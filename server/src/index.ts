@@ -5,10 +5,20 @@ import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import mongoose from 'mongoose';
+import http from 'http';
+import setupSocketIO from './socket';
+import Message from './models/message';
+import User from './models/user';
+import feedRoutes from './routes/feed';
+import newsRoutes from './routes/news';
+import settingsRoutes from './routes/settings';
+import authRoutes from './routes/auth';
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = setupSocketIO(server);
 const PORT = process.env.PORT || 5000;
 
 // Подключение к MongoDB
@@ -21,7 +31,8 @@ const contentSchema = new mongoose.Schema({
   url: { type: String, required: true },
   publicId: { type: String, required: true },
   resourceType: { type: String, enum: ['image', 'video'], required: true },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  customDate: { type: Date } // Пользовательская дата для календаря
 });
 
 const Content = mongoose.model('Content', contentSchema);
@@ -84,6 +95,9 @@ app.post('/api/upload', upload.array('media'), async (req: Request, res: Respons
       return res.status(400).json({ error: 'Файлы не были загружены' });
     }
 
+    // Получаем пользовательскую дату, если она была передана
+    const customDate = req.body.date ? new Date(req.body.date) : null;
+
     const savedContent = [];
 
     for (const file of files) {
@@ -105,7 +119,8 @@ app.post('/api/upload', upload.array('media'), async (req: Request, res: Respons
       const newContent = new Content({
         url: cloudinaryFile.path,
         publicId: cloudinaryFile.filename,
-        resourceType: resourceType // Используем определенный тип ресурса
+        resourceType: resourceType,
+        customDate: customDate // Добавляем пользовательскую дату
       });
       
       // Сохраняем в базу данных
@@ -126,7 +141,35 @@ app.post('/api/upload', upload.array('media'), async (req: Request, res: Respons
 // Маршрут для получения всего контента из MongoDB
 app.get('/api/content', async (req: Request, res: Response) => {
   try {
-    const allContent = await Content.find().sort({ createdAt: -1 });
+    const { startDate, endDate } = req.query;
+    
+    let query = {};
+    
+    // Если указаны даты, добавляем их в запрос
+    if (startDate && endDate) {
+      query = {
+        $or: [
+          { 
+            createdAt: { 
+              $gte: new Date(startDate as string), 
+              $lte: new Date(endDate as string) 
+            } 
+          },
+          { 
+            customDate: { 
+              $gte: new Date(startDate as string), 
+              $lte: new Date(endDate as string) 
+            } 
+          }
+        ]
+      };
+    }
+    
+    const allContent = await Content.find(query).sort({ 
+      customDate: -1, 
+      createdAt: -1 
+    });
+    
     res.json(allContent);
   } catch (error) {
     console.error('Ошибка при получении контента:', error);
@@ -134,7 +177,94 @@ app.get('/api/content', async (req: Request, res: Response) => {
   }
 });
 
+// API для чата
+app.get('/api/contacts', async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+
+    // Получаем всех пользователей, кроме текущего
+    const users = await User.find({ _id: { $ne: userId } });
+    
+    // Для каждого пользователя находим последнее сообщение
+    const contacts = await Promise.all(users.map(async (user) => {
+      const lastMessage = await Message.findOne({
+        $or: [
+          { senderId: userId, receiverId: user._id },
+          { senderId: user._id, receiverId: userId }
+        ]
+      }).sort({ createdAt: -1 });
+
+      return {
+        id: user._id,
+        name: user.firstName && user.lastName 
+          ? `${user.firstName} ${user.lastName}` 
+          : user.username,
+        avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
+        lastMessage: lastMessage ? {
+          text: lastMessage.text || 'Медиа-вложение',
+          timestamp: lastMessage.createdAt,
+          isRead: lastMessage.isRead || lastMessage.senderId.toString() === userId
+        } : {
+          text: 'Нет сообщений',
+          timestamp: new Date(),
+          isRead: true
+        }
+      };
+    }));
+
+    res.json(contacts);
+  } catch (error) {
+    console.error('Ошибка при получении контактов:', error);
+    res.status(500).json({ error: 'Ошибка при получении контактов' });
+  }
+});
+
+app.get('/api/messages', async (req: Request, res: Response) => {
+  try {
+    const { userId, contactId } = req.query;
+    
+    if (!userId || !contactId) {
+      return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    // Получаем сообщения между пользователями
+    const messages = await Message.find({
+      $or: [
+        { senderId: userId, receiverId: contactId },
+        { senderId: contactId, receiverId: userId }
+      ]
+    }).sort({ createdAt: 1 });
+
+    // Отмечаем сообщения как прочитанные
+    await Message.updateMany(
+      { senderId: contactId, receiverId: userId, isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    res.json(messages);
+  } catch (error) {
+    console.error('Ошибка при получении сообщений:', error);
+    res.status(500).json({ error: 'Ошибка при получении сообщений' });
+  }
+});
+
+// Маршруты для ленты
+app.use('/api/feed', feedRoutes);
+
+// Маршруты для новостей
+app.use('/api/news', newsRoutes);
+
+// Маршруты для настроек
+app.use('/api/settings', settingsRoutes);
+
+// Маршруты для аутентификации
+app.use('/api/auth', authRoutes);
+
 // Запуск сервера
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Сервер запущен на порту ${PORT}`);
 });
