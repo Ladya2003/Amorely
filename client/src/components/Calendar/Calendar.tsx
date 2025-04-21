@@ -125,7 +125,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, onAddContent }) => {
               <Box>
                 <Grid container spacing={1} sx={{ mb: 1 }}>
                   {['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((day, index) => (
-                    <Grid item xs={12/7} key={index}>
+                    <Grid size={{ xs: 12/7 }} key={index}>
                       <Typography align="center" variant="body2" color="text.secondary">
                         {day}
                       </Typography>
@@ -134,7 +134,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, onAddContent }) => {
                 </Grid>
                 <Grid container spacing={1}>
                   {contentByDay.map((day, index) => (
-                    <Grid item xs={12/7} key={index}>
+                    <Grid size={{ xs: 12/7 }} key={index}>
                       <CalendarDay 
                         date={day.date} 
                         content={day.content.length > 0 ? day.content[0] : null} 

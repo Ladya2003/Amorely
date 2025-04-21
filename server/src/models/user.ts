@@ -1,6 +1,42 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+// Определяем интерфейс для документа пользователя
+export interface UserDocument extends mongoose.Document {
+  _id: mongoose.Types.ObjectId;
+  email: string;
+  username: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  bio?: string;
+  partnerId?: mongoose.Types.ObjectId;
+  relationshipStartDate?: Date;
+  theme: 'light' | 'dark' | 'system';
+  notificationSettings?: {
+    email: {
+      newContent: boolean;
+      messages: boolean;
+      events: boolean;
+      news: boolean;
+    };
+    push: {
+      newContent: boolean;
+      messages: boolean;
+      events: boolean;
+      news: boolean;
+    };
+  };
+  createdAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+// Определяем интерфейс для модели пользователя
+interface UserModel extends mongoose.Model<UserDocument> {
+  // Здесь можно добавить статические методы модели, если они есть
+}
+
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   username: { type: String, required: true, unique: true },
@@ -42,4 +78,4 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-export default mongoose.model('User', userSchema); 
+export default mongoose.model<UserDocument, UserModel>('User', userSchema); 

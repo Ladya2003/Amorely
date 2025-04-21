@@ -139,7 +139,7 @@ const NewsPage: React.FC = () => {
         <>
           <Grid container spacing={3}>
             {news.map((item) => (
-              <Grid item xs={12} sm={6} md={4} key={item._id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item._id}>
                 <NewsCard news={item} onClick={handleNewsClick} />
               </Grid>
             ))}

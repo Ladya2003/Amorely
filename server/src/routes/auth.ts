@@ -54,8 +54,7 @@ router.post(
       );
 
       // Отправляем ответ с токеном и данными пользователя (без пароля)
-      const userWithoutPassword = { ...newUser.toObject() };
-      delete userWithoutPassword.password;
+      const { password: _, ...userWithoutPassword } = newUser.toObject();
 
       res.status(201).json({
         message: 'Пользователь успешно зарегистрирован',
@@ -96,8 +95,7 @@ router.post('/login', async (req: Request, res: Response) => {
     );
 
     // Отправляем ответ с токеном и данными пользователя (без пароля)
-    const userWithoutPassword = { ...user.toObject() };
-    delete userWithoutPassword.password;
+    const { password: _, ...userWithoutPassword } = user.toObject();
 
     res.json({
       message: 'Вход выполнен успешно',

@@ -79,7 +79,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
       
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               type="password"
@@ -90,7 +90,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
               variant="outlined"
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               type="password"
@@ -102,7 +102,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
               helperText="Минимум 8 символов"
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               type="password"
@@ -113,7 +113,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
               variant="outlined"
             />
           </Grid>
-          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               type="submit"
               variant="contained"

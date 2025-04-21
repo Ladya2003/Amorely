@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import User from '../models/user';
+import User, { UserDocument } from '../models/user';
 import Relationship from '../models/relationship';
 import mongoose from 'mongoose';
 
@@ -107,7 +107,7 @@ router.post('/partner', async (req: Request, res: Response) => {
     }
     
     // Проверяем, существует ли партнер
-    const partner = await User.findOne({ email: partnerEmail });
+    const partner = await User.findOne({ email: partnerEmail }) as UserDocument;
     if (!partner) {
       return res.status(404).json({ error: 'Партнер с указанным email не найден' });
     }
@@ -246,6 +246,48 @@ router.get('/search', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Ошибка при поиске пользователей:', error);
     res.status(500).json({ error: 'Ошибка при поиске пользователей' });
+  }
+});
+
+// Предполагаю, что проблема в этом маршруте или подобном
+router.post('/link-partner', async (req: Request, res: Response) => {
+  try {
+    const { userId, partnerEmail } = req.body;
+    
+    // Находим текущего пользователя
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    
+    // Находим партнера по email
+    const partner = await User.findOne({ email: partnerEmail }) as UserDocument;
+    if (!partner) {
+      return res.status(404).json({ error: 'Партнер не найден' });
+    }
+    
+    // Проблема здесь - partner._id имеет тип unknown
+    // Исправление: явное приведение типа
+    const partnerId = partner._id as mongoose.Types.ObjectId;
+    
+    // Обновляем пользователя
+    user.partnerId = partner._id;
+    user.relationshipStartDate = new Date();
+    await user.save();
+    
+    // Обновляем партнера
+    partner.partnerId = user._id as mongoose.Types.ObjectId;
+    partner.relationshipStartDate = new Date();
+    await partner.save();
+    
+    res.json({ message: 'Партнер успешно привязан', partner: { 
+      id: partner._id,
+      username: partner.username,
+      email: partner.email
+    }});
+  } catch (error) {
+    console.error('Ошибка при привязке партнера:', error);
+    res.status(500).json({ error: 'Ошибка при привязке партнера' });
   }
 });
 

@@ -9,6 +9,7 @@ import http from 'http';
 import setupSocketIO from './socket';
 import Message from './models/message';
 import User from './models/user';
+import Content from './models/content';
 import feedRoutes from './routes/feed';
 import newsRoutes from './routes/news';
 import settingsRoutes from './routes/settings';
@@ -25,17 +26,6 @@ const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amorely')
   .then(() => console.log('MongoDB подключена'))
   .catch((err: any) => console.error('Ошибка подключения к MongoDB:', err));
-
-// Определение схемы и модели для контента
-const contentSchema = new mongoose.Schema({
-  url: { type: String, required: true },
-  publicId: { type: String, required: true },
-  resourceType: { type: String, enum: ['image', 'video'], required: true },
-  createdAt: { type: Date, default: Date.now },
-  customDate: { type: Date } // Пользовательская дата для календаря
-});
-
-const Content = mongoose.model('Content', contentSchema);
 
 // Настройка Cloudinary
 cloudinary.config({

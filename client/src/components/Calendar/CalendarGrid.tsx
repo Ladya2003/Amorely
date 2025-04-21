@@ -23,13 +23,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ days }) => {
   return (
     <Grid container spacing={2}>
       {days.map((day, dayIndex) => (
-        <Grid item xs={12} key={dayIndex}>
+        <Grid size={{ xs: 12 }} key={dayIndex}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             {format(day.date, 'd MMMM yyyy', { locale: ru })}
           </Typography>
           <Grid container spacing={1}>
             {day.content.map((item, itemIndex) => (
-              <Grid item xs={4} sm={3} md={2} key={itemIndex}>
+              <Grid size={{ xs: 4, sm: 3, md: 2 }} key={itemIndex}>
                 <Box 
                   sx={{ 
                     position: 'relative',

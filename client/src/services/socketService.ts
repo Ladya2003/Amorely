@@ -2,7 +2,7 @@ import { Socket } from 'socket.io-client';
 import { API_URL } from '../config';
 
 class SocketService {
-  private socket: Socket | null = null;
+  private socket: any | null = null;
   private userId: string | null = null;
 
   // Инициализация сокета
@@ -19,7 +19,7 @@ class SocketService {
       console.log('Соединение с сокетом разорвано');
     });
 
-    this.socket.on('error', (error) => {
+    this.socket.on('error', (error: any) => {
       console.error('Ошибка сокета:', error);
     });
 

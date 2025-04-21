@@ -2,12 +2,13 @@ import React from 'react';
 import { 
   List, 
   ListItem, 
+  ListItemButton,
   ListItemAvatar, 
-  ListItemText, 
   Avatar, 
   Typography, 
   Divider,
-  Box
+  Box,
+  ListItemText
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -28,7 +29,7 @@ interface ChatListProps {
   selectedContactId: string | null;
 }
 
-const StyledListItem = styled(ListItem)(({ theme }) => ({
+const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
   '&.Mui-selected': {
     backgroundColor: theme.palette.action.selected,
@@ -43,9 +44,8 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
     <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
       {contacts.map((contact, index) => (
         <React.Fragment key={contact.id}>
-          <StyledListItem 
+          <StyledListItemButton 
             alignItems="flex-start" 
-            button 
             selected={selectedContactId === contact.id}
             onClick={() => onSelectContact(contact.id)}
             sx={{ py: 1.5 }}
@@ -86,7 +86,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                 </Typography>
               }
             />
-          </StyledListItem>
+          </StyledListItemButton>
           {index < contacts.length - 1 && <Divider variant="inset" component="li" />}
         </React.Fragment>
       ))}
