@@ -13,7 +13,7 @@ import {
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CreateIcon from '@mui/icons-material/Create';
 import SignatureCanvas from 'react-signature-canvas';
-
+import { useNavigate } from 'react-router-dom';
 interface DaysTogetherProps {
   daysCount: number | null;
   relationshipStartDate: string | null;
@@ -33,6 +33,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
 }) => {
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
   const [signatureRef, setSignatureRef] = useState<SignatureCanvas | null>(null);
+  const navigate = useNavigate();
 
   const getRelationshipStatus = (days: number) => {
     if (days < 30) return "Начало прекрасного пути вместе";
@@ -80,6 +81,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           textAlign: 'center',
           bgcolor: 'background.paper'
         }}
+        onClick={() => navigate('/settings')}
       >
         <Typography variant="h6" gutterBottom>
           Добавьте партнера в настройках

@@ -24,7 +24,7 @@ const CalendarPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState<{
     mediaUrl: string;
-    type: 'image' | 'video';
+    resourceType: 'image' | 'video';
   } | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -56,7 +56,7 @@ const CalendarPage: React.FC = () => {
 
   const handleContentClick = (content: {
     mediaUrl: string;
-    type: 'image' | 'video';
+    resourceType: 'image' | 'video';
   }) => {
     setSelectedContent(content);
     setViewerOpen(true);

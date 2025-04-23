@@ -9,43 +9,6 @@ import DaysTogether from '../components/Feed/DaysTogether';
 import AddContentDialog from '../components/Feed/AddContentDialog';
 import ContentViewer from '../components/Feed/ContentViewer';
 
-// Временные данные для демонстрации
-const MOCK_PARTNER_CONTENT: ContentItem[] = [
-  {
-    id: '1',
-    url: 'https://source.unsplash.com/random/800x600/?couple',
-    type: 'image',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    url: 'https://source.unsplash.com/random/800x600/?love',
-    type: 'image',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '3',
-    url: 'https://source.unsplash.com/random/800x600/?romance',
-    type: 'image',
-    createdAt: new Date().toISOString()
-  }
-];
-
-const MOCK_SELF_CONTENT: ContentItem[] = [
-  {
-    id: '4',
-    url: 'https://source.unsplash.com/random/800x600/?travel',
-    type: 'image',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '5',
-    url: 'https://source.unsplash.com/random/800x600/?nature',
-    type: 'image',
-    createdAt: new Date().toISOString()
-  }
-];
-
 const FeedPage: React.FC = () => {
   // Состояние для табов
   const [tabValue, setTabValue] = useState(0);
@@ -65,30 +28,53 @@ const FeedPage: React.FC = () => {
   const [addContentDialogOpen, setAddContentDialogOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
+
+  const isPartnerAdded = !!daysCount && !!relationshipStartDate;
   
   // Загрузка данных при монтировании компонента
   useEffect(() => {
-    // В реальном приложении здесь будет запрос к API
-    // fetchUserData();
-    // fetchContent();
-    
-    // Используем моковые данные для демонстрации
-    setTimeout(() => {
-      setPartnerContent(MOCK_PARTNER_CONTENT);
-      setSelfContent(MOCK_SELF_CONTENT);
+    // Загружаем данные с сервера
+    fetchUserData();
+    fetchContent();
+  }, []);
+  
+  // Функция для загрузки данных об отношениях
+  const fetchUserData = async () => {
+    try {
+      setIsLoading(true);
+      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
+      const response = await axios.get(`${API_URL}/api/feed/relationship?userId=${userId}`);
       
-      // Пример данных об отношениях
-      const startDate = new Date();
-      startDate.setMonth(startDate.getMonth() - 3); // 3 месяца назад
-      setRelationshipStartDate(startDate.toISOString());
+      if (response.data) {
+        setRelationshipStartDate(response.data.startDate);
+        setDaysCount(response.data.daysCount);
+        setRelationshipPhoto(response.data.photo);
+        setRelationshipSignature(response.data.signature);
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке данных об отношениях:', error);
+    }
+  };
+  
+  // Функция для загрузки контента
+  const fetchContent = async () => {
+    try {
+      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
       
-      const diffTime = Math.abs(new Date().getTime() - startDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setDaysCount(diffDays);
+      // Загружаем контент от партнера
+      const partnerResponse = await axios.get(`${API_URL}/api/feed/content?userId=${userId}&target=partner`);
+      setPartnerContent(partnerResponse.data);
+      
+      // Загружаем собственный контент
+      const selfResponse = await axios.get(`${API_URL}/api/feed/content?userId=${userId}&target=self`);
+      setSelfContent(selfResponse.data);
       
       setIsLoading(false);
-    }, 1000);
-  }, []);
+    } catch (error) {
+      console.error('Ошибка при загрузке контента:', error);
+      setIsLoading(false);
+    }
+  };
   
   // Обработчики событий
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -113,27 +99,23 @@ const FeedPage: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // В реальном приложении здесь будет загрузка файлов на сервер
-      // const formData = new FormData();
-      // files.forEach(file => formData.append('media', file));
-      // formData.append('target', target);
-      // formData.append('frequency', JSON.stringify(frequency));
-      // formData.append('applyNow', String(applyNow));
-      // const response = await axios.post(`${API_URL}/api/content`, formData);
+      // Загрузка файлов на сервер
+      const formData = new FormData();
+      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
       
-      // Для демонстрации создаем локальные URL
-      const newContent: ContentItem[] = files.map((file, index) => ({
-        id: `new-${Date.now()}-${index}`,
-        url: URL.createObjectURL(file),
-        type: file.type.startsWith('image/') ? 'image' : 'video',
-        createdAt: new Date().toISOString()
-      }));
+      files.forEach(file => formData.append('media', file));
+      formData.append('userId', userId);
+      formData.append('target', target);
+      formData.append('frequency', JSON.stringify(frequency));
+      formData.append('applyNow', String(applyNow));
+      
+      const response = await axios.post(`${API_URL}/api/feed/content`, formData);
       
       // Обновляем соответствующий список контента
       if (target === 'self') {
-        setSelfContent([...newContent, ...selfContent]);
+        setSelfContent([...response.data.content, ...selfContent]);
       } else {
-        setPartnerContent([...newContent, ...partnerContent]);
+        setPartnerContent([...response.data.content, ...partnerContent]);
       }
       
       setIsLoading(false);
@@ -145,14 +127,14 @@ const FeedPage: React.FC = () => {
   
   const handleAddPhoto = async (file: File) => {
     try {
-      // В реальном приложении здесь будет загрузка фото на сервер
-      // const formData = new FormData();
-      // formData.append('photo', file);
-      // const response = await axios.post(`${API_URL}/api/relationship/photo`, formData);
+      const formData = new FormData();
+      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
       
-      // Для демонстрации создаем локальный URL
-      const photoUrl = URL.createObjectURL(file);
-      setRelationshipPhoto(photoUrl);
+      formData.append('photo', file);
+      formData.append('userId', userId);
+      
+      const response = await axios.post(`${API_URL}/api/feed/relationship/photo`, formData);
+      setRelationshipPhoto(response.data.photo);
     } catch (error) {
       console.error('Ошибка при добавлении фото:', error);
     }
@@ -160,11 +142,14 @@ const FeedPage: React.FC = () => {
   
   const handleAddSignature = async (signatureDataUrl: string) => {
     try {
-      // В реальном приложении здесь будет отправка подписи на сервер
-      // const response = await axios.post(`${API_URL}/api/relationship/signature`, { signature: signatureDataUrl });
+      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
       
-      // Для демонстрации просто сохраняем в состоянии
-      setRelationshipSignature(signatureDataUrl);
+      const response = await axios.post(`${API_URL}/api/feed/relationship/signature`, {
+        userId,
+        signature: signatureDataUrl
+      });
+      
+      setRelationshipSignature(response.data.signature);
     } catch (error) {
       console.error('Ошибка при добавлении подписи:', error);
     }
@@ -185,6 +170,8 @@ const FeedPage: React.FC = () => {
         content={currentContent} 
         isLoading={isLoading}
         onContentClick={handleContentClick}
+        navigateTo={!isPartnerAdded ? '/settings' : undefined}
+        placeholder={!isPartnerAdded ? 'Добавьте партнера в настройках' : 'Нет доступного контента'}
       />
       
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>

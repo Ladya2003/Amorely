@@ -14,6 +14,8 @@ import feedRoutes from './routes/feed';
 import newsRoutes from './routes/news';
 import settingsRoutes from './routes/settings';
 import authRoutes from './routes/auth';
+import chatRoutes from './routes/chat';
+import { authMiddleware } from './middleware/auth';
 
 dotenv.config();
 
@@ -168,9 +170,9 @@ app.get('/api/content', async (req: Request, res: Response) => {
 });
 
 // API для чата
-app.get('/api/contacts', async (req: Request, res: Response) => {
+app.get('/api/contacts', async (req: any, res: Response) => {
   try {
-    const userId = req.query.userId as string;
+    const userId = req.userId as string;
     
     if (!userId) {
       return res.status(400).json({ error: 'Не указан ID пользователя' });
@@ -213,9 +215,10 @@ app.get('/api/contacts', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/api/messages', async (req: Request, res: Response) => {
+app.get('/api/messages', async (req: any, res: Response) => {
   try {
-    const { userId, contactId } = req.query;
+    const { contactId } = req.query;
+    const userId = req.userId as string;
     
     if (!userId || !contactId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
@@ -243,16 +246,19 @@ app.get('/api/messages', async (req: Request, res: Response) => {
 });
 
 // Маршруты для ленты
-app.use('/api/feed', feedRoutes);
+app.use('/api/feed', authMiddleware, feedRoutes);
 
 // Маршруты для новостей
-app.use('/api/news', newsRoutes);
+app.use('/api/news', authMiddleware, newsRoutes);
 
 // Маршруты для настроек
-app.use('/api/settings', settingsRoutes);
+app.use('/api/settings', authMiddleware, settingsRoutes);
 
 // Маршруты для аутентификации
 app.use('/api/auth', authRoutes);
+
+// Маршруты для чата
+app.use('/api', authMiddleware, chatRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {

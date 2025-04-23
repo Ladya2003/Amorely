@@ -25,50 +25,13 @@ import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
 
-// Временные данные для демонстрации
-const MOCK_USER: UserProfile = {
-  _id: 'user123',
-  email: 'user@example.com',
-  username: 'user123',
-  firstName: 'Иван',
-  lastName: 'Иванов',
-  bio: 'Люблю путешествовать и фотографировать',
-  avatar: 'https://randomuser.me/api/portraits/men/1.jpg'
-};
-
-const MOCK_PARTNER: Partner | null = {
-  _id: 'partner456',
-  email: 'partner@example.com',
-  username: 'partner456',
-  firstName: 'Анна',
-  lastName: 'Смирнова',
-  avatar: 'https://randomuser.me/api/portraits/women/1.jpg'
-};
-
-const MOCK_RELATIONSHIP_START_DATE = new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString();
-
-const MOCK_NOTIFICATION_SETTINGS = {
-  email: {
-    newContent: true,
-    messages: true,
-    events: true,
-    news: false
-  },
-  push: {
-    newContent: true,
-    messages: true,
-    events: false,
-    news: false
-  }
-};
-
 const SettingsPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [partner, setPartner] = useState<Partner | null>(null);
   const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
-  const [notificationSettings, setNotificationSettings] = useState(MOCK_NOTIFICATION_SETTINGS);
+  const [notificationSettings, setNotificationSettings] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -84,17 +47,51 @@ const SettingsPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      // В реальном приложении здесь будет запрос к API
-      // const response = await axios.get(`${API_URL}/api/settings/user/${userId}`);
-      // setUser(response.data);
-      
-      // Используем моковые данные для демонстрации
-      setTimeout(() => {
-        setUser(MOCK_USER);
-        setPartner(MOCK_PARTNER);
-        setRelationshipStartDate(MOCK_RELATIONSHIP_START_DATE);
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Не авторизован. Пожалуйста, войдите в систему.');
         setIsLoading(false);
-      }, 1000);
+        return;
+      }
+      
+      // Получаем данные пользователя
+      const response = await axios.get(`${API_URL}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      setUser(response.data);
+      setTheme(response.data.theme || 'system');
+      setNotificationSettings(response.data.notificationSettings || {
+        email: {
+          newContent: true,
+          messages: true,
+          events: true,
+          news: false
+        },
+        push: {
+          newContent: true,
+          messages: true,
+          events: false,
+          news: false
+        }
+      });
+      
+      // Если у пользователя есть партнер, получаем его данные
+      if (response.data.partnerId) {
+        const partnerResponse = await axios.get(`${API_URL}/api/settings/user/${response.data.partnerId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        setPartner(partnerResponse.data);
+        setRelationshipStartDate(response.data.relationshipStartDate);
+      }
+      
+      setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при загрузке данных пользователя:', error);
       setError('Не удалось загрузить данные пользователя. Пожалуйста, попробуйте позже.');
@@ -110,38 +107,21 @@ const SettingsPage: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // В реальном приложении здесь будет запрос к API
-      // const response = await axios.put(`${API_URL}/api/settings/user/${user?._id}`, formData, {
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data',
-      //   },
-      // });
-      // setUser(response.data.user);
-      
-      // Имитация запроса для демонстрации
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Обновляем локальное состояние
-      if (user) {
-        const updatedUser = { ...user };
-        updatedUser.username = formData.get('username') as string;
-        updatedUser.firstName = formData.get('firstName') as string;
-        updatedUser.lastName = formData.get('lastName') as string;
-        updatedUser.bio = formData.get('bio') as string;
-        
-        // Если был загружен новый аватар, создаем временный URL
-        const avatarFile = formData.get('avatar') as File;
-        if (avatarFile) {
-          const existingAvatarUrl = updatedUser.avatar;
-          if (existingAvatarUrl && existingAvatarUrl.startsWith('blob:')) {
-            URL.revokeObjectURL(existingAvatarUrl);
-          }
-          updatedUser.avatar = URL.createObjectURL(avatarFile);
-        }
-        
-        setUser(updatedUser);
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Не авторизован');
       }
       
+      // Отправляем запрос на обновление профиля
+      const response = await axios.put(`${API_URL}/api/settings/user/${user?._id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        },
+      });
+      
+      setUser(response.data.user);
       setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при сохранении профиля:', error);
@@ -150,29 +130,30 @@ const SettingsPage: React.FC = () => {
     }
   };
   
-  const handleAddPartner = async (partnerId: string, startDate: Date) => {
+  const handleAddPartner = async (partnerEmail: string, startDate: Date) => {
     try {
       setIsLoading(true);
       
-      // В реальном приложении здесь будет запрос к API
-      // const response = await axios.post(`${API_URL}/api/settings/partner`, {
-      //   userId: user?._id,
-      //   partnerId,
-      //   relationshipStartDate: startDate.toISOString()
-      // });
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Не авторизован');
+      }
       
-      // Имитация запроса для демонстрации
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Отправляем запрос на добавление партнера
+      const response = await axios.post(`${API_URL}/api/settings/partner`, {
+        userId: user?._id,
+        partnerEmail,
+        relationshipStartDate: startDate.toISOString()
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       
-      // Обновляем локальное состояние
+      // Обновляем данные о партнере и отношениях
       setRelationshipStartDate(startDate.toISOString());
-      
-      // В реальном приложении здесь будет запрос для получения данных партнера
-      // const partnerResponse = await axios.get(`${API_URL}/api/settings/user/${partnerId}`);
-      // setPartner(partnerResponse.data);
-      
-      // Используем моковые данные для демонстрации
-      setPartner(MOCK_PARTNER);
+      setPartner(response.data.partner);
       
       setIsLoading(false);
     } catch (error) {
@@ -186,11 +167,18 @@ const SettingsPage: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // В реальном приложении здесь будет запрос к API
-      // await axios.delete(`${API_URL}/api/settings/partner/${user?._id}`);
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Не авторизован');
+      }
       
-      // Имитация запроса для демонстрации
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Отправляем запрос на удаление партнера
+      await axios.delete(`${API_URL}/api/settings/partner/${user?._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       
       // Обновляем локальное состояние
       setPartner(null);
@@ -204,24 +192,53 @@ const SettingsPage: React.FC = () => {
     }
   };
   
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme);
-    // В реальном приложении здесь будет логика для сохранения настройки темы
+  const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
+    try {
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Не авторизован');
+      }
+      
+      // Обновляем тему в локальном состоянии
+      setTheme(newTheme);
+      
+      // Отправляем запрос на обновление темы
+      await axios.put(`${API_URL}/api/settings/theme`, {
+        userId: user?._id,
+        theme: newTheme
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Ошибка при изменении темы:', error);
+      // Возвращаем предыдущую тему в случае ошибки
+      setTheme(theme);
+    }
   };
   
   const handleChangePassword = async (oldPassword: string, newPassword: string) => {
     try {
       setIsLoading(true);
       
-      // В реальном приложении здесь будет запрос к API
-      // await axios.post(`${API_URL}/api/settings/change-password`, {
-      //   userId: user?._id,
-      //   oldPassword,
-      //   newPassword
-      // });
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Не авторизован');
+      }
       
-      // Имитация запроса для демонстрации
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Отправляем запрос на изменение пароля
+      await axios.post(`${API_URL}/api/auth/change-password`, {
+        userId: user?._id,
+        oldPassword,
+        newPassword
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       
       setIsLoading(false);
     } catch (error) {
@@ -231,16 +248,43 @@ const SettingsPage: React.FC = () => {
     }
   };
   
-  const handleNotificationSettingChange = (type: 'email' | 'push', setting: string, value: boolean) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        [setting]: value
+  const handleNotificationSettingChange = async (type: 'email' | 'push', setting: string, value: boolean) => {
+    try {
+      // Обновляем локальное состояние
+      setNotificationSettings((prev: any) => ({
+        ...prev,
+        [type]: {
+          ...prev[type],
+          [setting]: value
+        }
+      }));
+      
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Не авторизован');
       }
-    }));
-    
-    // В реальном приложении здесь будет запрос для сохранения настроек уведомлений
+      
+      // Отправляем запрос на обновление настроек уведомлений
+      await axios.put(`${API_URL}/api/settings/notifications`, {
+        userId: user?._id,
+        settings: {
+          ...notificationSettings,
+          [type]: {
+            ...notificationSettings[type],
+            [setting]: value
+          }
+        }
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Ошибка при обновлении настроек уведомлений:', error);
+      // Возвращаем предыдущие настройки в случае ошибки
+      fetchUserData();
+    }
   };
   
   if (isLoading && !user) {
@@ -356,7 +400,7 @@ const SettingsPage: React.FC = () => {
             />
           )}
           
-          {tabValue === 4 && (
+          {tabValue === 4 && notificationSettings && (
             <NotificationSettings 
               settings={notificationSettings}
               onSettingChange={handleNotificationSettingChange}

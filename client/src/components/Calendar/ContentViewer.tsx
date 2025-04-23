@@ -7,7 +7,7 @@ interface ContentViewerProps {
   onClose: () => void;
   content: {
     mediaUrl: string;
-    type: 'image' | 'video';
+    resourceType: 'image' | 'video';
   } | null;
 }
 
@@ -27,7 +27,7 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ open, onClose, content })
         </IconButton>
       </Box>
       <DialogContent sx={{ p: 0, overflow: 'hidden', bgcolor: 'black', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        {content.type === 'image' ? (
+        {content.resourceType === 'image' ? (
           <img
             src={content.mediaUrl}
             alt="Просмотр изображения"

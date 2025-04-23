@@ -6,10 +6,11 @@ import {
   Typography, 
   Alert, 
   InputAdornment, 
-  IconButton 
+  IconButton,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import CustomSnackbar from '../UI/CustomSnackbar';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -24,6 +25,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +51,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     }
     
     try {
-      await register(email, username, password);
+      const response = await register(email, username, password);
+      if (response?.status === 201) {
+        // Показываем сообщение об успешной регистрации
+        setSuccessMessage('Регистрация прошла успешно!');
+        
+          // Перенаправляем на страницу авторизации через 2 секунды
+          setTimeout(() => {
+          onSwitchToLogin();
+        }, 2000);
+      }
     } catch (error) {
       // Ошибка уже обрабатывается в контексте
     }
@@ -57,6 +68,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
+  };
+  
+  const handleCloseSuccessMessage = () => {
+    setSuccessMessage(null);
   };
   
   return (
@@ -77,6 +92,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
           {validationError || error}
         </Alert>
       )}
+      
+      {/* Используем новый компонент CustomSnackbar */}
+      <CustomSnackbar
+        open={!!successMessage}
+        message={successMessage}
+        severity="success"
+        onClose={handleCloseSuccessMessage}
+      />
       
       <TextField
         margin="normal"

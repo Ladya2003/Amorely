@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { API_URL } from '../config';
 
 interface User {
@@ -19,8 +19,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AxiosResponse<any, any> | undefined>;
+  register: (email: string, username: string, password: string) => Promise<AxiosResponse<any, any> | undefined>;
   logout: () => void;
   clearError: () => void;
 }
@@ -31,8 +31,8 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   error: null,
-  login: async () => {},
-  register: async () => {},
+  login: async () => undefined,
+  register: async () => undefined,
   logout: () => {},
   clearError: () => {}
 });
@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [token]);
 
   // Функция для входа
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<AxiosResponse<any, any> | undefined> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -96,16 +96,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(newToken);
       setUser(userData);
       setIsAuthenticated(true);
+      return response;
     } catch (error: any) {
       console.error('Ошибка входа:', error);
       setError(error.response?.data?.error || 'Ошибка при входе');
+      return undefined;
     } finally {
       setIsLoading(false);
     }
   };
 
   // Функция для регистрации
-  const register = async (email: string, username: string, password: string) => {
+  const register = async (email: string, username: string, password: string): Promise<AxiosResponse<any, any> | undefined> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -127,9 +129,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(newToken);
       setUser(userData);
       setIsAuthenticated(true);
+      return response;
     } catch (error: any) {
       console.error('Ошибка регистрации:', error);
       setError(error.response?.data?.error || 'Ошибка при регистрации');
+      return undefined;
     } finally {
       setIsLoading(false);
     }

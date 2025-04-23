@@ -194,15 +194,10 @@ const ChatPage: React.FC = () => {
   const fetchContacts = async () => {
     try {
       setIsLoading(true);
-      // В реальном приложении здесь будет запрос к API
-      // const response = await axios.get(`${API_URL}/api/contacts?userId=${CURRENT_USER_ID}`);
-      // setContacts(response.data);
-      
-      // Используем моковые данные для демонстрации
-      setTimeout(() => {
-        setContacts(MOCK_CONTACTS);
-        setIsLoading(false);
-      }, 500);
+      // Реальный запрос к API вместо моковых данных
+      const response = await axios.get(`${API_URL}/api/contacts?userId=${CURRENT_USER_ID}`);
+      setContacts(response.data);
+      setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при загрузке контактов:', error);
       setIsLoading(false);
@@ -212,15 +207,10 @@ const ChatPage: React.FC = () => {
   const fetchMessages = async (contactId: string) => {
     try {
       setIsLoading(true);
-      // В реальном приложении здесь будет запрос к API
-      // const response = await axios.get(`${API_URL}/api/messages?userId=${CURRENT_USER_ID}&contactId=${contactId}`);
-      // setMessages(response.data);
-      
-      // Используем моковые данные для демонстрации
-      setTimeout(() => {
-        setMessages(MOCK_MESSAGES[contactId] || []);
-        setIsLoading(false);
-      }, 500);
+      // Реальный запрос к API вместо моковых данных
+      const response = await axios.get(`${API_URL}/api/messages?userId=${CURRENT_USER_ID}&contactId=${contactId}`);
+      setMessages(response.data);
+      setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при загрузке сообщений:', error);
       setIsLoading(false);
@@ -284,7 +274,7 @@ const ChatPage: React.FC = () => {
       }
     };
 
-    // В реальном приложении здесь будет отправка через сокет после загрузки вложений
+    // Отправка сообщения через сокет после загрузки вложений
     const sendMessageWithAttachments = async () => {
       const uploadedAttachments = await uploadAttachments();
       
@@ -295,7 +285,7 @@ const ChatPage: React.FC = () => {
       updateContactLastMessage(selectedContactId, text, new Date().toISOString(), true);
     };
 
-    // Для демонстрации добавляем сообщение локально
+    // Временно добавляем сообщение локально для мгновенного отображения
     const newMessage: MessageType = {
       id: `temp-${Date.now()}`,
       senderId: CURRENT_USER_ID,
@@ -310,8 +300,8 @@ const ChatPage: React.FC = () => {
     setMessages([...messages, newMessage]);
     updateContactLastMessage(selectedContactId, text, new Date().toISOString(), true);
     
-    // В реальном приложении раскомментировать:
-    // sendMessageWithAttachments();
+    // Вызываем функцию для отправки сообщения через API
+    sendMessageWithAttachments();
   };
 
   const selectedContact = contacts.find(contact => contact.id === selectedContactId);

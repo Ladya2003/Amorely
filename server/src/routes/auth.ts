@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
 import { body, validationResult } from 'express-validator';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -143,10 +144,11 @@ router.get('/me', async (req: Request, res: Response) => {
 });
 
 // Изменение пароля
-router.post('/change-password', async (req: Request, res: Response) => {
+router.post('/change-password', authMiddleware, async (req: any, res: Response) => {
   try {
-    const { userId, oldPassword, newPassword } = req.body;
-    
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.userId as string;
+
     if (!userId || !oldPassword || !newPassword) {
       return res.status(400).json({ error: 'Не указаны обязательные поля' });
     }

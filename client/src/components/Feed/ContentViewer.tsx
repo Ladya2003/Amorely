@@ -38,7 +38,7 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ open, onClose, content })
         <CloseIcon />
       </IconButton>
       <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        {content.type === 'image' ? (
+        {content.resourceType === 'image' ? (
           <img
             src={content.url}
             alt="Просмотр"

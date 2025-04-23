@@ -22,26 +22,29 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 // Получение контента для ленты
-router.get('/content', async (req: Request, res: Response) => {
+router.get('/content', async (req: any, res: Response) => {
   try {
-    const { userId, target } = req.query;
+    const { target } = req.query;
+    const userId = req.userId as string;
     
     if (!userId) {
       return res.status(400).json({ error: 'Не указан ID пользователя' });
     }
+
+    const formattedUserId = new mongoose.Types.ObjectId(userId);
     
     let query: any = {};
     
     if (target === 'self') {
       // Контент пользователя для себя
-      query = { userId: userId, targetId: null };
+      query = { userId: formattedUserId, targetId: null };
     } else if (target === 'partner') {
       // Контент от партнера для пользователя
       // Сначала находим партнера
       const relationship = await Relationship.findOne({ 
         $or: [
-          { userId: userId },
-          { partnerId: userId }
+          { userId: formattedUserId },
+          { partnerId: formattedUserId }
         ]
       });
       
@@ -76,10 +79,11 @@ router.get('/content', async (req: Request, res: Response) => {
 });
 
 // Добавление нового контента
-router.post('/content', upload.array('media'), async (req: Request, res: Response) => {
+router.post('/content', upload.array('media'), async (req: any, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
-    const { userId, target, frequency, applyNow } = req.body;
+    const { target, frequency, applyNow } = req.body;
+    const userId = req.userId as string;
     
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'Файлы не были загружены' });
@@ -153,12 +157,19 @@ router.post('/content', upload.array('media'), async (req: Request, res: Respons
 });
 
 // Получение информации об отношениях
-router.get('/relationship', async (req: Request, res: Response) => {
+router.get('/relationship', async (req: any, res: Response) => {
   try {
-    const { userId } = req.query;
+    const userId = req.userId as string;
     
     if (!userId) {
       return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+
+    let userObjectId;
+    try {
+      userObjectId = new mongoose.Types.ObjectId(userId);
+    } catch (error) {
+      return res.status(400).json({ error: 'Неверный формат ID пользователя' });
     }
     
     const relationship = await Relationship.findOne({ 
@@ -191,9 +202,9 @@ router.get('/relationship', async (req: Request, res: Response) => {
 });
 
 // Обновление фото отношений
-router.post('/relationship/photo', upload.single('photo'), async (req: Request, res: Response) => {
+router.post('/relationship/photo', upload.single('photo'), async (req: any, res: Response) => {
   try {
-    const { userId } = req.body;
+    const userId = req.userId as string;
     const file = req.file as Express.Multer.File & { path: string, filename: string };
     
     if (!userId) {
@@ -239,9 +250,10 @@ router.post('/relationship/photo', upload.single('photo'), async (req: Request, 
 });
 
 // Обновление подписи отношений
-router.post('/relationship/signature', async (req: Request, res: Response) => {
+router.post('/relationship/signature', async (req: any, res: Response) => {
   try {
-    const { userId, signature } = req.body;
+    const userId = req.userId as string;
+    const { signature } = req.body;
     
     if (!userId || !signature) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });

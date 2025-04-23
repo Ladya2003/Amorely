@@ -1,38 +1,27 @@
-import { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { API_URL } from '../config';
 
 class SocketService {
-  private socket: any | null = null;
-  private userId: string | null = null;
+  private socket: ReturnType<typeof io> | null = null;
 
-  // Инициализация сокета
-  initialize(userId: string) {
-    this.userId = userId;
+  initialize(userId: string): ReturnType<typeof io> {
+    if (this.socket) {
+      this.socket.disconnect();
+    }
+
     this.socket = io(API_URL);
-
-    this.socket.on('connect', () => {
-      console.log('Соединение с сокетом установлено');
-      this.socket?.emit('user_connected', userId);
-    });
-
-    this.socket.on('disconnect', () => {
-      console.log('Соединение с сокетом разорвано');
-    });
-
-    this.socket.on('error', (error: any) => {
-      console.error('Ошибка сокета:', error);
-    });
-
+    
+    // Сообщаем серверу, что пользователь подключился
+    this.socket.emit('user_connected', userId);
+    
     return this.socket;
   }
 
-  // Отправка сообщения
-  sendMessage(receiverId: string, text: string, attachments?: Array<{ type: string, url: string, publicId: string }>) {
+  sendMessage(receiverId: string, text: string, attachments?: any[]) {
     if (!this.socket) {
-      console.error('Сокет не инициализирован');
-      return;
+      throw new Error('Socket not initialized');
     }
-
+    
     this.socket.emit('send_message', {
       receiverId,
       text,
@@ -40,42 +29,34 @@ class SocketService {
     });
   }
 
-  // Отметка сообщения как прочитанного
   markMessageAsRead(messageId: string) {
     if (!this.socket) {
-      console.error('Сокет не инициализирован');
-      return;
+      throw new Error('Socket not initialized');
     }
-
+    
     this.socket.emit('read_message', messageId);
   }
 
-  // Уведомление о печати
-  sendTyping(receiverId: string) {
+  startTyping(receiverId: string) {
     if (!this.socket) {
-      console.error('Сокет не инициализирован');
-      return;
+      throw new Error('Socket not initialized');
     }
-
+    
     this.socket.emit('typing', receiverId);
   }
 
-  // Уведомление о прекращении печати
-  sendStopTyping(receiverId: string) {
+  stopTyping(receiverId: string) {
     if (!this.socket) {
-      console.error('Сокет не инициализирован');
-      return;
+      throw new Error('Socket not initialized');
     }
-
+    
     this.socket.emit('stop_typing', receiverId);
   }
 
-  // Отключение сокета
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      this.userId = null;
     }
   }
 }

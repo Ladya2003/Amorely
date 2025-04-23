@@ -92,9 +92,10 @@ router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Respo
 });
 
 // Добавление партнера
-router.post('/partner', async (req: Request, res: Response) => {
+router.post('/partner', async (req: any, res: Response) => {
   try {
-    const { userId, partnerEmail, relationshipStartDate } = req.body;
+    const userId = req.userId as string;
+    const { partnerEmail, relationshipStartDate } = req.body;
     
     if (!userId || !partnerEmail || !relationshipStartDate) {
       return res.status(400).json({ error: 'Не указаны обязательные поля' });
@@ -222,9 +223,10 @@ router.delete('/partner/:userId', async (req: Request, res: Response) => {
 });
 
 // Поиск пользователей по email или username
-router.get('/search', async (req: Request, res: Response) => {
+router.get('/search', async (req: any, res: Response) => {
   try {
-    const { query, userId } = req.query;
+    const { query } = req.query;
+    const userId = req.userId;
     
     if (!query) {
       return res.status(400).json({ error: 'Не указан поисковый запрос' });
@@ -250,9 +252,10 @@ router.get('/search', async (req: Request, res: Response) => {
 });
 
 // Предполагаю, что проблема в этом маршруте или подобном
-router.post('/link-partner', async (req: Request, res: Response) => {
+router.post('/link-partner', async (req: any, res: Response) => {
   try {
-    const { userId, partnerEmail } = req.body;
+    const userId = req.userId as string;
+    const { partnerEmail } = req.body;
     
     // Находим текущего пользователя
     const user = await User.findById(userId);

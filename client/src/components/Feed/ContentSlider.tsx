@@ -3,22 +3,26 @@ import { Box, IconButton, Typography, CircularProgress, Paper } from '@mui/mater
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
+import { useNavigate } from 'react-router-dom';
 
 export interface ContentItem {
   id: string;
   url: string;
-  type: 'image' | 'video';
+  resourceType: 'image' | 'video';
   createdAt: string;
 }
 
 interface ContentSliderProps {
   content: ContentItem[];
   isLoading: boolean;
+  placeholder?: string;
   onContentClick?: (content: ContentItem) => void;
+  navigateTo?: string;
 }
 
-const ContentSlider: React.FC<ContentSliderProps> = ({ content, isLoading, onContentClick }) => {
+const ContentSlider: React.FC<ContentSliderProps> = ({ content, isLoading, onContentClick, placeholder, navigateTo }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
 
   const handlePrev = () => {
     setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : content.length - 1));
@@ -63,9 +67,10 @@ const ContentSlider: React.FC<ContentSliderProps> = ({ content, isLoading, onCon
           border: '1px dashed',
           borderColor: 'divider'
         }}
+        onClick={navigateTo ? () => navigate(navigateTo) : undefined}
       >
         <Typography color="text.secondary" align="center">
-          Нет доступного контента
+          {placeholder || 'Нет доступного контента'}
         </Typography>
       </Paper>
     );
@@ -86,7 +91,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({ content, isLoading, onCon
         }}
         onClick={handleContentClick}
       >
-        {currentContent.type === 'image' ? (
+        {currentContent.resourceType === 'image' ? (
           <Box
             component="img"
             src={currentContent.url}
