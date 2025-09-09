@@ -5,6 +5,7 @@ import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import User, { UserDocument } from '../models/user';
 import Relationship from '../models/relationship';
 import mongoose from 'mongoose';
+import { ExtendedRequest } from '../types/mongoose';
 
 const router = express.Router();
 
@@ -21,11 +22,15 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 // Получение данных пользователя
-router.get('/user/:id', async (req: Request, res: Response) => {
+router.get('/user/:id', async (req: ExtendedRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const userId = req.userId;
+    const clientUserId = req.params.id;
+    if (userId !== clientUserId) {
+      return res.status(403).json({ error: 'У вас нет доступа к этим данным' });
+    }
     
-    const user = await User.findById(id).select('-password');
+    const user = await User.findById(clientUserId).select('-password');
     
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
@@ -159,7 +164,7 @@ router.post('/partner', async (req: any, res: Response) => {
     partner.partnerId = user._id;
     await partner.save();
     
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Партнер успешно добавлен',
       relationship: newRelationship
     });
@@ -223,7 +228,7 @@ router.delete('/partner/:userId', async (req: Request, res: Response) => {
 });
 
 // Поиск пользователей по email или username
-router.get('/search', async (req: any, res: Response) => {
+router.get('/search', async (req: ExtendedRequest, res: Response) => {
   try {
     const { query } = req.query;
     const userId = req.userId;

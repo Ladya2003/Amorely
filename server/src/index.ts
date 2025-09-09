@@ -16,6 +16,7 @@ import settingsRoutes from './routes/settings';
 import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
 import { authMiddleware } from './middleware/auth';
+import relationshipsRoutes from './routes/relationships';
 
 dotenv.config();
 
@@ -259,6 +260,9 @@ app.use('/api/auth', authRoutes);
 
 // Маршруты для чата
 app.use('/api', authMiddleware, chatRoutes);
+
+// Маршруты для отношений
+app.use('/api/relationships', authMiddleware, relationshipsRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {
