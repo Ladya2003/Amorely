@@ -35,17 +35,7 @@ router.get('/content', async (req: any, res: Response) => {
     const now = new Date();
     let query: any = {};
     
-    if (target === 'self') {
-      // Контент пользователя для себя
-      query = { 
-        userId: formattedUserId, 
-        targetId: null,
-        $or: [
-          { nextDisplay: { $lte: now } },
-          { nextDisplay: null }
-        ]
-      };
-    } else if (target === 'partner') {
+    if (target === 'partner') {
       // Контент от партнера для пользователя
       // Сначала находим партнера
       const relationship = await Relationship.findOne({ 

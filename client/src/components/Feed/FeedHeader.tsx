@@ -77,7 +77,7 @@ const FeedHeader: React.FC<FeedHeaderProps> = ({ daysCount, tabValue, onTabChang
         )}
       </Box>
       
-      <Tabs 
+      {/* <Tabs 
         value={tabValue} 
         onChange={onTabChange} 
         variant="fullWidth"
@@ -94,7 +94,7 @@ const FeedHeader: React.FC<FeedHeaderProps> = ({ daysCount, tabValue, onTabChang
       >
         <Tab label="Партнер" />
         <Tab label="Свои" />
-      </Tabs>
+      </Tabs> */}
     </Box>
   );
 };

@@ -33,7 +33,7 @@ interface AddContentDialogProps {
 const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, onSave, hasPartner }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [target, setTarget] = useState<'self' | 'partner'>('self');
+  const [target, setTarget] = useState<'partner'>('partner');
   const [contentCount, setContentCount] = useState<number>(3);
   const [hoursInterval, setHoursInterval] = useState<number>(24);
   const [applyNow, setApplyNow] = useState<boolean>(true);
@@ -71,7 +71,7 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, onSa
     previews.forEach(url => URL.revokeObjectURL(url));
     setFiles([]);
     setPreviews([]);
-    setTarget('self');
+    setTarget('partner');
     setContentCount(3);
     setHoursInterval(24);
     setApplyNow(true);
@@ -91,7 +91,7 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, onSa
             <RadioGroup
               row
               value={target}
-              onChange={(e) => setTarget(e.target.value as 'self' | 'partner')}
+              onChange={(e) => setTarget(e.target.value as 'partner')}
             >
               <FormControlLabel value="self" control={<Radio />} label="Для себя" />
               {hasPartner && (

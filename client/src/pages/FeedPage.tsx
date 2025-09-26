@@ -114,9 +114,7 @@ const FeedPage: React.FC = () => {
       const response = await axios.post(`${API_URL}/api/feed/content`, formData);
       
       // Обновляем соответствующий список контента
-      if (target === 'self') {
-        setSelfContent((prevContent) => [...response.data.content, ...prevContent]);
-      } else {
+      if (target === 'partner') {
         setPartnerContent((prevContent) => [...response.data.content, ...prevContent]);
       }
       
@@ -169,7 +167,7 @@ const FeedPage: React.FC = () => {
       />
       
       <ContentSlider 
-        content={currentContent} 
+        content={partnerContent} 
         isLoading={isLoading}
         onContentClick={handleContentClick}
         navigateTo={!isPartnerAdded ? '/settings' : undefined}
@@ -180,7 +178,7 @@ const FeedPage: React.FC = () => {
       
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
         <Badge 
-          badgeContent={currentContent.length} 
+          badgeContent={partnerContent.length} 
           color="primary"
           sx={{
             '& .MuiBadge-badge': {
@@ -192,7 +190,7 @@ const FeedPage: React.FC = () => {
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            {tabValue === 0 ? 'Контент от партнера' : 'Ваш контент'}
+            Контент от партнера
           </Typography>
         </Badge>
       </Box>
