@@ -50,7 +50,7 @@ router.post(
       // Генерируем JWT токен
       const token = jwt.sign(
         { userId: newUser._id },
-        process.env.JWT_SECRET || 'your-secret-key',
+        process.env.JWT_SECRET || 'amorely',
         { expiresIn: '7d' }
       );
 
@@ -91,7 +91,7 @@ router.post('/login', async (req: Request, res: Response) => {
     // Генерируем JWT токен
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET || 'amorely',
       { expiresIn: '7d' }
     );
 
@@ -122,7 +122,7 @@ router.get('/me', async (req: Request, res: Response) => {
     const token = authHeader.split(' ')[1];
     
     // Верифицируем токен
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'amorely') as { userId: string };
     
     // Находим пользователя по ID
     const user = await User.findById(decoded.userId).select('-password');

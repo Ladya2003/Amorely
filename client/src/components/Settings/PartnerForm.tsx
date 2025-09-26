@@ -123,9 +123,13 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
       await onAddPartner(selectedPartner.email, startDate);
       setIsSubmitting(false);
       handleCloseDialog();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при добавлении партнера:', error);
-      setError('Не удалось добавить партнера. Пожалуйста, попробуйте еще раз.');
+      if (error.response && error.response.data && error.response.data.error) {
+        setError(error.response.data.error);
+      } else {
+        setError('Не удалось добавить партнера. Пожалуйста, попробуйте еще раз.');
+      }
       setIsSubmitting(false);
     }
   };

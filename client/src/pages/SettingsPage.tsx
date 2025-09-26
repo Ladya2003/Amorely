@@ -61,10 +61,12 @@ const SettingsPage: React.FC = () => {
           Authorization: `Bearer ${token}`
         }
       });
+
+      const user = response.data;
       
-      setUser(response.data);
-      setTheme(response.data.theme || 'system');
-      setNotificationSettings(response.data.notificationSettings || {
+      setUser(user);
+      setTheme(user.theme || 'system');
+      setNotificationSettings(user.notificationSettings || {
         email: {
           newContent: true,
           messages: true,
@@ -80,15 +82,15 @@ const SettingsPage: React.FC = () => {
       });
       
       // Если у пользователя есть партнер, получаем его данные
-      if (response.data.partnerId) {
-        const partnerResponse = await axios.get(`${API_URL}/api/settings/user/${response.data.partnerId}`, {
+      if (user.partnerId) {
+        const relationshipResponse = await axios.get(`${API_URL}/api/relationships`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
         
-        setPartner(partnerResponse.data.user);
-        setRelationshipStartDate(partnerResponse.data.partnership.startDate);
+        setPartner(relationshipResponse.data.partner);
+        setRelationshipStartDate(relationshipResponse.data.relationship.startDate);
       }
       
       setIsLoading(false);
@@ -141,8 +143,7 @@ const SettingsPage: React.FC = () => {
       }
       
       // Отправляем запрос на добавление партнера
-      const response = await axios.post(`${API_URL}/api/settings/partner`, {
-        userId: user?._id,
+      const response = await axios.post(`${API_URL}/api/relationships`, {
         partnerEmail,
         relationshipStartDate: startDate.toISOString()
       }, {
@@ -150,19 +151,26 @@ const SettingsPage: React.FC = () => {
           Authorization: `Bearer ${token}`
         }
       });
+
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
       
       // Обновляем данные о партнере и отношениях
-      setRelationshipStartDate(startDate.toISOString());
+      setRelationshipStartDate(response.data.relationship.startDate);
       setPartner(response.data.partner);
       
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при добавлении партнера:', error);
       setIsLoading(false);
-      throw error;
+      if (error.response && error.response.data) {
+        throw error.response.data;
+      }
+      throw { error: 'Не удалось добавить партнера' };
     }
   };
-  
+
   const handleRemovePartner = async () => {
     try {
       setIsLoading(true);
@@ -174,7 +182,7 @@ const SettingsPage: React.FC = () => {
       }
       
       // Отправляем запрос на удаление партнера
-      await axios.delete(`${API_URL}/api/settings/partner/${user?._id}`, {
+      await axios.delete(`${API_URL}/api/relationships`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -185,10 +193,13 @@ const SettingsPage: React.FC = () => {
       setRelationshipStartDate(null);
       
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при удалении партнера:', error);
       setIsLoading(false);
-      throw error;
+      if (error.response && error.response.data) {
+        throw error.response.data;
+      }
+      throw { error: 'Не удалось удалить партнера' };
     }
   };
   

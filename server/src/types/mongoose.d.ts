@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Request } from 'express';
 
 declare module 'mongoose' {
   interface UserDocument extends mongoose.Document {
@@ -30,3 +31,7 @@ declare module 'mongoose' {
     comparePassword(candidatePassword: string): Promise<boolean>;
   }
 }
+
+export type ExtendedRequest = Request & {
+  userId?: string;
+};
