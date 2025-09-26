@@ -233,7 +233,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               </InputAdornment>
             ),
           }}
-          sx={{ mt: 1 }}
+          sx={{ mt: 1, mb: 5 }}
         />
         <input
           type="file"

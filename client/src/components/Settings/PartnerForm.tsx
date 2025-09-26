@@ -42,7 +42,7 @@ interface PartnerFormProps {
   userId: string;
   partner: Partner | null;
   relationshipStartDate: string | null;
-  onAddPartner: (partnerId: string, startDate: Date) => Promise<void>;
+  onAddPartner: (partnerEmail: string, startDate: Date) => Promise<void>;
   onRemovePartner: () => Promise<void>;
   isLoading: boolean;
 }
@@ -63,6 +63,13 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (relationshipStartDate) {
+      setStartDate(new Date(relationshipStartDate));
+    }
+  }, [relationshipStartDate]);
 
   useEffect(() => {
     if (searchQuery.length >= 3) {
@@ -112,11 +119,14 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
     }
 
     try {
-      await onAddPartner(selectedPartner._id, startDate);
+      setIsSubmitting(true);
+      await onAddPartner(selectedPartner.email, startDate);
+      setIsSubmitting(false);
       handleCloseDialog();
     } catch (error) {
       console.error('Ошибка при добавлении партнера:', error);
       setError('Не удалось добавить партнера. Пожалуйста, попробуйте еще раз.');
+      setIsSubmitting(false);
     }
   };
 
@@ -192,6 +202,11 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
               <Typography variant="body2" color="text.secondary">
                 {partner.email}
               </Typography>
+              {partner.username && partner.username !== partner.email && (
+                <Typography variant="body2" color="text.secondary">
+                  @{partner.username}
+                </Typography>
+              )}
             </Box>
           </Box>
           
@@ -271,7 +286,8 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                   }
                   sx={{
                     bgcolor: selectedPartner?._id === user._id ? 'action.selected' : 'transparent',
-                    borderRadius: 1
+                    borderRadius: 1,
+                    cursor: 'pointer'
                   }}
                   onClick={() => handleSelectPartner(user)}
                 >
@@ -337,14 +353,14 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
+          <Button onClick={handleCloseDialog} disabled={isSubmitting}>Отмена</Button>
           <Button 
             onClick={handleAddPartner} 
             variant="contained" 
             color="primary"
-            disabled={!selectedPartner || !startDate || isLoading}
+            disabled={!selectedPartner || !startDate || isLoading || isSubmitting}
           >
-            Добавить
+            {isSubmitting ? 'Добавление...' : 'Добавить'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -358,14 +374,14 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseConfirmDialog}>Отмена</Button>
+          <Button onClick={handleCloseConfirmDialog} disabled={isLoading}>Отмена</Button>
           <Button 
             onClick={handleRemovePartner} 
             variant="contained" 
             color="error"
             disabled={isLoading}
           >
-            Удалить
+            {isLoading ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>

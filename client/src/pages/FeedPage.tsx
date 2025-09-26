@@ -17,6 +17,7 @@ const FeedPage: React.FC = () => {
   const [partnerContent, setPartnerContent] = useState<ContentItem[]>([]);
   const [selfContent, setSelfContent] = useState<ContentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
   
   // Состояние для отношений
   const [daysCount, setDaysCount] = useState<number | null>(null);
@@ -79,6 +80,7 @@ const FeedPage: React.FC = () => {
   // Обработчики событий
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    setCurrentIndex(0);
   };
   
   const handleAddContentClick = () => {
@@ -113,9 +115,9 @@ const FeedPage: React.FC = () => {
       
       // Обновляем соответствующий список контента
       if (target === 'self') {
-        setSelfContent([...response.data.content, ...selfContent]);
+        setSelfContent((prevContent) => [...response.data.content, ...prevContent]);
       } else {
-        setPartnerContent([...response.data.content, ...partnerContent]);
+        setPartnerContent((prevContent) => [...response.data.content, ...prevContent]);
       }
       
       setIsLoading(false);
@@ -172,6 +174,8 @@ const FeedPage: React.FC = () => {
         onContentClick={handleContentClick}
         navigateTo={!isPartnerAdded ? '/settings' : undefined}
         placeholder={!isPartnerAdded ? 'Добавьте партнера в настройках' : 'Нет доступного контента'}
+        currentIndex={currentIndex}
+        setCurrentIndex={setCurrentIndex}
       />
       
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
@@ -208,7 +212,7 @@ const FeedPage: React.FC = () => {
         onClick={handleAddContentClick}
         sx={{ 
           position: 'fixed', 
-          bottom: 16, 
+          bottom: 72, 
           right: 16 
         }}
       >

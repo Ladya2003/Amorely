@@ -32,12 +32,19 @@ router.get('/content', async (req: any, res: Response) => {
     }
 
     const formattedUserId = new mongoose.Types.ObjectId(userId);
-    
+    const now = new Date();
     let query: any = {};
     
     if (target === 'self') {
       // Контент пользователя для себя
-      query = { userId: formattedUserId, targetId: null };
+      query = { 
+        userId: formattedUserId, 
+        targetId: null,
+        $or: [
+          { nextDisplay: { $lte: now } },
+          { nextDisplay: null }
+        ]
+      };
     } else if (target === 'partner') {
       // Контент от партнера для пользователя
       // Сначала находим партнера
@@ -56,20 +63,28 @@ router.get('/content', async (req: any, res: Response) => {
         ? relationship.partnerId 
         : relationship.userId;
       
-      query = { userId: partnerId, targetId: userId };
+      query = {
+        $and: [
+          {
+            $or: [
+              { userId: partnerId, targetId: formattedUserId },
+              { userId: formattedUserId, targetId: partnerId }
+            ]
+          },
+          {
+            $or: [
+              { nextDisplay: { $lte: now } },
+              { nextDisplay: null }
+            ]
+          }
+        ]
+      };
     } else {
       return res.status(400).json({ error: 'Неверный параметр target' });
     }
     
     // Получаем контент с учетом частоты отображения
-    const now = new Date();
-    const content = await Content.find({
-      ...query,
-      $or: [
-        { nextDisplay: { $lte: now } },
-        { nextDisplay: null }
-      ]
-    }).sort({ createdAt: -1 });
+    const content = await Content.find(query).sort({ createdAt: -1 });
     
     res.json(content);
   } catch (error) {

@@ -87,8 +87,8 @@ const SettingsPage: React.FC = () => {
           }
         });
         
-        setPartner(partnerResponse.data);
-        setRelationshipStartDate(response.data.relationshipStartDate);
+        setPartner(partnerResponse.data.user);
+        setRelationshipStartDate(partnerResponse.data.partnership.startDate);
       }
       
       setIsLoading(false);

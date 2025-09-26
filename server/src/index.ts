@@ -170,7 +170,7 @@ app.get('/api/content', async (req: Request, res: Response) => {
 });
 
 // API для чата
-app.get('/api/contacts', async (req: any, res: Response) => {
+app.get('/api/contacts', authMiddleware, async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     

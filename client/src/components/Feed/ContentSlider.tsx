@@ -14,14 +14,15 @@ export interface ContentItem {
 
 interface ContentSliderProps {
   content: ContentItem[];
+  currentIndex: number;
+  setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
   isLoading: boolean;
   placeholder?: string;
   onContentClick?: (content: ContentItem) => void;
   navigateTo?: string;
 }
 
-const ContentSlider: React.FC<ContentSliderProps> = ({ content, isLoading, onContentClick, placeholder, navigateTo }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const ContentSlider: React.FC<ContentSliderProps> = ({ content, currentIndex, setCurrentIndex, isLoading, onContentClick, placeholder, navigateTo }) => {
   const navigate = useNavigate();
 
   const handlePrev = () => {
@@ -91,10 +92,10 @@ const ContentSlider: React.FC<ContentSliderProps> = ({ content, isLoading, onCon
         }}
         onClick={handleContentClick}
       >
-        {currentContent.resourceType === 'image' ? (
+        {currentContent?.resourceType === 'image' ? (
           <Box
             component="img"
-            src={currentContent.url}
+            src={currentContent?.url}
             alt="Контент"
             sx={{
               width: '100%',
@@ -106,7 +107,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({ content, isLoading, onCon
           <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
             <Box
               component="video"
-              src={currentContent.url}
+              src={currentContent?.url}
               controls
               sx={{
                 width: '100%',

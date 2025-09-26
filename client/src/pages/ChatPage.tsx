@@ -9,6 +9,7 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import socketService from '../services/socketService';
 import { Socket } from 'socket.io-client';
+import { useAuth } from '../contexts/AuthContext';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [
@@ -129,9 +130,6 @@ const MOCK_MESSAGES: Record<string, MessageType[]> = {
   ]
 };
 
-// Временный ID пользователя для демонстрации
-const CURRENT_USER_ID = 'current-user';
-
 const ChatPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -140,11 +138,18 @@ const ChatPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [socket, setSocket] = useState<any | null>(null);
   
+  const { user } = useAuth();
+  const CURRENT_USER_ID = user?._id;
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Инициализация сокета
   useEffect(() => {
+    if (!CURRENT_USER_ID) {
+      return;
+    }
+
     const newSocket = socketService.initialize(CURRENT_USER_ID);
     setSocket(newSocket);
 
@@ -243,7 +248,7 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSendMessage = (text: string, attachments?: File[]) => {
-    if (!selectedContactId) return;
+    if (!selectedContactId || !CURRENT_USER_ID) return;
 
     // Загрузка вложений в Cloudinary (если есть)
     const uploadAttachments = async () => {
@@ -345,7 +350,7 @@ const ChatPage: React.FC = () => {
                 width: isMobile || !selectedContactId ? '100%' : '70%',
                 display: isMobile && !selectedContactId ? 'none' : 'block'
               }}>
-                {selectedContactId ? (
+                {selectedContactId && CURRENT_USER_ID ? (
                   <ChatDialog 
                     contact={selectedContact || null}
                     messages={messages}

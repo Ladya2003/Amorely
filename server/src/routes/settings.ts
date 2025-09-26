@@ -30,8 +30,15 @@ router.get('/user/:id', async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
+
+    const partnership = await Relationship.findOne({
+      $or: [
+        { userId: id },
+        { partnerId: id }
+      ]
+    }).select('startDate');
     
-    res.json(user);
+    res.json({ user, partnership });
   } catch (error) {
     console.error('Ошибка при получении данных пользователя:', error);
     res.status(500).json({ error: 'Ошибка при получении данных пользователя' });
@@ -159,9 +166,19 @@ router.post('/partner', async (req: any, res: Response) => {
     partner.partnerId = user._id;
     await partner.save();
     
+    // Возвращаем больше информации о партнере
     res.status(201).json({
       message: 'Партнер успешно добавлен',
-      relationship: newRelationship
+      relationship: newRelationship,
+      partner: {
+        _id: partner._id,
+        username: partner.username,
+        email: partner.email,
+        firstName: partner.firstName,
+        lastName: partner.lastName,
+        avatar: partner.avatar
+      },
+      relationshipStartDate: relationshipStartDate
     });
   } catch (error) {
     console.error('Ошибка при добавлении партнера:', error);
