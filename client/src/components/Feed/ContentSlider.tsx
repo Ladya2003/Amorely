@@ -20,9 +20,19 @@ interface ContentSliderProps {
   placeholder?: string;
   onContentClick?: (content: ContentItem) => void;
   navigateTo?: string;
+  onEmptyClick?: () => void; // Новый пропс для обработки клика по пустому состоянию
 }
 
-const ContentSlider: React.FC<ContentSliderProps> = ({ content, currentIndex, setCurrentIndex, isLoading, onContentClick, placeholder, navigateTo }) => {
+const ContentSlider: React.FC<ContentSliderProps> = ({ 
+  content, 
+  currentIndex, 
+  setCurrentIndex, 
+  isLoading, 
+  onContentClick, 
+  placeholder, 
+  navigateTo, 
+  onEmptyClick 
+}) => {
   const navigate = useNavigate();
 
   const handlePrev = () => {
@@ -31,6 +41,14 @@ const ContentSlider: React.FC<ContentSliderProps> = ({ content, currentIndex, se
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex < content.length - 1 ? prevIndex + 1 : 0));
+  };
+
+  const handleEmptyClick = () => {
+    if (navigateTo) {
+      navigate(navigateTo);
+    } else if (onEmptyClick) {
+      onEmptyClick();
+    }
   };
 
   const handleContentClick = () => {
@@ -66,11 +84,24 @@ const ContentSlider: React.FC<ContentSliderProps> = ({ content, currentIndex, se
           bgcolor: 'background.paper',
           borderRadius: 2,
           border: '1px dashed',
-          borderColor: 'divider'
+          borderColor: 'divider',
+          cursor: (navigateTo || onEmptyClick) ? 'pointer' : 'default',
+          transition: 'all 0.2s ease',
+          '&:hover': (navigateTo || onEmptyClick) ? {
+            borderColor: 'primary.main',
+            bgcolor: 'action.hover'
+          } : {}
         }}
-        onClick={navigateTo ? () => navigate(navigateTo) : undefined}
+        onClick={handleEmptyClick}
       >
-        <Typography color="text.secondary" align="center">
+        <Typography 
+          color="text.secondary" 
+          align="center"
+          sx={{ 
+            whiteSpace: 'pre-line',
+            fontWeight: (navigateTo || onEmptyClick) ? 500 : 400
+          }}
+        >
           {placeholder || 'Нет доступного контента'}
         </Typography>
       </Paper>

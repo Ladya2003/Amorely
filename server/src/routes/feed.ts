@@ -6,6 +6,7 @@ import Content from '../models/content';
 import Relationship from '../models/relationship';
 import User from '../models/user';
 import mongoose from 'mongoose';
+import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation } from '../utils/contentRotation';
 
 const router = express.Router();
 
@@ -32,8 +33,6 @@ router.get('/content', async (req: any, res: Response) => {
     }
 
     const formattedUserId = new mongoose.Types.ObjectId(userId);
-    const now = new Date();
-    let query: any = {};
     
     if (target === 'partner') {
       // Контент от партнера для пользователя
@@ -53,33 +52,76 @@ router.get('/content', async (req: any, res: Response) => {
         ? relationship.partnerId 
         : relationship.userId;
       
-      query = {
-        $and: [
-          {
-            $or: [
-              { userId: partnerId, targetId: formattedUserId },
-              { userId: formattedUserId, targetId: partnerId }
-            ]
-          },
-          {
-            $or: [
-              { nextDisplay: { $lte: now } },
-              { nextDisplay: null }
-            ]
-          }
-        ]
-      };
+      // Получаем активный контент с учетом ротации
+      const activeContent = await getActiveContent(userId, partnerId.toString());
+      
+      res.json(activeContent);
     } else {
       return res.status(400).json({ error: 'Неверный параметр target' });
     }
-    
-    // Получаем контент с учетом частоты отображения
-    const content = await Content.find(query).sort({ createdAt: -1 });
-    
-    res.json(content);
   } catch (error) {
     console.error('Ошибка при получении контента:', error);
     res.status(500).json({ error: 'Ошибка при получении контента' });
+  }
+});
+
+// Получение всего контента пользователя и партнера для управления
+router.get('/user-content', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+
+    const formattedUserId = new mongoose.Types.ObjectId(userId);
+    
+    // Находим партнера
+    const relationship = await Relationship.findOne({ 
+      $or: [
+        { userId: formattedUserId },
+        { partnerId: formattedUserId }
+      ]
+    });
+    
+    let query: any = { userId: formattedUserId };
+    
+    if (relationship) {
+      const partnerId = relationship.userId.toString() === userId.toString() 
+        ? relationship.partnerId 
+        : relationship.userId;
+      
+      // Получаем контент и пользователя, и партнера
+      query = {
+        $or: [
+          { userId: formattedUserId },
+          { userId: partnerId }
+        ]
+      };
+    }
+    
+    // Получаем весь контент без фильтрации по времени
+    const content = await Content.find(query)
+      .populate('userId', 'name email')
+      .sort({ createdAt: -1 });
+    
+    // Форматируем данные для фронтенда
+    const formattedContent = content.map(item => ({
+      id: item._id.toString(),
+      url: item.url,
+      type: item.resourceType === 'video' ? 'video' : 'image',
+      name: `${item.resourceType === 'video' ? 'Видео' : 'Фото'}_${item.createdAt.toISOString().split('T')[0]}`,
+      size: item.fileSize || 0, // Используем сохраненный размер файла
+      uploadedAt: item.createdAt,
+      uploadedBy: item.userId,
+      publicId: item.publicId,
+      frequency: item.frequency // Добавляем информацию о частоте
+    }));
+    
+    res.json(formattedContent);
+  } catch (error) {
+    console.error('Ошибка при получении контента пользователя:', error);
+    res.status(500).json({ error: 'Ошибка при получении контента пользователя' });
   }
 });
 
@@ -104,11 +146,20 @@ router.post('/content', upload.array('media'), async (req: any, res: Response) =
     // Определяем targetId (если контент для партнера)
     let targetId = null;
     if (target === 'partner') {
-      const relationship = await Relationship.findOne({ userId });
-      if (!relationship) {
-        return res.status(400).json({ error: 'Партнер не найден' });
+      const relationship = await Relationship.findOne({ 
+        $or: [
+          { userId: new mongoose.Types.ObjectId(userId) },
+          { partnerId: new mongoose.Types.ObjectId(userId) }
+        ]
+      });
+      
+      if (relationship) {
+        // Если партнер найден, устанавливаем targetId
+        targetId = relationship.userId.toString() === userId.toString() 
+          ? relationship.partnerId 
+          : relationship.userId;
       }
-      targetId = relationship.partnerId;
+      // Если партнер не найден, targetId остается null, но загрузка продолжается
     }
     
     const savedContent = [];
@@ -128,12 +179,6 @@ router.post('/content', upload.array('media'), async (req: any, res: Response) =
         resourceType = 'video';
       }
       
-      // Рассчитываем время следующего отображения
-      const now = new Date();
-      const nextDisplay = applyNow === 'true' 
-        ? now 
-        : new Date(now.getTime() + parsedFrequency.hours * 60 * 60 * 1000);
-      
       // Создаем новую запись в MongoDB
       const newContent = new Content({
         userId: new mongoose.Types.ObjectId(userId),
@@ -141,14 +186,24 @@ router.post('/content', upload.array('media'), async (req: any, res: Response) =
         url: cloudinaryFile.path,
         publicId: cloudinaryFile.filename,
         resourceType,
+        fileSize: cloudinaryFile.size || 0, // Размер файла из multer
         frequency: parsedFrequency,
         displayedCount: 0,
-        nextDisplay
+        // Инициализация ротации будет выполнена после сохранения всех файлов
+        rotationOrder: 0,
+        currentBatch: 0,
+        isActive: false,
+        totalBatches: 0
       });
       
       // Сохраняем в базу данных
       const savedItem = await newContent.save();
       savedContent.push(savedItem);
+    }
+    
+    // После сохранения всех файлов инициализируем ротацию (только если есть партнер)
+    if (targetId) {
+      await initializeContentRotation(userId, targetId.toString());
     }
     
     res.json({
@@ -286,6 +341,137 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при обновлении подписи:', error);
     res.status(500).json({ error: 'Ошибка при обновлении подписи' });
+  }
+});
+
+// Обновление настроек частоты отображения контента
+router.put('/content/frequency', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { frequency, applyNow, resetRotation } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+    
+    if (!frequency || !frequency.count || !frequency.hours) {
+      return res.status(400).json({ error: 'Не указаны параметры частоты' });
+    }
+    
+    const formattedUserId = new mongoose.Types.ObjectId(userId);
+    
+    // Находим партнера
+    const relationship = await Relationship.findOne({ 
+      $or: [
+        { userId: formattedUserId },
+        { partnerId: formattedUserId }
+      ]
+    });
+    
+    if (!relationship) {
+      return res.status(400).json({ error: 'Партнер не найден' });
+    }
+    
+    const partnerId = relationship.userId.toString() === userId.toString() 
+      ? relationship.partnerId 
+      : relationship.userId;
+    
+    // Используем новую функцию для обновления частоты и ротации
+    await updateFrequencyAndRotation(
+      userId, 
+      partnerId.toString(), 
+      frequency, 
+      resetRotation === true || resetRotation === 'true'
+    );
+    
+    res.json({
+      message: 'Настройки частоты успешно обновлены',
+      resetRotation: resetRotation === true || resetRotation === 'true'
+    });
+  } catch (error) {
+    console.error('Ошибка при обновлении настроек частоты:', error);
+    res.status(500).json({ error: 'Ошибка при обновлении настроек частоты' });
+  }
+});
+
+// Удаление контента
+router.delete('/content/:id', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const contentId = req.params.id;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+    
+    if (!contentId) {
+      return res.status(400).json({ error: 'Не указан ID контента' });
+    }
+    
+    // Проверяем валидность ObjectId
+    if (!mongoose.Types.ObjectId.isValid(contentId)) {
+      return res.status(400).json({ error: 'Неверный формат ID контента' });
+    }
+    
+    const formattedUserId = new mongoose.Types.ObjectId(userId);
+    
+    // Находим контент
+    const content = await Content.findById(contentId);
+    
+    if (!content) {
+      return res.status(404).json({ error: 'Контент не найден' });
+    }
+    
+    // Проверяем, может ли пользователь удалить этот контент
+    // Пользователь может удалить контент, если он его создатель или если это контент от партнера
+    const relationship = await Relationship.findOne({ 
+      $or: [
+        { userId: formattedUserId },
+        { partnerId: formattedUserId }
+      ]
+    });
+    
+    let canDelete = false;
+    
+    if (content.userId.toString() === userId.toString()) {
+      // Пользователь является создателем контента
+      canDelete = true;
+    } else if (relationship) {
+      // Проверяем, является ли создатель контента партнером
+      const partnerId = relationship.userId.toString() === userId.toString() 
+        ? relationship.partnerId 
+        : relationship.userId;
+      
+      if (content.userId.toString() === partnerId.toString()) {
+        canDelete = true;
+      }
+    }
+    
+    if (!canDelete) {
+      return res.status(403).json({ error: 'Нет прав на удаление этого контента' });
+    }
+    
+    // Удаляем файл из Cloudinary
+    if (content.publicId) {
+      try {
+        await cloudinary.uploader.destroy(content.publicId, {
+          resource_type: content.resourceType === 'video' ? 'video' : 'image'
+        });
+      } catch (cloudinaryError) {
+        console.error('Ошибка при удалении из Cloudinary:', cloudinaryError);
+        // Продолжаем удаление из базы данных даже если не удалось удалить из Cloudinary
+      }
+    }
+    
+    // Удаляем запись из базы данных
+    await Content.findByIdAndDelete(contentId);
+    
+    res.json({
+      message: 'Контент успешно удален'
+    });
+  } catch (error) {
+    console.error('Ошибка при удалении контента:', error);
+    res.status(500).json({ error: 'Ошибка при удалении контента' });
   }
 });
 

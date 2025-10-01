@@ -29,9 +29,16 @@ A love app for beloved couples to bond together
 - Crop image on pasting (Settings and Feed)
 - Settings/Profile can't see sign out button in the bottom
 
+#### Ideas
+- Create questions for couples. And ability to create own quiz and share with community. When it hits certain point (ex. 100 complitions), it'll be shown to me and i can accept it so other ppl can see it too
+
 #### Customization 
 - Custom Font
 - Change Design
 
 #### Other improvment
 - Gather feedback
+
+##### Last improving tasks
+1. Как рабоатет Дрэг Энд Дроп потому что когда в инспекторе пытаюсь менять местами листается модалка. Мб надо как-то долго нажимать и потом перетягивать, чтобы работало норм
+2. Нужно сохранять еще и выбранную табу в Локал Стораге

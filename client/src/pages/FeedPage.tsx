@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Fab, Badge, CircularProgress, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import axios from 'axios';
 import { API_URL } from '../config';
 import FeedHeader from '../components/Feed/FeedHeader';
@@ -9,6 +9,19 @@ import DaysTogether from '../components/Feed/DaysTogether';
 import AddContentDialog from '../components/Feed/AddContentDialog';
 import ContentViewer from '../components/Feed/ContentViewer';
 
+// Интерфейс для контента из диалога управления
+interface UserContentItem {
+  id: string;
+  url: string;
+  type: 'image' | 'video';
+  name: string;
+  size: number;
+  uploadedAt: Date;
+  uploadedBy?: any;
+  publicId?: string;
+  frequency?: { count: number; hours: number }; // Добавляем информацию о частоте
+}
+
 const FeedPage: React.FC = () => {
   // Состояние для табов
   const [tabValue, setTabValue] = useState(0);
@@ -16,6 +29,7 @@ const FeedPage: React.FC = () => {
   // Состояние для контента
   const [partnerContent, setPartnerContent] = useState<ContentItem[]>([]);
   const [selfContent, setSelfContent] = useState<ContentItem[]>([]);
+  const [userContent, setUserContent] = useState<UserContentItem[]>([]); // Контент для управления
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   
@@ -37,6 +51,7 @@ const FeedPage: React.FC = () => {
     // Загружаем данные с сервера
     fetchUserData();
     fetchContent();
+    fetchUserContent(); // Загружаем контент для управления
   }, []);
   
   // Функция для загрузки данных об отношениях
@@ -57,18 +72,57 @@ const FeedPage: React.FC = () => {
     }
   };
   
+  // Функция для загрузки контента для управления
+  const fetchUserContent = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(`${API_URL}/api/feed/user-content`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setUserContent(response.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке контента пользователя:', error);
+    }
+  };
+  
+  // Функция для удаления контента
+  const handleDeleteContent = async (contentId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      await axios.delete(`${API_URL}/api/feed/content/${contentId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Обновляем список контента после удаления
+      setUserContent(prev => prev.filter(item => item.id !== contentId));
+      
+      // Также обновляем основной контент ленты
+      fetchContent();
+    } catch (error) {
+      console.error('Ошибка при удалении контента:', error);
+    }
+  };
+  
   // Функция для загрузки контента
   const fetchContent = async () => {
     try {
-      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
       
       // Загружаем контент от партнера
-      const partnerResponse = await axios.get(`${API_URL}/api/feed/content?userId=${userId}&target=partner`);
-      setPartnerContent(partnerResponse.data);
+      const partnerResponse = await axios.get(`${API_URL}/api/feed/content?target=partner`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      // Загружаем собственный контент
-      const selfResponse = await axios.get(`${API_URL}/api/feed/content?userId=${userId}&target=self`);
-      setSelfContent(selfResponse.data);
+      setPartnerContent(partnerResponse.data);
       
       setIsLoading(false);
     } catch (error) {
@@ -96,32 +150,56 @@ const FeedPage: React.FC = () => {
     files: File[], 
     target: 'self' | 'partner', 
     frequency: { count: number, hours: number }, 
-    applyNow: boolean
+    applyNow: boolean,
+    resetRotation?: boolean
   ) => {
     try {
       setIsLoading(true);
       
-      // Загрузка файлов на сервер
-      const formData = new FormData();
-      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
-      
-      files.forEach(file => formData.append('media', file));
-      formData.append('userId', userId);
-      formData.append('target', target);
-      formData.append('frequency', JSON.stringify(frequency));
-      formData.append('applyNow', String(applyNow));
-      
-      const response = await axios.post(`${API_URL}/api/feed/content`, formData);
-      
-      // Обновляем соответствующий список контента
-      if (target === 'partner') {
-        setPartnerContent((prevContent) => [...response.data.content, ...prevContent]);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
       }
+      
+      // Если есть файлы, загружаем их
+      if (files.length > 0) {
+        const formData = new FormData();
+        
+        files.forEach(file => formData.append('media', file));
+        formData.append('target', target);
+        formData.append('frequency', JSON.stringify(frequency));
+        formData.append('applyNow', String(applyNow));
+        
+        await axios.post(`${API_URL}/api/feed/content`, formData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      } else {
+        // Если файлов нет, но изменились настройки, обновляем только частоту
+        await axios.put(`${API_URL}/api/feed/content/frequency`, {
+          frequency,
+          applyNow,
+          resetRotation: resetRotation || false
+        }, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+      
+      // Обновляем контент после загрузки/обновления
+      fetchContent();
+      fetchUserContent();
       
       setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при добавлении контента:', error);
       setIsLoading(false);
+      throw error; // Пробрасываем ошибку для обработки в AddContentDialog
     }
   };
   
@@ -171,7 +249,8 @@ const FeedPage: React.FC = () => {
         isLoading={isLoading}
         onContentClick={handleContentClick}
         navigateTo={!isPartnerAdded ? '/settings' : undefined}
-        placeholder={!isPartnerAdded ? 'Добавьте партнера в настройках' : 'Нет доступного контента'}
+        placeholder={!isPartnerAdded ? 'Добавьте партнера в настройках' : 'Нет доступного контента\n\n📝 Нажмите здесь, чтобы управлять контентом'}
+        onEmptyClick={isPartnerAdded ? handleAddContentClick : undefined}
         currentIndex={currentIndex}
         setCurrentIndex={setCurrentIndex}
       />
@@ -214,7 +293,7 @@ const FeedPage: React.FC = () => {
           right: 16 
         }}
       >
-        <AddIcon />
+        <EditIcon />
       </Fab>
       
       <AddContentDialog 
@@ -222,6 +301,8 @@ const FeedPage: React.FC = () => {
         onClose={() => setAddContentDialogOpen(false)}
         onSave={handleAddContent}
         hasPartner={!!daysCount}
+        existingContent={userContent}
+        onDeleteContent={handleDeleteContent}
       />
       
       <ContentViewer 
