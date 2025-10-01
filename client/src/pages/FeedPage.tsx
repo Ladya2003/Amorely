@@ -303,6 +303,7 @@ const FeedPage: React.FC = () => {
         hasPartner={!!daysCount}
         existingContent={userContent}
         onDeleteContent={handleDeleteContent}
+        onContentReordered={fetchUserContent} // Добавляем callback для обновления
       />
       
       <ContentViewer 

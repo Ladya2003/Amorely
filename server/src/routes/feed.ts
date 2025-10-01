@@ -103,7 +103,7 @@ router.get('/user-content', async (req: any, res: Response) => {
     // Получаем весь контент без фильтрации по времени
     const content = await Content.find(query)
       .populate('userId', 'name email')
-      .sort({ createdAt: -1 });
+      .sort({ sortOrder: 1, createdAt: -1 }); // Сначала по sortOrder, потом по дате
     
     // Форматируем данные для фронтенда
     const formattedContent = content.map(item => ({
@@ -164,6 +164,13 @@ router.post('/content', upload.array('media'), async (req: any, res: Response) =
     
     const savedContent = [];
     
+    // Получаем максимальный sortOrder для установки новым элементам
+    const maxSortOrder = await Content.findOne({ userId: new mongoose.Types.ObjectId(userId) })
+      .sort({ sortOrder: -1 })
+      .select('sortOrder');
+    
+    let currentSortOrder = (maxSortOrder?.sortOrder || 0) + 1;
+    
     for (const file of files) {
       // Извлекаем информацию о загруженном файле из Cloudinary
       const cloudinaryFile = file as any;
@@ -187,6 +194,7 @@ router.post('/content', upload.array('media'), async (req: any, res: Response) =
         publicId: cloudinaryFile.filename,
         resourceType,
         fileSize: cloudinaryFile.size || 0, // Размер файла из multer
+        sortOrder: currentSortOrder++, // Увеличиваем порядок для каждого файла
         frequency: parsedFrequency,
         displayedCount: 0,
         // Инициализация ротации будет выполнена после сохранения всех файлов
@@ -472,6 +480,91 @@ router.delete('/content/:id', async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при удалении контента:', error);
     res.status(500).json({ error: 'Ошибка при удалении контента' });
+  }
+});
+
+// Изменение порядка контента
+router.put('/content/reorder', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { sourceId, targetId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+    
+    if (!sourceId || !targetId) {
+      return res.status(400).json({ error: 'Не указаны ID контента для перестановки' });
+    }
+    
+    if (sourceId === targetId) {
+      return res.json({ message: 'Элементы одинаковые, перестановка не нужна' });
+    }
+    
+    // Проверяем валидность ObjectId
+    if (!mongoose.Types.ObjectId.isValid(sourceId) || !mongoose.Types.ObjectId.isValid(targetId)) {
+      return res.status(400).json({ error: 'Неверный формат ID контента' });
+    }
+    
+    const formattedUserId = new mongoose.Types.ObjectId(userId);
+    
+    // Находим оба элемента контента
+    const sourceContent = await Content.findById(sourceId);
+    const targetContent = await Content.findById(targetId);
+    
+    if (!sourceContent || !targetContent) {
+      return res.status(404).json({ error: 'Контент не найден' });
+    }
+    
+    // Проверяем права доступа - пользователь может менять порядок только своего контента или контента партнера
+    const relationship = await Relationship.findOne({ 
+      $or: [
+        { userId: formattedUserId },
+        { partnerId: formattedUserId }
+      ]
+    });
+    
+    let canReorder = false;
+    const allowedUserIds = [formattedUserId.toString()];
+    
+    if (relationship) {
+      const partnerId = relationship.userId.toString() === userId.toString() 
+        ? relationship.partnerId 
+        : relationship.userId;
+      allowedUserIds.push(partnerId.toString());
+    }
+    
+    if (allowedUserIds.includes(sourceContent.userId.toString()) && 
+        allowedUserIds.includes(targetContent.userId.toString())) {
+      canReorder = true;
+    }
+    
+    if (!canReorder) {
+      return res.status(403).json({ error: 'Нет прав на изменение порядка этого контента' });
+    }
+    
+    // Получаем текущие sortOrder
+    const sourceSortOrder = sourceContent.sortOrder;
+    const targetSortOrder = targetContent.sortOrder;
+    
+    // Меняем местами sortOrder
+    sourceContent.sortOrder = targetSortOrder;
+    targetContent.sortOrder = sourceSortOrder;
+    
+    // Сохраняем изменения
+    await sourceContent.save();
+    await targetContent.save();
+    
+    res.json({
+      message: 'Порядок контента успешно изменен',
+      reorder: {
+        source: { id: sourceId, newSortOrder: targetSortOrder },
+        target: { id: targetId, newSortOrder: sourceSortOrder }
+      }
+    });
+  } catch (error) {
+    console.error('Ошибка при изменении порядка контента:', error);
+    res.status(500).json({ error: 'Ошибка при изменении порядка контента' });
   }
 });
 

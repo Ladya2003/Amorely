@@ -44,9 +44,12 @@ import PhotoIcon from '@mui/icons-material/Photo';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import SearchIcon from '@mui/icons-material/Search';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import DragHandleIcon from '@mui/icons-material/DragHandle';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ConfirmDeleteDialog from '../UI/ConfirmDeleteDialog';
 import FrequencyChangeDialog from '../UI/FrequencyChangeDialog';
+import axios from 'axios';
+import { API_URL } from '../../config';
 
 interface ContentItem {
   id: string;
@@ -67,6 +70,7 @@ interface AddContentDialogProps {
   hasPartner: boolean;
   existingContent?: ContentItem[]; // Существующий загруженный контент
   onDeleteContent?: (contentId: string) => void; // Callback для удаления
+  onContentReordered?: () => void; // Callback для обновления после изменения порядка
 }
 
 const AddContentDialog: React.FC<AddContentDialogProps> = ({ 
@@ -75,7 +79,8 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
   onSave, 
   hasPartner,
   existingContent = [],
-  onDeleteContent
+  onDeleteContent,
+  onContentReordered
 }) => {
   const [activeTab, setActiveTab] = useState<number>(() => {
     // Загружаем сохраненную вкладку из localStorage
@@ -92,8 +97,10 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [dragStartTime, setDragStartTime] = useState<number>(0);
-  const [isDragReady, setIsDragReady] = useState<boolean>(false);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [contentCount, setContentCount] = useState<number>(3);
@@ -141,6 +148,19 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
       setInitialContentCount(3);
       setInitialHoursInterval(24);
     }
+    
+    // Добавляем глобальный обработчик для отладки touch событий
+    if (open) {
+      const debugTouchMove = (e: TouchEvent) => {
+        console.log('🌍 Global touchmove detected:', { touches: e.touches.length, x: e.touches[0]?.clientX, y: e.touches[0]?.clientY });
+      };
+      
+      document.addEventListener('touchmove', debugTouchMove, { passive: true });
+      
+      return () => {
+        document.removeEventListener('touchmove', debugTouchMove);
+      };
+    }
   }, [open, existingContent]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,87 +207,143 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
     }
   };
 
-  // Обработчики drag & drop с улучшенной логикой
-  const handleMouseDown = (itemId: string) => {
-    setDragStartTime(Date.now());
-    setIsDragReady(false);
-    
-    // Устанавливаем таймер для активации drag через 300ms
-    setTimeout(() => {
-      if (dragStartTime > 0) {
-        setIsDragReady(true);
+  // Функция для изменения порядка контента
+  const handleReorderContent = async (sourceId: string, targetId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      console.log('🔄 Отправляем запрос на изменение порядка:', { sourceId, targetId });
+
+      const response = await axios.put(`${API_URL}/api/feed/content/reorder`, {
+        sourceId,
+        targetId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('✅ Порядок изменен:', response.data);
+      
+      // Вызываем callback для обновления списка контента
+      if (onContentReordered) {
+        onContentReordered();
       }
-    }, 300);
-  };
-
-  const handleMouseUp = () => {
-    setDragStartTime(0);
-    setIsDragReady(false);
-  };
-
-  const handleDragStart = (e: React.DragEvent, itemId: string) => {
-    // Разрешаем drag только если прошло достаточно времени
-    if (!isDragReady) {
-      e.preventDefault();
-      return;
+      
+    } catch (error) {
+      console.error('❌ Ошибка при изменении порядка контента:', error);
     }
+  };
+
+  // Новые обработчики для drag & drop с touch/mouse поддержкой
+  const getEventPos = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+    if ('touches' in e && e.touches.length > 0) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY };
+  };
+
+  const handlePointerDown = (e: React.MouseEvent | React.TouchEvent, itemId: string) => {
+    // НЕ вызываем preventDefault здесь - это блокирует прокрутку
+    const startPos = getEventPos(e);
+    const startTime = Date.now();
+    console.log('👆 Pointer down:', { itemId, startPos, eventType: e.type });
     
+    setDragStartPos(startPos);
+    setDragStartTime(startTime);
     setDraggedItem(itemId);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', itemId);
     
-    // Добавляем визуальный эффект
-    const dragImage = new Image();
-    dragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-    e.dataTransfer.setDragImage(dragImage, 0, 0);
-  };
+    let dragActive = false;
+    let currentDraggedItem = itemId; // Локальная переменная для отслеживания
+    let currentDragOverItem: string | null = null; // Локальная переменная для цели
+    
+    // Добавляем глобальные обработчики
+    const handlePointerMove = (moveEvent: MouseEvent | TouchEvent) => {
+      console.log('🔄 Pointer move detected:', { eventType: moveEvent.type });
+      
+      const currentPos = getEventPos(moveEvent);
+      const deltaX = currentPos.x - startPos.x;
+      const deltaY = currentPos.y - startPos.y;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const timeElapsed = Date.now() - startTime;
+      
+      console.log('📊 Move data:', { distance, timeElapsed, deltaX, deltaY });
+      
+      // Начинаем drag если прошло время и есть движение
+      if (timeElapsed > 100 && distance > 3) {
+        // ТЕПЕРЬ предотвращаем скролл, когда drag начался
+        moveEvent.preventDefault();
+        
+        if (!dragActive) {
+          dragActive = true;
+          setIsDragging(true);
+          // Блокируем прокрутку только когда drag активен
+          document.body.style.overflow = 'hidden';
+          console.log('🔥 Drag started!', { itemId, distance, timeElapsed });
+        }
+        
+        setDragOffset({ x: deltaX, y: deltaY });
+        console.log('📱 Drag move:', { deltaX, deltaY, currentPos });
+        
+        // Находим элемент под курсором
+        const elementBelow = document.elementFromPoint(currentPos.x, currentPos.y);
+        const cardElement = elementBelow?.closest('[data-content-id]');
+        if (cardElement) {
+          const targetId = cardElement.getAttribute('data-content-id');
+          if (targetId && targetId !== itemId) {
+            currentDragOverItem = targetId; // Обновляем локальную переменную
+            setDragOverItem(targetId);
+            console.log('🎯 Drag over:', targetId);
+          } else {
+            currentDragOverItem = null;
+            setDragOverItem(null);
+          }
+        } else {
+          currentDragOverItem = null;
+          setDragOverItem(null);
+        }
+      }
+    };
 
-  const handleDragOver = (e: React.DragEvent, itemId: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    
-    if (draggedItem && draggedItem !== itemId) {
-      setDragOverItem(itemId);
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    // Проверяем, что мы действительно покинули элемент
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      setDragOverItem(null);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent, targetId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!draggedItem || draggedItem === targetId) {
+    const handlePointerUp = () => {
+      console.log('👆 Pointer up:', { 
+        dragActive, 
+        currentDraggedItem, 
+        currentDragOverItem,
+        stateValues: { draggedItem, dragOverItem } // Показываем state для сравнения
+      });
+      
+      if (dragActive && currentDraggedItem && currentDragOverItem && currentDraggedItem !== currentDragOverItem) {
+        // Выполняем перестановку, используя локальные переменные
+        console.log(`✅ Перемещение ${currentDraggedItem} на позицию ${currentDragOverItem}`);
+        handleReorderContent(currentDraggedItem, currentDragOverItem);
+      }
+      
+      // Очищаем состояние
+      setIsDragging(false);
       setDraggedItem(null);
       setDragOverItem(null);
-      return;
-    }
+      setDragStartPos(null);
+      setDragStartTime(0);
+      setDragOffset({ x: 0, y: 0 });
+      
+      // Удаляем глобальные обработчики
+      document.removeEventListener('mousemove', handlePointerMove);
+      document.removeEventListener('touchmove', handlePointerMove);
+      document.removeEventListener('mouseup', handlePointerUp);
+      document.removeEventListener('touchend', handlePointerUp);
+      
+      // Восстанавливаем прокрутку
+      document.body.style.overflow = '';
+      console.log('🧹 Cleanup completed');
+    };
 
-    // Здесь можно добавить логику для изменения порядка на сервере
-    setDraggedItem(null);
-    setDragOverItem(null);
+    // Добавляем глобальные обработчики
+    document.addEventListener('mousemove', handlePointerMove);
+    document.addEventListener('touchmove', handlePointerMove, { passive: false });
+    document.addEventListener('mouseup', handlePointerUp);
+    document.addEventListener('touchend', handlePointerUp);
     
-    // TODO: Реализовать API для изменения порядка контента
-    console.log(`Перемещение ${draggedItem} на позицию ${targetId}`);
-    
-    // Показываем уведомление пользователю
-    // Можно добавить snackbar или другое уведомление
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    setDragOverItem(null);
-    setDragStartTime(0);
-    setIsDragReady(false);
+    console.log('🎯 Event listeners added');
   };
 
   const handleConfirmDelete = async () => {
@@ -353,8 +429,10 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
     // Очищаем состояние drag & drop
     setDraggedItem(null);
     setDragOverItem(null);
+    setIsDragging(false);
+    setDragStartPos(null);
     setDragStartTime(0);
-    setIsDragReady(false);
+    setDragOffset({ x: 0, y: 0 });
     
     // Сбрасываем начальные значения
     setInitialContentCount(3);
@@ -443,28 +521,27 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
     const filteredContent = getFilteredContent();
     
     return (
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 2, mt: 2 }}>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: {
+          xs: 'repeat(2, 1fr)', // Точно 2 колонки на мобильных
+          sm: 'repeat(auto-fill, minmax(200px, 1fr))'  // Стандартный размер для больших экранов
+        }, 
+        gap: { xs: 1, sm: 2 }, // Меньший gap на мобильных
+        mt: 2 
+      }}>
         {filteredContent.map((item) => (
         <Card 
           key={item.id} 
-          draggable
-          onMouseDown={() => handleMouseDown(item.id)}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onDragStart={(e) => handleDragStart(e, item.id)}
-          onDragOver={(e) => handleDragOver(e, item.id)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, item.id)}
-          onDragEnd={handleDragEnd}
+          data-content-id={item.id}
           sx={{ 
             position: 'relative', 
             height: '100%', 
             display: 'flex', 
             flexDirection: 'column',
-            cursor: isDragReady ? 'grabbing' : 'grab',
-            opacity: draggedItem === item.id ? 0.5 : 1,
+            opacity: draggedItem === item.id ? 0.7 : 1,
             transform: dragOverItem === item.id ? 'scale(1.02)' : 'scale(1)',
-            transition: 'all 0.2s ease',
+            transition: isDragging ? 'none' : 'all 0.2s ease',
             border: dragOverItem === item.id ? '2px dashed' : '1px solid',
             borderColor: dragOverItem === item.id ? 'primary.main' : 'divider',
             userSelect: 'none',
@@ -473,6 +550,30 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
             }
           }}
         >
+          {/* Drag Handle */}
+          <Box
+            onMouseDown={(e) => handlePointerDown(e, item.id)}
+            onTouchStart={(e) => handlePointerDown(e, item.id)}
+            sx={{
+              position: 'absolute',
+              top: 4,
+              left: 4,
+              zIndex: 10,
+              cursor: isDragging && draggedItem === item.id ? 'grabbing' : 'grab',
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              borderRadius: '4px',
+              padding: { xs: '2px', sm: '4px' }, // Меньше на мобильных
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              '&:hover': {
+                backgroundColor: 'rgba(0,0,0,0.9)',
+              }
+            }}
+          >
+            <DragHandleIcon sx={{ fontSize: { xs: '16px', sm: '20px' } }} />
+          </Box>
           <Box sx={{ position: 'relative', paddingTop: '100%' }}>
             {item.type === 'image' ? (
               <CardMedia
@@ -492,46 +593,79 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
               icon={item.type === 'image' ? <PhotoIcon fontSize="small" /> : <VideocamIcon fontSize="small" />}
               label={item.type === 'image' ? 'Фото' : 'Видео'}
               size="small"
-              sx={{ position: 'absolute', top: 8, left: 8 }}
-            />
-            <DragIndicatorIcon 
               sx={{ 
                 position: 'absolute', 
-                top: 8, 
-                right: 8, 
-                color: 'white', 
-                backgroundColor: 'rgba(0,0,0,0.6)', 
-                borderRadius: '50%', 
-                p: 0.5,
-                fontSize: '1.2rem'
-              }} 
+                top: 4, 
+                right: 4,
+                height: { xs: 20, sm: 24 }, // Меньше на мобильных
+                fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                '& .MuiChip-label': {
+                  px: { xs: 0.5, sm: 1 }
+                }
+              }}
             />
           </Box>
-          <CardContent sx={{ flexGrow: 1, pb: 1 }}>
+          <CardContent sx={{ 
+            flexGrow: 1, 
+            pb: 1,
+            p: { xs: 1, sm: 2 } // Меньший padding на мобильных
+          }}>
             <Tooltip title={item.name}>
-              <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
+              <Typography 
+                variant="body2" 
+                noWrap 
+                sx={{ 
+                  fontWeight: 500,
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' } // Меньший шрифт на мобильных
+                }}
+              >
                 {item.name}
               </Typography>
             </Tooltip>
-            <Typography variant="caption" color="text.secondary" display="block">
+            <Typography 
+              variant="caption" 
+              color="text.secondary" 
+              display="block"
+              sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+            >
               {item.size > 0 ? formatFileSize(item.size) : 'Размер неизвестен'}
             </Typography>
-            <Typography variant="caption" color="text.secondary" display="block">
+            <Typography 
+              variant="caption" 
+              color="text.secondary" 
+              display="block"
+              sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+            >
               {formatDate(item.uploadedAt)}
             </Typography>
             {item.uploadedBy && (
-              <Typography variant="caption" color="primary" display="block" sx={{ fontWeight: 500 }}>
+              <Typography 
+                variant="caption" 
+                color="primary" 
+                display="block" 
+                sx={{ 
+                  fontWeight: 500,
+                  fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                }}
+              >
                 Загрузил: {item.uploadedBy.name || item.uploadedBy.email || 'Пользователь'}
               </Typography>
             )}
           </CardContent>
-          <CardActions sx={{ pt: 0 }}>
+          <CardActions sx={{ 
+            pt: 0, 
+            p: { xs: 1, sm: 2 } // Меньший padding на мобильных
+          }}>
             <Button 
               size="small" 
               color="error" 
               startIcon={<DeleteIcon />}
               onClick={() => handleDeleteContent(item.id)}
               fullWidth
+              sx={{
+                fontSize: { xs: '0.75rem', sm: '0.875rem' }, // Меньший шрифт на мобильных
+                py: { xs: 0.5, sm: 1 } // Меньшая высота на мобильных
+              }}
             >
               Удалить
             </Button>
@@ -551,99 +685,135 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
         {filteredContent.map((item) => (
         <ListItem
           key={item.id}
-          draggable
-          onMouseDown={() => handleMouseDown(item.id)}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onDragStart={(e) => handleDragStart(e, item.id)}
-          onDragOver={(e) => handleDragOver(e, item.id)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, item.id)}
-          onDragEnd={handleDragEnd}
+          data-content-id={item.id}
           sx={{
             mb: 1,
             border: dragOverItem === item.id ? '2px dashed' : '1px solid',
             borderColor: dragOverItem === item.id ? 'primary.main' : 'divider',
             borderRadius: 1,
-            cursor: isDragReady ? 'grabbing' : 'grab',
-            opacity: draggedItem === item.id ? 0.5 : 1,
+            opacity: draggedItem === item.id ? 0.7 : 1,
             transform: dragOverItem === item.id ? 'scale(1.01)' : 'scale(1)',
-            transition: 'all 0.2s ease',
+            transition: isDragging ? 'none' : 'all 0.2s ease',
             userSelect: 'none',
+            position: 'relative',
+            p: 1, // Уменьшаем padding
             '&:hover': {
               bgcolor: 'action.hover',
               transform: draggedItem === item.id ? 'scale(1)' : 'scale(1.005)'
             }
           }}
         >
-          <ListItemAvatar>
-            <Box sx={{ position: 'relative' }}>
-              <Avatar
-                variant="rounded"
-                src={item.url}
-                sx={{ width: 64, height: 64 }}
-              >
-                {item.type === 'image' ? <PhotoIcon /> : <VideocamIcon />}
-              </Avatar>
-              <DragIndicatorIcon 
-                sx={{ 
-                  position: 'absolute', 
-                  top: -4, 
-                  right: -4, 
-                  color: 'white', 
-                  backgroundColor: 'primary.main', 
-                  borderRadius: '50%', 
-                  p: 0.2,
-                  fontSize: '0.9rem'
-                }} 
-              />
-            </Box>
-          </ListItemAvatar>
-          <ListItemText
-            primary={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+          {/* Drag Handle для списка */}
+          <Box
+            onMouseDown={(e) => handlePointerDown(e, item.id)}
+            onTouchStart={(e) => handlePointerDown(e, item.id)}
+            sx={{
+              position: 'absolute',
+              left: 4,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              cursor: isDragging && draggedItem === item.id ? 'grabbing' : 'grab',
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              borderRadius: '4px',
+              padding: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              '&:hover': {
+                backgroundColor: 'rgba(0,0,0,0.2)',
+              }
+            }}
+          >
+            <DragHandleIcon fontSize="small" />
+          </Box>
+          
+          {/* Компактная компоновка */}
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            width: '100%',
+            ml: 4, // Отступ от drag handle
+            gap: 1,
+            pr: 1 // Padding справа для кнопки удаления
+          }}>
+            {/* Аватар меньшего размера */}
+            <Avatar
+              variant="rounded"
+              src={item.url}
+              sx={{ width: 48, height: 48, flexShrink: 0 }}
+            >
+              {item.type === 'image' ? <PhotoIcon fontSize="small" /> : <VideocamIcon fontSize="small" />}
+            </Avatar>
+            
+            {/* Основная информация */}
+            <Box sx={{ 
+              flexGrow: 1, 
+              minWidth: 0, // Позволяет сжиматься
+              mr: 1
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontWeight: 500,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flexGrow: 1,
+                    minWidth: 0
+                  }}
+                >
                   {item.name}
                 </Typography>
                 <Chip
-                  icon={item.type === 'image' ? <PhotoIcon fontSize="small" /> : <VideocamIcon fontSize="small" />}
+                  icon={item.type === 'image' ? <PhotoIcon sx={{ fontSize: '12px !important' }} /> : <VideocamIcon sx={{ fontSize: '12px !important' }} />}
                   label={item.type === 'image' ? 'Фото' : 'Видео'}
                   size="small"
+                  sx={{ 
+                    height: 18,
+                    fontSize: '0.65rem',
+                    flexShrink: 0,
+                    '& .MuiChip-label': {
+                      px: 0.5
+                    }
+                  }}
                 />
               </Box>
-            }
-            secondary={
-              <Box sx={{ mt: 0.5 }}>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Размер: {item.size > 0 ? formatFileSize(item.size) : 'Неизвестен'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Загружено: {formatDate(item.uploadedAt)}
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                  {item.size > 0 ? formatFileSize(item.size) : 'Размер неизвестен'} • {formatDate(item.uploadedAt)}
                 </Typography>
                 {item.uploadedBy && (
-                  <Typography variant="caption" color="primary" display="block" sx={{ fontWeight: 500 }}>
-                    Автор: {item.uploadedBy.name || item.uploadedBy.email || 'Пользователь'}
+                  <Typography variant="caption" color="primary" sx={{ fontWeight: 500, fontSize: '0.7rem' }}>
+                    {item.uploadedBy.name || item.uploadedBy.email || 'Пользователь'}
                   </Typography>
                 )}
               </Box>
-            }
-            sx={{ ml: 2 }}
-          />
-          <ListItemSecondaryAction>
-            <IconButton
-              edge="end"
-              color="error"
-              onClick={() => handleDeleteContent(item.id)}
-              sx={{
-                '&:hover': {
-                  bgcolor: 'error.light',
-                  color: 'white'
-                }
-              }}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </ListItemSecondaryAction>
+            </Box>
+          </Box>
+          
+          {/* Кнопка удаления как overlay */}
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => handleDeleteContent(item.id)}
+            sx={{
+              position: 'absolute',
+              top: 4,
+              right: 4,
+              width: 24,
+              height: 24,
+              backgroundColor: 'rgba(255,255,255,0.9)',
+              '&:hover': {
+                backgroundColor: 'error.main',
+                color: 'white'
+              }
+            }}
+          >
+            <DeleteIcon sx={{ fontSize: '16px' }} />
+          </IconButton>
         </ListItem>
         ))}
       </List>
@@ -917,7 +1087,7 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
             
             {getFilteredContent().length > 1 && (
               <Alert severity="info" sx={{ mb: 2 }}>
-                💡 Удерживайте карточку 300мс, затем перетаскивайте для изменения порядка
+                💡 Используйте иконку ⋮⋮ для перетаскивания карточек и изменения порядка
               </Alert>
             )}
 
@@ -946,6 +1116,36 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({
           </>
         )}
       </DialogContent>
+      
+      {/* Плавающий элемент при перетаскивании */}
+      {isDragging && draggedItem && dragStartPos && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: dragStartPos.y + dragOffset.y - 20,
+            left: dragStartPos.x + dragOffset.x + 20,
+            width: '180px',
+            height: '60px',
+            pointerEvents: 'none',
+            zIndex: 9999,
+            opacity: 0.9,
+            border: '2px solid',
+            borderColor: 'primary.main',
+            borderRadius: 2,
+            bgcolor: 'primary.main',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: 4,
+            animation: 'pulse 1s infinite'
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            🔄 Перетаскивание...
+          </Typography>
+        </Box>
+      )}
       
       <DialogActions>
         <Button onClick={handleClose}>

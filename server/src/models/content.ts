@@ -7,6 +7,7 @@ const contentSchema = new mongoose.Schema({
   publicId: { type: String, required: true },
   resourceType: { type: String, enum: ['image', 'video'], required: true },
   fileSize: { type: Number, default: 0 }, // Размер файла в байтах
+  sortOrder: { type: Number, default: 0 }, // Порядок сортировки для drag & drop
   frequency: {
     count: { type: Number, default: 3 },
     hours: { type: Number, default: 24 }
