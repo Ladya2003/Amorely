@@ -6,7 +6,7 @@ import { API_URL } from '../config';
 import FeedHeader from '../components/Feed/FeedHeader';
 import ContentSlider, { ContentItem } from '../components/Feed/ContentSlider';
 import DaysTogether from '../components/Feed/DaysTogether';
-import AddContentDialog from '../components/Feed/AddContentDialog';
+import ContentManagementDialog from '../components/Feed/ContentManagement';
 import ContentViewer from '../components/Feed/ContentViewer';
 
 // Интерфейс для контента из диалога управления
@@ -106,6 +106,16 @@ const FeedPage: React.FC = () => {
     } catch (error) {
       console.error('Ошибка при удалении контента:', error);
     }
+  };
+  
+  // Функция для обновления после изменения порядка
+  const handleContentReordered = async () => {
+    // Обновляем список контента в модалке
+    await fetchUserContent();
+    // Обновляем контент в ленте
+    await fetchContent();
+    // Сбрасываем на первое фото, чтобы показать изменения
+    setCurrentIndex(0);
   };
   
   // Функция для загрузки контента
@@ -296,14 +306,14 @@ const FeedPage: React.FC = () => {
         <EditIcon />
       </Fab>
       
-      <AddContentDialog 
+      <ContentManagementDialog 
         open={addContentDialogOpen}
         onClose={() => setAddContentDialogOpen(false)}
         onSave={handleAddContent}
         hasPartner={!!daysCount}
         existingContent={userContent}
         onDeleteContent={handleDeleteContent}
-        onContentReordered={fetchUserContent} // Добавляем callback для обновления
+        onContentReordered={handleContentReordered}
       />
       
       <ContentViewer 

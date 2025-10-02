@@ -17,7 +17,7 @@ export const initializeContentRotation = async (userId: string, partnerId: strin
         { userId: formattedUserId },
         { userId: formattedPartnerId }
       ]
-    }).sort({ createdAt: 1 }); // Сортируем по времени создания
+    }).sort({ sortOrder: 1, createdAt: 1 }); // Сортируем по порядку, затем по времени создания
     
     if (allContent.length === 0) return;
     
@@ -219,6 +219,105 @@ export const getActiveContent = async (userId: string, partnerId: string) => {
 };
 
 /**
+ * Пересчитывает rotationOrder для всего контента на основе sortOrder
+ * @param userId - ID пользователя
+ * @param partnerId - ID партнера
+ */
+export const recalculateRotationOrder = async (userId: string, partnerId: string) => {
+  try {
+    const formattedUserId = new mongoose.Types.ObjectId(userId);
+    const formattedPartnerId = new mongoose.Types.ObjectId(partnerId);
+    
+    // Получаем весь контент отсортированный по sortOrder
+    const allContent = await Content.find({
+      $or: [
+        { userId: formattedUserId },
+        { userId: formattedPartnerId }
+      ]
+    }).sort({ sortOrder: 1, createdAt: 1 });
+    
+    if (allContent.length === 0) return;
+    
+    // Получаем текущий активный контент для определения текущего батча
+    const currentActiveContent = await Content.findOne({
+      $or: [
+        { userId: formattedUserId },
+        { userId: formattedPartnerId }
+      ],
+      isActive: true
+    });
+    
+    const frequency = allContent[0].frequency || { count: 3, hours: 24 };
+    const totalBatches = Math.ceil(allContent.length / frequency.count);
+    
+    // Если есть активный контент, сохраняем его ID чтобы понять к какому батчу он теперь относится
+    const activeContentIds = currentActiveContent 
+      ? await Content.find({
+          $or: [
+            { userId: formattedUserId },
+            { userId: formattedPartnerId }
+          ],
+          isActive: true
+        }).select('_id')
+      : [];
+    
+    // Пересчитываем rotationOrder для всех элементов
+    for (let i = 0; i < allContent.length; i++) {
+      const content = allContent[i];
+      const newBatchNumber = Math.floor(i / frequency.count);
+      
+      await Content.findByIdAndUpdate(content._id, {
+        rotationOrder: i,
+        totalBatches
+      });
+    }
+    
+    // Если был активный контент, нужно определить новый текущий батч
+    if (activeContentIds.length > 0) {
+      // Деактивируем все элементы
+      await Content.updateMany({
+        $or: [
+          { userId: formattedUserId },
+          { userId: formattedPartnerId }
+        ]
+      }, {
+        isActive: false
+      });
+      
+      // Находим первый элемент из ранее активных в новом порядке
+      const firstActiveInNewOrder = await Content.findOne({
+        _id: { $in: activeContentIds.map((item: any) => item._id) }
+      }).sort({ rotationOrder: 1 });
+      
+      if (firstActiveInNewOrder) {
+        const newBatch = Math.floor(firstActiveInNewOrder.rotationOrder / frequency.count);
+        const batchStartOrder = newBatch * frequency.count;
+        const batchEndOrder = batchStartOrder + frequency.count - 1;
+        
+        // Активируем элементы нового батча
+        await Content.updateMany({
+          $or: [
+            { userId: formattedUserId },
+            { userId: formattedPartnerId }
+          ],
+          rotationOrder: { $gte: batchStartOrder, $lte: batchEndOrder }
+        }, {
+          isActive: true,
+          currentBatch: newBatch,
+          batchStartTime: new Date()
+        });
+      } else {
+        // Если не нашли активный элемент, инициализируем ротацию заново
+        await initializeContentRotation(userId, partnerId);
+      }
+    }
+  } catch (error) {
+    console.error('Ошибка при пересчете порядка ротации:', error);
+    throw error;
+  }
+};
+
+/**
  * Обновляет настройки частоты и опционально сбрасывает ротацию
  * @param userId - ID пользователя
  * @param partnerId - ID партнера
@@ -267,7 +366,7 @@ export const updateFrequencyAndRotation = async (
             { userId: formattedUserId },
             { userId: formattedPartnerId }
           ]
-        }).sort({ createdAt: 1 });
+        }).sort({ sortOrder: 1, createdAt: 1 });
         
         const totalBatches = Math.ceil(allContent.length / frequency.count);
         

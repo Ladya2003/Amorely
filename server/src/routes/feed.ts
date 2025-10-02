@@ -6,7 +6,7 @@ import Content from '../models/content';
 import Relationship from '../models/relationship';
 import User from '../models/user';
 import mongoose from 'mongoose';
-import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation } from '../utils/contentRotation';
+import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation, recalculateRotationOrder } from '../utils/contentRotation';
 
 const router = express.Router();
 
@@ -554,6 +554,15 @@ router.put('/content/reorder', async (req: any, res: Response) => {
     // Сохраняем изменения
     await sourceContent.save();
     await targetContent.save();
+    
+    // Пересчитываем rotationOrder для всего контента
+    if (relationship) {
+      const partnerId = relationship.userId.toString() === userId.toString() 
+        ? relationship.partnerId 
+        : relationship.userId;
+      
+      await recalculateRotationOrder(userId, partnerId.toString());
+    }
     
     res.json({
       message: 'Порядок контента успешно изменен',
