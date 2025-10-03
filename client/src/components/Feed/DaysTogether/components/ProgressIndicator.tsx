@@ -66,7 +66,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             color: hasPhoto ? 'text.secondary' : theme.preview
           }}
         >
-          До следующей вехи:
+          До следующей отметки:
         </Typography>
         <Chip
           label={`${nextMilestone.icon} ${nextMilestone.title}`}
@@ -93,7 +93,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
           '& .MuiLinearProgress-bar': {
             borderRadius: 4,
             background: hasPhoto 
-              ? 'linear-gradient(90deg, #ff4b8d 0%, #ff6ba8 100%)'
+              ? `linear-gradient(90deg, ${theme.preview} 0%, ${theme.colors[1].replace(/rgba\((.+)\)/, 'rgb($1)').replace(/, 0\.\d+/, '')} 100%)`
               : `linear-gradient(90deg, ${theme.preview} 0%, ${theme.colors[1].replace(/rgba\((.+)\)/, 'rgb($1)').replace(/, 0\.\d+/, '')} 100%)`
           }
         }}

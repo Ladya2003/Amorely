@@ -25,15 +25,12 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
   const navigate = useNavigate();
   
   const {
-    signatureDialogOpen,
     showAchievements,
     nextMilestone,
     progress,
     achievements,
     daysUntilAnniversary,
     selectedTheme,
-    handleSignatureDialogOpen,
-    handleSignatureDialogClose,
     toggleAchievements,
     handleThemeChange
   } = useDaysTogether({ daysCount, relationshipStartDate });
@@ -112,6 +109,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
               height: '100%',
               background: `linear-gradient(135deg, ${gradientColors})`,
               backdropFilter: 'blur(10px)',
+              opacity: 0.7,
               zIndex: 1
             }}
           />
@@ -142,11 +140,8 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           fontWeight="bold"
           sx={{
             color: photo ? '#fff' : currentTheme.preview,
-            textShadow: photo 
-              ? '0 2px 8px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4)' 
-              : `0 2px 4px ${currentTheme.colors[0].replace(/0\.\d+/, '0.3')}`,
-            WebkitTextStroke: photo ? '0.5px rgba(0,0,0,0.2)' : 'none',
-            filter: photo ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' : `drop-shadow(0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.2')})`
+            textShadow: '0 2px 8px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4)',
+            WebkitTextStroke: '0.5px rgba(0,0,0,0.2)',
           }}
         >
           {daysCount} {getDaysWord(daysCount)} вместе
@@ -195,6 +190,8 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             showAchievements={showAchievements}
             onToggle={toggleAchievements}
             daysUntilAnniversary={daysUntilAnniversary}
+            theme={currentTheme}
+            hasPhoto={!!photo}
           />
         )}
 
@@ -265,14 +262,12 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             colorTheme={currentTheme}
           />
           <SignatureDialog
-            open={signatureDialogOpen}
-            onClose={handleSignatureDialogClose}
             onSave={onAddSignature}
             signature={signatures?.user || signature}
             colorTheme={currentTheme}
           />
           <ColorPicker selectedTheme={selectedTheme} onThemeChange={handleThemeChange} />
-          <ExportButton targetId="days-together" />
+          <ExportButton targetId="days-together" colorTheme={currentTheme} />
         </Box>
       </Box>
     </Paper>

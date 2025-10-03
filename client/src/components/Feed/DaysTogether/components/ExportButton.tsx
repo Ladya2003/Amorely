@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 import { IconButton, Snackbar, Alert, CircularProgress, Tooltip } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import html2canvas from 'html2canvas';
+import { ColorTheme } from './ColorPicker';
 
 interface ExportButtonProps {
   targetId: string;
+  colorTheme: ColorTheme;
 }
 
-const ExportButton: React.FC<ExportButtonProps> = ({ targetId }) => {
+const ExportButton: React.FC<ExportButtonProps> = ({ targetId, colorTheme }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,15 +61,18 @@ const ExportButton: React.FC<ExportButtonProps> = ({ targetId }) => {
     <>
       <Tooltip title="Скачать открытку" arrow>
         <IconButton
-          color="primary"
           onClick={handleExport}
           disabled={loading}
           sx={{
-            bgcolor: 'rgba(255, 75, 141, 0.1)',
-            '&:hover': { bgcolor: 'rgba(255, 75, 141, 0.2)' }
+            bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.1')}`,
+            color: colorTheme.preview,
+            '&:hover': { 
+              bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.2')}`,
+              color: colorTheme.preview
+            }
           }}
         >
-          {loading ? <CircularProgress size={24} /> : <DownloadIcon />}
+          {loading ? <CircularProgress size={24} sx={{ color: colorTheme.preview }} /> : <DownloadIcon />}
         </IconButton>
       </Tooltip>
 

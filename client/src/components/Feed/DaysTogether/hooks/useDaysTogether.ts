@@ -16,7 +16,6 @@ interface UseDaysTogetherProps {
 }
 
 export const useDaysTogether = ({ daysCount, relationshipStartDate }: UseDaysTogetherProps) => {
-  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [nextMilestone, setNextMilestone] = useState<Milestone | null>(null);
@@ -47,14 +46,6 @@ export const useDaysTogether = ({ daysCount, relationshipStartDate }: UseDaysTog
     }
   }, [relationshipStartDate]);
 
-  const handleSignatureDialogOpen = () => {
-    setSignatureDialogOpen(true);
-  };
-
-  const handleSignatureDialogClose = () => {
-    setSignatureDialogOpen(false);
-  };
-
   const toggleAchievements = () => {
     setShowAchievements(!showAchievements);
   };
@@ -66,7 +57,6 @@ export const useDaysTogether = ({ daysCount, relationshipStartDate }: UseDaysTog
 
   return {
     // State
-    signatureDialogOpen,
     showAchievements,
     milestones,
     nextMilestone,
@@ -76,8 +66,6 @@ export const useDaysTogether = ({ daysCount, relationshipStartDate }: UseDaysTog
     selectedTheme,
 
     // Handlers
-    handleSignatureDialogOpen,
-    handleSignatureDialogClose,
     toggleAchievements,
     handleThemeChange
   };

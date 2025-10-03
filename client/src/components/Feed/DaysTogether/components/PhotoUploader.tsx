@@ -203,7 +203,6 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
               crop={crop}
               onChange={(c) => setCrop(c)}
               onComplete={(c) => setCompletedCrop(c)}
-              aspect={16 / 9}
             >
               <img
                 ref={imgRef}
@@ -215,8 +214,28 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleUploadWithoutCrop}>Без обрезки</Button>
-          <Button onClick={handleCropDialogClose}>Отмена</Button>
+          <Button 
+            onClick={handleUploadWithoutCrop}
+            sx={{
+              color: colorTheme.preview,
+              '&:hover': {
+                bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.05')}`
+              }
+            }}
+          >
+            Без обрезки
+          </Button>
+          <Button 
+            onClick={handleCropDialogClose}
+            sx={{
+              color: colorTheme.preview,
+              '&:hover': {
+                bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.05')}`
+              }
+            }}
+          >
+            Отмена
+          </Button>
           <Button 
             onClick={handleCropComplete} 
             variant="contained"

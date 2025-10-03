@@ -13,19 +13,24 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Achievement } from '../types';
+import { ColorTheme } from './ColorPicker';
 
 interface MilestoneCardProps {
   achievements: Achievement[];
   showAchievements: boolean;
   onToggle: () => void;
   daysUntilAnniversary: number | null;
+  theme: ColorTheme;
+  hasPhoto?: boolean;
 }
 
 const MilestoneCard: React.FC<MilestoneCardProps> = ({
   achievements,
   showAchievements,
   onToggle,
-  daysUntilAnniversary
+  daysUntilAnniversary,
+  theme,
+  hasPhoto = false
 }) => {
   if (achievements.length === 0) return null;
 
@@ -35,9 +40,9 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
         mt: 2,
         p: 2,
         borderRadius: 2,
-        bgcolor: 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 75, 141, 0.2)'
+        bgcolor: hasPhoto ? 'rgba(255, 255, 255, 0.7)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
+        backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
+        border: `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`
       }}
     >
       {/* Заголовок с кнопкой разворачивания */}
@@ -51,18 +56,23 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
         onClick={onToggle}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <EmojiEventsIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight="bold">
+          <EmojiEventsIcon sx={{ color: theme.preview }} />
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ color: hasPhoto ? 'text.primary' : theme.preview }}>
             Достижения
           </Typography>
           <Chip
             label={achievements.length}
             size="small"
-            color="primary"
-            sx={{ height: 20, fontSize: '0.75rem' }}
+            sx={{ 
+              height: 20, 
+              fontSize: '0.75rem',
+              bgcolor: `${theme.colors[0].replace(/0\.\d+/, '0.2')}`,
+              color: theme.preview,
+              borderColor: theme.preview
+            }}
           />
         </Box>
-        <IconButton size="small">
+        <IconButton size="small" sx={{ color: hasPhoto ? 'text.primary' : theme.preview }}>
           {showAchievements ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </IconButton>
       </Box>
@@ -83,13 +93,14 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
                 sx={{
                   p: 1.5,
                   borderRadius: 1,
-                  bgcolor: 'rgba(255, 182, 193, 0.2)',
-                  border: '1px solid rgba(255, 75, 141, 0.3)',
+                  bgcolor: `${theme.colors[1].replace(/0\.\d+/, '0.15')}`,
+                  border: `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
                   textAlign: 'center',
                   transition: 'all 0.2s',
                   '&:hover': {
                     transform: 'scale(1.05)',
-                    boxShadow: 2
+                    boxShadow: 2,
+                    bgcolor: `${theme.colors[1].replace(/0\.\d+/, '0.25')}`
                   }
                 }}
               >
@@ -102,7 +113,8 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
                   sx={{
                     display: 'block',
                     fontSize: '0.7rem',
-                    lineHeight: 1.2
+                    lineHeight: 1.2,
+                    color: hasPhoto ? 'text.primary' : theme.preview
                   }}
                 >
                   {achievement.title}
@@ -119,15 +131,15 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
               mt: 2,
               p: 1.5,
               borderRadius: 1,
-              bgcolor: 'rgba(255, 215, 0, 0.1)',
-              border: '1px dashed rgba(255, 215, 0, 0.5)',
+              bgcolor: `${theme.colors[0].replace(/0\.\d+/, '0.1')}`,
+              border: `1px dashed ${theme.colors[0].replace(/0\.\d+/, '0.5')}`,
               textAlign: 'center'
             }}
           >
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant="body2" sx={{ color: hasPhoto ? 'text.secondary' : `${theme.preview}CC` }} gutterBottom>
               ⏳ До следующей годовщины:
             </Typography>
-            <Typography variant="h6" color="primary" fontWeight="bold">
+            <Typography variant="h6" fontWeight="bold" sx={{ color: theme.preview }}>
               {daysUntilAnniversary} {getDaysWord(daysUntilAnniversary)}
             </Typography>
           </Box>

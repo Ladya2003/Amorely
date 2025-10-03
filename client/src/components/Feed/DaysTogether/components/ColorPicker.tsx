@@ -111,25 +111,25 @@ export const colorThemes: ColorTheme[] = [
   {
     id: 'black-elegant',
     name: '🖤 Элегантная чернота',
-    colors: ['rgba(0, 0, 0, 0.4)', 'rgba(64, 64, 64, 0.3)', 'rgba(32, 32, 32, 0.35)'],
+    colors: ['rgba(0, 0, 0, 0.25)', 'rgba(32, 32, 32, 0.2)', 'rgba(16, 16, 16, 0.22)'],
     preview: '#000000'
   },
   {
     id: 'black-silver',
     name: '🌫️ Черное серебро',
-    colors: ['rgba(32, 32, 32, 0.4)', 'rgba(128, 128, 128, 0.3)', 'rgba(64, 64, 64, 0.35)'],
-    preview: '#202020'
+    colors: ['rgba(16, 16, 16, 0.25)', 'rgba(64, 64, 64, 0.2)', 'rgba(40, 40, 40, 0.22)'],
+    preview: '#101010'
   },
   {
     id: 'black-blue',
     name: '🌃 Черно-синий',
-    colors: ['rgba(0, 0, 0, 0.4)', 'rgba(0, 32, 64, 0.3)', 'rgba(16, 16, 48, 0.35)'],
+    colors: ['rgba(0, 0, 0, 0.25)', 'rgba(0, 32, 64, 0.2)', 'rgba(8, 16, 32, 0.22)'],
     preview: '#001020'
   },
   {
     id: 'black-purple',
     name: '🌌 Космическая тьма',
-    colors: ['rgba(16, 0, 32, 0.4)', 'rgba(64, 0, 128, 0.3)', 'rgba(32, 0, 64, 0.35)'],
+    colors: ['rgba(16, 0, 32, 0.25)', 'rgba(48, 0, 96, 0.2)', 'rgba(32, 0, 64, 0.22)'],
     preview: '#100020'
   }
 ];
