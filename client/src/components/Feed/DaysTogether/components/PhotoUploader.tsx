@@ -67,29 +67,9 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     reader.onload = () => {
       setImageSrc(reader.result as string);
       setCropDialogOpen(true);
-      // Устанавливаем crop по умолчанию (квадрат по центру)
-      const defaultCrop = {
-        unit: '%' as const,
-        width: 80,
-        height: 80,
-        x: 10,
-        y: 10
-      };
-      setCrop(defaultCrop);
-      
-      // Также устанавливаем completedCrop для немедленного использования
-      setTimeout(() => {
-        if (imgRef.current) {
-          const pixelCrop = {
-            x: Math.round((defaultCrop.x / 100) * imgRef.current.naturalWidth),
-            y: Math.round((defaultCrop.y / 100) * imgRef.current.naturalHeight),
-            width: Math.round((defaultCrop.width / 100) * imgRef.current.naturalWidth),
-            height: Math.round((defaultCrop.height / 100) * imgRef.current.naturalHeight),
-            unit: 'px' as const
-          };
-          setCompletedCrop(pixelCrop);
-        }
-      }, 100);
+      // Crop будет установлен после загрузки изображения через onImageLoad
+      setCrop(undefined);
+      setCompletedCrop(undefined);
     };
     reader.readAsDataURL(file);
   };
@@ -142,6 +122,29 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     if (onRemovePhoto) {
       onRemovePhoto();
     }
+  };
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    // Устанавливаем crop по умолчанию после того как изображение загрузилось
+    const defaultCrop = {
+      unit: '%' as const,
+      width: 80,
+      height: 80,
+      x: 10,
+      y: 10
+    };
+    setCrop(defaultCrop);
+    
+    // Конвертируем в пиксели для completedCrop
+    const pixelCrop = {
+      x: Math.round((defaultCrop.x / 100) * img.naturalWidth),
+      y: Math.round((defaultCrop.y / 100) * img.naturalHeight),
+      width: Math.round((defaultCrop.width / 100) * img.naturalWidth),
+      height: Math.round((defaultCrop.height / 100) * img.naturalHeight),
+      unit: 'px' as const
+    };
+    setCompletedCrop(pixelCrop);
   };
 
   const handleUploadWithoutCrop = () => {
@@ -208,6 +211,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
                 ref={imgRef}
                 src={imageSrc}
                 alt="Crop preview"
+                onLoad={handleImageLoad}
                 style={{ maxWidth: '100%', maxHeight: '60vh' }}
               />
             </ReactCrop>
