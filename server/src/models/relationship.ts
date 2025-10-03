@@ -8,7 +8,11 @@ const relationshipSchema = new mongoose.Schema({
     url: { type: String },
     publicId: { type: String }
   },
-  signature: { type: String },
+  signature: { type: String }, // Оставляем для обратной совместимости
+  signatures: {
+    user: { type: String }, // Подпись первого партнера (userId)
+    partner: { type: String } // Подпись второго партнера (partnerId)
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

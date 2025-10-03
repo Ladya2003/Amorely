@@ -38,6 +38,7 @@ const FeedPage: React.FC = () => {
   const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
   const [relationshipPhoto, setRelationshipPhoto] = useState<string | undefined>();
   const [relationshipSignature, setRelationshipSignature] = useState<string | undefined>();
+  const [relationshipSignatures, setRelationshipSignatures] = useState<{ user?: string; partner?: string }>({});
   
   // Состояние для диалогов
   const [addContentDialogOpen, setAddContentDialogOpen] = useState(false);
@@ -66,6 +67,7 @@ const FeedPage: React.FC = () => {
         setDaysCount(response.data.daysCount);
         setRelationshipPhoto(response.data.photo);
         setRelationshipSignature(response.data.signature);
+        setRelationshipSignatures(response.data.signatures || {});
       }
     } catch (error) {
       console.error('Ошибка при загрузке данных об отношениях:', error);
@@ -216,12 +218,18 @@ const FeedPage: React.FC = () => {
   const handleAddPhoto = async (file: File) => {
     try {
       const formData = new FormData();
-      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
+      const token = localStorage.getItem('token');
       
       formData.append('photo', file);
-      formData.append('userId', userId);
       
-      const response = await axios.post(`${API_URL}/api/feed/relationship/photo`, formData);
+      const response = await axios.post(`${API_URL}/api/feed/relationship/photo`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Обновляем фото сразу после загрузки
       setRelationshipPhoto(response.data.photo);
     } catch (error) {
       console.error('Ошибка при добавлении фото:', error);
@@ -230,14 +238,20 @@ const FeedPage: React.FC = () => {
   
   const handleAddSignature = async (signatureDataUrl: string) => {
     try {
-      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
+      const token = localStorage.getItem('token');
       
       const response = await axios.post(`${API_URL}/api/feed/relationship/signature`, {
-        userId,
         signature: signatureDataUrl
+      }, {
+        headers: { 
+          Authorization: `Bearer ${token}`
+        }
       });
       
-      setRelationshipSignature(response.data.signature);
+      // Обновляем подписи сразу после сохранения
+      if (response.data.signatures) {
+        setRelationshipSignatures(response.data.signatures);
+      }
     } catch (error) {
       console.error('Ошибка при добавлении подписи:', error);
     }
@@ -291,6 +305,7 @@ const FeedPage: React.FC = () => {
         onAddSignature={handleAddSignature}
         photo={relationshipPhoto}
         signature={relationshipSignature}
+        signatures={relationshipSignatures}
       />
       
       <Fab 

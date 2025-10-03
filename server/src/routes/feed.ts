@@ -261,7 +261,8 @@ router.get('/relationship', async (req: any, res: Response) => {
       startDate: relationship.startDate,
       daysCount: diffDays,
       photo: relationship.photo?.url,
-      signature: relationship.signature
+      signature: relationship.signature, // Для обратной совместимости
+      signatures: relationship.signatures || { user: '', partner: '' }
     });
   } catch (error) {
     console.error('Ошибка при получении информации об отношениях:', error);
@@ -338,13 +339,23 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Отношения не найдены' });
     }
     
-    // Обновляем подпись
-    relationship.signature = signature;
+    // Определяем, какую подпись обновляем (user или partner)
+    if (!relationship.signatures) {
+      relationship.signatures = { user: '', partner: '' };
+    }
+    
+    const isUser = relationship.userId.toString() === userId;
+    if (isUser) {
+      relationship.signatures.user = signature;
+    } else {
+      relationship.signatures.partner = signature;
+    }
+    
     await relationship.save();
     
     res.json({
       message: 'Подпись успешно обновлена',
-      signature: relationship.signature
+      signatures: relationship.signatures
     });
   } catch (error) {
     console.error('Ошибка при обновлении подписи:', error);
