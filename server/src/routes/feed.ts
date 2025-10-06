@@ -262,7 +262,8 @@ router.get('/relationship', async (req: any, res: Response) => {
       daysCount: diffDays,
       photo: relationship.photo?.url,
       signature: relationship.signature, // Для обратной совместимости
-      signatures: relationship.signatures || { user: '', partner: '' }
+      signatures: relationship.signatures || { user: '', partner: '' },
+      ownerId: relationship.userId.toString() // ID владельца отношений для определения текущей роли
     });
   } catch (error) {
     console.error('Ошибка при получении информации об отношениях:', error);

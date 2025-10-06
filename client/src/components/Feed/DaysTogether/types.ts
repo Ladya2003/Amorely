@@ -11,6 +11,8 @@ export interface DaysTogetherProps {
     user?: string;
     partner?: string;
   };
+  currentUserId?: string; // ID текущего залогиненного пользователя
+  relationshipOwnerId?: string | null; // ID владельца отношений (user)
 }
 
 export interface Milestone {

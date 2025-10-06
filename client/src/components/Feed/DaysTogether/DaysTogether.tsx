@@ -20,9 +20,17 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
   onAddSignature,
   photo,
   signature,
-  signatures
+  signatures,
+  currentUserId,
+  relationshipOwnerId
 }) => {
   const navigate = useNavigate();
+  
+  // Определяем, является ли текущий пользователь владельцем отношений
+  const isOwner = currentUserId && relationshipOwnerId && currentUserId === relationshipOwnerId;
+  
+  // Выбираем правильную подпись в зависимости от роли пользователя
+  const currentUserSignature = isOwner ? signatures?.user : signatures?.partner;
   
   const {
     showAchievements,
@@ -263,7 +271,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           />
           <SignatureDialog
             onSave={onAddSignature}
-            signature={signatures?.user || signature}
+            signature={currentUserSignature || signature}
             colorTheme={currentTheme}
           />
           <ColorPicker selectedTheme={selectedTheme} onThemeChange={handleThemeChange} />

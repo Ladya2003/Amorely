@@ -3,6 +3,7 @@ import { Box, Container, Fab, Badge, CircularProgress, Typography } from '@mui/m
 import EditIcon from '@mui/icons-material/Edit';
 import axios from 'axios';
 import { API_URL } from '../config';
+import { useAuth } from '../contexts/AuthContext';
 import FeedHeader from '../components/Feed/FeedHeader';
 import ContentSlider, { ContentItem } from '../components/Feed/ContentSlider';
 import DaysTogether from '../components/Feed/DaysTogether';
@@ -23,6 +24,8 @@ interface UserContentItem {
 }
 
 const FeedPage: React.FC = () => {
+  const { user } = useAuth(); // Получаем текущего пользователя
+  
   // Состояние для табов
   const [tabValue, setTabValue] = useState(0);
   
@@ -39,6 +42,7 @@ const FeedPage: React.FC = () => {
   const [relationshipPhoto, setRelationshipPhoto] = useState<string | undefined>();
   const [relationshipSignature, setRelationshipSignature] = useState<string | undefined>();
   const [relationshipSignatures, setRelationshipSignatures] = useState<{ user?: string; partner?: string }>({});
+  const [relationshipOwnerId, setRelationshipOwnerId] = useState<string | null>(null); // ID владельца отношений
   
   // Состояние для диалогов
   const [addContentDialogOpen, setAddContentDialogOpen] = useState(false);
@@ -59,8 +63,10 @@ const FeedPage: React.FC = () => {
   const fetchUserData = async () => {
     try {
       setIsLoading(true);
-      const userId = 'current-user'; // В реальном приложении получать из контекста аутентификации
-      const response = await axios.get(`${API_URL}/api/feed/relationship?userId=${userId}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/feed/relationship`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       if (response.data) {
         setRelationshipStartDate(response.data.startDate);
@@ -68,6 +74,7 @@ const FeedPage: React.FC = () => {
         setRelationshipPhoto(response.data.photo);
         setRelationshipSignature(response.data.signature);
         setRelationshipSignatures(response.data.signatures || {});
+        setRelationshipOwnerId(response.data.ownerId); // Сохраняем ID владельца отношений
       }
     } catch (error) {
       console.error('Ошибка при загрузке данных об отношениях:', error);
@@ -298,7 +305,7 @@ const FeedPage: React.FC = () => {
         </Badge>
       </Box>
       
-      <DaysTogether 
+      <DaysTogether
         daysCount={daysCount}
         relationshipStartDate={relationshipStartDate}
         onAddPhoto={handleAddPhoto}
@@ -306,6 +313,8 @@ const FeedPage: React.FC = () => {
         photo={relationshipPhoto}
         signature={relationshipSignature}
         signatures={relationshipSignatures}
+        currentUserId={user?._id}
+        relationshipOwnerId={relationshipOwnerId}
       />
       
       <Fab 

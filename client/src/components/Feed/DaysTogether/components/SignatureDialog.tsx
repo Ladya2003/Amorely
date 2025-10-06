@@ -62,8 +62,6 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
         // Реальная ширина контейнера с вычетом border
         const width = Math.floor(rect.width - borderLeft - borderRight);
         
-        console.log('Container rect width:', rect.width, 'Calculated canvas width:', width); // Для отладки
-        
         if (width > 0) {
           setCanvasSize({ width, height: 200 });
           setIsCanvasReady(false);
