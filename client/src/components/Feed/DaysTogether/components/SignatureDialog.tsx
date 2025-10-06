@@ -40,7 +40,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
   const signatureRef = useRef<SignatureCanvas | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 200 });
+  const [canvasSize, setCanvasSize] = useState({ width: 300, height: 200 });
   const [brushSize, setBrushSize] = useState(3);
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
   const [isCanvasReady, setIsCanvasReady] = useState(false);
@@ -52,16 +52,35 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
   useEffect(() => {
     const updateCanvasSize = () => {
       if (containerRef.current && dialogOpen) {
-        const width = containerRef.current.offsetWidth;
-        setCanvasSize({ width, height: 200 });
-        setIsCanvasReady(false);
-        // Даем время на ререндер canvas с новым размером
-        setTimeout(() => setIsCanvasReady(true), 100);
+        // Используем clientWidth (ширина без border, но с padding)
+        // Вычитаем border вручную если нужно
+        const rect = containerRef.current.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(containerRef.current);
+        const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+        const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+        
+        // Реальная ширина контейнера с вычетом border
+        const width = Math.floor(rect.width - borderLeft - borderRight);
+        
+        console.log('Container rect width:', rect.width, 'Calculated canvas width:', width); // Для отладки
+        
+        if (width > 0) {
+          setCanvasSize({ width, height: 200 });
+          setIsCanvasReady(false);
+          // Даем время на ререндер canvas с новым размером
+          setTimeout(() => setIsCanvasReady(true), 50);
+        }
       }
     };
 
     if (dialogOpen) {
-      updateCanvasSize();
+      // Используем requestAnimationFrame для гарантии что DOM обновился
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          updateCanvasSize();
+        }, 100);
+      });
+      
       window.addEventListener('resize', updateCanvasSize);
     }
     
@@ -77,10 +96,42 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
       const timer = setTimeout(() => {
         if (signatureRef.current) {
           try {
-            signatureRef.current.fromDataURL(signature, {
-              width: canvasSize.width,
-              height: canvasSize.height
-            });
+            // Загружаем изображение и центрируем/масштабируем его на canvas
+            const img = new Image();
+            img.onload = () => {
+              if (signatureRef.current) {
+                const canvas = signatureRef.current.getCanvas();
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  // Очищаем canvas перед загрузкой
+                  ctx.clearRect(0, 0, canvas.width, canvas.height);
+                  
+                  // Проверяем, нужно ли масштабировать изображение
+                  let drawWidth = img.width;
+                  let drawHeight = img.height;
+                  let x = 0;
+                  let y = 0;
+                  
+                  // Если изображение больше canvas, масштабируем с сохранением пропорций
+                  if (img.width > canvas.width || img.height > canvas.height) {
+                    const scale = Math.min(
+                      canvas.width / img.width,
+                      canvas.height / img.height
+                    );
+                    drawWidth = img.width * scale;
+                    drawHeight = img.height * scale;
+                  }
+                  
+                  // Центрируем изображение на canvas
+                  x = (canvas.width - drawWidth) / 2;
+                  y = (canvas.height - drawHeight) / 2;
+                  
+                  // Рисуем изображение
+                  ctx.drawImage(img, x, y, drawWidth, drawHeight);
+                }
+              }
+            };
+            img.src = signature;
           } catch (error) {
             console.error('Error loading signature:', error);
           }
@@ -89,7 +140,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [dialogOpen, isCanvasReady, signature, canvasSize]);
+  }, [dialogOpen, isCanvasReady, signature]);
 
   // Обновляем настройки canvas при изменении инструмента или размера кисти
   useEffect(() => {
