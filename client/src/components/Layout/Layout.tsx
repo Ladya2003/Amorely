@@ -129,7 +129,12 @@ const Layout: React.FC = () => {
       )}
       
       {/* Основное содержимое */}
-      <Box sx={{ flexGrow: 1, overflow: 'auto', p: isMobile ? 0 : 2 }}>
+      <Box sx={{ 
+        flexGrow: 1, 
+        overflow: 'auto', 
+        p: isMobile ? 0 : 2,
+        pb: isMobile ? '72px' : 2 // Отступ снизу для нижней навигации на мобильных
+      }}>
         <Outlet />
       </Box>
       

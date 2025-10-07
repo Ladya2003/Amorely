@@ -312,7 +312,11 @@ const ChatPage: React.FC = () => {
   const selectedContact = contacts.find(contact => contact.id === selectedContactId);
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ 
+      minHeight: 'calc(100vh - 72px)', // Вычитаем высоту нижней навигации
+      display: 'flex', 
+      flexDirection: 'column' 
+    }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs 
           value={tabValue} 

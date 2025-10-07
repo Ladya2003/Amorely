@@ -94,7 +94,11 @@ const CalendarPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ 
+      minHeight: 'calc(100vh - 72px)', // Вычитаем высоту нижней навигации
+      display: 'flex', 
+      flexDirection: 'column' 
+    }}>
       <Calendar 
         content={content}
         onAddContent={handleAddContent}
