@@ -144,6 +144,17 @@ const ChatPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Функция обновления последнего сообщения в контакте
+  const updateContactLastMessage = useCallback((contactId: string, text: string, timestamp: string, isRead: boolean) => {
+    setContacts(prevContacts => 
+      prevContacts.map(contact => 
+        contact.id === contactId 
+          ? { ...contact, lastMessage: { text, timestamp, isRead } } 
+          : contact
+      )
+    );
+  }, []);
+
   // Инициализация сокета
   useEffect(() => {
     if (!CURRENT_USER_ID) {
@@ -166,8 +177,28 @@ const ChatPage: React.FC = () => {
     });
 
     newSocket.on('message_sent', (message: MessageType) => {
-      // Добавляем отправленное сообщение в список
-      setMessages(prevMessages => [...prevMessages, message]);
+      // Заменяем временное сообщение на реальное или добавляем новое
+      setMessages(prevMessages => {
+        // Ищем временное сообщение с похожим текстом
+        const tempMessageIndex = prevMessages.findIndex(msg => 
+          msg.id.startsWith('temp-') && msg.text === message.text
+        );
+        
+        if (tempMessageIndex !== -1) {
+          // Заменяем временное сообщение на реальное
+          const newMessages = [...prevMessages];
+          newMessages[tempMessageIndex] = message;
+          return newMessages;
+        } else {
+          // Добавляем новое сообщение (если временного не было найдено)
+          return [...prevMessages, message];
+        }
+      });
+      
+      // Обновляем последнее сообщение в списке контактов
+      if (selectedContactId) {
+        updateContactLastMessage(selectedContactId, message.text, message.timestamp, true);
+      }
     });
 
     newSocket.on('message_read', (messageId: string) => {
@@ -182,7 +213,7 @@ const ChatPage: React.FC = () => {
     return () => {
       socketService.disconnect();
     };
-  }, [selectedContactId]);
+  }, [selectedContactId, updateContactLastMessage]);
 
   // Загрузка контактов
   useEffect(() => {
@@ -199,8 +230,11 @@ const ChatPage: React.FC = () => {
   const fetchContacts = async () => {
     try {
       setIsLoading(true);
-      // Реальный запрос к API вместо моковых данных
-      const response = await axios.get(`${API_URL}/api/contacts?userId=${CURRENT_USER_ID}`);
+      const token = localStorage.getItem('token');
+      // Реальный запрос к API (userId берется из токена через authMiddleware)
+      const response = await axios.get(`${API_URL}/api/contacts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setContacts(response.data);
       setIsLoading(false);
     } catch (error) {
@@ -212,25 +246,26 @@ const ChatPage: React.FC = () => {
   const fetchMessages = async (contactId: string) => {
     try {
       setIsLoading(true);
-      // Реальный запрос к API вместо моковых данных
-      const response = await axios.get(`${API_URL}/api/messages?userId=${CURRENT_USER_ID}&contactId=${contactId}`);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      
+      // Реальный запрос к API (userId берется из токена через authMiddleware)
+      const response = await axios.get(`${API_URL}/api/messages`, {
+        params: { contactId },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
       setMessages(response.data);
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при загрузке сообщений:', error);
       setIsLoading(false);
     }
   };
-
-  const updateContactLastMessage = useCallback((contactId: string, text: string, timestamp: string, isRead: boolean) => {
-    setContacts(prevContacts => 
-      prevContacts.map(contact => 
-        contact.id === contactId 
-          ? { ...contact, lastMessage: { text, timestamp, isRead } } 
-          : contact
-      )
-    );
-  }, []);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -285,9 +320,6 @@ const ChatPage: React.FC = () => {
       
       // Отправляем сообщение через сокет
       socketService.sendMessage(selectedContactId, text, uploadedAttachments);
-      
-      // Обновляем последнее сообщение в списке контактов
-      updateContactLastMessage(selectedContactId, text, new Date().toISOString(), true);
     };
 
     // Временно добавляем сообщение локально для мгновенного отображения
@@ -303,7 +335,6 @@ const ChatPage: React.FC = () => {
     };
 
     setMessages([...messages, newMessage]);
-    updateContactLastMessage(selectedContactId, text, new Date().toISOString(), true);
     
     // Вызываем функцию для отправки сообщения через API
     sendMessageWithAttachments();
@@ -329,16 +360,17 @@ const ChatPage: React.FC = () => {
         </Tabs>
       </Box>
 
-      <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+      <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {tabValue === 0 ? (
-          <Box sx={{ height: '100%', display: 'flex' }}>
+          <Box sx={{ flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
             {/* На мобильных устройствах показываем либо список, либо диалог */}
             {(!isMobile || !selectedContactId) && (
               <Box sx={{ 
                 width: isMobile || selectedContactId ? '100%' : '30%', 
                 borderRight: selectedContactId && !isMobile ? 1 : 0, 
                 borderColor: 'divider',
-                display: isMobile && selectedContactId ? 'none' : 'block'
+                display: isMobile && selectedContactId ? 'none' : 'block',
+                overflow: 'auto'
               }}>
                 <ChatList 
                   contacts={contacts} 
@@ -352,7 +384,10 @@ const ChatPage: React.FC = () => {
             {(!isMobile || selectedContactId) && (
               <Box sx={{ 
                 width: isMobile || !selectedContactId ? '100%' : '70%',
-                display: isMobile && !selectedContactId ? 'none' : 'block'
+                display: isMobile && !selectedContactId ? 'none' : 'flex',
+                flexDirection: 'column',
+                flexGrow: 1,
+                overflow: 'hidden'
               }}>
                 {selectedContactId && CURRENT_USER_ID ? (
                   <ChatDialog 

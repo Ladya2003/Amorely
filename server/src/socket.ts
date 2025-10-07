@@ -67,15 +67,28 @@ export default function setupSocketIO(server: HttpServer) {
 
         const savedMessage = await newMessage.save();
 
+        // Форматируем сообщение для отправки клиенту
+        const formattedMessage = {
+          id: savedMessage._id.toString(),
+          senderId: savedMessage.senderId.toString(),
+          text: savedMessage.text,
+          timestamp: savedMessage.createdAt.toISOString(),
+          isRead: savedMessage.isRead,
+          attachments: savedMessage.attachments?.map(attachment => ({
+            type: attachment.type,
+            url: attachment.url
+          }))
+        };
+
         // Находим получателя в списке подключенных пользователей
         const receiverSocketData = connectedUsers.find(user => user.userId === receiverId);
 
         // Отправляем сообщение отправителю для подтверждения
-        socket.emit('message_sent', savedMessage);
+        socket.emit('message_sent', formattedMessage);
 
         // Если получатель онлайн, отправляем ему сообщение
         if (receiverSocketData) {
-          io.to(receiverSocketData.socketId).emit('new_message', savedMessage);
+          io.to(receiverSocketData.socketId).emit('new_message', formattedMessage);
         }
       } catch (error) {
         console.error('Ошибка при отправке сообщения:', error);

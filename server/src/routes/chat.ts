@@ -57,6 +57,7 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
   try {
     const { contactId } = req.query;
     const userId = req.userId as string;
+    
     if (!userId || !contactId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
     }
