@@ -79,8 +79,8 @@ app.get('/api/test', (req: Request, res: Response) => {
   });
 });
 
-// Маршрут для загрузки медиа в Cloudinary и сохранения в MongoDB
-app.post('/api/upload', upload.array('media'), async (req: Request, res: Response) => {
+// Маршрут для загрузки медиа в Cloudinary (для чата - только загрузка без сохранения в Content)
+app.post('/api/upload', authMiddleware, upload.array('media'), async (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
     
@@ -88,10 +88,7 @@ app.post('/api/upload', upload.array('media'), async (req: Request, res: Respons
       return res.status(400).json({ error: 'Файлы не были загружены' });
     }
 
-    // Получаем пользовательскую дату, если она была передана
-    const customDate = req.body.date ? new Date(req.body.date) : null;
-
-    const savedContent = [];
+    const uploads = [];
 
     for (const file of files) {
       // Извлекаем информацию о загруженном файле из Cloudinary
@@ -108,26 +105,22 @@ app.post('/api/upload', upload.array('media'), async (req: Request, res: Respons
         resourceType = 'video';
       }
       
-      // Создаем новую запись в MongoDB
-      const newContent = new Content({
+      // Возвращаем только информацию о загруженных файлах
+      // Не сохраняем в Content, т.к. это для чата
+      uploads.push({
         url: cloudinaryFile.path,
         publicId: cloudinaryFile.filename,
-        resourceType: resourceType,
-        customDate: customDate // Добавляем пользовательскую дату
+        resourceType: resourceType
       });
-      
-      // Сохраняем в базу данных
-      const savedItem = await newContent.save();
-      savedContent.push(savedItem);
     }
 
     res.json({
-      message: 'Файлы успешно загружены и сохранены в базе данных',
-      uploads: savedContent
+      message: 'Файлы успешно загружены',
+      uploads: uploads
     });
   } catch (error) {
     console.error('Ошибка при загрузке файлов:', error);
-    res.status(500).json({ error: 'Ошибка при загрузке файлов' });
+    res.status(500).json({ error: 'Ошибка при загрузке файлов', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 

@@ -48,13 +48,31 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previousMessagesLengthRef = useRef<number>(0);
+  const isInitialLoadRef = useRef<boolean>(true);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // При первой загрузке скроллим вниз мгновенно
+    if (isInitialLoadRef.current && messages.length > 0 && !isLoading) {
+      scrollToBottom('auto');
+      isInitialLoadRef.current = false;
+      previousMessagesLengthRef.current = messages.length;
+    } 
+    // При добавлении новых сообщений скроллим плавно
+    else if (messages.length > previousMessagesLengthRef.current) {
+      scrollToBottom('smooth');
+      previousMessagesLengthRef.current = messages.length;
+    }
+  }, [messages, isLoading]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Сброс при смене контакта
+  useEffect(() => {
+    isInitialLoadRef.current = true;
+    previousMessagesLengthRef.current = 0;
+  }, [contact?.id]);
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   const handleSendMessage = () => {
@@ -90,20 +108,26 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%', 
-      bgcolor: 'background.paper' 
+      bgcolor: 'background.paper',
+      position: 'relative',
+      overflow: 'hidden'
     }}>
-      {/* Заголовок чата */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        p: 1, 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1
-      }}>
+      {/* Заголовок чата - фиксированный */}
+      <Paper 
+        elevation={2}
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          p: 1, 
+          borderBottom: 1, 
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          borderRadius: 0
+        }}
+      >
         <IconButton edge="start" onClick={onBack} sx={{ mr: 1 }}>
           <ArrowBackIcon />
         </IconButton>
@@ -115,7 +139,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         <Typography variant="h6" noWrap>
           {contact.name}
         </Typography>
-      </Box>
+      </Paper>
 
       {/* Область сообщений */}
       <Box sx={{ 
@@ -147,14 +171,18 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         )}
       </Box>
 
-      {/* Область ввода сообщения */}
+      {/* Область ввода сообщения - фиксированная */}
       <Paper 
         elevation={3} 
         sx={{ 
           p: 2, 
           borderTop: 1, 
           borderColor: 'divider',
-          bgcolor: 'background.paper'
+          bgcolor: 'background.paper',
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 100,
+          borderRadius: 0
         }}
       >
         {attachments.length > 0 && (
@@ -220,9 +248,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 <IconButton onClick={handleAttachmentClick}>
                   <AttachFileIcon />
                 </IconButton>
-                <IconButton>
+                {/* <IconButton>
                   <EmojiEmotionsIcon />
-                </IconButton>
+                </IconButton> */}
                 <IconButton 
                   color="primary" 
                   onClick={handleSendMessage}

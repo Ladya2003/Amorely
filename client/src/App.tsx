@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
+import { NavigationProvider } from './contexts/NavigationContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import FeedPage from './pages/FeedPage';
@@ -31,27 +32,29 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Публичный маршрут для аутентификации */}
-            <Route path="/auth" element={<AuthPage />} />
-            
-            {/* Защищенные маршруты */}
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }>
-              <Route index element={<FeedPage />} />
-              <Route path="chat" element={<ChatPage />} />
-              <Route path="news" element={<NewsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
-            
-            {/* Перенаправление на главную страницу для неизвестных маршрутов */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+        <NavigationProvider>
+          <Router>
+            <Routes>
+              {/* Публичный маршрут для аутентификации */}
+              <Route path="/auth" element={<AuthPage />} />
+              
+              {/* Защищенные маршруты */}
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<FeedPage />} />
+                <Route path="chat" element={<ChatPage />} />
+                <Route path="news" element={<NewsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
+              
+              {/* Перенаправление на главную страницу для неизвестных маршрутов */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </NavigationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

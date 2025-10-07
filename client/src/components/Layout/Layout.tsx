@@ -21,6 +21,7 @@ import NewspaperIcon from '@mui/icons-material/Newspaper';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigation } from '../../contexts/NavigationContext';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -28,6 +29,7 @@ const Layout: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
+  const { showBottomNav } = useNavigation();
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   
@@ -133,13 +135,13 @@ const Layout: React.FC = () => {
         flexGrow: 1, 
         overflow: 'auto', 
         p: isMobile ? 0 : 2,
-        pb: isMobile ? '72px' : 2 // Отступ снизу для нижней навигации на мобильных
+        pb: isMobile && showBottomNav ? '72px' : isMobile ? '0px' : 2 // Отступ снизу для нижней навигации на мобильных
       }}>
         <Outlet />
       </Box>
       
       {/* Нижняя панель навигации для мобильных устройств */}
-      {isMobile && (
+      {isMobile && showBottomNav && (
         <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }} elevation={3}>
           <BottomNavigation
             showLabels

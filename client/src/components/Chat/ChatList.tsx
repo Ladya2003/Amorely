@@ -11,6 +11,7 @@ import {
   ListItemText
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import ImageIcon from '@mui/icons-material/Image';
 
 export interface Contact {
   id: string;
@@ -20,6 +21,7 @@ export interface Contact {
     text: string;
     timestamp: string;
     isRead: boolean;
+    hasMedia?: boolean; // Флаг наличия медиафайлов
   };
 }
 
@@ -73,17 +75,35 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                 </Box>
               }
               secondary={
-                <Typography
-                  sx={{ display: 'inline', fontWeight: contact.lastMessage.isRead ? 'normal' : 'bold' }}
-                  component="span"
-                  variant="body2"
-                  color="text.primary"
-                  noWrap
-                >
-                  {contact.lastMessage.text.length > 40 
-                    ? `${contact.lastMessage.text.substring(0, 40)}...` 
-                    : contact.lastMessage.text}
-                </Typography>
+                contact.lastMessage.hasMedia ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <ImageIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography
+                      sx={{ 
+                        display: 'inline', 
+                        fontWeight: contact.lastMessage.isRead ? 'normal' : 'bold',
+                        fontStyle: 'italic'
+                      }}
+                      component="span"
+                      variant="body2"
+                      color="text.secondary"
+                    >
+                      Медиафайл
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography
+                    sx={{ display: 'inline', fontWeight: contact.lastMessage.isRead ? 'normal' : 'bold' }}
+                    component="span"
+                    variant="body2"
+                    color="text.primary"
+                    noWrap
+                  >
+                    {contact.lastMessage.text.length > 40 
+                      ? `${contact.lastMessage.text.substring(0, 40)}...` 
+                      : contact.lastMessage.text}
+                  </Typography>
+                )
               }
             />
           </StyledListItemButton>

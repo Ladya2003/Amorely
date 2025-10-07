@@ -27,6 +27,11 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
         ]
       }).sort({ createdAt: -1 });
 
+      const hasMedia = lastMessage?.attachments && lastMessage.attachments.length > 0;
+      const displayText = lastMessage 
+        ? (hasMedia && !lastMessage.text ? 'Медиафайл' : lastMessage.text || 'Медиафайл')
+        : 'Нет сообщений';
+
       return {
         id: user._id,
         name: user.firstName && user.lastName 
@@ -34,13 +39,15 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
           : user.username,
         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
         lastMessage: lastMessage ? {
-          text: lastMessage.text || 'Медиа-вложение',
+          text: displayText,
           timestamp: lastMessage.createdAt,
-          isRead: lastMessage.isRead || lastMessage.senderId.toString() === userId
+          isRead: lastMessage.isRead || lastMessage.senderId.toString() === userId,
+          hasMedia: hasMedia
         } : {
           text: 'Нет сообщений',
           timestamp: new Date(),
-          isRead: true
+          isRead: true,
+          hasMedia: false
         }
       };
     }));

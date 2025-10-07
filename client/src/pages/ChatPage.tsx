@@ -10,6 +10,7 @@ import { API_URL } from '../config';
 import socketService from '../services/socketService';
 import { Socket } from 'socket.io-client';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '../contexts/NavigationContext';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [
@@ -139,17 +140,18 @@ const ChatPage: React.FC = () => {
   const [socket, setSocket] = useState<any | null>(null);
   
   const { user } = useAuth();
+  const { setShowBottomNav } = useNavigation();
   const CURRENT_USER_ID = user?._id;
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Функция обновления последнего сообщения в контакте
-  const updateContactLastMessage = useCallback((contactId: string, text: string, timestamp: string, isRead: boolean) => {
+  const updateContactLastMessage = useCallback((contactId: string, text: string, timestamp: string, isRead: boolean, hasMedia?: boolean) => {
     setContacts(prevContacts => 
       prevContacts.map(contact => 
         contact.id === contactId 
-          ? { ...contact, lastMessage: { text, timestamp, isRead } } 
+          ? { ...contact, lastMessage: { text, timestamp, isRead, hasMedia } } 
           : contact
       )
     );
@@ -173,7 +175,9 @@ const ChatPage: React.FC = () => {
       }
 
       // Обновляем список контактов
-      updateContactLastMessage(message.senderId, message.text, message.timestamp, false);
+      const hasMedia = message.attachments && message.attachments.length > 0;
+      const displayText = hasMedia && !message.text ? 'Медиафайл' : message.text;
+      updateContactLastMessage(message.senderId, displayText, message.timestamp, false, hasMedia);
     });
 
     newSocket.on('message_sent', (message: MessageType) => {
@@ -197,7 +201,9 @@ const ChatPage: React.FC = () => {
       
       // Обновляем последнее сообщение в списке контактов
       if (selectedContactId) {
-        updateContactLastMessage(selectedContactId, message.text, message.timestamp, true);
+        const hasMedia = message.attachments && message.attachments.length > 0;
+        const displayText = hasMedia && !message.text ? 'Медиафайл' : message.text;
+        updateContactLastMessage(selectedContactId, displayText, message.timestamp, true, hasMedia);
       }
     });
 
@@ -226,6 +232,26 @@ const ChatPage: React.FC = () => {
       fetchMessages(selectedContactId);
     }
   }, [selectedContactId]);
+
+  // Управление видимостью нижнего меню
+  useEffect(() => {
+    if (isMobile) {
+      // Скрываем меню когда открыт чат с контактом
+      if (selectedContactId) {
+        setShowBottomNav(false);
+      } else {
+        // Показываем меню когда в списке контактов
+        setShowBottomNav(true);
+      }
+    }
+    
+    // При размонтировании компонента возвращаем меню
+    return () => {
+      if (isMobile) {
+        setShowBottomNav(true);
+      }
+    };
+  }, [isMobile, selectedContactId, setShowBottomNav]);
 
   const fetchContacts = async () => {
     try {
@@ -271,15 +297,27 @@ const ChatPage: React.FC = () => {
     setTabValue(newValue);
     if (newValue === 1) {
       setSelectedContactId(null);
+      // Показываем нижнее меню при переходе на вкладку игр
+      if (isMobile) {
+        setShowBottomNav(true);
+      }
     }
   };
 
   const handleSelectContact = (contactId: string) => {
     setSelectedContactId(contactId);
+    // Скрываем нижнее меню на мобильных при открытии чата
+    if (isMobile) {
+      setShowBottomNav(false);
+    }
   };
 
   const handleBackToList = () => {
     setSelectedContactId(null);
+    // Показываем нижнее меню на мобильных при возврате к списку
+    if (isMobile) {
+      setShowBottomNav(true);
+    }
   };
 
   const handleSendMessage = (text: string, attachments?: File[]) => {
@@ -297,9 +335,11 @@ const ChatPage: React.FC = () => {
       });
 
       try {
+        const token = localStorage.getItem('token');
         const response = await axios.post(`${API_URL}/api/upload`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
           },
         });
 
@@ -344,21 +384,32 @@ const ChatPage: React.FC = () => {
 
   return (
     <Box sx={{ 
-      minHeight: 'calc(100vh - 72px)', // Вычитаем высоту нижней навигации
+      height: isMobile ? '100vh' : 'calc(100vh - 64px)', // Полная высота для мобильных, вычитаем AppBar для десктопа
       display: 'flex', 
-      flexDirection: 'column' 
+      flexDirection: 'column',
+      overflow: 'hidden'
     }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange} 
-          aria-label="chat tabs"
-          variant="fullWidth"
-        >
-          <Tab icon={<ChatIcon />} label="Чат" />
-          <Tab icon={<SportsEsportsIcon />} label="Игры" />
-        </Tabs>
-      </Box>
+      {/* Скрываем табы когда открыт чат с контактом на мобильных */}
+      {(!isMobile || !selectedContactId) && (
+        <Box sx={{ 
+          borderBottom: 1, 
+          borderColor: 'divider',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          bgcolor: 'background.paper'
+        }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange} 
+            aria-label="chat tabs"
+            variant="fullWidth"
+          >
+            <Tab icon={<ChatIcon />} label="Чат" />
+            <Tab icon={<SportsEsportsIcon />} label="Игры" />
+          </Tabs>
+        </Box>
+      )}
 
       <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {tabValue === 0 ? (
@@ -387,7 +438,8 @@ const ChatPage: React.FC = () => {
                 display: isMobile && !selectedContactId ? 'none' : 'flex',
                 flexDirection: 'column',
                 flexGrow: 1,
-                overflow: 'hidden'
+                overflow: 'hidden',
+                height: '100%'
               }}>
                 {selectedContactId && CURRENT_USER_ID ? (
                   <ChatDialog 

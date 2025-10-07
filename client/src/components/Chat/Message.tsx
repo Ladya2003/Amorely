@@ -1,5 +1,6 @@
-import React from 'react';
-import { Box, Typography, Avatar, Paper } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Avatar, Paper, Dialog, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { MessageType } from './ChatDialog';
 
 interface MessageProps {
@@ -10,10 +11,20 @@ interface MessageProps {
 }
 
 const Message: React.FC<MessageProps> = ({ message, isOwn, contactName, contactAvatar }) => {
+  const [openImage, setOpenImage] = useState<string | null>(null);
+  
   const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { 
     hour: '2-digit', 
     minute: '2-digit' 
   });
+
+  const handleImageClick = (url: string) => {
+    setOpenImage(url);
+  };
+
+  const handleCloseImage = () => {
+    setOpenImage(null);
+  };
 
   return (
     <Box 
@@ -57,10 +68,12 @@ const Message: React.FC<MessageProps> = ({ message, isOwn, contactName, contactA
                     <img 
                       src={attachment.url} 
                       alt="Attachment" 
+                      onClick={() => handleImageClick(attachment.url)}
                       style={{ 
                         maxWidth: '100%', 
                         maxHeight: '200px',
-                        display: 'block'
+                        display: 'block',
+                        cursor: 'pointer'
                       }} 
                     />
                   ) : (
@@ -99,6 +112,53 @@ const Message: React.FC<MessageProps> = ({ message, isOwn, contactName, contactA
           {formattedTime}
         </Typography>
       </Box>
+
+      {/* Модальное окно для просмотра изображения */}
+      <Dialog
+        open={Boolean(openImage)}
+        onClose={handleCloseImage}
+        maxWidth="lg"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            bgcolor: 'rgba(0, 0, 0, 0.9)',
+            boxShadow: 'none',
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <Box sx={{ position: 'relative' }}>
+          <IconButton
+            onClick={handleCloseImage}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'white',
+              bgcolor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1,
+              '&:hover': {
+                bgcolor: 'rgba(0, 0, 0, 0.7)'
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          {openImage && (
+            <img
+              src={openImage}
+              alt="Full size"
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                maxHeight: '90vh',
+                objectFit: 'contain'
+              }}
+            />
+          )}
+        </Box>
+      </Dialog>
     </Box>
   );
 };
