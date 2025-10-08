@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import NewspaperIcon from '@mui/icons-material/Newspaper';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -51,8 +52,9 @@ const Layout: React.FC = () => {
     const path = location.pathname;
     if (path === '/') return 0;
     if (path === '/chat') return 1;
-    if (path === '/news') return 2;
-    if (path === '/settings') return 3;
+    if (path === '/calendar') return 2;
+    if (path === '/news') return 3;
+    if (path === '/settings') return 4;
     return 0;
   };
   
@@ -82,9 +84,12 @@ const Layout: React.FC = () => {
                       navigate('/chat');
                       break;
                     case 2:
-                      navigate('/news');
+                      navigate('/calendar');
                       break;
                     case 3:
+                      navigate('/news');
+                      break;
+                    case 4:
                       navigate('/settings');
                       break;
                   }
@@ -93,6 +98,7 @@ const Layout: React.FC = () => {
               >
                 <BottomNavigationAction label="Главная" icon={<HomeIcon />} />
                 <BottomNavigationAction label="Чат" icon={<ChatIcon />} />
+                <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} />
                 <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} />
                 <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} />
               </BottomNavigation>
@@ -155,9 +161,12 @@ const Layout: React.FC = () => {
                   navigate('/chat');
                   break;
                 case 2:
-                  navigate('/news');
+                  navigate('/calendar');
                   break;
                 case 3:
+                  navigate('/news');
+                  break;
+                case 4:
                   navigate('/settings');
                   break;
               }
@@ -165,6 +174,7 @@ const Layout: React.FC = () => {
           >
             <BottomNavigationAction label="Главная" icon={<HomeIcon />} />
             <BottomNavigationAction label="Чат" icon={<ChatIcon />} />
+            <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} />
             <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} />
             <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} />
           </BottomNavigation>
