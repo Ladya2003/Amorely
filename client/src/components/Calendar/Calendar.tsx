@@ -25,11 +25,15 @@ interface CalendarProps {
     date: string;
     mediaUrl: string;
     type: 'image' | 'video';
+    title?: string;
+    description?: string;
+    _id?: string;
   }>;
   onAddContent: (date: Date) => void;
+  onContentClick?: (eventId: string) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ content, onAddContent }) => {
+const Calendar: React.FC<CalendarProps> = ({ content, onAddContent, onContentClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'circles' | 'grid'>('circles');
   const [tabValue, setTabValue] = useState(0);
@@ -137,14 +141,15 @@ const Calendar: React.FC<CalendarProps> = ({ content, onAddContent }) => {
                     <Grid size={{ xs: 12/7 }} key={index}>
                       <CalendarDay 
                         date={day.date} 
-                        content={day.content.length > 0 ? day.content[0] : null} 
+                        content={day.content.length > 0 ? day.content[0] : null}
+                        onContentClick={onContentClick}
                       />
                     </Grid>
                   ))}
                 </Grid>
               </Box>
             ) : (
-              <CalendarGrid days={daysWithContent} />
+              <CalendarGrid days={daysWithContent} onContentClick={onContentClick} />
             )}
           </Box>
         </>

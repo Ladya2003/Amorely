@@ -17,6 +17,13 @@ const contentSchema = new mongoose.Schema({
   nextDisplay: { type: Date },
   customDate: { type: Date },
   
+  // Поля для событий календаря
+  eventId: { type: String }, // ID события для группировки медиафайлов
+  title: { type: String }, // Заголовок события
+  description: { type: String }, // Описание события
+  eventDate: { type: Date }, // Дата события (может отличаться от createdAt)
+  showInFeed: { type: Boolean, default: true }, // Показывать ли в ленте
+  
   // Новые поля для ротации контента
   rotationOrder: { type: Number, default: 0 }, // Порядок в ротации
   currentBatch: { type: Number, default: 0 }, // Текущий батч показа

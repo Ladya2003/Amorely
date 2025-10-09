@@ -15,6 +15,7 @@ import newsRoutes from './routes/news';
 import settingsRoutes from './routes/settings';
 import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
+import calendarRoutes from './routes/calendar';
 import { authMiddleware } from './middleware/auth';
 import relationshipsRoutes from './routes/relationships';
 
@@ -180,6 +181,9 @@ app.use('/api', authMiddleware, chatRoutes);
 
 // Маршруты для отношений
 app.use('/api/relationships', authMiddleware, relationshipsRoutes);
+
+// Маршруты для календаря
+app.use('/api/calendar', authMiddleware, calendarRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {

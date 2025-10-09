@@ -10,14 +10,17 @@ interface CalendarGridProps {
     content: Array<{
       mediaUrl: string;
       type: 'image' | 'video';
+      _id?: string;
     }>;
   }>;
+  onContentClick?: (eventId: string) => void;
 }
 
-const CalendarGrid: React.FC<CalendarGridProps> = ({ days }) => {
-  const handleContentClick = (content: { mediaUrl: string; type: 'image' | 'video' }) => {
-    // Открыть просмотр контента на весь экран
-    console.log('Open content:', content);
+const CalendarGrid: React.FC<CalendarGridProps> = ({ days, onContentClick }) => {
+  const handleContentClick = (eventId?: string) => {
+    if (eventId && onContentClick) {
+      onContentClick(eventId);
+    }
   };
 
   return (
@@ -38,7 +41,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ days }) => {
                     overflow: 'hidden',
                     cursor: 'pointer'
                   }}
-                  onClick={() => handleContentClick(item)}
+                  onClick={() => handleContentClick(item._id)}
                 >
                   <Box
                     component="img"

@@ -108,8 +108,6 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
     );
   }
 
-  const currentContent = content[currentIndex];
-
   return (
     <Box sx={{ position: 'relative', mb: 3 }}>
       <Box 
@@ -118,58 +116,84 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
           borderRadius: 2, 
           overflow: 'hidden',
           position: 'relative',
-          cursor: 'pointer',
           bgcolor: 'black'
         }}
-        onClick={handleContentClick}
       >
-        {currentContent?.resourceType === 'image' ? (
-          <Box
-            component="img"
-            src={currentContent?.url}
-            alt="Контент"
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain'
-            }}
-          />
-        ) : (
-          <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+        {/* Контейнер слайдера с плавной анимацией */}
+        <Box
+          sx={{
+            display: 'flex',
+            width: '100%',
+            height: '100%',
+            transform: `translateX(-${currentIndex * 100}%)`,
+            transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          {content.map((item, index) => (
             <Box
-              component="video"
-              src={currentContent?.url}
-              controls
+              key={item.id}
               sx={{
-                width: '100%',
+                minWidth: '100%',
                 height: '100%',
-                objectFit: 'contain'
+                cursor: 'pointer',
+                position: 'relative'
               }}
-            />
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                pointerEvents: 'none'
-              }}
+              onClick={handleContentClick}
             >
-              <PlayCircleFilledIcon 
-                sx={{ 
-                  fontSize: 60, 
-                  color: 'white', 
-                  opacity: 0.8,
-                  pointerEvents: 'none'
-                }} 
-              />
+              {item.resourceType === 'image' ? (
+                <Box
+                  component="img"
+                  src={item.url}
+                  alt={`Контент ${index + 1}`}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    pointerEvents: 'none'
+                  }}
+                />
+              ) : (
+                <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+                  <Box
+                    component="video"
+                    src={item.url}
+                    controls
+                    autoPlay={index === currentIndex}
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      pointerEvents: 'none',
+                      opacity: index === currentIndex ? 0 : 1,
+                      transition: 'opacity 0.3s ease'
+                    }}
+                  >
+                    <PlayCircleFilledIcon 
+                      sx={{ 
+                        fontSize: 60, 
+                        color: 'white', 
+                        opacity: 0.8
+                      }} 
+                    />
+                  </Box>
+                </Box>
+              )}
             </Box>
-          </Box>
-        )}
+          ))}
+        </Box>
       </Box>
 
       {content.length > 1 && (
@@ -213,7 +237,11 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'flex',
-              gap: 1
+              gap: 1,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              borderRadius: 2,
+              px: 1,
+              py: 0.5
             }}
           >
             {content.map((_, index) => (
@@ -223,7 +251,13 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                   width: 8,
                   height: 8,
                   borderRadius: '50%',
-                  bgcolor: index === currentIndex ? 'primary.main' : 'rgba(255, 255, 255, 0.7)'
+                  bgcolor: index === currentIndex ? 'white' : 'rgba(255, 255, 255, 0.4)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(index);
                 }}
               />
             ))}

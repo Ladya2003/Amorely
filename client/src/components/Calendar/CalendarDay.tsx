@@ -9,17 +9,18 @@ interface CalendarDayProps {
   content: {
     mediaUrl: string;
     type: 'image' | 'video';
+    _id?: string;
   } | null;
+  onContentClick?: (eventId: string) => void;
 }
 
-const CalendarDay: React.FC<CalendarDayProps> = ({ date, content }) => {
+const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, onContentClick }) => {
   const day = format(date, 'd');
   const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   const handleClick = () => {
-    if (content) {
-      // Открыть просмотр контента на весь экран
-      console.log('Open content:', content);
+    if (content && content._id && onContentClick) {
+      onContentClick(content._id);
     }
   };
 
