@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const contentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   targetId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Если контент для партнера
-  url: { type: String, required: true },
+  url: { type: String }, // Необязательно для текстовых событий
   publicId: { type: String, required: true },
   resourceType: { type: String, enum: ['image', 'video'], required: true },
   fileSize: { type: Number, default: 0 }, // Размер файла в байтах

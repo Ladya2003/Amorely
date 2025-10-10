@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ImageIcon from '@mui/icons-material/Image';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
@@ -42,14 +43,16 @@ interface EventDetailDrawerProps {
     createdAt: string;
     media?: MediaFile[];
   } | null;
-  onEdit?: (eventId: string) => void;
+  onEdit?: (event: any) => void;
+  onDelete?: (eventId: string) => void;
 }
 
 const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
   open,
   onClose,
   event,
-  onEdit
+  onEdit,
+  onDelete
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -67,7 +70,8 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
 
   const eventDate = new Date(event.eventDate || event.createdAt);
   const eventTitle = event.title || 'Без названия';
-  const mediaFiles = event.media || [];
+  // Фильтруем только медиа с реальными URL
+  const mediaFiles = (event.media || []).filter(m => m.url && m.url.trim().length > 0);
   const currentMedia = mediaFiles[currentMediaIndex];
   
   const handlePrevMedia = () => {
@@ -110,10 +114,21 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               {onEdit && (
                 <IconButton
                   color="inherit"
-                  onClick={() => onEdit(event._id)}
+                  onClick={() => onEdit(event)}
                   aria-label="edit"
+                  title="Редактировать"
                 >
                   <EditIcon />
+                </IconButton>
+              )}
+              {onDelete && (
+                <IconButton
+                  color="inherit"
+                  onClick={() => onDelete(event.eventId || event._id)}
+                  aria-label="delete"
+                  title="Удалить"
+                >
+                  <DeleteIcon />
                 </IconButton>
               )}
             </Toolbar>

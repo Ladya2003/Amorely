@@ -30,11 +30,22 @@ interface EventEditorDrawerProps {
   open: boolean;
   onClose: () => void;
   initialDate?: Date | null;
+  editEvent?: {
+    eventId: string;
+    title: string;
+    description?: string;
+    eventDate: string;
+  } | null;
   onSave: (eventData: {
     date: Date;
     title: string;
     description: string;
     files: File[];
+  }) => Promise<void>;
+  onUpdate?: (eventId: string, eventData: {
+    date: Date;
+    title: string;
+    description: string;
   }) => Promise<void>;
 }
 
@@ -42,8 +53,11 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   open,
   onClose,
   initialDate,
-  onSave
+  editEvent,
+  onSave,
+  onUpdate
 }) => {
+  const isEditMode = !!editEvent;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
@@ -70,28 +84,38 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
     if (isInitialized) return; // Уже инициализировано
 
-    // Проверяем наличие сохраненного черновика
-    const savedDraft = hasDraft();
-    if (savedDraft && draft.title) {
-      // Восстанавливаем из черновика
-      setSelectedDate(draft.date || initialDate || new Date());
-      setTitle(draft.title);
-      setDescription(draft.description);
+    if (isEditMode && editEvent) {
+      // Режим редактирования - загружаем данные события
+      setSelectedDate(new Date(editEvent.eventDate));
+      setTitle(editEvent.title);
+      setDescription(editEvent.description || '');
+      setFiles([]);
+      setPreviews([]);
     } else {
-      // Используем initialDate или текущую дату
-      setSelectedDate(initialDate || new Date());
-      setTitle('');
-      setDescription('');
+      // Режим создания - проверяем есть ли черновик
+      if (hasDraft && draft.date) {
+        // Восстанавливаем данные из черновика
+        setSelectedDate(draft.date);
+        setTitle(draft.title || '');
+        setDescription(draft.description || '');
+        setFiles([]); // Файлы не восстанавливаем
+        setPreviews([]);
+      } else {
+        // Начинаем с чистого листа
+        setSelectedDate(initialDate || new Date());
+        setTitle('');
+        setDescription('');
+        setFiles([]);
+        setPreviews([]);
+      }
     }
     
-    setFiles([]);
-    setPreviews([]);
     setIsInitialized(true);
   }, [open]); // Срабатывает только при изменении open
 
-  // Автосохранение изменений
+  // Автосохранение изменений (только если не в режиме редактирования)
   useEffect(() => {
-    if (!open || !isInitialized) return;
+    if (!open || !isInitialized || isEditMode) return;
 
     const timer = setTimeout(() => {
       updateDraft({
@@ -104,7 +128,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [selectedDate?.getTime(), title, description, files.length, previews.length, open, isInitialized, updateDraft]);
+  }, [selectedDate?.getTime(), title, description, files.length, previews.length, open, isInitialized, isEditMode, updateDraft]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -143,15 +167,25 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setIsSaving(true);
       setError(null);
       
-      await onSave({
-        date: selectedDate,
-        title: title.trim(),
-        description: description.trim(),
-        files
-      });
-
-      // Очищаем черновик после успешного сохранения
-      clearDraft();
+      if (isEditMode && editEvent && onUpdate) {
+        // Режим редактирования
+        await onUpdate(editEvent.eventId, {
+          date: selectedDate,
+          title: title.trim(),
+          description: description.trim()
+        });
+      } else {
+        // Режим создания
+        await onSave({
+          date: selectedDate,
+          title: title.trim(),
+          description: description.trim(),
+          files
+        });
+        
+        // Очищаем черновик после успешного создания
+        clearDraft();
+      }
       
       // Очищаем локальное состояние
       previews.forEach(url => URL.revokeObjectURL(url));
@@ -171,8 +205,18 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleClose = () => {
-    // Не очищаем черновик при закрытии - он автоматически сохранен
+    // Не очищаем черновик при закрытии - данные сохранятся для повторного открытия
     onClose();
+  };
+
+  const handleClearForm = () => {
+    // Очищаем форму и черновик
+    setTitle('');
+    setDescription('');
+    setFiles([]);
+    setPreviews([]);
+    setSelectedDate(initialDate || new Date());
+    clearDraft();
   };
 
   const canSave = selectedDate && title.trim().length > 0;
@@ -202,7 +246,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               <CloseIcon />
             </IconButton>
             <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
-              Новое событие
+              {isEditMode ? 'Редактировать событие' : 'Новое событие'}
             </Typography>
             {isAutosaving && (
               <Chip 
@@ -269,35 +313,43 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           />
 
           {/* Загрузка медиа */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              Фото и видео
+          {!isEditMode && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                Фото и видео
+              </Typography>
+              <input
+                accept="image/*,video/*"
+                style={{ display: 'none' }}
+                id="event-media-upload"
+                multiple
+                type="file"
+                onChange={handleFileChange}
+              />
+              <label htmlFor="event-media-upload">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<CloudUploadIcon />}
+                  fullWidth
+                >
+                  Добавить фото или видео
+                </Button>
+              </label>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). Фото необязательны.
+              </Typography>
+            </Box>
+          )}
+          
+          {isEditMode && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
+              Примечание: При редактировании нельзя изменить медиафайлы
             </Typography>
-            <input
-              accept="image/*,video/*"
-              style={{ display: 'none' }}
-              id="event-media-upload"
-              multiple
-              type="file"
-              onChange={handleFileChange}
-            />
-            <label htmlFor="event-media-upload">
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<CloudUploadIcon />}
-                fullWidth
-              >
-                Добавить фото или видео
-              </Button>
-            </label>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV)
-            </Typography>
-          </Box>
+          )}
 
           {/* Превью загруженных файлов */}
-          {previews.length > 0 && (
+          {!isEditMode && previews.length > 0 && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
               {previews.map((preview, index) => (
                 <Box
@@ -378,27 +430,44 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             borderColor: 'divider',
             p: 2,
             display: 'flex',
-            gap: 2
+            flexDirection: 'column',
+            gap: 1
           }}
         >
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={handleClose}
-            disabled={isSaving}
-          >
-            Отмена
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            onClick={handleSave}
-            disabled={!canSave || isSaving}
-            startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
-          >
-            {isSaving ? 'Сохранение...' : 'Сохранить'}
-          </Button>
+          {/* Показываем кнопку очистки, если есть данные и не в режиме редактирования */}
+          {!isEditMode && (title || description || files.length > 0) && (
+            <Button
+              fullWidth
+              variant="text"
+              size="small"
+              onClick={handleClearForm}
+              disabled={isSaving}
+              startIcon={<DeleteIcon />}
+            >
+              Очистить форму
+            </Button>
+          )}
+          
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleClose}
+              disabled={isSaving}
+            >
+              Отмена
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={handleSave}
+              disabled={!canSave || isSaving}
+              startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
+            >
+              {isSaving ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </Box>
         </Box>
       </Box>
     </Drawer>

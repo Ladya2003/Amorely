@@ -72,10 +72,24 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
         savedContent.push(content);
       }
     } else {
-      // Если нет файлов, создаем событие без медиа
-      // Можно использовать placeholder или просто сохранить событие как текст
-      // Для этого создадим запись без URL (позже можно обработать отдельно)
-      return res.status(400).json({ error: 'Необходимо добавить хотя бы одно фото или видео' });
+      // Создаем событие без медиафайлов (только текстовое)
+      const content = new Content({
+        userId: userId,
+        targetId: partnerId,
+        url: '', // Пустой URL для текстовых событий
+        publicId: `text_${eventId}`,
+        resourceType: 'image', // Устанавливаем тип по умолчанию
+        fileSize: 0,
+        eventId: eventId,
+        eventDate: new Date(eventDate),
+        title: title,
+        description: description || '',
+        showInFeed: false, // Текстовые события не показываем в ленте по умолчанию
+        customDate: new Date(eventDate)
+      });
+
+      await content.save();
+      savedContent.push(content);
     }
 
     res.json({
@@ -220,35 +234,37 @@ router.get('/events/:id', async (req: any, res: Response) => {
   }
 });
 
-// Обновление события
+// Обновление события (обновляет все медиафайлы с данным eventId)
 router.put('/events/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const { id } = req.params;
+    const { id } = req.params; // это eventId
     const { eventDate, title, description, showInFeed } = req.body;
 
-    const event = await Content.findById(id);
+    // Находим все медиафайлы события
+    const mediaFiles = await Content.find({ eventId: id });
 
-    if (!event) {
+    if (!mediaFiles || mediaFiles.length === 0) {
       return res.status(404).json({ error: 'Событие не найдено' });
     }
 
     // Проверяем, что пользователь - создатель события
-    if (event.userId.toString() !== userId) {
+    if (mediaFiles[0].userId.toString() !== userId) {
       return res.status(403).json({ error: 'Только создатель может редактировать событие' });
     }
 
-    // Обновляем поля
-    if (eventDate) event.eventDate = new Date(eventDate);
-    if (title) event.title = title;
-    if (description !== undefined) event.description = description;
-    if (showInFeed !== undefined) event.showInFeed = showInFeed;
+    // Обновляем все медиафайлы события
+    const updateData: any = {};
+    if (eventDate) updateData.eventDate = new Date(eventDate);
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (showInFeed !== undefined) updateData.showInFeed = showInFeed;
 
-    await event.save();
+    await Content.updateMany({ eventId: id }, { $set: updateData });
 
     res.json({
       message: 'Событие успешно обновлено',
-      event
+      eventId: id
     });
   } catch (error) {
     console.error('Ошибка при обновлении события:', error);
@@ -256,34 +272,37 @@ router.put('/events/:id', async (req: any, res: Response) => {
   }
 });
 
-// Удаление события
+// Удаление события (удаляет все медиафайлы с данным eventId)
 router.delete('/events/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const { id } = req.params;
+    const { id } = req.params; // это eventId
 
-    const event = await Content.findById(id);
+    // Находим все медиафайлы события
+    const mediaFiles = await Content.find({ eventId: id });
 
-    if (!event) {
+    if (!mediaFiles || mediaFiles.length === 0) {
       return res.status(404).json({ error: 'Событие не найдено' });
     }
 
     // Проверяем, что пользователь - создатель события
-    if (event.userId.toString() !== userId) {
+    if (mediaFiles[0].userId.toString() !== userId) {
       return res.status(403).json({ error: 'Только создатель может удалить событие' });
     }
 
-    // Удаляем файл из Cloudinary
-    try {
-      await cloudinary.uploader.destroy(event.publicId, {
-        resource_type: event.resourceType as any
-      });
-    } catch (cloudinaryError) {
-      console.error('Ошибка при удалении из Cloudinary:', cloudinaryError);
+    // Удаляем все файлы из Cloudinary
+    for (const media of mediaFiles) {
+      try {
+        await cloudinary.uploader.destroy(media.publicId, {
+          resource_type: media.resourceType as any
+        });
+      } catch (cloudinaryError) {
+        console.error('Ошибка при удалении из Cloudinary:', cloudinaryError);
+      }
     }
 
-    // Удаляем событие из базы данных
-    await Content.findByIdAndDelete(id);
+    // Удаляем все медиафайлы события из базы данных
+    await Content.deleteMany({ eventId: id });
 
     res.json({ message: 'Событие успешно удалено' });
   } catch (error) {

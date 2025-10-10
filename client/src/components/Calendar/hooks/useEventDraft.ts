@@ -104,10 +104,8 @@ export const useEventDraft = () => {
     }
   }, []);
 
-  // Проверка наличия черновика
-  const hasDraft = useCallback(() => {
-    return !!(draft.title || draft.description || draft.files.length > 0);
-  }, [draft]);
+  // Проверка наличия черновика (вычисляемое значение, а не функция)
+  const hasDraft = !!(draft.title || draft.description || draft.date);
 
   return {
     draft,
