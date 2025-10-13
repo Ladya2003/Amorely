@@ -31,6 +31,12 @@ interface MediaFile {
   fileSize?: number;
 }
 
+interface User {
+  _id: string;
+  username: string;
+  avatar?: string;
+}
+
 interface EventDetailDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -42,6 +48,9 @@ interface EventDetailDrawerProps {
     eventDate?: string;
     createdAt: string;
     media?: MediaFile[];
+    createdBy?: User;
+    lastEditedBy?: User;
+    lastEditedAt?: string;
   } | null;
   onEdit?: (event: any) => void;
   onDelete?: (eventId: string) => void;
@@ -327,10 +336,30 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   Создано
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" display="block">
                   {format(new Date(event.createdAt), 'd MMMM yyyy в HH:mm', { locale: ru })}
                 </Typography>
+                {event.createdBy && (
+                  <Typography variant="caption" color="text.secondary">
+                    Автор: {event.createdBy.username}
+                  </Typography>
+                )}
               </Box>
+
+              {/* Информация о редактировании */}
+              {event.lastEditedBy && event.lastEditedAt && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Последнее изменение
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    {format(new Date(event.lastEditedAt), 'd MMMM yyyy в HH:mm', { locale: ru })}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Редактор: {event.lastEditedBy.username}
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </Box>
         </Box>

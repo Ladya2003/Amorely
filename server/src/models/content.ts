@@ -23,6 +23,9 @@ const contentSchema = new mongoose.Schema({
   description: { type: String }, // Описание события
   eventDate: { type: Date }, // Дата события (может отличаться от createdAt)
   showInFeed: { type: Boolean, default: true }, // Показывать ли в ленте
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто создал событие
+  lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто последним редактировал
+  lastEditedAt: { type: Date }, // Когда последний раз редактировалось
   
   // Новые поля для ротации контента
   rotationOrder: { type: Number, default: 0 }, // Порядок в ротации

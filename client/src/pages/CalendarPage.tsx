@@ -16,6 +16,12 @@ interface MediaFile {
   fileSize?: number;
 }
 
+interface User {
+  _id: string;
+  username: string;
+  avatar?: string;
+}
+
 interface ContentItem {
   _id: string;
   eventId: string;
@@ -24,6 +30,9 @@ interface ContentItem {
   eventDate?: string;
   createdAt: string;
   media: MediaFile[];
+  createdBy?: User;
+  lastEditedBy?: User;
+  lastEditedAt?: string;
 }
 
 const CalendarPage: React.FC = () => {

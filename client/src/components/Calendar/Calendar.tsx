@@ -169,7 +169,8 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
               justifyContent: 'space-between', 
               alignItems: 'center', 
               px: 2, 
-              pb: 1
+              pb: 1,
+              pt: view === 'grid' ? 2 : 0 // Отступ сверху для плитки
             }}>
               <ToggleButtonGroup
                 value={view}

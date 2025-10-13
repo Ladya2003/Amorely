@@ -120,7 +120,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                   mb: 2, 
                   mt: 2,
                   fontWeight: 600,
-                  py: 1
+                  py: 1,
+                  textTransform: 'capitalize'
                 }}
               >
                 {format(month.monthDate, 'LLLL yyyy', { locale: ru })}

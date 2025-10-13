@@ -444,7 +444,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               disabled={isSaving}
               startIcon={<DeleteIcon />}
             >
-              Очистить форму
+              Очистить данные
             </Button>
           )}
           

@@ -65,7 +65,8 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
           title: title,
           description: description || '',
           showInFeed: true,
-          customDate: new Date(eventDate)
+          customDate: new Date(eventDate),
+          createdBy: userId // Кто создал событие
         });
 
         await content.save();
@@ -85,7 +86,8 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
         title: title,
         description: description || '',
         showInFeed: false, // Текстовые события не показываем в ленте по умолчанию
-        customDate: new Date(eventDate)
+        customDate: new Date(eventDate),
+        createdBy: userId // Кто создал событие
       });
 
       await content.save();
@@ -143,6 +145,8 @@ router.get('/events', async (req: any, res: Response) => {
 
     const allMedia = await Content.find(query)
       .populate('userId', 'username avatar')
+      .populate('createdBy', 'username avatar')
+      .populate('lastEditedBy', 'username avatar')
       .sort({ eventDate: -1, createdAt: -1 });
 
     // Группируем медиафайлы по eventId
@@ -161,6 +165,9 @@ router.get('/events', async (req: any, res: Response) => {
           eventDate: media.eventDate,
           createdAt: media.createdAt,
           userId: media.userId,
+          createdBy: media.createdBy,
+          lastEditedBy: media.lastEditedBy,
+          lastEditedAt: media.lastEditedAt,
           media: []
         });
       }
@@ -195,6 +202,8 @@ router.get('/events/:id', async (req: any, res: Response) => {
     const mediaFiles = await Content.find({ eventId: id })
       .populate('userId', 'username avatar')
       .populate('targetId', 'username avatar')
+      .populate('createdBy', 'username avatar')
+      .populate('lastEditedBy', 'username avatar')
       .sort({ createdAt: 1 }); // Сортируем по порядку добавления
 
     if (!mediaFiles || mediaFiles.length === 0) {
@@ -218,6 +227,9 @@ router.get('/events/:id', async (req: any, res: Response) => {
       createdAt: firstMedia.createdAt,
       userId: firstMedia.userId,
       targetId: firstMedia.targetId,
+      createdBy: firstMedia.createdBy,
+      lastEditedBy: firstMedia.lastEditedBy,
+      lastEditedAt: firstMedia.lastEditedAt,
       media: mediaFiles.map(m => ({
         _id: m._id,
         url: m.url,
@@ -259,6 +271,8 @@ router.put('/events/:id', async (req: any, res: Response) => {
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (showInFeed !== undefined) updateData.showInFeed = showInFeed;
+    updateData.lastEditedBy = userId; // Кто последним редактировал
+    updateData.lastEditedAt = new Date(); // Время редактирования
 
     await Content.updateMany({ eventId: id }, { $set: updateData });
 
