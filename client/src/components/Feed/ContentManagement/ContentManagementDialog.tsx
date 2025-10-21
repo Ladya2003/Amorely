@@ -115,9 +115,29 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
     </Tabs>
   );
 
+  // Информационное сообщение о новой логике
+  const infoMessage = (
+    <Box sx={{ 
+      p: 2, 
+      mb: 2, 
+      bgcolor: 'info.light', 
+      borderRadius: 1,
+      border: '1px solid',
+      borderColor: 'info.main'
+    }}>
+      <Typography variant="body2" color="info.dark">
+        📅 <strong>Новая логика:</strong> Контент теперь добавляется через Календарь. 
+        Создавайте события с фото и видео в разделе "Календарь" - они автоматически появятся в Ленте.
+        <br />
+        💡 <strong>Совет:</strong> Добавьте партнера в настройках, чтобы видеть его контент в Ленте.
+      </Typography>
+    </Box>
+  );
+
   // Общий контент страницы
   const pageContent = (
     <>
+      {infoMessage}
       <Box sx={{
         flexGrow: 1,
         overflow: 'auto',

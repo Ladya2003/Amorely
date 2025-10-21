@@ -22,7 +22,7 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-// Получение контента для ленты
+// Получение контента для ленты из календаря
 router.get('/content', async (req: any, res: Response) => {
   try {
     const { target } = req.query;
@@ -35,27 +35,97 @@ router.get('/content', async (req: any, res: Response) => {
     const formattedUserId = new mongoose.Types.ObjectId(userId);
     
     if (target === 'partner') {
-      // Контент от партнера для пользователя
-      // Сначала находим партнера
-      const relationship = await Relationship.findOne({ 
-        $or: [
-          { userId: formattedUserId },
-          { partnerId: formattedUserId }
-        ]
-      });
-      
-      if (!relationship) {
-        return res.json([]);
+      // Получаем информацию о пользователе и партнере
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'Пользователь не найден' });
       }
+
+      const partnerId = user.partnerId;
       
-      const partnerId = relationship.userId.toString() === userId.toString() 
-        ? relationship.partnerId 
-        : relationship.userId;
+      // Строим запрос для получения контента
+      let query: any = {
+        userId: formattedUserId, // Всегда включаем контент пользователя
+        showInFeed: true, // Только события, которые должны показываться в ленте
+        url: { $ne: '' } // Исключаем текстовые события без медиа
+      };
+
+      // Если есть партнер, добавляем его контент
+      if (partnerId) {
+        query = {
+          $or: [
+            { userId: formattedUserId },
+            { userId: partnerId }
+          ],
+          showInFeed: true,
+          url: { $ne: '' }
+        };
+      }
+
+      const allMedia = await Content.find(query)
+        .populate('userId', 'username avatar')
+        .populate('createdBy', 'username avatar')
+        .sort({ eventDate: -1, createdAt: -1 });
+
+      // Группируем медиафайлы по eventId и создаем контент для ленты
+      const eventsMap = new Map();
       
-      // Получаем активный контент с учетом ротации
-      const activeContent = await getActiveContent(userId, partnerId.toString());
+      allMedia.forEach(media => {
+        const key = media.eventId || media._id.toString();
+        
+        if (!eventsMap.has(key)) {
+          // Первое медиафайл события - создаем запись события
+          eventsMap.set(key, {
+            _id: key,
+            eventId: key,
+            title: media.title,
+            description: media.description,
+            eventDate: media.eventDate,
+            createdAt: media.createdAt,
+            userId: media.userId,
+            createdBy: media.createdBy,
+            media: []
+          });
+        }
+        
+        // Добавляем медиафайл в массив
+        eventsMap.get(key).media.push({
+          _id: media._id,
+          url: media.url,
+          publicId: media.publicId,
+          resourceType: media.resourceType,
+          fileSize: media.fileSize
+        });
+      });
+
+      // Преобразуем события в формат для ленты
+      const feedContent: any[] = [];
+      const events = Array.from(eventsMap.values());
       
-      res.json(activeContent);
+      events.forEach((event: any) => {
+        // Для каждого события добавляем все его медиафайлы в ленту
+        event.media.forEach((media: any) => {
+          feedContent.push({
+            id: media._id,
+            _id: media._id,
+            url: media.url,
+            resourceType: media.resourceType,
+            type: media.resourceType === 'video' ? 'video' : 'image',
+            title: event.title,
+            description: event.description,
+            eventDate: event.eventDate,
+            createdAt: event.createdAt,
+            userId: event.userId,
+            createdBy: event.createdBy,
+            eventId: event.eventId
+          });
+        });
+      });
+
+      // Сортируем по дате события (новые сверху)
+      feedContent.sort((a: any, b: any) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());
+      
+      res.json(feedContent);
     } else {
       return res.status(400).json({ error: 'Неверный параметр target' });
     }

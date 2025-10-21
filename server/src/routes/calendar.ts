@@ -122,11 +122,18 @@ router.get('/events', async (req: any, res: Response) => {
     const partnerId = user.partnerId;
 
     let query: any = {
-      $or: [
-        { userId: userId },
-        { targetId: userId }
-      ]
+      userId: userId // Сначала получаем события пользователя
     };
+
+    // Если есть партнер, добавляем его события
+    if (partnerId) {
+      query = {
+        $or: [
+          { userId: userId },
+          { userId: partnerId }
+        ]
+      };
+    }
 
     // Фильтрация по датам
     if (startDate && endDate) {
@@ -213,7 +220,16 @@ router.get('/events/:id', async (req: any, res: Response) => {
     const firstMedia = mediaFiles[0];
 
     // Проверяем, что пользователь имеет доступ к этому событию
-    if (firstMedia.userId.toString() !== userId && firstMedia.targetId.toString() !== userId) {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    const partnerId = user.partnerId;
+    const isOwner = firstMedia.userId.toString() === userId;
+    const isPartner = partnerId && firstMedia.userId.toString() === partnerId.toString();
+    
+    if (!isOwner && !isPartner) {
       return res.status(403).json({ error: 'Нет доступа к этому событию' });
     }
 
@@ -260,9 +276,18 @@ router.put('/events/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Событие не найдено' });
     }
 
-    // Проверяем, что пользователь - создатель события
-    if (mediaFiles[0].userId.toString() !== userId) {
-      return res.status(403).json({ error: 'Только создатель может редактировать событие' });
+    // Проверяем права на редактирование события
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    const partnerId = user.partnerId;
+    const isOwner = mediaFiles[0].userId.toString() === userId;
+    const isPartner = partnerId && mediaFiles[0].userId.toString() === partnerId.toString();
+    
+    if (!isOwner && !isPartner) {
+      return res.status(403).json({ error: 'Нет прав на редактирование этого события' });
     }
 
     // Обновляем все медиафайлы события
@@ -299,9 +324,18 @@ router.delete('/events/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Событие не найдено' });
     }
 
-    // Проверяем, что пользователь - создатель события
-    if (mediaFiles[0].userId.toString() !== userId) {
-      return res.status(403).json({ error: 'Только создатель может удалить событие' });
+    // Проверяем права на удаление события
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    const partnerId = user.partnerId;
+    const isOwner = mediaFiles[0].userId.toString() === userId;
+    const isPartner = partnerId && mediaFiles[0].userId.toString() === partnerId.toString();
+    
+    if (!isOwner && !isPartner) {
+      return res.status(403).json({ error: 'Нет прав на удаление этого события' });
     }
 
     // Удаляем все файлы из Cloudinary

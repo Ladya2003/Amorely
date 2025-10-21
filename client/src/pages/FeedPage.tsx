@@ -141,7 +141,15 @@ const FeedPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setPartnerContent(partnerResponse.data);
+      // Преобразуем данные в формат ContentItem
+      const formattedContent: ContentItem[] = partnerResponse.data.map((item: any) => ({
+        id: item.id || item._id,
+        url: item.url,
+        resourceType: item.resourceType,
+        createdAt: item.createdAt
+      }));
+      
+      setPartnerContent(formattedContent);
       
       setIsLoading(false);
     } catch (error) {
@@ -280,8 +288,8 @@ const FeedPage: React.FC = () => {
         isLoading={isLoading}
         onContentClick={handleContentClick}
         navigateTo={!isPartnerAdded ? '/settings' : undefined}
-        placeholder={!isPartnerAdded ? 'Добавьте партнера в настройках' : 'Нет доступного контента\n\n📝 Нажмите здесь, чтобы управлять контентом'}
-        onEmptyClick={isPartnerAdded ? handleAddContentClick : undefined}
+        placeholder={!isPartnerAdded ? 'Нет доступного контента\n\n📅 Добавьте события в Календаре с фото и видео' : 'Нет доступного контента\n\n📅 Добавьте события в Календаре с фото и видео'}
+        onEmptyClick={() => window.location.href = '/calendar'}
         currentIndex={currentIndex}
         setCurrentIndex={setCurrentIndex}
       />
@@ -300,7 +308,7 @@ const FeedPage: React.FC = () => {
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            Контент от партнера
+            {isPartnerAdded ? 'Контент от партнера' : 'Мой контент'}
           </Typography>
         </Badge>
       </Box>
@@ -317,7 +325,8 @@ const FeedPage: React.FC = () => {
         relationshipOwnerId={relationshipOwnerId}
       />
       
-      <Fab 
+      {/* Временно закомментировано - контент теперь добавляется через Календарь */}
+      {/* <Fab 
         color="primary" 
         aria-label="add" 
         onClick={handleAddContentClick}
@@ -328,7 +337,7 @@ const FeedPage: React.FC = () => {
         }}
       >
         <EditIcon />
-      </Fab>
+      </Fab> */}
       
       <ContentManagementDialog 
         open={addContentDialogOpen}

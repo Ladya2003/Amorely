@@ -15,7 +15,7 @@ A love app for beloved couples to bond together
 
 ### How to run server with debugger
 - At root folder Open new JavaScript Debugger Terminal
-- Run `npm run server`
+- Run `npm run server` or `npm run dev:local` for local development
 
 ### What to improve?
 #### Tech issues

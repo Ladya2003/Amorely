@@ -27,9 +27,20 @@ const io = setupSocketIO(server);
 const PORT = process.env.PORT || 5000;
 
 // Подключение к MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/amorely')
-  .then(() => console.log('MongoDB подключена'))
-  .catch((err: any) => console.error('Ошибка подключения к MongoDB:', err));
+const isLocalDev = process.env.NODE_ENV === 'development';
+const mongoUri = isLocalDev ? 'mongodb://localhost:27017/amorely' : process.env.MONGODB_URI || 'mongodb://localhost:27017/amorely';
+
+mongoose.connect(mongoUri)
+  .then(() => {
+    console.log(`MongoDB подключена: ${isLocalDev ? 'локальная' : 'облачная'}`);
+    console.log(`URI: ${mongoUri.replace(/\/\/.*@/, '//***@')}`); // Скрываем пароль в логах
+  })
+  .catch((err: any) => {
+    console.error('Ошибка подключения к MongoDB:', err);
+    if (isLocalDev) {
+      console.log('💡 Подсказка: Убедитесь, что локальная MongoDB запущена командой: npm run db:start');
+    }
+  });
 
 // Настройка Cloudinary
 cloudinary.config({
