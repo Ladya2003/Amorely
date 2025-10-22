@@ -20,6 +20,7 @@ interface CalendarDayProps {
 const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, onContentClick }) => {
   const day = format(date, 'd');
   const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+  const isBirthdayEvent = content && content.isBirthdayEvent;
 
   const handleClick = () => {
     if (content && content._id && onContentClick) {
@@ -44,7 +45,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, onContentClick
           width: 40,
           height: 40,
           overflow: 'hidden',
-          bgcolor: isToday ? 'primary.main' : content ? (content.mediaUrl === 'placeholder' ? 'primary.light' : 'transparent') : 'grey.200'
+          bgcolor: isToday ? 'primary.main' : content ? (content.mediaUrl === 'placeholder' ? 'primary.light' : 'transparent') : 'grey.200',
+          borderRadius: !isBirthdayEvent ? '50%' : '0%'
         }}
       >
         {content ? (
@@ -99,7 +101,6 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, onContentClick
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: '50%'
             }}
           >
             <Typography 
@@ -112,7 +113,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, onContentClick
         )}
         
         {/* Маленький бейджик дня рождения - 20px, top: 0, right: 0 */}
-        {content && content.isBirthdayEvent && (
+        {isBirthdayEvent && (
           <Box
             sx={{
               position: 'absolute',
