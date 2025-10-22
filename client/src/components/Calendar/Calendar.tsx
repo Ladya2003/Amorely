@@ -34,6 +34,7 @@ interface EventItem {
   eventDate?: string;
   createdAt: string;
   media: MediaFile[];
+  isBirthdayEvent?: boolean;
 }
 
 interface CalendarProps {
@@ -44,6 +45,7 @@ interface CalendarProps {
     title?: string;
     description?: string;
     _id?: string;
+    isBirthdayEvent?: boolean;
   }>;
   allEvents?: EventItem[]; // Полные данные событий для grid view
   onAddContent: (date: Date) => void;

@@ -24,8 +24,10 @@ import ThemeSettings from '../components/Settings/ThemeSettings';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
+import { useAuth } from '../contexts/AuthContext';
 
 const SettingsPage: React.FC = () => {
+  const { updateUser } = useAuth();
   const [tabValue, setTabValue] = useState(0);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [partner, setPartner] = useState<Partner | null>(null);
@@ -124,6 +126,8 @@ const SettingsPage: React.FC = () => {
       });
       
       setUser(response.data.user);
+      // Обновляем данные пользователя в AuthContext
+      updateUser(response.data.user);
       setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при сохранении профиля:', error);

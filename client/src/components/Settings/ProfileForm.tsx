@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Box, 
   TextField, 
@@ -22,6 +22,7 @@ export interface UserProfile {
   lastName?: string;
   bio?: string;
   avatar?: string;
+  birthday?: string;
 }
 
 interface ProfileFormProps {
@@ -35,10 +36,28 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
   const [bio, setBio] = useState(user.bio || '');
+  const [birthday, setBirthday] = useState(() => {
+    if (user.birthday) {
+      // Преобразуем ISO дату в формат YYYY-MM-DD для HTML input
+      const date = new Date(user.birthday);
+      return date.toISOString().split('T')[0];
+    }
+    return '';
+  });
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(user.avatar);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Обновляем birthday при изменении user
+  useEffect(() => {
+    if (user.birthday) {
+      const date = new Date(user.birthday);
+      setBirthday(date.toISOString().split('T')[0]);
+    } else {
+      setBirthday('');
+    }
+  }, [user.birthday]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -65,6 +84,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
       formData.append('firstName', firstName);
       formData.append('lastName', lastName);
       formData.append('bio', bio);
+      formData.append('birthday', birthday);
       
       if (avatarFile) {
         formData.append('avatar', avatarFile);
@@ -165,6 +185,20 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   variant="outlined"
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label="День рождения"
+                  type="date"
+                  value={birthday}
+                  onChange={(e) => setBirthday(e.target.value)}
+                  variant="outlined"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  helperText="Укажите дату рождения для отображения событий в ленте на день рождения"
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>

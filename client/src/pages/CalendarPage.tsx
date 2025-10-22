@@ -33,6 +33,7 @@ interface ContentItem {
   createdBy?: User;
   lastEditedBy?: User;
   lastEditedAt?: string;
+  isBirthdayEvent?: boolean;
 }
 
 const CalendarPage: React.FC = () => {
@@ -97,7 +98,8 @@ const CalendarPage: React.FC = () => {
           description: item.description,
           _id: item.eventId || item._id,
           eventDate: item.eventDate,
-          createdAt: item.createdAt
+          createdAt: item.createdAt,
+          isBirthdayEvent: item.isBirthdayEvent
         };
       });
       
@@ -160,7 +162,8 @@ const CalendarPage: React.FC = () => {
       eventId: event.eventId || event._id,
       title: event.title || '',
       description: event.description || '',
-      eventDate: event.eventDate || event.createdAt
+      eventDate: event.eventDate || event.createdAt,
+      isBirthdayEvent: event.isBirthdayEvent || false
     });
     setEventDetailOpen(false); // Закрываем детальный просмотр
     setAddDialogOpen(true); // Открываем редактор
@@ -251,6 +254,7 @@ const CalendarPage: React.FC = () => {
     date: Date;
     title: string;
     description: string;
+    isBirthdayEvent?: boolean;
   }) => {
     try {
       const token = localStorage.getItem('token');
@@ -261,7 +265,8 @@ const CalendarPage: React.FC = () => {
       await axios.put(`${API_URL}/api/calendar/events/${eventId}`, {
         eventDate: eventData.date.toISOString(),
         title: eventData.title,
-        description: eventData.description
+        description: eventData.description,
+        isBirthdayEvent: eventData.isBirthdayEvent
       }, {
         headers: {
           'Authorization': `Bearer ${token}`

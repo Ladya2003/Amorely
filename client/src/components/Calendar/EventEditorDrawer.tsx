@@ -12,7 +12,9 @@ import {
   useTheme,
   useMediaQuery,
   CircularProgress,
-  Alert
+  Alert,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -25,6 +27,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ru } from 'date-fns/locale';
 import { format } from 'date-fns';
 import { useEventDraft } from './hooks/useEventDraft';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface EventEditorDrawerProps {
   open: boolean;
@@ -35,17 +38,20 @@ interface EventEditorDrawerProps {
     title: string;
     description?: string;
     eventDate: string;
+    isBirthdayEvent?: boolean;
   } | null;
   onSave: (eventData: {
     date: Date;
     title: string;
     description: string;
     files: File[];
+    isBirthdayEvent?: boolean;
   }) => Promise<void>;
   onUpdate?: (eventId: string, eventData: {
     date: Date;
     title: string;
     description: string;
+    isBirthdayEvent?: boolean;
   }) => Promise<void>;
 }
 
@@ -60,6 +66,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const isEditMode = !!editEvent;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { user } = useAuth();
   
   const { draft, updateDraft, clearDraft, hasDraft, isSaving: isAutosaving } = useEventDraft();
   
@@ -71,6 +78,36 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isBirthdayEvent, setIsBirthdayEvent] = useState(false);
+
+  // Функция для проверки, находится ли дата в диапазоне дня рождения
+  const isDateNearBirthday = (date: Date | null): boolean => {
+    if (!date || !user?.birthday) return false;
+    
+    const userBirthday = new Date(user.birthday);
+    const eventDate = new Date(date);
+    
+    // Создаем даты для текущего года
+    const currentYear = new Date().getFullYear();
+    const birthdayThisYear = new Date(currentYear, userBirthday.getMonth(), userBirthday.getDate());
+    
+    // Проверяем диапазон ±2 недели
+    const twoWeeksAgo = new Date(birthdayThisYear);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    const twoWeeksLater = new Date(birthdayThisYear);
+    twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
+    
+    return eventDate >= twoWeeksAgo && eventDate <= twoWeeksLater;
+  };
+
+  // Обновляем состояние чекбокса дня рождения при изменении даты
+  // Только если не в режиме редактирования (чтобы не перезаписывать сохраненное значение)
+  useEffect(() => {
+    if (!isEditMode) {
+      setIsBirthdayEvent(isDateNearBirthday(selectedDate));
+    }
+  }, [selectedDate, user?.birthday, isEditMode]);
 
   // Инициализация при открытии drawer
   useEffect(() => {
@@ -91,6 +128,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setDescription(editEvent.description || '');
       setFiles([]);
       setPreviews([]);
+      setIsBirthdayEvent(editEvent.isBirthdayEvent || false);
     } else {
       // Режим создания - проверяем есть ли черновик
       if (hasDraft && draft.date) {
@@ -172,7 +210,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         await onUpdate(editEvent.eventId, {
           date: selectedDate,
           title: title.trim(),
-          description: description.trim()
+          description: description.trim(),
+          isBirthdayEvent
         });
       } else {
         // Режим создания
@@ -180,7 +219,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           date: selectedDate,
           title: title.trim(),
           description: description.trim(),
-          files
+          files,
+          isBirthdayEvent
         });
         
         // Очищаем черновик после успешного создания
@@ -311,6 +351,31 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             inputProps={{ maxLength: 500 }}
             helperText={`${description.length}/500 символов`}
           />
+
+          {/* Чекбокс дня рождения */}
+          {isDateNearBirthday(selectedDate) && (
+            <Box sx={{ mb: 3, p: 2, borderRadius: 1, border: '1px solid', borderColor: 'info.main' }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isBirthdayEvent}
+                    onChange={(e) => setIsBirthdayEvent(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Box>
+                    <Typography variant="body2" fontWeight="medium">
+                      🎂 Отнести ко дню рождения
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                      Это событие будет показываться в ленте на день рождения
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Box>
+          )}
 
           {/* Загрузка медиа */}
           {!isEditMode && (

@@ -47,7 +47,7 @@ router.get('/user/:id', async (req: ExtendedRequest, res: Response) => {
 router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { username, firstName, lastName, bio, theme } = req.body;
+    const { username, firstName, lastName, bio, birthday, theme } = req.body;
     const file = req.file as Express.Multer.File & { path: string, filename: string };
     
     const user = await User.findById(id);
@@ -69,6 +69,7 @@ router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Respo
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (bio) user.bio = bio;
+    if (birthday) user.birthday = new Date(birthday);
     if (theme) user.theme = theme;
     
     // Обновляем аватар, если он был загружен

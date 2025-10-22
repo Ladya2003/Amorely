@@ -20,6 +20,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ImageIcon from '@mui/icons-material/Image';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import CakeIcon from '@mui/icons-material/Cake';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -48,6 +49,7 @@ interface EventDetailDrawerProps {
     eventDate?: string;
     createdAt: string;
     media?: MediaFile[];
+    isBirthdayEvent?: boolean;
     createdBy?: User;
     lastEditedBy?: User;
     lastEditedAt?: string;
@@ -295,7 +297,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               {/* Дата */}
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                 <CalendarTodayIcon sx={{ color: 'primary.main', mr: 1 }} />
-                <Box>
+                <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" color="text.secondary">
                     Дата события
                   </Typography>
@@ -303,6 +305,14 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                     {format(eventDate, 'd MMMM yyyy', { locale: ru })}
                   </Typography>
                 </Box>
+                {event.isBirthdayEvent && (
+                  <Chip
+                    icon={<CakeIcon />}
+                    label="День рождения"
+                    color="secondary"
+                    size="small"
+                  />
+                )}
               </Box>
 
               <Divider sx={{ my: 2 }} />

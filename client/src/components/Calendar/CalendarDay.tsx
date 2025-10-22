@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
+import CakeIcon from '@mui/icons-material/Cake';
 
 interface CalendarDayProps {
   date: Date;
@@ -11,6 +12,7 @@ interface CalendarDayProps {
     mediaUrl: string;
     type: 'image' | 'video';
     _id?: string;
+    isBirthdayEvent?: boolean;
   } | null;
   onContentClick?: (eventId: string) => void;
 }
@@ -35,25 +37,43 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, onContentClick
       }}
       onClick={handleClick}
     >
-      <Avatar 
-        sx={{ 
-          width: 40, 
-          height: 40, 
-          bgcolor: isToday ? 'primary.main' : content ? (content.mediaUrl === 'placeholder' ? 'primary.light' : 'transparent') : 'grey.200',
-          border: content ? '2px solid #ff4b8d' : 'none',
-          position: 'relative'
+      {/* Контейнер для картинки события с relative позиционированием */}
+      <Box
+        sx={{
+          position: 'relative',
+          width: 40,
+          height: 40,
+          overflow: 'hidden',
+          bgcolor: isToday ? 'primary.main' : content ? (content.mediaUrl === 'placeholder' ? 'primary.light' : 'transparent') : 'grey.200'
         }}
       >
         {content ? (
           content.mediaUrl === 'placeholder' ? (
             // Текстовое событие - показываем иконку
-            <DescriptionIcon sx={{ fontSize: 20, color: 'white' }} />
+            <Box
+              sx={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                border: '2px solid #ff4b8d'
+              }}
+            >
+              <DescriptionIcon sx={{ fontSize: 20, color: 'white' }} />
+            </Box>
           ) : (
             // Событие с медиа - показываем превью
             <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
               <Avatar 
                 src={content.mediaUrl} 
-                sx={{ width: '100%', height: '100%' }}
+                sx={{ 
+                  width: '100%', 
+                  height: '100%',
+                  borderRadius: '50%',
+                  border: '2px solid #ff4b8d'
+                }}
                 variant="circular"
               />
               {content.type === 'video' && (
@@ -64,21 +84,57 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, onContentClick
                     left: '50%', 
                     transform: 'translate(-50%, -50%)',
                     color: 'white',
-                    fontSize: 16
+                    fontSize: 16,
+                    zIndex: 5
                   }} 
                 />
               )}
             </Box>
           )
         ) : (
-          <Typography 
-            variant="body2" 
-            color={isToday ? 'white' : 'text.primary'}
+          <Box
+            sx={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '50%'
+            }}
           >
-            {day}
-          </Typography>
+            <Typography 
+              variant="body2" 
+              color={isToday ? 'white' : 'text.primary'}
+            >
+              {day}
+            </Typography>
+          </Box>
         )}
-      </Avatar>
+        
+        {/* Маленький бейджик дня рождения - 20px, top: 0, right: 0 */}
+        {content && content.isBirthdayEvent && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bgcolor: 'secondary.main',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 2,
+              zIndex: 100,
+              border: '1px solid white'
+            }}
+          >
+            <CakeIcon sx={{ fontSize: 12, color: 'white' }} />
+          </Box>
+        )}
+      </Box>
+      
       {content && (
         <Typography variant="caption" sx={{ mt: 0.5 }}>
           {day}

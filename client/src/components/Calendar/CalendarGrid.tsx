@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
+import CakeIcon from '@mui/icons-material/Cake';
 
 interface MediaFile {
   _id: string;
@@ -19,6 +20,7 @@ interface EventItem {
   eventDate?: string;
   createdAt: string;
   media: MediaFile[];
+  isBirthdayEvent?: boolean;
 }
 
 interface CalendarGridProps {
@@ -168,6 +170,26 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                       >
                         <DescriptionIcon sx={{ fontSize: 48, color: 'white' }} />
                       </Box>
+                      {/* Бейджик дня рождения */}
+                      {event.isBirthdayEvent && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            bgcolor: 'secondary.main',
+                            borderRadius: '50%',
+                            p: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: 1
+                          }}
+                        >
+                          <CakeIcon sx={{ fontSize: 16, color: 'white' }} />
+                        </Box>
+                      )}
+                      
                       {/* Заголовок для текстового события */}
                       {event.title && (
                         <Box
@@ -228,6 +250,25 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                           fontSize: 32
                         }} 
                       />
+                    )}
+                    {/* Бейджик дня рождения */}
+                    {event.isBirthdayEvent && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          bgcolor: 'secondary.main',
+                          borderRadius: '50%',
+                          p: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: 1
+                        }}
+                      >
+                        <CakeIcon sx={{ fontSize: 16, color: 'white' }} />
+                      </Box>
                     )}
                     {/* Показываем заголовок только на первом медиа */}
                     {mediaIndex === 0 && event.title && (

@@ -11,6 +11,7 @@ export interface UserDocument extends mongoose.Document {
   lastName?: string;
   avatar?: string;
   bio?: string;
+  birthday?: Date;
   partnerId?: mongoose.Types.ObjectId;
   relationshipStartDate?: Date;
   theme: 'light' | 'dark' | 'system';
@@ -45,6 +46,7 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String },
   avatar: { type: String },
   bio: { type: String },
+  birthday: { type: Date },
   partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   relationshipStartDate: { type: Date },
   theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },

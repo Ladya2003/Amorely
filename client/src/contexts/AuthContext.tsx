@@ -10,6 +10,7 @@ interface User {
   lastName?: string;
   avatar?: string;
   bio?: string;
+  birthday?: string;
   theme?: 'light' | 'dark' | 'system';
 }
 
@@ -23,6 +24,7 @@ interface AuthContextType {
   register: (email: string, username: string, password: string) => Promise<AxiosResponse<any, any> | undefined>;
   logout: () => void;
   clearError: () => void;
+  updateUser: (userData: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,7 +36,8 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => undefined,
   register: async () => undefined,
   logout: () => {},
-  clearError: () => {}
+  clearError: () => {},
+  updateUser: () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -157,6 +160,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   };
 
+  // Функция для обновления данных пользователя
+  const updateUser = (userData: User) => {
+    setUser(userData);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -168,7 +176,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
-        clearError
+        clearError,
+        updateUser
       }}
     >
       {children}
