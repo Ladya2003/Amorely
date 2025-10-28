@@ -290,12 +290,10 @@ router.post('/link-partner', async (req: any, res: Response) => {
     
     // Обновляем пользователя
     user.partnerId = partner._id;
-    user.relationshipStartDate = new Date();
     await user.save();
     
     // Обновляем партнера
     partner.partnerId = user._id as mongoose.Types.ObjectId;
-    partner.relationshipStartDate = new Date();
     await partner.save();
     
     res.json({ message: 'Партнер успешно привязан', partner: { 

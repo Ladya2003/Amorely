@@ -11,7 +11,6 @@ declare module 'mongoose' {
     avatar?: string;
     bio?: string;
     partnerId?: mongoose.Types.ObjectId;
-    relationshipStartDate?: Date;
     theme: 'light' | 'dark' | 'system';
     notificationSettings?: {
       email: {

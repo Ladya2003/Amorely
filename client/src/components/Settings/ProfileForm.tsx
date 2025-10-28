@@ -59,6 +59,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
     }
   }, [user.birthday]);
 
+
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };

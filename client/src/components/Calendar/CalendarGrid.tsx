@@ -5,6 +5,7 @@ import { ru } from 'date-fns/locale';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CakeIcon from '@mui/icons-material/Cake';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 
 interface MediaFile {
   _id: string;
@@ -21,6 +22,7 @@ interface EventItem {
   createdAt: string;
   media: MediaFile[];
   isBirthdayEvent?: boolean;
+  isAnniversaryEvent?: boolean;
 }
 
 interface CalendarGridProps {
@@ -190,6 +192,26 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                         </Box>
                       )}
                       
+                      {/* Бейджик годовщины для медиа события */}
+                      {event.isAnniversaryEvent && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 4,
+                            ...(event.isBirthdayEvent ? { left: 4 } : { right: 4 }),
+                            bgcolor: 'error.main',
+                            borderRadius: '50%',
+                            p: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: 1
+                          }}
+                        >
+                          <FavoriteIcon sx={{ fontSize: 16, color: 'white' }} />
+                        </Box>
+                      )}
+                      
                       {/* Заголовок для текстового события */}
                       {event.title && (
                         <Box
@@ -268,6 +290,25 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                         }}
                       >
                         <CakeIcon sx={{ fontSize: 16, color: 'white' }} />
+                      </Box>
+                    )}
+                    {/* Бейджик годовщины */}
+                    {event.isAnniversaryEvent && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          ...(event.isBirthdayEvent ? { left: 4 } : { right: 4 }),
+                          bgcolor: 'error.main',
+                          borderRadius: '50%',
+                          p: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: 1
+                        }}
+                      >
+                        <FavoriteIcon sx={{ fontSize: 16, color: 'white' }} />
                       </Box>
                     )}
                     {/* Показываем заголовок только на первом медиа */}

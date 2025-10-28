@@ -39,6 +39,7 @@ interface EventEditorDrawerProps {
     description?: string;
     eventDate: string;
     isBirthdayEvent?: boolean;
+    isAnniversaryEvent?: boolean;
   } | null;
   onSave: (eventData: {
     date: Date;
@@ -46,12 +47,14 @@ interface EventEditorDrawerProps {
     description: string;
     files: File[];
     isBirthdayEvent?: boolean;
+    isAnniversaryEvent?: boolean;
   }) => Promise<void>;
   onUpdate?: (eventId: string, eventData: {
     date: Date;
     title: string;
     description: string;
     isBirthdayEvent?: boolean;
+    isAnniversaryEvent?: boolean;
   }) => Promise<void>;
 }
 
@@ -79,6 +82,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isBirthdayEvent, setIsBirthdayEvent] = useState(false);
+  const [isAnniversaryEvent, setIsAnniversaryEvent] = useState(false);
 
   // Функция для проверки, находится ли дата в диапазоне дня рождения
   const isDateNearBirthday = (date: Date | null): boolean => {
@@ -101,13 +105,36 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     return eventDate >= twoWeeksAgo && eventDate <= twoWeeksLater;
   };
 
+  // Функция для проверки, находится ли дата в диапазоне годовщины
+  const isDateNearAnniversary = (date: Date | null): boolean => {
+    if (!date || !user?.relationshipStartDate) return false;
+    
+    const relationshipStart = new Date(user.relationshipStartDate);
+    const eventDate = new Date(date);
+    
+    // Создаем даты для года события (не текущего года!)
+    const eventYear = eventDate.getFullYear();
+    const anniversaryThisYear = new Date(eventYear, relationshipStart.getMonth(), relationshipStart.getDate());
+    
+    // Проверяем диапазон ±2 недели
+    const twoWeeksAgo = new Date(anniversaryThisYear);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    const twoWeeksLater = new Date(anniversaryThisYear);
+    twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
+    
+    
+    return eventDate >= twoWeeksAgo && eventDate <= twoWeeksLater;
+  };
+
   // Обновляем состояние чекбокса дня рождения при изменении даты
   // Только если не в режиме редактирования (чтобы не перезаписывать сохраненное значение)
   useEffect(() => {
     if (!isEditMode) {
       setIsBirthdayEvent(isDateNearBirthday(selectedDate));
+      setIsAnniversaryEvent(isDateNearAnniversary(selectedDate));
     }
-  }, [selectedDate, user?.birthday, isEditMode]);
+  }, [selectedDate, user?.birthday, user?.relationshipStartDate, isEditMode]);
 
   // Инициализация при открытии drawer
   useEffect(() => {
@@ -129,6 +156,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setFiles([]);
       setPreviews([]);
       setIsBirthdayEvent(editEvent.isBirthdayEvent || false);
+      setIsAnniversaryEvent(editEvent.isAnniversaryEvent || false);
     } else {
       // Режим создания - проверяем есть ли черновик
       if (hasDraft && draft.date) {
@@ -211,7 +239,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           date: selectedDate,
           title: title.trim(),
           description: description.trim(),
-          isBirthdayEvent
+          isBirthdayEvent,
+          isAnniversaryEvent
         });
       } else {
         // Режим создания
@@ -220,7 +249,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           title: title.trim(),
           description: description.trim(),
           files,
-          isBirthdayEvent
+          isBirthdayEvent,
+          isAnniversaryEvent
         });
         
         // Очищаем черновик после успешного создания
@@ -370,6 +400,31 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                       Это событие будет показываться в ленте на день рождения
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Box>
+          )}
+
+          {/* Чекбокс годовщины */}
+          {isDateNearAnniversary(selectedDate) && (
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'info.light', borderRadius: 1, border: '1px solid', borderColor: 'info.main' }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isAnniversaryEvent}
+                    onChange={(e) => setIsAnniversaryEvent(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Box>
+                    <Typography variant="body2" fontWeight="medium">
+                      💕 Отнести к годовщине
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                      Это событие будет показываться в ленте на годовщину отношений
                     </Typography>
                   </Box>
                 }

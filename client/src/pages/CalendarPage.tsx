@@ -34,6 +34,7 @@ interface ContentItem {
   lastEditedBy?: User;
   lastEditedAt?: string;
   isBirthdayEvent?: boolean;
+  isAnniversaryEvent?: boolean;
 }
 
 const CalendarPage: React.FC = () => {
@@ -99,7 +100,8 @@ const CalendarPage: React.FC = () => {
           _id: item.eventId || item._id,
           eventDate: item.eventDate,
           createdAt: item.createdAt,
-          isBirthdayEvent: item.isBirthdayEvent
+          isBirthdayEvent: item.isBirthdayEvent,
+          isAnniversaryEvent: item.isAnniversaryEvent
         };
       });
       
@@ -163,7 +165,8 @@ const CalendarPage: React.FC = () => {
       title: event.title || '',
       description: event.description || '',
       eventDate: event.eventDate || event.createdAt,
-      isBirthdayEvent: event.isBirthdayEvent || false
+      isBirthdayEvent: event.isBirthdayEvent || false,
+      isAnniversaryEvent: event.isAnniversaryEvent || false
     });
     setEventDetailOpen(false); // Закрываем детальный просмотр
     setAddDialogOpen(true); // Открываем редактор
@@ -216,6 +219,8 @@ const CalendarPage: React.FC = () => {
     title: string;
     description: string;
     files: File[];
+    isBirthdayEvent?: boolean;
+    isAnniversaryEvent?: boolean;
   }) => {
     try {
       const token = localStorage.getItem('token');
@@ -234,6 +239,12 @@ const CalendarPage: React.FC = () => {
       formData.append('eventDate', eventData.date.toISOString());
       formData.append('title', eventData.title);
       formData.append('description', eventData.description);
+      if (eventData.isBirthdayEvent !== undefined) {
+        formData.append('isBirthdayEvent', eventData.isBirthdayEvent.toString());
+      }
+      if (eventData.isAnniversaryEvent !== undefined) {
+        formData.append('isAnniversaryEvent', eventData.isAnniversaryEvent.toString());
+      }
 
       await axios.post(`${API_URL}/api/calendar/events`, formData, {
         headers: {
@@ -255,6 +266,7 @@ const CalendarPage: React.FC = () => {
     title: string;
     description: string;
     isBirthdayEvent?: boolean;
+    isAnniversaryEvent?: boolean;
   }) => {
     try {
       const token = localStorage.getItem('token');
@@ -266,7 +278,8 @@ const CalendarPage: React.FC = () => {
         eventDate: eventData.date.toISOString(),
         title: eventData.title,
         description: eventData.description,
-        isBirthdayEvent: eventData.isBirthdayEvent
+        isBirthdayEvent: eventData.isBirthdayEvent,
+        isAnniversaryEvent: eventData.isAnniversaryEvent
       }, {
         headers: {
           'Authorization': `Bearer ${token}`

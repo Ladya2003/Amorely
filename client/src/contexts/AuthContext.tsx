@@ -11,6 +11,7 @@ interface User {
   avatar?: string;
   bio?: string;
   birthday?: string;
+  relationshipStartDate?: string;
   theme?: 'light' | 'dark' | 'system';
 }
 

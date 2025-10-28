@@ -24,7 +24,7 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
   try {
     const userId = req.userId as string;
     const files = req.files as Express.Multer.File[];
-    const { eventDate, title, description, isBirthdayEvent } = req.body;
+    const { eventDate, title, description, isBirthdayEvent, isAnniversaryEvent } = req.body;
 
     if (!eventDate || !title) {
       return res.status(400).json({ error: 'Требуются дата и заголовок события' });
@@ -66,6 +66,7 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
           description: description || '',
           showInFeed: true,
           isBirthdayEvent: isBirthdayEvent === 'true' || isBirthdayEvent === true,
+          isAnniversaryEvent: isAnniversaryEvent === 'true' || isAnniversaryEvent === true,
           customDate: new Date(eventDate),
           createdBy: userId // Кто создал событие
         });
@@ -88,6 +89,7 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
         description: description || '',
         showInFeed: false, // Текстовые события не показываем в ленте по умолчанию
         isBirthdayEvent: isBirthdayEvent === 'true' || isBirthdayEvent === true,
+        isAnniversaryEvent: isAnniversaryEvent === 'true' || isAnniversaryEvent === true,
         customDate: new Date(eventDate),
         createdBy: userId // Кто создал событие
       });
@@ -178,6 +180,7 @@ router.get('/events', async (req: any, res: Response) => {
           lastEditedBy: media.lastEditedBy,
           lastEditedAt: media.lastEditedAt,
           isBirthdayEvent: media.isBirthdayEvent,
+          isAnniversaryEvent: media.isAnniversaryEvent,
           media: []
         });
       }
@@ -270,7 +273,7 @@ router.put('/events/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { id } = req.params; // это eventId
-    const { eventDate, title, description, showInFeed, isBirthdayEvent } = req.body;
+    const { eventDate, title, description, showInFeed, isBirthdayEvent, isAnniversaryEvent } = req.body;
 
     // Находим все медиафайлы события
     const mediaFiles = await Content.find({ eventId: id });
@@ -300,6 +303,7 @@ router.put('/events/:id', async (req: any, res: Response) => {
     if (description !== undefined) updateData.description = description;
     if (showInFeed !== undefined) updateData.showInFeed = showInFeed;
     if (isBirthdayEvent !== undefined) updateData.isBirthdayEvent = isBirthdayEvent;
+    if (isAnniversaryEvent !== undefined) updateData.isAnniversaryEvent = isAnniversaryEvent;
     updateData.lastEditedBy = userId; // Кто последним редактировал
     updateData.lastEditedAt = new Date(); // Время редактирования
 

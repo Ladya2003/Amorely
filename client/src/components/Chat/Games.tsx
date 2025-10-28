@@ -32,7 +32,7 @@ const Games: React.FC = () => {
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundImage: 'url(https://source.unsplash.com/random/800x600/?love)',
+            backgroundImage: 'url(https://img.freepik.com/free-photo/couple-making-heart-from-hands-sea-shore_23-2148019887.jpg?w=360)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'blur(8px)',

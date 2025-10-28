@@ -13,7 +13,6 @@ export interface UserDocument extends mongoose.Document {
   bio?: string;
   birthday?: Date;
   partnerId?: mongoose.Types.ObjectId;
-  relationshipStartDate?: Date;
   theme: 'light' | 'dark' | 'system';
   notificationSettings?: {
     email: {
@@ -48,7 +47,6 @@ const userSchema = new mongoose.Schema({
   bio: { type: String },
   birthday: { type: Date },
   partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  relationshipStartDate: { type: Date },
   theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
   notificationSettings: {
     email: {

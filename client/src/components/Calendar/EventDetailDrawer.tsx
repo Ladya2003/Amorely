@@ -21,6 +21,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import CakeIcon from '@mui/icons-material/Cake';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -50,6 +51,7 @@ interface EventDetailDrawerProps {
     createdAt: string;
     media?: MediaFile[];
     isBirthdayEvent?: boolean;
+    isAnniversaryEvent?: boolean;
     createdBy?: User;
     lastEditedBy?: User;
     lastEditedAt?: string;
@@ -311,6 +313,15 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                     label="День рождения"
                     color="secondary"
                     size="small"
+                  />
+                )}
+                {event.isAnniversaryEvent && (
+                  <Chip
+                    icon={<FavoriteIcon />}
+                    label="Годовщина"
+                    color="error"
+                    size="small"
+                    // sx={{ ml: 1 }}
                   />
                 )}
               </Box>

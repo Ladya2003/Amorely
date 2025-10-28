@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
+import Relationship from '../models/relationship';
 import { body, validationResult } from 'express-validator';
 import { authMiddleware } from '../middleware/auth';
 
@@ -131,7 +132,28 @@ router.get('/me', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
     
-    res.json(user);
+    // Получаем дату начала отношений из коллекции Relationship
+    let relationshipStartDate = null;
+    if (user.partnerId) {
+      const relationship = await Relationship.findOne({
+        $or: [
+          { userId: user._id, partnerId: user.partnerId },
+          { userId: user.partnerId, partnerId: user._id }
+        ]
+      });
+      
+      if (relationship) {
+        relationshipStartDate = relationship.startDate;
+      }
+    }
+    
+    // Добавляем relationshipStartDate к объекту пользователя
+    const userWithRelationship = {
+      ...user.toObject(),
+      relationshipStartDate
+    };
+    
+    res.json(userWithRelationship);
   } catch (error) {
     console.error('Ошибка при получении данных пользователя:', error);
     
