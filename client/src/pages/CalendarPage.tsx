@@ -7,6 +7,7 @@ import EventListDialog from '../components/Calendar/EventListDialog';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { format } from 'date-fns';
+import { useSearchParams } from 'react-router-dom';
 
 interface MediaFile {
   _id: string;
@@ -38,6 +39,7 @@ interface ContentItem {
 }
 
 const CalendarPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [content, setContent] = useState<Array<{
     date: string;
     mediaUrl: string;
@@ -66,6 +68,18 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     fetchContent();
   }, []);
+
+  // Обработка URL параметра для открытия конкретного события
+  useEffect(() => {
+    const eventId = searchParams.get('event');
+    if (eventId && allEvents.length > 0) {
+      const event = allEvents.find(e => e.eventId === eventId || e._id === eventId);
+      if (event) {
+        setSelectedEvent(event);
+        setEventDetailOpen(true);
+      }
+    }
+  }, [searchParams, allEvents]);
 
   const fetchContent = async () => {
     try {

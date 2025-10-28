@@ -146,7 +146,9 @@ const FeedPage: React.FC = () => {
         id: item.id || item._id,
         url: item.url,
         resourceType: item.resourceType,
-        createdAt: item.createdAt
+        createdAt: item.createdAt,
+        title: item.title,
+        eventId: item.eventId
       }));
       
       setPartnerContent(formattedContent);
@@ -171,6 +173,11 @@ const FeedPage: React.FC = () => {
   const handleContentClick = (content: ContentItem) => {
     setSelectedContent(content);
     setViewerOpen(true);
+  };
+
+  const handleEventClick = (eventId: string) => {
+    // Переходим к календарю и открываем событие
+    window.location.href = `/calendar?event=${eventId}`;
   };
   
   const handleAddContent = async (
@@ -287,6 +294,7 @@ const FeedPage: React.FC = () => {
         content={partnerContent} 
         isLoading={isLoading}
         onContentClick={handleContentClick}
+        onEventClick={handleEventClick}
         navigateTo={!isPartnerAdded ? '/settings' : undefined}
         placeholder={!isPartnerAdded ? 'Нет доступного контента\n\n📅 Добавьте события в Календаре с фото и видео' : 'Нет доступного контента\n\n📅 Добавьте события в Календаре с фото и видео'}
         onEmptyClick={() => window.location.href = '/calendar'}

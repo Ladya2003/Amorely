@@ -10,6 +10,8 @@ export interface ContentItem {
   url: string;
   resourceType: 'image' | 'video';
   createdAt: string;
+  title?: string;
+  eventId?: string;
 }
 
 interface ContentSliderProps {
@@ -19,6 +21,7 @@ interface ContentSliderProps {
   isLoading: boolean;
   placeholder?: string;
   onContentClick?: (content: ContentItem) => void;
+  onEventClick?: (eventId: string) => void; // Новый пропс для перехода к событию
   navigateTo?: string;
   onEmptyClick?: () => void; // Новый пропс для обработки клика по пустому состоянию
 }
@@ -29,6 +32,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
   setCurrentIndex, 
   isLoading, 
   onContentClick, 
+  onEventClick,
   placeholder, 
   navigateTo, 
   onEmptyClick 
@@ -48,6 +52,14 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
       navigate(navigateTo);
     } else if (onEmptyClick) {
       onEmptyClick();
+    }
+  };
+
+  const handleMediaClick = (content: ContentItem) => {
+    if (content.eventId && onEventClick) {
+      onEventClick(content.eventId);
+    } else if (onContentClick) {
+      onContentClick(content);
     }
   };
 
@@ -138,7 +150,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                 cursor: 'pointer',
                 position: 'relative'
               }}
-              onClick={handleContentClick}
+              onClick={() => handleMediaClick(item)}
             >
               {item.resourceType === 'image' ? (
                 <Box
@@ -189,6 +201,38 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                       }} 
                     />
                   </Box>
+                </Box>
+              )}
+              
+              {/* Заголовок с обрезкой и черным блюром */}
+              {item.title && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 40,
+                    left: 0,
+                    right: 0,
+                    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
+                    p: 2,
+                    color: 'white'
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '1.1rem',
+                      lineHeight: 1.2,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      maxWidth: '100%'
+                    }}
+                  >
+                    {item.title}
+                  </Typography>
                 </Box>
               )}
             </Box>
