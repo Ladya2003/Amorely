@@ -4,9 +4,9 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import Content from '../models/content';
 import Relationship from '../models/relationship';
-import User from '../models/user';
 import mongoose from 'mongoose';
 import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation, recalculateRotationOrder } from '../utils/contentRotation';
+import { buildOrGetDynamicFeed } from '../utils/dynamicFeedRotation';
 
 const router = express.Router();
 
@@ -32,99 +32,23 @@ router.get('/content', async (req: any, res: Response) => {
       return res.status(400).json({ error: 'Не указан ID пользователя' });
     }
 
-    const formattedUserId = new mongoose.Types.ObjectId(userId);
-    
     if (target === 'partner') {
-      // Получаем информацию о пользователе и партнере
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ error: 'Пользователь не найден' });
-      }
+      const selectedMedia = await buildOrGetDynamicFeed(userId);
+      const feedContent = selectedMedia.map((media: any) => ({
+        id: media._id,
+        _id: media._id,
+        url: media.url,
+        resourceType: media.resourceType,
+        type: media.resourceType === 'video' ? 'video' : 'image',
+        title: media.title,
+        description: media.description,
+        eventDate: media.eventDate,
+        createdAt: media.createdAt,
+        userId: media.userId,
+        createdBy: media.createdBy,
+        eventId: media.eventId
+      }));
 
-      const partnerId = user.partnerId;
-      
-      // Строим запрос для получения контента
-      let query: any = {
-        userId: formattedUserId, // Всегда включаем контент пользователя
-        showInFeed: true, // Только события, которые должны показываться в ленте
-        url: { $ne: '' } // Исключаем текстовые события без медиа
-      };
-
-      // Если есть партнер, добавляем его контент
-      if (partnerId) {
-        query = {
-          $or: [
-            { userId: formattedUserId },
-            { userId: partnerId }
-          ],
-          showInFeed: true,
-          url: { $ne: '' }
-        };
-      }
-
-      const allMedia = await Content.find(query)
-        .populate('userId', 'username avatar')
-        .populate('createdBy', 'username avatar')
-        .sort({ eventDate: -1, createdAt: -1 });
-
-      // Группируем медиафайлы по eventId и создаем контент для ленты
-      const eventsMap = new Map();
-      
-      allMedia.forEach(media => {
-        const key = media.eventId || media._id.toString();
-        
-        if (!eventsMap.has(key)) {
-          // Первое медиафайл события - создаем запись события
-          eventsMap.set(key, {
-            _id: key,
-            eventId: key,
-            title: media.title,
-            description: media.description,
-            eventDate: media.eventDate,
-            createdAt: media.createdAt,
-            userId: media.userId,
-            createdBy: media.createdBy,
-            media: []
-          });
-        }
-        
-        // Добавляем медиафайл в массив
-        eventsMap.get(key).media.push({
-          _id: media._id,
-          url: media.url,
-          publicId: media.publicId,
-          resourceType: media.resourceType,
-          fileSize: media.fileSize
-        });
-      });
-
-      // Преобразуем события в формат для ленты
-      const feedContent: any[] = [];
-      const events = Array.from(eventsMap.values());
-      
-      events.forEach((event: any) => {
-        // Для каждого события добавляем все его медиафайлы в ленту
-        event.media.forEach((media: any) => {
-          feedContent.push({
-            id: media._id,
-            _id: media._id,
-            url: media.url,
-            resourceType: media.resourceType,
-            type: media.resourceType === 'video' ? 'video' : 'image',
-            title: event.title,
-            description: event.description,
-            eventDate: event.eventDate,
-            createdAt: event.createdAt,
-            userId: event.userId,
-            createdBy: event.createdBy,
-            eventId: event.eventId
-          });
-        });
-      });
-
-      // Сортируем по дате события (новые сверху)
-      feedContent.sort((a: any, b: any) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());
-      
       res.json(feedContent);
     } else {
       return res.status(400).json({ error: 'Неверный параметр target' });
@@ -151,7 +75,8 @@ router.get('/user-content', async (req: any, res: Response) => {
       $or: [
         { userId: formattedUserId },
         { partnerId: formattedUserId }
-      ]
+      ],
+      status: 'active'
     });
     
     let query: any = { userId: formattedUserId };
@@ -220,7 +145,8 @@ router.post('/content', upload.array('media'), async (req: any, res: Response) =
         $or: [
           { userId: new mongoose.Types.ObjectId(userId) },
           { partnerId: new mongoose.Types.ObjectId(userId) }
-        ]
+        ],
+        status: 'active'
       });
       
       if (relationship) {
@@ -314,7 +240,8 @@ router.get('/relationship', async (req: any, res: Response) => {
       $or: [
         { userId },
         { partnerId: userId }
-      ]
+      ],
+      status: 'active'
     });
     
     if (!relationship) {
@@ -359,7 +286,8 @@ router.post('/relationship/photo', upload.single('photo'), async (req: any, res:
       $or: [
         { userId },
         { partnerId: userId }
-      ]
+      ],
+      status: 'active'
     });
     
     if (!relationship) {
@@ -403,7 +331,8 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
       $or: [
         { userId },
         { partnerId: userId }
-      ]
+      ],
+      status: 'active'
     });
     
     if (!relationship) {
@@ -455,7 +384,8 @@ router.put('/content/frequency', async (req: any, res: Response) => {
       $or: [
         { userId: formattedUserId },
         { partnerId: formattedUserId }
-      ]
+      ],
+      status: 'active'
     });
     
     if (!relationship) {
@@ -518,7 +448,8 @@ router.delete('/content/:id', async (req: any, res: Response) => {
       $or: [
         { userId: formattedUserId },
         { partnerId: formattedUserId }
-      ]
+      ],
+      status: 'active'
     });
     
     let canDelete = false;
@@ -603,7 +534,8 @@ router.put('/content/reorder', async (req: any, res: Response) => {
       $or: [
         { userId: formattedUserId },
         { partnerId: formattedUserId }
-      ]
+      ],
+      status: 'active'
     });
     
     let canReorder = false;

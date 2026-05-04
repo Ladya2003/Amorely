@@ -129,7 +129,8 @@ router.post('/partner', async (req: any, res: Response) => {
       $or: [
         { userId: userId },
         { partnerId: userId }
-      ]
+      ],
+      status: 'active'
     });
     
     if (existingRelationship) {
@@ -141,7 +142,8 @@ router.post('/partner', async (req: any, res: Response) => {
       $or: [
         { userId: partner._id },
         { partnerId: partner._id }
-      ]
+      ],
+      status: 'active'
     });
     
     if (partnerExistingRelationship) {
@@ -200,7 +202,8 @@ router.delete('/partner/:userId', async (req: Request, res: Response) => {
       $or: [
         { userId: userId },
         { partnerId: userId }
-      ]
+      ],
+      status: 'active'
     });
     
     if (!relationship) {
@@ -215,8 +218,9 @@ router.delete('/partner/:userId', async (req: Request, res: Response) => {
     // Находим партнера
     const partner = await User.findById(partnerId);
     
-    // Удаляем отношения
-    await Relationship.findByIdAndDelete(relationship._id);
+    // Не удаляем отношения: помечаем как завершенные
+    relationship.status = 'broken_up';
+    await relationship.save();
     
     // Обновляем данные пользователя
     user.partnerId = undefined;

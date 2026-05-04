@@ -83,16 +83,27 @@ const SettingsPage: React.FC = () => {
         }
       });
       
-      // Если у пользователя есть партнер, получаем его данные
+      // Если у пользователя есть партнер, пробуем получить активные отношения.
+      // 404 означает, что активных отношений нет (например, запись удалена вручную).
       if (user.partnerId) {
-        const relationshipResponse = await axios.get(`${API_URL}/api/relationships`, {
-          headers: {
-            Authorization: `Bearer ${token}`
+        try {
+          const relationshipResponse = await axios.get(`${API_URL}/api/relationships`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          
+          setPartner(relationshipResponse.data.partner);
+          setRelationshipStartDate(relationshipResponse.data.relationship.startDate);
+        } catch (relationshipError: any) {
+          if (relationshipError?.response?.status === 404) {
+            setPartner(null);
+            setRelationshipStartDate(null);
+            setUser({ ...user, partnerId: undefined });
+          } else {
+            throw relationshipError;
           }
-        });
-        
-        setPartner(relationshipResponse.data.partner);
-        setRelationshipStartDate(relationshipResponse.data.relationship.startDate);
+        }
       }
       
       setIsLoading(false);

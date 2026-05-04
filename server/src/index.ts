@@ -18,6 +18,7 @@ import chatRoutes from './routes/chat';
 import calendarRoutes from './routes/calendar';
 import { authMiddleware } from './middleware/auth';
 import relationshipsRoutes from './routes/relationships';
+import { startFeedScheduler } from './utils/feedScheduler';
 
 dotenv.config();
 
@@ -198,5 +199,6 @@ app.use('/api/calendar', authMiddleware, calendarRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {
+  startFeedScheduler();
   console.log(`Сервер запущен на порту ${PORT}`);
 });

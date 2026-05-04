@@ -4,6 +4,7 @@ const relationshipSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   startDate: { type: Date, required: true },
+  status: { type: String, enum: ['active', 'broken_up'], default: 'active' },
   photo: {
     url: { type: String },
     publicId: { type: String }

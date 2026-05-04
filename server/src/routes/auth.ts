@@ -139,7 +139,8 @@ router.get('/me', async (req: Request, res: Response) => {
         $or: [
           { userId: user._id, partnerId: user.partnerId },
           { userId: user.partnerId, partnerId: user._id }
-        ]
+        ],
+        status: 'active'
       });
       
       if (relationship) {

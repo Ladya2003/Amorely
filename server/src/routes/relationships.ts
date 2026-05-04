@@ -14,7 +14,8 @@ router.get('/', authMiddleware, async (req: any, res: Response) => {
       $or: [
         { userId: userId },
         { partnerId: userId }
-      ]
+      ],
+      status: 'active'
     });
 
     if (!relationship) {
@@ -78,7 +79,8 @@ router.post('/', authMiddleware, async (req: any, res: Response) => {
         { partnerId: userId },
         { userId: partner._id },
         { partnerId: partner._id }
-      ]
+      ],
+      status: 'active'
     });
     
     if (existingRelationship) {
@@ -128,7 +130,8 @@ router.delete('/', authMiddleware, async (req: any, res: Response) => {
       $or: [
         { userId: userId },
         { partnerId: userId }
-      ]
+      ],
+      status: 'active'
     });
     
     if (!relationship) {
@@ -145,8 +148,9 @@ router.delete('/', authMiddleware, async (req: any, res: Response) => {
       { $unset: { partnerId: 1 } }
     );
     
-    // Удаляем отношения
-    await relationship.deleteOne();
+    // Не удаляем отношения: переводим в статус расставания
+    relationship.status = 'broken_up';
+    await relationship.save();
     
     res.json({ message: 'Отношения успешно удалены' });
   } catch (error) {
