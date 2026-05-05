@@ -169,6 +169,17 @@ const upsertCounts = (
 const cleanupItems = (items: RotationItemState[], allowedIds: Set<string>): RotationItemState[] =>
   items.filter((item) => allowedIds.has(item.contentId));
 
+const getCanonicalPairIds = (
+  firstId: mongoose.Types.ObjectId,
+  secondId: mongoose.Types.ObjectId
+): { userA: mongoose.Types.ObjectId; userB: mongoose.Types.ObjectId } => {
+  const [a, b] = [firstId.toString(), secondId.toString()].sort();
+  return {
+    userA: new mongoose.Types.ObjectId(a),
+    userB: new mongoose.Types.ObjectId(b)
+  };
+};
+
 const getRelationshipForUser = async (userId: string) =>
   Relationship.findOne({
     $or: [{ userId }, { partnerId: userId }],
@@ -194,18 +205,47 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
     relationship.userId.toString() === userId
       ? relationship.partnerId
       : relationship.userId;
+  const { userA, userB } = getCanonicalPairIds(ownerId, partnerId);
 
   const slotKey = buildSlotKey(now);
   const getIdsFromSlots = (slots: any): string[] =>
     [
-      ...((slots?.randomContentIds || []) as mongoose.Types.ObjectId[]).map((id) => id.toString()),
       slots?.birthdayContentId?.toString(),
-      slots?.anniversaryContentId?.toString()
+      slots?.anniversaryContentId?.toString(),
+      ...((slots?.randomContentIds || []) as mongoose.Types.ObjectId[]).map((id) => id.toString())
     ].filter((id): id is string => Boolean(id));
 
-  const state = await FeedRotationState.findOne({ userId: ownerId, partnerId });
+  let state = await FeedRotationState.findOne({ userId: userA, partnerId: userB });
+  const mirroredState = await FeedRotationState.findOne({ userId: userB, partnerId: userA });
 
-  // Нет записи ротации — показываем весь контент пары (включая события до добавления партнёра).
+  // Миграция старых зеркальных записей к канонической паре.
+  if (!state && mirroredState) {
+    mirroredState.userId = userA;
+    mirroredState.partnerId = userB;
+    await mirroredState.save();
+    state = mirroredState;
+  } else if (state && mirroredState) {
+    // Если уже есть дубликат, оставляем каноническую и удаляем зеркальную.
+    await FeedRotationState.deleteOne({ _id: mirroredState._id });
+  }
+
+  // Нет записи ротации — создаем и сразу генерируем текущий слот.
+  if (!state) {
+    state = await FeedRotationState.findOneAndUpdate(
+      { userId: userA, partnerId: userB },
+      {
+        $setOnInsert: {
+          userId: userA,
+          partnerId: userB,
+          status: relationship.status,
+          items: [],
+          currentSlots: { randomContentIds: [] }
+        }
+      },
+      { upsert: true, new: true }
+    );
+  }
+
   if (!state) {
     return fetchFullFeedForPair(ownerId, partnerId);
   }
@@ -236,7 +276,7 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
   const allowedIdSet = new Set(eligibleIds);
 
   const currentItems = cleanupItems(
-    ((state?.items || []) as any[]).map((item) => ({
+    ((state.items || []) as any[]).map((item) => ({
       contentId: item.contentId.toString(),
       showCount: item.showCount,
       lastShownAt: item.lastShownAt
@@ -303,7 +343,7 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
   }
 
   const updateResult = await FeedRotationState.updateOne(
-    { _id: state!._id, lastGeneratedSlot: { $ne: slotKey } },
+    { _id: state._id, lastGeneratedSlot: { $ne: slotKey } },
     {
       $set: {
         status: relationship.status,
@@ -318,7 +358,7 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
   const finalState =
     updateResult.modifiedCount > 0
       ? ({ currentSlots } as any)
-      : await FeedRotationState.findById(state!._id).select('currentSlots');
+      : await FeedRotationState.findById(state._id).select('currentSlots');
 
   const selectedIds = getIdsFromSlots(finalState?.currentSlots);
   if (selectedIds.length === 0) {
@@ -339,7 +379,6 @@ export const refreshDynamicFeedForAllActiveRelationships = async (now: Date = ne
   const relationships = await Relationship.find({ status: 'active' }).select('userId partnerId');
   for (const relationship of relationships) {
     await buildOrGetDynamicFeed(relationship.userId.toString(), now);
-    await buildOrGetDynamicFeed(relationship.partnerId.toString(), now);
   }
 };
 

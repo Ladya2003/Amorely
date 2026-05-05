@@ -171,12 +171,40 @@ const Layout: React.FC = () => {
                   break;
               }
             }}
+            sx={{
+              '& .MuiBottomNavigationAction-root': {
+                minWidth: 0,
+                flex: 1,
+                px: 1
+              },
+              '& .MuiBottomNavigationAction-label': {
+                fontSize: '12px',
+                '&.Mui-selected': {
+                  fontSize: '12px'
+                }
+              },
+              '@media (max-width:360px)': {
+                '& .MuiBottomNavigationAction-root': {
+                  px: 0.5
+                },
+                '& .MuiBottomNavigationAction-label': {
+                  fontSize: '12px',
+                  '&.Mui-selected': {
+                    fontSize: '12px'
+                  }
+                }
+              }
+            }}
           >
-            <BottomNavigationAction label="Главная" icon={<HomeIcon />} />
-            <BottomNavigationAction label="Чат" icon={<ChatIcon />} />
-            <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} />
-            <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} />
-            <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} />
+            <BottomNavigationAction
+              label="Главная"
+              icon={<HomeIcon />}
+              sx={{ px: 1 }}
+            />
+            <BottomNavigationAction label="Чат" icon={<ChatIcon />} sx={{ px: 1 }} />
+            <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} sx={{ px: 1 }} />
+            <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} sx={{ px: 1 }} />
+            <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} sx={{ px: 1 }} />
           </BottomNavigation>
         </Paper>
       )}

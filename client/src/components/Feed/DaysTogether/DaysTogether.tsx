@@ -11,7 +11,10 @@ import SignatureDialog from './components/SignatureDialog';
 import ProgressIndicator from './components/ProgressIndicator';
 import MilestoneCard from './components/MilestoneCard';
 import ExportButton from './components/ExportButton';
-import ColorPicker, { colorThemes } from './components/ColorPicker';
+import ColorPicker, { getThemeById } from './components/ColorPicker';
+
+const DEFAULT_ROMANTIC_BG =
+  'https://img.freepik.com/free-photo/couple-making-heart-from-hands-sea-shore_23-2148019887.jpg?w=360';
 
 const DaysTogether: React.FC<DaysTogetherProps> = ({
   daysCount,
@@ -44,8 +47,9 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
   } = useDaysTogether({ daysCount, relationshipStartDate });
 
   // Получаем цвета выбранной темы
-  const currentTheme = colorThemes.find(t => t.id === selectedTheme) || colorThemes[0];
+  const currentTheme = getThemeById(selectedTheme);
   const gradientColors = currentTheme.colors.join(', ');
+  const hasBackgroundImage = true;
 
   // Если нет данных - показываем заглушку
   if (!daysCount || !relationshipStartDate) {
@@ -121,20 +125,62 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
               zIndex: 1
             }}
           />
+          {/* Дополнительное затемнение для лучшей читаемости */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              bgcolor: 'rgba(0, 0, 0, 0.22)',
+              zIndex: 1
+            }}
+          />
         </>
       ) : (
-        // Если фото нет - просто красивый градиент с меньшей прозрачностью
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: `linear-gradient(135deg, ${currentTheme.colors[0].replace(/0\.\d+/, '0.08')}, ${currentTheme.colors[1].replace(/0\.\d+/, '0.05')}, ${currentTheme.colors[2].replace(/0\.\d+/, '0.06')})`,
-            zIndex: 0
-          }}
-        />
+        <>
+          {/* Дефолтный фон как в Чат/Игры */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundImage: `url(${DEFAULT_ROMANTIC_BG})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              filter: 'blur(8px)',
+              opacity: 0.3,
+              zIndex: 0
+            }}
+          />
+          {/* Градиентный слой темы поверх дефолтного фото */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: `linear-gradient(135deg, ${currentTheme.colors[0].replace(/0\.\d+/, '0.08')}, ${currentTheme.colors[1].replace(/0\.\d+/, '0.05')}, ${currentTheme.colors[2].replace(/0\.\d+/, '0.06')})`,
+              zIndex: 1
+            }}
+          />
+          {/* Дополнительное затемнение для лучшей читаемости */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              bgcolor: 'rgba(0, 0, 0, 0.22)',
+              zIndex: 1
+            }}
+          />
+        </>
       )}
 
       {/* Основной контент */}
@@ -147,7 +193,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           align="center"
           fontWeight="bold"
           sx={{
-            color: photo ? '#fff' : currentTheme.preview,
+            color: hasBackgroundImage ? '#fff' : currentTheme.preview,
             textShadow: '0 2px 8px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4)',
             WebkitTextStroke: '0.5px rgba(0,0,0,0.2)',
           }}
@@ -162,8 +208,8 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           gutterBottom
           sx={{ 
             fontWeight: 500,
-            color: photo ? 'rgba(255,255,255,0.9)' : currentTheme.preview,
-            textShadow: photo ? '0 1px 2px rgba(0,0,0,0.3)' : `0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.2')}`
+            color: hasBackgroundImage ? 'rgba(255,255,255,0.9)' : currentTheme.preview,
+            textShadow: hasBackgroundImage ? '0 1px 2px rgba(0,0,0,0.3)' : `0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.2')}`
           }}
         >
           {getRelationshipStatus(daysCount)}
@@ -175,8 +221,8 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           align="center" 
           gutterBottom
           sx={{
-            color: photo ? 'rgba(255,255,255,0.8)' : `${currentTheme.preview}CC`,
-            textShadow: photo ? '0 1px 2px rgba(0,0,0,0.2)' : `0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.15')}`
+            color: hasBackgroundImage ? 'rgba(255,255,255,0.8)' : `${currentTheme.preview}CC`,
+            textShadow: hasBackgroundImage ? '0 1px 2px rgba(0,0,0,0.2)' : `0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.15')}`
           }}
         >
           С {formatDate(relationshipStartDate)}
@@ -188,7 +234,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           progress={progress}
           daysCount={daysCount}
           theme={currentTheme}
-          hasPhoto={!!photo}
+          hasPhoto={hasBackgroundImage}
         />
 
         {/* Достижения */}
@@ -199,7 +245,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             onToggle={toggleAchievements}
             daysUntilAnniversary={daysUntilAnniversary}
             theme={currentTheme}
-            hasPhoto={!!photo}
+            hasPhoto={hasBackgroundImage}
           />
         )}
 

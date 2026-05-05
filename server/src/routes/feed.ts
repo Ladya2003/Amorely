@@ -46,7 +46,9 @@ router.get('/content', async (req: any, res: Response) => {
         createdAt: media.createdAt,
         userId: media.userId,
         createdBy: media.createdBy,
-        eventId: media.eventId
+        eventId: media.eventId,
+        isBirthdayEvent: media.isBirthdayEvent,
+        isAnniversaryEvent: media.isAnniversaryEvent
       }));
 
       res.json(feedContent);
@@ -323,7 +325,7 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
     const userId = req.userId as string;
     const { signature } = req.body;
     
-    if (!userId || !signature) {
+    if (!userId || signature === undefined || signature === null) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
     }
     

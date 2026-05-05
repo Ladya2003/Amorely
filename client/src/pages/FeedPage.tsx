@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Fab, Badge, CircularProgress, Typography } from '@mui/material';
+import { Box, Container, Fab, Badge, CircularProgress, Typography, Tooltip, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
@@ -148,7 +149,9 @@ const FeedPage: React.FC = () => {
         resourceType: item.resourceType,
         createdAt: item.createdAt,
         title: item.title,
-        eventId: item.eventId
+        eventId: item.eventId,
+        isBirthdayEvent: item.isBirthdayEvent,
+        isAnniversaryEvent: item.isAnniversaryEvent
       }));
       
       setPartnerContent(formattedContent);
@@ -302,23 +305,21 @@ const FeedPage: React.FC = () => {
         setCurrentIndex={setCurrentIndex}
       />
       
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-        <Badge 
-          badgeContent={partnerContent.length} 
-          color="primary"
-          sx={{
-            '& .MuiBadge-badge': {
-              fontSize: '0.8rem',
-              height: '1.5rem',
-              minWidth: '1.5rem',
-              padding: '0 6px'
-            }
-          }}
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 4, gap: 0.5 }}>
+        <Typography variant="body2" color="text.secondary">
+          Контент дня
+        </Typography>
+        <Tooltip
+          title="Подборка обновляется в 02:00 и 17:00 (Europe/Minsk)"
+          placement="top"
+          arrow
+          enterTouchDelay={0}
+          leaveTouchDelay={3000}
         >
-          <Typography variant="body2" color="text.secondary">
-            {isPartnerAdded ? 'Контент от партнера' : 'Мой контент'}
-          </Typography>
-        </Badge>
+          <IconButton size="small" sx={{ color: 'text.secondary', p: 0.3 }} aria-label="Информация об обновлении контента">
+            <InfoOutlinedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Box>
       
       <DaysTogether

@@ -1,14 +1,17 @@
 // Компонент выбора цветовой темы для градиента
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
+  Button,
   IconButton,
   Popover,
   Typography,
   Tooltip
 } from '@mui/material';
 import PaletteIcon from '@mui/icons-material/Palette';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { HexColorPicker } from 'react-colorful';
 
 export interface ColorTheme {
   id: string;
@@ -16,6 +19,42 @@ export interface ColorTheme {
   colors: [string, string, string]; // 3 цвета для градиента
   preview: string; // Цвет превью
 }
+
+const hexToRgb = (hex: string): [number, number, number] => {
+  const normalized = hex.replace('#', '');
+  const safeHex = normalized.length === 3
+    ? normalized.split('').map((ch) => ch + ch).join('')
+    : normalized;
+
+  const int = Number.parseInt(safeHex, 16);
+  return [
+    (int >> 16) & 255,
+    (int >> 8) & 255,
+    int & 255
+  ];
+};
+
+const buildCustomTheme = (hex: string): ColorTheme => {
+  const [r, g, b] = hexToRgb(hex);
+  return {
+    id: `custom:${hex}`,
+    name: '🎨 Свой цвет',
+    colors: [
+      `rgba(${r}, ${g}, ${b}, 0.7)`,
+      `rgba(${r}, ${g}, ${b}, 0.5)`,
+      `rgba(${r}, ${g}, ${b}, 0.6)`
+    ],
+    preview: hex
+  };
+};
+
+export const getThemeById = (themeId: string): ColorTheme => {
+  if (themeId?.startsWith('custom:')) {
+    const hex = themeId.split(':')[1] || '#ff4b8d';
+    return buildCustomTheme(hex);
+  }
+  return colorThemes.find(t => t.id === themeId) || colorThemes[0];
+};
 
 export const colorThemes: ColorTheme[] = [
   {
@@ -141,12 +180,26 @@ interface ColorPickerProps {
 
 const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [draftCustomColor, setDraftCustomColor] = useState(() =>
+    selectedTheme.startsWith('custom:') ? (selectedTheme.split(':')[1] || '#ff4b8d') : '#ff4b8d'
+  );
+  const [hasCustomTouched, setHasCustomTouched] = useState(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setHasCustomTouched(false);
+    setShowCustomPicker(false);
     setAnchorEl(event.currentTarget);
   };
 
   const handleClose = () => {
+    if (hasCustomTouched) {
+      const nextThemeId = `custom:${draftCustomColor}`;
+      if (selectedTheme !== nextThemeId) {
+        onThemeChange(nextThemeId);
+      }
+    }
+    setShowCustomPicker(false);
     setAnchorEl(null);
   };
 
@@ -156,7 +209,29 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
   };
 
   const open = Boolean(anchorEl);
-  const currentTheme = colorThemes.find(t => t.id === selectedTheme) || colorThemes[0];
+  const currentTheme = getThemeById(selectedTheme);
+  const isCustomSelected = selectedTheme.startsWith('custom:');
+  const selectedCustomColor = draftCustomColor;
+
+  useEffect(() => {
+    if (selectedTheme.startsWith('custom:')) {
+      const hex = selectedTheme.split(':')[1] || '#ff4b8d';
+      setDraftCustomColor(hex);
+    }
+  }, [selectedTheme]);
+
+  useEffect(() => {
+    if (!hasCustomTouched) return;
+
+    const timeoutId = window.setTimeout(() => {
+      const nextThemeId = `custom:${draftCustomColor}`;
+      if (selectedTheme !== nextThemeId) {
+        onThemeChange(nextThemeId);
+      }
+    }, 120);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [draftCustomColor, hasCustomTouched, selectedTheme, onThemeChange]);
 
   return (
     <>
@@ -164,15 +239,12 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
         <IconButton
           onClick={handleClick}
           sx={{
-            bgcolor: 'transparent',
-            backdropFilter: 'blur(10px)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
+            bgcolor: `${currentTheme.colors[0].replace(/0\.\d+/, '0.1')}`,
+            color: currentTheme.preview,
             '&:hover': {
-              bgcolor: 'rgba(255, 255, 255, 0.1)',
-              transform: 'scale(1.1)',
-              border: '2px solid rgba(255, 255, 255, 0.5)',
+              bgcolor: `${currentTheme.colors[0].replace(/0\.\d+/, '0.2')}`,
+              color: currentTheme.preview
             },
-            transition: 'all 0.2s'
           }}
         >
           <PaletteIcon sx={{ color: currentTheme.preview }} />
@@ -197,39 +269,96 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
             Выберите цветовую тему:
           </Typography>
           
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(5, 1fr)',
-              gap: 1,
-              mt: 1,
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }}
-          >
-            {colorThemes.map((theme) => (
-              <Tooltip key={theme.id} title={theme.name} arrow>
+          {!showCustomPicker ? (
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(5, 1fr)',
+                gap: 1,
+                mt: 1,
+                maxHeight: '300px',
+                overflowY: 'auto'
+              }}
+            >
+              <Tooltip title="Выбрать любой цвет" arrow>
                 <Box
-                  onClick={() => handleThemeSelect(theme.id)}
+                  onClick={() => {
+                    onThemeChange(`custom:${draftCustomColor}`);
+                    setShowCustomPicker(true);
+                  }}
                   sx={{
                     width: 48,
                     height: 48,
                     borderRadius: 2,
-                    background: `linear-gradient(135deg, ${theme.colors.join(', ')})`,
+                    background: selectedCustomColor,
                     cursor: 'pointer',
-                    border: selectedTheme === theme.id ? '3px solid' : '2px solid transparent',
-                    borderColor: selectedTheme === theme.id ? 'primary.main' : 'transparent',
+                    border: isCustomSelected ? '3px solid' : '2px dashed rgba(0,0,0,0.35)',
+                    borderColor: isCustomSelected ? 'primary.main' : 'rgba(0,0,0,0.35)',
                     transition: 'all 0.2s',
-                    boxShadow: selectedTheme === theme.id ? 3 : 1,
+                    boxShadow: isCustomSelected ? 3 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     '&:hover': {
                       transform: 'scale(1.1)',
                       boxShadow: 3
                     }
                   }}
-                />
+                >
+                  <PaletteIcon sx={{ color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.4)' }} />
+                </Box>
               </Tooltip>
-            ))}
-          </Box>
+
+              {colorThemes.map((theme) => (
+                <Tooltip key={theme.id} title={theme.name} arrow>
+                  <Box
+                    onClick={() => handleThemeSelect(theme.id)}
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 2,
+                      background: `linear-gradient(135deg, ${theme.colors.join(', ')})`,
+                      cursor: 'pointer',
+                      border: selectedTheme === theme.id ? '3px solid' : '2px solid transparent',
+                      borderColor: selectedTheme === theme.id ? 'primary.main' : 'transparent',
+                      transition: 'all 0.2s',
+                      boxShadow: selectedTheme === theme.id ? 3 : 1,
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                        boxShadow: 3
+                      }
+                    }}
+                  />
+                </Tooltip>
+              ))}
+            </Box>
+          ) : (
+            <Box sx={{ mt: 1 }}>
+              <Button
+                size="small"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => setShowCustomPicker(false)}
+                sx={{ mb: 1 }}
+              >
+                Назад
+              </Button>
+              <HexColorPicker
+                color={draftCustomColor}
+                onChange={(hex) => {
+                  setDraftCustomColor(hex);
+                  if (!hasCustomTouched) {
+                    setHasCustomTouched(true);
+                  }
+                }}
+              />
+              <Typography
+                variant="caption"
+                sx={{ mt: 1, display: 'block', textAlign: 'center', color: 'text.secondary' }}
+              >
+                Текущий цвет: {draftCustomColor.toUpperCase()}
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Popover>
     </>

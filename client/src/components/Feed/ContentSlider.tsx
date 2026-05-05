@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Box, IconButton, Typography, CircularProgress, Paper } from '@mui/material';
+import { Box, IconButton, Typography, CircularProgress, Paper, Chip } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
+import CakeIcon from '@mui/icons-material/Cake';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useNavigate } from 'react-router-dom';
 
 export interface ContentItem {
@@ -12,6 +14,8 @@ export interface ContentItem {
   createdAt: string;
   title?: string;
   eventId?: string;
+  isBirthdayEvent?: boolean;
+  isAnniversaryEvent?: boolean;
 }
 
 interface ContentSliderProps {
@@ -203,17 +207,51 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                   </Box>
                 </Box>
               )}
+
+              {(item.isBirthdayEvent || item.isAnniversaryEvent) && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.8,
+                    alignItems: 'flex-end',
+                    zIndex: 2
+                  }}
+                >
+                  {item.isBirthdayEvent && (
+                    <Chip
+                      icon={<CakeIcon />}
+                      label="День рождения"
+                      color="secondary"
+                      size="small"
+                    />
+                  )}
+                  {item.isAnniversaryEvent && (
+                    <Chip
+                      icon={<FavoriteIcon />}
+                      label="Годовщина"
+                      color="error"
+                      size="small"
+                    />
+                  )}
+                </Box>
+              )}
               
               {/* Заголовок с обрезкой и черным блюром */}
               {item.title && (
                 <Box
                   sx={{
                     position: 'absolute',
-                    bottom: 40,
+                    bottom: 0,
                     left: 0,
                     right: 0,
-                    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
-                    p: 2,
+                    background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.88))',
+                    px: 2,
+                    pt: 1.5,
+                    pb: 5.5,
                     color: 'white'
                   }}
                 >

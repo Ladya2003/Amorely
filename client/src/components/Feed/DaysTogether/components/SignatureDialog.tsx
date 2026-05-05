@@ -205,6 +205,8 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
 
       // Если canvas пустой
       if (minX > maxX || minY > maxY) {
+        // Пустая подпись при сохранении = удалить подпись пользователя
+        onSave('');
         handleClose();
         return;
       }

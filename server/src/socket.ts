@@ -12,7 +12,7 @@ interface ConnectedUser {
 export default function setupSocketIO(server: HttpServer) {
   const io = new SocketIOServer(server, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:3000',
+      origin: process.env.CLIENT_URL || 'http://localhost:3005',
       methods: ['GET', 'POST']
     }
   });
