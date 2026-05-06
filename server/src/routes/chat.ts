@@ -6,6 +6,29 @@ import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
+const getDisplayName = (user: {
+  firstName?: string;
+  lastName?: string;
+  username: string;
+}) => {
+  const firstName = (user.firstName || '').trim();
+  const lastName = (user.lastName || '').trim();
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  return fullName || user.username;
+};
+
+const sortContactsByLastMessageDesc = <T extends { isPartner?: boolean; lastMessage: { timestamp: Date | string } }>(contacts: T[]) => {
+  return contacts.sort((a, b) => {
+    if (a.isPartner && !b.isPartner) return -1;
+    if (!a.isPartner && b.isPartner) return 1;
+
+    const aTime = new Date(a.lastMessage.timestamp).getTime();
+    const bTime = new Date(b.lastMessage.timestamp).getTime();
+    return bTime - aTime;
+  });
+};
+
 // Получение списка контактов
 router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
   try {
@@ -15,8 +38,44 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
       return res.status(400).json({ error: 'Не указан ID пользователя' });
     }
 
-    // Получаем всех пользователей, кроме текущего
-    const users = await User.find({ _id: { $ne: userId } });
+    // По умолчанию показываем партнера (если есть) и пользователей, с которыми уже есть переписка
+    const currentUser = await User.findById(userId).select('partnerId');
+
+    const dialogUserIds = await Message.aggregate([
+      {
+        $match: {
+          $or: [
+            { senderId: new mongoose.Types.ObjectId(userId) },
+            { receiverId: new mongoose.Types.ObjectId(userId) }
+          ]
+        }
+      },
+      {
+        $project: {
+          otherUserId: {
+            $cond: [
+              { $eq: ['$senderId', new mongoose.Types.ObjectId(userId)] },
+              '$receiverId',
+              '$senderId'
+            ]
+          }
+        }
+      },
+      { $group: { _id: '$otherUserId' } }
+    ]);
+
+    const contactIdSet = new Set<string>(dialogUserIds.map((item) => item._id.toString()));
+    if (currentUser?.partnerId) {
+      contactIdSet.add(currentUser.partnerId.toString());
+    }
+
+    if (contactIdSet.size === 0) {
+      return res.json([]);
+    }
+
+    const users = await User.find({
+      _id: { $in: Array.from(contactIdSet).map((id) => new mongoose.Types.ObjectId(id)) }
+    });
     
     // Для каждого пользователя находим последнее сообщение
     const contacts = await Promise.all(users.map(async (user) => {
@@ -26,6 +85,11 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
           { senderId: user._id, receiverId: userId }
         ]
       }).sort({ createdAt: -1 });
+      const unreadCount = await Message.countDocuments({
+        senderId: user._id,
+        receiverId: userId,
+        isRead: false
+      });
 
       const hasMedia = lastMessage?.attachments && lastMessage.attachments.length > 0;
       const displayText = lastMessage 
@@ -34,16 +98,22 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
 
       return {
         id: user._id,
-        name: user.firstName && user.lastName 
-          ? `${user.firstName} ${user.lastName}` 
-          : user.username,
+        isPartner: Boolean(currentUser?.partnerId && user._id.toString() === currentUser.partnerId.toString()),
+        name: getDisplayName(user),
+        username: user.username,
+        email: user.email,
         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
+        unreadCount,
         lastMessage: lastMessage ? {
+          id: lastMessage._id.toString(),
+          senderId: lastMessage.senderId.toString(),
           text: displayText,
           timestamp: lastMessage.createdAt,
           isRead: lastMessage.isRead || lastMessage.senderId.toString() === userId,
           hasMedia: hasMedia
         } : {
+          id: '',
+          senderId: '',
           text: 'Нет сообщений',
           timestamp: new Date(),
           isRead: true,
@@ -52,10 +122,81 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
       };
     }));
 
-    res.json(contacts);
+    res.json(sortContactsByLastMessageDesc(contacts));
   } catch (error) {
     console.error('Ошибка при получении контактов:', error);
     res.status(500).json({ error: 'Ошибка при получении контактов' });
+  }
+});
+
+// Глобальный поиск пользователей для чата (по логину или почте)
+router.get('/contacts/search', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const query = String(req.query.query || '').trim();
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+
+    if (!query) {
+      return res.json([]);
+    }
+
+    // Ищем пользователей по частичному совпадению username/email, кроме текущего пользователя
+    const matchedUsers = await User.find({
+      _id: { $ne: userId },
+      $or: [
+        { username: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } }
+      ]
+    })
+      .select('_id username email firstName lastName avatar')
+      .limit(20);
+
+    // Находим собеседников, с которыми уже есть чат
+    const existingDialogIds = await Message.aggregate([
+      {
+        $match: {
+          $or: [
+            { senderId: new mongoose.Types.ObjectId(userId) },
+            { receiverId: new mongoose.Types.ObjectId(userId) }
+          ]
+        }
+      },
+      {
+        $project: {
+          otherUserId: {
+            $cond: [
+              { $eq: ['$senderId', new mongoose.Types.ObjectId(userId)] },
+              '$receiverId',
+              '$senderId'
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$otherUserId'
+        }
+      }
+    ]);
+
+    const existingDialogIdSet = new Set(existingDialogIds.map((item) => item._id.toString()));
+
+    const results = matchedUsers.map((user) => ({
+      id: user._id,
+      name: getDisplayName(user),
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
+      hasExistingChat: existingDialogIdSet.has(user._id.toString())
+    }));
+
+    res.json(results);
+  } catch (error) {
+    console.error('Ошибка глобального поиска пользователей:', error);
+    res.status(500).json({ error: 'Ошибка глобального поиска пользователей' });
   }
 });
 
@@ -76,12 +217,6 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
         { senderId: contactId, receiverId: userId }
       ]
     }).sort({ createdAt: 1 });
-
-    // Отмечаем сообщения как прочитанные
-    await Message.updateMany(
-      { senderId: contactId, receiverId: userId, isRead: false },
-      { $set: { isRead: true } }
-    );
 
     // Преобразуем сообщения в формат, ожидаемый клиентом
     const formattedMessages = messages.map(message => ({

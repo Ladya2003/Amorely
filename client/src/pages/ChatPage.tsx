@@ -1,7 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Tabs, Tab, useMediaQuery, useTheme } from '@mui/material';
+import {
+  Box,
+  Tabs,
+  Tab,
+  useMediaQuery,
+  useTheme,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Typography,
+  List,
+  ListItemButton,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  CircularProgress
+} from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import ChatList, { Contact } from '../components/Chat/ChatList';
 import ChatDialog, { MessageType } from '../components/Chat/ChatDialog';
 import Games from '../components/Chat/Games';
@@ -131,13 +149,30 @@ const MOCK_MESSAGES: Record<string, MessageType[]> = {
   ]
 };
 
+interface SearchUser {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatar: string;
+  hasExistingChat: boolean;
+}
+
+type ChatContact = Contact & {
+  isPartner?: boolean;
+};
+
 const ChatPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<ChatContact[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [socket, setSocket] = useState<any | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [globalSearchResults, setGlobalSearchResults] = useState<SearchUser[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   
   const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
@@ -146,16 +181,48 @@ const ChatPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Функция обновления последнего сообщения в контакте
-  const updateContactLastMessage = useCallback((contactId: string, text: string, timestamp: string, isRead: boolean, hasMedia?: boolean) => {
-    setContacts(prevContacts => 
-      prevContacts.map(contact => 
-        contact.id === contactId 
-          ? { ...contact, lastMessage: { text, timestamp, isRead, hasMedia } } 
-          : contact
-      )
-    );
+  const sortContactsByLastMessageDesc = useCallback((contactsToSort: ChatContact[]) => {
+    return [...contactsToSort].sort((a, b) => {
+      if (a.isPartner && !b.isPartner) return -1;
+      if (!a.isPartner && b.isPartner) return 1;
+
+      const aTime = new Date(a.lastMessage.timestamp).getTime();
+      const bTime = new Date(b.lastMessage.timestamp).getTime();
+      return bTime - aTime;
+    });
   }, []);
+
+  // Функция обновления последнего сообщения в контакте
+  const updateContactLastMessage = useCallback((
+    contactId: string,
+    text: string,
+    timestamp: string,
+    isRead: boolean,
+    hasMedia?: boolean,
+    senderId?: string,
+    messageId?: string,
+    isPending?: boolean
+  ) => {
+    setContacts(prevContacts => 
+      sortContactsByLastMessageDesc(prevContacts.map(contact => 
+        contact.id === contactId 
+          ? {
+              ...contact,
+              lastMessage: {
+                ...contact.lastMessage,
+                id: messageId ?? contact.lastMessage.id,
+                senderId: senderId ?? contact.lastMessage.senderId,
+                text,
+                timestamp,
+                isRead,
+                hasMedia,
+                isPending: isPending ?? false
+              }
+            }
+          : contact
+      ))
+    );
+  }, [sortContactsByLastMessageDesc]);
 
   // Инициализация сокета
   useEffect(() => {
@@ -168,8 +235,10 @@ const ChatPage: React.FC = () => {
 
     // Обработчики событий сокета
     newSocket.on('new_message', (message: MessageType) => {
+      const isCurrentDialogOpen = selectedContactId === message.senderId;
+
       // Если открыт диалог с отправителем, добавляем сообщение и отмечаем как прочитанное
-      if (selectedContactId === message.senderId) {
+      if (isCurrentDialogOpen) {
         setMessages(prevMessages => [...prevMessages, message]);
         socketService.markMessageAsRead(message.id);
       }
@@ -177,7 +246,25 @@ const ChatPage: React.FC = () => {
       // Обновляем список контактов
       const hasMedia = message.attachments && message.attachments.length > 0;
       const displayText = hasMedia && !message.text ? 'Медиафайл' : message.text;
-      updateContactLastMessage(message.senderId, displayText, message.timestamp, false, hasMedia);
+      setContacts(prevContacts =>
+        sortContactsByLastMessageDesc(prevContacts.map(contact =>
+          contact.id === message.senderId
+            ? {
+                ...contact,
+                unreadCount: isCurrentDialogOpen ? 0 : (contact.unreadCount || 0) + 1,
+                lastMessage: {
+                  id: message.id,
+                  senderId: message.senderId,
+                  text: displayText,
+                  timestamp: message.timestamp,
+                  isRead: isCurrentDialogOpen,
+                  hasMedia,
+                  isPending: false
+                }
+              }
+            : contact
+        ))
+      );
     });
 
     newSocket.on('message_sent', (message: MessageType) => {
@@ -203,7 +290,16 @@ const ChatPage: React.FC = () => {
       if (selectedContactId) {
         const hasMedia = message.attachments && message.attachments.length > 0;
         const displayText = hasMedia && !message.text ? 'Медиафайл' : message.text;
-        updateContactLastMessage(selectedContactId, displayText, message.timestamp, true, hasMedia);
+        updateContactLastMessage(
+          selectedContactId,
+          displayText,
+          message.timestamp,
+          false,
+          hasMedia,
+          message.senderId,
+          message.id,
+          false
+        );
       }
     });
 
@@ -212,6 +308,20 @@ const ChatPage: React.FC = () => {
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === messageId ? { ...msg, isRead: true } : msg
+        )
+      );
+
+      setContacts(prevContacts =>
+        prevContacts.map(contact =>
+          contact.lastMessage.id === messageId
+            ? {
+                ...contact,
+                lastMessage: {
+                  ...contact.lastMessage,
+                  isRead: true
+                }
+              }
+            : contact
         )
       );
     });
@@ -253,6 +363,43 @@ const ChatPage: React.FC = () => {
     };
   }, [isMobile, selectedContactId, setShowBottomNav]);
 
+  // Дебаунс ввода поиска
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Глобальный поиск пользователей по username/email
+  useEffect(() => {
+    const fetchGlobalSearch = async () => {
+      if (!debouncedSearchQuery) {
+        setGlobalSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+
+      try {
+        setIsSearching(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/api/contacts/search`, {
+          params: { query: debouncedSearchQuery },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setGlobalSearchResults(response.data || []);
+      } catch (error) {
+        console.error('Ошибка глобального поиска пользователей:', error);
+        setGlobalSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    fetchGlobalSearch();
+  }, [debouncedSearchQuery]);
+
   const fetchContacts = async () => {
     try {
       setIsLoading(true);
@@ -261,12 +408,48 @@ const ChatPage: React.FC = () => {
       const response = await axios.get(`${API_URL}/api/contacts`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setContacts(response.data);
+      setContacts(sortContactsByLastMessageDesc(response.data));
       setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при загрузке контактов:', error);
       setIsLoading(false);
     }
+  };
+
+  const ensureContactInList = (user: {
+    id: string;
+    name: string;
+    username: string;
+    email: string;
+    avatar: string;
+  }) => {
+    setContacts(prevContacts => {
+      const existing = prevContacts.find(contact => contact.id === user.id);
+      if (existing) {
+        return prevContacts;
+      }
+
+      const newContact: ChatContact = {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+        isPartner: false,
+        unreadCount: 0,
+        lastMessage: {
+          id: '',
+          senderId: '',
+          text: 'Нет сообщений',
+          timestamp: new Date().toISOString(),
+          isRead: true,
+          hasMedia: false,
+          isPending: false
+        }
+      };
+
+      return sortContactsByLastMessageDesc([newContact, ...prevContacts]);
+    });
   };
 
   const fetchMessages = async (contactId: string) => {
@@ -311,6 +494,66 @@ const ChatPage: React.FC = () => {
       setShowBottomNav(false);
     }
   };
+
+  const handleSelectGlobalUser = (user: SearchUser) => {
+    ensureContactInList(user);
+    setSelectedContactId(user.id);
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
+    setGlobalSearchResults([]);
+
+    if (isMobile) {
+      setShowBottomNav(false);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
+    setGlobalSearchResults([]);
+    setIsSearching(false);
+  };
+
+  const handleReachMessagesEnd = useCallback(() => {
+    if (!selectedContactId) {
+      return;
+    }
+
+    const unreadIncomingMessageIds = messages
+      .filter((message) => message.senderId === selectedContactId && message.isRead === false)
+      .map((message) => message.id);
+
+    if (unreadIncomingMessageIds.length === 0) {
+      return;
+    }
+
+    unreadIncomingMessageIds.forEach((messageId) => {
+      socketService.markMessageAsRead(messageId);
+    });
+
+    setMessages((prevMessages) =>
+      prevMessages.map((message) =>
+        unreadIncomingMessageIds.includes(message.id)
+          ? { ...message, isRead: true }
+          : message
+      )
+    );
+
+    setContacts((prevContacts) =>
+      prevContacts.map((contact) =>
+        contact.id === selectedContactId
+          ? {
+              ...contact,
+              lastMessage: {
+                ...contact.lastMessage,
+                isRead: true
+              },
+              unreadCount: 0
+            }
+          : contact
+      )
+    );
+  }, [messages, selectedContactId]);
 
   const handleBackToList = () => {
     setSelectedContactId(null);
@@ -375,39 +618,102 @@ const ChatPage: React.FC = () => {
     };
 
     setMessages([...messages, newMessage]);
+    updateContactLastMessage(
+      selectedContactId,
+      text || (attachments && attachments.length > 0 ? 'Медиафайл' : ''),
+      newMessage.timestamp,
+      false,
+      Boolean(attachments && attachments.length > 0),
+      CURRENT_USER_ID,
+      newMessage.id,
+      true
+    );
     
     // Вызываем функцию для отправки сообщения через API
     sendMessageWithAttachments();
   };
 
   const selectedContact = contacts.find(contact => contact.id === selectedContactId);
+  const immediateQuery = searchQuery.trim().toLowerCase();
+  const hasSearch = Boolean(immediateQuery);
+  const filteredExistingContacts = hasSearch
+    ? contacts.filter(contact =>
+        contact.name.toLowerCase().includes(immediateQuery) ||
+        (contact.username || '').toLowerCase().includes(immediateQuery) ||
+        (contact.email || '').toLowerCase().includes(immediateQuery)
+      )
+    : contacts;
+  const filteredGlobalResults = globalSearchResults.filter(
+    user => !filteredExistingContacts.some(contact => contact.id === user.id)
+  );
 
   return (
     <Box sx={{ 
-      height: isMobile ? '100vh' : 'calc(100vh - 64px)', // Полная высота для мобильных, вычитаем AppBar для десктопа
+      height: isMobile ? 'calc(100vh - 72px)' : 'calc(100vh - 64px)', // Аналогично CalendarPage: фиксируем рабочую область
       display: 'flex', 
       flexDirection: 'column',
-      overflow: 'hidden'
+      overflow: 'hidden' // Блокируем скролл страницы, скролл только во внутренних контейнерах
     }}>
       {/* Скрываем табы когда открыт чат с контактом на мобильных */}
       {(!isMobile || !selectedContactId) && (
         <Box sx={{ 
-          borderBottom: 1, 
-          borderColor: 'divider',
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-          bgcolor: 'background.paper'
+          borderBottom: 0,
+          flexShrink: 0,
+          zIndex: (theme) => theme.zIndex.appBar,
+          bgcolor: 'background.paper',
+          boxShadow: 'none'
         }}>
           <Tabs 
             value={tabValue} 
             onChange={handleTabChange} 
             aria-label="chat tabs"
             variant="fullWidth"
+            sx={{
+              '& .MuiTab-iconWrapper': {
+                fontSize: '1rem'
+              },
+              '& .MuiTab-root': {
+                minHeight: 'auto',
+                padding: 0,
+                paddingTop: 2,
+                fontSize: '12px'
+              }
+            }}
           >
-            <Tab icon={<ChatIcon />} label="Чат" />
-            <Tab icon={<SportsEsportsIcon />} label="Игры" />
+            <Tab icon={<ChatIcon fontSize="small" />} iconPosition="start" label="Чат" />
+            <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label="Игры" />
           </Tabs>
+          {tabValue === 0 && (!isMobile || !selectedContactId) && (
+            <Box sx={{ px: 2, pb: 1, pt: 1 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Поиск по логину или почте"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      {isSearching ? (
+                        <CircularProgress size={18} />
+                      ) : (
+                        searchQuery && (
+                          <IconButton size="small" onClick={handleClearSearch} aria-label="Очистить поиск">
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        )
+                      )}
+                    </InputAdornment>
+                  )
+                }}
+              />
+            </Box>
+          )}
         </Box>
       )}
 
@@ -423,11 +729,54 @@ const ChatPage: React.FC = () => {
                 display: isMobile && selectedContactId ? 'none' : 'block',
                 overflow: 'auto'
               }}>
-                <ChatList 
-                  contacts={contacts} 
-                  onSelectContact={handleSelectContact}
-                  selectedContactId={selectedContactId}
-                />
+                {hasSearch ? (
+                  <Box>
+                    {filteredExistingContacts.length > 0 && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
+                          Ваши чаты
+                        </Typography>
+                        <ChatList
+                          contacts={filteredExistingContacts}
+                          onSelectContact={handleSelectContact}
+                          selectedContactId={selectedContactId}
+                          currentUserId={CURRENT_USER_ID || ''}
+                        />
+                      </Box>
+                    )}
+
+                    <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
+                      Глобальный поиск
+                    </Typography>
+                    <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
+                      {filteredGlobalResults.map((user) => (
+                        <ListItemButton key={user.id} onClick={() => handleSelectGlobalUser(user)}>
+                          <ListItemAvatar>
+                            <Avatar alt={user.name} src={user.avatar} />
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={user.name}
+                            secondary={`${user.username} • ${user.email}`}
+                          />
+                        </ListItemButton>
+                      ))}
+                      {!isSearching && filteredGlobalResults.length === 0 && (
+                        <Box sx={{ px: 2, py: 1.5 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Ничего не найдено
+                          </Typography>
+                        </Box>
+                      )}
+                    </List>
+                  </Box>
+                ) : (
+                  <ChatList 
+                    contacts={contacts} 
+                    onSelectContact={handleSelectContact}
+                    selectedContactId={selectedContactId}
+                    currentUserId={CURRENT_USER_ID || ''}
+                  />
+                )}
               </Box>
             )}
             
@@ -448,6 +797,7 @@ const ChatPage: React.FC = () => {
                     currentUserId={CURRENT_USER_ID}
                     onBack={handleBackToList}
                     onSendMessage={handleSendMessage}
+                    onReachMessagesEnd={handleReachMessagesEnd}
                     isLoading={isLoading}
                   />
                 ) : (

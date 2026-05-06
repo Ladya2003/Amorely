@@ -33,9 +33,6 @@ export default function setupSocketIO(server: HttpServer) {
       } else {
         connectedUsers.push({ userId, socketId: socket.id });
       }
-      
-      // Обновляем статус сообщений как прочитанные
-      updateMessagesAsRead(userId);
     });
 
     // Пользователь отправляет сообщение
@@ -150,18 +147,6 @@ export default function setupSocketIO(server: HttpServer) {
       }
     });
   });
-
-  // Вспомогательная функция для обновления статуса сообщений
-  async function updateMessagesAsRead(userId: string) {
-    try {
-      await Message.updateMany(
-        { receiverId: new mongoose.Types.ObjectId(userId), isRead: false },
-        { $set: { isRead: true } }
-      );
-    } catch (error) {
-      console.error('Ошибка при обновлении статуса сообщений:', error);
-    }
-  }
 
   return io;
 } 

@@ -21,6 +21,7 @@ export interface MessageType {
   senderId: string;
   text: string;
   timestamp: string;
+  isRead?: boolean;
   attachments?: Array<{
     type: 'image' | 'video';
     url: string;
@@ -33,6 +34,7 @@ interface ChatDialogProps {
   currentUserId: string;
   onBack: () => void;
   onSendMessage: (text: string, attachments?: File[]) => void;
+  onReachMessagesEnd?: () => void;
   isLoading?: boolean;
 }
 
@@ -42,6 +44,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   currentUserId, 
   onBack, 
   onSendMessage,
+  onReachMessagesEnd,
   isLoading = false
 }) => {
   const [messageText, setMessageText] = useState('');
@@ -50,20 +53,40 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
   const isInitialLoadRef = useRef<boolean>(true);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  const isScrolledToBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return false;
+
+    const thresholdPx = 40;
+    return container.scrollHeight - container.scrollTop - container.clientHeight <= thresholdPx;
+  };
 
   useEffect(() => {
     // При первой загрузке скроллим вниз мгновенно
     if (isInitialLoadRef.current && messages.length > 0 && !isLoading) {
       scrollToBottom('auto');
+      // Небольшая задержка, чтобы дождаться применения скролла в DOM
+      setTimeout(() => {
+        if (isScrolledToBottom()) {
+          onReachMessagesEnd?.();
+        }
+      }, 0);
       isInitialLoadRef.current = false;
       previousMessagesLengthRef.current = messages.length;
     } 
     // При добавлении новых сообщений скроллим плавно
     else if (messages.length > previousMessagesLengthRef.current) {
       scrollToBottom('smooth');
+      setTimeout(() => {
+        if (isScrolledToBottom()) {
+          onReachMessagesEnd?.();
+        }
+      }, 200);
       previousMessagesLengthRef.current = messages.length;
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, onReachMessagesEnd]);
 
   // Сброс при смене контакта
   useEffect(() => {
@@ -98,6 +121,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       setAttachments([...attachments, ...newFiles]);
+    }
+  };
+
+  const handleMessagesScroll = () => {
+    if (isScrolledToBottom()) {
+      onReachMessagesEnd?.();
     }
   };
 
@@ -150,7 +179,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         flexDirection: 'column',
         gap: 1,
         bgcolor: '#f5f5f5'
-      }}>
+      }}
+      ref={messagesContainerRef}
+      onScroll={handleMessagesScroll}
+      >
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
             <CircularProgress color="primary" />
