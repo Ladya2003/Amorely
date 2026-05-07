@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Tabs,
@@ -158,6 +158,9 @@ interface SearchUser {
   hasExistingChat: boolean;
 }
 
+const GLOBAL_SEARCH_PAGE_SIZE = 20;
+const MESSAGE_PAGE_SIZE = 30;
+
 type ChatContact = Contact & {
   isPartner?: boolean;
 };
@@ -167,12 +170,20 @@ const ChatPage: React.FC = () => {
   const [contacts, setContacts] = useState<ChatContact[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageType[]>([]);
+  const [messagesPage, setMessagesPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false);
+  const [isRestoringChatPosition, setIsRestoringChatPosition] = useState(false);
+  const [restoredScrollTop, setRestoredScrollTop] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [socket, setSocket] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [globalSearchResults, setGlobalSearchResults] = useState<SearchUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingMoreGlobalSearch, setIsLoadingMoreGlobalSearch] = useState(false);
+  const [globalSearchPage, setGlobalSearchPage] = useState(1);
+  const [hasMoreGlobalSearch, setHasMoreGlobalSearch] = useState(false);
   
   const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
@@ -180,6 +191,52 @@ const ChatPage: React.FC = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const selectedContactIdRef = useRef<string | null>(null);
+
+  const getChatScrollStorageKey = useCallback((contactId: string) => {
+    if (!CURRENT_USER_ID) return null;
+    return `chat:scroll:${CURRENT_USER_ID}:${contactId}`;
+  }, [CURRENT_USER_ID]);
+
+  const getSavedScrollState = useCallback((contactId: string) => {
+    const key = getChatScrollStorageKey(contactId);
+    if (!key) return null;
+
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw) as { page?: number; scrollTop?: number };
+      const page = Math.max(1, Number(parsed.page) || 1);
+      const scrollTop = Math.max(0, Number(parsed.scrollTop) || 0);
+      return { page, scrollTop };
+    } catch (error) {
+      return null;
+    }
+  }, [getChatScrollStorageKey]);
+
+  const saveScrollState = useCallback((contactId: string, scrollTop: number) => {
+    const key = getChatScrollStorageKey(contactId);
+    if (!key) return;
+
+    const payload = {
+      page: Math.max(1, messagesPage),
+      scrollTop: Math.max(0, Math.round(scrollTop)),
+      savedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem(key, JSON.stringify(payload));
+  }, [getChatScrollStorageKey, messagesPage]);
+
+  const prepareDialogRestoreState = useCallback((contactId: string) => {
+    const savedState = getSavedScrollState(contactId);
+    const targetPage = savedState?.page || 1;
+    const needsRestore = Boolean(savedState && (targetPage > 1 || (savedState.scrollTop ?? 0) > 0));
+
+    // Переключаемся в режим восстановления до первого рендера диалога
+    setIsRestoringChatPosition(needsRestore);
+    setRestoredScrollTop(null);
+  }, [getSavedScrollState]);
 
   const sortContactsByLastMessageDesc = useCallback((contactsToSort: ChatContact[]) => {
     return [...contactsToSort].sort((a, b) => {
@@ -338,10 +395,44 @@ const ChatPage: React.FC = () => {
 
   // Загрузка сообщений при выборе контакта
   useEffect(() => {
-    if (selectedContactId) {
-      fetchMessages(selectedContactId);
-    }
+    selectedContactIdRef.current = selectedContactId;
   }, [selectedContactId]);
+
+  // Загрузка сообщений при выборе контакта
+  useEffect(() => {
+    if (selectedContactId) {
+      const initializeChat = async () => {
+        const savedState = getSavedScrollState(selectedContactId);
+        const targetPage = savedState?.page || 1;
+        const needsRestore = Boolean(savedState && (targetPage > 1 || (savedState.scrollTop ?? 0) > 0));
+
+        setRestoredScrollTop(null);
+        setIsRestoringChatPosition(needsRestore);
+        await fetchMessages(selectedContactId, 1, false);
+
+        try {
+          for (let page = 2; page <= targetPage; page += 1) {
+            if (selectedContactIdRef.current !== selectedContactId) {
+              return;
+            }
+            await fetchMessages(selectedContactId, page, true);
+          }
+
+          if (selectedContactIdRef.current === selectedContactId) {
+            setRestoredScrollTop(savedState?.scrollTop ?? null);
+          }
+        } finally {
+          if (selectedContactIdRef.current === selectedContactId) {
+            setIsRestoringChatPosition(false);
+          }
+        }
+      };
+
+      initializeChat();
+    } else {
+      setIsRestoringChatPosition(false);
+    }
+  }, [selectedContactId, getSavedScrollState]);
 
   // Управление видимостью нижнего меню
   useEffect(() => {
@@ -372,33 +463,60 @@ const ChatPage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  const fetchGlobalSearchPage = useCallback(async (query: string, page: number, append: boolean) => {
+    if (!query) return;
+
+    try {
+      if (append) {
+        setIsLoadingMoreGlobalSearch(true);
+      } else {
+        setIsSearching(true);
+      }
+
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/contacts/search`, {
+        params: { query, page, limit: GLOBAL_SEARCH_PAGE_SIZE },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const responseData = response.data;
+      const items: SearchUser[] = Array.isArray(responseData) ? responseData : (responseData.items || []);
+      const hasMore = Array.isArray(responseData)
+        ? items.length >= GLOBAL_SEARCH_PAGE_SIZE
+        : Boolean(responseData.hasMore);
+
+      setGlobalSearchResults(prev =>
+        append
+          ? [...prev, ...items.filter(item => !prev.some(existing => existing.id === item.id))]
+          : items
+      );
+      setGlobalSearchPage(page);
+      setHasMoreGlobalSearch(hasMore);
+    } catch (error) {
+      console.error('Ошибка глобального поиска пользователей:', error);
+      if (!append) {
+        setGlobalSearchResults([]);
+      }
+      setHasMoreGlobalSearch(false);
+    } finally {
+      setIsSearching(false);
+      setIsLoadingMoreGlobalSearch(false);
+    }
+  }, []);
+
   // Глобальный поиск пользователей по username/email
   useEffect(() => {
-    const fetchGlobalSearch = async () => {
-      if (!debouncedSearchQuery) {
-        setGlobalSearchResults([]);
-        setIsSearching(false);
-        return;
-      }
+    if (!debouncedSearchQuery) {
+      setGlobalSearchResults([]);
+      setGlobalSearchPage(1);
+      setHasMoreGlobalSearch(false);
+      setIsSearching(false);
+      setIsLoadingMoreGlobalSearch(false);
+      return;
+    }
 
-      try {
-        setIsSearching(true);
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${API_URL}/api/contacts/search`, {
-          params: { query: debouncedSearchQuery },
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setGlobalSearchResults(response.data || []);
-      } catch (error) {
-        console.error('Ошибка глобального поиска пользователей:', error);
-        setGlobalSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    fetchGlobalSearch();
-  }, [debouncedSearchQuery]);
+    fetchGlobalSearchPage(debouncedSearchQuery, 1, false);
+  }, [debouncedSearchQuery, fetchGlobalSearchPage]);
 
   const fetchContacts = async () => {
     try {
@@ -452,29 +570,57 @@ const ChatPage: React.FC = () => {
     });
   };
 
-  const fetchMessages = async (contactId: string) => {
+  const fetchMessages = async (contactId: string, page = 1, appendOlder = false) => {
     try {
-      setIsLoading(true);
+      if (appendOlder) {
+        setIsLoadingOlderMessages(true);
+      } else {
+        setIsLoading(true);
+      }
       const token = localStorage.getItem('token');
       
       if (!token) {
-        setIsLoading(false);
+        if (appendOlder) {
+          setIsLoadingOlderMessages(false);
+        } else {
+          setIsLoading(false);
+        }
         return;
       }
       
       // Реальный запрос к API (userId берется из токена через authMiddleware)
       const response = await axios.get(`${API_URL}/api/messages`, {
-        params: { contactId },
+        params: { contactId, page, limit: MESSAGE_PAGE_SIZE },
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      setMessages(response.data);
-      setIsLoading(false);
+
+      const responseData = response.data;
+      const items: MessageType[] = Array.isArray(responseData) ? responseData : (responseData.items || []);
+      const hasMore = Array.isArray(responseData)
+        ? false
+        : Boolean(responseData.hasMore);
+
+      setMessages((prevMessages) => appendOlder ? [...items, ...prevMessages] : items);
+      setMessagesPage(page);
+      setHasMoreMessages(hasMore);
     } catch (error: any) {
       console.error('Ошибка при загрузке сообщений:', error);
-      setIsLoading(false);
+    } finally {
+      if (appendOlder) {
+        setIsLoadingOlderMessages(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   };
+
+  const loadOlderMessages = useCallback(() => {
+    if (!selectedContactId || isLoading || isLoadingOlderMessages || isRestoringChatPosition || !hasMoreMessages) {
+      return;
+    }
+
+    fetchMessages(selectedContactId, messagesPage + 1, true);
+  }, [selectedContactId, isLoading, isLoadingOlderMessages, isRestoringChatPosition, hasMoreMessages, messagesPage]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -488,6 +634,7 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSelectContact = (contactId: string) => {
+    prepareDialogRestoreState(contactId);
     setSelectedContactId(contactId);
     // Скрываем нижнее меню на мобильных при открытии чата
     if (isMobile) {
@@ -497,6 +644,7 @@ const ChatPage: React.FC = () => {
 
   const handleSelectGlobalUser = (user: SearchUser) => {
     ensureContactInList(user);
+    prepareDialogRestoreState(user.id);
     setSelectedContactId(user.id);
     setSearchQuery('');
     setDebouncedSearchQuery('');
@@ -511,8 +659,37 @@ const ChatPage: React.FC = () => {
     setSearchQuery('');
     setDebouncedSearchQuery('');
     setGlobalSearchResults([]);
+    setGlobalSearchPage(1);
+    setHasMoreGlobalSearch(false);
     setIsSearching(false);
+    setIsLoadingMoreGlobalSearch(false);
   };
+
+  const loadMoreGlobalSearch = useCallback(() => {
+    if (!debouncedSearchQuery || isSearching || isLoadingMoreGlobalSearch || !hasMoreGlobalSearch) {
+      return;
+    }
+
+    fetchGlobalSearchPage(debouncedSearchQuery, globalSearchPage + 1, true);
+  }, [
+    debouncedSearchQuery,
+    fetchGlobalSearchPage,
+    globalSearchPage,
+    hasMoreGlobalSearch,
+    isLoadingMoreGlobalSearch,
+    isSearching
+  ]);
+
+  const handleSearchListScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    if (!searchQuery.trim()) return;
+
+    const element = event.currentTarget;
+    const distanceToBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+
+    if (distanceToBottom < 120) {
+      loadMoreGlobalSearch();
+    }
+  }, [loadMoreGlobalSearch, searchQuery]);
 
   const handleReachMessagesEnd = useCallback(() => {
     if (!selectedContactId) {
@@ -555,8 +732,12 @@ const ChatPage: React.FC = () => {
     );
   }, [messages, selectedContactId]);
 
-  const handleBackToList = () => {
+  const handleBackToList = (scrollTop = 0) => {
+    if (selectedContactId) {
+      saveScrollState(selectedContactId, scrollTop);
+    }
     setSelectedContactId(null);
+    setRestoredScrollTop(null);
     // Показываем нижнее меню на мобильных при возврате к списку
     if (isMobile) {
       setShowBottomNav(true);
@@ -647,9 +828,15 @@ const ChatPage: React.FC = () => {
     user => !filteredExistingContacts.some(contact => contact.id === user.id)
   );
 
+  const pageHeight = isMobile
+    ? selectedContactId
+      ? '100vh'
+      : 'calc(100vh - 72px)'
+    : 'calc(100vh - 64px)';
+
   return (
     <Box sx={{ 
-      height: isMobile ? 'calc(100vh - 72px)' : 'calc(100vh - 64px)', // Аналогично CalendarPage: фиксируем рабочую область
+      height: pageHeight, // На мобильных убираем резерв под BottomNav в открытом диалоге
       display: 'flex', 
       flexDirection: 'column',
       overflow: 'hidden' // Блокируем скролл страницы, скролл только во внутренних контейнерах
@@ -728,7 +915,9 @@ const ChatPage: React.FC = () => {
                 borderColor: 'divider',
                 display: isMobile && selectedContactId ? 'none' : 'block',
                 overflow: 'auto'
-              }}>
+              }}
+              onScroll={handleSearchListScroll}
+              >
                 {hasSearch ? (
                   <Box>
                     {filteredExistingContacts.length > 0 && (
@@ -767,6 +956,11 @@ const ChatPage: React.FC = () => {
                           </Typography>
                         </Box>
                       )}
+                      {isLoadingMoreGlobalSearch && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
+                          <CircularProgress size={18} />
+                        </Box>
+                      )}
                     </List>
                   </Box>
                 ) : (
@@ -797,8 +991,13 @@ const ChatPage: React.FC = () => {
                     currentUserId={CURRENT_USER_ID}
                     onBack={handleBackToList}
                     onSendMessage={handleSendMessage}
+                    onReachMessagesStart={loadOlderMessages}
                     onReachMessagesEnd={handleReachMessagesEnd}
-                    isLoading={isLoading}
+                    onScrollPositionChange={setRestoredScrollTop}
+                    hasMoreMessages={hasMoreMessages}
+                    isLoadingOlder={isLoadingOlderMessages}
+                    initialScrollTop={restoredScrollTop}
+                    isLoading={isLoading || isRestoringChatPosition}
                   />
                 ) : (
                   <Box 

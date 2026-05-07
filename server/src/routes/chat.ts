@@ -134,25 +134,34 @@ router.get('/contacts/search', authMiddleware, async (req: any, res: Response) =
   try {
     const userId = req.userId as string;
     const query = String(req.query.query || '').trim();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
     if (!userId) {
       return res.status(400).json({ error: 'Не указан ID пользователя' });
     }
 
     if (!query) {
-      return res.json([]);
+      return res.json({ items: [], hasMore: false, page, limit, total: 0 });
     }
 
-    // Ищем пользователей по частичному совпадению username/email, кроме текущего пользователя
-    const matchedUsers = await User.find({
+    const searchFilter = {
       _id: { $ne: userId },
       $or: [
         { username: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } }
       ]
-    })
+    };
+
+    const total = await User.countDocuments(searchFilter);
+
+    // Ищем пользователей по частичному совпадению username/email, кроме текущего пользователя
+    const matchedUsers = await User.find(searchFilter)
       .select('_id username email firstName lastName avatar')
-      .limit(20);
+      .sort({ username: 1 })
+      .skip(skip)
+      .limit(limit);
 
     // Находим собеседников, с которыми уже есть чат
     const existingDialogIds = await Message.aggregate([
@@ -193,7 +202,13 @@ router.get('/contacts/search', authMiddleware, async (req: any, res: Response) =
       hasExistingChat: existingDialogIdSet.has(user._id.toString())
     }));
 
-    res.json(results);
+    res.json({
+      items: results,
+      hasMore: skip + results.length < total,
+      page,
+      limit,
+      total
+    });
   } catch (error) {
     console.error('Ошибка глобального поиска пользователей:', error);
     res.status(500).json({ error: 'Ошибка глобального поиска пользователей' });
@@ -205,21 +220,30 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
   try {
     const { contactId } = req.query;
     const userId = req.userId as string;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 30));
+    const skip = (page - 1) * limit;
     
     if (!userId || !contactId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
     }
 
-    // Получаем сообщения между пользователями
-    const messages = await Message.find({
+    const dialogFilter = {
       $or: [
         { senderId: userId, receiverId: contactId },
         { senderId: contactId, receiverId: userId }
       ]
-    }).sort({ createdAt: 1 });
+    };
+
+    // Загружаем сообщения порциями: сначала более новые, потом разворачиваем в хронологический порядок
+    const total = await Message.countDocuments(dialogFilter);
+    const messages = await Message.find(dialogFilter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     // Преобразуем сообщения в формат, ожидаемый клиентом
-    const formattedMessages = messages.map(message => ({
+    const formattedMessages = messages.reverse().map(message => ({
       id: message._id.toString(),
       senderId: message.senderId.toString(),
       text: message.text,
@@ -231,7 +255,13 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
       }))
     }));
 
-    res.json(formattedMessages);
+    res.json({
+      items: formattedMessages,
+      hasMore: skip + messages.length < total,
+      page,
+      limit,
+      total
+    });
   } catch (error) {
     console.error('Ошибка при получении сообщений:', error);
     res.status(500).json({ error: 'Ошибка при получении сообщений' });
