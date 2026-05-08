@@ -17,7 +17,14 @@ class SocketService {
     return this.socket;
   }
 
-  sendMessage(receiverId: string, text: string, attachments?: any[]) {
+  sendMessage(
+    receiverId: string,
+    text: string,
+    attachments?: any[],
+    replyTo?: { id: string; text: string; senderId: string } | null,
+    forwardFrom?: { id: string; text: string; senderId: string; senderName?: string; senderAvatar?: string } | null,
+    clientTempId?: string
+  ) {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
@@ -25,7 +32,10 @@ class SocketService {
     this.socket.emit('send_message', {
       receiverId,
       text,
-      attachments
+      attachments,
+      replyTo,
+      forwardFrom,
+      clientTempId
     });
   }
 
@@ -35,6 +45,22 @@ class SocketService {
     }
     
     this.socket.emit('read_message', messageId);
+  }
+
+  editMessage(messageId: string, text: string) {
+    if (!this.socket) {
+      throw new Error('Socket not initialized');
+    }
+
+    this.socket.emit('edit_message', { messageId, text });
+  }
+
+  deleteMessage(messageId: string) {
+    if (!this.socket) {
+      throw new Error('Socket not initialized');
+    }
+
+    this.socket.emit('delete_message', { messageId });
   }
 
   startTyping(receiverId: string) {

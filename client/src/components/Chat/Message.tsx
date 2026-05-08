@@ -1,6 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, Avatar, Paper, Dialog, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import DoneIcon from '@mui/icons-material/Done';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import { MessageType } from './ChatDialog';
 
 interface MessageProps {
@@ -9,9 +13,21 @@ interface MessageProps {
   contactName: string;
   contactAvatar: string;
   mb?: number;
+  onOpenActions?: (event: React.MouseEvent, message: MessageType) => void;
+  onReplyReferenceClick?: (messageId: string) => void;
+  onForwardSourceClick?: (userId: string) => void;
 }
 
-const Message: React.FC<MessageProps> = ({ message, isOwn, contactName, contactAvatar, mb = 0.75 }) => {
+const Message: React.FC<MessageProps> = ({
+  message,
+  isOwn,
+  contactName,
+  contactAvatar,
+  mb = 0.75,
+  onOpenActions,
+  onReplyReferenceClick,
+  onForwardSourceClick
+}) => {
   const [openImage, setOpenImage] = useState<string | null>(null);
   
   const formattedTime = useMemo(() => (
@@ -30,6 +46,12 @@ const Message: React.FC<MessageProps> = ({ message, isOwn, contactName, contactA
   };
 
   const bubbleColor = isOwn ? 'primary.light' : 'background.paper';
+  const replyTo = message.replyTo;
+  const forwardFrom = message.forwardFrom;
+  const isPending = message.id.startsWith('temp-');
+  const actionsButtonRight = isOwn
+    ? (message.editedAt ? 92 : 66)
+    : (message.editedAt ? 68 : 44);
 
   return (
     <Box 
@@ -60,6 +82,87 @@ const Message: React.FC<MessageProps> = ({ message, isOwn, contactName, contactA
             overflow: 'hidden'
           }}
         >
+          {replyTo && (
+            <Box
+              onClick={() => onReplyReferenceClick?.(replyTo.id)}
+              sx={{
+                mb: (message.text || (message.attachments?.length || 0) > 0) ? 0.8 : 0.25,
+                px: 1,
+                py: 0.5,
+                borderLeft: '3px solid',
+                borderColor: isOwn ? 'rgba(255,255,255,0.7)' : 'primary.main',
+                bgcolor: isOwn ? 'rgba(255,255,255,0.15)' : 'action.hover',
+                borderRadius: 1,
+                cursor: 'pointer'
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  fontWeight: 600,
+                  color: isOwn ? 'rgba(255,255,255,0.9)' : 'primary.main'
+                }}
+              >
+                Ответ
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isOwn ? 'rgba(255,255,255,0.9)' : 'text.secondary',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
+                {replyTo.text || 'Медиафайл'}
+              </Typography>
+            </Box>
+          )}
+
+          {forwardFrom && (
+            <Box
+              sx={{
+                mb: (message.text || (message.attachments?.length || 0) > 0) ? 0.8 : 0.25,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                minWidth: 0
+              }}
+            >
+              <Box
+                onClick={() => forwardFrom.senderId && onForwardSourceClick?.(forwardFrom.senderId)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  cursor: 'pointer',
+                  minWidth: 0
+                }}
+              >
+                <Avatar
+                  src={forwardFrom.senderAvatar}
+                  alt={forwardFrom.senderName || 'user'}
+                  sx={{ width: 14, height: 14 }}
+                />
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: isOwn ? 'rgba(255,255,255,0.9)' : 'text.secondary',
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '2px',
+                    maxWidth: '100%',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  Forwarded from {forwardFrom.senderName || forwardFrom.senderId}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+
           {message.attachments && message.attachments.length > 0 && (
             <Box sx={{ mb: message.text ? 1 : 0 }}>
               {message.attachments.map((attachment, index) => (
@@ -113,16 +216,42 @@ const Message: React.FC<MessageProps> = ({ message, isOwn, contactName, contactA
                 aria-hidden
                 sx={{
                   display: 'inline-block',
-                  width: '46px',
+                  width: isOwn ? '94px' : '74px',
                   height: '1px'
                 }}
               />
             </Typography>
           )}
 
+          <IconButton
+            size="small"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenActions?.(event, message);
+            }}
+            aria-label="Действия с сообщением"
+            sx={{
+              position: 'absolute',
+              right: actionsButtonRight,
+              bottom: 6,
+              p: 0.1,
+              borderRadius: 1,
+              bgcolor: isOwn ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.06)',
+              color: isOwn ? 'rgba(255,255,255,0.95)' : 'text.secondary',
+              '&:hover': {
+                bgcolor: isOwn ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.1)'
+              }
+            }}
+          >
+            <MoreHorizIcon sx={{ fontSize: '14px' }} />
+          </IconButton>
+
           <Typography
             variant="caption"
             sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.25,
               position: 'absolute',
               right: 10,
               bottom: 5,
@@ -132,7 +261,21 @@ const Message: React.FC<MessageProps> = ({ message, isOwn, contactName, contactA
               color: isOwn ? 'rgba(255,255,255,0.9)' : 'text.secondary'
             }}
           >
+            {message.editedAt ? (
+              <Box component="span" sx={{ mr: 0 }}>
+                ред.
+              </Box>
+            ) : null}
             {formattedTime}
+            {isOwn ? (
+              isPending ? (
+                <ScheduleIcon sx={{ fontSize: 13, ml: 0.25 }} />
+              ) : message.isRead ? (
+                <DoneAllIcon sx={{ fontSize: 14, ml: 0.25 }} />
+              ) : (
+                <DoneIcon sx={{ fontSize: 14, ml: 0.25 }} />
+              )
+            ) : null}
           </Typography>
         </Paper>
       </Box>

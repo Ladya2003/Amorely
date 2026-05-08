@@ -15,13 +15,20 @@ import {
   ListItemText,
   Avatar,
   CircularProgress
+  ,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Divider,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatList, { Contact } from '../components/Chat/ChatList';
-import ChatDialog, { MessageType } from '../components/Chat/ChatDialog';
+import ChatDialog, { MessageForwardRef, MessageReplyRef, MessageType } from '../components/Chat/ChatDialog';
 import Games from '../components/Chat/Games';
 import axios from 'axios';
 import { API_URL } from '../config';
@@ -165,6 +172,13 @@ type ChatContact = Contact & {
   isPartner?: boolean;
 };
 
+const getMessagePreviewText = (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom'>) => {
+  const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
+  if (hasMedia && !message.text) return 'Медиафайл';
+  if (!message.text && message.forwardFrom) return 'Пересланное сообщение';
+  return message.text || '';
+};
+
 const ChatPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [contacts, setContacts] = useState<ChatContact[]>([]);
@@ -184,6 +198,22 @@ const ChatPage: React.FC = () => {
   const [isLoadingMoreGlobalSearch, setIsLoadingMoreGlobalSearch] = useState(false);
   const [globalSearchPage, setGlobalSearchPage] = useState(1);
   const [hasMoreGlobalSearch, setHasMoreGlobalSearch] = useState(false);
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
+  const [forwardSourceMessage, setForwardSourceMessage] = useState<MessageType | null>(null);
+  const [pendingForwardMessage, setPendingForwardMessage] = useState<MessageForwardRef | null>(null);
+  const [forwardSearchQuery, setForwardSearchQuery] = useState('');
+  const [forwardDebouncedQuery, setForwardDebouncedQuery] = useState('');
+  const [forwardGlobalResults, setForwardGlobalResults] = useState<SearchUser[]>([]);
+  const [isForwardSearching, setIsForwardSearching] = useState(false);
+  const [deleteToast, setDeleteToast] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
   
   const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
@@ -192,6 +222,16 @@ const ChatPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const selectedContactIdRef = useRef<string | null>(null);
+  const pendingDeleteRef = useRef<{
+    message: MessageType;
+    index: number;
+    contactId: string;
+  } | null>(null);
+  const hasRestoredSelectedChatRef = useRef(false);
+  const selectedChatStorageKey = useCallback(() => {
+    if (!CURRENT_USER_ID) return null;
+    return `chat:selected:${CURRENT_USER_ID}`;
+  }, [CURRENT_USER_ID]);
 
   const getChatScrollStorageKey = useCallback((contactId: string) => {
     if (!CURRENT_USER_ID) return null;
@@ -228,6 +268,18 @@ const ChatPage: React.FC = () => {
     localStorage.setItem(key, JSON.stringify(payload));
   }, [getChatScrollStorageKey, messagesPage]);
 
+  const saveSelectedChatId = useCallback((contactId: string | null) => {
+    const key = selectedChatStorageKey();
+    if (!key) return;
+
+    if (contactId) {
+      localStorage.setItem(key, contactId);
+      return;
+    }
+
+    localStorage.removeItem(key);
+  }, [selectedChatStorageKey]);
+
   const prepareDialogRestoreState = useCallback((contactId: string) => {
     const savedState = getSavedScrollState(contactId);
     const targetPage = savedState?.page || 1;
@@ -237,6 +289,27 @@ const ChatPage: React.FC = () => {
     setIsRestoringChatPosition(needsRestore);
     setRestoredScrollTop(null);
   }, [getSavedScrollState]);
+
+  useEffect(() => {
+    hasRestoredSelectedChatRef.current = false;
+  }, [CURRENT_USER_ID]);
+
+  useEffect(() => {
+    if (!CURRENT_USER_ID || selectedContactId || hasRestoredSelectedChatRef.current) {
+      return;
+    }
+
+    hasRestoredSelectedChatRef.current = true;
+    const key = selectedChatStorageKey();
+    if (!key) return;
+
+    const savedContactId = localStorage.getItem(key);
+    if (!savedContactId) return;
+
+    setTabValue(0);
+    prepareDialogRestoreState(savedContactId);
+    setSelectedContactId(savedContactId);
+  }, [CURRENT_USER_ID, selectedContactId, prepareDialogRestoreState, selectedChatStorageKey]);
 
   const sortContactsByLastMessageDesc = useCallback((contactsToSort: ChatContact[]) => {
     return [...contactsToSort].sort((a, b) => {
@@ -281,6 +354,47 @@ const ChatPage: React.FC = () => {
     );
   }, [sortContactsByLastMessageDesc]);
 
+  const updateContactLastMessageAfterDelete = useCallback((contactId: string, nextMessages: MessageType[]) => {
+    setContacts((prevContacts) =>
+      sortContactsByLastMessageDesc(prevContacts.map((contact) => {
+        if (contact.id !== contactId) return contact;
+
+        const nextLastMessage = nextMessages[nextMessages.length - 1];
+        if (!nextLastMessage) {
+          return {
+            ...contact,
+            lastMessage: {
+              ...contact.lastMessage,
+              id: '',
+              senderId: '',
+              text: 'Нет сообщений',
+              timestamp: new Date().toISOString(),
+              isRead: true,
+              hasMedia: false,
+              isPending: false
+            },
+            unreadCount: 0
+          };
+        }
+
+        const hasMedia = Boolean(nextLastMessage.attachments && nextLastMessage.attachments.length > 0);
+        return {
+          ...contact,
+          lastMessage: {
+            ...contact.lastMessage,
+            id: nextLastMessage.id,
+            senderId: nextLastMessage.senderId,
+            text: getMessagePreviewText(nextLastMessage),
+            timestamp: nextLastMessage.timestamp,
+            isRead: nextLastMessage.senderId === CURRENT_USER_ID || Boolean(nextLastMessage.isRead),
+            hasMedia,
+            isPending: nextLastMessage.id.startsWith('temp-')
+          }
+        };
+      }))
+    );
+  }, [CURRENT_USER_ID, sortContactsByLastMessageDesc]);
+
   // Инициализация сокета
   useEffect(() => {
     if (!CURRENT_USER_ID) {
@@ -302,7 +416,7 @@ const ChatPage: React.FC = () => {
 
       // Обновляем список контактов
       const hasMedia = message.attachments && message.attachments.length > 0;
-      const displayText = hasMedia && !message.text ? 'Медиафайл' : message.text;
+      const displayText = getMessagePreviewText(message);
       setContacts(prevContacts =>
         sortContactsByLastMessageDesc(prevContacts.map(contact =>
           contact.id === message.senderId
@@ -327,15 +441,23 @@ const ChatPage: React.FC = () => {
     newSocket.on('message_sent', (message: MessageType) => {
       // Заменяем временное сообщение на реальное или добавляем новое
       setMessages(prevMessages => {
-        // Ищем временное сообщение с похожим текстом
-        const tempMessageIndex = prevMessages.findIndex(msg => 
-          msg.id.startsWith('temp-') && msg.text === message.text
+        const tempMessageIndex = prevMessages.findIndex((msg) =>
+          msg.id.startsWith('temp-') &&
+          (
+            (Boolean(message.clientTempId) && msg.clientTempId === message.clientTempId) ||
+            msg.text === message.text
+          )
         );
         
         if (tempMessageIndex !== -1) {
           // Заменяем временное сообщение на реальное
           const newMessages = [...prevMessages];
-          newMessages[tempMessageIndex] = message;
+          const tempMessage = newMessages[tempMessageIndex];
+          newMessages[tempMessageIndex] = {
+            ...message,
+            replyTo: message.replyTo || tempMessage.replyTo,
+            forwardFrom: message.forwardFrom || tempMessage.forwardFrom
+          };
           return newMessages;
         } else {
           // Добавляем новое сообщение (если временного не было найдено)
@@ -346,7 +468,7 @@ const ChatPage: React.FC = () => {
       // Обновляем последнее сообщение в списке контактов
       if (selectedContactId) {
         const hasMedia = message.attachments && message.attachments.length > 0;
-        const displayText = hasMedia && !message.text ? 'Медиафайл' : message.text;
+        const displayText = getMessagePreviewText(message);
         updateContactLastMessage(
           selectedContactId,
           displayText,
@@ -383,10 +505,83 @@ const ChatPage: React.FC = () => {
       );
     });
 
+    newSocket.on('message_edited', (message: MessageType) => {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) => (msg.id === message.id ? { ...msg, ...message } : msg))
+      );
+
+      setContacts((prevContacts) =>
+        sortContactsByLastMessageDesc(prevContacts.map((contact) => {
+          if (contact.lastMessage.id !== message.id) {
+            return contact;
+          }
+
+          const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
+          return {
+            ...contact,
+            lastMessage: {
+              ...contact.lastMessage,
+              text: getMessagePreviewText(message),
+              hasMedia
+            }
+          };
+        }))
+      );
+    });
+
+    newSocket.on('message_deleted', (payload: { messageId: string; senderId: string; receiverId: string }) => {
+      const contactId = payload.senderId === CURRENT_USER_ID ? payload.receiverId : payload.senderId;
+      setMessages((prevMessages) => {
+        const nextMessages = prevMessages.filter((message) => message.id !== payload.messageId);
+        if (selectedContactIdRef.current === contactId) {
+          updateContactLastMessageAfterDelete(contactId, nextMessages);
+        }
+        return nextMessages;
+      });
+
+      if (pendingDeleteRef.current?.message.id === payload.messageId) {
+        pendingDeleteRef.current = null;
+        setDeleteToast({
+          open: true,
+          message: 'Сообщение удалено',
+          severity: 'success'
+        });
+      }
+    });
+
+    newSocket.on('error', (payload: { message?: string }) => {
+      if (!pendingDeleteRef.current) return;
+
+      const rollback = pendingDeleteRef.current;
+      pendingDeleteRef.current = null;
+
+      setMessages((prevMessages) => {
+        const alreadyExists = prevMessages.some((message) => message.id === rollback.message.id);
+        if (alreadyExists) {
+          return prevMessages;
+        }
+
+        const nextMessages = [...prevMessages];
+        nextMessages.splice(rollback.index, 0, rollback.message);
+
+        if (selectedContactIdRef.current === rollback.contactId) {
+          updateContactLastMessageAfterDelete(rollback.contactId, nextMessages);
+        }
+
+        return nextMessages;
+      });
+
+      setDeleteToast({
+        open: true,
+        message: payload?.message || 'Не удалось удалить сообщение',
+        severity: 'error'
+      });
+    });
+
     return () => {
       socketService.disconnect();
     };
-  }, [selectedContactId, updateContactLastMessage]);
+  }, [CURRENT_USER_ID, selectedContactId, updateContactLastMessage, updateContactLastMessageAfterDelete]);
 
   // Загрузка контактов
   useEffect(() => {
@@ -463,6 +658,14 @@ const ChatPage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setForwardDebouncedQuery(forwardSearchQuery.trim());
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [forwardSearchQuery]);
+
   const fetchGlobalSearchPage = useCallback(async (query: string, page: number, append: boolean) => {
     if (!query) return;
 
@@ -504,6 +707,31 @@ const ChatPage: React.FC = () => {
     }
   }, []);
 
+  const fetchForwardGlobalSearch = useCallback(async (query: string) => {
+    if (!query) {
+      setForwardGlobalResults([]);
+      return;
+    }
+
+    try {
+      setIsForwardSearching(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/contacts/search`, {
+        params: { query, page: 1, limit: GLOBAL_SEARCH_PAGE_SIZE },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const responseData = response.data;
+      const items: SearchUser[] = Array.isArray(responseData) ? responseData : (responseData.items || []);
+      setForwardGlobalResults(items);
+    } catch (error) {
+      console.error('Ошибка поиска для пересылки:', error);
+      setForwardGlobalResults([]);
+    } finally {
+      setIsForwardSearching(false);
+    }
+  }, []);
+
   // Глобальный поиск пользователей по username/email
   useEffect(() => {
     if (!debouncedSearchQuery) {
@@ -517,6 +745,16 @@ const ChatPage: React.FC = () => {
 
     fetchGlobalSearchPage(debouncedSearchQuery, 1, false);
   }, [debouncedSearchQuery, fetchGlobalSearchPage]);
+
+  useEffect(() => {
+    if (!forwardModalOpen) return;
+    if (!forwardDebouncedQuery) {
+      setForwardGlobalResults([]);
+      setIsForwardSearching(false);
+      return;
+    }
+    fetchForwardGlobalSearch(forwardDebouncedQuery);
+  }, [forwardDebouncedQuery, forwardModalOpen, fetchForwardGlobalSearch]);
 
   const fetchContacts = async () => {
     try {
@@ -625,6 +863,7 @@ const ChatPage: React.FC = () => {
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
     if (newValue === 1) {
+      saveSelectedChatId(null);
       setSelectedContactId(null);
       // Показываем нижнее меню при переходе на вкладку игр
       if (isMobile) {
@@ -635,6 +874,7 @@ const ChatPage: React.FC = () => {
 
   const handleSelectContact = (contactId: string) => {
     prepareDialogRestoreState(contactId);
+    saveSelectedChatId(contactId);
     setSelectedContactId(contactId);
     // Скрываем нижнее меню на мобильных при открытии чата
     if (isMobile) {
@@ -645,6 +885,7 @@ const ChatPage: React.FC = () => {
   const handleSelectGlobalUser = (user: SearchUser) => {
     ensureContactInList(user);
     prepareDialogRestoreState(user.id);
+    saveSelectedChatId(user.id);
     setSelectedContactId(user.id);
     setSearchQuery('');
     setDebouncedSearchQuery('');
@@ -663,6 +904,81 @@ const ChatPage: React.FC = () => {
     setHasMoreGlobalSearch(false);
     setIsSearching(false);
     setIsLoadingMoreGlobalSearch(false);
+  };
+
+  const handleStartForwardMessage = (message: MessageType) => {
+    setForwardSourceMessage(message);
+    setForwardModalOpen(true);
+    setForwardSearchQuery('');
+    setForwardDebouncedQuery('');
+    setForwardGlobalResults([]);
+    setIsForwardSearching(false);
+  };
+
+  const resolveForwardSenderMeta = (message: MessageType) => {
+    if (!CURRENT_USER_ID) {
+      return { senderName: undefined, senderAvatar: undefined };
+    }
+
+    if (message.senderId === CURRENT_USER_ID) {
+      const selfName = user?.firstName || user?.username || 'Вы';
+      const selfAvatar = user?.avatar || '';
+      return { senderName: selfName, senderAvatar: selfAvatar };
+    }
+
+    if (selectedContactId && message.senderId === selectedContactId) {
+      const senderContact = contacts.find((contact) => contact.id === selectedContactId);
+      return {
+        senderName: senderContact?.name || senderContact?.username || selectedContactId,
+        senderAvatar: senderContact?.avatar || ''
+      };
+    }
+
+    const knownContact = contacts.find((contact) => contact.id === message.senderId);
+    return {
+      senderName: knownContact?.name || knownContact?.username || message.senderId,
+      senderAvatar: knownContact?.avatar || ''
+    };
+  };
+
+  const handleSelectForwardTarget = (target: SearchUser | ChatContact) => {
+    ensureContactInList({
+      id: target.id,
+      name: target.name,
+      username: (target as SearchUser).username || target.username || '',
+      email: (target as SearchUser).email || target.email || '',
+      avatar: target.avatar
+    });
+
+    if (forwardSourceMessage) {
+      const forwardSenderMeta = resolveForwardSenderMeta(forwardSourceMessage);
+      setPendingForwardMessage({
+        id: forwardSourceMessage.id,
+        text: forwardSourceMessage.text || (forwardSourceMessage.attachments?.length ? 'Медиафайл' : ''),
+        senderId: forwardSourceMessage.senderId,
+        senderName: forwardSenderMeta.senderName,
+        senderAvatar: forwardSenderMeta.senderAvatar
+      });
+    }
+
+    prepareDialogRestoreState(target.id);
+    saveSelectedChatId(target.id);
+    setSelectedContactId(target.id);
+    setForwardModalOpen(false);
+    setForwardSourceMessage(null);
+    if (isMobile) {
+      setShowBottomNav(false);
+    }
+  };
+
+  const handleOpenChatWithUser = (userId: string) => {
+    if (!userId || userId === CURRENT_USER_ID) return;
+    prepareDialogRestoreState(userId);
+    saveSelectedChatId(userId);
+    setSelectedContactId(userId);
+    if (isMobile) {
+      setShowBottomNav(false);
+    }
   };
 
   const loadMoreGlobalSearch = useCallback(() => {
@@ -736,6 +1052,7 @@ const ChatPage: React.FC = () => {
     if (selectedContactId) {
       saveScrollState(selectedContactId, scrollTop);
     }
+    saveSelectedChatId(null);
     setSelectedContactId(null);
     setRestoredScrollTop(null);
     // Показываем нижнее меню на мобильных при возврате к списку
@@ -744,8 +1061,25 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  const handleSendMessage = (text: string, attachments?: File[]) => {
+  const handleDialogScrollPositionChange = useCallback((scrollTop: number) => {
+    setRestoredScrollTop(scrollTop);
+    if (selectedContactId) {
+      saveScrollState(selectedContactId, scrollTop);
+    }
+  }, [selectedContactId, saveScrollState]);
+
+  const handleSendMessage = (
+    text: string,
+    attachments?: File[],
+    replyTo?: MessageReplyRef | null,
+    forwardFrom?: MessageForwardRef | null
+  ) => {
+    const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
     if (!selectedContactId || !CURRENT_USER_ID) return;
+    const trimmedText = text.trim();
+    const isForwardOnly = Boolean(forwardFrom);
+    if (!isForwardOnly && !trimmedText) return;
 
     // Загрузка вложений в Cloudinary (если есть)
     const uploadAttachments = async () => {
@@ -783,25 +1117,36 @@ const ChatPage: React.FC = () => {
       const uploadedAttachments = await uploadAttachments();
       
       // Отправляем сообщение через сокет
-      socketService.sendMessage(selectedContactId, text, uploadedAttachments);
+      const tempClientId = newMessage.clientTempId;
+      socketService.sendMessage(
+        selectedContactId,
+        trimmedText,
+        uploadedAttachments,
+        replyTo || null,
+        forwardFrom || null,
+        tempClientId
+      );
     };
 
     // Временно добавляем сообщение локально для мгновенного отображения
     const newMessage: MessageType = {
-      id: `temp-${Date.now()}`,
+      id: `temp-${uniqueSuffix}`,
+      clientTempId: `client-temp-${uniqueSuffix}`,
       senderId: CURRENT_USER_ID,
-      text,
+      text: trimmedText,
       timestamp: new Date().toISOString(),
+      replyTo: replyTo || undefined,
+      forwardFrom: forwardFrom || undefined,
       attachments: attachments?.map(file => ({
         type: file.type.startsWith('image/') ? 'image' : 'video',
         url: URL.createObjectURL(file)
       }))
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
     updateContactLastMessage(
       selectedContactId,
-      text || (attachments && attachments.length > 0 ? 'Медиафайл' : ''),
+      trimmedText || (forwardFrom ? 'Пересланное сообщение' : (attachments && attachments.length > 0 ? 'Медиафайл' : '')),
       newMessage.timestamp,
       false,
       Boolean(attachments && attachments.length > 0),
@@ -812,6 +1157,69 @@ const ChatPage: React.FC = () => {
     
     // Вызываем функцию для отправки сообщения через API
     sendMessageWithAttachments();
+  };
+
+  const handleEditMessage = (messageId: string, text: string) => {
+    if (!selectedContactId || !CURRENT_USER_ID) return;
+
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
+
+    setMessages((prevMessages) =>
+      prevMessages.map((message) =>
+        message.id === messageId
+          ? { ...message, text: trimmedText, editedAt: new Date().toISOString() }
+          : message
+      )
+    );
+
+    setContacts((prevContacts) =>
+      sortContactsByLastMessageDesc(prevContacts.map((contact) => {
+        if (contact.id !== selectedContactId || contact.lastMessage.id !== messageId) {
+          return contact;
+        }
+
+        return {
+          ...contact,
+          lastMessage: {
+            ...contact.lastMessage,
+            text: trimmedText,
+            hasMedia: false
+          }
+        };
+      }))
+    );
+
+    socketService.editMessage(messageId, trimmedText);
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (!selectedContactId || !CURRENT_USER_ID) return;
+
+    setMessages((prevMessages) => {
+      const index = prevMessages.findIndex((message) => message.id === messageId);
+      const messageToDelete = prevMessages[index];
+      if (!messageToDelete) {
+        setDeleteToast({
+          open: true,
+          message: 'Не удалось удалить сообщение',
+          severity: 'error'
+        });
+        return prevMessages;
+      }
+
+      pendingDeleteRef.current = {
+        message: messageToDelete,
+        index,
+        contactId: selectedContactId
+      };
+
+      const nextMessages = prevMessages.filter((message) => message.id !== messageId);
+      updateContactLastMessageAfterDelete(selectedContactId, nextMessages);
+      return nextMessages;
+    });
+
+    socketService.deleteMessage(messageId);
   };
 
   const selectedContact = contacts.find(contact => contact.id === selectedContactId);
@@ -826,6 +1234,17 @@ const ChatPage: React.FC = () => {
     : contacts;
   const filteredGlobalResults = globalSearchResults.filter(
     user => !filteredExistingContacts.some(contact => contact.id === user.id)
+  );
+  const forwardImmediateQuery = forwardSearchQuery.trim().toLowerCase();
+  const forwardFilteredContacts = forwardImmediateQuery
+    ? contacts.filter(contact =>
+        contact.name.toLowerCase().includes(forwardImmediateQuery) ||
+        (contact.username || '').toLowerCase().includes(forwardImmediateQuery) ||
+        (contact.email || '').toLowerCase().includes(forwardImmediateQuery)
+      )
+    : contacts;
+  const forwardFilteredGlobalResults = forwardGlobalResults.filter(
+    (user) => !forwardFilteredContacts.some((contact) => contact.id === user.id)
   );
 
   const pageHeight = isMobile
@@ -991,9 +1410,15 @@ const ChatPage: React.FC = () => {
                     currentUserId={CURRENT_USER_ID}
                     onBack={handleBackToList}
                     onSendMessage={handleSendMessage}
+                    onStartForwardMessage={handleStartForwardMessage}
+                    onOpenChatWithUser={handleOpenChatWithUser}
+                    onEditMessage={handleEditMessage}
+                    onDeleteMessage={handleDeleteMessage}
                     onReachMessagesStart={loadOlderMessages}
                     onReachMessagesEnd={handleReachMessagesEnd}
-                    onScrollPositionChange={setRestoredScrollTop}
+                    onScrollPositionChange={handleDialogScrollPositionChange}
+                    pendingForwardMessage={pendingForwardMessage}
+                    onPendingForwardApplied={() => setPendingForwardMessage(null)}
                     hasMoreMessages={hasMoreMessages}
                     isLoadingOlder={isLoadingOlderMessages}
                     initialScrollTop={restoredScrollTop}
@@ -1024,6 +1449,93 @@ const ChatPage: React.FC = () => {
           <Games />
         )}
       </Box>
+      <Dialog open={forwardModalOpen} onClose={() => setForwardModalOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ pb: 1 }}>Переслать сообщение</DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Поиск чата, логина или почты"
+            value={forwardSearchQuery}
+            onChange={(e) => setForwardSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  {isForwardSearching ? (
+                    <CircularProgress size={16} />
+                  ) : (
+                    forwardSearchQuery && (
+                      <IconButton size="small" onClick={() => setForwardSearchQuery('')}>
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    )
+                  )}
+                </InputAdornment>
+              )
+            }}
+            sx={{ mb: 1.5 }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
+            Ваши чаты
+          </Typography>
+          <List sx={{ p: 0 }}>
+            {forwardFilteredContacts.map((contact) => (
+              <ListItemButton key={`forward-contact-${contact.id}`} onClick={() => handleSelectForwardTarget(contact)}>
+                <ListItemAvatar>
+                  <Avatar alt={contact.name} src={contact.avatar} />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={contact.name}
+                  secondary={contact.username ? `${contact.username}${contact.email ? ` • ${contact.email}` : ''}` : contact.email}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+          {forwardDebouncedQuery && (
+            <>
+              <Divider sx={{ my: 1.25 }} />
+              <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
+                Глобальный поиск
+              </Typography>
+              <List sx={{ p: 0 }}>
+                {forwardFilteredGlobalResults.map((user) => (
+                  <ListItemButton key={`forward-global-${user.id}`} onClick={() => handleSelectForwardTarget(user)}>
+                    <ListItemAvatar>
+                      <Avatar alt={user.name} src={user.avatar} />
+                    </ListItemAvatar>
+                    <ListItemText primary={user.name} secondary={`${user.username} • ${user.email}`} />
+                  </ListItemButton>
+                ))}
+                {!isForwardSearching && forwardFilteredGlobalResults.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 1 }}>
+                    Ничего не найдено
+                  </Typography>
+                )}
+              </List>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Snackbar
+        open={deleteToast.open}
+        autoHideDuration={3000}
+        onClose={() => setDeleteToast((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setDeleteToast((prev) => ({ ...prev, open: false }))}
+          severity={deleteToast.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {deleteToast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

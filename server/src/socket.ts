@@ -39,10 +39,13 @@ export default function setupSocketIO(server: HttpServer) {
     socket.on('send_message', async (data: { 
       receiverId: string, 
       text: string, 
-      attachments?: Array<{ type: string, url: string, publicId: string }> 
+      attachments?: Array<{ type: string, url: string, publicId: string }>,
+      replyTo?: { id: string, text: string, senderId: string } | null,
+      forwardFrom?: { id: string, text: string, senderId: string, senderName?: string, senderAvatar?: string } | null,
+      clientTempId?: string
     }) => {
       try {
-        const { receiverId, text, attachments } = data;
+        const { receiverId, text, attachments, replyTo, forwardFrom, clientTempId } = data;
         const senderSocketData = connectedUsers.find(user => user.socketId === socket.id);
         
         if (!senderSocketData) {
@@ -58,6 +61,8 @@ export default function setupSocketIO(server: HttpServer) {
           receiverId: new mongoose.Types.ObjectId(receiverId),
           text,
           attachments,
+          replyTo: replyTo || undefined,
+          forwardFrom: forwardFrom || undefined,
           isRead: false,
           createdAt: new Date()
         });
@@ -70,7 +75,11 @@ export default function setupSocketIO(server: HttpServer) {
           senderId: savedMessage.senderId.toString(),
           text: savedMessage.text,
           timestamp: savedMessage.createdAt.toISOString(),
+          editedAt: savedMessage.editedAt ? savedMessage.editedAt.toISOString() : undefined,
           isRead: savedMessage.isRead,
+          replyTo: savedMessage.replyTo || undefined,
+          forwardFrom: savedMessage.forwardFrom || undefined,
+          clientTempId,
           attachments: savedMessage.attachments?.map(attachment => ({
             type: attachment.type,
             url: attachment.url
@@ -90,6 +99,122 @@ export default function setupSocketIO(server: HttpServer) {
       } catch (error) {
         console.error('Ошибка при отправке сообщения:', error);
         socket.emit('error', { message: 'Ошибка при отправке сообщения' });
+      }
+    });
+
+    socket.on('edit_message', async (data: { messageId: string; text: string }) => {
+      try {
+        const { messageId } = data;
+        const text = String(data.text || '').trim();
+        const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
+
+        if (!senderSocketData) {
+          socket.emit('error', { message: 'Пользователь не авторизован' });
+          return;
+        }
+
+        const senderId = senderSocketData.userId;
+        const message = await Message.findById(messageId);
+
+        if (!message) {
+          socket.emit('error', { message: 'Сообщение не найдено' });
+          return;
+        }
+
+        if (!text) {
+          socket.emit('error', { message: 'Текст сообщения обязателен' });
+          return;
+        }
+
+        if (message.forwardFrom) {
+          socket.emit('error', { message: 'Пересланное сообщение нельзя редактировать' });
+          return;
+        }
+
+        // Безопасность: редактировать может только владелец сообщения.
+        if (message.senderId.toString() !== senderId) {
+          socket.emit('error', { message: 'Недостаточно прав для редактирования сообщения' });
+          return;
+        }
+
+        message.text = text;
+        message.editedAt = new Date();
+        await message.save();
+
+        const formattedMessage = {
+          id: message._id.toString(),
+          senderId: message.senderId.toString(),
+          text: message.text,
+          timestamp: message.createdAt.toISOString(),
+          editedAt: message.editedAt ? message.editedAt.toISOString() : undefined,
+          isRead: message.isRead,
+          replyTo: message.replyTo || undefined,
+          forwardFrom: message.forwardFrom || undefined,
+          attachments: message.attachments?.map((attachment) => ({
+            type: attachment.type,
+            url: attachment.url
+          }))
+        };
+
+        socket.emit('message_edited', formattedMessage);
+
+        const receiverSocketData = connectedUsers.find(
+          (user) => user.userId === message.receiverId.toString()
+        );
+        if (receiverSocketData) {
+          io.to(receiverSocketData.socketId).emit('message_edited', formattedMessage);
+        }
+      } catch (error) {
+        console.error('Ошибка при редактировании сообщения:', error);
+        socket.emit('error', { message: 'Ошибка при редактировании сообщения' });
+      }
+    });
+
+    socket.on('delete_message', async (data: { messageId: string }) => {
+      try {
+        const { messageId } = data;
+        const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
+
+        if (!senderSocketData) {
+          socket.emit('error', { message: 'Пользователь не авторизован' });
+          return;
+        }
+
+        const userId = senderSocketData.userId;
+        const message = await Message.findById(messageId);
+
+        if (!message) {
+          socket.emit('error', { message: 'Сообщение не найдено' });
+          return;
+        }
+
+        const senderId = message.senderId.toString();
+        const receiverId = message.receiverId.toString();
+        const isParticipant = senderId === userId || receiverId === userId;
+
+        if (!isParticipant) {
+          socket.emit('error', { message: 'Недостаточно прав для удаления сообщения' });
+          return;
+        }
+
+        await Message.deleteOne({ _id: message._id });
+
+        const payload = {
+          messageId,
+          senderId,
+          receiverId
+        };
+
+        socket.emit('message_deleted', payload);
+
+        const targetUserId = senderId === userId ? receiverId : senderId;
+        const targetSocketData = connectedUsers.find((user) => user.userId === targetUserId);
+        if (targetSocketData) {
+          io.to(targetSocketData.socketId).emit('message_deleted', payload);
+        }
+      } catch (error) {
+        console.error('Ошибка при удалении сообщения:', error);
+        socket.emit('error', { message: 'Ошибка при удалении сообщения' });
       }
     });
 

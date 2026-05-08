@@ -248,7 +248,10 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
       senderId: message.senderId.toString(),
       text: message.text,
       timestamp: message.createdAt.toISOString(),
+      editedAt: message.editedAt ? message.editedAt.toISOString() : undefined,
       isRead: message.isRead,
+      replyTo: message.replyTo || undefined,
+      forwardFrom: message.forwardFrom || undefined,
       attachments: message.attachments?.map(attachment => ({
         type: attachment.type,
         url: attachment.url
@@ -271,7 +274,7 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
 // Отправка нового сообщения
 router.post('/messages', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { senderId, receiverId, text, attachments } = req.body;
+    const { senderId, receiverId, text, attachments, replyTo, forwardFrom } = req.body;
     
     if (!senderId || !receiverId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
@@ -283,6 +286,8 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
       receiverId: new mongoose.Types.ObjectId(receiverId),
       text,
       attachments,
+      replyTo,
+      forwardFrom,
       isRead: false,
       createdAt: new Date()
     });
@@ -295,7 +300,10 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
       senderId: savedMessage.senderId.toString(),
       text: savedMessage.text,
       timestamp: savedMessage.createdAt.toISOString(),
+      editedAt: savedMessage.editedAt ? savedMessage.editedAt.toISOString() : undefined,
       isRead: savedMessage.isRead,
+      replyTo: savedMessage.replyTo || undefined,
+      forwardFrom: savedMessage.forwardFrom || undefined,
       attachments: savedMessage.attachments?.map(attachment => ({
         type: attachment.type,
         url: attachment.url
@@ -306,6 +314,55 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
   } catch (error) {
     console.error('Ошибка при отправке сообщения:', error);
     res.status(500).json({ error: 'Ошибка при отправке сообщения' });
+  }
+});
+
+// Редактирование сообщения
+router.put('/messages/:id', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId as string;
+    const text = String(req.body?.text || '').trim();
+
+    if (!text) {
+      return res.status(400).json({ error: 'Текст сообщения обязателен' });
+    }
+
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({ error: 'Сообщение не найдено' });
+    }
+
+    // Безопасность: только владелец сообщения может его редактировать.
+    if (message.senderId.toString() !== userId) {
+      return res.status(403).json({ error: 'Недостаточно прав для редактирования' });
+    }
+
+    if (message.forwardFrom) {
+      return res.status(403).json({ error: 'Пересланное сообщение нельзя редактировать' });
+    }
+
+    message.text = text;
+    message.editedAt = new Date();
+    await message.save();
+
+    return res.json({
+      id: message._id.toString(),
+      senderId: message.senderId.toString(),
+      text: message.text,
+      timestamp: message.createdAt.toISOString(),
+      editedAt: message.editedAt ? message.editedAt.toISOString() : undefined,
+      isRead: message.isRead,
+      replyTo: message.replyTo || undefined,
+      forwardFrom: message.forwardFrom || undefined,
+      attachments: message.attachments?.map((attachment) => ({
+        type: attachment.type,
+        url: attachment.url
+      }))
+    });
+  } catch (error) {
+    console.error('Ошибка при редактировании сообщения:', error);
+    return res.status(500).json({ error: 'Ошибка при редактировании сообщения' });
   }
 });
 
@@ -327,6 +384,33 @@ router.put('/messages/:id/read', authMiddleware, async (req: Request, res: Respo
   } catch (error) {
     console.error('Ошибка при обновлении статуса сообщения:', error);
     res.status(500).json({ error: 'Ошибка при обновлении статуса сообщения' });
+  }
+});
+
+// Удаление сообщения для обоих участников диалога
+router.delete('/messages/:id', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId as string;
+
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({ error: 'Сообщение не найдено' });
+    }
+
+    const senderId = message.senderId.toString();
+    const receiverId = message.receiverId.toString();
+    const isParticipant = senderId === userId || receiverId === userId;
+
+    if (!isParticipant) {
+      return res.status(403).json({ error: 'Недостаточно прав для удаления сообщения' });
+    }
+
+    await Message.deleteOne({ _id: message._id });
+    return res.json({ message: 'Сообщение удалено' });
+  } catch (error) {
+    console.error('Ошибка при удалении сообщения:', error);
+    return res.status(500).json({ error: 'Ошибка при удалении сообщения' });
   }
 });
 

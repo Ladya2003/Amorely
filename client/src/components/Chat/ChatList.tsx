@@ -140,6 +140,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
               />
             </ListItemAvatar>
             <ListItemText
+              secondaryTypographyProps={{ component: 'div' }}
               primary={
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle1" component="span">

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
@@ -7,21 +7,52 @@ import {
   Avatar, 
   Paper,
   InputAdornment,
-  CircularProgress
+  CircularProgress,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import CloseIcon from '@mui/icons-material/Close';
+import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Contact } from './ChatList';
 import Message from './Message';
+
+export interface MessageReplyRef {
+  id: string;
+  text: string;
+  senderId: string;
+}
+
+export interface MessageForwardRef {
+  id: string;
+  text: string;
+  senderId: string;
+  senderName?: string;
+  senderAvatar?: string;
+}
 
 export interface MessageType {
   id: string;
   senderId: string;
   text: string;
   timestamp: string;
+  editedAt?: string;
   isRead?: boolean;
+  replyTo?: MessageReplyRef;
+  forwardFrom?: MessageForwardRef;
+  clientTempId?: string;
   attachments?: Array<{
     type: 'image' | 'video';
     url: string;
@@ -33,10 +64,21 @@ interface ChatDialogProps {
   messages: MessageType[];
   currentUserId: string;
   onBack: (scrollTop?: number) => void;
-  onSendMessage: (text: string, attachments?: File[]) => void;
+  onSendMessage: (
+    text: string,
+    attachments?: File[],
+    replyTo?: MessageReplyRef | null,
+    forwardFrom?: MessageForwardRef | null
+  ) => void;
+  onStartForwardMessage: (message: MessageType) => void;
+  onOpenChatWithUser: (userId: string) => void;
+  onEditMessage: (messageId: string, text: string) => void;
+  onDeleteMessage: (messageId: string) => void;
   onReachMessagesStart?: () => void;
   onReachMessagesEnd?: () => void;
   onScrollPositionChange?: (scrollTop: number) => void;
+  pendingForwardMessage?: MessageForwardRef | null;
+  onPendingForwardApplied?: () => void;
   hasMoreMessages?: boolean;
   isLoadingOlder?: boolean;
   initialScrollTop?: number | null;
@@ -49,9 +91,15 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   currentUserId, 
   onBack, 
   onSendMessage,
+  onStartForwardMessage,
+  onOpenChatWithUser,
+  onEditMessage,
+  onDeleteMessage,
   onReachMessagesStart,
   onReachMessagesEnd,
   onScrollPositionChange,
+  pendingForwardMessage = null,
+  onPendingForwardApplied,
   hasMoreMessages = false,
   isLoadingOlder = false,
   initialScrollTop = null,
@@ -61,7 +109,20 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<string[]>([]);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [hiddenDayBadgeKeys, setHiddenDayBadgeKeys] = useState<Record<string, boolean>>({});
+  const [replyingTo, setReplyingTo] = useState<MessageReplyRef | null>(null);
+  const [forwardingMessage, setForwardingMessage] = useState<MessageForwardRef | null>(null);
+  const [editingMessage, setEditingMessage] = useState<MessageType | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+    message: MessageType;
+  } | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<MessageType | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
   const isInitialLoadRef = useRef<boolean>(true);
@@ -72,6 +133,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     prevScrollHeight: number;
   } | null>(null);
   const hasAppliedInitialScrollRef = useRef<boolean>(false);
+  const dayBadgeRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const highlightTimeoutRef = useRef<number | null>(null);
 
   const isScrolledToBottom = () => {
     const container = messagesContainerRef.current;
@@ -165,17 +229,74 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     pendingTopLoadAdjustmentRef.current = null;
     hasAppliedInitialScrollRef.current = false;
     setShowScrollToBottom(false);
+    dayBadgeRefs.current = {};
+    messageRefs.current = {};
+    setHiddenDayBadgeKeys({});
+    setReplyingTo(null);
+    setForwardingMessage(null);
+    setEditingMessage(null);
+    setContextMenu(null);
+    setHighlightedMessageId(null);
+    setDeleteModalOpen(false);
+    setMessageToDelete(null);
   }, [contact?.id]);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current) {
+        window.clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!contact?.id) return;
+    window.setTimeout(() => {
+      messageInputRef.current?.focus();
+    }, 0);
+  }, [contact?.id]);
+
+  useEffect(() => {
+    if (!pendingForwardMessage) return;
+    setEditingMessage(null);
+    setReplyingTo(null);
+    setForwardingMessage(pendingForwardMessage);
+    onPendingForwardApplied?.();
+  }, [pendingForwardMessage, onPendingForwardApplied]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   const handleSendMessage = () => {
-    if (messageText.trim() || attachments.length > 0) {
-      onSendMessage(messageText, attachments);
+    const trimmedText = messageText.trim();
+    if (editingMessage) {
+      if (!trimmedText) return;
+      onEditMessage(editingMessage.id, trimmedText);
+      setMessageText('');
+      setEditingMessage(null);
+      setAttachments([]);
+      return;
+    }
+
+    if (forwardingMessage) {
+      if (trimmedText) {
+        onSendMessage(trimmedText, [], null, null);
+      }
+      onSendMessage(forwardingMessage.text || 'Медиафайл', [], null, forwardingMessage);
       setMessageText('');
       setAttachments([]);
+      setReplyingTo(null);
+      setForwardingMessage(null);
+      return;
+    }
+
+    // Для обычной отправки и reply текст обязателен.
+    if (trimmedText) {
+      onSendMessage(trimmedText, attachments, replyingTo, null);
+      setMessageText('');
+      setAttachments([]);
+      setReplyingTo(null);
     }
   };
 
@@ -197,6 +318,60 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     }
   };
 
+  const updateHiddenDayBadges = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const stickyTop = 8;
+    const containerRect = container.getBoundingClientRect();
+    const stickyLineY = containerRect.top + stickyTop;
+    const badgeEntries = Object.entries(dayBadgeRefs.current)
+      .filter(([, element]) => Boolean(element))
+      .sort((a, b) => (a[1]?.offsetTop || 0) - (b[1]?.offsetTop || 0));
+
+    if (badgeEntries.length <= 1) {
+      setHiddenDayBadgeKeys((prev) => (Object.keys(prev).length === 0 ? prev : {}));
+      return;
+    }
+
+    const nextHidden: Record<string, boolean> = {};
+    for (let index = 0; index < badgeEntries.length - 1; index += 1) {
+      const [currentKey, currentEl] = badgeEntries[index];
+      const [, nextEl] = badgeEntries[index + 1];
+
+      if (!currentEl || !nextEl) continue;
+
+      const currentRect = currentEl.getBoundingClientRect();
+      const nextRect = nextEl.getBoundingClientRect();
+      const nextDistanceToStickyTop = nextRect.top - stickyLineY;
+      const isTouchingNext = nextDistanceToStickyTop <= currentRect.height;
+
+      if (isTouchingNext) {
+        nextHidden[currentKey] = true;
+      }
+    }
+
+    setHiddenDayBadgeKeys((prev) => {
+      const prevKeys = Object.keys(prev);
+      const nextKeys = Object.keys(nextHidden);
+      if (
+        prevKeys.length === nextKeys.length &&
+        prevKeys.every((key) => prev[key] === nextHidden[key])
+      ) {
+        return prev;
+      }
+      return nextHidden;
+    });
+  }, []);
+
+  useEffect(() => {
+    const rafId = window.requestAnimationFrame(() => {
+      updateHiddenDayBadges();
+    });
+
+    return () => window.cancelAnimationFrame(rafId);
+  }, [messages, updateHiddenDayBadges]);
+
   const handleMessagesScroll = () => {
     const container = messagesContainerRef.current;
     if (container) {
@@ -204,6 +379,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     }
 
     setShowScrollToBottom(!isScrolledToBottom());
+    updateHiddenDayBadges();
 
     if (
       container &&
@@ -238,9 +414,89 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     }, 250);
   };
 
+  const handleMessageContextMenu = (event: React.MouseEvent, message: MessageType) => {
+    if (event.type === 'contextmenu') {
+      event.preventDefault();
+    }
+    setContextMenu({
+      mouseX: event.clientX + 2,
+      mouseY: event.clientY - 6,
+      message
+    });
+  };
+
+  const handleContextMenuClose = () => {
+    setContextMenu(null);
+  };
+
+  const handleReplyFromContextMenu = () => {
+    if (!contextMenu) return;
+    setEditingMessage(null);
+    setForwardingMessage(null);
+    setReplyingTo({
+      id: contextMenu.message.id,
+      text: contextMenu.message.text || (contextMenu.message.attachments?.length ? 'Медиафайл' : ''),
+      senderId: contextMenu.message.senderId
+    });
+    setContextMenu(null);
+  };
+
+  const handleForwardFromContextMenu = () => {
+    if (!contextMenu) return;
+    onStartForwardMessage(contextMenu.message);
+    setContextMenu(null);
+  };
+
+  const handleEditFromContextMenu = () => {
+    if (!contextMenu) return;
+    if (contextMenu.message.senderId !== currentUserId || Boolean(contextMenu.message.forwardFrom)) {
+      setContextMenu(null);
+      return;
+    }
+
+    setReplyingTo(null);
+    setAttachments([]);
+    setEditingMessage(contextMenu.message);
+    setMessageText(contextMenu.message.text || '');
+    setContextMenu(null);
+  };
+
+  const handleDeleteFromContextMenu = () => {
+    if (!contextMenu) return;
+    setMessageToDelete(contextMenu.message);
+    setDeleteModalOpen(true);
+    setContextMenu(null);
+  };
+
+  const handleDeleteModalClose = () => {
+    setDeleteModalOpen(false);
+    setMessageToDelete(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!messageToDelete) return;
+    onDeleteMessage(messageToDelete.id);
+    handleDeleteModalClose();
+  };
+
+  const handleReplyReferenceClick = (messageId: string) => {
+    const target = messageRefs.current[messageId];
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightedMessageId(messageId);
+
+    if (highlightTimeoutRef.current) {
+      window.clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setHighlightedMessageId((current) => (current === messageId ? null : current));
+      highlightTimeoutRef.current = null;
+    }, 3000);
+  };
+
   const contactName = contact?.name || '';
   const contactAvatar = contact?.avatar || '';
-
   const renderedMessages = useMemo(() => {
     const isSameDay = (a: Date, b: Date) =>
       a.getDate() === b.getDate() &&
@@ -271,13 +527,23 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         (!previousDate || Number.isNaN(previousDate.getTime()) || !isSameDay(previousDate, currentDate));
 
       if (shouldShowDateBadge) {
+        const dayBadgeKey = `date-badge-${message.id}`;
         nodes.push(
           <Box
-            key={`date-badge-${message.id}`}
+            key={dayBadgeKey}
+            ref={(el: HTMLDivElement | null) => {
+              dayBadgeRefs.current[dayBadgeKey] = el;
+            }}
             sx={{
+              position: 'sticky',
+              top: 8,
+              zIndex: 3,
               display: 'flex',
               justifyContent: 'center',
-              my: 1
+              my: 1,
+              pointerEvents: 'none',
+              opacity: hiddenDayBadgeKeys[dayBadgeKey] ? 0 : 1,
+              transition: 'opacity 120ms linear'
             }}
           >
             <Box
@@ -302,19 +568,34 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       }
 
       nodes.push(
-        <Message
+        <Box
           key={message.id}
-          message={message}
-          isOwn={message.senderId === currentUserId}
-          contactName={contactName}
-          contactAvatar={contactAvatar}
-          mb={messageSpacing}
-        />
+          ref={(el: HTMLDivElement | null) => {
+            messageRefs.current[message.id] = el;
+          }}
+          onContextMenu={(event) => handleMessageContextMenu(event, message)}
+          sx={{
+            borderRadius: 2,
+            transition: 'background-color 200ms ease',
+            bgcolor: highlightedMessageId === message.id ? 'rgba(255, 235, 59, 0.35)' : 'transparent'
+          }}
+        >
+          <Message
+            message={message}
+            isOwn={message.senderId === currentUserId}
+            contactName={contactName}
+            contactAvatar={contactAvatar}
+            mb={messageSpacing}
+            onOpenActions={handleMessageContextMenu}
+            onReplyReferenceClick={handleReplyReferenceClick}
+            onForwardSourceClick={onOpenChatWithUser}
+          />
+        </Box>
       );
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar]);
+  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, string> = {};
@@ -491,10 +772,129 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </Box>
         )}
 
+        {replyingTo && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              borderLeft: '3px solid',
+              borderColor: 'primary.main',
+              bgcolor: 'action.hover',
+              px: 1.25,
+              py: 0.75,
+              borderRadius: 1,
+              mb: 1
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
+                Ответ на сообщение
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
+                {replyingTo.text || 'Медиафайл'}
+              </Typography>
+            </Box>
+            <IconButton size="small" onClick={() => setReplyingTo(null)} aria-label="Отменить ответ">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
+
+        {forwardingMessage && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              borderLeft: '3px solid',
+              borderColor: 'info.main',
+              bgcolor: 'action.hover',
+              px: 1.25,
+              py: 0.75,
+              borderRadius: 1,
+              mb: 1
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="info.main" sx={{ fontWeight: 600 }}>
+                Пересылаемое сообщение
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
+                {forwardingMessage.text || 'Медиафайл'}
+              </Typography>
+            </Box>
+            <IconButton size="small" onClick={() => setForwardingMessage(null)} aria-label="Отменить пересылку">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
+
+        {editingMessage && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              borderLeft: '3px solid',
+              borderColor: 'warning.main',
+              bgcolor: 'action.hover',
+              px: 1.25,
+              py: 0.75,
+              borderRadius: 1,
+              mb: 1
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
+                Редактирование сообщения
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
+              >
+                {editingMessage.text || 'Без текста'}
+              </Typography>
+            </Box>
+            <IconButton
+              size="small"
+              onClick={() => {
+                setEditingMessage(null);
+                setMessageText('');
+              }}
+              aria-label="Отменить редактирование"
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
+
         <TextField
           fullWidth
           multiline
           maxRows={4}
+          inputRef={messageInputRef}
           placeholder="Введите сообщение..."
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
@@ -511,7 +911,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 <IconButton 
                   color="primary" 
                   onClick={handleSendMessage}
-                  disabled={!messageText.trim() && attachments.length === 0}
+                  disabled={editingMessage ? !messageText.trim() : (!forwardingMessage && !messageText.trim())}
                 >
                   <SendIcon />
                 </IconButton>
@@ -529,6 +929,120 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           onChange={handleFileChange}
         />
       </Paper>
+      <Menu
+        open={contextMenu !== null}
+        onClose={handleContextMenuClose}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem
+          onClick={handleReplyFromContextMenu}
+          sx={{
+            fontSize: '12px',
+            minHeight: '28px',
+            py: 0.5,
+            px: 1.25
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
+            <ReplyOutlinedIcon sx={{ fontSize: 16 }} />
+          </ListItemIcon>
+          Ответить
+        </MenuItem>
+        {contextMenu?.message.senderId === currentUserId && !contextMenu?.message.forwardFrom && (
+          <MenuItem
+            onClick={handleEditFromContextMenu}
+            sx={{
+              fontSize: '12px',
+              minHeight: '28px',
+              py: 0.5,
+              px: 1.25
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
+              <EditOutlinedIcon sx={{ fontSize: 16 }} />
+            </ListItemIcon>
+            Редактировать
+          </MenuItem>
+        )}
+        <MenuItem
+          onClick={handleForwardFromContextMenu}
+          sx={{
+            fontSize: '12px',
+            minHeight: '28px',
+            py: 0.5,
+            px: 1.25
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
+            <ForwardOutlinedIcon sx={{ fontSize: 16 }} />
+          </ListItemIcon>
+          Переслать
+        </MenuItem>
+        <MenuItem
+          onClick={handleDeleteFromContextMenu}
+          sx={{
+            fontSize: '12px',
+            minHeight: '28px',
+            py: 0.5,
+            px: 1.25,
+            color: 'error.main'
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
+            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+          </ListItemIcon>
+          Удалить
+        </MenuItem>
+      </Menu>
+      <Dialog
+        open={deleteModalOpen}
+        onClose={handleDeleteModalClose}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ pb: 1 }}>Удалить сообщение?</DialogTitle>
+        <DialogContent sx={{ pt: '8px !important' }}>
+          <Typography variant="body2" sx={{ mb: 1.5 }}>
+            Вы точно хотите удалить сообщение для вас и вашего собеседника?
+          </Typography>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 1.25,
+              borderColor: 'divider',
+              bgcolor: 'background.default'
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {messageToDelete?.text || (messageToDelete?.attachments?.length ? 'Медиафайл' : 'Сообщение без текста')}
+            </Typography>
+          </Paper>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleDeleteModalClose} variant="text">
+            Отмена
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
