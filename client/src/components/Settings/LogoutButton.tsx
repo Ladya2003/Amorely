@@ -10,9 +10,11 @@ import {
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCrypto } from '../../contexts/CryptoContext';
 
 const LogoutButton: React.FC = () => {
   const { logout } = useAuth();
+  const { clearLocalKeys } = useCrypto();
   const [dialogOpen, setDialogOpen] = useState(false);
   
   const handleOpenDialog = () => {
@@ -24,6 +26,12 @@ const LogoutButton: React.FC = () => {
   };
   
   const handleLogout = () => {
+    logout();
+    setDialogOpen(false);
+  };
+
+  const handleLogoutAndRemoveKeys = async () => {
+    await clearLocalKeys();
     logout();
     setDialogOpen(false);
   };
@@ -45,11 +53,14 @@ const LogoutButton: React.FC = () => {
         <DialogTitle>Подтверждение выхода</DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            Вы уверены, что хотите выйти из аккаунта?
+            Вы можете просто выйти из аккаунта (ключи останутся на устройстве) или выйти и удалить ключи E2EE.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Отмена</Button>
+          <Button onClick={handleLogoutAndRemoveKeys} color="warning">
+            Выйти и удалить ключи
+          </Button>
           <Button onClick={handleLogout} color="error">
             Выйти
           </Button>

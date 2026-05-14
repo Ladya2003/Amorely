@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Box,
   Tabs,
@@ -14,14 +15,17 @@ import {
   ListItemAvatar,
   ListItemText,
   Avatar,
-  CircularProgress
-  ,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   Divider,
   Snackbar,
-  Alert
+  Alert,
+  Button,
+  Link,
+  Paper,
+  Stack
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
@@ -36,6 +40,10 @@ import socketService from '../services/socketService';
 import { Socket } from 'socket.io-client';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useCrypto } from '../contexts/CryptoContext';
+import { decryptChatText, encryptChatText } from '../crypto/cryptoService';
+import { readChatRulesConsent, writeChatRulesConsent } from '../legal/chatRulesConsent';
+import { CHAT_RULES_SUMMARY } from '../legal/chatRulesContent';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [
@@ -172,8 +180,11 @@ type ChatContact = Contact & {
   isPartner?: boolean;
 };
 
-const getMessagePreviewText = (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom'>) => {
+const getMessagePreviewText = (
+  message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'encryptedPayload'>
+) => {
   const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
+  if (message.encryptedPayload) return 'Зашифрованное сообщение';
   if (hasMedia && !message.text) return 'Медиафайл';
   if (!message.text && message.forwardFrom) return 'Пересланное сообщение';
   return message.text || '';
@@ -214,14 +225,51 @@ const ChatPage: React.FC = () => {
     message: '',
     severity: 'success'
   });
-  
+  const [chatRulesAccepted, setChatRulesAccepted] = useState(false);
+
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
+  const { localDeviceKeys } = useCrypto();
   const CURRENT_USER_ID = user?._id;
+
+  useEffect(() => {
+    if (!CURRENT_USER_ID) {
+      setChatRulesAccepted(false);
+      return;
+    }
+    setChatRulesAccepted(Boolean(readChatRulesConsent(CURRENT_USER_ID)));
+  }, [CURRENT_USER_ID]);
+
+  const handleChatRulesAccept = () => {
+    if (!CURRENT_USER_ID) return;
+    writeChatRulesConsent(CURRENT_USER_ID);
+    setChatRulesAccepted(true);
+  };
+
+  const handleChatRulesDecline = () => {
+    navigate('/');
+  };
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const selectedContactIdRef = useRef<string | null>(null);
+
+  const decryptMessageForDialog = useCallback(
+    async (message: MessageType, peerId: string): Promise<MessageType> => {
+      if (!message.encryptedPayload || !localDeviceKeys) {
+        return message;
+      }
+
+      try {
+        const decryptedText = await decryptChatText(localDeviceKeys, peerId, message.encryptedPayload);
+        return { ...message, text: decryptedText };
+      } catch (error) {
+        return { ...message, text: 'Не удалось расшифровать сообщение' };
+      }
+    },
+    [localDeviceKeys]
+  );
   const pendingDeleteRef = useRef<{
     message: MessageType;
     index: number;
@@ -406,80 +454,87 @@ const ChatPage: React.FC = () => {
 
     // Обработчики событий сокета
     newSocket.on('new_message', (message: MessageType) => {
-      const isCurrentDialogOpen = selectedContactId === message.senderId;
+      const isCurrentDialogOpen = selectedContactIdRef.current === message.senderId;
 
-      // Если открыт диалог с отправителем, добавляем сообщение и отмечаем как прочитанное
-      if (isCurrentDialogOpen) {
-        setMessages(prevMessages => [...prevMessages, message]);
-        socketService.markMessageAsRead(message.id);
-      }
+      const processIncoming = async () => {
+        const messageForDialog = await decryptMessageForDialog(message, message.senderId);
 
-      // Обновляем список контактов
-      const hasMedia = message.attachments && message.attachments.length > 0;
-      const displayText = getMessagePreviewText(message);
-      setContacts(prevContacts =>
-        sortContactsByLastMessageDesc(prevContacts.map(contact =>
-          contact.id === message.senderId
-            ? {
-                ...contact,
-                unreadCount: isCurrentDialogOpen ? 0 : (contact.unreadCount || 0) + 1,
-                lastMessage: {
-                  id: message.id,
-                  senderId: message.senderId,
-                  text: displayText,
-                  timestamp: message.timestamp,
-                  isRead: isCurrentDialogOpen,
-                  hasMedia,
-                  isPending: false
+        if (isCurrentDialogOpen) {
+          setMessages((prevMessages) => [...prevMessages, messageForDialog]);
+          socketService.markMessageAsRead(message.id);
+        }
+
+        const hasMedia = message.attachments && message.attachments.length > 0;
+        const displayText = getMessagePreviewText(messageForDialog);
+        setContacts((prevContacts) =>
+          sortContactsByLastMessageDesc(prevContacts.map((contact) =>
+            contact.id === message.senderId
+              ? {
+                  ...contact,
+                  unreadCount: isCurrentDialogOpen ? 0 : (contact.unreadCount || 0) + 1,
+                  lastMessage: {
+                    id: message.id,
+                    senderId: message.senderId,
+                    text: displayText,
+                    timestamp: message.timestamp,
+                    isRead: isCurrentDialogOpen,
+                    hasMedia,
+                    isPending: false
+                  }
                 }
-              }
-            : contact
-        ))
-      );
+              : contact
+          ))
+        );
+      };
+
+      processIncoming();
     });
 
     newSocket.on('message_sent', (message: MessageType) => {
-      // Заменяем временное сообщение на реальное или добавляем новое
-      setMessages(prevMessages => {
-        const tempMessageIndex = prevMessages.findIndex((msg) =>
-          msg.id.startsWith('temp-') &&
-          (
-            (Boolean(message.clientTempId) && msg.clientTempId === message.clientTempId) ||
-            msg.text === message.text
-          )
-        );
-        
-        if (tempMessageIndex !== -1) {
-          // Заменяем временное сообщение на реальное
-          const newMessages = [...prevMessages];
-          const tempMessage = newMessages[tempMessageIndex];
-          newMessages[tempMessageIndex] = {
-            ...message,
-            replyTo: message.replyTo || tempMessage.replyTo,
-            forwardFrom: message.forwardFrom || tempMessage.forwardFrom
-          };
-          return newMessages;
-        } else {
-          // Добавляем новое сообщение (если временного не было найдено)
-          return [...prevMessages, message];
+      const processSent = async () => {
+        const peerId = selectedContactIdRef.current || '';
+        const messageForDialog = peerId ? await decryptMessageForDialog(message, peerId) : message;
+
+        setMessages((prevMessages) => {
+          const tempMessageIndex = prevMessages.findIndex((msg) =>
+            msg.id.startsWith('temp-') &&
+            (
+              (Boolean(message.clientTempId) && msg.clientTempId === message.clientTempId) ||
+              msg.text === message.text
+            )
+          );
+
+          if (tempMessageIndex !== -1) {
+            const newMessages = [...prevMessages];
+            const tempMessage = newMessages[tempMessageIndex];
+            newMessages[tempMessageIndex] = {
+              ...messageForDialog,
+              text: tempMessage.text || messageForDialog.text,
+              replyTo: message.replyTo || tempMessage.replyTo,
+              forwardFrom: message.forwardFrom || tempMessage.forwardFrom
+            };
+            return newMessages;
+          }
+          return [...prevMessages, messageForDialog];
+        });
+
+        if (selectedContactIdRef.current) {
+          const hasMedia = message.attachments && message.attachments.length > 0;
+          const displayText = getMessagePreviewText(messageForDialog);
+          updateContactLastMessage(
+            selectedContactIdRef.current,
+            displayText,
+            message.timestamp,
+            false,
+            hasMedia,
+            message.senderId,
+            message.id,
+            false
+          );
         }
-      });
-      
-      // Обновляем последнее сообщение в списке контактов
-      if (selectedContactId) {
-        const hasMedia = message.attachments && message.attachments.length > 0;
-        const displayText = getMessagePreviewText(message);
-        updateContactLastMessage(
-          selectedContactId,
-          displayText,
-          message.timestamp,
-          false,
-          hasMedia,
-          message.senderId,
-          message.id,
-          false
-        );
-      }
+      };
+
+      processSent();
     });
 
     newSocket.on('message_read', (messageId: string) => {
@@ -581,7 +636,13 @@ const ChatPage: React.FC = () => {
     return () => {
       socketService.disconnect();
     };
-  }, [CURRENT_USER_ID, selectedContactId, updateContactLastMessage, updateContactLastMessageAfterDelete]);
+  }, [
+    CURRENT_USER_ID,
+    selectedContactId,
+    updateContactLastMessage,
+    updateContactLastMessageAfterDelete,
+    decryptMessageForDialog
+  ]);
 
   // Загрузка контактов
   useEffect(() => {
@@ -838,7 +899,11 @@ const ChatPage: React.FC = () => {
         ? false
         : Boolean(responseData.hasMore);
 
-      setMessages((prevMessages) => appendOlder ? [...items, ...prevMessages] : items);
+      const decryptedItems = await Promise.all(
+        items.map((item) => decryptMessageForDialog(item, contactId))
+      );
+
+      setMessages((prevMessages) => appendOlder ? [...decryptedItems, ...prevMessages] : decryptedItems);
       setMessagesPage(page);
       setHasMoreMessages(hasMore);
     } catch (error: any) {
@@ -971,8 +1036,15 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  const handleOpenChatWithUser = (userId: string) => {
+  const handleOpenChatWithUser = (userId: string, forwardHint?: MessageForwardRef | null) => {
     if (!userId || userId === CURRENT_USER_ID) return;
+    ensureContactInList({
+      id: userId,
+      name: forwardHint?.senderName?.trim() || 'Пользователь',
+      username: forwardHint?.senderName?.trim() || userId.slice(0, 8),
+      email: '',
+      avatar: forwardHint?.senderAvatar || ''
+    });
     prepareDialogRestoreState(userId);
     saveSelectedChatId(userId);
     setSelectedContactId(userId);
@@ -1115,12 +1187,17 @@ const ChatPage: React.FC = () => {
     // Отправка сообщения через сокет после загрузки вложений
     const sendMessageWithAttachments = async () => {
       const uploadedAttachments = await uploadAttachments();
+      const encryptedPayload =
+        localDeviceKeys && trimmedText
+          ? await encryptChatText(localDeviceKeys, selectedContactId, trimmedText)
+          : undefined;
       
       // Отправляем сообщение через сокет
       const tempClientId = newMessage.clientTempId;
       socketService.sendMessage(
         selectedContactId,
-        trimmedText,
+        encryptedPayload ? '' : trimmedText,
+        encryptedPayload,
         uploadedAttachments,
         replyTo || null,
         forwardFrom || null,
@@ -1323,7 +1400,44 @@ const ChatPage: React.FC = () => {
         </Box>
       )}
 
-      <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        {tabValue === 0 && !chatRulesAccepted && CURRENT_USER_ID && (
+          <Paper
+            elevation={8}
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 20,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              p: { xs: 2, sm: 3 },
+              borderRadius: 0,
+              bgcolor: 'background.paper'
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="chat-rules-consent-title"
+          >
+            <Typography id="chat-rules-consent-title" variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+              Правила чата
+            </Typography>
+            <Typography variant="body2" color="text.primary" sx={{ mb: 2, lineHeight: 1.6 }}>
+              {CHAT_RULES_SUMMARY}
+            </Typography>
+            <Link component={RouterLink} to="/legal/chat-rules" variant="body2" sx={{ mb: 2 }}>
+              Подробнее — полный текст правил
+            </Link>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 1 }}>
+              <Button variant="contained" color="primary" onClick={handleChatRulesAccept} fullWidth>
+                Согласен
+              </Button>
+              <Button variant="outlined" color="inherit" onClick={handleChatRulesDecline} fullWidth>
+                Не согласен
+              </Button>
+            </Stack>
+          </Paper>
+        )}
         {tabValue === 0 ? (
           <Box sx={{ flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
             {/* На мобильных устройствах показываем либо список, либо диалог */}

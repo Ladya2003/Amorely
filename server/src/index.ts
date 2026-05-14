@@ -15,6 +15,7 @@ import newsRoutes from './routes/news';
 import settingsRoutes from './routes/settings';
 import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
+import cryptoRoutes from './routes/crypto';
 import calendarRoutes from './routes/calendar';
 import { authMiddleware } from './middleware/auth';
 import relationshipsRoutes from './routes/relationships';
@@ -65,6 +66,16 @@ const upload = multer({ storage });
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use((req: Request, res: Response, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+  );
+  next();
+});
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
@@ -190,6 +201,7 @@ app.use('/api/auth', authRoutes);
 
 // Маршруты для чата
 app.use('/api', authMiddleware, chatRoutes);
+app.use('/api/crypto', cryptoRoutes);
 
 // Маршруты для отношений
 app.use('/api/relationships', authMiddleware, relationshipsRoutes);

@@ -53,6 +53,13 @@ export interface MessageType {
   replyTo?: MessageReplyRef;
   forwardFrom?: MessageForwardRef;
   clientTempId?: string;
+  encryptedPayload?: {
+    version: number;
+    algorithm: string;
+    ciphertext: string;
+    iv: string;
+    senderDeviceId: string;
+  };
   attachments?: Array<{
     type: 'image' | 'video';
     url: string;
@@ -71,7 +78,7 @@ interface ChatDialogProps {
     forwardFrom?: MessageForwardRef | null
   ) => void;
   onStartForwardMessage: (message: MessageType) => void;
-  onOpenChatWithUser: (userId: string) => void;
+  onOpenChatWithUser: (userId: string, forwardHint?: MessageForwardRef | null) => void;
   onEditMessage: (messageId: string, text: string) => void;
   onDeleteMessage: (messageId: string) => void;
   onReachMessagesStart?: () => void;
@@ -449,7 +456,11 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   const handleEditFromContextMenu = () => {
     if (!contextMenu) return;
-    if (contextMenu.message.senderId !== currentUserId || Boolean(contextMenu.message.forwardFrom)) {
+    if (
+      contextMenu.message.senderId !== currentUserId ||
+      Boolean(contextMenu.message.forwardFrom) ||
+      Boolean(contextMenu.message.encryptedPayload)
+    ) {
       setContextMenu(null);
       return;
     }
@@ -588,7 +599,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             mb={messageSpacing}
             onOpenActions={handleMessageContextMenu}
             onReplyReferenceClick={handleReplyReferenceClick}
-            onForwardSourceClick={onOpenChatWithUser}
+            onForwardSourceClick={(userId, forwardFrom) => onOpenChatWithUser(userId, forwardFrom)}
           />
         </Box>
       );
@@ -953,7 +964,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </ListItemIcon>
           Ответить
         </MenuItem>
-        {contextMenu?.message.senderId === currentUserId && !contextMenu?.message.forwardFrom && (
+        {contextMenu?.message.senderId === currentUserId &&
+          !contextMenu?.message.forwardFrom &&
+          !contextMenu?.message.encryptedPayload && (
           <MenuItem
             onClick={handleEditFromContextMenu}
             sx={{

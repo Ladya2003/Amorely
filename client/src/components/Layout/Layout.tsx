@@ -48,13 +48,14 @@ const Layout: React.FC = () => {
   };
   
   // Определяем текущую вкладку на основе пути
-  const getCurrentTab = () => {
+  const getCurrentTab = (): number | false => {
     const path = location.pathname;
     if (path === '/') return 0;
     if (path === '/chat') return 1;
     if (path === '/calendar') return 2;
     if (path === '/news') return 3;
     if (path === '/settings') return 4;
+    if (path.startsWith('/legal/')) return false;
     return 0;
   };
   

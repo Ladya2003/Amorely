@@ -5,7 +5,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import { MessageType } from './ChatDialog';
+import { MessageType, MessageForwardRef } from './ChatDialog';
 
 interface MessageProps {
   message: MessageType;
@@ -15,7 +15,7 @@ interface MessageProps {
   mb?: number;
   onOpenActions?: (event: React.MouseEvent, message: MessageType) => void;
   onReplyReferenceClick?: (messageId: string) => void;
-  onForwardSourceClick?: (userId: string) => void;
+  onForwardSourceClick?: (userId: string, forwardFrom: MessageForwardRef) => void;
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -131,7 +131,9 @@ const Message: React.FC<MessageProps> = ({
               }}
             >
               <Box
-                onClick={() => forwardFrom.senderId && onForwardSourceClick?.(forwardFrom.senderId)}
+                onClick={() =>
+                  forwardFrom.senderId && onForwardSourceClick?.(forwardFrom.senderId, forwardFrom)
+                }
                 sx={{
                   display: 'flex',
                   alignItems: 'center',

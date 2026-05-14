@@ -20,6 +20,13 @@ class SocketService {
   sendMessage(
     receiverId: string,
     text: string,
+    encryptedPayload?: {
+      version: number;
+      algorithm: string;
+      ciphertext: string;
+      iv: string;
+      senderDeviceId: string;
+    },
     attachments?: any[],
     replyTo?: { id: string; text: string; senderId: string } | null,
     forwardFrom?: { id: string; text: string; senderId: string; senderName?: string; senderAvatar?: string } | null,
@@ -32,6 +39,7 @@ class SocketService {
     this.socket.emit('send_message', {
       receiverId,
       text,
+      encryptedPayload,
       attachments,
       replyTo,
       forwardFrom,

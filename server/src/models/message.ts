@@ -17,11 +17,23 @@ const replySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const encryptedPayloadSchema = new mongoose.Schema(
+  {
+    version: { type: Number, required: true, default: 1 },
+    algorithm: { type: String, required: true, default: 'ECDH-P256-AES-GCM' },
+    ciphertext: { type: String, required: true },
+    iv: { type: String, required: true },
+    senderDeviceId: { type: String, required: true }
+  },
+  { _id: false }
+);
+
 const messageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   text: { type: String },
   attachments: [attachmentSchema],
+  encryptedPayload: { type: encryptedPayloadSchema, required: false },
   replyTo: { type: replySchema, required: false },
   forwardFrom: { type: replySchema, required: false },
   editedAt: { type: Date, required: false },

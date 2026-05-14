@@ -9,6 +9,31 @@ interface ConnectedUser {
   socketId: string;
 }
 
+const formatSocketMessage = (message: any, clientTempId?: string) => ({
+  id: message._id.toString(),
+  senderId: message.senderId.toString(),
+  text: message.text,
+  timestamp: message.createdAt.toISOString(),
+  editedAt: message.editedAt ? message.editedAt.toISOString() : undefined,
+  isRead: message.isRead,
+  replyTo: message.replyTo || undefined,
+  forwardFrom: message.forwardFrom || undefined,
+  clientTempId,
+  encryptedPayload: message.encryptedPayload
+    ? {
+        version: message.encryptedPayload.version,
+        algorithm: message.encryptedPayload.algorithm,
+        ciphertext: message.encryptedPayload.ciphertext,
+        iv: message.encryptedPayload.iv,
+        senderDeviceId: message.encryptedPayload.senderDeviceId
+      }
+    : undefined,
+  attachments: message.attachments?.map((attachment: any) => ({
+    type: attachment.type,
+    url: attachment.url
+  }))
+});
+
 export default function setupSocketIO(server: HttpServer) {
   const io = new SocketIOServer(server, {
     cors: {
@@ -39,13 +64,20 @@ export default function setupSocketIO(server: HttpServer) {
     socket.on('send_message', async (data: { 
       receiverId: string, 
       text: string, 
+      encryptedPayload?: {
+        version: number;
+        algorithm: string;
+        ciphertext: string;
+        iv: string;
+        senderDeviceId: string;
+      },
       attachments?: Array<{ type: string, url: string, publicId: string }>,
       replyTo?: { id: string, text: string, senderId: string } | null,
       forwardFrom?: { id: string, text: string, senderId: string, senderName?: string, senderAvatar?: string } | null,
       clientTempId?: string
     }) => {
       try {
-        const { receiverId, text, attachments, replyTo, forwardFrom, clientTempId } = data;
+        const { receiverId, text, encryptedPayload, attachments, replyTo, forwardFrom, clientTempId } = data;
         const senderSocketData = connectedUsers.find(user => user.socketId === socket.id);
         
         if (!senderSocketData) {
@@ -60,6 +92,7 @@ export default function setupSocketIO(server: HttpServer) {
           senderId: new mongoose.Types.ObjectId(senderId),
           receiverId: new mongoose.Types.ObjectId(receiverId),
           text,
+          encryptedPayload: encryptedPayload || undefined,
           attachments,
           replyTo: replyTo || undefined,
           forwardFrom: forwardFrom || undefined,
@@ -70,21 +103,7 @@ export default function setupSocketIO(server: HttpServer) {
         const savedMessage = await newMessage.save();
 
         // Форматируем сообщение для отправки клиенту
-        const formattedMessage = {
-          id: savedMessage._id.toString(),
-          senderId: savedMessage.senderId.toString(),
-          text: savedMessage.text,
-          timestamp: savedMessage.createdAt.toISOString(),
-          editedAt: savedMessage.editedAt ? savedMessage.editedAt.toISOString() : undefined,
-          isRead: savedMessage.isRead,
-          replyTo: savedMessage.replyTo || undefined,
-          forwardFrom: savedMessage.forwardFrom || undefined,
-          clientTempId,
-          attachments: savedMessage.attachments?.map(attachment => ({
-            type: attachment.type,
-            url: attachment.url
-          }))
-        };
+        const formattedMessage = formatSocketMessage(savedMessage, clientTempId);
 
         // Находим получателя в списке подключенных пользователей
         const receiverSocketData = connectedUsers.find(user => user.userId === receiverId);
@@ -126,7 +145,7 @@ export default function setupSocketIO(server: HttpServer) {
           return;
         }
 
-        if (message.forwardFrom) {
+        if (message.forwardFrom || message.encryptedPayload) {
           socket.emit('error', { message: 'Пересланное сообщение нельзя редактировать' });
           return;
         }
@@ -141,20 +160,7 @@ export default function setupSocketIO(server: HttpServer) {
         message.editedAt = new Date();
         await message.save();
 
-        const formattedMessage = {
-          id: message._id.toString(),
-          senderId: message.senderId.toString(),
-          text: message.text,
-          timestamp: message.createdAt.toISOString(),
-          editedAt: message.editedAt ? message.editedAt.toISOString() : undefined,
-          isRead: message.isRead,
-          replyTo: message.replyTo || undefined,
-          forwardFrom: message.forwardFrom || undefined,
-          attachments: message.attachments?.map((attachment) => ({
-            type: attachment.type,
-            url: attachment.url
-          }))
-        };
+        const formattedMessage = formatSocketMessage(message);
 
         socket.emit('message_edited', formattedMessage);
 

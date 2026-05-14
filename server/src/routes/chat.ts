@@ -29,6 +29,30 @@ const sortContactsByLastMessageDesc = <T extends { isPartner?: boolean; lastMess
   });
 };
 
+const formatMessageForClient = (message: any) => ({
+  id: message._id.toString(),
+  senderId: message.senderId.toString(),
+  text: message.text,
+  timestamp: message.createdAt.toISOString(),
+  editedAt: message.editedAt ? message.editedAt.toISOString() : undefined,
+  isRead: message.isRead,
+  replyTo: message.replyTo || undefined,
+  forwardFrom: message.forwardFrom || undefined,
+  encryptedPayload: message.encryptedPayload
+    ? {
+        version: message.encryptedPayload.version,
+        algorithm: message.encryptedPayload.algorithm,
+        ciphertext: message.encryptedPayload.ciphertext,
+        iv: message.encryptedPayload.iv,
+        senderDeviceId: message.encryptedPayload.senderDeviceId
+      }
+    : undefined,
+  attachments: message.attachments?.map((attachment: any) => ({
+    type: attachment.type,
+    url: attachment.url
+  }))
+});
+
 // Получение списка контактов
 router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
   try {
@@ -92,8 +116,10 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
       });
 
       const hasMedia = lastMessage?.attachments && lastMessage.attachments.length > 0;
-      const displayText = lastMessage 
-        ? (hasMedia && !lastMessage.text ? 'Медиафайл' : lastMessage.text || 'Медиафайл')
+      const displayText = lastMessage
+        ? (lastMessage.encryptedPayload
+            ? 'Зашифрованное сообщение'
+            : (hasMedia && !lastMessage.text ? 'Медиафайл' : lastMessage.text || 'Медиафайл'))
         : 'Нет сообщений';
 
       return {
@@ -243,20 +269,7 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
       .limit(limit);
 
     // Преобразуем сообщения в формат, ожидаемый клиентом
-    const formattedMessages = messages.reverse().map(message => ({
-      id: message._id.toString(),
-      senderId: message.senderId.toString(),
-      text: message.text,
-      timestamp: message.createdAt.toISOString(),
-      editedAt: message.editedAt ? message.editedAt.toISOString() : undefined,
-      isRead: message.isRead,
-      replyTo: message.replyTo || undefined,
-      forwardFrom: message.forwardFrom || undefined,
-      attachments: message.attachments?.map(attachment => ({
-        type: attachment.type,
-        url: attachment.url
-      }))
-    }));
+    const formattedMessages = messages.reverse().map(formatMessageForClient);
 
     res.json({
       items: formattedMessages,
@@ -274,7 +287,7 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
 // Отправка нового сообщения
 router.post('/messages', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { senderId, receiverId, text, attachments, replyTo, forwardFrom } = req.body;
+    const { senderId, receiverId, text, attachments, replyTo, forwardFrom, encryptedPayload } = req.body;
     
     if (!senderId || !receiverId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
@@ -286,6 +299,7 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
       receiverId: new mongoose.Types.ObjectId(receiverId),
       text,
       attachments,
+      encryptedPayload: encryptedPayload || undefined,
       replyTo,
       forwardFrom,
       isRead: false,
@@ -295,20 +309,7 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
     const savedMessage = await newMessage.save();
 
     // Форматируем сообщение для ответа
-    const formattedMessage = {
-      id: savedMessage._id.toString(),
-      senderId: savedMessage.senderId.toString(),
-      text: savedMessage.text,
-      timestamp: savedMessage.createdAt.toISOString(),
-      editedAt: savedMessage.editedAt ? savedMessage.editedAt.toISOString() : undefined,
-      isRead: savedMessage.isRead,
-      replyTo: savedMessage.replyTo || undefined,
-      forwardFrom: savedMessage.forwardFrom || undefined,
-      attachments: savedMessage.attachments?.map(attachment => ({
-        type: attachment.type,
-        url: attachment.url
-      }))
-    };
+    const formattedMessage = formatMessageForClient(savedMessage);
 
     res.status(201).json(formattedMessage);
   } catch (error) {
@@ -338,7 +339,7 @@ router.put('/messages/:id', authMiddleware, async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Недостаточно прав для редактирования' });
     }
 
-    if (message.forwardFrom) {
+    if (message.forwardFrom || message.encryptedPayload) {
       return res.status(403).json({ error: 'Пересланное сообщение нельзя редактировать' });
     }
 
@@ -346,20 +347,7 @@ router.put('/messages/:id', authMiddleware, async (req: any, res: Response) => {
     message.editedAt = new Date();
     await message.save();
 
-    return res.json({
-      id: message._id.toString(),
-      senderId: message.senderId.toString(),
-      text: message.text,
-      timestamp: message.createdAt.toISOString(),
-      editedAt: message.editedAt ? message.editedAt.toISOString() : undefined,
-      isRead: message.isRead,
-      replyTo: message.replyTo || undefined,
-      forwardFrom: message.forwardFrom || undefined,
-      attachments: message.attachments?.map((attachment) => ({
-        type: attachment.type,
-        url: attachment.url
-      }))
-    });
+    return res.json(formatMessageForClient(message));
   } catch (error) {
     console.error('Ошибка при редактировании сообщения:', error);
     return res.status(500).json({ error: 'Ошибка при редактировании сообщения' });
