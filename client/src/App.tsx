@@ -38,7 +38,7 @@ function App() {
       <AuthProvider>
         <CryptoProvider>
           <NavigationProvider>
-            <Router>
+            <Router basename={process.env.PUBLIC_URL}>
               <Routes>
                 {/* Публичный маршрут для аутентификации */}
                 <Route path="/auth" element={<AuthPage />} />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Container, Fab, Badge, CircularProgress, Typography, Tooltip, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -28,6 +29,7 @@ interface UserContentItem {
 }
 
 const FeedPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { localDeviceKeys } = useCrypto();
   const partnerId = usePartnerId();
@@ -221,8 +223,7 @@ const FeedPage: React.FC = () => {
   };
 
   const handleEventClick = (eventId: string) => {
-    // Переходим к календарю и открываем событие
-    window.location.href = `/calendar?event=${eventId}`;
+    navigate(`/calendar?event=${eventId}`);
   };
   
   const handleAddContent = async (
@@ -355,7 +356,7 @@ const FeedPage: React.FC = () => {
         onEventClick={handleEventClick}
         navigateTo={!isPartnerAdded ? '/settings' : undefined}
         placeholder={!isPartnerAdded ? 'Нет доступного контента\n\n📅 Добавьте события в Календаре с фото и видео' : 'Нет доступного контента\n\n📅 Добавьте события в Календаре с фото и видео'}
-        onEmptyClick={() => window.location.href = '/calendar'}
+        onEmptyClick={() => navigate('/calendar')}
         currentIndex={currentIndex}
         setCurrentIndex={setCurrentIndex}
       />
