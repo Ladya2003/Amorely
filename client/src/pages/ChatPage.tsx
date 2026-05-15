@@ -41,7 +41,13 @@ import { Socket } from 'socket.io-client';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useCrypto } from '../contexts/CryptoContext';
-import { decryptChatText, encryptChatText } from '../crypto/cryptoService';
+import {
+  decryptChatPayload,
+  encryptChatPayload,
+  type ChatPayloadV2,
+  type EncryptedChatPayload
+} from '../crypto/cryptoService';
+import { encryptAndUploadChatFiles, type StoredChatAttachment } from '../crypto/chatMediaService';
 import { readChatRulesConsent, writeChatRulesConsent } from '../legal/chatRulesConsent';
 import { CHAT_RULES_SUMMARY } from '../legal/chatRulesContent';
 
@@ -184,6 +190,10 @@ const getMessagePreviewText = (
   message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'encryptedPayload'>
 ) => {
   const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
+  const hasEncryptedMedia = Boolean(
+    message.attachments?.some((attachment) => attachment.encrypted || attachment.type === 'encrypted')
+  );
+  if (message.encryptedPayload && hasEncryptedMedia) return 'Зашифрованное медиа';
   if (message.encryptedPayload) return 'Зашифрованное сообщение';
   if (hasMedia && !message.text) return 'Медиафайл';
   if (!message.text && message.forwardFrom) return 'Пересланное сообщение';
@@ -255,6 +265,12 @@ const ChatPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const selectedContactIdRef = useRef<string | null>(null);
 
+  const resolvePeerIdForMessage = useCallback(
+    (message: MessageType, dialogPeerId: string) =>
+      message.senderId === CURRENT_USER_ID ? dialogPeerId : message.senderId,
+    [CURRENT_USER_ID]
+  );
+
   const decryptMessageForDialog = useCallback(
     async (message: MessageType, peerId: string): Promise<MessageType> => {
       if (!message.encryptedPayload || !localDeviceKeys) {
@@ -262,14 +278,49 @@ const ChatPage: React.FC = () => {
       }
 
       try {
-        const decryptedText = await decryptChatText(localDeviceKeys, peerId, message.encryptedPayload);
-        return { ...message, text: decryptedText };
+        const decryptPeerId = resolvePeerIdForMessage(message, peerId);
+        const payload = await decryptChatPayload(
+          localDeviceKeys,
+          decryptPeerId,
+          message.encryptedPayload
+        );
+        if (payload.version === 2) {
+          return {
+            ...message,
+            text: payload.text,
+            mediaEnvelopes: payload.attachments
+          };
+        }
+        return { ...message, text: payload.text };
       } catch (error) {
         return { ...message, text: 'Не удалось расшифровать сообщение' };
       }
     },
-    [localDeviceKeys]
+    [localDeviceKeys, resolvePeerIdForMessage]
   );
+
+  const sendEncryptedSocketMessage = useCallback(
+    (
+      receiverId: string,
+      encryptedPayload: EncryptedChatPayload,
+      storedAttachments: StoredChatAttachment[],
+      replyTo: MessageReplyRef | null,
+      forwardFrom: MessageForwardRef | null,
+      clientTempId?: string
+    ) => {
+      socketService.sendMessage(
+        receiverId,
+        '',
+        encryptedPayload,
+        storedAttachments,
+        replyTo,
+        forwardFrom,
+        clientTempId
+      );
+    },
+    []
+  );
+
   const pendingDeleteRef = useRef<{
     message: MessageType;
     index: number;
@@ -401,6 +452,93 @@ const ChatPage: React.FC = () => {
       ))
     );
   }, [sortContactsByLastMessageDesc]);
+
+  const forwardEncryptedMessage = useCallback(
+    async (
+      targetContactId: string,
+      sourcePeerId: string,
+      sourceMessage: MessageType,
+      forwardFrom: MessageForwardRef
+    ) => {
+      if (!localDeviceKeys || !CURRENT_USER_ID || !sourceMessage.encryptedPayload) {
+        return;
+      }
+
+      const decryptPeerId = resolvePeerIdForMessage(sourceMessage, sourcePeerId);
+      const payload = await decryptChatPayload(
+        localDeviceKeys,
+        decryptPeerId,
+        sourceMessage.encryptedPayload
+      );
+
+      if (payload.version !== 2 || !payload.attachments?.length) {
+        return;
+      }
+
+      const storedAttachments: StoredChatAttachment[] = (sourceMessage.attachments || [])
+        .filter((attachment) => attachment.encrypted || attachment.type === 'encrypted')
+        .map((attachment) => ({
+          type: 'encrypted' as const,
+          url: attachment.url,
+          publicId: attachment.publicId || '',
+          encrypted: true as const
+        }))
+        .filter((attachment) => attachment.publicId);
+
+      const encryptedPayload = await encryptChatPayload(localDeviceKeys, targetContactId, {
+        version: 2,
+        text: payload.text || '',
+        attachments: payload.attachments
+      } satisfies ChatPayloadV2);
+
+      const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const clientTempId = `client-temp-${uniqueSuffix}`;
+
+      sendEncryptedSocketMessage(
+        targetContactId,
+        encryptedPayload,
+        storedAttachments,
+        null,
+        forwardFrom,
+        clientTempId
+      );
+
+      const optimisticMessage: MessageType = {
+        id: `temp-${uniqueSuffix}`,
+        clientTempId,
+        senderId: CURRENT_USER_ID,
+        text: payload.text || '',
+        timestamp: new Date().toISOString(),
+        forwardFrom,
+        attachments: storedAttachments,
+        mediaEnvelopes: payload.attachments,
+        encryptedPayload
+      };
+
+      if (selectedContactId === targetContactId) {
+        setMessages((prev) => [...prev, optimisticMessage]);
+      }
+
+      updateContactLastMessage(
+        targetContactId,
+        payload.text || 'Пересланное сообщение',
+        optimisticMessage.timestamp,
+        false,
+        true,
+        CURRENT_USER_ID,
+        optimisticMessage.id,
+        true
+      );
+    },
+    [
+      CURRENT_USER_ID,
+      localDeviceKeys,
+      resolvePeerIdForMessage,
+      selectedContactId,
+      sendEncryptedSocketMessage,
+      updateContactLastMessage
+    ]
+  );
 
   const updateContactLastMessageAfterDelete = useCallback((contactId: string, nextMessages: MessageType[]) => {
     setContacts((prevContacts) =>
@@ -1007,6 +1145,9 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSelectForwardTarget = (target: SearchUser | ChatContact) => {
+    const sourcePeerId = selectedContactId;
+    const sourceMessage = forwardSourceMessage;
+
     ensureContactInList({
       id: target.id,
       name: target.name,
@@ -1015,15 +1156,34 @@ const ChatPage: React.FC = () => {
       avatar: target.avatar
     });
 
-    if (forwardSourceMessage) {
-      const forwardSenderMeta = resolveForwardSenderMeta(forwardSourceMessage);
-      setPendingForwardMessage({
-        id: forwardSourceMessage.id,
-        text: forwardSourceMessage.text || (forwardSourceMessage.attachments?.length ? 'Медиафайл' : ''),
-        senderId: forwardSourceMessage.senderId,
+    if (sourceMessage && sourcePeerId) {
+      const forwardSenderMeta = resolveForwardSenderMeta(sourceMessage);
+      const forwardFrom: MessageForwardRef = {
+        id: sourceMessage.id,
+        text: sourceMessage.text || (sourceMessage.attachments?.length ? 'Медиафайл' : ''),
+        senderId: sourceMessage.senderId,
         senderName: forwardSenderMeta.senderName,
         senderAvatar: forwardSenderMeta.senderAvatar
-      });
+      };
+
+      const hasEncryptedMedia = Boolean(
+        sourceMessage.attachments?.some(
+          (attachment) => attachment.encrypted || attachment.type === 'encrypted'
+        ) && sourceMessage.encryptedPayload
+      );
+
+      if (hasEncryptedMedia) {
+        void forwardEncryptedMessage(target.id, sourcePeerId, sourceMessage, forwardFrom).catch((error) => {
+          console.error('Ошибка пересылки зашифрованного медиа:', error);
+          setDeleteToast({
+            open: true,
+            message: 'Не удалось переслать зашифрованное медиа',
+            severity: 'error'
+          });
+        });
+      } else {
+        setPendingForwardMessage(forwardFrom);
+      }
     }
 
     prepareDialogRestoreState(target.id);
@@ -1151,70 +1311,30 @@ const ChatPage: React.FC = () => {
     if (!selectedContactId || !CURRENT_USER_ID) return;
     const trimmedText = text.trim();
     const isForwardOnly = Boolean(forwardFrom);
-    if (!isForwardOnly && !trimmedText) return;
+    const hasFiles = Boolean(attachments && attachments.length > 0);
 
-    // Загрузка вложений в Cloudinary (если есть)
-    const uploadAttachments = async () => {
-      if (!attachments || attachments.length === 0) {
-        return [];
-      }
+    if (!isForwardOnly && !trimmedText && !hasFiles) return;
 
-      const formData = new FormData();
-      attachments.forEach(file => {
-        formData.append('media', file);
+    if (hasFiles && !localDeviceKeys) {
+      setDeleteToast({
+        open: true,
+        message: 'Для отправки медиа нужны ключи шифрования на этом устройстве',
+        severity: 'error'
       });
+      return;
+    }
 
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.post(`${API_URL}/api/upload`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          },
-        });
+    const clientTempId = `client-temp-${uniqueSuffix}`;
 
-        return response.data.uploads.map((item: any) => ({
-          type: item.resourceType,
-          url: item.url,
-          publicId: item.publicId
-        }));
-      } catch (error) {
-        console.error('Ошибка при загрузке вложений:', error);
-        return [];
-      }
-    };
-
-    // Отправка сообщения через сокет после загрузки вложений
-    const sendMessageWithAttachments = async () => {
-      const uploadedAttachments = await uploadAttachments();
-      const encryptedPayload =
-        localDeviceKeys && trimmedText
-          ? await encryptChatText(localDeviceKeys, selectedContactId, trimmedText)
-          : undefined;
-      
-      // Отправляем сообщение через сокет
-      const tempClientId = newMessage.clientTempId;
-      socketService.sendMessage(
-        selectedContactId,
-        encryptedPayload ? '' : trimmedText,
-        encryptedPayload,
-        uploadedAttachments,
-        replyTo || null,
-        forwardFrom || null,
-        tempClientId
-      );
-    };
-
-    // Временно добавляем сообщение локально для мгновенного отображения
     const newMessage: MessageType = {
       id: `temp-${uniqueSuffix}`,
-      clientTempId: `client-temp-${uniqueSuffix}`,
+      clientTempId,
       senderId: CURRENT_USER_ID,
       text: trimmedText,
       timestamp: new Date().toISOString(),
       replyTo: replyTo || undefined,
       forwardFrom: forwardFrom || undefined,
-      attachments: attachments?.map(file => ({
+      attachments: attachments?.map((file) => ({
         type: file.type.startsWith('image/') ? 'image' : 'video',
         url: URL.createObjectURL(file)
       }))
@@ -1223,17 +1343,77 @@ const ChatPage: React.FC = () => {
     setMessages((prevMessages) => [...prevMessages, newMessage]);
     updateContactLastMessage(
       selectedContactId,
-      trimmedText || (forwardFrom ? 'Пересланное сообщение' : (attachments && attachments.length > 0 ? 'Медиафайл' : '')),
+      trimmedText || (forwardFrom ? 'Пересланное сообщение' : (hasFiles ? 'Медиафайл' : '')),
       newMessage.timestamp,
       false,
-      Boolean(attachments && attachments.length > 0),
+      hasFiles,
       CURRENT_USER_ID,
       newMessage.id,
       true
     );
-    
-    // Вызываем функцию для отправки сообщения через API
-    sendMessageWithAttachments();
+
+    const sendMessageWithAttachments = async () => {
+      try {
+        let storedAttachments: StoredChatAttachment[] = [];
+        let mediaEnvelopes: ChatPayloadV2['attachments'] = [];
+        let encryptedPayload: EncryptedChatPayload | undefined;
+
+        if (hasFiles && localDeviceKeys) {
+          const uploaded = await encryptAndUploadChatFiles(attachments!);
+          storedAttachments = uploaded.stored;
+          mediaEnvelopes = uploaded.envelopes;
+        }
+
+        if (hasFiles && !localDeviceKeys) {
+          throw new Error('Нет ключей для шифрования медиа');
+        }
+
+        if (localDeviceKeys && (trimmedText || mediaEnvelopes.length > 0)) {
+          encryptedPayload = await encryptChatPayload(localDeviceKeys, selectedContactId, {
+            version: 2,
+            text: trimmedText,
+            attachments: mediaEnvelopes
+          });
+        }
+
+        if (hasFiles && !encryptedPayload) {
+          throw new Error('Не удалось зашифровать вложения');
+        }
+
+        if (encryptedPayload) {
+          sendEncryptedSocketMessage(
+            selectedContactId,
+            encryptedPayload,
+            storedAttachments,
+            replyTo || null,
+            forwardFrom || null,
+            clientTempId
+          );
+        } else {
+          socketService.sendMessage(
+            selectedContactId,
+            trimmedText,
+            undefined,
+            [],
+            replyTo || null,
+            forwardFrom || null,
+            clientTempId
+          );
+        }
+      } catch (error) {
+        console.error('Ошибка при отправке сообщения:', error);
+        setMessages((prev) => prev.filter((message) => message.id !== newMessage.id));
+        setDeleteToast({
+          open: true,
+          message: 'Не удалось отправить сообщение',
+          severity: 'error'
+        });
+      }
+    };
+
+    if (hasFiles || trimmedText || isForwardOnly) {
+      void sendMessageWithAttachments();
+    }
   };
 
   const handleEditMessage = (messageId: string, text: string) => {

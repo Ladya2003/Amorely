@@ -30,7 +30,9 @@ const formatSocketMessage = (message: any, clientTempId?: string) => ({
     : undefined,
   attachments: message.attachments?.map((attachment: any) => ({
     type: attachment.type,
-    url: attachment.url
+    url: attachment.url,
+    publicId: attachment.publicId,
+    encrypted: Boolean(attachment.encrypted)
   }))
 });
 
@@ -71,7 +73,7 @@ export default function setupSocketIO(server: HttpServer) {
         iv: string;
         senderDeviceId: string;
       },
-      attachments?: Array<{ type: string, url: string, publicId: string }>,
+      attachments?: Array<{ type: string, url: string, publicId: string, encrypted?: boolean }>,
       replyTo?: { id: string, text: string, senderId: string } | null,
       forwardFrom?: { id: string, text: string, senderId: string, senderName?: string, senderAvatar?: string } | null,
       clientTempId?: string

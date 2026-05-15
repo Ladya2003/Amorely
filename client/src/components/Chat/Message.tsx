@@ -6,6 +6,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { MessageType, MessageForwardRef } from './ChatDialog';
+import EncryptedAttachment from './EncryptedAttachment';
 
 interface MessageProps {
   message: MessageType;
@@ -167,40 +168,52 @@ const Message: React.FC<MessageProps> = ({
 
           {message.attachments && message.attachments.length > 0 && (
             <Box sx={{ mb: message.text ? 1 : 0 }}>
-              {message.attachments.map((attachment, index) => (
-                <Box 
-                  key={index} 
-                  sx={{ 
-                    mb: 1,
-                    borderRadius: 1,
-                    overflow: 'hidden'
-                  }}
-                >
-                  {attachment.type === 'image' ? (
-                    <img 
-                      src={attachment.url} 
-                      alt="Attachment" 
-                      onClick={() => handleImageClick(attachment.url)}
-                      style={{ 
-                        maxWidth: '100%', 
-                        maxHeight: '200px',
-                        display: 'block',
-                        cursor: 'pointer'
-                      }} 
-                    />
-                  ) : (
-                    <video 
-                      src={attachment.url} 
-                      controls 
-                      style={{ 
-                        maxWidth: '100%', 
-                        maxHeight: '200px',
-                        display: 'block'
-                      }} 
-                    />
-                  )}
-                </Box>
-              ))}
+              {message.attachments.map((attachment, index) => {
+                const envelope = message.mediaEnvelopes?.[index];
+                const isEncrypted = attachment.encrypted || attachment.type === 'encrypted';
+
+                return (
+                  <Box
+                    key={index}
+                    sx={{
+                      mb: 1,
+                      borderRadius: 1,
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {isEncrypted && envelope ? (
+                      <EncryptedAttachment
+                        cacheKey={`${message.id}-${index}`}
+                        url={attachment.url}
+                        envelope={envelope}
+                        onImageClick={handleImageClick}
+                      />
+                    ) : attachment.type === 'image' ? (
+                      <img
+                        src={attachment.url}
+                        alt="Attachment"
+                        onClick={() => handleImageClick(attachment.url)}
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '200px',
+                          display: 'block',
+                          cursor: 'pointer'
+                        }}
+                      />
+                    ) : (
+                      <video
+                        src={attachment.url}
+                        controls
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '200px',
+                          display: 'block'
+                        }}
+                      />
+                    )}
+                  </Box>
+                );
+              })}
             </Box>
           )}
           

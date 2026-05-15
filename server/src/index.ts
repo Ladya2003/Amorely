@@ -63,6 +63,17 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
+const encryptedChatStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'amorely/chat-encrypted',
+    resource_type: 'raw',
+    format: 'bin'
+  } as any
+});
+
+const uploadEncryptedChat = multer({ storage: encryptedChatStorage });
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -103,7 +114,38 @@ app.get('/api/test', (req: Request, res: Response) => {
   });
 });
 
-// Маршрут для загрузки медиа в Cloudinary (для чата - только загрузка без сохранения в Content)
+// Загрузка зашифрованных blob для чата (E2EE — только ciphertext)
+app.post('/api/chat/upload-encrypted', authMiddleware, uploadEncryptedChat.array('media'), async (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'Файлы не были загружены' });
+    }
+
+    const uploads = files.map((file) => {
+      const cloudinaryFile = file as any;
+      return {
+        url: cloudinaryFile.path,
+        publicId: cloudinaryFile.filename,
+        resourceType: 'raw'
+      };
+    });
+
+    res.json({
+      message: 'Зашифрованные файлы успешно загружены',
+      uploads
+    });
+  } catch (error) {
+    console.error('Ошибка при загрузке зашифрованных файлов:', error);
+    res.status(500).json({
+      error: 'Ошибка при загрузке зашифрованных файлов',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Маршрут для загрузки медиа в Cloudinary (legacy / feed)
 app.post('/api/upload', authMiddleware, upload.array('media'), async (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];

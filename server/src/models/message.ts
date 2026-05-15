@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 
 const attachmentSchema = new mongoose.Schema({
-  type: { type: String, enum: ['image', 'video'], required: true },
+  type: { type: String, enum: ['image', 'video', 'encrypted'], required: true },
   url: { type: String, required: true },
-  publicId: { type: String, required: true }
+  publicId: { type: String, required: true },
+  encrypted: { type: Boolean, default: false }
 });
 
 const replySchema = new mongoose.Schema(

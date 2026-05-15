@@ -406,3 +406,73 @@ export const decryptChatText = async (
   );
   return decoder.decode(new Uint8Array(decrypted));
 };
+
+export type ChatMediaEnvelope = {
+  mediaKey: string;
+  iv: string;
+  mimeType: string;
+  displayType: 'image' | 'video';
+};
+
+export type ChatPayloadV1 = {
+  version: 1;
+  text: string;
+};
+
+export type ChatPayloadV2 = {
+  version: 2;
+  text: string;
+  attachments: ChatMediaEnvelope[];
+};
+
+export type ChatPayload = ChatPayloadV1 | ChatPayloadV2;
+
+export type EncryptedChatPayload = {
+  ciphertext: string;
+  iv: string;
+  version: number;
+  algorithm: string;
+  senderDeviceId: string;
+};
+
+export const parseDecryptedChatPayload = (plaintext: string): ChatPayload => {
+  try {
+    const parsed = JSON.parse(plaintext) as ChatPayload;
+    if (parsed && typeof parsed === 'object' && 'version' in parsed) {
+      if (parsed.version === 2 && Array.isArray((parsed as ChatPayloadV2).attachments)) {
+        return {
+          version: 2,
+          text: String((parsed as ChatPayloadV2).text ?? ''),
+          attachments: (parsed as ChatPayloadV2).attachments
+        };
+      }
+      if (parsed.version === 1) {
+        return { version: 1, text: String((parsed as ChatPayloadV1).text ?? '') };
+      }
+    }
+  } catch {
+    // legacy v1: plaintext string only
+  }
+  return { version: 1, text: plaintext };
+};
+
+export const encryptChatPayload = async (
+  senderKeys: LocalDeviceKeys,
+  receiverUserId: string,
+  payload: ChatPayload
+): Promise<EncryptedChatPayload> => {
+  const serialized =
+    payload.version === 2
+      ? JSON.stringify(payload)
+      : payload.text;
+  return encryptChatText(senderKeys, receiverUserId, serialized);
+};
+
+export const decryptChatPayload = async (
+  receiverKeys: LocalDeviceKeys,
+  senderUserId: string,
+  encryptedPayload: { ciphertext: string; iv: string }
+): Promise<ChatPayload> => {
+  const plaintext = await decryptChatText(receiverKeys, senderUserId, encryptedPayload);
+  return parseDecryptedChatPayload(plaintext);
+};

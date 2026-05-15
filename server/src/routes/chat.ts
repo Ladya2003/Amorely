@@ -49,7 +49,9 @@ const formatMessageForClient = (message: any) => ({
     : undefined,
   attachments: message.attachments?.map((attachment: any) => ({
     type: attachment.type,
-    url: attachment.url
+    url: attachment.url,
+    publicId: attachment.publicId,
+    encrypted: Boolean(attachment.encrypted)
   }))
 });
 

@@ -28,6 +28,7 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Contact } from './ChatList';
 import Message from './Message';
+import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 
 export interface MessageReplyRef {
   id: string;
@@ -61,9 +62,12 @@ export interface MessageType {
     senderDeviceId: string;
   };
   attachments?: Array<{
-    type: 'image' | 'video';
+    type: 'image' | 'video' | 'encrypted';
     url: string;
+    publicId?: string;
+    encrypted?: boolean;
   }>;
+  mediaEnvelopes?: ChatMediaEnvelope[];
 }
 
 interface ChatDialogProps {
@@ -298,8 +302,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       return;
     }
 
-    // Для обычной отправки и reply текст обязателен.
-    if (trimmedText) {
+    if (trimmedText || attachments.length > 0) {
       onSendMessage(trimmedText, attachments, replyingTo, null);
       setMessageText('');
       setAttachments([]);
@@ -922,7 +925,11 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 <IconButton 
                   color="primary" 
                   onClick={handleSendMessage}
-                  disabled={editingMessage ? !messageText.trim() : (!forwardingMessage && !messageText.trim())}
+                  disabled={
+                    editingMessage
+                      ? !messageText.trim()
+                      : !forwardingMessage && !messageText.trim() && attachments.length === 0
+                  }
                 >
                   <SendIcon />
                 </IconButton>
