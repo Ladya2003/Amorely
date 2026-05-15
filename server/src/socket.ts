@@ -3,6 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import Message from './models/message';
 import User from './models/user';
 import mongoose from 'mongoose';
+import { getAllowedOrigins } from './utils/corsOrigins';
 
 interface ConnectedUser {
   userId: string;
@@ -39,7 +40,7 @@ const formatSocketMessage = (message: any, clientTempId?: string) => ({
 export default function setupSocketIO(server: HttpServer) {
   const io = new SocketIOServer(server, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:3005',
+      origin: getAllowedOrigins(),
       methods: ['GET', 'POST']
     }
   });

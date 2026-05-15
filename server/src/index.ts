@@ -20,6 +20,7 @@ import calendarRoutes from './routes/calendar';
 import { authMiddleware } from './middleware/auth';
 import relationshipsRoutes from './routes/relationships';
 import { startFeedScheduler } from './utils/feedScheduler';
+import { getAllowedOrigins } from './utils/corsOrigins';
 
 dotenv.config();
 
@@ -97,7 +98,11 @@ const withMulter =
 const uploadEncryptedChat = multer({ storage: encryptedChatStorage });
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: getAllowedOrigins()
+  })
+);
 app.use(express.json());
 app.use((req: Request, res: Response, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');

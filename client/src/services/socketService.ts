@@ -9,7 +9,9 @@ class SocketService {
       this.socket.disconnect();
     }
 
-    this.socket = io(API_URL);
+    this.socket = io(API_URL, {
+      transports: ['websocket', 'polling']
+    });
     
     // Сообщаем серверу, что пользователь подключился
     this.socket.emit('user_connected', userId);
