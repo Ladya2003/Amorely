@@ -3,7 +3,6 @@
 import React from 'react';
 import {
   Card,
-  CardMedia,
   CardContent,
   CardActions,
   Button,
@@ -18,6 +17,7 @@ import VideocamIcon from '@mui/icons-material/Videocam';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { ContentItem } from '../types';
 import { formatFileSize, formatDate } from '../utils/helpers';
+import DecryptedMedia from '../../../common/DecryptedMedia';
 
 interface ContentCardProps {
   item: ContentItem;
@@ -81,20 +81,18 @@ const ContentCard: React.FC<ContentCardProps> = ({
       </Box>
 
       <Box sx={{ position: 'relative', paddingTop: '100%' }}>
-        {item.type === 'image' ? (
-          <CardMedia
-            component="img"
-            image={item.url}
-            alt={item.name}
-            sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
+          <DecryptedMedia
+            cacheKey={`manage-${item.id}`}
+            url={item.url}
+            resourceType={item.type}
+            encrypted={item.encrypted}
+            mediaEnvelope={item.mediaEnvelope}
+            imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            loadingMinHeight={120}
           />
-        ) : (
-          <CardMedia
-            component="video"
-            src={item.url}
-            sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        )}
+        </Box>
         <Chip
           icon={item.type === 'image' ? <PhotoIcon fontSize="small" /> : <VideocamIcon fontSize="small" />}
           label={item.type === 'image' ? 'Фото' : 'Видео'}

@@ -6,11 +6,15 @@ import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import DecryptedMedia from '../common/DecryptedMedia';
+import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
 interface MediaFile {
   _id: string;
   url: string;
   resourceType: 'image' | 'video';
+  encrypted?: boolean;
+  mediaEnvelope?: ContentMediaEnvelope;
 }
 
 interface EventItem {
@@ -250,17 +254,26 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                     onClick={() => handleContentClick(eventId)}
                   >
                     <Box
-                      component="img"
-                      src={media.url}
                       sx={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover'
+                        overflow: 'hidden'
                       }}
-                    />
+                    >
+                      <DecryptedMedia
+                        cacheKey={`cal-grid-${eventId}-${media._id}`}
+                        url={media.url}
+                        resourceType={media.resourceType}
+                        encrypted={media.encrypted}
+                        mediaEnvelope={media.mediaEnvelope}
+                        imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        loadingMinHeight={0}
+                      />
+                    </Box>
                     {media.resourceType === 'video' && (
                       <PlayCircleIcon 
                         sx={{ 

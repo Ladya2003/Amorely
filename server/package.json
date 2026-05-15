@@ -20,7 +20,8 @@
     "db:status:native": "net start MongoDB && mongo --eval \"db.adminCommand('ismaster')\"",
     "db:reset:native": "net stop MongoDB && rmdir /s /q C:\\data\\db && net start MongoDB",
     "compass": "start \"\" \"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\MongoDBCompass.exe\"",
-    "compass:connect": "start \"\" \"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\MongoDBCompass.exe\" --uri mongodb://localhost:27017"
+    "compass:connect": "start \"\" \"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\MongoDBCompass.exe\" --uri mongodb://localhost:27017",
+    "seed:beta-news": "ts-node scripts/seed-beta-news.ts"
   },
   "keywords": [],
   "author": "",

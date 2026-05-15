@@ -62,7 +62,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
       messageDate.getDate() === now.getDate();
 
     if (isToday) {
-      return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     }
 
     return messageDate.toLocaleDateString('ru-RU', {

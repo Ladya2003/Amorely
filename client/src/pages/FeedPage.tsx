@@ -10,6 +10,9 @@ import ContentSlider, { ContentItem } from '../components/Feed/ContentSlider';
 import DaysTogether from '../components/Feed/DaysTogether';
 import ContentManagementDialog from '../components/Feed/ContentManagement';
 import ContentViewer from '../components/Feed/ContentViewer';
+import { useCrypto } from '../contexts/CryptoContext';
+import { decryptContentFieldsList } from '../crypto/contentCryptoService';
+import { usePartnerId } from '../hooks/usePartnerId';
 
 // Интерфейс для контента из диалога управления
 interface UserContentItem {
@@ -25,7 +28,9 @@ interface UserContentItem {
 }
 
 const FeedPage: React.FC = () => {
-  const { user } = useAuth(); // Получаем текущего пользователя
+  const { user } = useAuth();
+  const { localDeviceKeys } = useCrypto();
+  const partnerId = usePartnerId();
   
   // Состояние для табов
   const [tabValue, setTabValue] = useState(0);
@@ -54,11 +59,10 @@ const FeedPage: React.FC = () => {
   
   // Загрузка данных при монтировании компонента
   useEffect(() => {
-    // Загружаем данные с сервера
     fetchUserData();
     fetchContent();
-    fetchUserContent(); // Загружаем контент для управления
-  }, []);
+    fetchUserContent();
+  }, [localDeviceKeys, user?._id]);
   
   // Функция для загрузки данных об отношениях
   const fetchUserData = async () => {
@@ -92,7 +96,15 @@ const FeedPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setUserContent(response.data);
+      let items = response.data;
+      if (localDeviceKeys) {
+        items = items.map((item: any) => ({
+          ...item,
+          encrypted: item.encrypted,
+          mediaEnvelope: item.mediaEnvelope
+        }));
+      }
+      setUserContent(items);
     } catch (error) {
       console.error('Ошибка при загрузке контента пользователя:', error);
     }
@@ -142,18 +154,48 @@ const FeedPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Преобразуем данные в формат ContentItem
-      const formattedContent: ContentItem[] = partnerResponse.data.map((item: any) => ({
+      let formattedContent: ContentItem[] = partnerResponse.data.map((item: any) => ({
         id: item.id || item._id,
         url: item.url,
         resourceType: item.resourceType,
         createdAt: item.createdAt,
         title: item.title,
+        description: item.description,
+        encrypted: item.encrypted,
+        mediaEnvelope: item.mediaEnvelope,
+        encryptedTitle: item.encryptedTitle,
+        encryptedDescription: item.encryptedDescription,
+        metadataSenderId: item.metadataSenderId,
+        metadataRecipientId: item.metadataRecipientId,
+        targetId: item.targetId,
+        userId: item.userId,
         eventId: item.eventId,
         isBirthdayEvent: item.isBirthdayEvent,
         isAnniversaryEvent: item.isAnniversaryEvent
       }));
-      
+
+      if (localDeviceKeys) {
+        const decrypted = await decryptContentFieldsList(
+          localDeviceKeys,
+          formattedContent,
+          user?._id,
+          partnerId || undefined
+        );
+        formattedContent = decrypted.map((item) => ({
+          id: item.id,
+          url: item.url,
+          resourceType: item.resourceType,
+          createdAt: item.createdAt,
+          title: item.title,
+          description: item.description,
+          encrypted: item.encrypted,
+          mediaEnvelope: item.mediaEnvelope,
+          eventId: item.eventId,
+          isBirthdayEvent: item.isBirthdayEvent,
+          isAnniversaryEvent: item.isAnniversaryEvent
+        }));
+      }
+
       setPartnerContent(formattedContent);
       
       setIsLoading(false);
@@ -201,19 +243,32 @@ const FeedPage: React.FC = () => {
       
       // Если есть файлы, загружаем их
       if (files.length > 0) {
-        const formData = new FormData();
-        
-        files.forEach(file => formData.append('media', file));
-        formData.append('target', target);
-        formData.append('frequency', JSON.stringify(frequency));
-        formData.append('applyNow', String(applyNow));
-        
-        await axios.post(`${API_URL}/api/feed/content`, formData, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+        if (!localDeviceKeys) {
+          throw new Error('Нет ключей для шифрования контента');
+        }
+
+        const { encryptAndUploadFiles } = await import('../crypto/encryptedUploadService');
+        const uploaded = await encryptAndUploadFiles(files);
+
+        await axios.post(
+          `${API_URL}/api/feed/content-encrypted`,
+          {
+            target,
+            frequency,
+            items: uploaded.map((item) => ({
+              url: item.url,
+              publicId: item.publicId,
+              fileSize: item.fileSize,
+              mediaEnvelope: item.mediaEnvelope
+            }))
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
           }
-        });
+        );
       } else {
         // Если файлов нет, но изменились настройки, обновляем только частоту
         await axios.put(`${API_URL}/api/feed/content/frequency`, {

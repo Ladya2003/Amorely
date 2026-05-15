@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, Paper, Tabs, Tab } from '@mui/material';
+import { Box, TextField, Typography, Paper, Tabs, Tab, Alert } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -14,6 +14,10 @@ const PlansEditor: React.FC = () => {
 
   return (
     <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Alert severity="warning" sx={{ mb: 2 }}>
+        Пока что можно просто писать в Markdown — сохранение добавится позже с обновлением приложения.
+      </Alert>
+
       <Tabs
         value={mode}
         onChange={handleModeChange}

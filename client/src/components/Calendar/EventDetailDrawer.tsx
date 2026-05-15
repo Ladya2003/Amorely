@@ -24,6 +24,8 @@ import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import DecryptedMedia from '../common/DecryptedMedia';
+import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
 interface MediaFile {
   _id: string;
@@ -31,6 +33,8 @@ interface MediaFile {
   publicId: string;
   resourceType: 'image' | 'video';
   fileSize?: number;
+  encrypted?: boolean;
+  mediaEnvelope?: ContentMediaEnvelope;
 }
 
 interface User {
@@ -154,15 +158,20 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               <Box
                 sx={{
                   width: '100%',
-                  height: 300,
-                  bgcolor: 'grey.100',
                   position: 'relative',
+                  paddingTop: '100%',
+                  bgcolor: 'grey.100',
                   overflow: 'hidden'
                 }}
               >
                 {/* Контейнер слайдера */}
                 <Box
                   sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     display: 'flex',
                     width: '100%',
                     height: '100%',
@@ -176,33 +185,34 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                       sx={{
                         minWidth: '100%',
                         height: '100%',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                       onClick={() => setMediaViewerOpen(true)}
                     >
-                      {media.resourceType === 'image' ? (
-                        <img
-                          src={media.url}
-                          alt={`${eventTitle} - ${index + 1}`}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            pointerEvents: 'none'
-                          }}
-                        />
-                      ) : (
-                        <video
-                          src={media.url}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                          controls
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      )}
+                      <DecryptedMedia
+                        cacheKey={`calendar-${event.eventId || event._id}-${media._id}`}
+                        url={media.url}
+                        resourceType={media.resourceType}
+                        encrypted={media.encrypted}
+                        mediaEnvelope={media.mediaEnvelope}
+                        imageStyle={{
+                          width: '100%',
+                          height: '100%',
+                          maxHeight: '100%',
+                          objectFit: 'cover',
+                          pointerEvents: 'none'
+                        }}
+                        videoStyle={{
+                          width: '100%',
+                          height: '100%',
+                          maxHeight: '100%',
+                          objectFit: 'cover'
+                        }}
+                        loadingMinHeight={0}
+                      />
                     </Box>
                   ))}
                 </Box>
@@ -449,7 +459,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
-            {mediaFiles.map((media, index) => (
+            {mediaFiles.map((media) => (
               <Box
                 key={media._id}
                 sx={{
@@ -460,20 +470,16 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                   alignItems: 'center'
                 }}
               >
-                {media.resourceType === 'image' ? (
-                  <img
-                    src={media.url}
-                    alt={`${eventTitle} - ${index + 1}`}
-                    style={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain' }}
-                  />
-                ) : (
-                  <video
-                    src={media.url}
-                    controls
-                    autoPlay={index === currentMediaIndex}
-                    style={{ maxWidth: '100%', maxHeight: '90vh' }}
-                  />
-                )}
+                <DecryptedMedia
+                  cacheKey={`calendar-full-${event.eventId || event._id}-${media._id}`}
+                  url={media.url}
+                  resourceType={media.resourceType}
+                  encrypted={media.encrypted}
+                  mediaEnvelope={media.mediaEnvelope}
+                  imageStyle={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain' }}
+                  videoStyle={{ maxWidth: '100%', maxHeight: '90vh' }}
+                  loadingMinHeight={400}
+                />
               </Box>
             ))}
           </Box>

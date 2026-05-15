@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -14,17 +14,26 @@ import {
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
+import CustomSnackbar from '../UI/CustomSnackbar';
 
 interface ThemeSettingsProps {
   currentTheme: 'light' | 'dark' | 'system';
   onThemeChange: (theme: 'light' | 'dark' | 'system') => void;
 }
 
+const THEME_UNAVAILABLE_MESSAGE = 'Простите, пока доступна только системная тема 😉';
+
 const ThemeSettings: React.FC<ThemeSettingsProps> = ({ currentTheme, onThemeChange }) => {
   const theme = useTheme();
+  const [toastOpen, setToastOpen] = useState(false);
   
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onThemeChange(event.target.value as 'light' | 'dark' | 'system');
+    const nextTheme = event.target.value as 'light' | 'dark' | 'system';
+    if (nextTheme !== 'system') {
+      setToastOpen(true);
+      return;
+    }
+    onThemeChange(nextTheme);
   };
   
   return (
@@ -78,6 +87,13 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ currentTheme, onThemeChan
       <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
         Выбранная тема будет применена ко всему приложению.
       </Typography>
+
+      <CustomSnackbar
+        open={toastOpen}
+        message={THEME_UNAVAILABLE_MESSAGE}
+        severity="info"
+        onClose={() => setToastOpen(false)}
+      />
     </Paper>
   );
 };

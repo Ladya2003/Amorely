@@ -7,6 +7,7 @@ import Relationship from '../models/relationship';
 import mongoose from 'mongoose';
 import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation, recalculateRotationOrder } from '../utils/contentRotation';
 import { buildOrGetDynamicFeed } from '../utils/dynamicFeedRotation';
+import { formatContentForApi } from '../utils/contentFormat';
 
 const router = express.Router();
 
@@ -34,22 +35,7 @@ router.get('/content', async (req: any, res: Response) => {
 
     if (target === 'partner') {
       const selectedMedia = await buildOrGetDynamicFeed(userId);
-      const feedContent = selectedMedia.map((media: any) => ({
-        id: media._id,
-        _id: media._id,
-        url: media.url,
-        resourceType: media.resourceType,
-        type: media.resourceType === 'video' ? 'video' : 'image',
-        title: media.title,
-        description: media.description,
-        eventDate: media.eventDate,
-        createdAt: media.createdAt,
-        userId: media.userId,
-        createdBy: media.createdBy,
-        eventId: media.eventId,
-        isBirthdayEvent: media.isBirthdayEvent,
-        isAnniversaryEvent: media.isAnniversaryEvent
-      }));
+      const feedContent = selectedMedia.map((media: any) => formatContentForApi(media));
 
       res.json(feedContent);
     } else {
@@ -103,22 +89,106 @@ router.get('/user-content', async (req: any, res: Response) => {
       .sort({ sortOrder: 1, createdAt: -1 }); // Сначала по sortOrder, потом по дате
     
     // Форматируем данные для фронтенда
-    const formattedContent = content.map(item => ({
-      id: item._id.toString(),
-      url: item.url,
-      type: item.resourceType === 'video' ? 'video' : 'image',
+    const formattedContent = content.map((item) => ({
+      ...formatContentForApi(item),
       name: `${item.resourceType === 'video' ? 'Видео' : 'Фото'}_${item.createdAt.toISOString().split('T')[0]}`,
-      size: item.fileSize || 0, // Используем сохраненный размер файла
+      size: item.fileSize || 0,
       uploadedAt: item.createdAt,
       uploadedBy: item.userId,
-      publicId: item.publicId,
-      frequency: item.frequency // Добавляем информацию о частоте
+      frequency: item.frequency
     }));
     
     res.json(formattedContent);
   } catch (error) {
     console.error('Ошибка при получении контента пользователя:', error);
     res.status(500).json({ error: 'Ошибка при получении контента пользователя' });
+  }
+});
+
+// Добавление зашифрованного контента (E2EE — ciphertext уже на Cloudinary)
+router.post('/content-encrypted', async (req: any, res: Response) => {
+  try {
+    const { target, frequency, items } = req.body || {};
+    const userId = req.userId as string;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Не переданы элементы контента' });
+    }
+
+    const parsedFrequency = frequency || { count: 3, hours: 24 };
+    let targetId: mongoose.Types.ObjectId | null = null;
+
+    if (target === 'partner') {
+      const relationship = await Relationship.findOne({
+        $or: [
+          { userId: new mongoose.Types.ObjectId(userId) },
+          { partnerId: new mongoose.Types.ObjectId(userId) }
+        ],
+        status: 'active'
+      });
+
+      if (relationship) {
+        targetId =
+          relationship.userId.toString() === userId
+            ? (relationship.partnerId as mongoose.Types.ObjectId)
+            : (relationship.userId as mongoose.Types.ObjectId);
+      }
+    }
+
+    const maxSortOrder = await Content.findOne({ userId: new mongoose.Types.ObjectId(userId) })
+      .sort({ sortOrder: -1 })
+      .select('sortOrder');
+
+    let currentSortOrder = (maxSortOrder?.sortOrder || 0) + 1;
+    const savedContent = [];
+
+    for (const item of items) {
+      if (!item?.url || !item?.publicId || !item?.mediaEnvelope?.mediaKey) {
+        return res.status(400).json({ error: 'Некорректные данные зашифрованного контента' });
+      }
+
+      const displayType = item.mediaEnvelope.displayType || item.resourceType || 'image';
+      const newContent = new Content({
+        userId: new mongoose.Types.ObjectId(userId),
+        targetId: targetId ? new mongoose.Types.ObjectId(targetId) : null,
+        url: item.url,
+        publicId: item.publicId,
+        resourceType: displayType === 'video' ? 'video' : 'image',
+        fileSize: item.fileSize || 0,
+        sortOrder: currentSortOrder++,
+        frequency: parsedFrequency,
+        encrypted: true,
+        mediaEnvelope: {
+          mediaKey: item.mediaEnvelope.mediaKey,
+          iv: item.mediaEnvelope.iv,
+          mimeType: item.mediaEnvelope.mimeType || 'application/octet-stream'
+        },
+        metadataSenderId: new mongoose.Types.ObjectId(userId),
+        displayedCount: 0,
+        rotationOrder: 0,
+        currentBatch: 0,
+        isActive: false,
+        totalBatches: 0
+      });
+
+      savedContent.push(await newContent.save());
+    }
+
+    if (targetId) {
+      await initializeContentRotation(userId, targetId.toString());
+    }
+
+    res.json({
+      message: 'Зашифрованный контент успешно загружен',
+      content: savedContent
+    });
+  } catch (error) {
+    console.error('Ошибка при загрузке зашифрованного контента:', error);
+    res.status(500).json({ error: 'Ошибка при загрузке зашифрованного контента' });
   }
 });
 
@@ -478,7 +548,7 @@ router.delete('/content/:id', async (req: any, res: Response) => {
     if (content.publicId) {
       try {
         await cloudinary.uploader.destroy(content.publicId, {
-          resource_type: content.resourceType === 'video' ? 'video' : 'image'
+          resource_type: content.encrypted ? 'raw' : content.resourceType === 'video' ? 'video' : 'image'
         });
       } catch (cloudinaryError) {
         console.error('Ошибка при удалении из Cloudinary:', cloudinaryError);

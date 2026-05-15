@@ -6,6 +6,22 @@ const contentSchema = new mongoose.Schema({
   url: { type: String }, // Необязательно для текстовых событий
   publicId: { type: String, required: true },
   resourceType: { type: String, enum: ['image', 'video'], required: true },
+  encrypted: { type: Boolean, default: false },
+  mediaEnvelope: {
+    mediaKey: { type: String },
+    iv: { type: String },
+    mimeType: { type: String }
+  },
+  encryptedTitle: {
+    ciphertext: { type: String },
+    iv: { type: String }
+  },
+  encryptedDescription: {
+    ciphertext: { type: String },
+    iv: { type: String }
+  },
+  metadataSenderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  metadataRecipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   fileSize: { type: Number, default: 0 }, // Размер файла в байтах
   sortOrder: { type: Number, default: 0 }, // Порядок сортировки для drag & drop
   frequency: {

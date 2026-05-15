@@ -8,6 +8,16 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import { format } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
+import { useCrypto } from '../contexts/CryptoContext';
+import { useEncryptionRecipientId, usePartnerId } from '../hooks/usePartnerId';
+import { useAuth } from '../contexts/AuthContext';
+import {
+  decryptContentFieldsList,
+  encryptTextForPartner
+} from '../crypto/contentCryptoService';
+import { encryptAndUploadFiles } from '../crypto/encryptedUploadService';
+import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
+import { loadLocalKeys, type LocalDeviceKeys } from '../crypto/cryptoService';
 
 interface MediaFile {
   _id: string;
@@ -15,6 +25,8 @@ interface MediaFile {
   publicId: string;
   resourceType: 'image' | 'video';
   fileSize?: number;
+  encrypted?: boolean;
+  mediaEnvelope?: ContentMediaEnvelope;
 }
 
 interface User {
@@ -28,6 +40,11 @@ interface ContentItem {
   eventId: string;
   title?: string;
   description?: string;
+  encrypted?: boolean;
+  encryptedTitle?: { ciphertext: string; iv: string };
+  encryptedDescription?: { ciphertext: string; iv: string };
+  metadataSenderId?: string;
+  userId?: string;
   eventDate?: string;
   createdAt: string;
   media: MediaFile[];
@@ -40,6 +57,10 @@ interface ContentItem {
 
 const CalendarPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { localDeviceKeys, ensureLocalKeys } = useCrypto();
+  const { user } = useAuth();
+  const encryptionRecipientId = useEncryptionRecipientId();
+  const partnerId = usePartnerId();
   const [content, setContent] = useState<Array<{
     date: string;
     mediaUrl: string;
@@ -67,7 +88,7 @@ const CalendarPage: React.FC = () => {
 
   useEffect(() => {
     fetchContent();
-  }, []);
+  }, [localDeviceKeys, user?._id]);
 
   // Обработка URL параметра для открытия конкретного события
   useEffect(() => {
@@ -97,18 +118,30 @@ const CalendarPage: React.FC = () => {
         }
       });
       
-      // Сохраняем полные данные
-      setAllEvents(response.data);
-      
-      // Преобразуем данные в нужный формат для календаря
-      const formattedContent = response.data.map((item: ContentItem) => {
+      let events: ContentItem[] = response.data;
+
+      if (localDeviceKeys) {
+        events = await decryptContentFieldsList(
+          localDeviceKeys,
+          events,
+          user?._id,
+          partnerId || undefined
+        );
+      }
+
+      setAllEvents(events);
+
+      const formattedContent = events.map((item: ContentItem) => {
         const hasMedia = item.media && item.media.length > 0 && item.media[0].url && item.media[0].url.trim().length > 0;
         
+        const firstMedia = hasMedia ? item.media[0] : null;
         return {
           date: item.eventDate || item.createdAt,
-          // Для текстовых событий используем placeholder
-          mediaUrl: hasMedia ? item.media[0].url : 'placeholder',
-          type: hasMedia ? item.media[0].resourceType : 'image' as 'image' | 'video',
+          mediaUrl: hasMedia ? firstMedia!.url : 'placeholder',
+          type: hasMedia ? firstMedia!.resourceType : 'image' as 'image' | 'video',
+          encrypted: firstMedia?.encrypted,
+          mediaEnvelope: firstMedia?.mediaEnvelope,
+          mediaId: firstMedia?._id,
           title: item.title,
           description: item.description,
           _id: item.eventId || item._id,
@@ -228,6 +261,20 @@ const CalendarPage: React.FC = () => {
     setEventToDelete(null);
   };
 
+  const resolveKeysForEncrypt = async (): Promise<LocalDeviceKeys> => {
+    if (localDeviceKeys) return localDeviceKeys;
+    await ensureLocalKeys();
+    if (localDeviceKeys) return localDeviceKeys;
+    if (!user?._id) {
+      throw new Error('Пользователь не авторизован');
+    }
+    const loaded = await loadLocalKeys(user._id);
+    if (!loaded) {
+      throw new Error('Разблокируйте ключи шифрования на странице /crypto/unlock');
+    }
+    return loaded;
+  };
+
   const handleSaveEvent = async (eventData: {
     date: Date;
     title: string;
@@ -242,32 +289,47 @@ const CalendarPage: React.FC = () => {
         throw new Error('Не авторизован');
       }
 
-      const formData = new FormData();
-      
-      // Добавляем файлы
-      eventData.files.forEach(file => {
-        formData.append('media', file);
-      });
-
-      // Добавляем данные события
-      formData.append('eventDate', eventData.date.toISOString());
-      formData.append('title', eventData.title);
-      formData.append('description', eventData.description);
-      if (eventData.isBirthdayEvent !== undefined) {
-        formData.append('isBirthdayEvent', eventData.isBirthdayEvent.toString());
-      }
-      if (eventData.isAnniversaryEvent !== undefined) {
-        formData.append('isAnniversaryEvent', eventData.isAnniversaryEvent.toString());
+      const keys = await resolveKeysForEncrypt();
+      if (!encryptionRecipientId) {
+        throw new Error('Не удалось определить получателя шифрования');
       }
 
-      await axios.post(`${API_URL}/api/calendar/events`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
+      const encryptedTitle = await encryptTextForPartner(
+        keys,
+        encryptionRecipientId,
+        eventData.title
+      );
+      const encryptedDescription = eventData.description
+        ? await encryptTextForPartner(keys, encryptionRecipientId, eventData.description)
+        : undefined;
+
+      const uploaded =
+        eventData.files.length > 0 ? await encryptAndUploadFiles(eventData.files) : [];
+
+      await axios.post(
+        `${API_URL}/api/calendar/events-encrypted`,
+        {
+          eventDate: eventData.date.toISOString(),
+          encryptedTitle,
+          encryptedDescription,
+          encryptionRecipientId,
+          isBirthdayEvent: eventData.isBirthdayEvent,
+          isAnniversaryEvent: eventData.isAnniversaryEvent,
+          media: uploaded.map((item) => ({
+            url: item.url,
+            publicId: item.publicId,
+            fileSize: item.fileSize,
+            mediaEnvelope: item.mediaEnvelope
+          }))
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      // Обновляем список контента
       await fetchContent();
     } catch (error) {
       console.error('Ошибка при сохранении события:', error);
@@ -288,17 +350,36 @@ const CalendarPage: React.FC = () => {
         throw new Error('Не авторизован');
       }
 
-      await axios.put(`${API_URL}/api/calendar/events/${eventId}`, {
-        eventDate: eventData.date.toISOString(),
-        title: eventData.title,
-        description: eventData.description,
-        isBirthdayEvent: eventData.isBirthdayEvent,
-        isAnniversaryEvent: eventData.isAnniversaryEvent
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const keys = await resolveKeysForEncrypt();
+      if (!encryptionRecipientId) {
+        throw new Error('Не удалось определить получателя шифрования');
+      }
+
+      const encryptedTitle = await encryptTextForPartner(
+        keys,
+        encryptionRecipientId,
+        eventData.title
+      );
+      const encryptedDescription = eventData.description
+        ? await encryptTextForPartner(keys, encryptionRecipientId, eventData.description)
+        : undefined;
+
+      await axios.put(
+        `${API_URL}/api/calendar/events/${eventId}`,
+        {
+          eventDate: eventData.date.toISOString(),
+          encryptedTitle,
+          encryptedDescription,
+          encryptionRecipientId,
+          isBirthdayEvent: eventData.isBirthdayEvent,
+          isAnniversaryEvent: eventData.isAnniversaryEvent
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
-      });
+      );
 
       // Обновляем список контента
       await fetchContent();

@@ -379,6 +379,35 @@ export const encryptChatText = async (
   };
 };
 
+/** Расшифровка отправителем (тот же ECDH, что при encryptChatText). */
+export const decryptChatTextAsSender = async (
+  senderKeys: LocalDeviceKeys,
+  receiverUserId: string,
+  encryptedPayload: { ciphertext: string; iv: string }
+): Promise<string> => {
+  const receiverPublicKeyBase64 = await getOrCreatePeerPublicKey(receiverUserId);
+  const receiverPublicKey = await importSpkiFromBase64(receiverPublicKeyBase64);
+  const senderPrivateKey = await crypto.subtle.importKey(
+    'jwk',
+    senderKeys.identityPrivateJwk,
+    { name: 'ECDH', namedCurve: 'P-256' },
+    false,
+    ['deriveBits']
+  );
+  const sharedSecret = await crypto.subtle.deriveBits(
+    { name: 'ECDH', public: receiverPublicKey },
+    senderPrivateKey,
+    256
+  );
+  const aesKey = await crypto.subtle.importKey('raw', sharedSecret, { name: 'AES-GCM' }, false, ['decrypt']);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: base64ToBytes(encryptedPayload.iv) },
+    aesKey,
+    base64ToBytes(encryptedPayload.ciphertext).buffer
+  );
+  return decoder.decode(new Uint8Array(decrypted));
+};
+
 export const decryptChatText = async (
   receiverKeys: LocalDeviceKeys,
   senderUserId: string,

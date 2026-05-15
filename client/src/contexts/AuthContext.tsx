@@ -12,6 +12,7 @@ interface User {
   bio?: string;
   birthday?: string;
   relationshipStartDate?: string;
+  partnerId?: string;
   theme?: 'light' | 'dark' | 'system';
 }
 

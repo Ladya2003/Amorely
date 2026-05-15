@@ -14,7 +14,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GridViewIcon from '@mui/icons-material/GridView';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import ListAltIcon from '@mui/icons-material/ListAlt';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
@@ -77,7 +77,10 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const days = eachDayOfInterval({
+    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+    end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
+  });
 
   // Для grid view группируем все события по месяцам и дням (без фильтрации)
   const allEventsGroupedByMonth = allEvents.reduce((acc, event) => {
@@ -114,13 +117,17 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
 
   // Для calendar view используем старую логику
   const contentByDay = days.map(day => {
-    const dayContent = content.filter(item => {
-      const itemDate = new Date(item.date);
-      return format(itemDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
-    });
+    const inCurrentMonth = isSameMonth(day, currentDate);
+    const dayContent = inCurrentMonth
+      ? content.filter(item => {
+          const itemDate = new Date(item.date);
+          return format(itemDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+        })
+      : [];
     return {
       date: day,
-      content: dayContent
+      content: dayContent,
+      isOutsideMonth: !inCurrentMonth,
     };
   });
 
@@ -212,11 +219,12 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
                   ))}
                 </Grid>
                 <Grid container spacing={1}>
-                  {contentByDay.map((day, index) => (
-                    <Grid size={{ xs: 12/7 }} key={index}>
+                  {contentByDay.map((day) => (
+                    <Grid size={{ xs: 12/7 }} key={format(day.date, 'yyyy-MM-dd')}>
                       <CalendarDay 
                         date={day.date} 
                         content={day.content.length > 0 ? day.content[0] : null}
+                        isOutsideMonth={day.isOutsideMonth}
                         onContentClick={onContentClick}
                       />
                     </Grid>

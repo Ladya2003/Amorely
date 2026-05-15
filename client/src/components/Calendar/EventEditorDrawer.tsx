@@ -268,7 +268,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       onClose();
     } catch (error) {
       console.error('Ошибка при сохранении события:', error);
-      setError('Не удалось сохранить событие. Попробуйте еще раз.');
+      const message =
+        error instanceof Error ? error.message : 'Не удалось сохранить событие. Попробуйте еще раз.';
+      setError(message);
     } finally {
       setIsSaving(false);
     }

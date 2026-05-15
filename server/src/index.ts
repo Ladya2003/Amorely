@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, RequestHandler } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
@@ -67,10 +67,32 @@ const encryptedChatStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'amorely/chat-encrypted',
-    resource_type: 'raw',
-    format: 'bin'
+    resource_type: 'raw'
   } as any
 });
+
+const formatUploadError = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'Unknown error';
+};
+
+const withMulter =
+  (upload: RequestHandler, errorMessage = 'Ошибка при загрузке файлов'): RequestHandler =>
+  (req, res, next) => {
+    upload(req, res, (err) => {
+      if (err) {
+        console.error(errorMessage, formatUploadError(err));
+        return res.status(500).json({
+          error: errorMessage,
+          details: formatUploadError(err)
+        });
+      }
+      next();
+    });
+  };
 
 const uploadEncryptedChat = multer({ storage: encryptedChatStorage });
 
@@ -115,7 +137,11 @@ app.get('/api/test', (req: Request, res: Response) => {
 });
 
 // Загрузка зашифрованных blob для чата (E2EE — только ciphertext)
-app.post('/api/chat/upload-encrypted', authMiddleware, uploadEncryptedChat.array('media'), async (req: Request, res: Response) => {
+app.post(
+  '/api/chat/upload-encrypted',
+  authMiddleware,
+  withMulter(uploadEncryptedChat.array('media'), 'Ошибка при загрузке зашифрованных файлов'),
+  async (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
 

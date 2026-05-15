@@ -4,6 +4,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import Content from '../models/content';
 import User from '../models/user';
+import { formatCalendarEventGroup, formatCalendarEventMedia } from '../utils/contentFormat';
+import { resolvePartnerUserId } from '../utils/resolvePartnerId';
 
 const router = express.Router();
 
@@ -18,6 +20,107 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage });
+
+// Создание зашифрованного события (E2EE)
+router.post('/events-encrypted', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const {
+      eventDate,
+      isBirthdayEvent,
+      isAnniversaryEvent,
+      encryptedTitle,
+      encryptedDescription,
+      encryptionRecipientId,
+      media
+    } = req.body || {};
+
+    if (!eventDate || !encryptedTitle?.ciphertext) {
+      return res.status(400).json({ error: 'Требуются дата и зашифрованный заголовок события' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    const partnerId = encryptionRecipientId
+      ? String(encryptionRecipientId)
+      : await resolvePartnerUserId(userId);
+    const eventId = `event_${Date.now()}_${userId}`;
+    const savedContent = [];
+    const mediaItems = Array.isArray(media) ? media : [];
+
+    if (mediaItems.length > 0) {
+      for (const item of mediaItems) {
+        if (!item?.url || !item?.publicId || !item?.mediaEnvelope?.mediaKey) {
+          return res.status(400).json({ error: 'Некорректные данные зашифрованного медиа' });
+        }
+
+        const displayType = item.mediaEnvelope.displayType || item.resourceType || 'image';
+        const content = new Content({
+          userId,
+          targetId: partnerId,
+          url: item.url,
+          publicId: item.publicId,
+          resourceType: displayType === 'video' ? 'video' : 'image',
+          fileSize: item.fileSize || 0,
+          eventId,
+          eventDate: new Date(eventDate),
+          encrypted: true,
+          mediaEnvelope: {
+            mediaKey: item.mediaEnvelope.mediaKey,
+            iv: item.mediaEnvelope.iv,
+            mimeType: item.mediaEnvelope.mimeType || 'application/octet-stream'
+          },
+          encryptedTitle,
+          encryptedDescription: encryptedDescription || undefined,
+          metadataSenderId: userId,
+          metadataRecipientId: partnerId,
+          showInFeed: true,
+          isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
+          isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
+          customDate: new Date(eventDate),
+          createdBy: userId
+        });
+
+        savedContent.push(await content.save());
+      }
+    } else {
+      const content = new Content({
+        userId,
+        targetId: partnerId,
+        url: '',
+        publicId: `text_${eventId}`,
+        resourceType: 'image',
+        fileSize: 0,
+        eventId,
+        eventDate: new Date(eventDate),
+        encrypted: true,
+        encryptedTitle,
+        encryptedDescription: encryptedDescription || undefined,
+        metadataSenderId: userId,
+        metadataRecipientId: partnerId,
+        showInFeed: false,
+        isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
+        isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
+        customDate: new Date(eventDate),
+        createdBy: userId
+      });
+
+      savedContent.push(await content.save());
+    }
+
+    res.json({
+      message: 'Зашифрованное событие успешно создано',
+      content: savedContent,
+      eventId
+    });
+  } catch (error) {
+    console.error('Ошибка при создании зашифрованного события:', error);
+    res.status(500).json({ error: 'Ошибка при создании зашифрованного события' });
+  }
+});
 
 // Создание нового события в календаре
 router.post('/events', upload.array('media'), async (req: any, res: Response) => {
@@ -167,32 +270,10 @@ router.get('/events', async (req: any, res: Response) => {
       const key = media.eventId || media._id.toString();
       
       if (!eventsMap.has(key)) {
-        // Первый медиафайл события - создаем запись события
-        eventsMap.set(key, {
-          _id: key,
-          eventId: key,
-          title: media.title,
-          description: media.description,
-          eventDate: media.eventDate,
-          createdAt: media.createdAt,
-          userId: media.userId,
-          createdBy: media.createdBy,
-          lastEditedBy: media.lastEditedBy,
-          lastEditedAt: media.lastEditedAt,
-          isBirthdayEvent: media.isBirthdayEvent,
-          isAnniversaryEvent: media.isAnniversaryEvent,
-          media: []
-        });
+        eventsMap.set(key, formatCalendarEventGroup(media));
       }
-      
-      // Добавляем медиафайл в массив
-      eventsMap.get(key).media.push({
-        _id: media._id,
-        url: media.url,
-        publicId: media.publicId,
-        resourceType: media.resourceType,
-        fileSize: media.fileSize
-      });
+
+      eventsMap.get(key).media.push(formatCalendarEventMedia(media));
     });
 
     // Преобразуем Map в массив
@@ -241,24 +322,9 @@ router.get('/events/:id', async (req: any, res: Response) => {
 
     // Формируем ответ с группированными медиафайлами
     const event = {
-      _id: id,
-      eventId: id,
-      title: firstMedia.title,
-      description: firstMedia.description,
-      eventDate: firstMedia.eventDate,
-      createdAt: firstMedia.createdAt,
-      userId: firstMedia.userId,
+      ...formatCalendarEventGroup(firstMedia),
       targetId: firstMedia.targetId,
-      createdBy: firstMedia.createdBy,
-      lastEditedBy: firstMedia.lastEditedBy,
-      lastEditedAt: firstMedia.lastEditedAt,
-      media: mediaFiles.map(m => ({
-        _id: m._id,
-        url: m.url,
-        publicId: m.publicId,
-        resourceType: m.resourceType,
-        fileSize: m.fileSize
-      }))
+      media: mediaFiles.map((m) => formatCalendarEventMedia(m))
     };
 
     res.json(event);
@@ -273,7 +339,17 @@ router.put('/events/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { id } = req.params; // это eventId
-    const { eventDate, title, description, showInFeed, isBirthdayEvent, isAnniversaryEvent } = req.body;
+    const {
+      eventDate,
+      title,
+      description,
+      encryptedTitle,
+      encryptedDescription,
+      encryptionRecipientId,
+      showInFeed,
+      isBirthdayEvent,
+      isAnniversaryEvent
+    } = req.body;
 
     // Находим все медиафайлы события
     const mediaFiles = await Content.find({ eventId: id });
@@ -299,13 +375,32 @@ router.put('/events/:id', async (req: any, res: Response) => {
     // Обновляем все медиафайлы события
     const updateData: any = {};
     if (eventDate) updateData.eventDate = new Date(eventDate);
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
+    const recipientId = encryptionRecipientId
+      ? String(encryptionRecipientId)
+      : await resolvePartnerUserId(userId);
+
+    if (encryptedTitle?.ciphertext) {
+      updateData.encrypted = true;
+      updateData.encryptedTitle = encryptedTitle;
+      updateData.title = undefined;
+      updateData.metadataSenderId = userId;
+      updateData.metadataRecipientId = recipientId;
+    } else if (title !== undefined) {
+      updateData.title = title;
+    }
+    if (encryptedDescription?.ciphertext) {
+      updateData.encryptedDescription = encryptedDescription;
+      updateData.description = undefined;
+      updateData.metadataSenderId = userId;
+      updateData.metadataRecipientId = recipientId;
+    } else if (description !== undefined) {
+      updateData.description = description;
+    }
     if (showInFeed !== undefined) updateData.showInFeed = showInFeed;
     if (isBirthdayEvent !== undefined) updateData.isBirthdayEvent = isBirthdayEvent;
     if (isAnniversaryEvent !== undefined) updateData.isAnniversaryEvent = isAnniversaryEvent;
-    updateData.lastEditedBy = userId; // Кто последним редактировал
-    updateData.lastEditedAt = new Date(); // Время редактирования
+    updateData.lastEditedBy = userId;
+    updateData.lastEditedAt = new Date();
 
     await Content.updateMany({ eventId: id }, { $set: updateData });
 
@@ -348,9 +443,10 @@ router.delete('/events/:id', async (req: any, res: Response) => {
 
     // Удаляем все файлы из Cloudinary
     for (const media of mediaFiles) {
+      if (!media.publicId || media.publicId.startsWith('text_')) continue;
       try {
         await cloudinary.uploader.destroy(media.publicId, {
-          resource_type: media.resourceType as any
+          resource_type: media.encrypted ? 'raw' : (media.resourceType as any)
         });
       } catch (cloudinaryError) {
         console.error('Ошибка при удалении из Cloudinary:', cloudinaryError);

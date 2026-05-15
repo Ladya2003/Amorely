@@ -1,5 +1,7 @@
 // Типы и интерфейсы для управления контентом
 
+import type { ContentMediaEnvelope } from '../../../crypto/contentCryptoService';
+
 export interface ContentItem {
   id: string;
   url: string;
@@ -10,6 +12,8 @@ export interface ContentItem {
   uploadedBy?: any;
   publicId?: string;
   frequency?: { count: number; hours: number };
+  encrypted?: boolean;
+  mediaEnvelope?: ContentMediaEnvelope;
 }
 
 export interface ContentManagementDialogProps {

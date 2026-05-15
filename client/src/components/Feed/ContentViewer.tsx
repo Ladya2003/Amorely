@@ -2,6 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, IconButton, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { ContentItem } from './ContentSlider';
+import DecryptedMedia from '../common/DecryptedMedia';
 
 interface ContentViewerProps {
   open: boolean;
@@ -38,32 +39,28 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ open, onClose, content })
         <CloseIcon />
       </IconButton>
       <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        {content.resourceType === 'image' ? (
-          <img
-            src={content.url}
-            alt="Просмотр"
-            style={{
+        <Box sx={{ width: '100%', maxHeight: '80vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <DecryptedMedia
+            cacheKey={`feed-viewer-${content.id}`}
+            url={content.url}
+            resourceType={content.resourceType}
+            encrypted={content.encrypted}
+            mediaEnvelope={content.mediaEnvelope}
+            imageStyle={{
               maxWidth: '100%',
               maxHeight: '80vh',
               objectFit: 'contain'
             }}
+            videoStyle={{
+              maxWidth: '100%',
+              maxHeight: '80vh'
+            }}
+            loadingMinHeight={240}
           />
-        ) : (
-          <Box sx={{ width: '100%', height: '80vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <video
-              src={content.url}
-              controls
-              autoPlay
-              style={{
-                maxWidth: '100%',
-                maxHeight: '80vh'
-              }}
-            />
-          </Box>
-        )}
+        </Box>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default ContentViewer; 
+export default ContentViewer;

@@ -6,6 +6,8 @@ import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useNavigate } from 'react-router-dom';
+import DecryptedMedia from '../common/DecryptedMedia';
+import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
 export interface ContentItem {
   id: string;
@@ -13,6 +15,9 @@ export interface ContentItem {
   resourceType: 'image' | 'video';
   createdAt: string;
   title?: string;
+  description?: string;
+  encrypted?: boolean;
+  mediaEnvelope?: ContentMediaEnvelope;
   eventId?: string;
   isBirthdayEvent?: boolean;
   isAnniversaryEvent?: boolean;
@@ -156,32 +161,38 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
               }}
               onClick={() => handleMediaClick(item)}
             >
-              {item.resourceType === 'image' ? (
-                <Box
-                  component="img"
-                  src={item.url}
-                  alt={`Контент ${index + 1}`}
-                  sx={{
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  pointerEvents: item.resourceType === 'video' ? 'auto' : 'none'
+                }}
+                onClick={(e) => item.resourceType === 'video' && e.stopPropagation()}
+              >
+                <DecryptedMedia
+                  cacheKey={`feed-${item.id}`}
+                  url={item.url}
+                  resourceType={item.resourceType}
+                  encrypted={item.encrypted}
+                  mediaEnvelope={item.mediaEnvelope}
+                  imageStyle={{
                     width: '100%',
                     height: '100%',
                     objectFit: 'contain',
-                    pointerEvents: 'none'
+                    maxHeight: '100%'
                   }}
+                  videoStyle={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    maxHeight: '100%'
+                  }}
+                  loadingMinHeight={300}
                 />
-              ) : (
-                <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
-                  <Box
-                    component="video"
-                    src={item.url}
-                    controls
-                    autoPlay={index === currentIndex}
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain'
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
+                {item.resourceType === 'video' && index !== currentIndex && (
                   <Box
                     sx={{
                       position: 'absolute',
@@ -192,21 +203,13 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                       display: 'flex',
                       justifyContent: 'center',
                       alignItems: 'center',
-                      pointerEvents: 'none',
-                      opacity: index === currentIndex ? 0 : 1,
-                      transition: 'opacity 0.3s ease'
+                      pointerEvents: 'none'
                     }}
                   >
-                    <PlayCircleFilledIcon 
-                      sx={{ 
-                        fontSize: 60, 
-                        color: 'white', 
-                        opacity: 0.8
-                      }} 
-                    />
+                    <PlayCircleFilledIcon sx={{ fontSize: 60, color: 'white', opacity: 0.8 }} />
                   </Box>
-                </Box>
-              )}
+                )}
+              </Box>
 
               {(item.isBirthdayEvent || item.isAnniversaryEvent) && (
                 <Box
@@ -240,8 +243,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                 </Box>
               )}
               
-              {/* Заголовок с обрезкой и черным блюром */}
-              {item.title && (
+              {(item.title || item.description) && (
                 <Box
                   sx={{
                     position: 'absolute',
@@ -255,22 +257,40 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                     color: 'white'
                   }}
                 >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: '1.1rem',
-                      lineHeight: 1.2,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      maxWidth: '100%'
-                    }}
-                  >
-                    {item.title}
-                  </Typography>
+                  {item.title && (
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '1.1rem',
+                        lineHeight: 1.2,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        maxWidth: '100%'
+                      }}
+                    >
+                      {item.title}
+                    </Typography>
+                  )}
+                  {item.description && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mt: item.title ? 0.5 : 0,
+                        opacity: 0.92,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical'
+                      }}
+                    >
+                      {item.description}
+                    </Typography>
+                  )}
                 </Box>
               )}
             </Box>
