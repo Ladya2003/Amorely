@@ -127,7 +127,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                 sx={{ 
                   mb: 2, 
                   mt: 2,
-                  fontWeight: 600,
+                  fontWeight: 400,
                   py: 1,
                   textTransform: 'capitalize'
                 }}

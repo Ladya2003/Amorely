@@ -16,6 +16,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ImageIcon from '@mui/icons-material/Image';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
@@ -62,6 +63,8 @@ interface EventDetailDrawerProps {
   } | null;
   onEdit?: (event: any) => void;
   onDelete?: (eventId: string) => void;
+  onShare?: (event: NonNullable<EventDetailDrawerProps['event']>) => void;
+  readOnly?: boolean;
 }
 
 const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
@@ -69,7 +72,9 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
   onClose,
   event,
   onEdit,
-  onDelete
+  onDelete,
+  onShare,
+  readOnly = false
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -125,10 +130,27 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               >
                 <CloseIcon />
               </IconButton>
-              <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+              <Typography variant="h6" sx={{ ml: 2, flex: 1, fontWeight: 400 }}>
                 {eventTitle}
               </Typography>
-              {onEdit && (
+              {readOnly && (
+                <Chip
+                  label="Только просмотр"
+                  size="small"
+                  sx={{ mr: 1 }}
+                />
+              )}
+              {!readOnly && onShare && (
+                <IconButton
+                  color="inherit"
+                  onClick={() => onShare(event)}
+                  aria-label="share"
+                  title="Поделиться"
+                >
+                  <ReplyOutlinedIcon />
+                </IconButton>
+              )}
+              {!readOnly && onEdit && (
                 <IconButton
                   color="inherit"
                   onClick={() => onEdit(event)}
@@ -138,7 +160,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                   <EditIcon />
                 </IconButton>
               )}
-              {onDelete && (
+              {!readOnly && onDelete && (
                 <IconButton
                   color="inherit"
                   onClick={() => onDelete(event.eventId || event._id)}
@@ -343,7 +365,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   Заголовок
                 </Typography>
-                <Typography variant="h6">
+                <Typography variant="h6" sx={{ fontWeight: 400 }}>
                   {eventTitle}
                 </Typography>
               </Box>

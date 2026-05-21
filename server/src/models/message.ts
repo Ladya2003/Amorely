@@ -29,6 +29,19 @@ const encryptedPayloadSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const sharedEventSchema = new mongoose.Schema(
+  {
+    eventId: { type: String, required: true },
+    title: { type: String, required: true },
+    previewUrl: { type: String, required: false },
+    previewResourceType: { type: String, enum: ['image', 'video'], required: false },
+    previewEncrypted: { type: Boolean, required: false },
+    previewMediaEnvelope: { type: mongoose.Schema.Types.Mixed, required: false },
+    eventDate: { type: String, required: false }
+  },
+  { _id: false }
+);
+
 const messageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -37,6 +50,7 @@ const messageSchema = new mongoose.Schema({
   encryptedPayload: { type: encryptedPayloadSchema, required: false },
   replyTo: { type: replySchema, required: false },
   forwardFrom: { type: replySchema, required: false },
+  sharedEvent: { type: sharedEventSchema, required: false },
   editedAt: { type: Date, required: false },
   isRead: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }

@@ -100,7 +100,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
 
   return (
     <Paper elevation={0} sx={{ p: 3, mb: 4 }}>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
         Личная информация
       </Typography>
       <Divider sx={{ mb: 3 }} />

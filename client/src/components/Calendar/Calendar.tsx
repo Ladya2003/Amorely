@@ -163,7 +163,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
                 <IconButton onClick={handlePrevMonth}>
                   &lt;
                 </IconButton>
-                <Typography variant="h6">
+                <Typography variant="h6" sx={{ fontWeight: 400 }}>
                   {format(currentDate, 'LLLL yyyy', { locale: ru })}
                 </Typography>
                 <IconButton onClick={handleNextMonth}>

@@ -38,6 +38,7 @@ const formatMessageForClient = (message: any) => ({
   isRead: message.isRead,
   replyTo: message.replyTo || undefined,
   forwardFrom: message.forwardFrom || undefined,
+  sharedEvent: message.sharedEvent || undefined,
   encryptedPayload: message.encryptedPayload
     ? {
         version: message.encryptedPayload.version,
@@ -289,7 +290,7 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
 // Отправка нового сообщения
 router.post('/messages', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { senderId, receiverId, text, attachments, replyTo, forwardFrom, encryptedPayload } = req.body;
+    const { senderId, receiverId, text, attachments, replyTo, forwardFrom, sharedEvent, encryptedPayload } = req.body;
     
     if (!senderId || !receiverId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
@@ -304,6 +305,7 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
       encryptedPayload: encryptedPayload || undefined,
       replyTo,
       forwardFrom,
+      sharedEvent,
       isRead: false,
       createdAt: new Date()
     });
@@ -327,10 +329,6 @@ router.put('/messages/:id', authMiddleware, async (req: any, res: Response) => {
     const userId = req.userId as string;
     const text = String(req.body?.text || '').trim();
 
-    if (!text) {
-      return res.status(400).json({ error: 'Текст сообщения обязателен' });
-    }
-
     const message = await Message.findById(id);
     if (!message) {
       return res.status(404).json({ error: 'Сообщение не найдено' });
@@ -341,11 +339,30 @@ router.put('/messages/:id', authMiddleware, async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Недостаточно прав для редактирования' });
     }
 
-    if (message.forwardFrom || message.encryptedPayload) {
-      return res.status(403).json({ error: 'Пересланное сообщение нельзя редактировать' });
+    if (message.forwardFrom || message.sharedEvent) {
+      return res.status(403).json({ error: 'Это сообщение нельзя редактировать' });
     }
 
-    message.text = text;
+    const hasMedia = Boolean(message.attachments?.length);
+    if (hasMedia) {
+      return res.status(403).json({ error: 'Сообщения с медиа нельзя редактировать' });
+    }
+
+    const encryptedPayload = req.body?.encryptedPayload;
+
+    if (message.encryptedPayload) {
+      if (!encryptedPayload) {
+        return res.status(400).json({ error: 'Не удалось обновить зашифрованное сообщение' });
+      }
+      message.encryptedPayload = encryptedPayload;
+      message.text = text;
+    } else {
+      if (!text) {
+        return res.status(400).json({ error: 'Текст сообщения обязателен' });
+      }
+      message.text = text;
+    }
+
     message.editedAt = new Date();
     await message.save();
 

@@ -7,6 +7,7 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { MessageType, MessageForwardRef } from './ChatDialog';
 import EncryptedAttachment from './EncryptedAttachment';
+import SharedEventCard from './SharedEventCard';
 
 interface MessageProps {
   message: MessageType;
@@ -17,6 +18,7 @@ interface MessageProps {
   onOpenActions?: (event: React.MouseEvent, message: MessageType) => void;
   onReplyReferenceClick?: (messageId: string) => void;
   onForwardSourceClick?: (userId: string, forwardFrom: MessageForwardRef) => void;
+  onSharedEventClick?: (eventId: string) => void;
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -27,7 +29,8 @@ const Message: React.FC<MessageProps> = ({
   mb = 0.75,
   onOpenActions,
   onReplyReferenceClick,
-  onForwardSourceClick
+  onForwardSourceClick,
+  onSharedEventClick
 }) => {
   const [openImage, setOpenImage] = useState<string | null>(null);
   
@@ -50,6 +53,7 @@ const Message: React.FC<MessageProps> = ({
   const bubbleColor = isOwn ? 'primary.light' : 'background.paper';
   const replyTo = message.replyTo;
   const forwardFrom = message.forwardFrom;
+  const sharedEvent = message.sharedEvent;
   const isPending = message.id.startsWith('temp-');
   const actionsButtonRight = isOwn
     ? (message.editedAt ? 92 : 66)
@@ -223,7 +227,8 @@ const Message: React.FC<MessageProps> = ({
               variant="body1"
               sx={{
                 wordBreak: 'break-word',
-                lineHeight: 1.3
+                lineHeight: 1.3,
+                mb: sharedEvent ? 0.8 : 0
               }}
             >
               {message.text}
@@ -237,6 +242,16 @@ const Message: React.FC<MessageProps> = ({
                 }}
               />
             </Typography>
+          )}
+
+          {sharedEvent && (
+            <Box sx={{ mb: message.text ? 0 : 0.25, pb: message.text ? 0 : 2.5 }}>
+              <SharedEventCard
+                sharedEvent={sharedEvent}
+                isOwn={isOwn}
+                onClick={() => onSharedEventClick?.(sharedEvent.eventId)}
+              />
+            </Box>
           )}
 
           <IconButton

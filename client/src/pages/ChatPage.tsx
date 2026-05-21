@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Tabs,
@@ -16,10 +16,6 @@ import {
   ListItemText,
   Avatar,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Divider,
   Snackbar,
   Alert,
   Button,
@@ -32,7 +28,8 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatList, { Contact } from '../components/Chat/ChatList';
-import ChatDialog, { MessageForwardRef, MessageReplyRef, MessageType } from '../components/Chat/ChatDialog';
+import ChatDialog, { MessageForwardRef, MessageReplyRef, MessageType, SharedEventRef } from '../components/Chat/ChatDialog';
+import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import Games from '../components/Chat/Games';
 import axios from 'axios';
 import { API_URL } from '../config';
@@ -50,6 +47,7 @@ import {
 import { encryptAndUploadChatFiles, type StoredChatAttachment } from '../crypto/chatMediaService';
 import { readChatRulesConsent, writeChatRulesConsent } from '../legal/chatRulesConsent';
 import { CHAT_RULES_SUMMARY } from '../legal/chatRulesContent';
+import { getForwardPreviewText } from '../utils/getForwardPreviewText';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [
@@ -187,7 +185,7 @@ type ChatContact = Contact & {
 };
 
 const getMessagePreviewText = (
-  message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'encryptedPayload'>
+  message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'encryptedPayload'>
 ) => {
   const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
   const hasEncryptedMedia = Boolean(
@@ -197,6 +195,7 @@ const getMessagePreviewText = (
   if (message.encryptedPayload) return 'Зашифрованное сообщение';
   if (hasMedia && !message.text) return 'Медиафайл';
   if (!message.text && message.forwardFrom) return 'Пересланное сообщение';
+  if (!message.text && message.sharedEvent) return `Событие: ${message.sharedEvent.title}`;
   return message.text || '';
 };
 
@@ -222,10 +221,8 @@ const ChatPage: React.FC = () => {
   const [forwardModalOpen, setForwardModalOpen] = useState(false);
   const [forwardSourceMessage, setForwardSourceMessage] = useState<MessageType | null>(null);
   const [pendingForwardMessage, setPendingForwardMessage] = useState<MessageForwardRef | null>(null);
-  const [forwardSearchQuery, setForwardSearchQuery] = useState('');
-  const [forwardDebouncedQuery, setForwardDebouncedQuery] = useState('');
-  const [forwardGlobalResults, setForwardGlobalResults] = useState<SearchUser[]>([]);
-  const [isForwardSearching, setIsForwardSearching] = useState(false);
+  const [pendingForwardSharedEvent, setPendingForwardSharedEvent] = useState<SharedEventRef | null>(null);
+  const [pendingSharedEvent, setPendingSharedEvent] = useState<SharedEventRef | null>(null);
   const [deleteToast, setDeleteToast] = useState<{
     open: boolean;
     message: string;
@@ -238,6 +235,7 @@ const ChatPage: React.FC = () => {
   const [chatRulesAccepted, setChatRulesAccepted] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
   const { localDeviceKeys } = useCrypto();
@@ -306,7 +304,8 @@ const ChatPage: React.FC = () => {
       storedAttachments: StoredChatAttachment[],
       replyTo: MessageReplyRef | null,
       forwardFrom: MessageForwardRef | null,
-      clientTempId?: string
+      clientTempId?: string,
+      sharedEvent: SharedEventRef | null = null
     ) => {
       socketService.sendMessage(
         receiverId,
@@ -315,6 +314,7 @@ const ChatPage: React.FC = () => {
         storedAttachments,
         replyTo,
         forwardFrom,
+        sharedEvent,
         clientTempId
       );
     },
@@ -649,7 +649,8 @@ const ChatPage: React.FC = () => {
               ...messageForDialog,
               text: tempMessage.text || messageForDialog.text,
               replyTo: message.replyTo || tempMessage.replyTo,
-              forwardFrom: message.forwardFrom || tempMessage.forwardFrom
+              forwardFrom: message.forwardFrom || tempMessage.forwardFrom,
+              sharedEvent: message.sharedEvent || tempMessage.sharedEvent
             };
             return newMessages;
           }
@@ -699,27 +700,40 @@ const ChatPage: React.FC = () => {
     });
 
     newSocket.on('message_edited', (message: MessageType) => {
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) => (msg.id === message.id ? { ...msg, ...message } : msg))
-      );
+      const processEdited = async () => {
+        const contactId =
+          message.senderId === CURRENT_USER_ID
+            ? (selectedContactIdRef.current || '')
+            : message.senderId;
 
-      setContacts((prevContacts) =>
-        sortContactsByLastMessageDesc(prevContacts.map((contact) => {
-          if (contact.lastMessage.id !== message.id) {
-            return contact;
-          }
+        const messageForDialog = contactId
+          ? await decryptMessageForDialog(message, contactId)
+          : message;
 
-          const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
-          return {
-            ...contact,
-            lastMessage: {
-              ...contact.lastMessage,
-              text: getMessagePreviewText(message),
-              hasMedia
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => (msg.id === message.id ? { ...msg, ...messageForDialog } : msg))
+        );
+
+        setContacts((prevContacts) =>
+          sortContactsByLastMessageDesc(prevContacts.map((contact) => {
+            if (contact.lastMessage.id !== message.id) {
+              return contact;
             }
-          };
-        }))
-      );
+
+            const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
+            return {
+              ...contact,
+              lastMessage: {
+                ...contact.lastMessage,
+                text: getMessagePreviewText(messageForDialog),
+                hasMedia
+              }
+            };
+          }))
+        );
+      };
+
+      void processEdited();
     });
 
     newSocket.on('message_deleted', (payload: { messageId: string; senderId: string; receiverId: string }) => {
@@ -857,14 +871,6 @@ const ChatPage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setForwardDebouncedQuery(forwardSearchQuery.trim());
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [forwardSearchQuery]);
-
   const fetchGlobalSearchPage = useCallback(async (query: string, page: number, append: boolean) => {
     if (!query) return;
 
@@ -906,31 +912,6 @@ const ChatPage: React.FC = () => {
     }
   }, []);
 
-  const fetchForwardGlobalSearch = useCallback(async (query: string) => {
-    if (!query) {
-      setForwardGlobalResults([]);
-      return;
-    }
-
-    try {
-      setIsForwardSearching(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/contacts/search`, {
-        params: { query, page: 1, limit: GLOBAL_SEARCH_PAGE_SIZE },
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const responseData = response.data;
-      const items: SearchUser[] = Array.isArray(responseData) ? responseData : (responseData.items || []);
-      setForwardGlobalResults(items);
-    } catch (error) {
-      console.error('Ошибка поиска для пересылки:', error);
-      setForwardGlobalResults([]);
-    } finally {
-      setIsForwardSearching(false);
-    }
-  }, []);
-
   // Глобальный поиск пользователей по username/email
   useEffect(() => {
     if (!debouncedSearchQuery) {
@@ -944,16 +925,6 @@ const ChatPage: React.FC = () => {
 
     fetchGlobalSearchPage(debouncedSearchQuery, 1, false);
   }, [debouncedSearchQuery, fetchGlobalSearchPage]);
-
-  useEffect(() => {
-    if (!forwardModalOpen) return;
-    if (!forwardDebouncedQuery) {
-      setForwardGlobalResults([]);
-      setIsForwardSearching(false);
-      return;
-    }
-    fetchForwardGlobalSearch(forwardDebouncedQuery);
-  }, [forwardDebouncedQuery, forwardModalOpen, fetchForwardGlobalSearch]);
 
   const fetchContacts = async () => {
     try {
@@ -1112,10 +1083,6 @@ const ChatPage: React.FC = () => {
   const handleStartForwardMessage = (message: MessageType) => {
     setForwardSourceMessage(message);
     setForwardModalOpen(true);
-    setForwardSearchQuery('');
-    setForwardDebouncedQuery('');
-    setForwardGlobalResults([]);
-    setIsForwardSearching(false);
   };
 
   const resolveForwardSenderMeta = (message: MessageType) => {
@@ -1144,7 +1111,7 @@ const ChatPage: React.FC = () => {
     };
   };
 
-  const handleSelectForwardTarget = (target: SearchUser | ChatContact) => {
+  const handleSelectForwardTarget = (target: ShareRecipientContact) => {
     const sourcePeerId = selectedContactId;
     const sourceMessage = forwardSourceMessage;
 
@@ -1153,14 +1120,14 @@ const ChatPage: React.FC = () => {
       name: target.name,
       username: (target as SearchUser).username || target.username || '',
       email: (target as SearchUser).email || target.email || '',
-      avatar: target.avatar
+      avatar: target.avatar || ''
     });
 
     if (sourceMessage && sourcePeerId) {
       const forwardSenderMeta = resolveForwardSenderMeta(sourceMessage);
       const forwardFrom: MessageForwardRef = {
         id: sourceMessage.id,
-        text: sourceMessage.text || (sourceMessage.attachments?.length ? 'Медиафайл' : ''),
+        text: getForwardPreviewText(sourceMessage),
         senderId: sourceMessage.senderId,
         senderName: forwardSenderMeta.senderName,
         senderAvatar: forwardSenderMeta.senderAvatar
@@ -1182,6 +1149,7 @@ const ChatPage: React.FC = () => {
           });
         });
       } else {
+        setPendingForwardSharedEvent(sourceMessage.sharedEvent || null);
         setPendingForwardMessage(forwardFrom);
       }
     }
@@ -1212,6 +1180,38 @@ const ChatPage: React.FC = () => {
       setShowBottomNav(false);
     }
   };
+
+  useEffect(() => {
+    const state = location.state as {
+      pendingSharedEvent?: SharedEventRef;
+      targetUserId?: string;
+      targetUserName?: string;
+      targetUsername?: string;
+      targetUserEmail?: string;
+      targetUserAvatar?: string;
+    } | null;
+
+    if (!state?.pendingSharedEvent || !state?.targetUserId) {
+      return;
+    }
+
+    ensureContactInList({
+      id: state.targetUserId,
+      name: state.targetUserName?.trim() || 'Пользователь',
+      username: state.targetUsername?.trim() || state.targetUserId.slice(0, 8),
+      email: state.targetUserEmail || '',
+      avatar: state.targetUserAvatar || ''
+    });
+    setPendingSharedEvent(state.pendingSharedEvent);
+    prepareDialogRestoreState(state.targetUserId);
+    saveSelectedChatId(state.targetUserId);
+    setSelectedContactId(state.targetUserId);
+    setTabValue(0);
+    if (isMobile) {
+      setShowBottomNav(false);
+    }
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate, prepareDialogRestoreState, saveSelectedChatId, isMobile, setShowBottomNav]);
 
   const loadMoreGlobalSearch = useCallback(() => {
     if (!debouncedSearchQuery || isSearching || isLoadingMoreGlobalSearch || !hasMoreGlobalSearch) {
@@ -1304,16 +1304,18 @@ const ChatPage: React.FC = () => {
     text: string,
     attachments?: File[],
     replyTo?: MessageReplyRef | null,
-    forwardFrom?: MessageForwardRef | null
+    forwardFrom?: MessageForwardRef | null,
+    sharedEvent?: SharedEventRef | null
   ) => {
     const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
     if (!selectedContactId || !CURRENT_USER_ID) return;
     const trimmedText = text.trim();
     const isForwardOnly = Boolean(forwardFrom);
+    const isSharedEventOnly = Boolean(sharedEvent);
     const hasFiles = Boolean(attachments && attachments.length > 0);
 
-    if (!isForwardOnly && !trimmedText && !hasFiles) return;
+    if (!isForwardOnly && !isSharedEventOnly && !trimmedText && !hasFiles) return;
 
     if (hasFiles && !localDeviceKeys) {
       setDeleteToast({
@@ -1334,6 +1336,7 @@ const ChatPage: React.FC = () => {
       timestamp: new Date().toISOString(),
       replyTo: replyTo || undefined,
       forwardFrom: forwardFrom || undefined,
+      sharedEvent: sharedEvent || undefined,
       attachments: attachments?.map((file) => ({
         type: file.type.startsWith('image/') ? 'image' : 'video',
         url: URL.createObjectURL(file)
@@ -1343,7 +1346,7 @@ const ChatPage: React.FC = () => {
     setMessages((prevMessages) => [...prevMessages, newMessage]);
     updateContactLastMessage(
       selectedContactId,
-      trimmedText || (forwardFrom ? 'Пересланное сообщение' : (hasFiles ? 'Медиафайл' : '')),
+      trimmedText || (sharedEvent ? `Событие: ${sharedEvent.title}` : (forwardFrom ? 'Пересланное сообщение' : (hasFiles ? 'Медиафайл' : ''))),
       newMessage.timestamp,
       false,
       hasFiles,
@@ -1397,6 +1400,7 @@ const ChatPage: React.FC = () => {
             [],
             replyTo || null,
             forwardFrom || null,
+            sharedEvent || null,
             clientTempId
           );
         }
@@ -1411,9 +1415,13 @@ const ChatPage: React.FC = () => {
       }
     };
 
-    if (hasFiles || trimmedText || isForwardOnly) {
+    if (hasFiles || trimmedText || isForwardOnly || isSharedEventOnly) {
       void sendMessageWithAttachments();
     }
+  };
+
+  const handleSharedEventClick = (eventId: string) => {
+    navigate(`/calendar?event=${encodeURIComponent(eventId)}`);
   };
 
   const handleEditMessage = (messageId: string, text: string) => {
@@ -1422,32 +1430,67 @@ const ChatPage: React.FC = () => {
     const trimmedText = text.trim();
     if (!trimmedText) return;
 
-    setMessages((prevMessages) =>
-      prevMessages.map((message) =>
-        message.id === messageId
-          ? { ...message, text: trimmedText, editedAt: new Date().toISOString() }
-          : message
-      )
-    );
+    const originalMessage = messages.find((message) => message.id === messageId);
+    if (!originalMessage) return;
 
-    setContacts((prevContacts) =>
-      sortContactsByLastMessageDesc(prevContacts.map((contact) => {
-        if (contact.id !== selectedContactId || contact.lastMessage.id !== messageId) {
-          return contact;
+    const applyOptimisticEdit = () => {
+      setMessages((prevMessages) =>
+        prevMessages.map((message) =>
+          message.id === messageId
+            ? { ...message, text: trimmedText, editedAt: new Date().toISOString() }
+            : message
+        )
+      );
+
+      setContacts((prevContacts) =>
+        sortContactsByLastMessageDesc(prevContacts.map((contact) => {
+          if (contact.id !== selectedContactId || contact.lastMessage.id !== messageId) {
+            return contact;
+          }
+
+          return {
+            ...contact,
+            lastMessage: {
+              ...contact.lastMessage,
+              text: trimmedText,
+              hasMedia: false
+            }
+          };
+        }))
+      );
+    };
+
+    const sendEdit = async () => {
+      try {
+        if (originalMessage.encryptedPayload) {
+          if (!localDeviceKeys) {
+            throw new Error('Нет ключей шифрования');
+          }
+
+          const encryptedPayload = await encryptChatPayload(localDeviceKeys, selectedContactId, {
+            version: 2,
+            text: trimmedText,
+            attachments: originalMessage.mediaEnvelopes || []
+          });
+
+          applyOptimisticEdit();
+          socketService.editMessage(messageId, '', encryptedPayload);
+          return;
         }
 
-        return {
-          ...contact,
-          lastMessage: {
-            ...contact.lastMessage,
-            text: trimmedText,
-            hasMedia: false
-          }
-        };
-      }))
-    );
+        applyOptimisticEdit();
+        socketService.editMessage(messageId, trimmedText);
+      } catch (error) {
+        console.error('Ошибка при редактировании сообщения:', error);
+        setDeleteToast({
+          open: true,
+          message: 'Не удалось отредактировать сообщение',
+          severity: 'error'
+        });
+      }
+    };
 
-    socketService.editMessage(messageId, trimmedText);
+    void sendEdit();
   };
 
   const handleDeleteMessage = (messageId: string) => {
@@ -1491,17 +1534,6 @@ const ChatPage: React.FC = () => {
     : contacts;
   const filteredGlobalResults = globalSearchResults.filter(
     user => !filteredExistingContacts.some(contact => contact.id === user.id)
-  );
-  const forwardImmediateQuery = forwardSearchQuery.trim().toLowerCase();
-  const forwardFilteredContacts = forwardImmediateQuery
-    ? contacts.filter(contact =>
-        contact.name.toLowerCase().includes(forwardImmediateQuery) ||
-        (contact.username || '').toLowerCase().includes(forwardImmediateQuery) ||
-        (contact.email || '').toLowerCase().includes(forwardImmediateQuery)
-      )
-    : contacts;
-  const forwardFilteredGlobalResults = forwardGlobalResults.filter(
-    (user) => !forwardFilteredContacts.some((contact) => contact.id === user.id)
   );
 
   const pageHeight = isMobile
@@ -1712,7 +1744,14 @@ const ChatPage: React.FC = () => {
                     onReachMessagesEnd={handleReachMessagesEnd}
                     onScrollPositionChange={handleDialogScrollPositionChange}
                     pendingForwardMessage={pendingForwardMessage}
-                    onPendingForwardApplied={() => setPendingForwardMessage(null)}
+                    onPendingForwardApplied={() => {
+                      setPendingForwardMessage(null);
+                      setPendingForwardSharedEvent(null);
+                    }}
+                    pendingForwardSharedEvent={pendingForwardSharedEvent}
+                    pendingSharedEvent={pendingSharedEvent}
+                    onPendingSharedEventApplied={() => setPendingSharedEvent(null)}
+                    onSharedEventClick={handleSharedEventClick}
                     hasMoreMessages={hasMoreMessages}
                     isLoadingOlder={isLoadingOlderMessages}
                     initialScrollTop={restoredScrollTop}
@@ -1743,78 +1782,16 @@ const ChatPage: React.FC = () => {
           <Games />
         )}
       </Box>
-      <Dialog open={forwardModalOpen} onClose={() => setForwardModalOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ pb: 1 }}>Переслать сообщение</DialogTitle>
-        <DialogContent sx={{ pt: 1 }}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Поиск чата, логина или почты"
-            value={forwardSearchQuery}
-            onChange={(e) => setForwardSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  {isForwardSearching ? (
-                    <CircularProgress size={16} />
-                  ) : (
-                    forwardSearchQuery && (
-                      <IconButton size="small" onClick={() => setForwardSearchQuery('')}>
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    )
-                  )}
-                </InputAdornment>
-              )
-            }}
-            sx={{ mb: 1.5 }}
-          />
-          <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
-            Ваши чаты
-          </Typography>
-          <List sx={{ p: 0 }}>
-            {forwardFilteredContacts.map((contact) => (
-              <ListItemButton key={`forward-contact-${contact.id}`} onClick={() => handleSelectForwardTarget(contact)}>
-                <ListItemAvatar>
-                  <Avatar alt={contact.name} src={contact.avatar} />
-                </ListItemAvatar>
-                <ListItemText
-                  primary={contact.name}
-                  secondary={contact.username ? `${contact.username}${contact.email ? ` • ${contact.email}` : ''}` : contact.email}
-                />
-              </ListItemButton>
-            ))}
-          </List>
-          {forwardDebouncedQuery && (
-            <>
-              <Divider sx={{ my: 1.25 }} />
-              <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
-                Глобальный поиск
-              </Typography>
-              <List sx={{ p: 0 }}>
-                {forwardFilteredGlobalResults.map((user) => (
-                  <ListItemButton key={`forward-global-${user.id}`} onClick={() => handleSelectForwardTarget(user)}>
-                    <ListItemAvatar>
-                      <Avatar alt={user.name} src={user.avatar} />
-                    </ListItemAvatar>
-                    <ListItemText primary={user.name} secondary={`${user.username} • ${user.email}`} />
-                  </ListItemButton>
-                ))}
-                {!isForwardSearching && forwardFilteredGlobalResults.length === 0 && (
-                  <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 1 }}>
-                    Ничего не найдено
-                  </Typography>
-                )}
-              </List>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ShareRecipientDialog
+        open={forwardModalOpen}
+        onClose={() => {
+          setForwardModalOpen(false);
+          setForwardSourceMessage(null);
+        }}
+        onSelect={handleSelectForwardTarget}
+        title="Переслать сообщение"
+        contacts={contacts}
+      />
       <Snackbar
         open={deleteToast.open}
         autoHideDuration={3000}

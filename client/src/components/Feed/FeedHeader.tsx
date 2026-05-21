@@ -34,7 +34,11 @@ const FeedHeader: React.FC<FeedHeaderProps> = ({ daysCount, tabValue, onTabChang
         alignItems: 'center',
         mb: 2
       }}>
-        <Typography variant="h5" component="h1" fontWeight="bold">
+        <Typography
+          variant="h5"
+          component="h1"
+          sx={{ fontWeight: 500, fontSize: '1.7rem' }}
+        >
           Лента
         </Typography>
         

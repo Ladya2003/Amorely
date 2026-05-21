@@ -4,10 +4,11 @@ import Calendar from '../components/Calendar/Calendar';
 import EventDetailDrawer from '../components/Calendar/EventDetailDrawer';
 import EventEditorDrawer from '../components/Calendar/EventEditorDrawer';
 import EventListDialog from '../components/Calendar/EventListDialog';
+import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { format } from 'date-fns';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useCrypto } from '../contexts/CryptoContext';
 import { useEncryptionRecipientId, usePartnerId } from '../hooks/usePartnerId';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +19,7 @@ import {
 import { encryptAndUploadFiles } from '../crypto/encryptedUploadService';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
 import { loadLocalKeys, type LocalDeviceKeys } from '../crypto/cryptoService';
+import { buildSharedEventRef } from '../utils/buildSharedEventRef';
 
 interface MediaFile {
   _id: string;
@@ -53,10 +55,12 @@ interface ContentItem {
   lastEditedAt?: string;
   isBirthdayEvent?: boolean;
   isAnniversaryEvent?: boolean;
+  readOnly?: boolean;
 }
 
 const CalendarPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { localDeviceKeys, ensureLocalKeys } = useCrypto();
   const { user } = useAuth();
   const encryptionRecipientId = useEncryptionRecipientId();
@@ -76,6 +80,7 @@ const CalendarPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<ContentItem | null>(null);
   const [eventDetailOpen, setEventDetailOpen] = useState(false);
+  const [eventDetailReadOnly, setEventDetailReadOnly] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editEvent, setEditEvent] = useState<any>(null);
@@ -85,6 +90,16 @@ const CalendarPage: React.FC = () => {
   const [eventListOpen, setEventListOpen] = useState(false);
   const [eventsForDate, setEventsForDate] = useState<ContentItem[]>([]);
   const [selectedDateForList, setSelectedDateForList] = useState<Date | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [eventToShare, setEventToShare] = useState<{
+    _id: string;
+    eventId?: string;
+    title?: string;
+    eventDate?: string;
+    createdAt: string;
+    media?: MediaFile[];
+  } | null>(null);
+  const [shareContacts, setShareContacts] = useState<ShareRecipientContact[]>([]);
 
   useEffect(() => {
     fetchContent();
@@ -93,14 +108,48 @@ const CalendarPage: React.FC = () => {
   // Обработка URL параметра для открытия конкретного события
   useEffect(() => {
     const eventId = searchParams.get('event');
-    if (eventId && allEvents.length > 0) {
-      const event = allEvents.find(e => e.eventId === eventId || e._id === eventId);
-      if (event) {
-        setSelectedEvent(event);
-        setEventDetailOpen(true);
-      }
+    if (!eventId || isLoading) return;
+
+    const localEvent = allEvents.find((e) => e.eventId === eventId || e._id === eventId);
+    if (localEvent) {
+      setEventDetailReadOnly(false);
+      setSelectedEvent(localEvent);
+      setEventDetailOpen(true);
+      return;
     }
-  }, [searchParams, allEvents]);
+
+    void openSharedEventById(eventId);
+  }, [searchParams, allEvents, isLoading]);
+
+  const openSharedEventById = async (eventId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(`${API_URL}/api/calendar/events/${encodeURIComponent(eventId)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      let event: ContentItem = response.data;
+      const isReadOnly = Boolean(event.readOnly);
+
+      if (!isReadOnly && localDeviceKeys) {
+        const [decrypted] = await decryptContentFieldsList(
+          localDeviceKeys,
+          [event],
+          user?._id,
+          partnerId || undefined
+        );
+        event = decrypted;
+      }
+
+      setEventDetailReadOnly(isReadOnly);
+      setSelectedEvent(event);
+      setEventDetailOpen(true);
+    } catch (error) {
+      console.error('Ошибка при открытии события:', error);
+    }
+  };
 
   const fetchContent = async () => {
     try {
@@ -222,6 +271,54 @@ const CalendarPage: React.FC = () => {
   const handleDeleteClick = (eventId: string) => {
     setEventToDelete(eventId);
     setDeleteDialogOpen(true);
+  };
+
+  const fetchShareContacts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(`${API_URL}/api/contacts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShareContacts(response.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке контактов для отправки:', error);
+      setShareContacts([]);
+    }
+  };
+
+  const handleShareEvent = (event: {
+    _id: string;
+    eventId?: string;
+    title?: string;
+    eventDate?: string;
+    createdAt: string;
+    media?: MediaFile[];
+  }) => {
+    setEventToShare(event);
+    setShareModalOpen(true);
+    void fetchShareContacts();
+  };
+
+  const handleSelectShareTarget = (target: ShareRecipientContact) => {
+    if (!eventToShare) return;
+
+    const sharedEvent = buildSharedEventRef(eventToShare);
+    setShareModalOpen(false);
+    setEventDetailOpen(false);
+    setEventToShare(null);
+
+    navigate('/chat', {
+      state: {
+        pendingSharedEvent: sharedEvent,
+        targetUserId: target.id,
+        targetUserName: target.name,
+        targetUsername: target.username,
+        targetUserEmail: target.email,
+        targetUserAvatar: target.avatar
+      }
+    });
   };
 
   const handleConfirmDelete = async () => {
@@ -413,10 +510,26 @@ const CalendarPage: React.FC = () => {
 
       <EventDetailDrawer
         open={eventDetailOpen}
-        onClose={() => setEventDetailOpen(false)}
+        onClose={() => {
+          setEventDetailOpen(false);
+          setEventDetailReadOnly(false);
+        }}
         event={selectedEvent}
-        onEdit={handleEditEvent}
-        onDelete={handleDeleteClick}
+        readOnly={eventDetailReadOnly}
+        onEdit={eventDetailReadOnly ? undefined : handleEditEvent}
+        onDelete={eventDetailReadOnly ? undefined : handleDeleteClick}
+        onShare={eventDetailReadOnly ? undefined : handleShareEvent}
+      />
+
+      <ShareRecipientDialog
+        open={shareModalOpen}
+        onClose={() => {
+          setShareModalOpen(false);
+          setEventToShare(null);
+        }}
+        onSelect={handleSelectShareTarget}
+        title="Поделиться событием"
+        contacts={shareContacts}
       />
       
       <EventEditorDrawer

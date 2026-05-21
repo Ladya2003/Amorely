@@ -262,7 +262,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                       variant="h6"
                       sx={{
                         fontWeight: 600,
-                        fontSize: '1.1rem',
+                        fontSize: '1.3rem',
                         lineHeight: 1.2,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',

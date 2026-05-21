@@ -32,6 +32,15 @@ class SocketService {
     attachments?: any[],
     replyTo?: { id: string; text: string; senderId: string } | null,
     forwardFrom?: { id: string; text: string; senderId: string; senderName?: string; senderAvatar?: string } | null,
+    sharedEvent?: {
+      eventId: string;
+      title: string;
+      previewUrl?: string;
+      previewResourceType?: 'image' | 'video';
+      previewEncrypted?: boolean;
+      previewMediaEnvelope?: unknown;
+      eventDate?: string;
+    } | null,
     clientTempId?: string
   ) {
     if (!this.socket) {
@@ -45,6 +54,7 @@ class SocketService {
       attachments,
       replyTo,
       forwardFrom,
+      sharedEvent,
       clientTempId
     });
   }
@@ -57,12 +67,22 @@ class SocketService {
     this.socket.emit('read_message', messageId);
   }
 
-  editMessage(messageId: string, text: string) {
+  editMessage(
+    messageId: string,
+    text: string,
+    encryptedPayload?: {
+      version: number;
+      algorithm: string;
+      ciphertext: string;
+      iv: string;
+      senderDeviceId: string;
+    }
+  ) {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
 
-    this.socket.emit('edit_message', { messageId, text });
+    this.socket.emit('edit_message', { messageId, text, encryptedPayload });
   }
 
   deleteMessage(messageId: string) {

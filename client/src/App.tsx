@@ -16,6 +16,9 @@ import ChatRulesPage from './pages/ChatRulesPage';
 import AuthPage from './pages/AuthPage';
 import CryptoUnlockPage from './pages/CryptoUnlockPage';
 
+const bodyFontFamily = '"Roboto", "Arial", sans-serif';
+const headingFontFamily = '"Oswald", sans-serif';
+
 // Создаем тему с основным цветом приложения
 const theme = createTheme({
   palette: {
@@ -27,18 +30,55 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Arial", sans-serif',
+    fontFamily: bodyFontFamily,
+    h1: { fontFamily: headingFontFamily },
+    h2: { fontFamily: headingFontFamily },
+    h3: { fontFamily: headingFontFamily },
+    h4: { fontFamily: headingFontFamily },
+    h5: { fontFamily: headingFontFamily },
+    h6: { fontFamily: headingFontFamily },
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          fontFamily: bodyFontFamily,
+        },
+        h1: { fontFamily: headingFontFamily },
+        h2: { fontFamily: headingFontFamily },
+        h3: { fontFamily: headingFontFamily },
+        h4: { fontFamily: headingFontFamily },
+        h5: { fontFamily: headingFontFamily },
+        h6: { fontFamily: headingFontFamily },
+      },
+    },
   },
 });
 
+const getRouterBasename = (): string | undefined => {
+  const publicUrl = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
+  if (!publicUrl || publicUrl === '/') {
+    return undefined;
+  }
+
+  // Локально CRA часто открывается с /, а homepage задаёт /Amorely только для GitHub Pages.
+  if (process.env.NODE_ENV === 'development' && !window.location.pathname.startsWith(publicUrl)) {
+    return undefined;
+  }
+
+  return publicUrl;
+};
+
 function App() {
+  const routerBasename = getRouterBasename();
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
         <CryptoProvider>
           <NavigationProvider>
-            <Router basename={process.env.PUBLIC_URL}>
+            <Router basename={routerBasename}>
               <Routes>
                 {/* Публичный маршрут для аутентификации */}
                 <Route path="/auth" element={<AuthPage />} />

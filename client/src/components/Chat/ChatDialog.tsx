@@ -28,7 +28,10 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Contact } from './ChatList';
 import Message from './Message';
+import SharedEventCard from './SharedEventCard';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
+
+const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
 
 export interface MessageReplyRef {
   id: string;
@@ -44,6 +47,16 @@ export interface MessageForwardRef {
   senderAvatar?: string;
 }
 
+export interface SharedEventRef {
+  eventId: string;
+  title: string;
+  previewUrl?: string;
+  previewResourceType?: 'image' | 'video';
+  previewEncrypted?: boolean;
+  previewMediaEnvelope?: unknown;
+  eventDate?: string;
+}
+
 export interface MessageType {
   id: string;
   senderId: string;
@@ -53,6 +66,7 @@ export interface MessageType {
   isRead?: boolean;
   replyTo?: MessageReplyRef;
   forwardFrom?: MessageForwardRef;
+  sharedEvent?: SharedEventRef;
   clientTempId?: string;
   encryptedPayload?: {
     version: number;
@@ -79,7 +93,8 @@ interface ChatDialogProps {
     text: string,
     attachments?: File[],
     replyTo?: MessageReplyRef | null,
-    forwardFrom?: MessageForwardRef | null
+    forwardFrom?: MessageForwardRef | null,
+    sharedEvent?: SharedEventRef | null
   ) => void;
   onStartForwardMessage: (message: MessageType) => void;
   onOpenChatWithUser: (userId: string, forwardHint?: MessageForwardRef | null) => void;
@@ -90,11 +105,36 @@ interface ChatDialogProps {
   onScrollPositionChange?: (scrollTop: number) => void;
   pendingForwardMessage?: MessageForwardRef | null;
   onPendingForwardApplied?: () => void;
+  pendingForwardSharedEvent?: SharedEventRef | null;
+  pendingSharedEvent?: SharedEventRef | null;
+  onPendingSharedEventApplied?: () => void;
+  onSharedEventClick?: (eventId: string) => void;
   hasMoreMessages?: boolean;
   isLoadingOlder?: boolean;
   initialScrollTop?: number | null;
   isLoading?: boolean;
 }
+
+const isMessageEditable = (message: MessageType, currentUserId: string) => {
+  if (message.id.startsWith('temp-')) return false;
+  if (message.senderId !== currentUserId) return false;
+  if (message.forwardFrom) return false;
+  if (message.sharedEvent && !message.text?.trim() && !message.encryptedPayload) return false;
+
+  const hasMediaAttachments = Boolean(
+    message.attachments?.some(
+      (attachment) =>
+        attachment.type === 'image' ||
+        attachment.type === 'video' ||
+        attachment.type === 'encrypted' ||
+        attachment.encrypted
+    )
+  );
+
+  if (hasMediaAttachments) return false;
+
+  return Boolean(message.text?.trim() || message.encryptedPayload);
+};
 
 const ChatDialog: React.FC<ChatDialogProps> = ({ 
   contact, 
@@ -111,6 +151,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onScrollPositionChange,
   pendingForwardMessage = null,
   onPendingForwardApplied,
+  pendingForwardSharedEvent = null,
+  pendingSharedEvent = null,
+  onPendingSharedEventApplied,
+  onSharedEventClick,
   hasMoreMessages = false,
   isLoadingOlder = false,
   initialScrollTop = null,
@@ -123,6 +167,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [hiddenDayBadgeKeys, setHiddenDayBadgeKeys] = useState<Record<string, boolean>>({});
   const [replyingTo, setReplyingTo] = useState<MessageReplyRef | null>(null);
   const [forwardingMessage, setForwardingMessage] = useState<MessageForwardRef | null>(null);
+  const [forwardingSharedEvent, setForwardingSharedEvent] = useState<SharedEventRef | null>(null);
+  const [sharingEvent, setSharingEvent] = useState<SharedEventRef | null>(null);
   const [editingMessage, setEditingMessage] = useState<MessageType | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
@@ -245,6 +291,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setHiddenDayBadgeKeys({});
     setReplyingTo(null);
     setForwardingMessage(null);
+    setForwardingSharedEvent(null);
+    setSharingEvent(null);
     setEditingMessage(null);
     setContextMenu(null);
     setHighlightedMessageId(null);
@@ -271,9 +319,21 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     if (!pendingForwardMessage) return;
     setEditingMessage(null);
     setReplyingTo(null);
+    setSharingEvent(null);
     setForwardingMessage(pendingForwardMessage);
+    setForwardingSharedEvent(pendingForwardSharedEvent || null);
     onPendingForwardApplied?.();
-  }, [pendingForwardMessage, onPendingForwardApplied]);
+  }, [pendingForwardMessage, pendingForwardSharedEvent, onPendingForwardApplied]);
+
+  useEffect(() => {
+    if (!pendingSharedEvent) return;
+    setEditingMessage(null);
+    setReplyingTo(null);
+    setForwardingMessage(null);
+    setForwardingSharedEvent(null);
+    setSharingEvent(pendingSharedEvent);
+    onPendingSharedEventApplied?.();
+  }, [pendingSharedEvent, onPendingSharedEventApplied]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -292,13 +352,32 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
     if (forwardingMessage) {
       if (trimmedText) {
-        onSendMessage(trimmedText, [], null, null);
+        onSendMessage(trimmedText, [], null, null, null);
       }
-      onSendMessage(forwardingMessage.text || 'Медиафайл', [], null, forwardingMessage);
+      onSendMessage(
+        forwardingSharedEvent ? '' : (forwardingMessage.text || 'Пересланное сообщение'),
+        [],
+        null,
+        forwardingMessage,
+        forwardingSharedEvent
+      );
       setMessageText('');
       setAttachments([]);
       setReplyingTo(null);
       setForwardingMessage(null);
+      setForwardingSharedEvent(null);
+      return;
+    }
+
+    if (sharingEvent) {
+      if (trimmedText) {
+        onSendMessage(trimmedText, [], null, null, null);
+      }
+      onSendMessage('', [], null, null, sharingEvent);
+      setMessageText('');
+      setAttachments([]);
+      setReplyingTo(null);
+      setSharingEvent(null);
       return;
     }
 
@@ -443,6 +522,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     if (!contextMenu) return;
     setEditingMessage(null);
     setForwardingMessage(null);
+    setForwardingSharedEvent(null);
+    setSharingEvent(null);
     setReplyingTo({
       id: contextMenu.message.id,
       text: contextMenu.message.text || (contextMenu.message.attachments?.length ? 'Медиафайл' : ''),
@@ -459,11 +540,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   const handleEditFromContextMenu = () => {
     if (!contextMenu) return;
-    if (
-      contextMenu.message.senderId !== currentUserId ||
-      Boolean(contextMenu.message.forwardFrom) ||
-      Boolean(contextMenu.message.encryptedPayload)
-    ) {
+    if (!isMessageEditable(contextMenu.message, currentUserId)) {
       setContextMenu(null);
       return;
     }
@@ -603,13 +680,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             onOpenActions={handleMessageContextMenu}
             onReplyReferenceClick={handleReplyReferenceClick}
             onForwardSourceClick={(userId, forwardFrom) => onOpenChatWithUser(userId, forwardFrom)}
+            onSharedEventClick={onSharedEventClick}
           />
         </Box>
       );
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId]);
+  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, onOpenChatWithUser, onSharedEventClick]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, string> = {};
@@ -628,13 +706,17 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   if (!contact) return null;
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%', 
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
       bgcolor: 'background.paper',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      fontFamily: CHAT_FONT_FAMILY,
+      '& .MuiTypography-root': { fontFamily: CHAT_FONT_FAMILY },
+      '& .MuiInputBase-root': { fontFamily: CHAT_FONT_FAMILY },
+      '& .MuiMenuItem-root': { fontFamily: CHAT_FONT_FAMILY },
     }}>
       {/* Заголовок чата - фиксированный */}
       <Paper 
@@ -838,23 +920,61 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               mb: 1
             }}
           >
-            <Box sx={{ minWidth: 0 }}>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="caption" color="info.main" sx={{ fontWeight: 600 }}>
                 Пересылаемое сообщение
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-              >
-                {forwardingMessage.text || 'Медиафайл'}
-              </Typography>
+              {forwardingSharedEvent ? (
+                <SharedEventCard sharedEvent={forwardingSharedEvent} compact />
+              ) : (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  {forwardingMessage.text || 'Пересланное сообщение'}
+                </Typography>
+              )}
             </Box>
-            <IconButton size="small" onClick={() => setForwardingMessage(null)} aria-label="Отменить пересылку">
+            <IconButton
+              size="small"
+              onClick={() => {
+                setForwardingMessage(null);
+                setForwardingSharedEvent(null);
+              }}
+              aria-label="Отменить пересылку"
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
+
+        {sharingEvent && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              borderLeft: '3px solid',
+              borderColor: 'primary.main',
+              bgcolor: 'action.hover',
+              px: 1.25,
+              py: 0.75,
+              borderRadius: 1,
+              mb: 1
+            }}
+          >
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
+                Поделиться событием
+              </Typography>
+              <SharedEventCard sharedEvent={sharingEvent} compact />
+            </Box>
+            <IconButton size="small" onClick={() => setSharingEvent(null)} aria-label="Отменить отправку события">
               <CloseIcon fontSize="small" />
             </IconButton>
           </Box>
@@ -928,7 +1048,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                   disabled={
                     editingMessage
                       ? !messageText.trim()
-                      : !forwardingMessage && !messageText.trim() && attachments.length === 0
+                      : !forwardingMessage && !sharingEvent && !messageText.trim() && attachments.length === 0
                   }
                 >
                   <SendIcon />
@@ -967,13 +1087,11 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           }}
         >
           <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
-            <ReplyOutlinedIcon sx={{ fontSize: 16 }} />
+            <ForwardOutlinedIcon sx={{ fontSize: 16 }} />
           </ListItemIcon>
           Ответить
         </MenuItem>
-        {contextMenu?.message.senderId === currentUserId &&
-          !contextMenu?.message.forwardFrom &&
-          !contextMenu?.message.encryptedPayload && (
+        {contextMenu && isMessageEditable(contextMenu.message, currentUserId) && (
           <MenuItem
             onClick={handleEditFromContextMenu}
             sx={{
@@ -999,7 +1117,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           }}
         >
           <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
-            <ForwardOutlinedIcon sx={{ fontSize: 16 }} />
+            <ReplyOutlinedIcon sx={{ fontSize: 16 }} />
           </ListItemIcon>
           Переслать
         </MenuItem>

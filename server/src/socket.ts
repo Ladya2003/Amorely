@@ -19,6 +19,7 @@ const formatSocketMessage = (message: any, clientTempId?: string) => ({
   isRead: message.isRead,
   replyTo: message.replyTo || undefined,
   forwardFrom: message.forwardFrom || undefined,
+  sharedEvent: message.sharedEvent || undefined,
   clientTempId,
   encryptedPayload: message.encryptedPayload
     ? {
@@ -77,10 +78,19 @@ export default function setupSocketIO(server: HttpServer) {
       attachments?: Array<{ type: string, url: string, publicId: string, encrypted?: boolean }>,
       replyTo?: { id: string, text: string, senderId: string } | null,
       forwardFrom?: { id: string, text: string, senderId: string, senderName?: string, senderAvatar?: string } | null,
+      sharedEvent?: {
+        eventId: string;
+        title: string;
+        previewUrl?: string;
+        previewResourceType?: 'image' | 'video';
+        previewEncrypted?: boolean;
+        previewMediaEnvelope?: unknown;
+        eventDate?: string;
+      } | null,
       clientTempId?: string
     }) => {
       try {
-        const { receiverId, text, encryptedPayload, attachments, replyTo, forwardFrom, clientTempId } = data;
+        const { receiverId, text, encryptedPayload, attachments, replyTo, forwardFrom, sharedEvent, clientTempId } = data;
         const senderSocketData = connectedUsers.find(user => user.socketId === socket.id);
         
         if (!senderSocketData) {
@@ -90,6 +100,20 @@ export default function setupSocketIO(server: HttpServer) {
 
         const senderId = senderSocketData.userId;
 
+        const sanitizedForwardFrom = forwardFrom
+          ? {
+              ...forwardFrom,
+              text: String(forwardFrom.text || '').trim() || 'Пересланное сообщение'
+            }
+          : undefined;
+
+        const sanitizedReplyTo = replyTo
+          ? {
+              ...replyTo,
+              text: String(replyTo.text || '').trim() || 'Сообщение'
+            }
+          : undefined;
+
         // Создаем новое сообщение в базе данных
         const newMessage = new Message({
           senderId: new mongoose.Types.ObjectId(senderId),
@@ -97,8 +121,9 @@ export default function setupSocketIO(server: HttpServer) {
           text,
           encryptedPayload: encryptedPayload || undefined,
           attachments,
-          replyTo: replyTo || undefined,
-          forwardFrom: forwardFrom || undefined,
+          replyTo: sanitizedReplyTo,
+          forwardFrom: sanitizedForwardFrom,
+          sharedEvent: sharedEvent || undefined,
           isRead: false,
           createdAt: new Date()
         });
@@ -124,9 +149,19 @@ export default function setupSocketIO(server: HttpServer) {
       }
     });
 
-    socket.on('edit_message', async (data: { messageId: string; text: string }) => {
+    socket.on('edit_message', async (data: {
+      messageId: string;
+      text: string;
+      encryptedPayload?: {
+        version: number;
+        algorithm: string;
+        ciphertext: string;
+        iv: string;
+        senderDeviceId: string;
+      };
+    }) => {
       try {
-        const { messageId } = data;
+        const { messageId, encryptedPayload } = data;
         const text = String(data.text || '').trim();
         const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
 
@@ -143,23 +178,37 @@ export default function setupSocketIO(server: HttpServer) {
           return;
         }
 
-        if (!text) {
-          socket.emit('error', { message: 'Текст сообщения обязателен' });
-          return;
-        }
-
-        if (message.forwardFrom || message.encryptedPayload) {
-          socket.emit('error', { message: 'Пересланное сообщение нельзя редактировать' });
-          return;
-        }
-
-        // Безопасность: редактировать может только владелец сообщения.
         if (message.senderId.toString() !== senderId) {
           socket.emit('error', { message: 'Недостаточно прав для редактирования сообщения' });
           return;
         }
 
-        message.text = text;
+        if (message.forwardFrom || message.sharedEvent) {
+          socket.emit('error', { message: 'Это сообщение нельзя редактировать' });
+          return;
+        }
+
+        const hasMedia = Boolean(message.attachments?.length);
+        if (hasMedia) {
+          socket.emit('error', { message: 'Сообщения с медиа нельзя редактировать' });
+          return;
+        }
+
+        if (message.encryptedPayload) {
+          if (!encryptedPayload) {
+            socket.emit('error', { message: 'Не удалось обновить зашифрованное сообщение' });
+            return;
+          }
+          message.encryptedPayload = encryptedPayload;
+          message.text = text;
+        } else {
+          if (!text) {
+            socket.emit('error', { message: 'Текст сообщения обязателен' });
+            return;
+          }
+          message.text = text;
+        }
+
         message.editedAt = new Date();
         await message.save();
 

@@ -193,6 +193,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           align="center"
           fontWeight="bold"
           sx={{
+            fontSize: '2rem',
             color: hasBackgroundImage ? '#fff' : currentTheme.preview,
             textShadow: '0 2px 8px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4)',
             WebkitTextStroke: '0.5px rgba(0,0,0,0.2)',

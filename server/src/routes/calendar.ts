@@ -4,6 +4,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import Content from '../models/content';
 import User from '../models/user';
+import Message from '../models/message';
+import mongoose from 'mongoose';
 import { formatCalendarEventGroup, formatCalendarEventMedia } from '../utils/contentFormat';
 import { resolvePartnerUserId } from '../utils/resolvePartnerId';
 
@@ -315,16 +317,80 @@ router.get('/events/:id', async (req: any, res: Response) => {
     const partnerId = user.partnerId;
     const isOwner = firstMedia.userId.toString() === userId;
     const isPartner = partnerId && firstMedia.userId.toString() === partnerId.toString();
-    
-    if (!isOwner && !isPartner) {
+
+    if (isOwner || isPartner) {
+      const event = {
+        ...formatCalendarEventGroup(firstMedia),
+        targetId: firstMedia.targetId,
+        media: mediaFiles.map((m) => formatCalendarEventMedia(m)),
+        readOnly: false
+      };
+
+      return res.json(event);
+    }
+
+    const shareMessage = await Message.findOne({
+      receiverId: new mongoose.Types.ObjectId(userId),
+      'sharedEvent.eventId': id
+    })
+      .sort({ createdAt: -1 })
+      .select('sharedEvent senderId');
+
+    if (!shareMessage?.sharedEvent) {
       return res.status(403).json({ error: 'Нет доступа к этому событию' });
     }
 
-    // Формируем ответ с группированными медиафайлами
+    const shared = shareMessage.sharedEvent;
+    const createdBySource =
+      typeof firstMedia.createdBy === 'object' && firstMedia.createdBy !== null && 'username' in firstMedia.createdBy
+        ? (firstMedia.createdBy as { _id?: { toString(): string }; username?: string; avatar?: string })
+        : typeof firstMedia.userId === 'object' && firstMedia.userId !== null && 'username' in firstMedia.userId
+          ? (firstMedia.userId as { _id?: { toString(): string }; username?: string; avatar?: string })
+          : null;
+
+    const lastEditedBySource =
+      typeof firstMedia.lastEditedBy === 'object' &&
+      firstMedia.lastEditedBy !== null &&
+      'username' in firstMedia.lastEditedBy
+        ? (firstMedia.lastEditedBy as { _id?: { toString(): string }; username?: string; avatar?: string })
+        : null;
+
     const event = {
-      ...formatCalendarEventGroup(firstMedia),
-      targetId: firstMedia.targetId,
-      media: mediaFiles.map((m) => formatCalendarEventMedia(m))
+      _id: id,
+      eventId: id,
+      title: shared.title || 'Без названия',
+      eventDate: shared.eventDate || firstMedia.eventDate,
+      createdAt: firstMedia.createdAt,
+      createdBy: createdBySource
+        ? {
+            _id: createdBySource._id?.toString(),
+            username: createdBySource.username,
+            avatar: createdBySource.avatar
+          }
+        : undefined,
+      lastEditedAt: firstMedia.lastEditedAt || undefined,
+      lastEditedBy: lastEditedBySource
+        ? {
+            _id: lastEditedBySource._id?.toString(),
+            username: lastEditedBySource.username,
+            avatar: lastEditedBySource.avatar
+          }
+        : undefined,
+      isBirthdayEvent: firstMedia.isBirthdayEvent,
+      isAnniversaryEvent: firstMedia.isAnniversaryEvent,
+      readOnly: true,
+      media: shared.previewUrl
+        ? [
+            {
+              _id: `${id}-shared-preview`,
+              url: shared.previewUrl,
+              publicId: `${id}-shared-preview`,
+              resourceType: shared.previewResourceType || 'image',
+              encrypted: Boolean(shared.previewEncrypted),
+              mediaEnvelope: shared.previewMediaEnvelope || undefined
+            }
+          ]
+        : []
     };
 
     res.json(event);
