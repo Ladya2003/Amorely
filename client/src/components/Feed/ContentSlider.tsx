@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { Box, IconButton, Typography, CircularProgress, Paper, Chip } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -47,6 +47,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
   onEmptyClick 
 }) => {
   const navigate = useNavigate();
+  const swipeStateRef = useRef({ startX: 0, startY: 0, isSwipe: false });
 
   const handlePrev = () => {
     setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : content.length - 1));
@@ -69,6 +70,57 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
       onEventClick(content.eventId);
     } else if (onContentClick) {
       onContentClick(content);
+    }
+  };
+
+  const handleSlideItemClick = (item: ContentItem) => {
+    if (swipeStateRef.current.isSwipe) {
+      swipeStateRef.current.isSwipe = false;
+      return;
+    }
+
+    handleMediaClick(item);
+  };
+
+  const handleTouchStart = (event: React.TouchEvent) => {
+    if (content.length <= 1) return;
+
+    const touch = event.touches[0];
+    swipeStateRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      isSwipe: false
+    };
+  };
+
+  const handleTouchMove = (event: React.TouchEvent) => {
+    if (content.length <= 1) return;
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - swipeStateRef.current.startX;
+    const deltaY = touch.clientY - swipeStateRef.current.startY;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 12) {
+      swipeStateRef.current.isSwipe = true;
+    }
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    if (content.length <= 1) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - swipeStateRef.current.startX;
+    const deltaY = touch.clientY - swipeStateRef.current.startY;
+    const threshold = 50;
+
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
+      swipeStateRef.current.isSwipe = true;
+
+      if (deltaX > 0) {
+        handlePrev();
+      } else {
+        handleNext();
+      }
     }
   };
 
@@ -137,8 +189,12 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
           borderRadius: 2, 
           overflow: 'hidden',
           position: 'relative',
-          bgcolor: 'black'
+          bgcolor: 'black',
+          touchAction: 'pan-y'
         }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Контейнер слайдера с плавной анимацией */}
         <Box
@@ -159,7 +215,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                 cursor: 'pointer',
                 position: 'relative'
               }}
-              onClick={() => handleMediaClick(item)}
+              onClick={() => handleSlideItemClick(item)}
             >
               <Box
                 sx={{
@@ -306,9 +362,10 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
               left: 8,
               top: '50%',
               transform: 'translateY(-50%)',
-              bgcolor: 'rgba(255, 255, 255, 0.7)',
+              bgcolor: 'rgba(0, 0, 0, 0.5)',
+              color: 'white',
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.9)'
+                bgcolor: 'rgba(0, 0, 0, 0.7)'
               }
             }}
             onClick={handlePrev}
@@ -322,9 +379,10 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
               right: 8,
               top: '50%',
               transform: 'translateY(-50%)',
-              bgcolor: 'rgba(255, 255, 255, 0.7)',
+              bgcolor: 'rgba(0, 0, 0, 0.5)',
+              color: 'white',
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.9)'
+                bgcolor: 'rgba(0, 0, 0, 0.7)'
               }
             }}
             onClick={handleNext}
