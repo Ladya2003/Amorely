@@ -30,7 +30,20 @@ export interface Contact {
     timestamp: string;
     isRead: boolean;
     isPending?: boolean;
-    hasMedia?: boolean; // Флаг наличия медиафайлов
+    hasMedia?: boolean;
+    encryptedPayload?: {
+      version: number;
+      algorithm: string;
+      ciphertext: string;
+      iv: string;
+      senderDeviceId: string;
+    };
+    attachments?: Array<{
+      type: 'image' | 'video' | 'encrypted';
+      url: string;
+      publicId?: string;
+      encrypted?: boolean;
+    }>;
   };
 }
 

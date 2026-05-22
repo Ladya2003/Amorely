@@ -121,7 +121,7 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
       const hasMedia = lastMessage?.attachments && lastMessage.attachments.length > 0;
       const displayText = lastMessage
         ? (lastMessage.encryptedPayload
-            ? 'Зашифрованное сообщение'
+            ? ''
             : (hasMedia && !lastMessage.text ? 'Медиафайл' : lastMessage.text || 'Медиафайл'))
         : 'Нет сообщений';
 
@@ -139,7 +139,22 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
           text: displayText,
           timestamp: lastMessage.createdAt,
           isRead: lastMessage.isRead || lastMessage.senderId.toString() === userId,
-          hasMedia: hasMedia
+          hasMedia: hasMedia,
+          encryptedPayload: lastMessage.encryptedPayload
+            ? {
+                version: lastMessage.encryptedPayload.version,
+                algorithm: lastMessage.encryptedPayload.algorithm,
+                ciphertext: lastMessage.encryptedPayload.ciphertext,
+                iv: lastMessage.encryptedPayload.iv,
+                senderDeviceId: lastMessage.encryptedPayload.senderDeviceId
+              }
+            : undefined,
+          attachments: lastMessage.attachments?.map((attachment: any) => ({
+            type: attachment.type,
+            url: attachment.url,
+            publicId: attachment.publicId,
+            encrypted: Boolean(attachment.encrypted)
+          }))
         } : {
           id: '',
           senderId: '',

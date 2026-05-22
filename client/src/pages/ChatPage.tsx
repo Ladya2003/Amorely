@@ -185,17 +185,29 @@ type ChatContact = Contact & {
 };
 
 const getMessagePreviewText = (
-  message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'encryptedPayload'>
+  message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'encryptedPayload' | 'mediaEnvelopes'>
 ) => {
   const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
   const hasEncryptedMedia = Boolean(
     message.attachments?.some((attachment) => attachment.encrypted || attachment.type === 'encrypted')
   );
-  if (message.encryptedPayload && hasEncryptedMedia) return 'Зашифрованное медиа';
-  if (message.encryptedPayload) return 'Зашифрованное сообщение';
-  if (hasMedia && !message.text) return 'Медиафайл';
+  const hasDecryptedMedia = Boolean(message.mediaEnvelopes && message.mediaEnvelopes.length > 0);
+
+  if (message.text?.trim()) {
+    return message.text;
+  }
+
+  if (hasDecryptedMedia || (hasMedia && !message.encryptedPayload)) {
+    return 'Медиафайл';
+  }
+
   if (!message.text && message.forwardFrom) return 'Пересланное сообщение';
   if (!message.text && message.sharedEvent) return `Событие: ${message.sharedEvent.title}`;
+
+  if (message.encryptedPayload && hasEncryptedMedia) return 'Зашифрованное медиа';
+  if (message.encryptedPayload) return 'Зашифрованное сообщение';
+
+  if (hasMedia) return 'Медиафайл';
   return message.text || '';
 };
 
@@ -295,6 +307,52 @@ const ChatPage: React.FC = () => {
       }
     },
     [localDeviceKeys, resolvePeerIdForMessage]
+  );
+
+  const decryptContactsLastMessages = useCallback(
+    async (contactsToDecrypt: ChatContact[]): Promise<ChatContact[]> => {
+      if (!localDeviceKeys || !CURRENT_USER_ID) {
+        return contactsToDecrypt;
+      }
+
+      return Promise.all(
+        contactsToDecrypt.map(async (contact) => {
+          const { lastMessage } = contact;
+          if (!lastMessage.encryptedPayload) {
+            return contact;
+          }
+
+          try {
+            const messageLike: MessageType = {
+              id: lastMessage.id || '',
+              senderId: lastMessage.senderId || '',
+              text: '',
+              timestamp: lastMessage.timestamp,
+              encryptedPayload: lastMessage.encryptedPayload,
+              attachments: lastMessage.attachments
+            };
+            const decrypted = await decryptMessageForDialog(messageLike, contact.id);
+            const hasMedia = Boolean(
+              lastMessage.hasMedia ||
+              decrypted.attachments?.length ||
+              decrypted.mediaEnvelopes?.length
+            );
+
+            return {
+              ...contact,
+              lastMessage: {
+                ...lastMessage,
+                text: getMessagePreviewText(decrypted),
+                hasMedia
+              }
+            };
+          } catch {
+            return contact;
+          }
+        })
+      );
+    },
+    [CURRENT_USER_ID, decryptMessageForDialog, localDeviceKeys]
   );
 
   const sendEncryptedSocketMessage = useCallback(
@@ -796,11 +854,6 @@ const ChatPage: React.FC = () => {
     decryptMessageForDialog
   ]);
 
-  // Загрузка контактов
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-
   // Загрузка сообщений при выборе контакта
   useEffect(() => {
     selectedContactIdRef.current = selectedContactId;
@@ -926,21 +979,25 @@ const ChatPage: React.FC = () => {
     fetchGlobalSearchPage(debouncedSearchQuery, 1, false);
   }, [debouncedSearchQuery, fetchGlobalSearchPage]);
 
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      // Реальный запрос к API (userId берется из токена через authMiddleware)
       const response = await axios.get(`${API_URL}/api/contacts`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setContacts(sortContactsByLastMessageDesc(response.data));
-      setIsLoading(false);
+      const decryptedContacts = await decryptContactsLastMessages(response.data);
+      setContacts(sortContactsByLastMessageDesc(decryptedContacts));
     } catch (error) {
       console.error('Ошибка при загрузке контактов:', error);
+    } finally {
       setIsLoading(false);
     }
-  };
+  }, [decryptContactsLastMessages, sortContactsByLastMessageDesc]);
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   const ensureContactInList = (user: {
     id: string;

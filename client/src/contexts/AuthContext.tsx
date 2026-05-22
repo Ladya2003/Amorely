@@ -1,6 +1,12 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios, { AxiosResponse } from 'axios';
 import { API_URL } from '../config';
+import {
+  hasAnyPushSettingEnabled,
+  isPushSupported,
+  registerServiceWorker,
+  subscribeToPush
+} from '../services/pushNotifications';
 
 interface User {
   _id: string;
@@ -63,6 +69,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const response = await axios.get(`${API_URL}/api/auth/me`);
           setUser(response.data);
           setIsAuthenticated(true);
+
+          if (
+            isPushSupported() &&
+            Notification.permission === 'granted' &&
+            hasAnyPushSettingEnabled(response.data.notificationSettings)
+          ) {
+            void registerServiceWorker().then(() => subscribeToPush(token));
+          }
         } catch (error) {
           console.error('Ошибка аутентификации:', error);
           // Если токен недействителен, удаляем его

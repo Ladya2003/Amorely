@@ -4,6 +4,7 @@ import Message from './models/message';
 import User from './models/user';
 import mongoose from 'mongoose';
 import { getAllowedOrigins } from './utils/corsOrigins';
+import { notifyNewMessage } from './services/pushService';
 
 interface ConnectedUser {
   userId: string;
@@ -142,6 +143,21 @@ export default function setupSocketIO(server: HttpServer) {
         // Если получатель онлайн, отправляем ему сообщение
         if (receiverSocketData) {
           io.to(receiverSocketData.socketId).emit('new_message', formattedMessage);
+        } else {
+          const clientUrl = (process.env.CLIENT_URL || '').replace(/\/$/, '');
+          const appBasePath = (process.env.APP_BASE_PATH || '').replace(/\/$/, '');
+          const chatUrl = clientUrl
+            ? `${clientUrl}${appBasePath}/chat`
+            : `${appBasePath || ''}/chat`;
+
+          void notifyNewMessage({
+            receiverId,
+            senderId,
+            text,
+            encryptedPayload,
+            attachments,
+            chatUrl
+          });
         }
       } catch (error) {
         console.error('Ошибка при отправке сообщения:', error);

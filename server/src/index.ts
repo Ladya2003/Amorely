@@ -19,6 +19,7 @@ import cryptoRoutes from './routes/crypto';
 import calendarRoutes from './routes/calendar';
 import { authMiddleware } from './middleware/auth';
 import relationshipsRoutes from './routes/relationships';
+import pushRoutes from './routes/push';
 import { startFeedScheduler } from './utils/feedScheduler';
 import { getAllowedOrigins } from './utils/corsOrigins';
 
@@ -268,6 +269,7 @@ app.use('/api/news', authMiddleware, newsRoutes);
 
 // Маршруты для настроек
 app.use('/api/settings', authMiddleware, settingsRoutes);
+app.use('/api/push', authMiddleware, pushRoutes);
 
 // Маршруты для аутентификации
 app.use('/api/auth', authRoutes);

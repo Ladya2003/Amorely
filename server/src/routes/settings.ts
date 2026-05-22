@@ -311,4 +311,36 @@ router.post('/link-partner', async (req: any, res: Response) => {
   }
 });
 
+// Обновление настроек уведомлений
+router.put('/notifications', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+    const { settings } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Не авторизован' });
+    }
+
+    if (!settings?.email || !settings?.push) {
+      return res.status(400).json({ error: 'Некорректные настройки уведомлений' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    user.notificationSettings = settings;
+    await user.save();
+
+    res.json({
+      message: 'Настройки уведомлений обновлены',
+      notificationSettings: user.notificationSettings
+    });
+  } catch (error) {
+    console.error('Ошибка при обновлении настроек уведомлений:', error);
+    res.status(500).json({ error: 'Ошибка при обновлении настроек уведомлений' });
+  }
+});
+
 export default router; 

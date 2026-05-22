@@ -25,6 +25,13 @@ import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  ensurePushSubscription,
+  getNotificationPermission,
+  hasAnyPushSettingEnabled,
+  isPushSupported,
+  registerServiceWorker
+} from '../services/pushNotifications';
 
 const SettingsPage: React.FC = () => {
   const { updateUser } = useAuth();
@@ -34,6 +41,9 @@ const SettingsPage: React.FC = () => {
   const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [notificationSettings, setNotificationSettings] = useState<any>(null);
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
+  const [isEnablingPush, setIsEnablingPush] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -42,6 +52,13 @@ const SettingsPage: React.FC = () => {
   
   useEffect(() => {
     fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    setPushPermission(getNotificationPermission());
+    if (isPushSupported()) {
+      void registerServiceWorker();
+    }
   }, []);
   
   const fetchUserData = async () => {
@@ -68,7 +85,7 @@ const SettingsPage: React.FC = () => {
       
       setUser(user);
       setTheme(user.theme || 'system');
-      setNotificationSettings(user.notificationSettings || {
+      const loadedNotificationSettings = user.notificationSettings || {
         email: {
           newContent: true,
           messages: true,
@@ -81,7 +98,17 @@ const SettingsPage: React.FC = () => {
           events: false,
           news: false
         }
-      });
+      };
+      setNotificationSettings(loadedNotificationSettings);
+      setPushPermission(getNotificationPermission());
+      if (hasAnyPushSettingEnabled(loadedNotificationSettings) && Notification.permission === 'granted') {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const result = await ensurePushSubscription(token, true);
+          setPushSubscribed(result.subscribed);
+          setPushPermission(result.permission);
+        }
+      }
       
       // Если у пользователя есть партнер, пробуем получить активные отношения.
       // 404 означает, что активных отношений нет (например, запись удалена вручную).
@@ -274,41 +301,70 @@ const SettingsPage: React.FC = () => {
     }
   };
   
+  const syncPushSubscription = async (settings: any) => {
+    const token = localStorage.getItem('token');
+    if (!token || !isPushSupported()) {
+      return;
+    }
+
+    if (!hasAnyPushSettingEnabled(settings)) {
+      setPushSubscribed(false);
+      return;
+    }
+
+    const result = await ensurePushSubscription(token, true);
+    setPushSubscribed(result.subscribed);
+    setPushPermission(result.permission);
+  };
+
+  const handleEnablePush = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return;
+    }
+
+    try {
+      setIsEnablingPush(true);
+      const result = await ensurePushSubscription(token, true);
+      setPushSubscribed(result.subscribed);
+      setPushPermission(result.permission);
+    } catch (enableError) {
+      console.error('Ошибка включения push-уведомлений:', enableError);
+    } finally {
+      setIsEnablingPush(false);
+    }
+  };
+
   const handleNotificationSettingChange = async (type: 'email' | 'push', setting: string, value: boolean) => {
     try {
-      // Обновляем локальное состояние
-      setNotificationSettings((prev: any) => ({
-        ...prev,
+      const nextSettings = {
+        ...notificationSettings,
         [type]: {
-          ...prev[type],
+          ...notificationSettings[type],
           [setting]: value
         }
-      }));
+      };
+
+      setNotificationSettings(nextSettings);
       
-      // Получаем токен из localStorage
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Не авторизован');
       }
       
-      // Отправляем запрос на обновление настроек уведомлений
       await axios.put(`${API_URL}/api/settings/notifications`, {
-        userId: user?._id,
-        settings: {
-          ...notificationSettings,
-          [type]: {
-            ...notificationSettings[type],
-            [setting]: value
-          }
-        }
+        settings: nextSettings
       }, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-    } catch (error) {
-      console.error('Ошибка при обновлении настроек уведомлений:', error);
-      // Возвращаем предыдущие настройки в случае ошибки
+
+      if (type === 'push' && value) {
+        await syncPushSubscription(nextSettings);
+      }
+    } catch (changeError) {
+      console.error('Ошибка при обновлении настроек уведомлений:', changeError);
       fetchUserData();
     }
   };
@@ -430,6 +486,11 @@ const SettingsPage: React.FC = () => {
             <NotificationSettings 
               settings={notificationSettings}
               onSettingChange={handleNotificationSettingChange}
+              pushSupported={isPushSupported()}
+              pushPermission={pushPermission}
+              pushSubscribed={pushSubscribed}
+              onEnablePush={handleEnablePush}
+              isEnablingPush={isEnablingPush}
             />
           )}
         </Box>

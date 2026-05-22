@@ -21,7 +21,8 @@
     "db:reset:native": "net stop MongoDB && rmdir /s /q C:\\data\\db && net start MongoDB",
     "compass": "start \"\" \"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\MongoDBCompass.exe\"",
     "compass:connect": "start \"\" \"C:\\Program Files\\MongoDB\\Tools\\100\\bin\\MongoDBCompass.exe\" --uri mongodb://localhost:27017",
-    "seed:beta-news": "ts-node scripts/seed-beta-news.ts"
+    "seed:beta-news": "ts-node scripts/seed-beta-news.ts",
+    "generate-vapid-keys": "ts-node scripts/generate-vapid-keys.ts"
   },
   "keywords": [],
   "author": "",
@@ -32,7 +33,11 @@
     "@mui/icons-material": "^7.0.2",
     "@mui/material": "^7.0.2",
     "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^20.10.4",
     "@types/socket.io": "^3.0.1",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^1.41.3",
@@ -46,13 +51,11 @@
     "multer-storage-cloudinary": "^4.0.0",
     "node-cron": "^4.2.1",
     "socket.io": "^4.8.1",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/multer": "^1.4.12",
-    "@types/node": "^20.10.4",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@types/web-push": "^3.6.4",
     "cross-env": "^7.0.3",
     "nodemon": "^3.0.2",
     "ts-node": "^10.9.2"
