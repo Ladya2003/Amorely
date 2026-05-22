@@ -51,7 +51,7 @@ const getSettingsTabIndex = (tab?: string | null) => {
 };
 
 const SettingsPage: React.FC = () => {
-  const { updateUser } = useAuth();
+  const { user: authUser, updateUser } = useAuth();
   const [searchParams] = useSearchParams();
   const [tabValue, setTabValue] = useState(() => getSettingsTabIndex(searchParams.get('tab')));
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -269,17 +269,18 @@ const SettingsPage: React.FC = () => {
   };
   
   const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
+    const previousTheme = theme;
     try {
-      // Получаем токен из localStorage
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Не авторизован');
       }
-      
-      // Обновляем тему в локальном состоянии
+
       setTheme(newTheme);
-      
-      // Отправляем запрос на обновление темы
+      if (authUser) {
+        updateUser({ ...authUser, theme: newTheme });
+      }
+
       await axios.put(`${API_URL}/api/settings/theme`, {
         userId: user?._id,
         theme: newTheme
@@ -290,8 +291,10 @@ const SettingsPage: React.FC = () => {
       });
     } catch (error) {
       console.error('Ошибка при изменении темы:', error);
-      // Возвращаем предыдущую тему в случае ошибки
-      setTheme(theme);
+      setTheme(previousTheme);
+      if (authUser) {
+        updateUser({ ...authUser, theme: previousTheme });
+      }
     }
   };
   

@@ -755,7 +755,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         display: 'flex',
         flexDirection: 'column',
         gap: 0,
-        bgcolor: '#f5f5f5'
+        bgcolor: 'background.default'
       }}
       ref={messagesContainerRef}
       onScroll={handleMessagesScroll}

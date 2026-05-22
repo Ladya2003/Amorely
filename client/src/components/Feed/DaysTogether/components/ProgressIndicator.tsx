@@ -1,7 +1,7 @@
 // Индикатор прогресса до следующей вехи
 
 import React from 'react';
-import { Box, Typography, LinearProgress, Chip } from '@mui/material';
+import { Box, Typography, LinearProgress, Chip, useTheme } from '@mui/material';
 import { Milestone } from '../types';
 import { getDaysWord } from '../utils/helpers';
 import { ColorTheme } from './ColorPicker';
@@ -21,6 +21,25 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   theme,
   hasPhoto = false
 }) => {
+  const muiTheme = useTheme();
+  const isDarkMode = muiTheme.palette.mode === 'dark';
+
+  const getBlockStyles = () => {
+    if (isDarkMode) {
+      return {
+        bgcolor: hasPhoto ? 'rgba(30, 30, 30, 0.78)' : 'rgba(255, 255, 255, 0.06)',
+        backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
+        border: hasPhoto ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.1)',
+      };
+    }
+
+    return {
+      bgcolor: hasPhoto ? 'rgba(255, 255, 255, 0.7)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
+      backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
+      border: hasPhoto ? '1px solid rgba(255, 75, 141, 0.2)' : `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
+    };
+  };
+
   if (!nextMilestone) {
     return (
       <Box
@@ -28,8 +47,16 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
           mt: 2,
           p: 2,
           borderRadius: 2,
-          bgcolor: hasPhoto ? 'rgba(76, 175, 80, 0.15)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
-          border: hasPhoto ? '1px solid rgba(76, 175, 80, 0.3)' : `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`
+          ...getBlockStyles(),
+          ...(isDarkMode
+            ? {
+                bgcolor: 'rgba(46, 125, 50, 0.15)',
+                border: '1px solid rgba(76, 175, 80, 0.25)',
+              }
+            : {
+                bgcolor: hasPhoto ? 'rgba(76, 175, 80, 0.15)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
+                border: hasPhoto ? '1px solid rgba(76, 175, 80, 0.3)' : `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
+              }),
         }}
       >
         <Typography 
@@ -37,7 +64,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
           align="center" 
           fontWeight="bold"
           sx={{
-            color: hasPhoto ? 'success.main' : theme.preview
+            color: hasPhoto || isDarkMode ? 'success.main' : theme.preview
           }}
         >
           🎉 Все вехи достигнуты! Вы - легенды! 💎
@@ -54,16 +81,14 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
         mt: 2,
         p: 2,
         borderRadius: 2,
-        bgcolor: hasPhoto ? 'rgba(255, 255, 255, 0.7)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
-        backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
-        border: hasPhoto ? '1px solid rgba(255, 75, 141, 0.2)' : `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`
+        ...getBlockStyles(),
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography 
           variant="body2" 
           sx={{
-            color: hasPhoto ? 'text.secondary' : theme.preview
+            color: hasPhoto || isDarkMode ? 'text.secondary' : theme.preview
           }}
         >
           До следующей отметки:
@@ -89,7 +114,11 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
           height: 8,
           borderRadius: 4,
           mb: 1,
-          bgcolor: hasPhoto ? 'rgba(255, 75, 141, 0.1)' : `${theme.colors[0].replace(/0\.\d+/, '0.15')}`,
+          bgcolor: isDarkMode
+            ? 'rgba(255, 255, 255, 0.08)'
+            : hasPhoto
+              ? 'rgba(255, 75, 141, 0.1)'
+              : `${theme.colors[0].replace(/0\.\d+/, '0.15')}`,
           '& .MuiLinearProgress-bar': {
             borderRadius: 4,
             background: hasPhoto 
@@ -103,7 +132,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
         <Typography 
           variant="caption" 
           sx={{
-            color: hasPhoto ? 'text.secondary' : `${theme.preview}AA`
+            color: hasPhoto || isDarkMode ? 'text.secondary' : `${theme.preview}AA`
           }}
         >
           {Math.round(progress)}% пройдено

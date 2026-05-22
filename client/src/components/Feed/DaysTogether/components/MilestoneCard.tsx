@@ -7,7 +7,8 @@ import {
   Chip,
   Collapse,
   IconButton,
-  Tooltip
+  Tooltip,
+  useTheme,
 } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -32,6 +33,25 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
   theme,
   hasPhoto = false
 }) => {
+  const muiTheme = useTheme();
+  const isDarkMode = muiTheme.palette.mode === 'dark';
+
+  const getBlockStyles = () => {
+    if (isDarkMode) {
+      return {
+        bgcolor: hasPhoto ? 'rgba(30, 30, 30, 0.78)' : 'rgba(255, 255, 255, 0.06)',
+        backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+      };
+    }
+
+    return {
+      bgcolor: hasPhoto ? 'rgba(255, 255, 255, 0.7)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
+      backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
+      border: `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
+    };
+  };
+
   if (achievements.length === 0) return null;
 
   return (
@@ -40,9 +60,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
         mt: 2,
         p: 2,
         borderRadius: 2,
-        bgcolor: hasPhoto ? 'rgba(255, 255, 255, 0.7)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
-        backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
-        border: `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`
+        ...getBlockStyles(),
       }}
     >
       {/* Заголовок с кнопкой разворачивания */}
@@ -57,7 +75,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <EmojiEventsIcon sx={{ color: theme.preview }} />
-          <Typography variant="subtitle1" fontWeight="bold" sx={{ color: hasPhoto ? 'text.primary' : theme.preview }}>
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ color: hasPhoto || isDarkMode ? 'text.primary' : theme.preview }}>
             Достижения
           </Typography>
           <Chip
@@ -72,7 +90,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             }}
           />
         </Box>
-        <IconButton size="small" sx={{ color: hasPhoto ? 'text.primary' : theme.preview }}>
+        <IconButton size="small" sx={{ color: hasPhoto || isDarkMode ? 'text.primary' : theme.preview }}>
           {showAchievements ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </IconButton>
       </Box>
@@ -93,15 +111,21 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
                 sx={{
                   p: 1.5,
                   borderRadius: 1,
-                  bgcolor: `${theme.colors[1].replace(/0\.\d+/, '0.15')}`,
-                  border: `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
+                  bgcolor: isDarkMode
+                    ? 'rgba(255, 255, 255, 0.06)'
+                    : `${theme.colors[1].replace(/0\.\d+/, '0.15')}`,
+                  border: isDarkMode
+                    ? '1px solid rgba(255, 255, 255, 0.1)'
+                    : `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
                   textAlign: 'center',
                   transition: 'all 0.2s',
                   '&:hover': {
                     transform: 'scale(1.05)',
                     boxShadow: 2,
-                    bgcolor: `${theme.colors[1].replace(/0\.\d+/, '0.25')}`
-                  }
+                    bgcolor: isDarkMode
+                      ? 'rgba(255, 255, 255, 0.1)'
+                      : `${theme.colors[1].replace(/0\.\d+/, '0.25')}`,
+                  },
                 }}
               >
                 <Typography variant="h4" sx={{ mb: 0.5 }}>
@@ -114,7 +138,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
                     display: 'block',
                     fontSize: '0.7rem',
                     lineHeight: 1.2,
-                    color: hasPhoto ? 'text.primary' : theme.preview
+                    color: hasPhoto || isDarkMode ? 'text.primary' : theme.preview
                   }}
                 >
                   {achievement.title}
@@ -131,12 +155,16 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
               mt: 2,
               p: 1.5,
               borderRadius: 1,
-              bgcolor: `${theme.colors[0].replace(/0\.\d+/, '0.1')}`,
-              border: `1px dashed ${theme.colors[0].replace(/0\.\d+/, '0.5')}`,
-              textAlign: 'center'
+              bgcolor: isDarkMode
+                ? 'rgba(255, 255, 255, 0.06)'
+                : `${theme.colors[0].replace(/0\.\d+/, '0.1')}`,
+              border: isDarkMode
+                ? '1px dashed rgba(255, 255, 255, 0.16)'
+                : `1px dashed ${theme.colors[0].replace(/0\.\d+/, '0.5')}`,
+              textAlign: 'center',
             }}
           >
-            <Typography variant="body2" sx={{ color: hasPhoto ? 'text.secondary' : `${theme.preview}CC` }} gutterBottom>
+            <Typography variant="body2" sx={{ color: hasPhoto || isDarkMode ? 'text.secondary' : `${theme.preview}CC` }} gutterBottom>
               ⏳ До следующей годовщины:
             </Typography>
             <Typography variant="h6" fontWeight="bold" sx={{ color: theme.preview }}>

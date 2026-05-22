@@ -69,13 +69,18 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
           width: 40,
           height: 40,
           overflow: 'visible',
-          bgcolor: isOutsideMonth
-            ? 'transparent'
-            : content
-              ? content.mediaUrl === 'placeholder' ? 'primary.light' : 'transparent'
-              : isToday
-                ? 'primary.main'
-                : 'grey.200',
+          bgcolor: (theme) => {
+            if (isOutsideMonth) {
+              return 'transparent';
+            }
+            if (content) {
+              return content.mediaUrl === 'placeholder' ? theme.palette.primary.light : 'transparent';
+            }
+            if (isToday) {
+              return theme.palette.primary.main;
+            }
+            return theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[200];
+          },
           borderRadius: '50%'
         }}
       >

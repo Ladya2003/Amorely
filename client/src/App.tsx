@@ -1,8 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
+import AppThemeProvider from './contexts/AppThemeProvider';
 import { NavigationProvider } from './contexts/NavigationContext';
 import { CryptoProvider } from './contexts/CryptoContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
@@ -15,80 +14,6 @@ import SettingsPage from './pages/SettingsPage';
 import ChatRulesPage from './pages/ChatRulesPage';
 import AuthPage from './pages/AuthPage';
 import CryptoUnlockPage from './pages/CryptoUnlockPage';
-
-const bodyFontFamily = '"Roboto", "Arial", sans-serif';
-const headingFontFamily = '"Oswald", sans-serif';
-
-// Создаем тему с основным цветом приложения
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#ff4b8d',
-    },
-    secondary: {
-      main: '#8c52ff',
-    },
-  },
-  typography: {
-    fontFamily: bodyFontFamily,
-    h1: { fontFamily: headingFontFamily },
-    h2: { fontFamily: headingFontFamily },
-    h3: { fontFamily: headingFontFamily },
-    h4: { fontFamily: headingFontFamily },
-    h5: { fontFamily: headingFontFamily },
-    h6: { fontFamily: headingFontFamily },
-  },
-  components: {
-    MuiOutlinedInput: {
-      styleOverrides: {
-        notchedOutline: {
-          legend: {
-            transition: 'none',
-          },
-        },
-        root: {
-          '@supports (-webkit-touch-callout: none)': {
-            '& .MuiOutlinedInput-notchedOutline legend': {
-              visibility: 'visible',
-            },
-          },
-        },
-      },
-    },
-    MuiInputLabel: {
-      styleOverrides: {
-        outlined: ({ theme }) => ({
-          '@supports (-webkit-touch-callout: none)': {
-            '&.MuiInputLabel-shrink': {
-              px: '4px',
-              mx: '-4px',
-              backgroundColor: theme.palette.background.paper,
-              zIndex: 1,
-            },
-          },
-          // Safari/iOS: после blur legend может не схлопнуться — закрываем вырез вручную
-          '&:not(.MuiInputLabel-shrink) + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend': {
-            maxWidth: '0.01px !important',
-            padding: 0,
-          },
-        }),
-      },
-    },
-    MuiCssBaseline: {
-      styleOverrides: {
-        body: {
-          fontFamily: bodyFontFamily,
-        },
-        h1: { fontFamily: headingFontFamily },
-        h2: { fontFamily: headingFontFamily },
-        h3: { fontFamily: headingFontFamily },
-        h4: { fontFamily: headingFontFamily },
-        h5: { fontFamily: headingFontFamily },
-        h6: { fontFamily: headingFontFamily },
-      },
-    },
-  },
-});
 
 const getRouterBasename = (): string | undefined => {
   const publicUrl = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
@@ -108,9 +33,8 @@ function App() {
   const routerBasename = getRouterBasename();
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
+    <AuthProvider>
+      <AppThemeProvider>
         <CryptoProvider>
           <NavigationProvider>
             <Router basename={routerBasename}>
@@ -151,8 +75,8 @@ function App() {
             </Router>
           </NavigationProvider>
         </CryptoProvider>
-      </AuthProvider>
-    </ThemeProvider>
+      </AppThemeProvider>
+    </AuthProvider>
   );
 }
 

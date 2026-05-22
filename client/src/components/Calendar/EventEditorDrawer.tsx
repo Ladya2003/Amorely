@@ -70,6 +70,22 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user } = useAuth();
+
+  const eventFlagBoxSx = (filledBackground = false) => ({
+    mb: 3,
+    p: 2,
+    borderRadius: 1,
+    border: '1px solid',
+    ...(theme.palette.mode === 'dark'
+      ? {
+          borderColor: 'rgba(144, 202, 249, 0.25)',
+          bgcolor: 'rgba(144, 202, 249, 0.08)',
+        }
+      : {
+          borderColor: theme.palette.info.main,
+          bgcolor: filledBackground ? theme.palette.info.light : 'transparent',
+        }),
+  });
   
   const { draft, updateDraft, clearDraft, hasDraft, isSaving: isAutosaving } = useEventDraft();
   
@@ -376,7 +392,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
           {/* Чекбокс дня рождения */}
           {isDateNearBirthday(selectedDate) && (
-            <Box sx={{ mb: 3, p: 2, borderRadius: 1, border: '1px solid', borderColor: 'info.main' }}>
+            <Box sx={eventFlagBoxSx()}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -401,7 +417,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
           {/* Чекбокс годовщины */}
           {isDateNearAnniversary(selectedDate) && (
-            <Box sx={{ mb: 3, p: 2, bgcolor: 'info.light', borderRadius: 1, border: '1px solid', borderColor: 'info.main' }}>
+            <Box sx={eventFlagBoxSx(true)}>
               <FormControlLabel
                 control={
                   <Checkbox
