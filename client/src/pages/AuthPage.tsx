@@ -6,13 +6,24 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [loginPrefill, setLoginPrefill] = useState<{ email: string; password: string } | null>(null);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const theme = useTheme();
   
   const handleSwitchToRegister = () => {
+    setLoginPrefill(null);
+    setRegistrationSuccess(false);
     setIsLogin(false);
   };
   
-  const handleSwitchToLogin = () => {
+  const handleSwitchToLogin = (credentials?: { email: string; password: string }) => {
+    if (credentials) {
+      setLoginPrefill(credentials);
+      setRegistrationSuccess(true);
+    } else {
+      setLoginPrefill(null);
+      setRegistrationSuccess(false);
+    }
     setIsLogin(true);
   };
   
@@ -27,7 +38,7 @@ const AuthPage: React.FC = () => {
       >
         <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
           <FavoriteIcon sx={{ color: 'primary.main', fontSize: 40, mr: 1 }} />
-          <Typography variant="h4" component="div" fontWeight="bold">
+          <Typography variant="h4" component="div" fontWeight={500}>
             Amorely
           </Typography>
         </Box>
@@ -42,7 +53,12 @@ const AuthPage: React.FC = () => {
           }}
         >
           {isLogin ? (
-            <LoginForm onSwitchToRegister={handleSwitchToRegister} />
+            <LoginForm
+              onSwitchToRegister={handleSwitchToRegister}
+              initialEmail={loginPrefill?.email}
+              initialPassword={loginPrefill?.password}
+              showRegistrationSuccess={registrationSuccess}
+            />
           ) : (
             <RegisterForm onSwitchToLogin={handleSwitchToLogin} />
           )}

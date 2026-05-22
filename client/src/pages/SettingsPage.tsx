@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Container, 
   Box, 
@@ -9,13 +10,15 @@ import {
   Alert,
   useMediaQuery,
   useTheme,
-  Paper
+  Paper,
+  Button,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import PeopleIcon from '@mui/icons-material/People';
 import PaletteIcon from '@mui/icons-material/Palette';
 import SecurityIcon from '@mui/icons-material/Security';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
 import { API_URL } from '../config';
 import ProfileForm, { UserProfile } from '../components/Settings/ProfileForm';
@@ -24,18 +27,33 @@ import ThemeSettings from '../components/Settings/ThemeSettings';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
+import { settingsActionButtonSx } from '../components/Settings/settingsButtonSx';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import {
+  checkPushSubscriptionStatus,
   ensurePushSubscription,
   getNotificationPermission,
   hasAnyPushSettingEnabled,
   isPushSupported,
-  registerServiceWorker
+  registerServiceWorker,
+  unsubscribeFromPush
 } from '../services/pushNotifications';
+
+const SETTINGS_TAB_KEYS = ['profile', 'partner', 'theme', 'notifications', 'security'] as const;
+
+const getSettingsTabIndex = (tab?: string | null) => {
+  if (!tab) {
+    return 0;
+  }
+  const index = SETTINGS_TAB_KEYS.indexOf(tab as typeof SETTINGS_TAB_KEYS[number]);
+  return index >= 0 ? index : 0;
+};
 
 const SettingsPage: React.FC = () => {
   const { updateUser } = useAuth();
-  const [tabValue, setTabValue] = useState(0);
+  const [searchParams] = useSearchParams();
+  const [tabValue, setTabValue] = useState(() => getSettingsTabIndex(searchParams.get('tab')));
   const [user, setUser] = useState<UserProfile | null>(null);
   const [partner, setPartner] = useState<Partner | null>(null);
   const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
@@ -49,10 +67,18 @@ const SettingsPage: React.FC = () => {
   
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
+  const { showBottomNav } = useNavigation();
+  const showFixedActionsBar = isSmallMobile && showBottomNav;
+  const actionsBarBottom = showFixedActionsBar ? 72 : 0;
   
   useEffect(() => {
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    setTabValue(getSettingsTabIndex(searchParams.get('tab')));
+  }, [searchParams]);
 
   useEffect(() => {
     setPushPermission(getNotificationPermission());
@@ -101,13 +127,10 @@ const SettingsPage: React.FC = () => {
       };
       setNotificationSettings(loadedNotificationSettings);
       setPushPermission(getNotificationPermission());
-      if (hasAnyPushSettingEnabled(loadedNotificationSettings) && Notification.permission === 'granted') {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const result = await ensurePushSubscription(token, true);
-          setPushSubscribed(result.subscribed);
-          setPushPermission(result.permission);
-        }
+      if (isPushSupported()) {
+        const pushStatus = await checkPushSubscriptionStatus();
+        setPushSubscribed(pushStatus.subscribed);
+        setPushPermission(pushStatus.permission);
       }
       
       // Если у пользователя есть партнер, пробуем получить активные отношения.
@@ -317,7 +340,7 @@ const SettingsPage: React.FC = () => {
     setPushPermission(result.permission);
   };
 
-  const handleEnablePush = async () => {
+  const handlePushMasterToggle = async (enabled: boolean) => {
     const token = localStorage.getItem('token');
     if (!token) {
       return;
@@ -325,11 +348,39 @@ const SettingsPage: React.FC = () => {
 
     try {
       setIsEnablingPush(true);
-      const result = await ensurePushSubscription(token, true);
-      setPushSubscribed(result.subscribed);
-      setPushPermission(result.permission);
-    } catch (enableError) {
-      console.error('Ошибка включения push-уведомлений:', enableError);
+
+      if (enabled) {
+        const result = await ensurePushSubscription(token, true);
+        setPushSubscribed(result.subscribed);
+        setPushPermission(result.permission);
+        return;
+      }
+
+      await unsubscribeFromPush(token);
+      setPushSubscribed(false);
+
+      const nextSettings = {
+        ...notificationSettings,
+        push: {
+          newContent: false,
+          messages: false,
+          events: false,
+          news: false
+        }
+      };
+
+      setNotificationSettings(nextSettings);
+
+      await axios.put(`${API_URL}/api/settings/notifications`, {
+        settings: nextSettings
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    } catch (toggleError) {
+      console.error('Ошибка переключения push-уведомлений:', toggleError);
+      fetchUserData();
     } finally {
       setIsEnablingPush(false);
     }
@@ -388,12 +439,32 @@ const SettingsPage: React.FC = () => {
   }
   
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
+    <Container
+      maxWidth="lg"
+      sx={{
+        py: 4,
+        pb: showFixedActionsBar ? 10 : 4,
+        display: 'flex',
+        flexDirection: 'column',
+        ...(!showFixedActionsBar && {
+          height: 'calc(100vh - 96px)',
+          boxSizing: 'border-box',
+        }),
+      }}
+    >
+      <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.7rem', flexShrink: 0 }}>
         Настройки
       </Typography>
       
-      <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', mt: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flex: showFixedActionsBar ? undefined : 1,
+          flexDirection: isMobile ? 'column' : 'row',
+          mt: 3,
+          minHeight: showFixedActionsBar ? undefined : 0,
+        }}
+      >
         {/* Вкладки */}
         <Box sx={{ 
           width: isMobile ? '100%' : 240, 
@@ -412,9 +483,12 @@ const SettingsPage: React.FC = () => {
                 borderColor: 'divider',
                 minHeight: isMobile ? 'auto' : 300,
                 '.MuiTab-root': {
-                  alignItems: 'flex-start',
-                  textAlign: 'left',
-                  py: 2
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  py: 1,
+                  px: 1.5,
+                  minHeight: 40,
                 }
               }}
             >
@@ -434,13 +508,13 @@ const SettingsPage: React.FC = () => {
                 iconPosition="start"
               />
               <Tab 
-                icon={<SecurityIcon />} 
-                label="Безопасность" 
+                icon={<NotificationsIcon />} 
+                label="Уведомления" 
                 iconPosition="start"
               />
               <Tab 
-                icon={<NotificationsIcon />} 
-                label="Уведомления" 
+                icon={<SecurityIcon />} 
+                label="Безопасность" 
                 iconPosition="start"
               />
             </Tabs>
@@ -448,7 +522,8 @@ const SettingsPage: React.FC = () => {
         </Box>
         
         {/* Содержимое вкладок */}
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: showFixedActionsBar ? undefined : 0 }}>
+          <Box sx={{ flex: showFixedActionsBar ? undefined : 1, minHeight: showFixedActionsBar ? undefined : 0, overflow: showFixedActionsBar ? undefined : 'auto' }}>
           {tabValue === 0 && user && (
             <ProfileForm 
               user={user} 
@@ -475,29 +550,76 @@ const SettingsPage: React.FC = () => {
             />
           )}
           
-          {tabValue === 3 && (
-            <SecuritySettings 
-              onChangePassword={handleChangePassword}
-              isLoading={isLoading}
-            />
-          )}
-          
-          {tabValue === 4 && notificationSettings && (
+          {tabValue === 3 && notificationSettings && (
             <NotificationSettings 
               settings={notificationSettings}
               onSettingChange={handleNotificationSettingChange}
               pushSupported={isPushSupported()}
               pushPermission={pushPermission}
               pushSubscribed={pushSubscribed}
-              onEnablePush={handleEnablePush}
+              onPushMasterToggle={handlePushMasterToggle}
               isEnablingPush={isEnablingPush}
             />
           )}
+          
+          {tabValue === 4 && (
+            <SecuritySettings 
+              onChangePassword={handleChangePassword}
+              isLoading={isLoading}
+            />
+          )}
+          </Box>
+
+          <Box
+            sx={{
+              ...(showFixedActionsBar
+                ? {
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 900,
+                    bgcolor: 'background.default',
+                  }
+                : {
+                    flexShrink: 0,
+                    bgcolor: 'background.default',
+                    borderTop: 1,
+                    borderColor: 'divider',
+                  }),
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 2,
+                py: 1.5,
+                px: showFixedActionsBar ? 2 : 0,
+                borderTop: showFixedActionsBar ? 1 : 0,
+                borderColor: 'divider',
+              }}
+            >
+              <LogoutButton />
+              {tabValue === 0 && (
+                <Button
+                  type="submit"
+                  form="profile-settings-form"
+                  variant="contained"
+                  color="primary"
+                  startIcon={<SaveIcon />}
+                  disabled={isLoading}
+                  sx={settingsActionButtonSx}
+                >
+                  {isLoading ? 'Сохранение...' : 'Сохранить'}
+                </Button>
+              )}
+            </Box>
+            {showFixedActionsBar && <Box sx={{ height: actionsBarBottom, bgcolor: 'background.default' }} />}
+          </Box>
         </Box>
       </Box>
-      
-      {/* Добавляем кнопку выхода из аккаунта */}
-      <LogoutButton />
     </Container>
   );
 };

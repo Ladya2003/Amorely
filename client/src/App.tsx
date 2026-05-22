@@ -39,6 +39,41 @@ const theme = createTheme({
     h6: { fontFamily: headingFontFamily },
   },
   components: {
+    MuiOutlinedInput: {
+      styleOverrides: {
+        notchedOutline: {
+          legend: {
+            transition: 'none',
+          },
+        },
+        root: {
+          '@supports (-webkit-touch-callout: none)': {
+            '& .MuiOutlinedInput-notchedOutline legend': {
+              visibility: 'visible',
+            },
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        outlined: ({ theme }) => ({
+          '@supports (-webkit-touch-callout: none)': {
+            '&.MuiInputLabel-shrink': {
+              px: '4px',
+              mx: '-4px',
+              backgroundColor: theme.palette.background.paper,
+              zIndex: 1,
+            },
+          },
+          // Safari/iOS: после blur legend может не схлопнуться — закрываем вырез вручную
+          '&:not(.MuiInputLabel-shrink) + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend': {
+            maxWidth: '0.01px !important',
+            padding: 0,
+          },
+        }),
+      },
+    },
     MuiCssBaseline: {
       styleOverrides: {
         body: {

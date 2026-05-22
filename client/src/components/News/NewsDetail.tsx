@@ -74,7 +74,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
       fullWidth
       scroll="paper"
     >
-      <DialogTitle sx={{ pr: 6 }}>
+      <DialogTitle sx={{ pr: 6, fontWeight: 400 }}>
         {news.title}
         <IconButton
           aria-label="close"

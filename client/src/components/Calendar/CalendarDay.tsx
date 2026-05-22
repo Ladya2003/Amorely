@@ -22,17 +22,33 @@ interface CalendarDayProps {
     isAnniversaryEvent?: boolean;
   } | null;
   onContentClick?: (eventId: string) => void;
+  onAddContent?: (date: Date) => void;
 }
 
-const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, isOutsideMonth = false, onContentClick }) => {
+const CalendarDay: React.FC<CalendarDayProps> = ({
+  date,
+  content,
+  isOutsideMonth = false,
+  onContentClick,
+  onAddContent,
+}) => {
   const day = format(date, 'd');
   const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
   const isBirthdayEvent = content && content.isBirthdayEvent;
   const isAnniversaryEvent = content && content.isAnniversaryEvent;
 
   const handleClick = () => {
+    if (isOutsideMonth) {
+      return;
+    }
+
     if (content && content._id && onContentClick) {
       onContentClick(content._id);
+      return;
+    }
+
+    if (!content && onAddContent) {
+      onAddContent(date);
     }
   };
 
@@ -42,10 +58,10 @@ const CalendarDay: React.FC<CalendarDayProps> = ({ date, content, isOutsideMonth
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        cursor: content && !isOutsideMonth ? 'pointer' : 'default',
+        cursor: !isOutsideMonth ? 'pointer' : 'default',
         opacity: isOutsideMonth ? 0.35 : 1,
       }}
-      onClick={isOutsideMonth ? undefined : handleClick}
+      onClick={handleClick}
     >
       <Box
         sx={{

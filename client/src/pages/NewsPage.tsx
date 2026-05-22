@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import UserProfileChip from '../components/UI/UserProfileChip';
 
 // Интерфейс для новости
 interface NewsItem {
@@ -98,9 +99,18 @@ const NewsPage: React.FC = () => {
   
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Новости и обновления
-      </Typography>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 2,
+        mb: 3,
+      }}>
+        <Typography variant="h4" component="h1" sx={{ fontSize: '1.7rem', fontWeight: 400 }}>
+          Новости и обновления
+        </Typography>
+        <UserProfileChip maxNameWidth={40} />
+      </Box>
       
       <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         <Chip 
@@ -157,7 +167,7 @@ const NewsPage: React.FC = () => {
                 )}
                 <CardContent sx={{ flex: '1 0 auto' }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                    <Typography variant="h6" component="h2">
+                    <Typography variant="h6" component="h2" fontWeight={400}>
                       {item.title}
                     </Typography>
                     <Chip 

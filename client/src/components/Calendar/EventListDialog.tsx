@@ -7,26 +7,29 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  ListItemAvatar,
-  Avatar,
   IconButton,
   Box,
   Typography
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import ImageIcon from '@mui/icons-material/Image';
-import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import DecryptedMedia from '../common/DecryptedMedia';
+import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
 interface EventItem {
+  _id?: string;
   eventId: string;
   title?: string;
   description?: string;
   media?: Array<{
+    _id: string;
     url: string;
     resourceType: 'image' | 'video';
+    encrypted?: boolean;
+    mediaEnvelope?: ContentMediaEnvelope;
   }>;
 }
 
@@ -54,7 +57,7 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6">
+          <Typography variant="h6" sx={{ fontWeight: 500 }}>
             События {date && format(date, 'd MMMM yyyy', { locale: ru })}
           </Typography>
           <IconButton onClick={onClose} size="small">
@@ -62,40 +65,72 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
           </IconButton>
         </Box>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ p: 0 }}>
         <List>
           {events.map((event) => {
-            const hasMedia = event.media && event.media.length > 0 && event.media[0].url;
+            const eventId = event.eventId || event._id || '';
+            const hasMedia =
+              event.media &&
+              event.media.length > 0 &&
+              event.media[0].url &&
+              event.media[0].url.trim().length > 0;
             const firstMedia = hasMedia ? event.media![0] : null;
 
             return (
-              <ListItem key={event.eventId} disablePadding>
-                <ListItemButton onClick={() => handleEventClick(event.eventId)} sx={{ gap: 1 }}>
-                  <ListItemAvatar>
-                    {firstMedia ? (
-                      <Avatar
-                        src={firstMedia.resourceType === 'image' ? firstMedia.url : undefined}
-                        sx={{ 
-                          width: 56, 
-                          height: 56,
-                          borderRadius: 2
-                        }}
-                      >
-                        {firstMedia.resourceType === 'video' && <VideoLibraryIcon />}
-                      </Avatar>
-                    ) : (
-                      <Avatar
-                        sx={{ 
-                          width: 56, 
-                          height: 56,
-                          borderRadius: 2,
-                          bgcolor: 'primary.light'
-                        }}
-                      >
-                        <DescriptionIcon />
-                      </Avatar>
-                    )}
-                  </ListItemAvatar>
+              <ListItem key={eventId} disablePadding>
+                <ListItemButton onClick={() => handleEventClick(eventId)} sx={{ gap: 1.5, py: 1 }}>
+                  {firstMedia ? (
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        position: 'relative',
+                        bgcolor: 'grey.200',
+                      }}
+                    >
+                      <DecryptedMedia
+                        cacheKey={`event-list-${eventId}-${firstMedia._id}`}
+                        url={firstMedia.url}
+                        resourceType={firstMedia.resourceType}
+                        encrypted={firstMedia.encrypted}
+                        mediaEnvelope={firstMedia.mediaEnvelope}
+                        imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        loadingMinHeight={56}
+                      />
+                      {firstMedia.resourceType === 'video' && (
+                        <PlayCircleIcon
+                          sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            color: 'white',
+                            fontSize: 28,
+                            pointerEvents: 'none',
+                          }}
+                        />
+                      )}
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 2,
+                        flexShrink: 0,
+                        bgcolor: 'primary.light',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <DescriptionIcon sx={{ color: 'white' }} />
+                    </Box>
+                  )}
                   <ListItemText
                     primary={event.title || 'Без названия'}
                     secondary={
@@ -106,15 +141,14 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
                           </Typography>
                         )}
                         <Typography variant="caption" color="text.secondary">
-                          {hasMedia 
+                          {hasMedia
                             ? `${event.media!.length} ${event.media!.length === 1 ? 'файл' : 'файла'}`
-                            : 'Текстовое событие'
-                          }
+                            : 'Текстовое событие'}
                         </Typography>
                       </Box>
                     }
                     primaryTypographyProps={{
-                      fontWeight: 500
+                      fontWeight: 500,
                     }}
                   />
                 </ListItemButton>
@@ -128,4 +162,3 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
 };
 
 export default EventListDialog;
-

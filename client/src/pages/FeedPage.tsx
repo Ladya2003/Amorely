@@ -57,8 +57,6 @@ const FeedPage: React.FC = () => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
 
-  const isPartnerAdded = !!daysCount && !!relationshipStartDate;
-  
   // Загрузка данных при монтировании компонента
   useEffect(() => {
     fetchUserData();
@@ -343,20 +341,15 @@ const FeedPage: React.FC = () => {
   
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
-      <FeedHeader 
-        daysCount={daysCount} 
-        tabValue={tabValue} 
-        onTabChange={handleTabChange} 
-      />
+      <FeedHeader />
       
       <ContentSlider 
         content={partnerContent} 
         isLoading={isLoading}
         onContentClick={handleContentClick}
         onEventClick={handleEventClick}
-        navigateTo={!isPartnerAdded ? '/settings' : undefined}
-        placeholder={!isPartnerAdded ? 'Нет доступного контента\n\n📅 Добавьте события в Календаре с фото и видео' : 'Нет доступного контента\n\n📅 Добавьте события в Календаре с фото и видео'}
-        onEmptyClick={() => navigate('/calendar')}
+        navigateTo="/calendar"
+        placeholder={'Еще нету доступного контента\n\n📅 Добавьте ваши события в\nКалендаре с фото и видео'}
         currentIndex={currentIndex}
         setCurrentIndex={setCurrentIndex}
       />

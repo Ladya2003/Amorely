@@ -96,6 +96,25 @@ export const unsubscribeFromPush = async (token: string) => {
   }
 };
 
+export const checkPushSubscriptionStatus = async (): Promise<{
+  subscribed: boolean;
+  permission: NotificationPermission | 'unsupported';
+}> => {
+  const permission = getNotificationPermission();
+  if (!isPushSupported() || permission !== 'granted') {
+    return { subscribed: false, permission };
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration(getServiceWorkerPath());
+    const subscription = await registration?.pushManager.getSubscription();
+    return { subscribed: !!subscription, permission };
+  } catch (error) {
+    console.error('Не удалось проверить push-подписку:', error);
+    return { subscribed: false, permission };
+  }
+};
+
 export const ensurePushSubscription = async (token: string, hasPushEnabled: boolean) => {
   if (!isPushSupported() || !hasPushEnabled) {
     return { subscribed: false, permission: getNotificationPermission() };

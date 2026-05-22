@@ -14,14 +14,22 @@ import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
+  initialEmail?: string;
+  initialPassword?: string;
+  showRegistrationSuccess?: boolean;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
+const LoginForm: React.FC<LoginFormProps> = ({
+  onSwitchToRegister,
+  initialEmail = '',
+  initialPassword = '',
+  showRegistrationSuccess = false,
+}) => {
   const { login, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
   
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState(initialPassword);
   const [showPassword, setShowPassword] = useState(false);
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +57,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         Вход в аккаунт
       </Typography>
       
+      {showRegistrationSuccess && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          Регистрация прошла успешно! Войдите в аккаунт.
+        </Alert>
+      )}
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={clearError}>
           {error}

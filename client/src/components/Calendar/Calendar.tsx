@@ -19,6 +19,7 @@ import { ru } from 'date-fns/locale';
 import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
 import PlansEditor from './PlansEditor';
+import UserProfileChip from '../UI/UserProfileChip';
 
 interface MediaFile {
   _id: string;
@@ -148,6 +149,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
             <Tab icon={<CalendarMonthIcon />} label="Календарь" />
             <Tab icon={<ListAltIcon />} label="Планы" />
           </Tabs>
+          <UserProfileChip maxNameWidth={80} />
         </Box>
 
         {tabValue === 0 && (
@@ -226,6 +228,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
                         content={day.content.length > 0 ? day.content[0] : null}
                         isOutsideMonth={day.isOutsideMonth}
                         onContentClick={onContentClick}
+                        onAddContent={onAddContent}
                       />
                     </Grid>
                   ))}

@@ -107,7 +107,7 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
               {formatDate(news.publishDate)}
             </Typography>
           </Box>
-          <Typography variant="h6" component="h2" gutterBottom>
+          <Typography variant="h6" component="h2" fontWeight={400} gutterBottom>
             {news.title}
           </Typography>
           <Typography variant="body2" color="text.secondary">

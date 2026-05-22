@@ -10,14 +10,12 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
-import CustomSnackbar from '../UI/CustomSnackbar';
-
 interface RegisterFormProps {
-  onSwitchToLogin: () => void;
+  onSwitchToLogin: (credentials?: { email: string; password: string }) => void;
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
-  const { register, isLoading, error, clearError } = useAuth();
+  const { register, logout, isLoading, error, clearError } = useAuth();
   
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
@@ -25,7 +23,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,13 +50,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     try {
       const response = await register(email, username, password);
       if (response?.status === 201) {
-        // Показываем сообщение об успешной регистрации
-        setSuccessMessage('Регистрация прошла успешно!');
-        
-          // Перенаправляем на страницу авторизации через 2 секунды
-          setTimeout(() => {
-          onSwitchToLogin();
-        }, 2000);
+        logout();
+        onSwitchToLogin({ email, password });
       }
     } catch (error) {
       // Ошибка уже обрабатывается в контексте
@@ -68,10 +60,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
-  };
-  
-  const handleCloseSuccessMessage = () => {
-    setSuccessMessage(null);
   };
   
   return (
@@ -92,14 +80,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
           {validationError || error}
         </Alert>
       )}
-      
-      {/* Используем новый компонент CustomSnackbar */}
-      <CustomSnackbar
-        open={!!successMessage}
-        message={successMessage}
-        severity="success"
-        onClose={handleCloseSuccessMessage}
-      />
       
       <TextField
         margin="normal"
@@ -197,7 +177,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         <Typography variant="body2">
           Уже есть аккаунт?{' '}
           <Button 
-            onClick={onSwitchToLogin} 
+            onClick={() => onSwitchToLogin()} 
             sx={{ p: 0, minWidth: 'auto' }}
             disabled={isLoading}
           >

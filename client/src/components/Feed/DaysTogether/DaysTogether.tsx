@@ -68,13 +68,13 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             boxShadow: 6
           }
         }}
-        onClick={() => navigate('/settings')}
+        onClick={() => navigate('/settings?tab=partner')}
       >
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
           Добавьте партнера в настройках
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Чтобы видеть количество дней вместе, добавьте партнера и дату начала отношений
+          Чтобы видеть количество дней вместе, добавьте вашего партнера и дату начала отношений
         </Typography>
       </Paper>
     );

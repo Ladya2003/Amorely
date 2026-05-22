@@ -2,17 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Box, 
   TextField, 
-  Button, 
   Avatar, 
   Typography, 
   IconButton, 
   Paper,
   Divider,
   Alert,
-  Grid
+  Grid,
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import SaveIcon from '@mui/icons-material/Save';
+import ImageCropDialog from '../UI/ImageCropDialog';
+import CustomSnackbar from '../UI/CustomSnackbar';
 
 export interface UserProfile {
   _id: string;
@@ -47,6 +47,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(user.avatar);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successToastOpen, setSuccessToastOpen] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Обновляем birthday при изменении user
@@ -65,14 +69,36 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      setAvatarFile(file);
-      
-      // Создаем URL превью для аватара
-      const previewUrl = URL.createObjectURL(file);
-      setAvatarPreview(previewUrl);
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Выберите файл изображения');
+      return;
     }
+
+    setPendingAvatarFile(file);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+      setCropDialogOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropDialogClose = () => {
+    setCropDialogOpen(false);
+    setCropImageSrc(null);
+    setPendingAvatarFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAvatarCropped = (file: File) => {
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -92,6 +118,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
       }
       
       await onSave(formData);
+      setSuccessToastOpen(true);
     } catch (error) {
       console.error('Ошибка при сохранении профиля:', error);
       setError('Не удалось сохранить изменения. Пожалуйста, попробуйте еще раз.');
@@ -99,7 +126,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 3, mb: 4 }}>
+    <Paper elevation={0} sx={{ p: 3, mb: 0 }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
         Личная информация
       </Typography>
@@ -111,7 +138,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
         </Alert>
       )}
       
-      <form onSubmit={handleSubmit}>
+      <form id="profile-settings-form" onSubmit={handleSubmit}>
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ position: 'relative', mb: 2 }}>
@@ -215,20 +242,33 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
               </Grid>
             </Grid>
           </Grid>
-          
-          <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              startIcon={<SaveIcon />}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Сохранение...' : 'Сохранить изменения'}
-            </Button>
-          </Grid>
         </Grid>
       </form>
+
+      <ImageCropDialog
+        open={cropDialogOpen}
+        imageSrc={cropImageSrc}
+        originalFile={pendingAvatarFile}
+        onClose={handleCropDialogClose}
+        onConfirm={handleAvatarCropped}
+        title="Обрезать фото профиля"
+        aspect={1}
+      />
+
+      <CustomSnackbar
+        open={!!error}
+        message={error}
+        severity="error"
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+      />
+
+      <CustomSnackbar
+        open={successToastOpen}
+        message="Профиль успешно сохранён"
+        severity="success"
+        onClose={() => setSuccessToastOpen(false)}
+      />
     </Paper>
   );
 };

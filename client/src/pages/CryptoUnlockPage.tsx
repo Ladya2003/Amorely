@@ -1,13 +1,17 @@
 import React, { useMemo, useState } from 'react';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {
   Alert,
   Box,
   Button,
   Container,
+  IconButton,
   Paper,
   Tab,
   Tabs,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -41,8 +45,19 @@ const CryptoUnlockPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [pairingPrivateJwk, setPairingPrivateJwk] = useState<JsonWebKey | null>(null);
+  const [phraseCopied, setPhraseCopied] = useState(false);
 
   const suggestedPhrase = useMemo(() => generateSuggestedPassphrase(), [generateSuggestedPassphrase]);
+
+  const handleCopySuggestedPhrase = async () => {
+    try {
+      await navigator.clipboard.writeText(suggestedPhrase);
+      setPhraseCopied(true);
+      setTimeout(() => setPhraseCopied(false), 2000);
+    } catch {
+      setError('Не удалось скопировать. Выделите фразу и скопируйте вручную.');
+    }
+  };
 
   if (isCryptoReady) {
     const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
@@ -70,25 +85,25 @@ const CryptoUnlockPage: React.FC = () => {
 
   const handleCreateKeys = async () => {
     if (!passphrase.trim()) {
-      setError('Введите recovery-фразу');
+      setError('Введите секретную фразу');
       return;
     }
 
     await withAction(async () => {
       await createAndBackupKeys(passphrase.trim());
-      setStatus('Ключи успешно созданы и backup сохранен');
+      setStatus('Устройство подключено. Сохраните фразу в надёжном месте — она понадобится на других устройствах.');
     });
   };
 
   const handleRestore = async () => {
     if (!restorePhrase.trim()) {
-      setError('Введите recovery-фразу для восстановления');
+      setError('Введите секретную фразу');
       return;
     }
 
     await withAction(async () => {
       await restoreKeysFromPassphrase(restorePhrase.trim());
-      setStatus('Ключи успешно восстановлены');
+      setStatus('Доступ восстановлен. Можно пользоваться приложением.');
     });
   };
 
@@ -100,7 +115,7 @@ const CryptoUnlockPage: React.FC = () => {
       const content = await file.text();
       await importLocalKeysFileContent(userId, content);
       await ensureLocalKeys();
-      setStatus('Ключи импортированы из файла');
+      setStatus('Доступ восстановлен из файла');
     });
   };
 
@@ -114,24 +129,24 @@ const CryptoUnlockPage: React.FC = () => {
       const request = await createPairingRequest(localDeviceKeys?.deviceId || `pending-${Date.now()}`);
       setPairingPayload(JSON.stringify(request.payload));
       setPairingPrivateJwk(request.privateJwk);
-      setStatus('Pairing payload создан. Передайте его на устройство с доступом к ключам.');
+      setStatus('Код для подключения создан. Передайте его на устройство, где вы уже заходили в приложение.');
     });
   };
 
   const handleApprovePairing = async () => {
     if (!localDeviceKeys) {
-      setError('Нет локальных ключей для подтверждения');
+      setError('На этом устройстве ещё нет доступа к сообщениям');
       return;
     }
     if (!pairingPayload.trim()) {
-      setError('Вставьте pairing payload');
+      setError('Вставьте код подключения');
       return;
     }
 
     await withAction(async () => {
       const parsed = JSON.parse(pairingPayload) as PairingRequestPayload;
       await approvePairingRequest(parsed, localDeviceKeys);
-      setStatus('Pairing подтвержден. На новом устройстве завершите подключение.');
+      setStatus('Подключение подтверждено. На новом устройстве нажмите «Завершить подключение».');
     });
   };
 
@@ -141,11 +156,11 @@ const CryptoUnlockPage: React.FC = () => {
       return;
     }
     if (!pairingPrivateJwk) {
-      setError('Сначала создайте pairing payload на этом устройстве');
+      setError('Сначала создайте код подключения на этом устройстве');
       return;
     }
     if (!pairingPayload.trim()) {
-      setError('Вставьте pairing payload');
+      setError('Вставьте код подключения');
       return;
     }
 
@@ -153,25 +168,49 @@ const CryptoUnlockPage: React.FC = () => {
       const parsed = JSON.parse(pairingPayload) as PairingRequestPayload;
       await consumePairingRequest(userId, parsed, pairingPrivateJwk);
       await ensureLocalKeys();
-      setStatus('Ключи успешно получены через pairing');
+      setStatus('Новое устройство подключено');
     });
   };
 
   return (
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" fontWeight={700} gutterBottom>
-          Восстановление шифрования
+        <Typography variant="h5" fontWeight={500} gutterBottom>
+          Подключение этого устройства
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Вы вошли в аккаунт, но на этом устройстве не найдены ключи E2EE. Восстановите их одним из способов.
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            Сообщения и фото зашифрованы и доступны только вам. На этом устройстве нужно подключить ключ —
+            выберите способ ниже.
+          </Typography>
+          <Tooltip
+            title={
+              <Typography variant="body2" sx={{ maxWidth: 280 }}>
+                Данные шифруются на вашем устройстве. Мы не храним ключи и не можем прочитать ваши сообщения
+                и фото — даже по запросу. Это защита вашей приватности. На каждом новом телефоне или браузере
+                понадобится секретная фраза, которую вы создаёте при первом подключении.
+              </Typography>
+            }
+            placement="top"
+            arrow
+            enterTouchDelay={0}
+            leaveTouchDelay={4000}
+          >
+            <IconButton
+              size="small"
+              sx={{ color: 'text.secondary', p: 0.3, mt: -0.3, flexShrink: 0 }}
+              aria-label="О шифровании и приватности"
+            >
+              <InfoOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
 
         <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" sx={{ mb: 2 }}>
           <Tab label="Создать" />
           <Tab label="Ввести фразу" />
           <Tab label="Файл" />
-          <Tab label="QR/Pairing" />
+          <Tab label="Другое устройство" />
         </Tabs>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -180,39 +219,55 @@ const CryptoUnlockPage: React.FC = () => {
         {tab === 0 && (
           <Box>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              Сгенерированная recovery-фраза (сохраните ее в менеджер паролей):
+              Мы подготовили для вас секретную фразу. Запишите её в надёжное место — заметки, менеджер паролей
+              или бумажный блокнот. Она понадобится, если вы зайдёте с другого телефона или браузера.
             </Typography>
-            <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+            <Paper variant="outlined" sx={{ p: 1.5, mb: 1 }}>
               <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                 {suggestedPhrase}
               </Typography>
             </Paper>
+            <Button
+              disabled={isLoading}
+              variant="outlined"
+              size="small"
+              startIcon={<ContentCopyIcon />}
+              onClick={handleCopySuggestedPhrase}
+              sx={{ mb: 2 }}
+            >
+              {phraseCopied ? 'Скопировано' : 'Скопировать фразу'}
+            </Button>
             <TextField
               fullWidth
-              label="Подтвердите/измените recovery-фразу"
+              label="Секретная фраза"
+              helperText="Можно оставить предложенную или придумать свою — главное, не потерять её"
               value={passphrase}
               onChange={(event) => setPassphrase(event.target.value)}
               sx={{ mb: 2 }}
             />
             <Button disabled={isLoading} variant="contained" onClick={handleCreateKeys}>
-              Создать ключи и backup
+              Сохранить и продолжить
             </Button>
           </Box>
         )}
 
         {tab === 1 && (
           <Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Если вы уже подключали другое устройство, введите ту же секретную фразу, которую сохраняли
+              тогда.
+            </Typography>
             <TextField
               fullWidth
               multiline
               minRows={3}
-              label="Recovery-фраза"
+              label="Секретная фраза"
               value={restorePhrase}
               onChange={(event) => setRestorePhrase(event.target.value)}
               sx={{ mb: 2 }}
             />
             <Button disabled={isLoading} variant="contained" onClick={handleRestore}>
-              Восстановить ключи
+              Подключить устройство
             </Button>
           </Box>
         )}
@@ -220,7 +275,7 @@ const CryptoUnlockPage: React.FC = () => {
         {tab === 2 && (
           <Box>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Выберите файл экспортированных ключей.
+              Если вы раньше сохраняли файл с настройками доступа на другом устройстве, выберите его здесь.
             </Typography>
             <Button disabled={isLoading} component="label" variant="outlined">
               Выбрать файл
@@ -231,23 +286,24 @@ const CryptoUnlockPage: React.FC = () => {
 
         {tab === 3 && (
           <Box>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              Временный flow pairing: передайте JSON между устройствами (QR можно добавить поверх этого payload).
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              На устройстве, где вы уже пользуетесь приложением, создайте код и передайте его сюда — через
+              мессенджер или вставкой в поле ниже.
             </Typography>
             <Button sx={{ mb: 2, mr: 1 }} variant="outlined" onClick={handleCreatePairing} disabled={isLoading}>
-              Создать pairing payload
+              Создать код (новое устройство)
             </Button>
             <Button sx={{ mb: 2, mr: 1 }} variant="contained" onClick={handleApprovePairing} disabled={isLoading}>
-              Подтвердить pairing
+              Подтвердить (старое устройство)
             </Button>
             <Button sx={{ mb: 2 }} variant="outlined" onClick={handleCompletePairing} disabled={isLoading}>
-              Завершить pairing
+              Завершить подключение
             </Button>
             <TextField
               fullWidth
               multiline
               minRows={5}
-              label="Pairing payload"
+              label="Код подключения"
               value={pairingPayload}
               onChange={(event) => setPairingPayload(event.target.value)}
             />

@@ -38,7 +38,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({ currentTheme, onThemeChan
   
   return (
     <Paper elevation={0} sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
         Настройки темы
       </Typography>
       <Divider sx={{ mb: 3 }} />

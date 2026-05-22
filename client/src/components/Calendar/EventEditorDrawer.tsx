@@ -158,26 +158,16 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setIsBirthdayEvent(editEvent.isBirthdayEvent || false);
       setIsAnniversaryEvent(editEvent.isAnniversaryEvent || false);
     } else {
-      // Режим создания - проверяем есть ли черновик
-      if (hasDraft && draft.date) {
-        // Восстанавливаем данные из черновика
-        setSelectedDate(draft.date);
-        setTitle(draft.title || '');
-        setDescription(draft.description || '');
-        setFiles([]); // Файлы не восстанавливаем
-        setPreviews([]);
-      } else {
-        // Начинаем с чистого листа
-        setSelectedDate(initialDate || new Date());
-        setTitle('');
-        setDescription('');
-        setFiles([]);
-        setPreviews([]);
-      }
+      // Режим создания — дата с клика по календарю важнее черновика
+      setSelectedDate(initialDate || draft.date || new Date());
+      setTitle(hasDraft ? draft.title || '' : '');
+      setDescription(hasDraft ? draft.description || '' : '');
+      setFiles([]);
+      setPreviews([]);
     }
     
     setIsInitialized(true);
-  }, [open]); // Срабатывает только при изменении open
+  }, [open, initialDate?.getTime(), editEvent?.eventId, isEditMode, hasDraft, draft.date, draft.title, draft.description]);
 
   // Автосохранение изменений (только если не в режиме редактирования)
   useEffect(() => {

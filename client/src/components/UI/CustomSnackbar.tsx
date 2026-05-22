@@ -1,5 +1,10 @@
 import React from 'react';
-import { Snackbar, Alert, AlertColor } from '@mui/material';
+import { Snackbar, Alert, AlertColor, SxProps, Theme } from '@mui/material';
+
+export const toastAlertSx: SxProps<Theme> = {
+  width: '100%',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+};
 
 interface CustomSnackbarProps {
   open: boolean;
@@ -14,7 +19,7 @@ const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
   message,
   severity,
   onClose,
-  autoHideDuration = 2000,
+  autoHideDuration = 3000,
 }) => {
   return (
     <Snackbar
@@ -23,10 +28,11 @@ const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
       onClose={onClose}
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
     >
-      <Alert 
-        onClose={onClose} 
-        severity={severity} 
-        sx={{ width: '100%' }}
+      <Alert
+        onClose={onClose}
+        severity={severity}
+        variant="filled"
+        sx={toastAlertSx}
       >
         {message}
       </Alert>
@@ -34,4 +40,4 @@ const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
   );
 };
 
-export default CustomSnackbar; 
+export default CustomSnackbar;

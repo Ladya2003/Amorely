@@ -16,8 +16,6 @@ import {
   ListItemText,
   Avatar,
   CircularProgress,
-  Snackbar,
-  Alert,
   Button,
   Link,
   Paper,
@@ -31,6 +29,7 @@ import ChatList, { Contact } from '../components/Chat/ChatList';
 import ChatDialog, { MessageForwardRef, MessageReplyRef, MessageType, SharedEventRef } from '../components/Chat/ChatDialog';
 import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import Games from '../components/Chat/Games';
+import UserProfileChip from '../components/UI/UserProfileChip';
 import axios from 'axios';
 import { API_URL } from '../config';
 import socketService from '../services/socketService';
@@ -48,6 +47,7 @@ import { encryptAndUploadChatFiles, type StoredChatAttachment } from '../crypto/
 import { readChatRulesConsent, writeChatRulesConsent } from '../legal/chatRulesConsent';
 import { CHAT_RULES_SUMMARY } from '../legal/chatRulesContent';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
+import CustomSnackbar from '../components/UI/CustomSnackbar';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [
@@ -1636,7 +1636,8 @@ const ChatPage: React.FC = () => {
             <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label="Игры" />
           </Tabs>
           {tabValue === 0 && (!isMobile || !selectedContactId) && (
-            <Box sx={{ px: 2, pb: 1, pt: 1 }}>
+            <Box sx={{ px: 2, pb: 1, pt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <UserProfileChip maxNameWidth={80} />
               <TextField
                 fullWidth
                 size="small"
@@ -1849,21 +1850,12 @@ const ChatPage: React.FC = () => {
         title="Переслать сообщение"
         contacts={contacts}
       />
-      <Snackbar
+      <CustomSnackbar
         open={deleteToast.open}
-        autoHideDuration={3000}
+        message={deleteToast.message}
+        severity={deleteToast.severity}
         onClose={() => setDeleteToast((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setDeleteToast((prev) => ({ ...prev, open: false }))}
-          severity={deleteToast.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {deleteToast.message}
-        </Alert>
-      </Snackbar>
+      />
     </Box>
   );
 };

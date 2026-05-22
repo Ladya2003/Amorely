@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { 
-  Box, 
   Button, 
   Typography, 
   Dialog, 
   DialogTitle, 
   DialogContent, 
-  DialogActions 
+  DialogActions,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
+import { settingsActionButtonSx } from './settingsButtonSx';
 
 const LogoutButton: React.FC = () => {
   const { logout } = useAuth();
@@ -38,16 +38,15 @@ const LogoutButton: React.FC = () => {
   
   return (
     <>
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<LogoutIcon />}
-          onClick={handleOpenDialog}
-        >
-          Выйти из аккаунта
-        </Button>
-      </Box>
+      <Button
+        variant="outlined"
+        color="error"
+        startIcon={<LogoutIcon />}
+        onClick={handleOpenDialog}
+        sx={settingsActionButtonSx}
+      >
+        Выйти
+      </Button>
       
       <Dialog open={dialogOpen} onClose={handleCloseDialog}>
         <DialogTitle>Подтверждение выхода</DialogTitle>

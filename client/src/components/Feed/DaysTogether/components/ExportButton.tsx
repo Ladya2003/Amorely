@@ -1,9 +1,10 @@
 // Кнопка для экспорта открытки как изображения
 
 import React, { useState } from 'react';
-import { IconButton, Snackbar, Alert, CircularProgress, Tooltip } from '@mui/material';
+import { IconButton, CircularProgress, Tooltip } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import html2canvas from 'html2canvas';
+import CustomSnackbar from '../../../UI/CustomSnackbar';
 import { ColorTheme } from './ColorPicker';
 
 interface ExportButtonProps {
@@ -76,29 +77,20 @@ const ExportButton: React.FC<ExportButtonProps> = ({ targetId, colorTheme }) => 
         </IconButton>
       </Tooltip>
 
-      {/* Уведомление об успехе */}
-      <Snackbar
+      <CustomSnackbar
         open={success}
-        autoHideDuration={3000}
+        message="Открытка успешно сохранена! 📸"
+        severity="success"
         onClose={() => setSuccess(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: '100%' }}>
-          Открытка успешно сохранена! 📸
-        </Alert>
-      </Snackbar>
+      />
 
-      {/* Уведомление об ошибке */}
-      <Snackbar
+      <CustomSnackbar
         open={!!error}
+        message={error}
+        severity="error"
         autoHideDuration={6000}
         onClose={() => setError(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={() => setError(null)} severity="error" sx={{ width: '100%' }}>
-          {error}
-        </Alert>
-      </Snackbar>
+      />
     </>
   );
 };

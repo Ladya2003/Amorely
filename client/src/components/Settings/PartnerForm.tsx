@@ -28,6 +28,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import { API_URL } from '../../config';
+import CustomSnackbar from '../UI/CustomSnackbar';
 
 export interface Partner {
   _id: string;
@@ -62,6 +63,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successToastOpen, setSuccessToastOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -123,6 +125,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
       await onAddPartner(selectedPartner.email, startDate);
       setIsSubmitting(false);
       handleCloseDialog();
+      setSuccessToastOpen(true);
     } catch (error: any) {
       console.error('Ошибка при добавлении партнера:', error);
       if (error.response && error.response.data && error.response.data.error) {
@@ -164,7 +167,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   return (
     <Paper elevation={0} sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">
+        <Typography variant="h6" sx={{ fontWeight: 400 }}>
           Партнер
         </Typography>
         {partner ? (
@@ -185,7 +188,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             onClick={handleOpenDialog}
             disabled={isLoading}
           >
-            Добавить партнера
+            Добавить
           </Button>
         )}
       </Box>
@@ -200,7 +203,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
               sx={{ width: 64, height: 64, mr: 2 }}
             />
             <Box>
-              <Typography variant="h6">
+              <Typography variant="h6" sx={{ fontWeight: 400 }}>
                 {getPartnerName(partner)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -389,6 +392,13 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <CustomSnackbar
+        open={successToastOpen}
+        message="Партнер успешно добавлен"
+        severity="success"
+        onClose={() => setSuccessToastOpen(false)}
+      />
     </Paper>
   );
 };
