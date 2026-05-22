@@ -29,6 +29,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Contact } from './ChatList';
 import Message from './Message';
 import SharedEventCard from './SharedEventCard';
+import ContactProfileDialog from './ContactProfileDialog';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 
 const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
@@ -178,8 +179,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<MessageType | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messageInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
   const isInitialLoadRef = useRef<boolean>(true);
@@ -298,6 +299,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setHighlightedMessageId(null);
     setDeleteModalOpen(false);
     setMessageToDelete(null);
+    setProfileDialogOpen(false);
   }, [contact?.id]);
 
   useEffect(() => {
@@ -307,13 +309,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (!contact?.id) return;
-    window.setTimeout(() => {
-      messageInputRef.current?.focus();
-    }, 0);
-  }, [contact?.id]);
 
   useEffect(() => {
     if (!pendingForwardMessage) return;
@@ -336,7 +331,36 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   }, [pendingSharedEvent, onPendingSharedEventApplied]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    messagesEndRef.current?.scrollIntoView({ behavior });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const top = container.scrollHeight - container.clientHeight;
+    if (behavior === 'auto') {
+      container.scrollTop = top;
+      return;
+    }
+
+    container.scrollTo({ top, behavior });
+  };
+
+  const scrollMessageIntoView = (messageId: string, behavior: ScrollBehavior = 'smooth') => {
+    const container = messagesContainerRef.current;
+    const target = messageRefs.current[messageId];
+    if (!container || !target) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const targetTop = targetRect.top - containerRect.top + container.scrollTop;
+    const centeredTop = targetTop - container.clientHeight / 2 + targetRect.height / 2;
+    const maxTop = container.scrollHeight - container.clientHeight;
+    const nextTop = Math.max(0, Math.min(centeredTop, maxTop));
+
+    if (behavior === 'auto') {
+      container.scrollTop = nextTop;
+      return;
+    }
+
+    container.scrollTo({ top: nextTop, behavior });
   };
 
   const handleSendMessage = () => {
@@ -571,10 +595,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   };
 
   const handleReplyReferenceClick = (messageId: string) => {
-    const target = messageRefs.current[messageId];
-    if (!target) return;
-
-    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    scrollMessageIntoView(messageId, 'smooth');
     setHighlightedMessageId(messageId);
 
     if (highlightTimeoutRef.current) {
@@ -728,8 +749,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           borderBottom: 1, 
           borderColor: 'divider',
           bgcolor: 'background.paper',
-          position: 'sticky',
-          top: 0,
+          flexShrink: 0,
           zIndex: 100,
           borderRadius: 0
         }}
@@ -739,8 +759,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         </IconButton>
         <Avatar 
           alt={contact.name} 
-          src={contact.avatar} 
-          sx={{ width: 40, height: 40, mr: 2 }}
+          src={contact.avatar}
+          onClick={() => setProfileDialogOpen(true)}
+          sx={{
+            width: 40,
+            height: 40,
+            mr: 2,
+            cursor: 'pointer'
+          }}
         />
         <Typography variant="h6" noWrap>
           {contact.name}
@@ -813,8 +839,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           borderTop: 1, 
           borderColor: 'divider',
           bgcolor: 'background.paper',
-          position: 'sticky',
-          bottom: 0,
+          flexShrink: 0,
           zIndex: 100,
           borderRadius: 0
         }}
@@ -1028,7 +1053,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           fullWidth
           multiline
           maxRows={4}
-          inputRef={messageInputRef}
           placeholder="Введите сообщение..."
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
@@ -1181,6 +1205,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ContactProfileDialog
+        open={profileDialogOpen}
+        onClose={() => setProfileDialogOpen(false)}
+        contact={contact}
+      />
     </Box>
   );
 };

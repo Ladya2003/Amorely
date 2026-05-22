@@ -129,8 +129,12 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
         id: user._id,
         isPartner: Boolean(currentUser?.partnerId && user._id.toString() === currentUser.partnerId.toString()),
         name: getDisplayName(user),
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
         username: user.username,
         email: user.email,
+        bio: user.bio || '',
+        birthday: user.birthday ? user.birthday.toISOString() : null,
         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
         unreadCount,
         lastMessage: lastMessage ? {
@@ -256,6 +260,54 @@ router.get('/contacts/search', authMiddleware, async (req: any, res: Response) =
   } catch (error) {
     console.error('Ошибка глобального поиска пользователей:', error);
     res.status(500).json({ error: 'Ошибка глобального поиска пользователей' });
+  }
+});
+
+// Профиль собеседника для просмотра в чате
+router.get('/contacts/:contactId/profile', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const contactId = String(req.params.contactId || '');
+
+    if (!userId || !contactId) {
+      return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    const currentUser = await User.findById(userId).select('partnerId');
+    const isPartner = Boolean(currentUser?.partnerId && currentUser.partnerId.toString() === contactId);
+
+    const hasDialog = await Message.exists({
+      $or: [
+        { senderId: userId, receiverId: contactId },
+        { senderId: contactId, receiverId: userId }
+      ]
+    });
+
+    if (!isPartner && !hasDialog) {
+      return res.status(403).json({ error: 'Нет доступа к профилю пользователя' });
+    }
+
+    const user = await User.findById(contactId).select('username email firstName lastName avatar bio birthday');
+
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    res.json({
+      id: user._id.toString(),
+      isPartner,
+      name: getDisplayName(user),
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      username: user.username,
+      email: user.email,
+      bio: user.bio || '',
+      birthday: user.birthday ? user.birthday.toISOString() : null,
+      avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`
+    });
+  } catch (error) {
+    console.error('Ошибка при получении профиля контакта:', error);
+    res.status(500).json({ error: 'Ошибка при получении профиля контакта' });
   }
 });
 

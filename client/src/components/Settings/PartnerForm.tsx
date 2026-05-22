@@ -28,6 +28,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import { API_URL } from '../../config';
+import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
 
 export interface Partner {
@@ -66,12 +67,19 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   const [successToastOpen, setSuccessToastOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
 
   useEffect(() => {
     if (relationshipStartDate) {
       setStartDate(new Date(relationshipStartDate));
     }
   }, [relationshipStartDate]);
+
+  useEffect(() => {
+    if (!partner) {
+      setAvatarViewerOpen(false);
+    }
+  }, [partner]);
 
   useEffect(() => {
     if (searchQuery.length >= 3) {
@@ -200,7 +208,17 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             <Avatar 
               src={partner.avatar} 
               alt={getPartnerName(partner)}
-              sx={{ width: 64, height: 64, mr: 2 }}
+              onClick={() => {
+                if (partner.avatar) {
+                  setAvatarViewerOpen(true);
+                }
+              }}
+              sx={{
+                width: 64,
+                height: 64,
+                mr: 2,
+                cursor: partner.avatar ? 'pointer' : 'default'
+              }}
             />
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 400 }}>
@@ -392,6 +410,20 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ContentViewer
+        open={avatarViewerOpen}
+        onClose={() => setAvatarViewerOpen(false)}
+        fullScreen
+        content={
+          partner?.avatar
+            ? {
+                mediaUrl: partner.avatar,
+                resourceType: 'image'
+              }
+            : null
+        }
+      />
 
       <CustomSnackbar
         open={successToastOpen}

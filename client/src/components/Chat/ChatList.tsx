@@ -19,9 +19,13 @@ export interface Contact {
   id: string;
   isPartner?: boolean;
   name: string;
-  avatar: string;
+  firstName?: string;
+  lastName?: string;
   username?: string;
   email?: string;
+  bio?: string;
+  birthday?: string | null;
+  avatar: string;
   unreadCount?: number;
   lastMessage: {
     id?: string;

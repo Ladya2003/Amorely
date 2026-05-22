@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageCropDialog from '../UI/ImageCropDialog';
+import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
 
 export interface UserProfile {
@@ -51,6 +52,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Обновляем birthday при изменении user
@@ -145,7 +147,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
               <Avatar
                 src={avatarPreview}
                 alt={username}
-                sx={{ width: 120, height: 120 }}
+                onClick={() => {
+                  if (avatarPreview) {
+                    setAvatarViewerOpen(true);
+                  }
+                }}
+                sx={{
+                  width: 120,
+                  height: 120,
+                  cursor: avatarPreview ? 'pointer' : 'default'
+                }}
               />
               <IconButton
                 color="primary"
@@ -171,7 +182,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
               />
             </Box>
             <Typography variant="body2" color="text.secondary" align="center">
-              Нажмите на иконку камеры, чтобы загрузить новое фото
+              Нажмите на фото, чтобы открыть его на весь экран. Иконка камеры — для загрузки нового фото
             </Typography>
           </Grid>
           
@@ -253,6 +264,20 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
         onConfirm={handleAvatarCropped}
         title="Обрезать фото профиля"
         aspect={1}
+      />
+
+      <ContentViewer
+        open={avatarViewerOpen}
+        onClose={() => setAvatarViewerOpen(false)}
+        fullScreen
+        content={
+          avatarPreview
+            ? {
+                mediaUrl: avatarPreview,
+                resourceType: 'image'
+              }
+            : null
+        }
       />
 
       <CustomSnackbar

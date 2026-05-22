@@ -895,22 +895,23 @@ const ChatPage: React.FC = () => {
     }
   }, [selectedContactId, getSavedScrollState]);
 
-  // Управление видимостью нижнего меню
+  // Управление видимостью нижнего меню и блокировка скролла страницы в открытом чате
   useEffect(() => {
     if (isMobile) {
-      // Скрываем меню когда открыт чат с контактом
       if (selectedContactId) {
         setShowBottomNav(false);
+        window.scrollTo(0, 0);
+        document.body.style.overflow = 'hidden';
       } else {
-        // Показываем меню когда в списке контактов
         setShowBottomNav(true);
+        document.body.style.overflow = '';
       }
     }
     
-    // При размонтировании компонента возвращаем меню
     return () => {
       if (isMobile) {
         setShowBottomNav(true);
+        document.body.style.overflow = '';
       }
     };
   }, [isMobile, selectedContactId, setShowBottomNav]);
@@ -1593,10 +1594,11 @@ const ChatPage: React.FC = () => {
     user => !filteredExistingContacts.some(contact => contact.id === user.id)
   );
 
+  const isMobileChatOpen = isMobile && Boolean(selectedContactId);
   const pageHeight = isMobile
     ? selectedContactId
-      ? '100vh'
-      : 'calc(100vh - 72px)'
+      ? '100dvh'
+      : 'calc(100dvh - 72px)'
     : 'calc(100vh - 64px)';
 
   return (
@@ -1604,7 +1606,20 @@ const ChatPage: React.FC = () => {
       height: pageHeight, // На мобильных убираем резерв под BottomNav в открытом диалоге
       display: 'flex', 
       flexDirection: 'column',
-      overflow: 'hidden' // Блокируем скролл страницы, скролл только во внутренних контейнерах
+      overflow: 'hidden', // Блокируем скролл страницы, скролл только во внутренних контейнерах
+      ...(isMobileChatOpen ? {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        maxHeight: '100dvh',
+        zIndex: (theme) => theme.zIndex.appBar,
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        boxSizing: 'border-box'
+      } : {})
     }}>
       {/* Скрываем табы когда открыт чат с контактом на мобильных */}
       {(!isMobile || !selectedContactId) && (

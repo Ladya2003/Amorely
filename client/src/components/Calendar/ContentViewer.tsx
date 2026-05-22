@@ -9,9 +9,17 @@ interface ContentViewerProps {
     mediaUrl: string;
     resourceType: 'image' | 'video';
   } | null;
+  fullScreen?: boolean;
+  stackAboveParentModal?: boolean;
 }
 
-const ContentViewer: React.FC<ContentViewerProps> = ({ open, onClose, content }) => {
+const ContentViewer: React.FC<ContentViewerProps> = ({
+  open,
+  onClose,
+  content,
+  fullScreen = false,
+  stackAboveParentModal = false
+}) => {
   if (!content) return null;
 
   return (
@@ -20,25 +28,48 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ open, onClose, content })
       onClose={onClose}
       maxWidth="lg"
       fullWidth
+      fullScreen={fullScreen}
+      sx={
+        stackAboveParentModal
+          ? { zIndex: (theme) => theme.zIndex.modal + 2 }
+          : undefined
+      }
     >
       <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
         <IconButton onClick={onClose} sx={{ color: 'white' }}>
           <CloseIcon />
         </IconButton>
       </Box>
-      <DialogContent sx={{ p: 0, overflow: 'hidden', bgcolor: 'black', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <DialogContent
+        sx={{
+          p: 0,
+          overflow: 'hidden',
+          bgcolor: 'black',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: fullScreen ? '100%' : undefined
+        }}
+      >
         {content.resourceType === 'image' ? (
           <img
             src={content.mediaUrl}
             alt="Просмотр изображения"
-            style={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain' }}
+            style={{
+              maxWidth: '100%',
+              maxHeight: fullScreen ? '100dvh' : '90vh',
+              objectFit: 'contain'
+            }}
           />
         ) : (
           <video
             src={content.mediaUrl}
             controls
             autoPlay
-            style={{ maxWidth: '100%', maxHeight: '90vh' }}
+            style={{
+              maxWidth: '100%',
+              maxHeight: fullScreen ? '100dvh' : '90vh'
+            }}
           />
         )}
       </DialogContent>
