@@ -36,6 +36,7 @@ import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
+import { formatContactPresence } from '../../utils/formatContactPresence';
 
 const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
 
@@ -802,13 +803,31 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           sx={{
             width: 40,
             height: 40,
-            mr: 2,
-            cursor: 'pointer'
+            mr: 1.5,
+            cursor: 'pointer',
+            flexShrink: 0
           }}
         />
-        <Typography variant="h6" noWrap>
-          {contact.name}
-        </Typography>
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Typography
+            variant="subtitle1"
+            noWrap
+            sx={{ fontWeight: 600, lineHeight: 1.25, fontSize: '0.95rem' }}
+          >
+            {contact.name}
+          </Typography>
+          <Typography
+            variant="caption"
+            noWrap
+            sx={{
+              display: 'block',
+              color: contact.isOnline ? 'success.main' : 'text.secondary',
+              lineHeight: 1.2
+            }}
+          >
+            {formatContactPresence(contact.isOnline, contact.lastSeen)}
+          </Typography>
+        </Box>
       </Paper>
 
       {/* Область сообщений */}

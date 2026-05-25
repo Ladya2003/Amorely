@@ -1,6 +1,7 @@
 import webpush from 'web-push';
 import PushSubscription from '../models/pushSubscription';
 import User, { UserDocument } from '../models/user';
+import Message from '../models/message';
 
 let vapidConfigured = false;
 
@@ -30,7 +31,14 @@ export interface PushPayload {
   body: string;
   url?: string;
   tag?: string;
+  badgeCount?: number;
 }
+
+export const getTotalUnreadCount = async (userId: string) =>
+  Message.countDocuments({
+    receiverId: userId,
+    isRead: false
+  });
 
 export const sendPushToUser = async (userId: string, payload: PushPayload) => {
   if (!configureVapid()) {
@@ -110,10 +118,13 @@ export const notifyNewMessage = async (params: {
     Boolean(params.attachments?.length)
   );
 
+  const badgeCount = await getTotalUnreadCount(params.receiverId);
+
   await sendPushToUser(params.receiverId, {
     title: senderName,
     body,
     url: params.chatUrl || '/chat',
-    tag: `chat-${params.senderId}`
+    tag: `chat-${params.senderId}`,
+    badgeCount
   });
 };

@@ -26,6 +26,8 @@ export interface Contact {
   bio?: string;
   birthday?: string | null;
   avatar: string;
+  isOnline?: boolean;
+  lastSeen?: string | null;
   unreadCount?: number;
   lastMessage: {
     id?: string;

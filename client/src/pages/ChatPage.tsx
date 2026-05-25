@@ -847,12 +847,41 @@ const ChatPage: React.FC = () => {
       });
     };
 
+    const onUserOnline = ({ userId }: { userId: string }) => {
+      setContacts((prevContacts) =>
+        prevContacts.map((contact) =>
+          contact.id === userId ? { ...contact, isOnline: true } : contact
+        )
+      );
+    };
+
+    const onUserOffline = ({ userId, lastSeen }: { userId: string; lastSeen: string }) => {
+      setContacts((prevContacts) =>
+        prevContacts.map((contact) =>
+          contact.id === userId ? { ...contact, isOnline: false, lastSeen } : contact
+        )
+      );
+    };
+
+    const onPresenceSnapshot = ({ onlineUserIds }: { onlineUserIds: string[] }) => {
+      const onlineSet = new Set(onlineUserIds);
+      setContacts((prevContacts) =>
+        prevContacts.map((contact) => ({
+          ...contact,
+          isOnline: onlineSet.has(contact.id)
+        }))
+      );
+    };
+
     newSocket.on('new_message', onNewMessage);
     newSocket.on('message_sent', onMessageSent);
     newSocket.on('message_read', onMessageRead);
     newSocket.on('message_edited', onMessageEdited);
     newSocket.on('message_deleted', onMessageDeleted);
     newSocket.on('error', onError);
+    newSocket.on('user_online', onUserOnline);
+    newSocket.on('user_offline', onUserOffline);
+    newSocket.on('presence_snapshot', onPresenceSnapshot);
 
     return () => {
       newSocket.off('new_message', onNewMessage);
@@ -861,6 +890,9 @@ const ChatPage: React.FC = () => {
       newSocket.off('message_edited', onMessageEdited);
       newSocket.off('message_deleted', onMessageDeleted);
       newSocket.off('error', onError);
+      newSocket.off('user_online', onUserOnline);
+      newSocket.off('user_offline', onUserOffline);
+      newSocket.off('presence_snapshot', onPresenceSnapshot);
     };
   }, [
     CURRENT_USER_ID,

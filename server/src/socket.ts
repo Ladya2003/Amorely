@@ -5,6 +5,7 @@ import User from './models/user';
 import mongoose from 'mongoose';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { notifyNewMessage } from './services/pushService';
+import { markUserOnline, markUserOffline, getOnlineUserIds } from './presence';
 
 interface ConnectedUser {
   userId: string;
@@ -63,6 +64,16 @@ export default function setupSocketIO(server: HttpServer) {
       } else {
         connectedUsers.push({ userId, socketId: socket.id });
       }
+
+      markUserOnline(userId);
+
+      socket.emit('presence_snapshot', { onlineUserIds: getOnlineUserIds() });
+
+      connectedUsers.forEach((user) => {
+        if (user.userId !== userId) {
+          io.to(user.socketId).emit('user_online', { userId });
+        }
+      });
     });
 
     // Пользователь отправляет сообщение
@@ -338,11 +349,27 @@ export default function setupSocketIO(server: HttpServer) {
     });
 
     // Пользователь отключается
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log('Пользователь отключен:', socket.id);
       const index = connectedUsers.findIndex(user => user.socketId === socket.id);
       if (index !== -1) {
+        const { userId } = connectedUsers[index];
         connectedUsers.splice(index, 1);
+        markUserOffline(userId);
+
+        const lastSeen = new Date();
+        try {
+          await User.findByIdAndUpdate(userId, { lastSeen });
+        } catch (error) {
+          console.error('Ошибка при обновлении lastSeen:', error);
+        }
+
+        connectedUsers.forEach((user) => {
+          io.to(user.socketId).emit('user_offline', {
+            userId,
+            lastSeen: lastSeen.toISOString()
+          });
+        });
       }
     });
   });

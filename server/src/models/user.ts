@@ -28,6 +28,7 @@ export interface UserDocument extends mongoose.Document {
       news: boolean;
     };
   };
+  lastSeen?: Date;
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -62,6 +63,7 @@ const userSchema = new mongoose.Schema({
       news: { type: Boolean, default: false }
     }
   },
+  lastSeen: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 

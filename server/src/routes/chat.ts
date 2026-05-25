@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Message from '../models/message';
 import User from '../models/user';
 import { authMiddleware } from '../middleware/auth';
+import { isUserOnline } from '../presence';
 
 const router = express.Router();
 
@@ -137,6 +138,8 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
         birthday: user.birthday ? user.birthday.toISOString() : null,
         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
         unreadCount,
+        isOnline: isUserOnline(user._id.toString()),
+        lastSeen: user.lastSeen ? user.lastSeen.toISOString() : null,
         lastMessage: lastMessage ? {
           id: lastMessage._id.toString(),
           senderId: lastMessage.senderId.toString(),

@@ -12,6 +12,7 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import { useAuth } from './AuthContext';
 import socketService from '../services/socketService';
+import { syncAppBadge } from '../utils/appBadge';
 
 interface UnreadMessagesContextType {
   totalUnreadCount: number;
@@ -148,6 +149,15 @@ export const UnreadMessagesProvider: React.FC<UnreadMessagesProviderProps> = ({ 
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [userId, refreshUnreadCount]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      void syncAppBadge(0);
+      return;
+    }
+
+    void syncAppBadge(totalUnreadCount);
+  }, [isAuthenticated, totalUnreadCount]);
 
   const value = useMemo(
     () => ({

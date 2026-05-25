@@ -7,6 +7,22 @@ const getScopeBase = () => {
   }
 };
 
+const syncAppBadge = async (count) => {
+  if (!('setAppBadge' in navigator)) {
+    return;
+  }
+
+  try {
+    if (count > 0) {
+      await navigator.setAppBadge(count);
+    } else {
+      await navigator.clearAppBadge();
+    }
+  } catch (error) {
+    console.error('Failed to set app badge:', error);
+  }
+};
+
 self.addEventListener('push', (event) => {
   let payload = {};
   try {
@@ -29,7 +45,14 @@ self.addEventListener('push', (event) => {
     renotify: true
   };
 
-  event.waitUntil(self.registration.showNotification(payload.title || 'Amorely', options));
+  const badgeCount = typeof payload.badgeCount === 'number' ? payload.badgeCount : null;
+
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(payload.title || 'Amorely', options),
+      badgeCount !== null ? syncAppBadge(badgeCount) : Promise.resolve()
+    ])
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {
