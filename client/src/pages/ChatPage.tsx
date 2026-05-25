@@ -289,10 +289,12 @@ const ChatPage: React.FC = () => {
 
       try {
         const decryptPeerId = resolvePeerIdForMessage(message, peerId);
+        const isOwnMessage = message.senderId === CURRENT_USER_ID;
         const payload = await decryptChatPayload(
           localDeviceKeys,
           decryptPeerId,
-          message.encryptedPayload
+          message.encryptedPayload,
+          { isOwnMessage }
         );
         if (payload.version === 2) {
           return {
@@ -306,7 +308,7 @@ const ChatPage: React.FC = () => {
         return { ...message, text: 'Не удалось расшифровать сообщение' };
       }
     },
-    [localDeviceKeys, resolvePeerIdForMessage]
+    [localDeviceKeys, resolvePeerIdForMessage, CURRENT_USER_ID]
   );
 
   const decryptContactsLastMessages = useCallback(
@@ -523,10 +525,12 @@ const ChatPage: React.FC = () => {
       }
 
       const decryptPeerId = resolvePeerIdForMessage(sourceMessage, sourcePeerId);
+      const isOwnMessage = sourceMessage.senderId === CURRENT_USER_ID;
       const payload = await decryptChatPayload(
         localDeviceKeys,
         decryptPeerId,
-        sourceMessage.encryptedPayload
+        sourceMessage.encryptedPayload,
+        { isOwnMessage }
       );
 
       if (payload.version !== 2 || !payload.attachments?.length) {
@@ -980,9 +984,12 @@ const ChatPage: React.FC = () => {
     fetchGlobalSearchPage(debouncedSearchQuery, 1, false);
   }, [debouncedSearchQuery, fetchGlobalSearchPage]);
 
-  const fetchContacts = useCallback(async () => {
+  const fetchContacts = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
     try {
-      setIsLoading(true);
+      if (!silent) {
+        setIsLoading(true);
+      }
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/api/contacts`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -992,7 +999,9 @@ const ChatPage: React.FC = () => {
     } catch (error) {
       console.error('Ошибка при загрузке контактов:', error);
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   }, [decryptContactsLastMessages, sortContactsByLastMessageDesc]);
 
@@ -1345,6 +1354,7 @@ const ChatPage: React.FC = () => {
     saveSelectedChatId(null);
     setSelectedContactId(null);
     setRestoredScrollTop(null);
+    void fetchContacts({ silent: true });
     // Показываем нижнее меню на мобильных при возврате к списку
     if (isMobile) {
       setShowBottomNav(true);

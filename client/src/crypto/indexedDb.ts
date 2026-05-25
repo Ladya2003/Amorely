@@ -64,3 +64,23 @@ export const clearCryptoStore = async (): Promise<void> => {
     return Promise.resolve();
   });
 };
+
+export const clearStoredKeysByPrefix = async (prefix: string): Promise<void> => {
+  await withStore('readwrite', (store) =>
+    new Promise<void>((resolve, reject) => {
+      const request = store.openCursor();
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) {
+          resolve();
+          return;
+        }
+        if (String(cursor.key).startsWith(prefix)) {
+          cursor.delete();
+        }
+        cursor.continue();
+      };
+    })
+  );
+};

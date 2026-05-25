@@ -1,6 +1,12 @@
 import axios from 'axios';
 import { API_URL } from '../config';
-import { clearCryptoStore, getStoredValue, removeStoredValue, setStoredValue } from './indexedDb';
+import {
+  clearCryptoStore,
+  clearStoredKeysByPrefix,
+  getStoredValue,
+  removeStoredValue,
+  setStoredValue
+} from './indexedDb';
 
 const WORDS = [
   'amber', 'apple', 'arrow', 'artist', 'autumn', 'balance', 'beacon', 'berry', 'blade', 'bloom',
@@ -99,6 +105,8 @@ export const generateRecoveryPhrase = (wordCount = 12): string =>
 
 const storageKey = (userId: string) => `${ACTIVE_DEVICE_KEY}:${userId}`;
 
+const peerPublicCacheKey = (peerUserId: string) => `${SESSION_CACHE_PREFIX}peer-public:${peerUserId}`;
+
 export const loadLocalKeys = async (userId: string): Promise<LocalDeviceKeys | null> =>
   getStoredValue<LocalDeviceKeys>(storageKey(userId));
 
@@ -106,6 +114,15 @@ export const hasLocalKeys = async (userId: string): Promise<boolean> => Boolean(
 
 export const removeLocalKeys = async (userId: string): Promise<void> => {
   await removeStoredValue(storageKey(userId));
+  await clearPeerPublicKeyCaches();
+};
+
+export const clearPeerPublicKeyCaches = async (): Promise<void> => {
+  await clearStoredKeysByPrefix(`${SESSION_CACHE_PREFIX}peer-public:`);
+};
+
+export const invalidatePeerPublicKeyCache = async (peerUserId: string): Promise<void> => {
+  await removeStoredValue(peerPublicCacheKey(peerUserId));
 };
 
 export const wipeAllLocalCrypto = async (): Promise<void> => {
@@ -162,6 +179,7 @@ export const initializeCryptoForUser = async (userId: string): Promise<LocalDevi
 
   await persistLocalKeys(keys);
   await publishDevice(keys);
+  await clearPeerPublicKeyCaches();
   return keys;
 };
 
@@ -206,6 +224,7 @@ export const restoreFromBackup = async (userId: string, passphrase: string): Pro
 
   await persistLocalKeys(parsed);
   await publishDevice(parsed);
+  await clearPeerPublicKeyCaches();
   return parsed;
 };
 
@@ -222,6 +241,7 @@ export const importLocalKeysFileContent = async (userId: string, fileContent: st
   }
   await persistLocalKeys(parsed);
   await publishDevice(parsed);
+  await clearPeerPublicKeyCaches();
   return parsed;
 };
 
@@ -334,18 +354,101 @@ export const consumePairingRequest = async (
   }
   await persistLocalKeys(keys);
   await publishDevice(keys);
+  await clearPeerPublicKeyCaches();
   return keys;
 };
 
-const getOrCreatePeerPublicKey = async (peerUserId: string): Promise<string> => {
-  const cacheKey = `${SESSION_CACHE_PREFIX}peer-public:${peerUserId}`;
-  const cached = await getStoredValue<string>(cacheKey);
-  if (cached) return cached;
+const fetchPeerPublicKey = async (
+  peerUserId: string,
+  options?: { deviceId?: string; bypassCache?: boolean }
+): Promise<string> => {
+  const cacheKey = peerPublicCacheKey(peerUserId);
+  if (!options?.deviceId && !options?.bypassCache) {
+    const cached = await getStoredValue<string>(cacheKey);
+    if (cached) return cached;
+  }
 
-  const response = await axios.get(`${API_URL}/api/crypto/prekey-bundle/${peerUserId}`);
+  const response = await axios.get(`${API_URL}/api/crypto/prekey-bundle/${peerUserId}`, {
+    params: options?.deviceId ? { deviceId: options.deviceId } : undefined
+  });
   const publicKey = String(response.data.identityPublicKey);
-  await setStoredValue(cacheKey, publicKey);
+
+  if (!options?.deviceId) {
+    await setStoredValue(cacheKey, publicKey);
+  }
+
   return publicKey;
+};
+
+const decryptChatTextWithPeerPublicKey = async (
+  localKeys: LocalDeviceKeys,
+  peerPublicKeyBase64: string,
+  encryptedPayload: { ciphertext: string; iv: string }
+): Promise<string> => {
+  const peerPublicKey = await importSpkiFromBase64(peerPublicKeyBase64);
+  const localPrivateKey = await crypto.subtle.importKey(
+    'jwk',
+    localKeys.identityPrivateJwk,
+    { name: 'ECDH', namedCurve: 'P-256' },
+    false,
+    ['deriveBits']
+  );
+  const sharedSecret = await crypto.subtle.deriveBits(
+    { name: 'ECDH', public: peerPublicKey },
+    localPrivateKey,
+    256
+  );
+  const aesKey = await crypto.subtle.importKey('raw', sharedSecret, { name: 'AES-GCM' }, false, ['decrypt']);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: base64ToBytes(encryptedPayload.iv) },
+    aesKey,
+    base64ToBytes(encryptedPayload.ciphertext).buffer
+  );
+  return decoder.decode(new Uint8Array(decrypted));
+};
+
+export type DecryptChatTextOptions = {
+  isOwnMessage?: boolean;
+  senderDeviceId?: string;
+};
+
+export const decryptChatTextWithFallback = async (
+  localKeys: LocalDeviceKeys,
+  peerUserId: string,
+  encryptedPayload: { ciphertext: string; iv: string; senderDeviceId?: string },
+  options?: DecryptChatTextOptions
+): Promise<string> => {
+  const isOwnMessage = options?.isOwnMessage ?? false;
+  const senderDeviceId = options?.senderDeviceId ?? encryptedPayload.senderDeviceId;
+
+  const keyFetchers: Array<() => Promise<string>> = [];
+
+  if (!isOwnMessage && senderDeviceId) {
+    keyFetchers.push(() => fetchPeerPublicKey(peerUserId, { deviceId: senderDeviceId, bypassCache: true }));
+  }
+  keyFetchers.push(() => fetchPeerPublicKey(peerUserId));
+  keyFetchers.push(async () => {
+    await invalidatePeerPublicKeyCache(peerUserId);
+    return fetchPeerPublicKey(peerUserId, { bypassCache: true });
+  });
+
+  const triedKeys = new Set<string>();
+  let lastError: unknown;
+
+  for (const fetchKey of keyFetchers) {
+    try {
+      const peerPublicKeyBase64 = await fetchKey();
+      if (triedKeys.has(peerPublicKeyBase64)) {
+        continue;
+      }
+      triedKeys.add(peerPublicKeyBase64);
+      return await decryptChatTextWithPeerPublicKey(localKeys, peerPublicKeyBase64, encryptedPayload);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError ?? new Error('Не удалось расшифровать сообщение');
 };
 
 export const encryptChatText = async (
@@ -353,7 +456,7 @@ export const encryptChatText = async (
   receiverUserId: string,
   plaintext: string
 ): Promise<{ ciphertext: string; iv: string; version: number; algorithm: string; senderDeviceId: string }> => {
-  const receiverPublicKeyBase64 = await getOrCreatePeerPublicKey(receiverUserId);
+  const receiverPublicKeyBase64 = await fetchPeerPublicKey(receiverUserId, { bypassCache: true });
   const receiverPublicKey = await importSpkiFromBase64(receiverPublicKeyBase64);
   const senderPrivateKey = await crypto.subtle.importKey(
     'jwk',
@@ -383,58 +486,24 @@ export const encryptChatText = async (
 export const decryptChatTextAsSender = async (
   senderKeys: LocalDeviceKeys,
   receiverUserId: string,
-  encryptedPayload: { ciphertext: string; iv: string }
-): Promise<string> => {
-  const receiverPublicKeyBase64 = await getOrCreatePeerPublicKey(receiverUserId);
-  const receiverPublicKey = await importSpkiFromBase64(receiverPublicKeyBase64);
-  const senderPrivateKey = await crypto.subtle.importKey(
-    'jwk',
-    senderKeys.identityPrivateJwk,
-    { name: 'ECDH', namedCurve: 'P-256' },
-    false,
-    ['deriveBits']
-  );
-  const sharedSecret = await crypto.subtle.deriveBits(
-    { name: 'ECDH', public: receiverPublicKey },
-    senderPrivateKey,
-    256
-  );
-  const aesKey = await crypto.subtle.importKey('raw', sharedSecret, { name: 'AES-GCM' }, false, ['decrypt']);
-  const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: base64ToBytes(encryptedPayload.iv) },
-    aesKey,
-    base64ToBytes(encryptedPayload.ciphertext).buffer
-  );
-  return decoder.decode(new Uint8Array(decrypted));
-};
+  encryptedPayload: { ciphertext: string; iv: string; senderDeviceId?: string },
+  options?: Omit<DecryptChatTextOptions, 'isOwnMessage'>
+): Promise<string> =>
+  decryptChatTextWithFallback(senderKeys, receiverUserId, encryptedPayload, {
+    ...options,
+    isOwnMessage: true
+  });
 
 export const decryptChatText = async (
   receiverKeys: LocalDeviceKeys,
   senderUserId: string,
-  encryptedPayload: { ciphertext: string; iv: string }
-): Promise<string> => {
-  const senderPublicKeyBase64 = await getOrCreatePeerPublicKey(senderUserId);
-  const senderPublicKey = await importSpkiFromBase64(senderPublicKeyBase64);
-  const receiverPrivateKey = await crypto.subtle.importKey(
-    'jwk',
-    receiverKeys.identityPrivateJwk,
-    { name: 'ECDH', namedCurve: 'P-256' },
-    false,
-    ['deriveBits']
-  );
-  const sharedSecret = await crypto.subtle.deriveBits(
-    { name: 'ECDH', public: senderPublicKey },
-    receiverPrivateKey,
-    256
-  );
-  const aesKey = await crypto.subtle.importKey('raw', sharedSecret, { name: 'AES-GCM' }, false, ['decrypt']);
-  const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: base64ToBytes(encryptedPayload.iv) },
-    aesKey,
-    base64ToBytes(encryptedPayload.ciphertext).buffer
-  );
-  return decoder.decode(new Uint8Array(decrypted));
-};
+  encryptedPayload: { ciphertext: string; iv: string; senderDeviceId?: string },
+  options?: Omit<DecryptChatTextOptions, 'isOwnMessage'>
+): Promise<string> =>
+  decryptChatTextWithFallback(receiverKeys, senderUserId, encryptedPayload, {
+    ...options,
+    isOwnMessage: false
+  });
 
 export type ChatMediaEnvelope = {
   mediaKey: string;
@@ -498,10 +567,11 @@ export const encryptChatPayload = async (
 };
 
 export const decryptChatPayload = async (
-  receiverKeys: LocalDeviceKeys,
-  senderUserId: string,
-  encryptedPayload: { ciphertext: string; iv: string }
+  localKeys: LocalDeviceKeys,
+  peerUserId: string,
+  encryptedPayload: { ciphertext: string; iv: string; senderDeviceId?: string },
+  options?: DecryptChatTextOptions
 ): Promise<ChatPayload> => {
-  const plaintext = await decryptChatText(receiverKeys, senderUserId, encryptedPayload);
+  const plaintext = await decryptChatTextWithFallback(localKeys, peerUserId, encryptedPayload, options);
   return parseDecryptedChatPayload(plaintext);
 };

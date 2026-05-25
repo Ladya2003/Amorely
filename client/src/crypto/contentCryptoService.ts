@@ -1,6 +1,5 @@
 import {
-  decryptChatText,
-  decryptChatTextAsSender,
+  decryptChatTextWithFallback,
   encryptChatText,
   type LocalDeviceKeys
 } from './cryptoService';
@@ -91,7 +90,8 @@ export const decryptTextFromSender = async (
   keys: LocalDeviceKeys,
   senderUserId: string,
   payload: EncryptedTextPayload
-): Promise<string> => decryptChatText(keys, senderUserId, payload);
+): Promise<string> =>
+  decryptChatTextWithFallback(keys, senderUserId, payload, { isOwnMessage: false });
 
 const decryptEncryptedText = async (
   keys: LocalDeviceKeys,
@@ -108,7 +108,7 @@ const decryptEncryptedText = async (
     if (!recipientId) {
       throw new Error('Не удалось определить получателя шифрования');
     }
-    return decryptChatTextAsSender(keys, recipientId, payload);
+    return decryptChatTextWithFallback(keys, recipientId, payload, { isOwnMessage: true });
   }
 
   if (!senderId) {
