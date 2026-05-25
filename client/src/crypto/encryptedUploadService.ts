@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 import { encryptFileForUpload } from './mediaCrypto';
+import { encryptMediaEnvelopeForPartner } from './contentCryptoService';
+import type { EncryptedTextPayload } from './contentCryptoService';
+import type { LocalDeviceKeys } from './cryptoService';
 
 export type UploadedEncryptedFile = {
   url: string;
@@ -12,6 +15,17 @@ export type UploadedEncryptedFile = {
     displayType: 'image' | 'video';
   };
   fileSize: number;
+};
+
+export type UploadedEncryptedContentFile = {
+  url: string;
+  publicId: string;
+  fileSize: number;
+  mediaEnvelope: {
+    mimeType: string;
+    displayType: 'image' | 'video';
+  };
+  encryptedMediaEnvelope: EncryptedTextPayload;
 };
 
 export const getDisplayTypeFromFile = (file: File): 'image' | 'video' =>
@@ -53,4 +67,33 @@ export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncr
   }
 
   return uploads;
+};
+
+/** Загрузка медиа для ленты/календаря: ключ файла шифруется ECDH для партнёра. */
+export const encryptAndUploadContentFiles = async (
+  files: File[],
+  localKeys: LocalDeviceKeys,
+  partnerUserId: string
+): Promise<UploadedEncryptedContentFile[]> => {
+  const uploads = await encryptAndUploadFiles(files);
+
+  return Promise.all(
+    uploads.map(async (item) => {
+      const encryptedMediaEnvelope = await encryptMediaEnvelopeForPartner(localKeys, partnerUserId, {
+        mediaKey: item.mediaEnvelope.mediaKey,
+        iv: item.mediaEnvelope.iv
+      });
+
+      return {
+        url: item.url,
+        publicId: item.publicId,
+        fileSize: item.fileSize,
+        mediaEnvelope: {
+          mimeType: item.mediaEnvelope.mimeType,
+          displayType: item.mediaEnvelope.displayType
+        },
+        encryptedMediaEnvelope
+      };
+    })
+  );
 };

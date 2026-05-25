@@ -27,6 +27,41 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
+const isValidEncryptedMediaItem = (item: any): boolean =>
+  Boolean(
+    item?.url &&
+      item?.publicId &&
+      (item?.encryptedMediaEnvelope?.ciphertext ||
+        item?.mediaEnvelope?.mediaKey)
+  );
+
+const buildStoredMediaFields = (item: any) => {
+  const displayType = item.mediaEnvelope?.displayType || item.resourceType || 'image';
+  const mimeType = item.mediaEnvelope?.mimeType || 'application/octet-stream';
+
+  if (item.encryptedMediaEnvelope?.ciphertext) {
+    return {
+      mediaEnvelope: {
+        mimeType,
+        displayType: displayType === 'video' ? 'video' : 'image'
+      },
+      encryptedMediaEnvelope: {
+        ciphertext: String(item.encryptedMediaEnvelope.ciphertext),
+        iv: String(item.encryptedMediaEnvelope.iv)
+      }
+    };
+  }
+
+  return {
+    mediaEnvelope: {
+      mediaKey: item.mediaEnvelope.mediaKey,
+      iv: item.mediaEnvelope.iv,
+      mimeType,
+      displayType: displayType === 'video' ? 'video' : 'image'
+    }
+  };
+};
+
 // Создание зашифрованного события (E2EE)
 router.post('/events-encrypted', async (req: any, res: Response) => {
   try {
@@ -59,11 +94,11 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
 
     if (mediaItems.length > 0) {
       for (const item of mediaItems) {
-        if (!item?.url || !item?.publicId || !item?.mediaEnvelope?.mediaKey) {
+        if (!isValidEncryptedMediaItem(item)) {
           return res.status(400).json({ error: 'Некорректные данные зашифрованного медиа' });
         }
 
-        const displayType = item.mediaEnvelope.displayType || item.resourceType || 'image';
+        const displayType = item.mediaEnvelope?.displayType || item.resourceType || 'image';
         const content = new Content({
           userId,
           targetId: partnerId,
@@ -74,11 +109,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
           eventId,
           eventDate: new Date(eventDate),
           encrypted: true,
-          mediaEnvelope: {
-            mediaKey: item.mediaEnvelope.mediaKey,
-            iv: item.mediaEnvelope.iv,
-            mimeType: item.mediaEnvelope.mimeType || 'application/octet-stream'
-          },
+          ...buildStoredMediaFields(item),
           encryptedTitle,
           encryptedDescription: encryptedDescription || undefined,
           metadataSenderId: userId,
@@ -362,6 +393,22 @@ router.get('/events/:id', async (req: any, res: Response) => {
         ? (firstMedia.lastEditedBy as { _id?: { toString(): string }; username?: string; avatar?: string })
         : null;
 
+    const sharedMediaItems =
+      Array.isArray(shared.media) && shared.media.length > 0
+        ? shared.media
+        : shared.previewUrl
+          ? [
+              {
+                id: `${id}-shared-preview`,
+                url: shared.previewUrl,
+                resourceType: shared.previewResourceType || 'image',
+                encrypted: Boolean(shared.previewEncrypted),
+                previewMediaEnvelope: shared.previewMediaEnvelope || undefined,
+                encryptedMediaEnvelope: shared.previewEncryptedMediaEnvelope || undefined
+              }
+            ]
+          : [];
+
     const event = {
       _id: id,
       eventId: id,
@@ -386,18 +433,17 @@ router.get('/events/:id', async (req: any, res: Response) => {
       isBirthdayEvent: firstMedia.isBirthdayEvent,
       isAnniversaryEvent: firstMedia.isAnniversaryEvent,
       readOnly: true,
-      media: shared.previewUrl
-        ? [
-            {
-              _id: `${id}-shared-preview`,
-              url: shared.previewUrl,
-              publicId: `${id}-shared-preview`,
-              resourceType: shared.previewResourceType || 'image',
-              encrypted: Boolean(shared.previewEncrypted),
-              mediaEnvelope: shared.previewMediaEnvelope || undefined
-            }
-          ]
-        : []
+      media: sharedMediaItems.map((item: any, index: number) => ({
+        _id: item.id || `${id}-shared-media-${index}`,
+        url: item.url,
+        publicId: item.id || `${id}-shared-media-${index}`,
+        resourceType: item.resourceType || 'image',
+        encrypted: Boolean(item.encrypted),
+        mediaEnvelope: item.previewMediaEnvelope || undefined,
+        encryptedMediaEnvelope: item.encryptedMediaEnvelope || undefined,
+        metadataSenderId: shared.previewMetadataSenderId,
+        metadataRecipientId: shared.previewMetadataRecipientId
+      }))
     };
 
     res.json(event);

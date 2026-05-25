@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ImageIcon from '@mui/icons-material/Image';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import DecryptedMedia from '../common/DecryptedMedia';
-import type { SharedEventRef } from './ChatDialog';
+import type { SharedEventMediaRef, SharedEventRef } from './ChatDialog';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
+import { decryptSharedEventMediaItem } from '../../crypto/contentCryptoService';
+import { useCrypto } from '../../contexts/CryptoContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { usePartnerId } from '../../hooks/usePartnerId';
 
 interface SharedEventCardProps {
   sharedEvent: SharedEventRef;
@@ -15,13 +19,93 @@ interface SharedEventCardProps {
   onClick?: () => void;
 }
 
+const resolveMediaItems = (sharedEvent: SharedEventRef): SharedEventMediaRef[] => {
+  if (sharedEvent.media?.length) {
+    return sharedEvent.media.filter((item) => item.url?.trim());
+  }
+
+  if (!sharedEvent.previewUrl?.trim()) {
+    return [];
+  }
+
+  return [
+    {
+      url: sharedEvent.previewUrl,
+      resourceType: sharedEvent.previewResourceType || 'image',
+      encrypted: sharedEvent.previewEncrypted,
+      previewMediaEnvelope: sharedEvent.previewMediaEnvelope,
+      encryptedMediaEnvelope: sharedEvent.previewEncryptedMediaEnvelope
+    }
+  ];
+};
+
 const SharedEventCard: React.FC<SharedEventCardProps> = ({
   sharedEvent,
   isOwn = false,
   compact = false,
   onClick
 }) => {
-  const hasPreview = Boolean(sharedEvent.previewUrl);
+  const { localDeviceKeys } = useCrypto();
+  const { user } = useAuth();
+  const partnerId = usePartnerId();
+  const mediaItems = useMemo(() => resolveMediaItems(sharedEvent), [sharedEvent]);
+  const [previewEnvelopes, setPreviewEnvelopes] = useState<Array<ContentMediaEnvelope | undefined>>(
+    () => mediaItems.map((item) => item.previewMediaEnvelope)
+  );
+
+  const metadata = useMemo(
+    () => ({
+      previewMetadataSenderId: sharedEvent.previewMetadataSenderId,
+      previewMetadataRecipientId: sharedEvent.previewMetadataRecipientId
+    }),
+    [sharedEvent.previewMetadataRecipientId, sharedEvent.previewMetadataSenderId]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolvePreviews = async () => {
+      if (!localDeviceKeys) {
+        setPreviewEnvelopes(mediaItems.map((item) => item.previewMediaEnvelope));
+        return;
+      }
+
+      const resolved = await Promise.all(
+        mediaItems.map(async (item) => {
+          if (!item.encrypted) {
+            return item.previewMediaEnvelope;
+          }
+
+          try {
+            return await decryptSharedEventMediaItem(
+              localDeviceKeys,
+              item,
+              metadata,
+              user?._id,
+              partnerId || undefined
+            );
+          } catch {
+            return undefined;
+          }
+        })
+      );
+
+      if (!cancelled) {
+        setPreviewEnvelopes(resolved);
+      }
+    };
+
+    void resolvePreviews();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [localDeviceKeys, mediaItems, metadata, partnerId, user?._id]);
+
+  const previewMedia = mediaItems[0];
+  const previewEnvelope = previewEnvelopes[0];
+  const extraMediaCount = Math.max(0, mediaItems.length - 1);
+  const hasPreview = Boolean(previewMedia?.url);
   const eventDate = sharedEvent.eventDate ? new Date(sharedEvent.eventDate) : null;
   const formattedDate = eventDate
     ? format(eventDate, 'd MMMM yyyy', { locale: ru })
@@ -51,28 +135,50 @@ const SharedEventCard: React.FC<SharedEventCardProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          position: 'relative'
         }}
       >
         {hasPreview ? (
-          <DecryptedMedia
-            cacheKey={`shared-event-${sharedEvent.eventId}`}
-            url={sharedEvent.previewUrl!}
-            resourceType={sharedEvent.previewResourceType || 'image'}
-            encrypted={sharedEvent.previewEncrypted}
-            mediaEnvelope={sharedEvent.previewMediaEnvelope as ContentMediaEnvelope | undefined}
-            imageStyle={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }}
-            videoStyle={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }}
-            loadingMinHeight={0}
-          />
+          <>
+            <DecryptedMedia
+              cacheKey={`shared-event-${sharedEvent.eventId}-${previewMedia?.id || '0'}`}
+              url={previewMedia!.url}
+              resourceType={previewMedia!.resourceType || 'image'}
+              encrypted={Boolean(previewEnvelope?.mediaKey) || Boolean(previewMedia!.encrypted)}
+              mediaEnvelope={previewEnvelope}
+              imageStyle={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+              videoStyle={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+              loadingMinHeight={0}
+            />
+            {extraMediaCount > 0 && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  right: 4,
+                  bottom: 4,
+                  px: 0.75,
+                  py: 0.25,
+                  borderRadius: 1,
+                  bgcolor: 'rgba(0,0,0,0.65)',
+                  color: 'common.white',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  lineHeight: 1.2
+                }}
+              >
+                +{extraMediaCount}
+              </Box>
+            )}
+          </>
         ) : (
           <ImageIcon
             sx={{

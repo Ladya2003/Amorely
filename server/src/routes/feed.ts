@@ -11,6 +11,41 @@ import { formatContentForApi } from '../utils/contentFormat';
 
 const router = express.Router();
 
+const isValidEncryptedMediaItem = (item: any): boolean =>
+  Boolean(
+    item?.url &&
+      item?.publicId &&
+      (item?.encryptedMediaEnvelope?.ciphertext ||
+        item?.mediaEnvelope?.mediaKey)
+  );
+
+const buildStoredMediaFields = (item: any) => {
+  const displayType = item.mediaEnvelope?.displayType || item.resourceType || 'image';
+  const mimeType = item.mediaEnvelope?.mimeType || 'application/octet-stream';
+
+  if (item.encryptedMediaEnvelope?.ciphertext) {
+    return {
+      mediaEnvelope: {
+        mimeType,
+        displayType: displayType === 'video' ? 'video' : 'image'
+      },
+      encryptedMediaEnvelope: {
+        ciphertext: String(item.encryptedMediaEnvelope.ciphertext),
+        iv: String(item.encryptedMediaEnvelope.iv)
+      }
+    };
+  }
+
+  return {
+    mediaEnvelope: {
+      mediaKey: item.mediaEnvelope.mediaKey,
+      iv: item.mediaEnvelope.iv,
+      mimeType,
+      displayType: displayType === 'video' ? 'video' : 'image'
+    }
+  };
+};
+
 // Настройка хранилища Cloudinary для multer
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -147,11 +182,11 @@ router.post('/content-encrypted', async (req: any, res: Response) => {
     const savedContent = [];
 
     for (const item of items) {
-      if (!item?.url || !item?.publicId || !item?.mediaEnvelope?.mediaKey) {
+      if (!isValidEncryptedMediaItem(item)) {
         return res.status(400).json({ error: 'Некорректные данные зашифрованного контента' });
       }
 
-      const displayType = item.mediaEnvelope.displayType || item.resourceType || 'image';
+      const displayType = item.mediaEnvelope?.displayType || item.resourceType || 'image';
       const newContent = new Content({
         userId: new mongoose.Types.ObjectId(userId),
         targetId: targetId ? new mongoose.Types.ObjectId(targetId) : null,
@@ -162,12 +197,9 @@ router.post('/content-encrypted', async (req: any, res: Response) => {
         sortOrder: currentSortOrder++,
         frequency: parsedFrequency,
         encrypted: true,
-        mediaEnvelope: {
-          mediaKey: item.mediaEnvelope.mediaKey,
-          iv: item.mediaEnvelope.iv,
-          mimeType: item.mediaEnvelope.mimeType || 'application/octet-stream'
-        },
+        ...buildStoredMediaFields(item),
         metadataSenderId: new mongoose.Types.ObjectId(userId),
+        metadataRecipientId: targetId || undefined,
         displayedCount: 0,
         rotationOrder: 0,
         currentBatch: 0,

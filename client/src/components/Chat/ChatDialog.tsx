@@ -31,6 +31,7 @@ import Message from './Message';
 import SharedEventCard from './SharedEventCard';
 import ContactProfileDialog from './ContactProfileDialog';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
+import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
 const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
 
@@ -48,14 +49,28 @@ export interface MessageForwardRef {
   senderAvatar?: string;
 }
 
+export interface SharedEventMediaRef {
+  id?: string;
+  url: string;
+  resourceType: 'image' | 'video';
+  encrypted?: boolean;
+  previewMediaEnvelope?: ContentMediaEnvelope;
+  encryptedMediaEnvelope?: { ciphertext: string; iv: string };
+}
+
 export interface SharedEventRef {
   eventId: string;
   title: string;
+  /** @deprecated используйте media; первое медиа для обратной совместимости */
   previewUrl?: string;
   previewResourceType?: 'image' | 'video';
   previewEncrypted?: boolean;
-  previewMediaEnvelope?: unknown;
+  previewMediaEnvelope?: ContentMediaEnvelope;
+  previewEncryptedMediaEnvelope?: { ciphertext: string; iv: string };
+  previewMetadataSenderId?: string;
+  previewMetadataRecipientId?: string;
   eventDate?: string;
+  media?: SharedEventMediaRef[];
 }
 
 export interface MessageType {

@@ -29,6 +29,18 @@ const encryptedPayloadSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const sharedEventMediaSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: false },
+    url: { type: String, required: true },
+    resourceType: { type: String, enum: ['image', 'video'], required: true },
+    encrypted: { type: Boolean, required: false },
+    previewMediaEnvelope: { type: mongoose.Schema.Types.Mixed, required: false },
+    encryptedMediaEnvelope: { type: mongoose.Schema.Types.Mixed, required: false }
+  },
+  { _id: false }
+);
+
 const sharedEventSchema = new mongoose.Schema(
   {
     eventId: { type: String, required: true },
@@ -37,7 +49,11 @@ const sharedEventSchema = new mongoose.Schema(
     previewResourceType: { type: String, enum: ['image', 'video'], required: false },
     previewEncrypted: { type: Boolean, required: false },
     previewMediaEnvelope: { type: mongoose.Schema.Types.Mixed, required: false },
-    eventDate: { type: String, required: false }
+    previewEncryptedMediaEnvelope: { type: mongoose.Schema.Types.Mixed, required: false },
+    previewMetadataSenderId: { type: String, required: false },
+    previewMetadataRecipientId: { type: String, required: false },
+    eventDate: { type: String, required: false },
+    media: { type: [sharedEventMediaSchema], required: false }
   },
   { _id: false }
 );

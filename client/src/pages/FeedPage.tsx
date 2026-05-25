@@ -12,8 +12,8 @@ import DaysTogether from '../components/Feed/DaysTogether';
 import ContentManagementDialog from '../components/Feed/ContentManagement';
 import ContentViewer from '../components/Feed/ContentViewer';
 import { useCrypto } from '../contexts/CryptoContext';
-import { decryptContentFieldsList } from '../crypto/contentCryptoService';
-import { usePartnerId } from '../hooks/usePartnerId';
+import { decryptContentItemsWithMedia } from '../crypto/contentCryptoService';
+import { usePartnerId, useEncryptionRecipientId } from '../hooks/usePartnerId';
 
 // Интерфейс для контента из диалога управления
 interface UserContentItem {
@@ -33,6 +33,7 @@ const FeedPage: React.FC = () => {
   const { user } = useAuth();
   const { localDeviceKeys } = useCrypto();
   const partnerId = usePartnerId();
+  const encryptionRecipientId = useEncryptionRecipientId();
   
   // Состояние для табов
   const [tabValue, setTabValue] = useState(0);
@@ -98,11 +99,12 @@ const FeedPage: React.FC = () => {
       
       let items = response.data;
       if (localDeviceKeys) {
-        items = items.map((item: any) => ({
-          ...item,
-          encrypted: item.encrypted,
-          mediaEnvelope: item.mediaEnvelope
-        }));
+        items = await decryptContentItemsWithMedia(
+          localDeviceKeys,
+          items,
+          user?._id,
+          partnerId || undefined
+        );
       }
       setUserContent(items);
     } catch (error) {
@@ -175,7 +177,7 @@ const FeedPage: React.FC = () => {
       }));
 
       if (localDeviceKeys) {
-        const decrypted = await decryptContentFieldsList(
+        const decrypted = await decryptContentItemsWithMedia(
           localDeviceKeys,
           formattedContent,
           user?._id,
@@ -245,9 +247,16 @@ const FeedPage: React.FC = () => {
         if (!localDeviceKeys) {
           throw new Error('Нет ключей для шифрования контента');
         }
+        if (!encryptionRecipientId) {
+          throw new Error('Не удалось определить получателя шифрования');
+        }
 
-        const { encryptAndUploadFiles } = await import('../crypto/encryptedUploadService');
-        const uploaded = await encryptAndUploadFiles(files);
+        const { encryptAndUploadContentFiles } = await import('../crypto/encryptedUploadService');
+        const uploaded = await encryptAndUploadContentFiles(
+          files,
+          localDeviceKeys,
+          encryptionRecipientId
+        );
 
         await axios.post(
           `${API_URL}/api/feed/content-encrypted`,
@@ -258,7 +267,8 @@ const FeedPage: React.FC = () => {
               url: item.url,
               publicId: item.publicId,
               fileSize: item.fileSize,
-              mediaEnvelope: item.mediaEnvelope
+              mediaEnvelope: item.mediaEnvelope,
+              encryptedMediaEnvelope: item.encryptedMediaEnvelope
             }))
           },
           {

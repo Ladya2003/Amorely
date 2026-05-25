@@ -10,7 +10,12 @@ const contentSchema = new mongoose.Schema({
   mediaEnvelope: {
     mediaKey: { type: String },
     iv: { type: String },
-    mimeType: { type: String }
+    mimeType: { type: String },
+    displayType: { type: String, enum: ['image', 'video'] }
+  },
+  encryptedMediaEnvelope: {
+    ciphertext: { type: String },
+    iv: { type: String }
   },
   encryptedTitle: {
     ciphertext: { type: String },

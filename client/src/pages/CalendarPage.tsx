@@ -13,13 +13,13 @@ import { useCrypto } from '../contexts/CryptoContext';
 import { useEncryptionRecipientId, usePartnerId } from '../hooks/usePartnerId';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  decryptContentFieldsList,
+  decryptCalendarEventsWithMedia,
   encryptTextForPartner
 } from '../crypto/contentCryptoService';
-import { encryptAndUploadFiles } from '../crypto/encryptedUploadService';
+import { encryptAndUploadContentFiles } from '../crypto/encryptedUploadService';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
 import { loadLocalKeys, type LocalDeviceKeys } from '../crypto/cryptoService';
-import { buildSharedEventRef } from '../utils/buildSharedEventRef';
+import { buildSharedEventRef, prepareEventForShare, type EventLikeForShare } from '../utils/buildSharedEventRef';
 
 interface MediaFile {
   _id: string;
@@ -29,6 +29,7 @@ interface MediaFile {
   fileSize?: number;
   encrypted?: boolean;
   mediaEnvelope?: ContentMediaEnvelope;
+  encryptedMediaEnvelope?: { ciphertext: string; iv: string };
 }
 
 interface User {
@@ -46,6 +47,7 @@ interface ContentItem {
   encryptedTitle?: { ciphertext: string; iv: string };
   encryptedDescription?: { ciphertext: string; iv: string };
   metadataSenderId?: string;
+  metadataRecipientId?: string;
   userId?: string;
   eventDate?: string;
   createdAt: string;
@@ -91,14 +93,7 @@ const CalendarPage: React.FC = () => {
   const [eventsForDate, setEventsForDate] = useState<ContentItem[]>([]);
   const [selectedDateForList, setSelectedDateForList] = useState<Date | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [eventToShare, setEventToShare] = useState<{
-    _id: string;
-    eventId?: string;
-    title?: string;
-    eventDate?: string;
-    createdAt: string;
-    media?: MediaFile[];
-  } | null>(null);
+  const [eventToShare, setEventToShare] = useState<EventLikeForShare | null>(null);
   const [shareContacts, setShareContacts] = useState<ShareRecipientContact[]>([]);
 
   useEffect(() => {
@@ -133,8 +128,8 @@ const CalendarPage: React.FC = () => {
       let event: ContentItem = response.data;
       const isReadOnly = Boolean(event.readOnly);
 
-      if (!isReadOnly && localDeviceKeys) {
-        const [decrypted] = await decryptContentFieldsList(
+      if (localDeviceKeys) {
+        const [decrypted] = await decryptCalendarEventsWithMedia(
           localDeviceKeys,
           [event],
           user?._id,
@@ -170,7 +165,7 @@ const CalendarPage: React.FC = () => {
       let events: ContentItem[] = response.data;
 
       if (localDeviceKeys) {
-        events = await decryptContentFieldsList(
+        events = await decryptCalendarEventsWithMedia(
           localDeviceKeys,
           events,
           user?._id,
@@ -288,23 +283,27 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const handleShareEvent = (event: {
-    _id: string;
-    eventId?: string;
-    title?: string;
-    eventDate?: string;
-    createdAt: string;
-    media?: MediaFile[];
-  }) => {
+  const handleShareEvent = (event: EventLikeForShare) => {
     setEventToShare(event);
     setShareModalOpen(true);
     void fetchShareContacts();
   };
 
-  const handleSelectShareTarget = (target: ShareRecipientContact) => {
+  const handleSelectShareTarget = async (target: ShareRecipientContact) => {
     if (!eventToShare) return;
 
-    const sharedEvent = buildSharedEventRef(eventToShare);
+    let sharedEvent;
+    if (localDeviceKeys) {
+      sharedEvent = await prepareEventForShare(
+        localDeviceKeys,
+        eventToShare,
+        user?._id,
+        partnerId || undefined
+      );
+    } else {
+      sharedEvent = buildSharedEventRef(eventToShare);
+    }
+
     setShareModalOpen(false);
     setEventDetailOpen(false);
     setEventToShare(null);
@@ -401,7 +400,9 @@ const CalendarPage: React.FC = () => {
         : undefined;
 
       const uploaded =
-        eventData.files.length > 0 ? await encryptAndUploadFiles(eventData.files) : [];
+        eventData.files.length > 0
+          ? await encryptAndUploadContentFiles(eventData.files, keys, encryptionRecipientId)
+          : [];
 
       await axios.post(
         `${API_URL}/api/calendar/events-encrypted`,
@@ -416,7 +417,8 @@ const CalendarPage: React.FC = () => {
             url: item.url,
             publicId: item.publicId,
             fileSize: item.fileSize,
-            mediaEnvelope: item.mediaEnvelope
+            mediaEnvelope: item.mediaEnvelope,
+            encryptedMediaEnvelope: item.encryptedMediaEnvelope
           }))
         },
         {

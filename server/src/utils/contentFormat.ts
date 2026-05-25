@@ -14,6 +14,18 @@ const formatEncryptedText = (value: unknown) => {
   return { ciphertext: payload.ciphertext, iv: payload.iv };
 };
 
+const formatMediaEnvelope = (media: any) => {
+  if (!media.mediaEnvelope) return undefined;
+  const envelope = media.mediaEnvelope;
+  if (media.encryptedMediaEnvelope?.ciphertext) {
+    return {
+      mimeType: envelope.mimeType,
+      displayType: envelope.displayType
+    };
+  }
+  return envelope;
+};
+
 export const formatContentForApi = (media: any) => ({
   id: media._id?.toString(),
   _id: media._id?.toString(),
@@ -21,7 +33,8 @@ export const formatContentForApi = (media: any) => ({
   resourceType: media.resourceType,
   type: media.resourceType === 'video' ? 'video' : 'image',
   encrypted: Boolean(media.encrypted),
-  mediaEnvelope: media.mediaEnvelope || undefined,
+  mediaEnvelope: formatMediaEnvelope(media),
+  encryptedMediaEnvelope: formatEncryptedText(media.encryptedMediaEnvelope),
   encryptedTitle: formatEncryptedText(media.encryptedTitle),
   encryptedDescription: formatEncryptedText(media.encryptedDescription),
   metadataSenderId:
@@ -86,7 +99,8 @@ export const formatCalendarEventMedia = (media: any) => ({
   fileSize: media.fileSize,
   createdAt: media.createdAt,
   encrypted: Boolean(media.encrypted),
-  mediaEnvelope: media.mediaEnvelope || undefined
+  mediaEnvelope: formatMediaEnvelope(media),
+  encryptedMediaEnvelope: formatEncryptedText(media.encryptedMediaEnvelope)
 });
 
 export const sortCalendarEventMedia = <T extends { createdAt?: Date | string }>(media: T[]) =>

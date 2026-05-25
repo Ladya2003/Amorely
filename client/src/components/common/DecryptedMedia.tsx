@@ -26,17 +26,20 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   videoStyle,
   loadingMinHeight = 80
 }) => {
+  const needsDecrypt = Boolean(mediaEnvelope?.mediaKey && mediaEnvelope?.iv);
+
   const [blobUrl, setBlobUrl] = useState<string | null>(() => {
-    if (!encrypted) return url;
+    if (!needsDecrypt) return url;
     return getCachedBlobUrl(cacheKey) || null;
   });
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(Boolean(encrypted) && !blobUrl);
+  const [loading, setLoading] = useState(needsDecrypt && !blobUrl);
 
   useEffect(() => {
-    if (!encrypted || !mediaEnvelope) {
+    if (!needsDecrypt) {
       setBlobUrl(url);
       setLoading(false);
+      setError(false);
       return;
     }
 
@@ -50,6 +53,10 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
     let cancelled = false;
 
     const load = async () => {
+      if (!mediaEnvelope?.mediaKey || !mediaEnvelope?.iv) {
+        return;
+      }
+
       try {
         setLoading(true);
         setError(false);
@@ -73,7 +80,7 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [cacheKey, encrypted, mediaEnvelope, url]);
+  }, [cacheKey, needsDecrypt, mediaEnvelope, url]);
 
   if (loading) {
     return (
