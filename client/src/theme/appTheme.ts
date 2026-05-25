@@ -5,6 +5,51 @@ const headingFontFamily = '"Oswald", sans-serif';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
+export type PrimaryColorPreference = 'pink' | 'purple' | 'blue' | 'dark-red' | 'dark-green';
+
+export interface PrimaryColorOption {
+  id: PrimaryColorPreference;
+  name: string;
+  preview: string;
+}
+
+export const primaryColorOptions: PrimaryColorOption[] = [
+  { id: 'pink', name: 'Розовый', preview: '#ff4b8d' },
+  { id: 'purple', name: 'Тёмно-розовый', preview: '#8a2be2' },
+  { id: 'blue', name: 'Голубой', preview: '#1e90ff' },
+  { id: 'dark-red', name: 'Красный', preview: '#8b0000' },
+  { id: 'dark-green', name: 'Зелёный', preview: '#006400' },
+];
+
+const primaryPalettes: Record<
+  PrimaryColorPreference,
+  { light: { main: string; dark: string; light: string; contrastText: string }; dark: { main: string; dark: string; light: string; contrastText: string } }
+> = {
+  pink: {
+    light: { main: '#ff4b8d', dark: '#e0437d', light: '#ff8fb3', contrastText: '#ffffff' },
+    dark: { main: '#8f3d5c', dark: '#7a3450', light: '#5c2a3f', contrastText: '#ffffff' },
+  },
+  purple: {
+    light: { main: '#8a2be2', dark: '#6e22b5', light: '#ba55d3', contrastText: '#ffffff' },
+    dark: { main: '#6b3fa0', dark: '#5a3588', light: '#452966', contrastText: '#ffffff' },
+  },
+  blue: {
+    light: { main: '#1e90ff', dark: '#1873cc', light: '#87cefa', contrastText: '#ffffff' },
+    dark: { main: '#2b6cb0', dark: '#245a94', light: '#1a3d5c', contrastText: '#ffffff' },
+  },
+  'dark-red': {
+    light: { main: '#8b0000', dark: '#6d0000', light: '#b22222', contrastText: '#ffffff' },
+    dark: { main: '#7a2020', dark: '#631a1a', light: '#4a1515', contrastText: '#ffffff' },
+  },
+  'dark-green': {
+    light: { main: '#006400', dark: '#005000', light: '#228b22', contrastText: '#ffffff' },
+    dark: { main: '#2d5c2d', dark: '#254a25', light: '#1a351a', contrastText: '#ffffff' },
+  },
+};
+
+export const getPrimaryPreviewColor = (color: PrimaryColorPreference): string =>
+  primaryPalettes[color].light.main;
+
 export const resolvePaletteMode = (
   preference: ThemePreference,
   prefersDarkMode: boolean
@@ -15,26 +60,11 @@ export const resolvePaletteMode = (
   return preference;
 };
 
-const primaryPalette = {
-  light: {
-    main: '#ff4b8d',
-    dark: '#e0437d',
-    light: '#ff8fb3',
-    contrastText: '#ffffff',
-  },
-  dark: {
-    main: '#b84d6f',
-    dark: '#9a4160',
-    light: '#6f3f52',
-    contrastText: '#ffffff',
-  },
-} as const;
-
-export const createAppTheme = (mode: PaletteMode) =>
+export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPreference = 'pink') =>
   createTheme({
     palette: {
       mode,
-      primary: primaryPalette[mode],
+      primary: primaryPalettes[primaryColor][mode],
       secondary: {
         main: mode === 'dark' ? '#7a63b8' : '#8c52ff',
       },

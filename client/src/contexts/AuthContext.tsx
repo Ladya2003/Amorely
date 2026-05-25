@@ -20,6 +20,7 @@ interface User {
   relationshipStartDate?: string;
   partnerId?: string;
   theme?: 'light' | 'dark' | 'system';
+  primaryColor?: 'pink' | 'purple' | 'blue' | 'dark-red' | 'dark-green';
 }
 
 interface AuthContextType {

@@ -14,6 +14,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 
 export interface Contact {
   id: string;
@@ -148,15 +149,32 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
             sx={{ py: 0.5 }}
           >
             <ListItemAvatar>
-              <Avatar 
-                alt={contact.name} 
-                src={contact.avatar} 
-                sx={{ 
-                  width: 50, 
-                  height: 50,
-                  border: hasUnreadIncoming ? '2px solid #ff4b8d' : 'none'
-                }}
-              />
+              <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                <Avatar 
+                  alt={contact.name} 
+                  src={contact.avatar} 
+                  sx={{ 
+                    width: 50, 
+                    height: 50,
+                    border: hasUnreadIncoming ? '2px solid #ff4b8d' : 'none'
+                  }}
+                />
+                {contact.isOnline && (
+                  <Box
+                    sx={(theme) => ({
+                      position: 'absolute',
+                      top: 2,
+                      right: 2,
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: getOnlinePresenceColor(theme),
+                      border: `2px solid ${theme.palette.background.paper}`,
+                      boxSizing: 'border-box',
+                    })}
+                  />
+                )}
+              </Box>
             </ListItemAvatar>
             <ListItemText
               secondaryTypographyProps={{ component: 'div' }}

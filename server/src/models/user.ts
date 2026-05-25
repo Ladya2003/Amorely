@@ -14,6 +14,7 @@ export interface UserDocument extends mongoose.Document {
   birthday?: Date;
   partnerId?: mongoose.Types.ObjectId;
   theme: 'light' | 'dark' | 'system';
+  primaryColor: 'pink' | 'purple' | 'blue' | 'dark-red' | 'dark-green';
   notificationSettings?: {
     email: {
       newContent: boolean;
@@ -49,6 +50,7 @@ const userSchema = new mongoose.Schema({
   birthday: { type: Date },
   partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
+  primaryColor: { type: String, enum: ['pink', 'purple', 'blue', 'dark-red', 'dark-green'], default: 'pink' },
   notificationSettings: {
     email: {
       newContent: { type: Boolean, default: true },

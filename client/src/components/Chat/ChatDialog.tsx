@@ -37,6 +37,7 @@ import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import { formatContactPresence } from '../../utils/formatContactPresence';
+import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 
 const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
 
@@ -819,11 +820,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           <Typography
             variant="caption"
             noWrap
-            sx={{
+            sx={(theme) => ({
               display: 'block',
-              color: contact.isOnline ? 'success.main' : 'text.secondary',
-              lineHeight: 1.2
-            }}
+              color: contact.isOnline
+                ? getOnlinePresenceColor(theme)
+                : theme.palette.text.secondary,
+              lineHeight: 1.2,
+              fontWeight: contact.isOnline ? 600 : 400,
+            })}
           >
             {formatContactPresence(contact.isOnline, contact.lastSeen)}
           </Typography>
@@ -890,12 +894,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
       {/* Область ввода сообщения - фиксированная */}
       <Paper 
-        elevation={3} 
+        elevation={0} 
         sx={{ 
           p: 2, 
-          borderTop: 1, 
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
+          bgcolor: 'background.default',
           flexShrink: 0,
           zIndex: 100,
           borderRadius: 0
@@ -1142,7 +1144,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               </InputAdornment>
             ),
           }}
-          sx={{ mt: 1 }}
+          sx={{
+            mt: 1,
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'background.paper',
+            },
+          }}
         />
         <input
           type="file"

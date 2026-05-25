@@ -12,6 +12,7 @@ declare module 'mongoose' {
     bio?: string;
     partnerId?: mongoose.Types.ObjectId;
     theme: 'light' | 'dark' | 'system';
+    primaryColor: 'pink' | 'purple' | 'blue' | 'dark-red' | 'dark-green';
     notificationSettings?: {
       email: {
         newContent: boolean;

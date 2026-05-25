@@ -24,6 +24,7 @@ import { API_URL } from '../config';
 import ProfileForm, { UserProfile } from '../components/Settings/ProfileForm';
 import PartnerForm, { Partner } from '../components/Settings/PartnerForm';
 import ThemeSettings from '../components/Settings/ThemeSettings';
+import { PrimaryColorPreference } from '../theme/appTheme';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
@@ -58,6 +59,7 @@ const SettingsPage: React.FC = () => {
   const [partner, setPartner] = useState<Partner | null>(null);
   const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [primaryColor, setPrimaryColor] = useState<PrimaryColorPreference>('pink');
   const [notificationSettings, setNotificationSettings] = useState<any>(null);
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
@@ -111,6 +113,7 @@ const SettingsPage: React.FC = () => {
       
       setUser(user);
       setTheme(user.theme || 'system');
+      setPrimaryColor(user.primaryColor || 'pink');
       const loadedNotificationSettings = user.notificationSettings || {
         email: {
           newContent: true,
@@ -294,6 +297,36 @@ const SettingsPage: React.FC = () => {
       setTheme(previousTheme);
       if (authUser) {
         updateUser({ ...authUser, theme: previousTheme });
+      }
+    }
+  };
+
+  const handlePrimaryColorChange = async (newPrimaryColor: PrimaryColorPreference) => {
+    const previousPrimaryColor = primaryColor;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Не авторизован');
+      }
+
+      setPrimaryColor(newPrimaryColor);
+      if (authUser) {
+        updateUser({ ...authUser, primaryColor: newPrimaryColor });
+      }
+
+      await axios.put(`${API_URL}/api/settings/theme`, {
+        userId: user?._id,
+        primaryColor: newPrimaryColor
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Ошибка при изменении основного цвета:', error);
+      setPrimaryColor(previousPrimaryColor);
+      if (authUser) {
+        updateUser({ ...authUser, primaryColor: previousPrimaryColor });
       }
     }
   };
@@ -549,7 +582,9 @@ const SettingsPage: React.FC = () => {
           {tabValue === 2 && (
             <ThemeSettings 
               currentTheme={theme} 
-              onThemeChange={handleThemeChange} 
+              onThemeChange={handleThemeChange}
+              currentPrimaryColor={primaryColor}
+              onPrimaryColorChange={handlePrimaryColorChange}
             />
           )}
           

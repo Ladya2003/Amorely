@@ -347,14 +347,10 @@ router.put('/notifications', async (req: ExtendedRequest, res: Response) => {
 router.put('/theme', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId;
-    const { theme } = req.body;
+    const { theme, primaryColor } = req.body;
 
     if (!userId) {
       return res.status(401).json({ error: 'Не авторизован' });
-    }
-
-    if (!['light', 'dark', 'system'].includes(theme)) {
-      return res.status(400).json({ error: 'Некорректная тема оформления' });
     }
 
     const user = await User.findById(userId);
@@ -362,12 +358,26 @@ router.put('/theme', async (req: ExtendedRequest, res: Response) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    user.theme = theme;
+    if (theme !== undefined) {
+      if (!['light', 'dark', 'system'].includes(theme)) {
+        return res.status(400).json({ error: 'Некорректная тема оформления' });
+      }
+      user.theme = theme;
+    }
+
+    if (primaryColor !== undefined) {
+      if (!['pink', 'purple', 'blue', 'dark-red', 'dark-green'].includes(primaryColor)) {
+        return res.status(400).json({ error: 'Некорректный основной цвет' });
+      }
+      user.primaryColor = primaryColor;
+    }
+
     await user.save();
 
     res.json({
-      message: 'Тема оформления обновлена',
-      theme: user.theme
+      message: 'Настройки темы обновлены',
+      theme: user.theme,
+      primaryColor: user.primaryColor
     });
   } catch (error) {
     console.error('Ошибка при обновлении темы:', error);

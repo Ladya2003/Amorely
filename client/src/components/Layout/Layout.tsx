@@ -157,7 +157,9 @@ const Layout: React.FC = () => {
         flexGrow: 1, 
         overflow: 'auto', 
         p: isMobile ? 0 : 2,
-        pb: isMobile && showBottomNav ? '72px' : isMobile ? '0px' : 2 // Отступ снизу для нижней навигации на мобильных
+        pb: isMobile && showBottomNav
+          ? 'calc(84px + max(16px, env(safe-area-inset-bottom, 0px)))'
+          : isMobile ? '0px' : 2 // Отступ снизу для нижней навигации на мобильных
       }}>
         <Outlet />
       </Box>
@@ -188,6 +190,8 @@ const Layout: React.FC = () => {
               }
             }}
             sx={{
+              pt: 1.5,
+              pb: 'max(16px, env(safe-area-inset-bottom, 0px))',
               '& .MuiBottomNavigationAction-root': {
                 minWidth: 0,
                 flex: 1,
