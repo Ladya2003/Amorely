@@ -84,6 +84,12 @@ export const formatCalendarEventMedia = (media: any) => ({
   publicId: media.publicId,
   resourceType: media.resourceType,
   fileSize: media.fileSize,
+  createdAt: media.createdAt,
   encrypted: Boolean(media.encrypted),
   mediaEnvelope: media.mediaEnvelope || undefined
 });
+
+export const sortCalendarEventMedia = <T extends { createdAt?: Date | string }>(media: T[]) =>
+  [...media].sort(
+    (a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+  );

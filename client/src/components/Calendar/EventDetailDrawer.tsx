@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Drawer,
   AppBar,
@@ -26,6 +26,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import DecryptedMedia from '../common/DecryptedMedia';
+import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
 interface MediaFile {
@@ -80,28 +81,40 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const mediaFiles = (event?.media || []).filter((media) => media.url && media.url.trim().length > 0);
 
-  // Сброс индекса слайдера при открытии/смене события
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setCurrentMediaIndex(0);
     }
   }, [open, event?._id]);
 
+  const handlePrevMedia = useCallback(() => {
+    setCurrentMediaIndex((prev) => (prev > 0 ? prev - 1 : mediaFiles.length - 1));
+  }, [mediaFiles.length]);
+
+  const handleNextMedia = useCallback(() => {
+    setCurrentMediaIndex((prev) => (prev < mediaFiles.length - 1 ? prev + 1 : 0));
+  }, [mediaFiles.length]);
+
+  const { swipeHandlers, swipeContainerSx, consumeSwipeClick } = useHorizontalSwipe({
+    enabled: mediaFiles.length > 1,
+    onPrev: handlePrevMedia,
+    onNext: handleNextMedia
+  });
+
   if (!event) return null;
 
   const eventDate = new Date(event.eventDate || event.createdAt);
   const eventTitle = event.title || 'Без названия';
-  // Фильтруем только медиа с реальными URL
-  const mediaFiles = (event.media || []).filter(m => m.url && m.url.trim().length > 0);
   const currentMedia = mediaFiles[currentMediaIndex];
-  
-  const handlePrevMedia = () => {
-    setCurrentMediaIndex((prev) => (prev > 0 ? prev - 1 : mediaFiles.length - 1));
-  };
-  
-  const handleNextMedia = () => {
-    setCurrentMediaIndex((prev) => (prev < mediaFiles.length - 1 ? prev + 1 : 0));
+
+  const handleOpenMediaViewer = () => {
+    if (consumeSwipeClick()) {
+      return;
+    }
+
+    setMediaViewerOpen(true);
   };
 
   return (
@@ -183,8 +196,10 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                   position: 'relative',
                   paddingTop: '100%',
                   bgcolor: 'grey.100',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  ...swipeContainerSx
                 }}
+                {...swipeHandlers}
               >
                 {/* Контейнер слайдера */}
                 <Box
@@ -212,7 +227,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
-                      onClick={() => setMediaViewerOpen(true)}
+                      onClick={handleOpenMediaViewer}
                     >
                       <DecryptedMedia
                         cacheKey={`calendar-${event.eventId || event._id}-${media._id}`}
@@ -471,7 +486,17 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
           </>
         )}
         
-        <DialogContent sx={{ p: 0, overflow: 'hidden', bgcolor: 'black', position: 'relative', minHeight: '90vh' }}>
+        <DialogContent
+          sx={{
+            p: 0,
+            overflow: 'hidden',
+            bgcolor: 'black',
+            position: 'relative',
+            minHeight: '90vh',
+            ...swipeContainerSx
+          }}
+          {...swipeHandlers}
+        >
           <Box
             sx={{
               display: 'flex',

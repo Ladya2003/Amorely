@@ -6,7 +6,11 @@ import Content from '../models/content';
 import User from '../models/user';
 import Message from '../models/message';
 import mongoose from 'mongoose';
-import { formatCalendarEventGroup, formatCalendarEventMedia } from '../utils/contentFormat';
+import {
+  formatCalendarEventGroup,
+  formatCalendarEventMedia,
+  sortCalendarEventMedia
+} from '../utils/contentFormat';
 import { resolvePartnerUserId } from '../utils/resolvePartnerId';
 
 const router = express.Router();
@@ -278,9 +282,12 @@ router.get('/events', async (req: any, res: Response) => {
       eventsMap.get(key).media.push(formatCalendarEventMedia(media));
     });
 
-    // Преобразуем Map в массив
-    const events = Array.from(eventsMap.values());
-    
+    // Преобразуем Map в массив и сортируем медиа по порядку добавления
+    const events = Array.from(eventsMap.values()).map((event) => ({
+      ...event,
+      media: sortCalendarEventMedia(event.media)
+    }));
+
     res.json(events);
   } catch (error) {
     console.error('Ошибка при получении событий:', error);
@@ -322,7 +329,7 @@ router.get('/events/:id', async (req: any, res: Response) => {
       const event = {
         ...formatCalendarEventGroup(firstMedia),
         targetId: firstMedia.targetId,
-        media: mediaFiles.map((m) => formatCalendarEventMedia(m)),
+        media: sortCalendarEventMedia(mediaFiles.map((m) => formatCalendarEventMedia(m))),
         readOnly: false
       };
 

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Box, IconButton, Typography, CircularProgress, Paper, Chip } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -7,6 +7,7 @@ import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useNavigate } from 'react-router-dom';
 import DecryptedMedia from '../common/DecryptedMedia';
+import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
 export interface ContentItem {
@@ -47,7 +48,6 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
   onEmptyClick 
 }) => {
   const navigate = useNavigate();
-  const swipeStateRef = useRef({ startX: 0, startY: 0, isSwipe: false });
 
   const handlePrev = () => {
     setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : content.length - 1));
@@ -56,6 +56,12 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex < content.length - 1 ? prevIndex + 1 : 0));
   };
+
+  const { swipeHandlers, swipeContainerSx, consumeSwipeClick } = useHorizontalSwipe({
+    enabled: content.length > 1,
+    onPrev: handlePrev,
+    onNext: handleNext
+  });
 
   const handleEmptyClick = () => {
     if (navigateTo) {
@@ -74,54 +80,11 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
   };
 
   const handleSlideItemClick = (item: ContentItem) => {
-    if (swipeStateRef.current.isSwipe) {
-      swipeStateRef.current.isSwipe = false;
+    if (consumeSwipeClick()) {
       return;
     }
 
     handleMediaClick(item);
-  };
-
-  const handleTouchStart = (event: React.TouchEvent) => {
-    if (content.length <= 1) return;
-
-    const touch = event.touches[0];
-    swipeStateRef.current = {
-      startX: touch.clientX,
-      startY: touch.clientY,
-      isSwipe: false
-    };
-  };
-
-  const handleTouchMove = (event: React.TouchEvent) => {
-    if (content.length <= 1) return;
-
-    const touch = event.touches[0];
-    const deltaX = touch.clientX - swipeStateRef.current.startX;
-    const deltaY = touch.clientY - swipeStateRef.current.startY;
-
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 12) {
-      swipeStateRef.current.isSwipe = true;
-    }
-  };
-
-  const handleTouchEnd = (event: React.TouchEvent) => {
-    if (content.length <= 1) return;
-
-    const touch = event.changedTouches[0];
-    const deltaX = touch.clientX - swipeStateRef.current.startX;
-    const deltaY = touch.clientY - swipeStateRef.current.startY;
-    const threshold = 50;
-
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
-      swipeStateRef.current.isSwipe = true;
-
-      if (deltaX > 0) {
-        handlePrev();
-      } else {
-        handleNext();
-      }
-    }
   };
 
   const handleContentClick = () => {
@@ -190,11 +153,9 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
           overflow: 'hidden',
           position: 'relative',
           bgcolor: 'black',
-          touchAction: 'pan-y'
+          ...swipeContainerSx
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        {...swipeHandlers}
       >
         {/* Контейнер слайдера с плавной анимацией */}
         <Box

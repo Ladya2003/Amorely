@@ -58,6 +58,9 @@ interface EventEditorDrawerProps {
   }) => Promise<void>;
 }
 
+const formatFileDate = (file: File) =>
+  format(new Date(file.lastModified), 'd MMMM yyyy', { locale: ru });
+
 const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   open,
   onClose,
@@ -541,9 +544,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                       textAlign: 'center'
                     }}
                   >
-                    {files[index].name.length > 15
-                      ? files[index].name.substring(0, 15) + '...'
-                      : files[index].name}
+                    {formatFileDate(files[index])}
                   </Typography>
                 </Box>
               ))}
