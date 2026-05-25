@@ -15,7 +15,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button
+  Button,
+  Badge
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
@@ -30,6 +31,7 @@ import { Contact } from './ChatList';
 import Message from './Message';
 import SharedEventCard from './SharedEventCard';
 import ContactProfileDialog from './ContactProfileDialog';
+import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
@@ -176,6 +178,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   initialScrollTop = null,
   isLoading = false
 }) => {
+  const { otherUnreadCount } = useUnreadMessages();
   const [messageText, setMessageText] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<string[]>([]);
@@ -770,7 +773,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         }}
       >
         <IconButton edge="start" onClick={handleBackClick} sx={{ mr: 1 }}>
-          <ArrowBackIcon />
+          <Badge
+            badgeContent={otherUnreadCount}
+            color="error"
+            max={99}
+            invisible={otherUnreadCount === 0}
+          >
+            <ArrowBackIcon />
+          </Badge>
         </IconButton>
         <Avatar 
           alt={contact.name} 

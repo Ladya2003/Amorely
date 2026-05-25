@@ -36,6 +36,7 @@ import socketService from '../services/socketService';
 import { Socket } from 'socket.io-client';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useUnreadMessages } from '../contexts/UnreadMessagesContext';
 import { useCrypto } from '../contexts/CryptoContext';
 import {
   decryptChatPayload,
@@ -250,6 +251,7 @@ const ChatPage: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
+  const { syncUnreadFromContacts, setActiveContactId } = useUnreadMessages();
   const { localDeviceKeys } = useCrypto();
   const CURRENT_USER_ID = user?._id;
 
@@ -652,8 +654,7 @@ const ChatPage: React.FC = () => {
     const newSocket = socketService.initialize(CURRENT_USER_ID);
     setSocket(newSocket);
 
-    // Обработчики событий сокета
-    newSocket.on('new_message', (message: MessageType) => {
+    const onNewMessage = (message: MessageType) => {
       const isCurrentDialogOpen = selectedContactIdRef.current === message.senderId;
 
       const processIncoming = async () => {
@@ -688,9 +689,9 @@ const ChatPage: React.FC = () => {
       };
 
       processIncoming();
-    });
+    };
 
-    newSocket.on('message_sent', (message: MessageType) => {
+    const onMessageSent = (message: MessageType) => {
       const processSent = async () => {
         const peerId = selectedContactIdRef.current || '';
         const messageForDialog = peerId ? await decryptMessageForDialog(message, peerId) : message;
@@ -736,12 +737,11 @@ const ChatPage: React.FC = () => {
       };
 
       processSent();
-    });
+    };
 
-    newSocket.on('message_read', (messageId: string) => {
-      // Обновляем статус сообщения как прочитанное
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
+    const onMessageRead = (messageId: string) => {
+      setMessages(prevMessages =>
+        prevMessages.map(msg =>
           msg.id === messageId ? { ...msg, isRead: true } : msg
         )
       );
@@ -759,9 +759,9 @@ const ChatPage: React.FC = () => {
             : contact
         )
       );
-    });
+    };
 
-    newSocket.on('message_edited', (message: MessageType) => {
+    const onMessageEdited = (message: MessageType) => {
       const processEdited = async () => {
         const contactId =
           message.senderId === CURRENT_USER_ID
@@ -796,9 +796,9 @@ const ChatPage: React.FC = () => {
       };
 
       void processEdited();
-    });
+    };
 
-    newSocket.on('message_deleted', (payload: { messageId: string; senderId: string; receiverId: string }) => {
+    const onMessageDeleted = (payload: { messageId: string; senderId: string; receiverId: string }) => {
       const contactId = payload.senderId === CURRENT_USER_ID ? payload.receiverId : payload.senderId;
       setMessages((prevMessages) => {
         const nextMessages = prevMessages.filter((message) => message.id !== payload.messageId);
@@ -816,9 +816,9 @@ const ChatPage: React.FC = () => {
           severity: 'success'
         });
       }
-    });
+    };
 
-    newSocket.on('error', (payload: { message?: string }) => {
+    const onError = (payload: { message?: string }) => {
       if (!pendingDeleteRef.current) return;
 
       const rollback = pendingDeleteRef.current;
@@ -845,18 +845,38 @@ const ChatPage: React.FC = () => {
         message: payload?.message || 'Не удалось удалить сообщение',
         severity: 'error'
       });
-    });
+    };
+
+    newSocket.on('new_message', onNewMessage);
+    newSocket.on('message_sent', onMessageSent);
+    newSocket.on('message_read', onMessageRead);
+    newSocket.on('message_edited', onMessageEdited);
+    newSocket.on('message_deleted', onMessageDeleted);
+    newSocket.on('error', onError);
 
     return () => {
-      socketService.disconnect();
+      newSocket.off('new_message', onNewMessage);
+      newSocket.off('message_sent', onMessageSent);
+      newSocket.off('message_read', onMessageRead);
+      newSocket.off('message_edited', onMessageEdited);
+      newSocket.off('message_deleted', onMessageDeleted);
+      newSocket.off('error', onError);
     };
   }, [
     CURRENT_USER_ID,
-    selectedContactId,
     updateContactLastMessage,
     updateContactLastMessageAfterDelete,
-    decryptMessageForDialog
+    decryptMessageForDialog,
+    sortContactsByLastMessageDesc
   ]);
+
+  useEffect(() => {
+    setActiveContactId(selectedContactId);
+  }, [selectedContactId, setActiveContactId]);
+
+  useEffect(() => {
+    syncUnreadFromContacts(contacts);
+  }, [contacts, syncUnreadFromContacts]);
 
   // Загрузка сообщений при выборе контакта
   useEffect(() => {

@@ -3,8 +3,13 @@ import { API_URL } from '../config';
 
 class SocketService {
   private socket: ReturnType<typeof io> | null = null;
+  private connectedUserId: string | null = null;
 
   initialize(userId: string): ReturnType<typeof io> {
+    if (this.socket?.connected && this.connectedUserId === userId) {
+      return this.socket;
+    }
+
     if (this.socket) {
       this.socket.disconnect();
     }
@@ -12,10 +17,15 @@ class SocketService {
     this.socket = io(API_URL, {
       transports: ['websocket', 'polling']
     });
-    
+    this.connectedUserId = userId;
+
     // Сообщаем серверу, что пользователь подключился
     this.socket.emit('user_connected', userId);
-    
+
+    return this.socket;
+  }
+
+  getSocket(): ReturnType<typeof io> | null {
     return this.socket;
   }
 
@@ -113,6 +123,7 @@ class SocketService {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
+      this.connectedUserId = null;
     }
   }
 }

@@ -13,7 +13,8 @@ import {
   IconButton,
   Avatar,
   Menu,
-  MenuItem
+  MenuItem,
+  Badge
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -23,6 +24,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '../../contexts/NavigationContext';
+import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -31,6 +33,19 @@ const Layout: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
   const { showBottomNav } = useNavigation();
+  const { totalUnreadCount } = useUnreadMessages();
+  
+  const hideChatTabBadge = location.pathname === '/chat';
+  const chatTabIcon = (
+    <Badge
+      badgeContent={totalUnreadCount}
+      color="error"
+      max={99}
+      invisible={hideChatTabBadge || totalUnreadCount === 0}
+    >
+      <ChatIcon />
+    </Badge>
+  );
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   
@@ -98,7 +113,7 @@ const Layout: React.FC = () => {
                 sx={{ bgcolor: 'transparent' }}
               >
                 <BottomNavigationAction label="Главная" icon={<HomeIcon />} />
-                <BottomNavigationAction label="Чат" icon={<ChatIcon />} />
+                <BottomNavigationAction label="Чат" icon={chatTabIcon} />
                 <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} />
                 <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} />
                 <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} />
@@ -202,7 +217,7 @@ const Layout: React.FC = () => {
               icon={<HomeIcon />}
               sx={{ px: 1 }}
             />
-            <BottomNavigationAction label="Чат" icon={<ChatIcon />} sx={{ px: 1 }} />
+            <BottomNavigationAction label="Чат" icon={chatTabIcon} sx={{ px: 1 }} />
             <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} sx={{ px: 1 }} />
             <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} sx={{ px: 1 }} />
             <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} sx={{ px: 1 }} />

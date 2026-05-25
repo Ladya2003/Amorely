@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import AppThemeProvider from './contexts/AppThemeProvider';
 import { NavigationProvider } from './contexts/NavigationContext';
+import { UnreadMessagesProvider } from './contexts/UnreadMessagesContext';
 import { CryptoProvider } from './contexts/CryptoContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
@@ -38,6 +39,7 @@ function App() {
         <CryptoProvider>
           <NavigationProvider>
             <Router basename={routerBasename}>
+              <UnreadMessagesProvider>
               <Routes>
                 {/* Публичный маршрут для аутентификации */}
                 <Route path="/auth" element={<AuthPage />} />
@@ -72,6 +74,7 @@ function App() {
                 {/* Перенаправление на главную страницу для неизвестных маршрутов */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </UnreadMessagesProvider>
             </Router>
           </NavigationProvider>
         </CryptoProvider>
