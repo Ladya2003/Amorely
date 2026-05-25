@@ -142,7 +142,7 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
           senderId: lastMessage.senderId.toString(),
           text: displayText,
           timestamp: lastMessage.createdAt,
-          isRead: lastMessage.isRead || lastMessage.senderId.toString() === userId,
+          isRead: lastMessage.isRead,
           hasMedia: hasMedia,
           encryptedPayload: lastMessage.encryptedPayload
             ? {

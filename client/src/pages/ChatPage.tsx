@@ -634,7 +634,7 @@ const ChatPage: React.FC = () => {
             senderId: nextLastMessage.senderId,
             text: getMessagePreviewText(nextLastMessage),
             timestamp: nextLastMessage.timestamp,
-            isRead: nextLastMessage.senderId === CURRENT_USER_ID || Boolean(nextLastMessage.isRead),
+            isRead: Boolean(nextLastMessage.isRead),
             hasMedia,
             isPending: nextLastMessage.id.startsWith('temp-')
           }
@@ -1332,20 +1332,23 @@ const ChatPage: React.FC = () => {
     );
 
     setContacts((prevContacts) =>
-      prevContacts.map((contact) =>
-        contact.id === selectedContactId
-          ? {
-              ...contact,
-              lastMessage: {
-                ...contact.lastMessage,
-                isRead: true
-              },
-              unreadCount: 0
-            }
-          : contact
-      )
+      prevContacts.map((contact) => {
+        if (contact.id !== selectedContactId) {
+          return contact;
+        }
+
+        const isOwnLastMessage = contact.lastMessage.senderId === CURRENT_USER_ID;
+        return {
+          ...contact,
+          lastMessage: {
+            ...contact.lastMessage,
+            isRead: isOwnLastMessage ? contact.lastMessage.isRead : true
+          },
+          unreadCount: 0
+        };
+      })
     );
-  }, [messages, selectedContactId]);
+  }, [messages, selectedContactId, CURRENT_USER_ID]);
 
   const handleBackToList = (scrollTop = 0) => {
     if (selectedContactId) {
