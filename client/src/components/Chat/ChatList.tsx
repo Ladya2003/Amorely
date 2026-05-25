@@ -164,7 +164,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                     sx={(theme) => ({
                       position: 'absolute',
                       top: 2,
-                      right: 2,
+                      left: 2,
                       width: 12,
                       height: 12,
                       borderRadius: '50%',

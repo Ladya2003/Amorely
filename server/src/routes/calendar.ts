@@ -3,6 +3,7 @@ import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import Content from '../models/content';
+import PlanNote from '../models/planNote';
 import User from '../models/user';
 import Message from '../models/message';
 import mongoose from 'mongoose';
@@ -579,6 +580,306 @@ router.delete('/events/:id', async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при удалении события:', error);
     res.status(500).json({ error: 'Ошибка при удалении события' });
+  }
+});
+
+const buildCoupleQuery = (userId: string, partnerId?: string | null) => {
+  if (partnerId) {
+    return {
+      $or: [
+        { userId, partnerId },
+        { userId: partnerId, partnerId: userId }
+      ]
+    };
+  }
+
+  return {
+    userId,
+    $or: [{ partnerId: { $exists: false } }, { partnerId: null }, { partnerId: userId }]
+  };
+};
+
+const canAccessPlanNote = (note: any, userId: string, partnerId?: string | null) => {
+  const noteUserId = note.userId?.toString();
+  const notePartnerId = note.partnerId?.toString();
+
+  if (noteUserId === userId || notePartnerId === userId) {
+    return true;
+  }
+
+  if (partnerId && (noteUserId === partnerId || notePartnerId === partnerId)) {
+    return true;
+  }
+
+  return false;
+};
+
+const formatPlanNoteMedia = (media: any) => ({
+  _id: media._id?.toString(),
+  url: media.url,
+  publicId: media.publicId,
+  resourceType: media.resourceType,
+  fileSize: media.fileSize,
+  encrypted: media.encrypted,
+  mediaEnvelope: media.mediaEnvelope,
+  encryptedMediaEnvelope: media.encryptedMediaEnvelope,
+  metadataSenderId: media.metadataSenderId?.toString(),
+  metadataRecipientId: media.metadataRecipientId?.toString()
+});
+
+const buildPlanNoteMediaItem = (item: any, userId: string, partnerId: string) => {
+  const displayType = item.mediaEnvelope?.displayType || item.resourceType || 'image';
+
+  return {
+    url: item.url,
+    publicId: item.publicId,
+    resourceType: displayType === 'video' ? 'video' : 'image',
+    fileSize: item.fileSize || 0,
+    encrypted: true,
+    ...buildStoredMediaFields(item),
+    metadataSenderId: userId,
+    metadataRecipientId: partnerId
+  };
+};
+
+const deletePlanNoteMediaFromCloudinary = async (mediaItems: any[]) => {
+  for (const media of mediaItems) {
+    if (!media.publicId) continue;
+    try {
+      await cloudinary.uploader.destroy(media.publicId, { resource_type: 'raw' });
+    } catch (cloudinaryError) {
+      console.error('Ошибка при удалении медиа заметки из Cloudinary:', cloudinaryError);
+    }
+  }
+};
+
+const formatPlanNote = (note: any) => ({
+  _id: note._id.toString(),
+  title: note.title,
+  content: note.content,
+  category: note.category,
+  media: Array.isArray(note.media) ? note.media.map(formatPlanNoteMedia) : [],
+  createdAt: note.createdAt,
+  updatedAt: note.updatedAt,
+  createdBy: note.createdBy
+    ? {
+        _id: note.createdBy._id?.toString(),
+        username: note.createdBy.username,
+        avatar: note.createdBy.avatar,
+        firstName: note.createdBy.firstName,
+        lastName: note.createdBy.lastName
+      }
+    : undefined,
+  lastEditedBy: note.lastEditedBy
+    ? {
+        _id: note.lastEditedBy._id?.toString(),
+        username: note.lastEditedBy.username,
+        avatar: note.lastEditedBy.avatar,
+        firstName: note.lastEditedBy.firstName,
+        lastName: note.lastEditedBy.lastName
+      }
+    : undefined
+});
+
+// Получение всех заметок пары
+router.get('/plans', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const partnerId = await resolvePartnerUserId(userId);
+    const { category } = req.query;
+
+    const query: any = buildCoupleQuery(userId, partnerId);
+    if (category && typeof category === 'string') {
+      query.category = category;
+    }
+
+    const notes = await PlanNote.find(query)
+      .populate('createdBy', 'username avatar firstName lastName')
+      .populate('lastEditedBy', 'username avatar firstName lastName')
+      .sort({ updatedAt: -1 });
+
+    const categories = await PlanNote.distinct('category', buildCoupleQuery(userId, partnerId));
+
+    res.json({
+      notes: notes.map(formatPlanNote),
+      categories: categories.sort((a, b) => a.localeCompare(b, 'ru'))
+    });
+  } catch (error) {
+    console.error('Ошибка при получении заметок:', error);
+    res.status(500).json({ error: 'Ошибка при получении заметок' });
+  }
+});
+
+// Получение одной заметки
+router.get('/plans/:id', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { id } = req.params;
+    const partnerId = await resolvePartnerUserId(userId);
+
+    const note = await PlanNote.findById(id)
+      .populate('createdBy', 'username avatar firstName lastName')
+      .populate('lastEditedBy', 'username avatar firstName lastName');
+
+    if (!note) {
+      return res.status(404).json({ error: 'Заметка не найдена' });
+    }
+
+    if (!canAccessPlanNote(note, userId, partnerId)) {
+      return res.status(403).json({ error: 'Нет доступа к этой заметке' });
+    }
+
+    res.json(formatPlanNote(note));
+  } catch (error) {
+    console.error('Ошибка при получении заметки:', error);
+    res.status(500).json({ error: 'Ошибка при получении заметки' });
+  }
+});
+
+// Создание заметки
+router.post('/plans', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { title, content, category, media, encryptionRecipientId } = req.body || {};
+
+    if (!title?.trim()) {
+      return res.status(400).json({ error: 'Укажите заголовок заметки' });
+    }
+
+    if (!category?.trim()) {
+      return res.status(400).json({ error: 'Укажите категорию заметки' });
+    }
+
+    const partnerId = encryptionRecipientId
+      ? String(encryptionRecipientId)
+      : await resolvePartnerUserId(userId);
+
+    const mediaItems = Array.isArray(media) ? media : [];
+    for (const item of mediaItems) {
+      if (!isValidEncryptedMediaItem(item)) {
+        return res.status(400).json({ error: 'Некорректные данные зашифрованного медиа' });
+      }
+    }
+
+    const note = new PlanNote({
+      userId,
+      partnerId: partnerId !== userId ? partnerId : undefined,
+      title: title.trim(),
+      content: (content || '').trim(),
+      category: category.trim(),
+      media: mediaItems.map((item: any) => buildPlanNoteMediaItem(item, userId, partnerId)),
+      createdBy: userId,
+      lastEditedBy: userId
+    });
+
+    await note.save();
+
+    const populated = await PlanNote.findById(note._id)
+      .populate('createdBy', 'username avatar firstName lastName')
+      .populate('lastEditedBy', 'username avatar firstName lastName');
+
+    res.status(201).json(formatPlanNote(populated));
+  } catch (error) {
+    console.error('Ошибка при создании заметки:', error);
+    res.status(500).json({ error: 'Ошибка при создании заметки' });
+  }
+});
+
+// Обновление заметки
+router.put('/plans/:id', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { id } = req.params;
+    const { title, content, category, newMedia, removeMediaIds, encryptionRecipientId } = req.body || {};
+    const partnerId = encryptionRecipientId
+      ? String(encryptionRecipientId)
+      : await resolvePartnerUserId(userId);
+
+    const note = await PlanNote.findById(id);
+
+    if (!note) {
+      return res.status(404).json({ error: 'Заметка не найдена' });
+    }
+
+    if (!canAccessPlanNote(note, userId, partnerId)) {
+      return res.status(403).json({ error: 'Нет прав на редактирование этой заметки' });
+    }
+
+    if (title !== undefined) {
+      if (!title.trim()) {
+        return res.status(400).json({ error: 'Заголовок не может быть пустым' });
+      }
+      note.title = title.trim();
+    }
+
+    if (content !== undefined) {
+      note.content = content.trim();
+    }
+
+    if (category !== undefined) {
+      if (!category.trim()) {
+        return res.status(400).json({ error: 'Категория не может быть пустой' });
+      }
+      note.category = category.trim();
+    }
+
+    if (Array.isArray(removeMediaIds) && removeMediaIds.length > 0) {
+      const idsToRemove = new Set(removeMediaIds.map(String));
+      const mediaToDelete = note.media.filter((item) => idsToRemove.has(item._id.toString()));
+
+      await deletePlanNoteMediaFromCloudinary(mediaToDelete);
+      for (const id of idsToRemove) {
+        note.media.pull(id);
+      }
+    }
+
+    if (Array.isArray(newMedia) && newMedia.length > 0) {
+      for (const item of newMedia) {
+        if (!isValidEncryptedMediaItem(item)) {
+          return res.status(400).json({ error: 'Некорректные данные зашифрованного медиа' });
+        }
+        note.media.push(buildPlanNoteMediaItem(item, userId, partnerId));
+      }
+    }
+
+    note.lastEditedBy = new mongoose.Types.ObjectId(userId);
+    await note.save();
+
+    const populated = await PlanNote.findById(note._id)
+      .populate('createdBy', 'username avatar firstName lastName')
+      .populate('lastEditedBy', 'username avatar firstName lastName');
+
+    res.json(formatPlanNote(populated));
+  } catch (error) {
+    console.error('Ошибка при обновлении заметки:', error);
+    res.status(500).json({ error: 'Ошибка при обновлении заметки' });
+  }
+});
+
+// Удаление заметки
+router.delete('/plans/:id', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { id } = req.params;
+    const partnerId = await resolvePartnerUserId(userId);
+
+    const note = await PlanNote.findById(id);
+
+    if (!note) {
+      return res.status(404).json({ error: 'Заметка не найдена' });
+    }
+
+    if (!canAccessPlanNote(note, userId, partnerId)) {
+      return res.status(403).json({ error: 'Нет прав на удаление этой заметки' });
+    }
+
+    await deletePlanNoteMediaFromCloudinary(note.media);
+    await PlanNote.findByIdAndDelete(id);
+
+    res.json({ message: 'Заметка удалена' });
+  } catch (error) {
+    console.error('Ошибка при удалении заметки:', error);
+    res.status(500).json({ error: 'Ошибка при удалении заметки' });
   }
 });
 

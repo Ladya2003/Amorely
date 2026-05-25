@@ -18,7 +18,7 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterv
 import { ru } from 'date-fns/locale';
 import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
-import PlansEditor from './PlansEditor';
+import PlansNotes from './PlansNotes';
 import UserProfileChip from '../UI/UserProfileChip';
 
 interface MediaFile {
@@ -249,7 +249,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
             )}
           </Box>
         ) : (
-          <PlansEditor />
+          <PlansNotes />
         )}
       </Box>
     </Box>

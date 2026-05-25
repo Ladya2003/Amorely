@@ -167,6 +167,13 @@ const Layout: React.FC = () => {
       {/* Нижняя панель навигации для мобильных устройств */}
       {isMobile && showBottomNav && (
         <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }} elevation={3}>
+          <Box
+            sx={{
+              pt: 1.5,
+              pb: 'max(16px, env(safe-area-inset-bottom, 0px))',
+              bgcolor: 'background.paper',
+            }}
+          >
           <BottomNavigation
             showLabels
             value={getCurrentTab()}
@@ -190,8 +197,8 @@ const Layout: React.FC = () => {
               }
             }}
             sx={{
-              pt: 1.5,
-              pb: 'max(16px, env(safe-area-inset-bottom, 0px))',
+              bgcolor: 'transparent',
+              height: 56,
               '& .MuiBottomNavigationAction-root': {
                 minWidth: 0,
                 flex: 1,
@@ -226,6 +233,7 @@ const Layout: React.FC = () => {
             <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} sx={{ px: 1 }} />
             <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} sx={{ px: 1 }} />
           </BottomNavigation>
+          </Box>
         </Paper>
       )}
     </Box>
