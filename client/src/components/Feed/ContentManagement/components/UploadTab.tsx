@@ -16,6 +16,7 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { VIDEO_LIMITS_HINT } from '../../../../utils/mediaLimits';
 
 interface UploadTabProps {
   files: File[];
@@ -23,6 +24,7 @@ interface UploadTabProps {
   contentCount: number;
   hoursInterval: number;
   hasFrequencyChanges: boolean;
+  mediaValidationError?: string | null;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveFile: (index: number) => void;
   onContentCountChange: (count: number) => void;
@@ -36,6 +38,7 @@ const UploadTab: React.FC<UploadTabProps> = ({
   contentCount,
   hoursInterval,
   hasFrequencyChanges,
+  mediaValidationError,
   onFileChange,
   onRemoveFile,
   onContentCountChange,
@@ -67,8 +70,13 @@ const UploadTab: React.FC<UploadTabProps> = ({
           </Button>
         </label>
         <Typography variant="body2" color="text.secondary">
-          Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV)
+          Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). {VIDEO_LIMITS_HINT}
         </Typography>
+        {mediaValidationError && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {mediaValidationError}
+          </Alert>
+        )}
       </Box>
 
       {previews.length > 0 && (

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { format } from 'date-fns';
-import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -117,23 +116,11 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
                 resourceType={content.type}
                 encrypted={content.encrypted}
                 mediaEnvelope={content.mediaEnvelope}
+                videoPreview={content.type === 'video'}
                 imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 loadingMinHeight={40}
               />
-              {content.type === 'video' && (
-                <PlayCircleIcon
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    color: 'white',
-                    fontSize: 16,
-                    zIndex: 5
-                  }}
-                />
-              )}
             </Box>
           )
         ) : (

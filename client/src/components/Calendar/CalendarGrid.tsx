@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { Grid, Box, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -260,7 +259,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                         left: 0,
                         width: '100%',
                         height: '100%',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        pointerEvents: 'none'
                       }}
                     >
                       <DecryptedMedia
@@ -269,23 +269,12 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                         resourceType={media.resourceType}
                         encrypted={media.encrypted}
                         mediaEnvelope={media.mediaEnvelope}
+                        videoPreview={media.resourceType === 'video'}
                         imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         loadingMinHeight={0}
                       />
                     </Box>
-                    {media.resourceType === 'video' && (
-                      <PlayCircleIcon 
-                        sx={{ 
-                          position: 'absolute', 
-                          top: '50%', 
-                          left: '50%', 
-                          transform: 'translate(-50%, -50%)',
-                          color: 'white',
-                          fontSize: 32
-                        }} 
-                      />
-                    )}
                     {/* Бейджик дня рождения */}
                     {event.isBirthdayEvent && (
                       <Box

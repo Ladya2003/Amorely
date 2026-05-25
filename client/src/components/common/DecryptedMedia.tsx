@@ -9,11 +9,66 @@ interface DecryptedMediaProps {
   resourceType: 'image' | 'video';
   encrypted?: boolean;
   mediaEnvelope?: ContentMediaEnvelope;
+  /** Показывать видео как статичный первый кадр без элементов управления. */
+  videoPreview?: boolean;
   onImageClick?: (blobUrl: string) => void;
   imageStyle?: React.CSSProperties;
   videoStyle?: React.CSSProperties;
   loadingMinHeight?: number;
 }
+
+const captureVideoPoster = (blobUrl: string): Promise<string | null> =>
+  new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+    video.src = blobUrl;
+
+    const cleanup = () => {
+      video.onloadedmetadata = null;
+      video.onseeked = null;
+      video.onerror = null;
+      video.removeAttribute('src');
+      video.load();
+    };
+
+    video.onerror = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    video.onloadedmetadata = () => {
+      video.currentTime = Math.min(0.1, video.duration > 0 ? video.duration / 10 : 0.1);
+    };
+
+    video.onseeked = () => {
+      try {
+        if (!video.videoWidth || !video.videoHeight) {
+          cleanup();
+          resolve(null);
+          return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          cleanup();
+          resolve(null);
+          return;
+        }
+
+        ctx.drawImage(video, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      } catch {
+        resolve(null);
+      } finally {
+        cleanup();
+      }
+    };
+  });
 
 const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   cacheKey,
@@ -21,6 +76,7 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   resourceType,
   encrypted,
   mediaEnvelope,
+  videoPreview = false,
   onImageClick,
   imageStyle,
   videoStyle,
@@ -34,6 +90,8 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   });
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(needsDecrypt && !blobUrl);
+  const [videoPosterUrl, setVideoPosterUrl] = useState<string | null>(null);
+  const [posterLoading, setPosterLoading] = useState(false);
 
   useEffect(() => {
     if (!needsDecrypt) {
@@ -82,7 +140,29 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
     };
   }, [cacheKey, needsDecrypt, mediaEnvelope, url]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!videoPreview || resourceType !== 'video' || !blobUrl) {
+      setVideoPosterUrl(null);
+      setPosterLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setPosterLoading(true);
+    setVideoPosterUrl(null);
+
+    void captureVideoPoster(blobUrl).then((poster) => {
+      if (cancelled) return;
+      setVideoPosterUrl(poster);
+      setPosterLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [blobUrl, resourceType, videoPreview]);
+
+  if (loading || (videoPreview && resourceType === 'video' && posterLoading)) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 2, minHeight: loadingMinHeight }}>
         <CircularProgress size={28} />
@@ -98,11 +178,45 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
     );
   }
 
+  if (resourceType === 'video' && videoPreview) {
+    if (videoPosterUrl) {
+      return (
+        <img
+          src={videoPosterUrl}
+          alt=""
+          draggable={false}
+          style={{
+            maxWidth: '100%',
+            maxHeight: '200px',
+            display: 'block',
+            pointerEvents: 'none',
+            userSelect: 'none',
+            ...imageStyle
+          }}
+        />
+      );
+    }
+
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          minHeight: loadingMinHeight,
+          bgcolor: 'grey.300',
+          pointerEvents: 'none'
+        }}
+      />
+    );
+  }
+
   if (resourceType === 'video') {
     return (
       <video
         src={blobUrl}
         controls
+        playsInline
+        preload="auto"
         style={{
           maxWidth: '100%',
           maxHeight: '200px',

@@ -12,7 +12,6 @@ import {
   Typography
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -97,23 +96,11 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
                         resourceType={firstMedia.resourceType}
                         encrypted={firstMedia.encrypted}
                         mediaEnvelope={firstMedia.mediaEnvelope}
+                        videoPreview={firstMedia.resourceType === 'video'}
                         imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         loadingMinHeight={56}
                       />
-                      {firstMedia.resourceType === 'video' && (
-                        <PlayCircleIcon
-                          sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            color: 'white',
-                            fontSize: 28,
-                            pointerEvents: 'none',
-                          }}
-                        />
-                      )}
                     </Box>
                   ) : (
                     <Box
@@ -134,13 +121,24 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
                   <ListItemText
                     primary={event.title || 'Без названия'}
                     secondary={
-                      <Box>
+                      <Box component="span" sx={{ display: 'block' }}>
                         {event.description && (
-                          <Typography variant="body2" color="text.secondary" noWrap>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                            component="span"
+                            sx={{ display: 'block' }}
+                          >
                             {event.description}
                           </Typography>
                         )}
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          component="span"
+                          sx={{ display: 'block' }}
+                        >
                           {hasMedia
                             ? `${event.media!.length} ${event.media!.length === 1 ? 'файл' : 'файла'}`
                             : 'Текстовое событие'}
@@ -150,6 +148,7 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
                     primaryTypographyProps={{
                       fontWeight: 500,
                     }}
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                 </ListItemButton>
               </ListItem>

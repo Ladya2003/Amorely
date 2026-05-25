@@ -1500,7 +1500,7 @@ const ChatPage: React.FC = () => {
         setMessages((prev) => prev.filter((message) => message.id !== newMessage.id));
         setDeleteToast({
           open: true,
-          message: 'Не удалось отправить сообщение',
+          message: error instanceof Error ? error.message : 'Не удалось отправить сообщение',
           severity: 'error'
         });
       }

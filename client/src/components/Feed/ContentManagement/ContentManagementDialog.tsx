@@ -58,6 +58,7 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
     frequencyChangeOpen,
     pendingFrequency,
     isSaving,
+    mediaValidationError,
     initialContentCount,
     initialHoursInterval,
     setSearchQuery,
@@ -151,6 +152,7 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
             contentCount={contentCount}
             hoursInterval={hoursInterval}
             hasFrequencyChanges={hasFrequencyChanges}
+            mediaValidationError={mediaValidationError}
             onFileChange={handleFileChange}
             onRemoveFile={handleRemoveFile}
             onContentCountChange={setContentCount}

@@ -81,12 +81,26 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [drawerMediaReady, setDrawerMediaReady] = useState(false);
   const mediaFiles = (event?.media || []).filter((media) => media.url && media.url.trim().length > 0);
 
   useEffect(() => {
     if (open) {
       setCurrentMediaIndex(0);
     }
+  }, [open, event?._id]);
+
+  useEffect(() => {
+    if (!open) {
+      setDrawerMediaReady(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setDrawerMediaReady(true);
+    }, 320);
+
+    return () => window.clearTimeout(timer);
   }, [open, event?._id]);
 
   const handlePrevMedia = useCallback(() => {
@@ -193,14 +207,26 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               <Box
                 sx={{
                   width: '100%',
+                  aspectRatio: '1 / 1',
                   position: 'relative',
-                  paddingTop: '100%',
                   bgcolor: 'grey.100',
                   overflow: 'hidden',
                   ...swipeContainerSx
                 }}
                 {...swipeHandlers}
               >
+                {!drawerMediaReady ? (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  />
+                ) : (
+                <>
                 {/* Контейнер слайдера */}
                 <Box
                   sx={{
@@ -216,18 +242,18 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                     transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 >
-                  {mediaFiles.map((media, index) => (
+                  {mediaFiles.map((media) => (
                     <Box
                       key={media._id}
                       sx={{
                         minWidth: '100%',
                         height: '100%',
-                        cursor: 'pointer',
+                        cursor: media.resourceType === 'video' ? 'default' : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
-                      onClick={handleOpenMediaViewer}
+                      onClick={media.resourceType === 'video' ? undefined : handleOpenMediaViewer}
                     >
                       <DecryptedMedia
                         cacheKey={`calendar-${event.eventId || event._id}-${media._id}`}
@@ -338,6 +364,8 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                     color: 'white'
                   }}
                 />
+                </>
+                )}
               </Box>
             )}
 

@@ -16,7 +16,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Badge
+  Badge,
+  Alert
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
@@ -34,6 +35,7 @@ import ContactProfileDialog from './ContactProfileDialog';
 import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
+import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 
 const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
 
@@ -181,6 +183,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const { otherUnreadCount } = useUnreadMessages();
   const [messageText, setMessageText] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachmentValidationError, setAttachmentValidationError] = useState<string | null>(null);
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<string[]>([]);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [hiddenDayBadgeKeys, setHiddenDayBadgeKeys] = useState<Record<string, boolean>>({});
@@ -442,11 +445,21 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setAttachments([...attachments, ...newFiles]);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    const { accepted, errors } = await validateAndFilterMediaFiles(Array.from(e.target.files));
+    e.target.value = '';
+
+    if (errors.length > 0) {
+      setAttachmentValidationError(errors.join(' '));
+    } else {
+      setAttachmentValidationError(null);
     }
+
+    if (accepted.length === 0) return;
+
+    setAttachments((prev) => [...prev, ...accepted]);
   };
 
   const updateHiddenDayBadges = useCallback(() => {
@@ -869,6 +882,11 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           borderRadius: 0
         }}
       >
+        {attachmentValidationError && (
+          <Alert severity="error" sx={{ mb: 1 }}>
+            {attachmentValidationError}
+          </Alert>
+        )}
         {attachments.length > 0 && (
           <Box sx={{ 
             display: 'flex', 

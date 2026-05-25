@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '../config';
+import { prepareMediaForUpload } from '../utils/prepareMediaForUpload';
 import { encryptFileForUpload } from './mediaCrypto';
 import { encryptMediaEnvelopeForPartner } from './contentCryptoService';
 import type { EncryptedTextPayload } from './contentCryptoService';
@@ -36,7 +37,8 @@ export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncr
   const uploads: UploadedEncryptedFile[] = [];
 
   for (const file of files) {
-    const encrypted = await encryptFileForUpload(file);
+    const preparedFile = await prepareMediaForUpload(file);
+    const encrypted = await encryptFileForUpload(preparedFile);
     const uploadName = `encrypted-${Date.now()}-${Math.random().toString(36).slice(2)}.enc`;
     const formData = new FormData();
     formData.append('media', encrypted.encryptedBlob, uploadName);
@@ -59,10 +61,10 @@ export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncr
       mediaEnvelope: {
         mediaKey: encrypted.mediaKey,
         iv: encrypted.iv,
-        mimeType: file.type || 'application/octet-stream',
-        displayType: getDisplayTypeFromFile(file)
+        mimeType: preparedFile.type || 'application/octet-stream',
+        displayType: getDisplayTypeFromFile(preparedFile)
       },
-      fileSize: file.size
+      fileSize: preparedFile.size
     });
   }
 

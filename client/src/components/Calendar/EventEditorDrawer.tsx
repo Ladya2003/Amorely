@@ -28,6 +28,9 @@ import { ru } from 'date-fns/locale';
 import { format } from 'date-fns';
 import { useEventDraft } from './hooks/useEventDraft';
 import { useAuth } from '../../contexts/AuthContext';
+import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
+import { VIDEO_LIMITS_HINT } from '../../utils/mediaLimits';
+import ContentViewer from './ContentViewer';
 
 interface EventEditorDrawerProps {
   open: boolean;
@@ -102,6 +105,11 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [isBirthdayEvent, setIsBirthdayEvent] = useState(false);
   const [isAnniversaryEvent, setIsAnniversaryEvent] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerContent, setViewerContent] = useState<{
+    mediaUrl: string;
+    resourceType: 'image' | 'video';
+  } | null>(null);
 
   // Функция для проверки, находится ли дата в диапазоне дня рождения
   const isDateNearBirthday = (date: Date | null): boolean => {
@@ -205,15 +213,28 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     return () => clearTimeout(timer);
   }, [selectedDate?.getTime(), title, description, files.length, previews.length, open, isInitialized, isEditMode, updateDraft]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const newFiles = Array.from(event.target.files);
-      setFiles(prev => [...prev, ...newFiles]);
-      
-      // Создаем URL превью для каждого файла
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setPreviews(prev => [...prev, ...newPreviews]);
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
+
+    const { accepted, errors } = await validateAndFilterMediaFiles(Array.from(event.target.files));
+    event.target.value = '';
+
+    if (errors.length > 0) {
+      setError(errors.join(' '));
     }
+
+    if (accepted.length === 0) return;
+
+    setFiles((prev) => [...prev, ...accepted]);
+    setPreviews((prev) => [...prev, ...accepted.map((file) => URL.createObjectURL(file))]);
+  };
+
+  const handlePreviewClick = (index: number) => {
+    setViewerContent({
+      mediaUrl: previews[index],
+      resourceType: files[index].type.startsWith('image/') ? 'image' : 'video'
+    });
+    setViewerOpen(true);
   };
 
   const handleRemoveFile = (index: number) => {
@@ -286,6 +307,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleClose = () => {
+    setViewerOpen(false);
     // Не очищаем черновик при закрытии - данные сохранятся для повторного открытия
     onClose();
   };
@@ -303,6 +325,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const canSave = selectedDate && title.trim().length > 0;
 
   return (
+    <>
     <Drawer
       anchor="right"
       open={open}
@@ -468,7 +491,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                 </Button>
               </label>
               <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). Фото необязательны.
+                Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). Фото необязательны. {VIDEO_LIMITS_HINT}
               </Typography>
             </Box>
           )}
@@ -485,6 +508,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               {previews.map((preview, index) => (
                 <Box
                   key={index}
+                  onClick={() => handlePreviewClick(index)}
                   sx={{
                     position: 'relative',
                     width: 120,
@@ -492,7 +516,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                     borderRadius: 1,
                     overflow: 'hidden',
                     border: '2px solid',
-                    borderColor: 'divider'
+                    borderColor: 'divider',
+                    cursor: 'pointer'
                   }}
                 >
                   {files[index].type.startsWith('image/') ? (
@@ -527,7 +552,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                         color: 'white'
                       }
                     }}
-                    onClick={() => handleRemoveFile(index)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFile(index);
+                    }}
                   >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
@@ -600,6 +628,13 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         </Box>
       </Box>
     </Drawer>
+      <ContentViewer
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        content={viewerContent}
+        stackAboveParentModal
+      />
+    </>
   );
 };
 

@@ -4,6 +4,30 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// MUI Drawer + <video controls> могут вызывать benign ResizeObserver loop в dev.
+if (typeof window !== 'undefined' && 'ResizeObserver' in window) {
+  const NativeResizeObserver = window.ResizeObserver;
+  window.ResizeObserver = class extends NativeResizeObserver {
+    constructor(callback: ResizeObserverCallback) {
+      super((entries, observer) => {
+        window.requestAnimationFrame(() => {
+          callback(entries, observer);
+        });
+      });
+    }
+  };
+}
+
+const isResizeObserverError = (message?: string) =>
+  Boolean(message && /ResizeObserver loop/i.test(message));
+
+window.addEventListener('error', (event) => {
+  if (isResizeObserverError(event.message)) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+});
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );

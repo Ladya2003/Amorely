@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ContentItem, ViewMode, SizeFilter, DateFilter, FrequencySettings } from '../types';
+import { validateAndFilterMediaFiles } from '../../../../utils/validateMediaFile';
 
 interface UseContentManagementProps {
   open: boolean;
@@ -59,6 +60,7 @@ export const useContentManagement = ({
   const [frequencyChangeOpen, setFrequencyChangeOpen] = useState<boolean>(false);
   const [pendingFrequency, setPendingFrequency] = useState<FrequencySettings | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [mediaValidationError, setMediaValidationError] = useState<string | null>(null);
 
   // Вычисляемые значения
   const hasFrequencyChanges = contentCount !== initialContentCount || hoursInterval !== initialHoursInterval;
@@ -84,14 +86,22 @@ export const useContentManagement = ({
   }, [open, existingContent]);
 
   // Обработчики файлов
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const newFiles = Array.from(event.target.files);
-      setFiles([...files, ...newFiles]);
-      
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setPreviews([...previews, ...newPreviews]);
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
+
+    const { accepted, errors } = await validateAndFilterMediaFiles(Array.from(event.target.files));
+    event.target.value = '';
+
+    if (errors.length > 0) {
+      setMediaValidationError(errors.join(' '));
+    } else {
+      setMediaValidationError(null);
     }
+
+    if (accepted.length === 0) return;
+
+    setFiles([...files, ...accepted]);
+    setPreviews([...previews, ...accepted.map((file) => URL.createObjectURL(file))]);
   };
 
   const handleRemoveFile = (index: number) => {
@@ -231,6 +241,7 @@ export const useContentManagement = ({
     frequencyChangeOpen,
     pendingFrequency,
     isSaving,
+    mediaValidationError,
     initialContentCount,
     initialHoursInterval,
 

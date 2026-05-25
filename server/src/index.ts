@@ -96,7 +96,12 @@ const withMulter =
     });
   };
 
-const uploadEncryptedChat = multer({ storage: encryptedChatStorage });
+const MAX_ENCRYPTED_UPLOAD_BYTES = 35 * 1024 * 1024;
+
+const uploadEncryptedChat = multer({
+  storage: encryptedChatStorage,
+  limits: { fileSize: MAX_ENCRYPTED_UPLOAD_BYTES }
+});
 
 // Middleware
 app.use(
@@ -153,6 +158,15 @@ app.post(
 
     if (!files || files.length === 0) {
       return res.status(400).json({ error: 'Файлы не были загружены' });
+    }
+
+    const maxVideoMb = 30;
+    for (const file of files) {
+      if (file.size > MAX_ENCRYPTED_UPLOAD_BYTES) {
+        return res.status(413).json({
+          error: `Файл слишком большой. Максимум ${maxVideoMb} МБ для видео после сжатия`
+        });
+      }
     }
 
     const uploads = files.map((file) => {

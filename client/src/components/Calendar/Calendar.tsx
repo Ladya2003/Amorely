@@ -7,12 +7,12 @@ import {
   ToggleButtonGroup, 
   ToggleButton, 
   IconButton,
+  Button,
   Grid,
   Paper
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GridViewIcon from '@mui/icons-material/GridView';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -197,9 +197,14 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
                   <GridViewIcon />
                 </ToggleButton>
               </ToggleButtonGroup>
-              <IconButton color="primary" onClick={() => onAddContent(currentDate)}>
-                <AddCircleIcon />
-              </IconButton>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => onAddContent(currentDate)}
+              >
+                Создать событие
+              </Button>
             </Box>
           </>
         )}

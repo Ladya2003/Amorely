@@ -136,7 +136,8 @@ const SharedEventCard: React.FC<SharedEventCardProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          position: 'relative'
+          position: 'relative',
+          pointerEvents: 'none'
         }}
       >
         {hasPreview ? (
@@ -147,6 +148,7 @@ const SharedEventCard: React.FC<SharedEventCardProps> = ({
               resourceType={previewMedia!.resourceType || 'image'}
               encrypted={Boolean(previewEnvelope?.mediaKey) || Boolean(previewMedia!.encrypted)}
               mediaEnvelope={previewEnvelope}
+              videoPreview={previewMedia!.resourceType === 'video'}
               imageStyle={{
                 width: '100%',
                 height: '100%',
