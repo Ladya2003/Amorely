@@ -59,7 +59,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
   };
   
   return (
-    <Paper elevation={0} sx={{ p: 3 }}>
+    <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
         Безопасность
       </Typography>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Box, 
   TextField, 
@@ -29,43 +29,106 @@ export interface UserProfile {
 interface ProfileFormProps {
   user: UserProfile;
   onSave: (userData: FormData) => Promise<void>;
-  isLoading: boolean;
 }
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) => {
+const SAVE_DEBOUNCE_MS = 800;
+
+const formatBirthdayValue = (birthday?: string) => {
+  if (!birthday) return '';
+  return new Date(birthday).toISOString().split('T')[0];
+};
+
+const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave }) => {
   const [username, setUsername] = useState(user.username || '');
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
   const [bio, setBio] = useState(user.bio || '');
-  const [birthday, setBirthday] = useState(() => {
-    if (user.birthday) {
-      // Преобразуем ISO дату в формат YYYY-MM-DD для HTML input
-      const date = new Date(user.birthday);
-      return date.toISOString().split('T')[0];
-    }
-    return '';
-  });
+  const [birthday, setBirthday] = useState(() => formatBirthdayValue(user.birthday));
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(user.avatar);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successToastOpen, setSuccessToastOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const isSavingRef = useRef(false);
+  const isMountedRef = useRef(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Обновляем birthday при изменении user
   useEffect(() => {
-    if (user.birthday) {
-      const date = new Date(user.birthday);
-      setBirthday(date.toISOString().split('T')[0]);
-    } else {
-      setBirthday('');
-    }
+    setBirthday(formatBirthdayValue(user.birthday));
   }, [user.birthday]);
 
+  useEffect(() => {
+    if (!avatarFile) {
+      setAvatarPreview(user.avatar);
+    }
+  }, [user.avatar, avatarFile]);
 
+  const buildFormData = useCallback((avatarOverride?: File | null) => {
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('firstName', firstName);
+    formData.append('lastName', lastName);
+    formData.append('bio', bio);
+    formData.append('birthday', birthday);
+
+    const avatarToUpload = avatarOverride !== undefined ? avatarOverride : avatarFile;
+    if (avatarToUpload) {
+      formData.append('avatar', avatarToUpload);
+    }
+
+    return formData;
+  }, [username, firstName, lastName, bio, birthday, avatarFile]);
+
+  const isTextDirty = useCallback(() => (
+    username !== (user.username || '') ||
+    firstName !== (user.firstName || '') ||
+    lastName !== (user.lastName || '') ||
+    bio !== (user.bio || '') ||
+    birthday !== formatBirthdayValue(user.birthday)
+  ), [username, firstName, lastName, bio, birthday, user]);
+
+  const saveProfile = useCallback(async (avatarOverride?: File | null) => {
+    if (isSavingRef.current || !username.trim()) {
+      return;
+    }
+
+    isSavingRef.current = true;
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      await onSave(buildFormData(avatarOverride));
+      setAvatarFile(null);
+      setSuccessToastOpen(true);
+    } catch (saveError) {
+      console.error('Ошибка при сохранении профиля:', saveError);
+      setError('Не удалось сохранить изменения. Пожалуйста, попробуйте еще раз.');
+    } finally {
+      isSavingRef.current = false;
+      setIsSaving(false);
+    }
+  }, [buildFormData, onSave, username]);
+
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+
+    if (!isTextDirty()) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void saveProfile();
+    }, SAVE_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [username, firstName, lastName, bio, birthday, isTextDirty, saveProfile]);
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
@@ -101,36 +164,18 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
   const handleAvatarCropped = (file: File) => {
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setError(null);
-    
-    try {
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('firstName', firstName);
-      formData.append('lastName', lastName);
-      formData.append('bio', bio);
-      formData.append('birthday', birthday);
-      
-      if (avatarFile) {
-        formData.append('avatar', avatarFile);
-      }
-      
-      await onSave(formData);
-      setSuccessToastOpen(true);
-    } catch (error) {
-      console.error('Ошибка при сохранении профиля:', error);
-      setError('Не удалось сохранить изменения. Пожалуйста, попробуйте еще раз.');
-    }
+    void saveProfile(file);
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 3, mb: 0 }}>
+    <Paper elevation={0} sx={{ p: 3, mb: 0, bgcolor: 'transparent' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
         Личная информация
+        {isSaving && (
+          <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1.5 }}>
+            Сохранение...
+          </Typography>
+        )}
       </Typography>
       <Divider sx={{ mb: 3 }} />
       
@@ -140,7 +185,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
         </Alert>
       )}
       
-      <form id="profile-settings-form" onSubmit={handleSubmit}>
+      <Box component="div">
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={{ position: 'relative', mb: 2 }}>
@@ -254,7 +299,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, isLoading }) =>
             </Grid>
           </Grid>
         </Grid>
-      </form>
+      </Box>
 
       <ImageCropDialog
         open={cropDialogOpen}

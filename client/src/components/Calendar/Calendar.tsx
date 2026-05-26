@@ -133,7 +133,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
   });
 
   return (
-    <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ width: '100%', height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {/* Верхний контейнер с навигацией - фиксированный */}
       <Box sx={{ flexShrink: 0, bgcolor: 'background.paper' }}>
         {/* Табы */}
@@ -211,7 +211,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
       </Box>
 
       {/* Нижний контейнер с контентом - скроллящийся */}
-      <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+      <Box sx={{ flexGrow: 1, minHeight: 0, overflow: 'auto' }}>
         {tabValue === 0 ? (
           <Box sx={{ p: 1 }}>
             {view === 'circles' ? (

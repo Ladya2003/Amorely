@@ -25,6 +25,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
+import { MOBILE_BOTTOM_NAV_OFFSET } from '../../constants/layout';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -75,7 +76,7 @@ const Layout: React.FC = () => {
   };
   
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
       {/* Верхняя панель навигации для десктопа */}
       {!isMobile && (
         <AppBar position="static" color="default" elevation={1}>
@@ -154,11 +155,14 @@ const Layout: React.FC = () => {
       
       {/* Основное содержимое */}
       <Box sx={{ 
-        flexGrow: 1, 
-        overflow: 'auto', 
+        flexGrow: 1,
+        minHeight: 0,
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
         p: isMobile ? 0 : 2,
         pb: isMobile && showBottomNav
-          ? 'calc(84px + max(16px, env(safe-area-inset-bottom, 0px)))'
+          ? MOBILE_BOTTOM_NAV_OFFSET
           : isMobile ? '0px' : 2 // Отступ снизу для нижней навигации на мобильных
       }}>
         <Outlet />

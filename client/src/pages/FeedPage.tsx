@@ -63,7 +63,7 @@ const FeedPage: React.FC = () => {
     fetchUserData();
     fetchContent();
     fetchUserContent();
-  }, [localDeviceKeys, user?._id]);
+  }, [localDeviceKeys, user?._id, partnerId]);
   
   // Функция для загрузки данных об отношениях
   const fetchUserData = async () => {
@@ -165,12 +165,14 @@ const FeedPage: React.FC = () => {
         description: item.description,
         encrypted: item.encrypted,
         mediaEnvelope: item.mediaEnvelope,
+        encryptedMediaEnvelope: item.encryptedMediaEnvelope,
         encryptedTitle: item.encryptedTitle,
         encryptedDescription: item.encryptedDescription,
         metadataSenderId: item.metadataSenderId,
         metadataRecipientId: item.metadataRecipientId,
         targetId: item.targetId,
         userId: item.userId,
+        createdBy: item.createdBy,
         eventId: item.eventId,
         isBirthdayEvent: item.isBirthdayEvent,
         isAnniversaryEvent: item.isAnniversaryEvent

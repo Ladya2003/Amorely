@@ -83,17 +83,26 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   loadingMinHeight = 80
 }) => {
   const needsDecrypt = Boolean(mediaEnvelope?.mediaKey && mediaEnvelope?.iv);
+  const awaitingDecryption = Boolean(encrypted && !needsDecrypt);
 
   const [blobUrl, setBlobUrl] = useState<string | null>(() => {
-    if (!needsDecrypt) return url;
-    return getCachedBlobUrl(cacheKey) || null;
+    if (needsDecrypt) return getCachedBlobUrl(cacheKey) || null;
+    if (awaitingDecryption) return null;
+    return url;
   });
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(needsDecrypt && !blobUrl);
+  const [loading, setLoading] = useState((needsDecrypt || awaitingDecryption) && !blobUrl);
   const [videoPosterUrl, setVideoPosterUrl] = useState<string | null>(null);
   const [posterLoading, setPosterLoading] = useState(false);
 
   useEffect(() => {
+    if (awaitingDecryption) {
+      setBlobUrl(null);
+      setLoading(true);
+      setError(false);
+      return;
+    }
+
     if (!needsDecrypt) {
       setBlobUrl(url);
       setLoading(false);
@@ -138,7 +147,7 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [cacheKey, needsDecrypt, mediaEnvelope, url]);
+  }, [awaitingDecryption, cacheKey, needsDecrypt, mediaEnvelope, url]);
 
   useEffect(() => {
     if (!videoPreview || resourceType !== 'video' || !blobUrl) {

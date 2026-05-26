@@ -107,7 +107,7 @@ const NewsPage: React.FC = () => {
         mb: 3,
       }}>
         <Typography variant="h4" component="h1" sx={{ fontSize: '1.7rem', fontWeight: 400 }}>
-          Новости и обновления
+          Новости
         </Typography>
         <UserProfileChip maxNameWidth={40} />
       </Box>

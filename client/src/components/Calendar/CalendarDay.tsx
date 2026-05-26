@@ -93,7 +93,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: '50%',
-                border: '2px solid #ff4b8d',
+                border: 2,
+                borderColor: 'primary.main',
                 overflow: 'hidden'
               }}
             >
@@ -106,7 +107,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
                 height: '100%',
                 position: 'relative',
                 borderRadius: '50%',
-                border: '2px solid #ff4b8d',
+                border: 2,
+                borderColor: 'primary.main',
                 overflow: 'hidden'
               }}
             >

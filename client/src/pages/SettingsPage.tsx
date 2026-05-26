@@ -11,14 +11,12 @@ import {
   useMediaQuery,
   useTheme,
   Paper,
-  Button,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import PeopleIcon from '@mui/icons-material/People';
 import PaletteIcon from '@mui/icons-material/Palette';
 import SecurityIcon from '@mui/icons-material/Security';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import SaveIcon from '@mui/icons-material/Save';
 import axios from 'axios';
 import { API_URL } from '../config';
 import ProfileForm, { UserProfile } from '../components/Settings/ProfileForm';
@@ -28,9 +26,7 @@ import { PrimaryColorPreference } from '../theme/appTheme';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
-import { settingsActionButtonSx } from '../components/Settings/settingsButtonSx';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigation } from '../contexts/NavigationContext';
 import {
   checkPushSubscriptionStatus,
   ensurePushSubscription,
@@ -69,10 +65,6 @@ const SettingsPage: React.FC = () => {
   
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
-  const isSmallMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
-  const { showBottomNav } = useNavigation();
-  const showFixedActionsBar = isSmallMobile && showBottomNav;
-  const actionsBarBottom = showFixedActionsBar ? 72 : 0;
   
   useEffect(() => {
     fetchUserData();
@@ -172,32 +164,20 @@ const SettingsPage: React.FC = () => {
   };
   
   const handleSaveProfile = async (formData: FormData) => {
-    try {
-      setIsLoading(true);
-      
-      // Получаем токен из localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Не авторизован');
-      }
-      
-      // Отправляем запрос на обновление профиля
-      const response = await axios.put(`${API_URL}/api/settings/user/${user?._id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
-        },
-      });
-      
-      setUser(response.data.user);
-      // Обновляем данные пользователя в AuthContext
-      updateUser(response.data.user);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Ошибка при сохранении профиля:', error);
-      setIsLoading(false);
-      throw error;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Не авторизован');
     }
+
+    const response = await axios.put(`${API_URL}/api/settings/user/${user?._id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${token}`
+      },
+    });
+
+    setUser(response.data.user);
+    updateUser(response.data.user);
   };
   
   const handleAddPartner = async (partnerEmail: string, startDate: Date) => {
@@ -475,36 +455,51 @@ const SettingsPage: React.FC = () => {
   }
   
   return (
-    <Container
-      maxWidth="lg"
+    <Box
       sx={{
-        py: 4,
-        pb: showFixedActionsBar ? 10 : 4,
+        flex: 1,
+        minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
-        ...(!showFixedActionsBar && {
-          height: 'calc(100vh - 96px)',
-          boxSizing: 'border-box',
-        }),
+        overflow: 'hidden',
+        maxWidth: 'lg',
+        width: '100%',
+        mx: 'auto',
+        px: isMobile ? 2 : 3,
+        py: isMobile ? 2 : 4,
+        boxSizing: 'border-box',
       }}
     >
-      <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.7rem', flexShrink: 0 }}>
-        Настройки
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+          flexShrink: 0,
+          mb: 1,
+        }}
+      >
+        <Typography variant="h4" component="h1" sx={{ fontSize: '1.7rem' }}>
+          Настройки
+        </Typography>
+        <LogoutButton size="small" />
+      </Box>
       
       <Box
         sx={{
           display: 'flex',
-          flex: showFixedActionsBar ? undefined : 1,
+          flex: 1,
           flexDirection: isMobile ? 'column' : 'row',
-          mt: 3,
-          minHeight: showFixedActionsBar ? undefined : 0,
+          mt: isMobile ? 2 : 3,
+          minHeight: 0,
+          gap: isMobile ? 2 : 0,
         }}
       >
         {/* Вкладки */}
         <Box sx={{ 
           width: isMobile ? '100%' : 240, 
-          mb: isMobile ? 2 : 0,
+          flexShrink: 0,
           mr: isMobile ? 0 : 3
         }}>
           <Paper elevation={1} sx={{ borderRadius: 2 }}>
@@ -558,13 +553,22 @@ const SettingsPage: React.FC = () => {
         </Box>
         
         {/* Содержимое вкладок */}
-        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: showFixedActionsBar ? undefined : 0 }}>
-          <Box sx={{ flex: showFixedActionsBar ? undefined : 1, minHeight: showFixedActionsBar ? undefined : 0, overflow: showFixedActionsBar ? undefined : 'auto' }}>
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+            }}
+          >
           {tabValue === 0 && user && (
             <ProfileForm 
               user={user} 
               onSave={handleSaveProfile} 
-              isLoading={isLoading} 
             />
           )}
           
@@ -607,58 +611,9 @@ const SettingsPage: React.FC = () => {
             />
           )}
           </Box>
-
-          <Box
-            sx={{
-              ...(showFixedActionsBar
-                ? {
-                    position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 900,
-                    bgcolor: 'background.default',
-                  }
-                : {
-                    flexShrink: 0,
-                    bgcolor: 'background.default',
-                    borderTop: 1,
-                    borderColor: 'divider',
-                  }),
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 2,
-                py: 1.5,
-                px: showFixedActionsBar ? 2 : 0,
-                borderTop: showFixedActionsBar ? 1 : 0,
-                borderColor: 'divider',
-              }}
-            >
-              <LogoutButton />
-              {tabValue === 0 && (
-                <Button
-                  type="submit"
-                  form="profile-settings-form"
-                  variant="contained"
-                  color="primary"
-                  startIcon={<SaveIcon />}
-                  disabled={isLoading}
-                  sx={settingsActionButtonSx}
-                >
-                  {isLoading ? 'Сохранение...' : 'Сохранить'}
-                </Button>
-              )}
-            </Box>
-            {showFixedActionsBar && <Box sx={{ height: actionsBarBottom, bgcolor: 'background.default' }} />}
-          </Box>
         </Box>
       </Box>
-    </Container>
+    </Box>
   );
 };
 

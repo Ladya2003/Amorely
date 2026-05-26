@@ -388,6 +388,12 @@ const ChatPage: React.FC = () => {
     index: number;
     contactId: string;
   } | null>(null);
+  const pendingSendsRef = useRef<Map<string, {
+    message: MessageType;
+    contactId: string;
+    timeoutId: ReturnType<typeof setTimeout>;
+  }>>(new Map());
+  const PENDING_SEND_TIMEOUT_MS = 30000;
   const hasRestoredSelectedChatRef = useRef(false);
   const selectedChatStorageKey = useCallback(() => {
     if (!CURRENT_USER_ID) return null;
@@ -515,6 +521,108 @@ const ChatPage: React.FC = () => {
     );
   }, [sortContactsByLastMessageDesc]);
 
+  const updateContactLastMessageAfterDelete = useCallback((contactId: string, nextMessages: MessageType[]) => {
+    setContacts((prevContacts) =>
+      sortContactsByLastMessageDesc(prevContacts.map((contact) => {
+        if (contact.id !== contactId) return contact;
+
+        const nextLastMessage = nextMessages[nextMessages.length - 1];
+        if (!nextLastMessage) {
+          return {
+            ...contact,
+            lastMessage: {
+              ...contact.lastMessage,
+              id: '',
+              senderId: '',
+              text: 'Нет сообщений',
+              timestamp: new Date().toISOString(),
+              isRead: true,
+              hasMedia: false,
+              isPending: false
+            },
+            unreadCount: 0
+          };
+        }
+
+        const hasMedia = Boolean(nextLastMessage.attachments && nextLastMessage.attachments.length > 0);
+        return {
+          ...contact,
+          lastMessage: {
+            ...contact.lastMessage,
+            id: nextLastMessage.id,
+            senderId: nextLastMessage.senderId,
+            text: getMessagePreviewText(nextLastMessage),
+            timestamp: nextLastMessage.timestamp,
+            isRead: Boolean(nextLastMessage.isRead),
+            hasMedia,
+            isPending: nextLastMessage.id.startsWith('temp-')
+          }
+        };
+      }))
+    );
+  }, [CURRENT_USER_ID, sortContactsByLastMessageDesc]);
+
+  const resolvePendingSend = useCallback((clientTempId?: string) => {
+    if (!clientTempId) {
+      return;
+    }
+
+    const pending = pendingSendsRef.current.get(clientTempId);
+    if (!pending) {
+      return;
+    }
+
+    clearTimeout(pending.timeoutId);
+    pendingSendsRef.current.delete(clientTempId);
+  }, []);
+
+  const failPendingSend = useCallback((
+    clientTempId: string,
+    errorMessage: string
+  ) => {
+    const pending = pendingSendsRef.current.get(clientTempId);
+    if (!pending) {
+      return;
+    }
+
+    clearTimeout(pending.timeoutId);
+    pendingSendsRef.current.delete(clientTempId);
+
+    const { message, contactId } = pending;
+    setMessages((prevMessages) => {
+      const nextMessages = prevMessages.filter((item) => item.id !== message.id);
+      if (selectedContactIdRef.current === contactId) {
+        updateContactLastMessageAfterDelete(contactId, nextMessages);
+      }
+      return nextMessages;
+    });
+
+    setDeleteToast({
+      open: true,
+      message: errorMessage,
+      severity: 'error'
+    });
+  }, [updateContactLastMessageAfterDelete]);
+
+  const trackPendingSend = useCallback((
+    clientTempId: string,
+    message: MessageType,
+    contactId: string
+  ) => {
+    const timeoutId = setTimeout(() => {
+      failPendingSend(
+        clientTempId,
+        'Не удалось отправить сообщение. Проверьте соединение и попробуйте снова.'
+      );
+    }, PENDING_SEND_TIMEOUT_MS);
+
+    pendingSendsRef.current.set(clientTempId, {
+      message,
+      contactId,
+      timeoutId
+    });
+  }, [failPendingSend]);
+
   const forwardEncryptedMessage = useCallback(
     async (
       targetContactId: string,
@@ -583,6 +691,8 @@ const ChatPage: React.FC = () => {
         setMessages((prev) => [...prev, optimisticMessage]);
       }
 
+      trackPendingSend(clientTempId, optimisticMessage, targetContactId);
+
       updateContactLastMessage(
         targetContactId,
         payload.text || 'Пересланное сообщение',
@@ -600,50 +710,10 @@ const ChatPage: React.FC = () => {
       resolvePeerIdForMessage,
       selectedContactId,
       sendEncryptedSocketMessage,
-      updateContactLastMessage
+      updateContactLastMessage,
+      trackPendingSend
     ]
   );
-
-  const updateContactLastMessageAfterDelete = useCallback((contactId: string, nextMessages: MessageType[]) => {
-    setContacts((prevContacts) =>
-      sortContactsByLastMessageDesc(prevContacts.map((contact) => {
-        if (contact.id !== contactId) return contact;
-
-        const nextLastMessage = nextMessages[nextMessages.length - 1];
-        if (!nextLastMessage) {
-          return {
-            ...contact,
-            lastMessage: {
-              ...contact.lastMessage,
-              id: '',
-              senderId: '',
-              text: 'Нет сообщений',
-              timestamp: new Date().toISOString(),
-              isRead: true,
-              hasMedia: false,
-              isPending: false
-            },
-            unreadCount: 0
-          };
-        }
-
-        const hasMedia = Boolean(nextLastMessage.attachments && nextLastMessage.attachments.length > 0);
-        return {
-          ...contact,
-          lastMessage: {
-            ...contact.lastMessage,
-            id: nextLastMessage.id,
-            senderId: nextLastMessage.senderId,
-            text: getMessagePreviewText(nextLastMessage),
-            timestamp: nextLastMessage.timestamp,
-            isRead: Boolean(nextLastMessage.isRead),
-            hasMedia,
-            isPending: nextLastMessage.id.startsWith('temp-')
-          }
-        };
-      }))
-    );
-  }, [CURRENT_USER_ID, sortContactsByLastMessageDesc]);
 
   // Инициализация сокета
   useEffect(() => {
@@ -692,6 +762,8 @@ const ChatPage: React.FC = () => {
     };
 
     const onMessageSent = (message: MessageType) => {
+      resolvePendingSend(message.clientTempId);
+
       const processSent = async () => {
         const peerId = selectedContactIdRef.current || '';
         const messageForDialog = peerId ? await decryptMessageForDialog(message, peerId) : message;
@@ -818,32 +890,43 @@ const ChatPage: React.FC = () => {
       }
     };
 
-    const onError = (payload: { message?: string }) => {
-      if (!pendingDeleteRef.current) return;
+    const onError = (payload: { message?: string; clientTempId?: string }) => {
+      if (pendingDeleteRef.current) {
+        const rollback = pendingDeleteRef.current;
+        pendingDeleteRef.current = null;
 
-      const rollback = pendingDeleteRef.current;
-      pendingDeleteRef.current = null;
+        setMessages((prevMessages) => {
+          const alreadyExists = prevMessages.some((message) => message.id === rollback.message.id);
+          if (alreadyExists) {
+            return prevMessages;
+          }
 
-      setMessages((prevMessages) => {
-        const alreadyExists = prevMessages.some((message) => message.id === rollback.message.id);
-        if (alreadyExists) {
-          return prevMessages;
-        }
+          const nextMessages = [...prevMessages];
+          nextMessages.splice(rollback.index, 0, rollback.message);
 
-        const nextMessages = [...prevMessages];
-        nextMessages.splice(rollback.index, 0, rollback.message);
+          if (selectedContactIdRef.current === rollback.contactId) {
+            updateContactLastMessageAfterDelete(rollback.contactId, nextMessages);
+          }
 
-        if (selectedContactIdRef.current === rollback.contactId) {
-          updateContactLastMessageAfterDelete(rollback.contactId, nextMessages);
-        }
+          return nextMessages;
+        });
 
-        return nextMessages;
-      });
+        setDeleteToast({
+          open: true,
+          message: payload?.message || 'Не удалось удалить сообщение',
+          severity: 'error'
+        });
+        return;
+      }
 
-      setDeleteToast({
-        open: true,
-        message: payload?.message || 'Не удалось удалить сообщение',
-        severity: 'error'
+      const errorMessage = payload?.message || 'Не удалось отправить сообщение';
+      if (payload.clientTempId) {
+        failPendingSend(payload.clientTempId, errorMessage);
+        return;
+      }
+
+      Array.from(pendingSendsRef.current.keys()).forEach((clientTempId) => {
+        failPendingSend(clientTempId, errorMessage);
       });
     };
 
@@ -899,7 +982,9 @@ const ChatPage: React.FC = () => {
     updateContactLastMessage,
     updateContactLastMessageAfterDelete,
     decryptMessageForDialog,
-    sortContactsByLastMessageDesc
+    sortContactsByLastMessageDesc,
+    resolvePendingSend,
+    failPendingSend
   ]);
 
   useEffect(() => {
@@ -1467,6 +1552,7 @@ const ChatPage: React.FC = () => {
     };
 
     setMessages((prevMessages) => [...prevMessages, newMessage]);
+    trackPendingSend(clientTempId, newMessage, selectedContactId);
     updateContactLastMessage(
       selectedContactId,
       trimmedText || (sharedEvent ? `Событие: ${sharedEvent.title}` : (forwardFrom ? 'Пересланное сообщение' : (hasFiles ? 'Медиафайл' : ''))),
@@ -1529,12 +1615,10 @@ const ChatPage: React.FC = () => {
         }
       } catch (error) {
         console.error('Ошибка при отправке сообщения:', error);
-        setMessages((prev) => prev.filter((message) => message.id !== newMessage.id));
-        setDeleteToast({
-          open: true,
-          message: error instanceof Error ? error.message : 'Не удалось отправить сообщение',
-          severity: 'error'
-        });
+        failPendingSend(
+          clientTempId,
+          error instanceof Error ? error.message : 'Не удалось отправить сообщение'
+        );
       }
     };
 
@@ -1660,11 +1744,7 @@ const ChatPage: React.FC = () => {
   );
 
   const isMobileChatOpen = isMobile && Boolean(selectedContactId);
-  const pageHeight = isMobile
-    ? selectedContactId
-      ? '100dvh'
-      : 'calc(100dvh - 72px)'
-    : 'calc(100vh - 64px)';
+  const pageHeight = isMobile && selectedContactId ? '100dvh' : '100%';
 
   return (
     <Box sx={{ 

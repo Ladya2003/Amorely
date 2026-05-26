@@ -106,7 +106,7 @@ export default function setupSocketIO(server: HttpServer) {
         const senderSocketData = connectedUsers.find(user => user.socketId === socket.id);
         
         if (!senderSocketData) {
-          socket.emit('error', { message: 'Пользователь не авторизован' });
+          socket.emit('error', { message: 'Пользователь не авторизован', clientTempId });
           return;
         }
 
@@ -172,7 +172,10 @@ export default function setupSocketIO(server: HttpServer) {
         }
       } catch (error) {
         console.error('Ошибка при отправке сообщения:', error);
-        socket.emit('error', { message: 'Ошибка при отправке сообщения' });
+        socket.emit('error', {
+          message: 'Ошибка при отправке сообщения',
+          clientTempId: data.clientTempId
+        });
       }
     });
 

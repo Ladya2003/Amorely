@@ -12,7 +12,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
 import { settingsActionButtonSx } from './settingsButtonSx';
 
-const LogoutButton: React.FC = () => {
+interface LogoutButtonProps {
+  size?: 'small' | 'medium' | 'large';
+}
+
+const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
   const { logout } = useAuth();
   const { clearLocalKeys } = useCrypto();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -41,6 +45,7 @@ const LogoutButton: React.FC = () => {
       <Button
         variant="outlined"
         color="error"
+        size={size}
         startIcon={<LogoutIcon />}
         onClick={handleOpenDialog}
         sx={settingsActionButtonSx}

@@ -4,23 +4,93 @@ import { API_URL } from '../config';
 class SocketService {
   private socket: ReturnType<typeof io> | null = null;
   private connectedUserId: string | null = null;
+  private onConnectHandler: (() => void) | null = null;
+  private onVisibilityHandler: (() => void) | null = null;
+  private onOnlineHandler: (() => void) | null = null;
+
+  private registerUserOnServer() {
+    if (this.socket?.connected && this.connectedUserId) {
+      this.socket.emit('user_connected', this.connectedUserId);
+    }
+  }
+
+  private setupSocketLifecycle() {
+    if (!this.socket) {
+      return;
+    }
+
+    if (this.onConnectHandler) {
+      this.socket.off('connect', this.onConnectHandler);
+    }
+
+    this.onConnectHandler = () => {
+      this.registerUserOnServer();
+    };
+    this.socket.on('connect', this.onConnectHandler);
+
+    if (typeof document !== 'undefined' && !this.onVisibilityHandler) {
+      this.onVisibilityHandler = () => {
+        if (document.visibilityState !== 'visible') {
+          return;
+        }
+
+        if (this.socket?.connected) {
+          this.registerUserOnServer();
+        } else {
+          this.socket?.connect();
+        }
+      };
+      document.addEventListener('visibilitychange', this.onVisibilityHandler);
+    }
+
+    if (typeof window !== 'undefined' && !this.onOnlineHandler) {
+      this.onOnlineHandler = () => {
+        if (this.socket?.connected) {
+          this.registerUserOnServer();
+        } else {
+          this.socket?.connect();
+        }
+      };
+      window.addEventListener('online', this.onOnlineHandler);
+    }
+  }
+
+  private teardownGlobalListeners() {
+    if (this.onVisibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.onVisibilityHandler);
+      this.onVisibilityHandler = null;
+    }
+
+    if (this.onOnlineHandler && typeof window !== 'undefined') {
+      window.removeEventListener('online', this.onOnlineHandler);
+      this.onOnlineHandler = null;
+    }
+  }
 
   initialize(userId: string): ReturnType<typeof io> {
     if (this.socket?.connected && this.connectedUserId === userId) {
+      this.registerUserOnServer();
       return this.socket;
     }
 
     if (this.socket) {
+      if (this.onConnectHandler) {
+        this.socket.off('connect', this.onConnectHandler);
+        this.onConnectHandler = null;
+      }
       this.socket.disconnect();
     }
 
-    this.socket = io(API_URL, {
-      transports: ['websocket', 'polling']
-    });
     this.connectedUserId = userId;
+    this.socket = io(API_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000
+    });
 
-    // Сообщаем серверу, что пользователь подключился
-    this.socket.emit('user_connected', userId);
+    this.setupSocketLifecycle();
 
     return this.socket;
   }
@@ -56,7 +126,13 @@ class SocketService {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
-    
+
+    if (!this.socket.connected) {
+      this.socket.connect();
+    }
+
+    this.registerUserOnServer();
+
     this.socket.emit('send_message', {
       receiverId,
       text,
@@ -73,7 +149,7 @@ class SocketService {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
-    
+
     this.socket.emit('read_message', messageId);
   }
 
@@ -107,7 +183,7 @@ class SocketService {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
-    
+
     this.socket.emit('typing', receiverId);
   }
 
@@ -115,17 +191,23 @@ class SocketService {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
-    
+
     this.socket.emit('stop_typing', receiverId);
   }
 
   disconnect() {
     if (this.socket) {
+      if (this.onConnectHandler) {
+        this.socket.off('connect', this.onConnectHandler);
+        this.onConnectHandler = null;
+      }
       this.socket.disconnect();
       this.socket = null;
-      this.connectedUserId = null;
     }
+
+    this.connectedUserId = null;
+    this.teardownGlobalListeners();
   }
 }
 
-export default new SocketService(); 
+export default new SocketService();

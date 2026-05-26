@@ -490,10 +490,11 @@ const CalendarPage: React.FC = () => {
 
   return (
     <Box sx={{ 
-      height: 'calc(100vh - 72px)', // Фиксированная высота (вычитаем нижнюю навигацию)
+      height: '100%',
+      minHeight: 0,
       display: 'flex', 
       flexDirection: 'column',
-      overflow: 'hidden' // Блокируем скролл страницы
+      overflow: 'hidden'
     }}>
       <Calendar 
         content={content}
