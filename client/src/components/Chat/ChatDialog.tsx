@@ -11,7 +11,6 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -19,6 +18,7 @@ import {
   Badge,
   Alert
 } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
@@ -1230,7 +1230,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           Удалить
         </MenuItem>
       </Menu>
-      <Dialog
+      <ResponsiveDialog
         open={deleteModalOpen}
         onClose={handleDeleteModalClose}
         fullWidth
@@ -1273,7 +1273,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             Удалить
           </Button>
         </DialogActions>
-      </Dialog>
+      </ResponsiveDialog>
 
       <ContactProfileDialog
         open={profileDialogOpen}

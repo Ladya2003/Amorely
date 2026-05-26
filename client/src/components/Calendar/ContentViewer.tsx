@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, IconButton, Dialog, DialogContent } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
+import { Box, IconButton, DialogContent } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface ContentViewerProps {
@@ -23,12 +24,13 @@ const ContentViewer: React.FC<ContentViewerProps> = ({
   if (!content) return null;
 
   return (
-    <Dialog
+    <ResponsiveDialog
       open={open}
       onClose={onClose}
       maxWidth="lg"
       fullWidth
       fullScreen={fullScreen}
+      disableMobileDrawer
       sx={
         stackAboveParentModal
           ? { zIndex: (theme) => theme.zIndex.modal + 2 }
@@ -73,7 +75,7 @@ const ContentViewer: React.FC<ContentViewerProps> = ({
           />
         )}
       </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 };
 

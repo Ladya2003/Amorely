@@ -211,11 +211,16 @@ export const restoreFromBackup = async (userId: string, passphrase: string): Pro
   const salt = base64ToBytes(backup.salt);
   const iv = base64ToBytes(backup.iv);
   const key = await derivePassphraseKey(passphrase, salt);
-  const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    base64ToBytes(backup.ciphertext).buffer
-  );
+  let decrypted: ArrayBuffer;
+  try {
+    decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      base64ToBytes(backup.ciphertext).buffer
+    );
+  } catch {
+    throw new Error('Неверная секретная фраза');
+  }
 
   const parsed = JSON.parse(decoder.decode(new Uint8Array(decrypted))) as LocalDeviceKeys;
   if (parsed.userId !== userId) {

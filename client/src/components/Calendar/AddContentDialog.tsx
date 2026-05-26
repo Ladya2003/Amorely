@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { 
-  Dialog, 
   DialogTitle, 
   DialogContent, 
   DialogActions, 
@@ -65,7 +65,7 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <ResponsiveDialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>
         Добавить контент на {date ? format(date, 'd MMMM yyyy', { locale: ru }) : ''}
       </DialogTitle>
@@ -159,7 +159,7 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
           Сохранить
         </Button>
       </DialogActions>
-    </Dialog>
+    </ResponsiveDialog>
   );
 };
 

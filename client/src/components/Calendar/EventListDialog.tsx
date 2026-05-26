@@ -1,6 +1,6 @@
 import React from 'react';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   List,
@@ -53,7 +53,7 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <ResponsiveDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6" sx={{ fontWeight: 500 }}>
@@ -156,7 +156,7 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
           })}
         </List>
       </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 };
 

@@ -1,6 +1,6 @@
 import React from 'react';
+import ResponsiveDialog from './ResponsiveDialog';
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -43,7 +43,7 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
   };
 
   return (
-    <Dialog
+    <ResponsiveDialog
       open={open}
       onClose={onClose}
       maxWidth="sm"
@@ -112,7 +112,7 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
           {isLoading ? 'Удаление...' : 'Удалить'}
         </Button>
       </DialogActions>
-    </Dialog>
+    </ResponsiveDialog>
   );
 };
 

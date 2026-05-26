@@ -3,12 +3,12 @@ import {
   Avatar,
   Box,
   CircularProgress,
-  Dialog,
   DialogContent,
   DialogTitle,
   IconButton,
   Typography
 } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import CloseIcon from '@mui/icons-material/Close';
 import CakeOutlinedIcon from '@mui/icons-material/CakeOutlined';
 import axios from 'axios';
@@ -142,7 +142,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
 
   return (
     <>
-      <Dialog
+      <ResponsiveDialog
         open={open}
         onClose={handleClose}
         fullWidth
@@ -240,7 +240,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
             </Box>
           ) : null}
         </DialogContent>
-      </Dialog>
+      </ResponsiveDialog>
 
       <ContentViewer
         open={avatarViewerOpen}

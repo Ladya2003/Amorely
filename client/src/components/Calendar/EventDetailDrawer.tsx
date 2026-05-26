@@ -10,9 +10,9 @@ import {
   useMediaQuery,
   Chip,
   Divider,
-  Dialog,
   DialogContent
 } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -462,11 +462,12 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
       </Drawer>
 
       {/* Полноэкранный просмотр медиа */}
-      <Dialog
+      <ResponsiveDialog
         open={mediaViewerOpen}
         onClose={() => setMediaViewerOpen(false)}
         maxWidth="lg"
         fullWidth
+        disableMobileDrawer
       >
         <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
           <IconButton onClick={() => setMediaViewerOpen(false)} sx={{ color: 'white' }}>
@@ -593,7 +594,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
             </Box>
           )}
         </DialogContent>
-      </Dialog>
+      </ResponsiveDialog>
     </>
   );
 };

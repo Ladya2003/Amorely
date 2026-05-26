@@ -1,6 +1,6 @@
 import React from 'react';
+import ResponsiveDialog from './ResponsiveDialog';
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -47,7 +47,7 @@ const FrequencyChangeDialog: React.FC<FrequencyChangeDialogProps> = ({
   };
 
   return (
-    <Dialog
+    <ResponsiveDialog
       open={open}
       onClose={handleClose}
       maxWidth="sm"
@@ -160,7 +160,7 @@ const FrequencyChangeDialog: React.FC<FrequencyChangeDialogProps> = ({
           {isLoading ? 'Применение...' : 'Применить'}
         </Button>
       </DialogActions>
-    </Dialog>
+    </ResponsiveDialog>
   );
 };
 

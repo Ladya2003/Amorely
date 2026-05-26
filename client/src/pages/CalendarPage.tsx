@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from '@mui/material';
+import ResponsiveDialog from '../components/UI/ResponsiveDialog';
 import Calendar from '../components/Calendar/Calendar';
 import EventDetailDrawer from '../components/Calendar/EventDetailDrawer';
 import EventEditorDrawer from '../components/Calendar/EventEditorDrawer';
@@ -95,6 +96,19 @@ const CalendarPage: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [eventToShare, setEventToShare] = useState<EventLikeForShare | null>(null);
   const [shareContacts, setShareContacts] = useState<ShareRecipientContact[]>([]);
+  const eventIdFromUrl = searchParams.get('event');
+  const [eventFromUrlHandled, setEventFromUrlHandled] = useState(!eventIdFromUrl);
+  const openingEventIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (eventIdFromUrl) {
+      setEventFromUrlHandled(false);
+      openingEventIdRef.current = null;
+    } else {
+      setEventFromUrlHandled(true);
+      openingEventIdRef.current = null;
+    }
+  }, [eventIdFromUrl]);
 
   useEffect(() => {
     fetchContent();
@@ -104,47 +118,64 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     const eventId = searchParams.get('event');
     if (!eventId || isLoading) return;
+    if (openingEventIdRef.current === eventId) return;
+
+    const finishOpeningFromUrl = () => {
+      openingEventIdRef.current = eventId;
+      setEventFromUrlHandled(true);
+    };
 
     const localEvent = allEvents.find((e) => e.eventId === eventId || e._id === eventId);
     if (localEvent) {
       setEventDetailReadOnly(false);
       setSelectedEvent(localEvent);
       setEventDetailOpen(true);
+      finishOpeningFromUrl();
       return;
     }
 
-    void openSharedEventById(eventId);
+    openingEventIdRef.current = eventId;
+
+    void (async () => {
+      try {
+        await openSharedEventById(eventId);
+      } catch (error) {
+        console.error('Ошибка при открытии события:', error);
+      } finally {
+        setEventFromUrlHandled(true);
+      }
+    })();
   }, [searchParams, allEvents, isLoading]);
 
   const openSharedEventById = async (eventId: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const response = await axios.get(`${API_URL}/api/calendar/events/${encodeURIComponent(eventId)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      let event: ContentItem = response.data;
-      const isReadOnly = Boolean(event.readOnly);
-
-      if (localDeviceKeys) {
-        const [decrypted] = await decryptCalendarEventsWithMedia(
-          localDeviceKeys,
-          [event],
-          user?._id,
-          partnerId || undefined
-        );
-        event = decrypted;
-      }
-
-      setEventDetailReadOnly(isReadOnly);
-      setSelectedEvent(event);
-      setEventDetailOpen(true);
-    } catch (error) {
-      console.error('Ошибка при открытии события:', error);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Не авторизован');
     }
+
+    const response = await axios.get(`${API_URL}/api/calendar/events/${encodeURIComponent(eventId)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    let event: ContentItem = response.data;
+    const isReadOnly = Boolean(event.readOnly);
+
+    if (localDeviceKeys) {
+      const [decrypted] = await decryptCalendarEventsWithMedia(
+        localDeviceKeys,
+        [event],
+        user?._id,
+        partnerId || undefined
+      );
+      event = decrypted;
+    }
+
+    setEventDetailReadOnly(isReadOnly);
+    setSelectedEvent(event);
+    setEventDetailOpen(true);
   };
+
+  const showEventLoadingOverlay = Boolean(eventIdFromUrl) && !eventFromUrlHandled;
 
   const fetchContent = async () => {
     try {
@@ -496,6 +527,22 @@ const CalendarPage: React.FC = () => {
       flexDirection: 'column',
       overflow: 'hidden'
     }}>
+      {showEventLoadingOverlay && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'background.default',
+            zIndex: (theme) => theme.zIndex.modal + 1
+          }}
+        >
+          <CircularProgress color="primary" />
+        </Box>
+      )}
+
       <Calendar 
         content={content}
         allEvents={allEvents}
@@ -548,7 +595,7 @@ const CalendarPage: React.FC = () => {
       />
 
       {/* Диалог подтверждения удаления */}
-      <Dialog
+      <ResponsiveDialog
         open={deleteDialogOpen}
         onClose={handleCancelDelete}
       >
@@ -572,7 +619,7 @@ const CalendarPage: React.FC = () => {
             {isDeleting ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
-      </Dialog>
+      </ResponsiveDialog>
     </Box>
   );
 };

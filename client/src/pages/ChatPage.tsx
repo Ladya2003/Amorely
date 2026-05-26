@@ -222,7 +222,8 @@ const ChatPage: React.FC = () => {
   const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false);
   const [isRestoringChatPosition, setIsRestoringChatPosition] = useState(false);
   const [restoredScrollTop, setRestoredScrollTop] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingContacts, setIsLoadingContacts] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [socket, setSocket] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -246,6 +247,7 @@ const ChatPage: React.FC = () => {
     severity: 'success'
   });
   const [chatRulesAccepted, setChatRulesAccepted] = useState(false);
+  const [isChatRulesChecked, setIsChatRulesChecked] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -258,9 +260,11 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     if (!CURRENT_USER_ID) {
       setChatRulesAccepted(false);
+      setIsChatRulesChecked(false);
       return;
     }
     setChatRulesAccepted(Boolean(readChatRulesConsent(CURRENT_USER_ID)));
+    setIsChatRulesChecked(true);
   }, [CURRENT_USER_ID]);
 
   const handleChatRulesAccept = () => {
@@ -1125,7 +1129,7 @@ const ChatPage: React.FC = () => {
     const silent = options?.silent ?? false;
     try {
       if (!silent) {
-        setIsLoading(true);
+        setIsLoadingContacts(true);
       }
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/api/contacts`, {
@@ -1137,7 +1141,7 @@ const ChatPage: React.FC = () => {
       console.error('Ошибка при загрузке контактов:', error);
     } finally {
       if (!silent) {
-        setIsLoading(false);
+        setIsLoadingContacts(false);
       }
     }
   }, [decryptContactsLastMessages, sortContactsByLastMessageDesc]);
@@ -1187,7 +1191,7 @@ const ChatPage: React.FC = () => {
       if (appendOlder) {
         setIsLoadingOlderMessages(true);
       } else {
-        setIsLoading(true);
+        setIsLoadingMessages(true);
       }
       const token = localStorage.getItem('token');
       
@@ -1195,7 +1199,7 @@ const ChatPage: React.FC = () => {
         if (appendOlder) {
           setIsLoadingOlderMessages(false);
         } else {
-          setIsLoading(false);
+          setIsLoadingMessages(false);
         }
         return;
       }
@@ -1225,18 +1229,18 @@ const ChatPage: React.FC = () => {
       if (appendOlder) {
         setIsLoadingOlderMessages(false);
       } else {
-        setIsLoading(false);
+        setIsLoadingMessages(false);
       }
     }
   };
 
   const loadOlderMessages = useCallback(() => {
-    if (!selectedContactId || isLoading || isLoadingOlderMessages || isRestoringChatPosition || !hasMoreMessages) {
+    if (!selectedContactId || isLoadingMessages || isLoadingOlderMessages || isRestoringChatPosition || !hasMoreMessages) {
       return;
     }
 
     fetchMessages(selectedContactId, messagesPage + 1, true);
-  }, [selectedContactId, isLoading, isLoadingOlderMessages, isRestoringChatPosition, hasMoreMessages, messagesPage]);
+  }, [selectedContactId, isLoadingMessages, isLoadingOlderMessages, isRestoringChatPosition, hasMoreMessages, messagesPage]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -1745,6 +1749,8 @@ const ChatPage: React.FC = () => {
 
   const isMobileChatOpen = isMobile && Boolean(selectedContactId);
   const pageHeight = isMobile && selectedContactId ? '100dvh' : '100%';
+  const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
+  const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady;
 
   return (
     <Box sx={{ 
@@ -1831,7 +1837,22 @@ const ChatPage: React.FC = () => {
       )}
 
       <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-        {tabValue === 0 && !chatRulesAccepted && CURRENT_USER_ID && (
+        {showChatListLoadingOverlay && (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'background.default',
+              zIndex: (theme) => theme.zIndex.modal + 1
+            }}
+          >
+            <CircularProgress color="primary" />
+          </Box>
+        )}
+        {tabValue === 0 && isChatRulesChecked && !chatRulesAccepted && CURRENT_USER_ID && (
           <Paper
             elevation={8}
             sx={{
@@ -1973,7 +1994,7 @@ const ChatPage: React.FC = () => {
                     hasMoreMessages={hasMoreMessages}
                     isLoadingOlder={isLoadingOlderMessages}
                     initialScrollTop={restoredScrollTop}
-                    isLoading={isLoading || isRestoringChatPosition}
+                    isLoading={isLoadingMessages || isRestoringChatPosition}
                   />
                 ) : (
                   <Box 

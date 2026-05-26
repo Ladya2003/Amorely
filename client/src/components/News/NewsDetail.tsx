@@ -1,6 +1,6 @@
 import React from 'react';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { 
-  Dialog, 
   DialogContent, 
   DialogTitle, 
   IconButton, 
@@ -67,7 +67,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
   };
 
   return (
-    <Dialog 
+    <ResponsiveDialog 
       open={open} 
       onClose={onClose} 
       maxWidth="md" 
@@ -121,7 +121,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
           {news.content}
         </Typography>
       </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 };
 

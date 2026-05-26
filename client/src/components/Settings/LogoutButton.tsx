@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { 
   Button, 
   Typography, 
-  Dialog, 
   DialogTitle, 
   DialogContent, 
   DialogActions,
+  IconButton,
 } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import LogoutIcon from '@mui/icons-material/Logout';
+import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
 import { settingsActionButtonSx } from './settingsButtonSx';
@@ -53,23 +55,38 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
         Выйти
       </Button>
       
-      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Подтверждение выхода</DialogTitle>
-        <DialogContent>
+      <ResponsiveDialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            p: '16px',
+          }}
+        >
+          Подтверждение выхода
+          <IconButton onClick={handleCloseDialog} aria-label="Закрыть" size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: '16px' }}>
           <Typography variant="body1">
-            Вы можете просто выйти из аккаунта (ключи останутся на устройстве) или выйти и удалить ключи E2EE.
+            Вы можете просто выйти из аккаунта (ключевая фраза сохранится на устройстве) или выйти и удалить вашу фразу.
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleLogoutAndRemoveKeys} color="warning">
-            Выйти и удалить ключи
+        <DialogActions sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <Button
+            onClick={handleLogoutAndRemoveKeys}
+            color="warning"
+            sx={{ justifyContent: 'flex-start', textAlign: 'left', mr: 2 }}
+          >
+            Выйти и удалить ключевую фразу
           </Button>
-          <Button onClick={handleLogout} color="error">
+          <Button onClick={handleLogout} color="error" sx={{ flexShrink: 0 }}>
             Выйти
           </Button>
         </DialogActions>
-      </Dialog>
+      </ResponsiveDialog>
     </>
   );
 };

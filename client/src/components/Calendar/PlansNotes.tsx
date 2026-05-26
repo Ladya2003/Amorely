@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -7,7 +7,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -16,6 +15,7 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -41,6 +41,10 @@ import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import ConfirmDeleteDialog from '../UI/ConfirmDeleteDialog';
 import DecryptedMedia from '../common/DecryptedMedia';
 import { getUserDisplayName } from '../UI/UserProfileChip';
+import {
+  readCalendarUiPreferences,
+  updateCalendarUiPreferences
+} from '../../utils/calendarUiPreferences';
 
 interface PlanNoteUser {
   _id?: string;
@@ -95,8 +99,14 @@ const PlansNotes: React.FC = () => {
 
   const [notes, setNotes] = useState<PlanNote[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(() =>
+    user?._id ? readCalendarUiPreferences(user._id).plansCategory ?? null : null
+  );
+  const [isPrefsHydrated, setIsPrefsHydrated] = useState(() => Boolean(user?._id));
+  const skipNextCategorySaveRef = useRef(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshingNotes, setIsRefreshingNotes] = useState(false);
+  const isFirstFetchRef = useRef(true);
   const [error, setError] = useState<string | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -161,9 +171,16 @@ const PlansNotes: React.FC = () => {
   );
 
   const fetchNotes = useCallback(async () => {
+    const isFirstFetch = isFirstFetchRef.current;
+
     try {
-      setIsLoading(true);
       setError(null);
+      if (isFirstFetch) {
+        setIsInitialLoading(true);
+      } else {
+        setIsRefreshingNotes(true);
+      }
+
       const params = selectedCategory ? { category: selectedCategory } : undefined;
       const response = await axios.get(`${API_URL}/api/calendar/plans`, { params });
       const rawNotes: PlanNote[] = response.data.notes || [];
@@ -174,13 +191,48 @@ const PlansNotes: React.FC = () => {
       console.error('Ошибка загрузки заметок:', err);
       setError('Не удалось загрузить заметки');
     } finally {
-      setIsLoading(false);
+      if (isFirstFetch) {
+        setIsInitialLoading(false);
+        isFirstFetchRef.current = false;
+      } else {
+        setIsRefreshingNotes(false);
+      }
     }
   }, [selectedCategory, decryptNotesList]);
 
   useEffect(() => {
+    if (!user?._id) {
+      setIsPrefsHydrated(false);
+      isFirstFetchRef.current = true;
+      return;
+    }
+
+    skipNextCategorySaveRef.current = true;
+    const prefs = readCalendarUiPreferences(user._id);
+    setSelectedCategory(prefs.plansCategory ?? null);
+    setIsPrefsHydrated(true);
+  }, [user?._id]);
+
+  useEffect(() => {
+    if (!user?._id) {
+      return;
+    }
+
+    if (skipNextCategorySaveRef.current) {
+      skipNextCategorySaveRef.current = false;
+      return;
+    }
+
+    updateCalendarUiPreferences(user._id, { plansCategory: selectedCategory });
+  }, [user?._id, selectedCategory]);
+
+  useEffect(() => {
+    if (!isPrefsHydrated) {
+      return;
+    }
+
     void fetchNotes();
-  }, [fetchNotes]);
+  }, [fetchNotes, isPrefsHydrated]);
 
   const resetMediaState = () => {
     previews.forEach((url) => URL.revokeObjectURL(url));
@@ -422,17 +474,31 @@ const PlansNotes: React.FC = () => {
 
   return (
     <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle1" color="text.secondary">
+      <Box
+        sx={{
+          mb: 2,
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 1.5
+        }}
+      >
+        <Typography variant="subtitle1" color="text.secondary" sx={{ minWidth: 0 }}>
           Общие заметки для вашей пары
         </Typography>
-        {!isLoading && notes.length > 0 && (
+        {!isInitialLoading && (
           <Button
             variant="contained"
             size="small"
             startIcon={<AddIcon />}
             onClick={openCreateForm}
-            sx={{ mt: 1.5 }}
+            sx={{
+              flexShrink: 0,
+              '& .MuiButton-startIcon': {
+                marginRight: 0.5
+              }
+            }}
           >
             Новая заметка
           </Button>
@@ -467,12 +533,13 @@ const PlansNotes: React.FC = () => {
         </Alert>
       )}
 
-      <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+      <Box sx={{ flexGrow: 1, overflow: 'auto', position: 'relative' }}>
+        {(isInitialLoading || isRefreshingNotes) && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
             <CircularProgress />
           </Box>
-        ) : notes.length === 0 ? (
+        )}
+        {!isInitialLoading && !isRefreshingNotes && notes.length === 0 && (
           <Paper
             elevation={0}
             sx={{
@@ -483,16 +550,14 @@ const PlansNotes: React.FC = () => {
               bgcolor: 'background.default'
             }}
           >
-            <Typography color="text.secondary" gutterBottom>
+            <Typography color="text.secondary">
               {selectedCategory
                 ? `В категории «${selectedCategory}» пока нет заметок`
                 : 'Пока нет заметок'}
             </Typography>
-            <Button variant="outlined" startIcon={<AddIcon />} onClick={openCreateForm} sx={{ mt: 1 }}>
-              Добавить первую заметку
-            </Button>
           </Paper>
-        ) : (
+        )}
+        {!isInitialLoading && !isRefreshingNotes && notes.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {notes.map((note) => (
               <Paper
@@ -557,7 +622,7 @@ const PlansNotes: React.FC = () => {
       </Box>
 
       {/* Форма создания / редактирования */}
-      <Dialog open={formOpen} onClose={() => !isSaving && setFormOpen(false)} fullWidth maxWidth="sm">
+      <ResponsiveDialog open={formOpen} onClose={() => !isSaving && setFormOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {editingNote ? 'Редактировать заметку' : 'Новая заметка'}
           <IconButton onClick={() => setFormOpen(false)} disabled={isSaving} size="small">
@@ -708,10 +773,10 @@ const PlansNotes: React.FC = () => {
             {isSaving ? 'Сохранение...' : editingNote ? 'Сохранить' : 'Создать'}
           </Button>
         </DialogActions>
-      </Dialog>
+      </ResponsiveDialog>
 
       {/* Просмотр заметки */}
-      <Dialog open={viewOpen} onClose={() => setViewOpen(false)} fullWidth maxWidth="sm">
+      <ResponsiveDialog open={viewOpen} onClose={() => setViewOpen(false)} fullWidth maxWidth="sm">
         {viewingNote && (
           <>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -782,14 +847,15 @@ const PlansNotes: React.FC = () => {
             </DialogActions>
           </>
         )}
-      </Dialog>
+      </ResponsiveDialog>
 
       {/* Полноэкранный просмотр медиа */}
-      <Dialog
+      <ResponsiveDialog
         open={mediaViewerOpen}
         onClose={() => setMediaViewerOpen(false)}
         maxWidth="md"
         fullWidth
+        disableMobileDrawer
       >
         <DialogContent sx={{ p: 0, bgcolor: 'black', position: 'relative' }}>
           <IconButton
@@ -813,7 +879,7 @@ const PlansNotes: React.FC = () => {
             </Box>
           )}
         </DialogContent>
-      </Dialog>
+      </ResponsiveDialog>
 
       <ConfirmDeleteDialog
         open={deleteOpen}

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   TextField,
@@ -119,7 +119,7 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
   );
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <ResponsiveDialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 1 }}>{title}</DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         <TextField
@@ -197,7 +197,7 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
           </>
         )}
       </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 };
 

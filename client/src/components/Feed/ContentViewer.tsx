@@ -1,5 +1,6 @@
 import React from 'react';
-import { Dialog, DialogContent, IconButton, Box } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
+import { DialogContent, IconButton, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { ContentItem } from './ContentSlider';
 import DecryptedMedia from '../common/DecryptedMedia';
@@ -14,11 +15,12 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ open, onClose, content })
   if (!content) return null;
 
   return (
-    <Dialog
+    <ResponsiveDialog
       open={open}
       onClose={onClose}
       maxWidth="lg"
       fullWidth
+      disableMobileDrawer
       PaperProps={{
         sx: {
           bgcolor: 'black',
@@ -59,7 +61,7 @@ const ContentViewer: React.FC<ContentViewerProps> = ({ open, onClose, content })
           />
         </Box>
       </DialogContent>
-    </Dialog>
+    </ResponsiveDialog>
   );
 };
 

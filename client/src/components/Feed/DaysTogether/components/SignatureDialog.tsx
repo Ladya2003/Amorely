@@ -2,21 +2,18 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
   Box,
   IconButton,
-  Drawer,
-  useMediaQuery,
-  useTheme,
   Slider,
   Typography,
   ToggleButton,
   ToggleButtonGroup
 } from '@mui/material';
+import ResponsiveDialog from '../../../UI/ResponsiveDialog';
 import CreateIcon from '@mui/icons-material/Create';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BrushIcon from '@mui/icons-material/Brush';
@@ -44,9 +41,6 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
   const [brushSize, setBrushSize] = useState(3);
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
   const [isCanvasReady, setIsCanvasReady] = useState(false);
-  
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Обновляем размер холста при изменении размера контейнера
   useEffect(() => {
@@ -445,43 +439,10 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
         )}
       </Box>
 
-      {isMobile ? (
-        <Drawer
-          anchor="bottom"
-          open={dialogOpen}
-          onClose={handleClose}
-          PaperProps={{
-            sx: {
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
-              maxHeight: '80vh'
-            }
-          }}
-        >
-          <Box sx={{ 
-            width: '100%', 
-            pt: 1,
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <Box sx={{ 
-              width: 40, 
-              height: 4, 
-              bgcolor: 'grey.300', 
-              borderRadius: 2, 
-              mx: 'auto', 
-              mb: 2 
-            }} />
-            <DialogTitle sx={{ pb: 0 }}>Добавить подпись</DialogTitle>
-            {dialogContent}
-          </Box>
-        </Drawer>
-      ) : (
-        <Dialog open={dialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
-          <DialogTitle>Добавить подпись</DialogTitle>
-          {dialogContent}
-        </Dialog>
-      )}
+      <ResponsiveDialog open={dialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle>Добавить подпись</DialogTitle>
+        {dialogContent}
+      </ResponsiveDialog>
     </>
   );
 };

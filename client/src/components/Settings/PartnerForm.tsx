@@ -13,12 +13,12 @@ import {
   ListItemText, 
   Avatar, 
   IconButton,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   InputAdornment
 } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -263,7 +263,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
       )}
       
       {/* Диалог добавления партнера */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <ResponsiveDialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>Добавить партнера</DialogTitle>
         <DialogContent>
           {error && (
@@ -388,10 +388,10 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             {isSubmitting ? 'Добавление...' : 'Добавить'}
           </Button>
         </DialogActions>
-      </Dialog>
+      </ResponsiveDialog>
       
       {/* Диалог подтверждения удаления */}
-      <Dialog open={confirmDialogOpen} onClose={handleCloseConfirmDialog}>
+      <ResponsiveDialog open={confirmDialogOpen} onClose={handleCloseConfirmDialog}>
         <DialogTitle>Подтверждение</DialogTitle>
         <DialogContent>
           <Typography variant="body1">
@@ -409,7 +409,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             {isLoading ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
-      </Dialog>
+      </ResponsiveDialog>
 
       <ContentViewer
         open={avatarViewerOpen}

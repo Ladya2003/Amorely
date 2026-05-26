@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Box, Typography, Avatar, Paper, Dialog, IconButton } from '@mui/material';
+import { Box, Typography, Avatar, Paper, IconButton } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import CloseIcon from '@mui/icons-material/Close';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import DoneIcon from '@mui/icons-material/Done';
@@ -312,11 +313,12 @@ const Message: React.FC<MessageProps> = ({
       </Box>
 
       {/* Модальное окно для просмотра изображения */}
-      <Dialog
+      <ResponsiveDialog
         open={Boolean(openImage)}
         onClose={handleCloseImage}
         maxWidth="lg"
         fullWidth
+        disableMobileDrawer
         sx={{
           '& .MuiDialog-paper': {
             bgcolor: 'rgba(0, 0, 0, 0.9)',
@@ -356,7 +358,7 @@ const Message: React.FC<MessageProps> = ({
             />
           )}
         </Box>
-      </Dialog>
+      </ResponsiveDialog>
     </Box>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -14,12 +14,19 @@ import {
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ListAltIcon from '@mui/icons-material/ListAlt';
+import AddIcon from '@mui/icons-material/Add';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
 import PlansNotes from './PlansNotes';
 import UserProfileChip from '../UI/UserProfileChip';
+import { useAuth } from '../../contexts/AuthContext';
+import {
+  readCalendarUiPreferences,
+  updateCalendarUiPreferences,
+  type CalendarViewMode
+} from '../../utils/calendarUiPreferences';
 
 interface MediaFile {
   _id: string;
@@ -54,17 +61,51 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddContent, onContentClick }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'circles' | 'grid'>('circles');
-  const [tabValue, setTabValue] = useState(0);
+  const { user } = useAuth();
+  const skipNextSaveRef = useRef(false);
 
-  const handleViewChange = (event: React.MouseEvent<HTMLElement>, newView: 'circles' | 'grid') => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<CalendarViewMode>(() =>
+    user?._id ? readCalendarUiPreferences(user._id).calendarView : 'circles'
+  );
+  const [tabValue, setTabValue] = useState(() =>
+    user?._id && readCalendarUiPreferences(user._id).mainTab === 'plans' ? 1 : 0
+  );
+
+  useEffect(() => {
+    if (!user?._id) {
+      return;
+    }
+
+    skipNextSaveRef.current = true;
+    const prefs = readCalendarUiPreferences(user._id);
+    setTabValue(prefs.mainTab === 'plans' ? 1 : 0);
+    setView(prefs.calendarView);
+  }, [user?._id]);
+
+  useEffect(() => {
+    if (!user?._id) {
+      return;
+    }
+
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false;
+      return;
+    }
+
+    updateCalendarUiPreferences(user._id, {
+      mainTab: tabValue === 1 ? 'plans' : 'calendar',
+      calendarView: view
+    });
+  }, [user?._id, tabValue, view]);
+
+  const handleViewChange = (_event: React.MouseEvent<HTMLElement>, newView: CalendarViewMode | null) => {
     if (newView !== null) {
       setView(newView);
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -201,7 +242,13 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
                 variant="contained"
                 color="primary"
                 size="small"
+                startIcon={<AddIcon />}
                 onClick={() => onAddContent(currentDate)}
+                sx={{
+                  '& .MuiButton-startIcon': {
+                    marginRight: 0.5
+                  }
+                }}
               >
                 Создать событие
               </Button>

@@ -1,62 +1,98 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
+import ClearIcon from '@mui/icons-material/Clear';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {
+  AlertColor,
   Alert,
   Box,
   Button,
-  Container,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
+  InputAdornment,
   Paper,
   Tab,
   Tabs,
   TextField,
-  Tooltip,
   Typography
 } from '@mui/material';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import CustomSnackbar from '../components/UI/CustomSnackbar';
+import ResponsiveDialog from '../components/UI/ResponsiveDialog';
 import { useAuth } from '../contexts/AuthContext';
 import { useCrypto } from '../contexts/CryptoContext';
-import {
-  PairingRequestPayload,
-  approvePairingRequest,
-  consumePairingRequest,
-  createPairingRequest,
-  importLocalKeysFileContent
-} from '../crypto/cryptoService';
+// import {
+//   PairingRequestPayload,
+//   approvePairingRequest,
+//   consumePairingRequest,
+//   createPairingRequest,
+//   importLocalKeysFileContent
+// } from '../crypto/cryptoService';
+
+const MIN_PASSPHRASE_WORDS = 12;
+
+const countPassphraseWords = (value: string): number =>
+  value.trim().split(/\s+/).filter(Boolean).length;
 
 const CryptoUnlockPage: React.FC = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const {
     isCryptoReady,
     createAndBackupKeys,
     restoreKeysFromPassphrase,
-    generateSuggestedPassphrase,
-    localDeviceKeys,
-    ensureLocalKeys
-  } =
-    useCrypto();
+    generateSuggestedPassphrase
+    // localDeviceKeys,
+    // ensureLocalKeys
+  } = useCrypto();
   const [tab, setTab] = useState(0);
   const [passphrase, setPassphrase] = useState('');
   const [restorePhrase, setRestorePhrase] = useState('');
-  const [pairingPayload, setPairingPayload] = useState('');
+  // const [pairingPayload, setPairingPayload] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [pairingPrivateJwk, setPairingPrivateJwk] = useState<JsonWebKey | null>(null);
-  const [phraseCopied, setPhraseCopied] = useState(false);
+  // const [pairingPrivateJwk, setPairingPrivateJwk] = useState<JsonWebKey | null>(null);
+  const [copyToastOpen, setCopyToastOpen] = useState(false);
+  const [copyToastMessage, setCopyToastMessage] = useState('');
+  const [copyToastSeverity, setCopyToastSeverity] = useState<AlertColor>('success');
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-  const suggestedPhrase = useMemo(() => generateSuggestedPassphrase(), [generateSuggestedPassphrase]);
+  const showCopyToast = (message: string, severity: AlertColor) => {
+    setCopyToastMessage(message);
+    setCopyToastSeverity(severity);
+    setCopyToastOpen(true);
+  };
 
-  const handleCopySuggestedPhrase = async () => {
+  const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(suggestedPhrase);
-      setPhraseCopied(true);
-      setTimeout(() => setPhraseCopied(false), 2000);
+      await navigator.clipboard.writeText(text);
+      showCopyToast('Фраза скопирована', 'success');
     } catch {
-      setError('Не удалось скопировать. Выделите фразу и скопируйте вручную.');
+      showCopyToast('Не удалось скопировать. Выделите фразу и скопируйте вручную.', 'error');
     }
+  };
+
+  const handleCopyPassphrase = () => {
+    if (!passphrase.trim()) return;
+    copyToClipboard(passphrase.trim());
+  };
+
+  const handleCopyInModal = () => {
+    copyToClipboard(passphrase.trim());
+  };
+
+  const handleGeneratePassphrase = () => {
+    setPassphrase(generateSuggestedPassphrase());
+    setError(null);
+  };
+
+  const handleBack = () => {
+    logout();
+    navigate('/auth');
   };
 
   if (isCryptoReady) {
@@ -68,7 +104,7 @@ const CryptoUnlockPage: React.FC = () => {
     return <Navigate to={to} replace />;
   }
 
-  const userId = user?._id;
+  // const userId = user?._id;
 
   const withAction = async (fn: () => Promise<void>) => {
     try {
@@ -83,12 +119,25 @@ const CryptoUnlockPage: React.FC = () => {
     }
   };
 
-  const handleCreateKeys = async () => {
-    if (!passphrase.trim()) {
+  const handleSaveClick = () => {
+    const trimmedPassphrase = passphrase.trim();
+    if (!trimmedPassphrase) {
       setError('Введите секретную фразу');
       return;
     }
+    if (countPassphraseWords(trimmedPassphrase) < MIN_PASSPHRASE_WORDS) {
+      const wordCount = countPassphraseWords(trimmedPassphrase);
+      setError(
+        `Секретная фраза должна содержать не менее ${MIN_PASSPHRASE_WORDS} слов. Слов в вашей фразе - ${wordCount}`
+      );
+      return;
+    }
+    setError(null);
+    setConfirmDialogOpen(true);
+  };
 
+  const handleConfirmCreateKeys = async () => {
+    setConfirmDialogOpen(false);
     await withAction(async () => {
       await createAndBackupKeys(passphrase.trim());
       setStatus('Устройство подключено. Сохраните фразу в надёжном месте — она понадобится на других устройствах.');
@@ -107,110 +156,131 @@ const CryptoUnlockPage: React.FC = () => {
     });
   };
 
-  const handleFileRestore = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !userId) return;
+  // const handleFileRestore = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (!file || !userId) return;
+  //
+  //   await withAction(async () => {
+  //     const content = await file.text();
+  //     await importLocalKeysFileContent(userId, content);
+  //     await ensureLocalKeys();
+  //     setStatus('Доступ восстановлен из файла');
+  //   });
+  // };
 
-    await withAction(async () => {
-      const content = await file.text();
-      await importLocalKeysFileContent(userId, content);
-      await ensureLocalKeys();
-      setStatus('Доступ восстановлен из файла');
-    });
-  };
+  // const handleCreatePairing = async () => {
+  //   if (!userId) {
+  //     setError('Пользователь не авторизован');
+  //     return;
+  //   }
+  //
+  //   await withAction(async () => {
+  //     const request = await createPairingRequest(localDeviceKeys?.deviceId || `pending-${Date.now()}`);
+  //     setPairingPayload(JSON.stringify(request.payload));
+  //     setPairingPrivateJwk(request.privateJwk);
+  //     setStatus('Код для подключения создан. Передайте его на устройство, где вы уже заходили в приложение.');
+  //   });
+  // };
 
-  const handleCreatePairing = async () => {
-    if (!userId) {
-      setError('Пользователь не авторизован');
-      return;
-    }
+  // const handleApprovePairing = async () => {
+  //   if (!localDeviceKeys) {
+  //     setError('На этом устройстве ещё нет доступа к сообщениям');
+  //     return;
+  //   }
+  //   if (!pairingPayload.trim()) {
+  //     setError('Вставьте код подключения');
+  //     return;
+  //   }
+  //
+  //   await withAction(async () => {
+  //     const parsed = JSON.parse(pairingPayload) as PairingRequestPayload;
+  //     await approvePairingRequest(parsed, localDeviceKeys);
+  //     setStatus('Подключение подтверждено. На новом устройстве нажмите «Завершить подключение».');
+  //   });
+  // };
 
-    await withAction(async () => {
-      const request = await createPairingRequest(localDeviceKeys?.deviceId || `pending-${Date.now()}`);
-      setPairingPayload(JSON.stringify(request.payload));
-      setPairingPrivateJwk(request.privateJwk);
-      setStatus('Код для подключения создан. Передайте его на устройство, где вы уже заходили в приложение.');
-    });
-  };
-
-  const handleApprovePairing = async () => {
-    if (!localDeviceKeys) {
-      setError('На этом устройстве ещё нет доступа к сообщениям');
-      return;
-    }
-    if (!pairingPayload.trim()) {
-      setError('Вставьте код подключения');
-      return;
-    }
-
-    await withAction(async () => {
-      const parsed = JSON.parse(pairingPayload) as PairingRequestPayload;
-      await approvePairingRequest(parsed, localDeviceKeys);
-      setStatus('Подключение подтверждено. На новом устройстве нажмите «Завершить подключение».');
-    });
-  };
-
-  const handleCompletePairing = async () => {
-    if (!userId) {
-      setError('Пользователь не авторизован');
-      return;
-    }
-    if (!pairingPrivateJwk) {
-      setError('Сначала создайте код подключения на этом устройстве');
-      return;
-    }
-    if (!pairingPayload.trim()) {
-      setError('Вставьте код подключения');
-      return;
-    }
-
-    await withAction(async () => {
-      const parsed = JSON.parse(pairingPayload) as PairingRequestPayload;
-      await consumePairingRequest(userId, parsed, pairingPrivateJwk);
-      await ensureLocalKeys();
-      setStatus('Новое устройство подключено');
-    });
-  };
+  // const handleCompletePairing = async () => {
+  //   if (!userId) {
+  //     setError('Пользователь не авторизован');
+  //     return;
+  //   }
+  //   if (!pairingPrivateJwk) {
+  //     setError('Сначала создайте код подключения на этом устройстве');
+  //     return;
+  //   }
+  //   if (!pairingPayload.trim()) {
+  //     setError('Вставьте код подключения');
+  //     return;
+  //   }
+  //
+  //   await withAction(async () => {
+  //     const parsed = JSON.parse(pairingPayload) as PairingRequestPayload;
+  //     await consumePairingRequest(userId, parsed, pairingPrivateJwk);
+  //     await ensureLocalKeys();
+  //     setStatus('Новое устройство подключено');
+  //   });
+  // };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 6 }}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" fontWeight={500} gutterBottom>
-          Подключение этого устройства
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, mb: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Сообщения и фото зашифрованы и доступны только вам. На этом устройстве нужно подключить ключ —
-            выберите способ ниже.
-          </Typography>
-          <Tooltip
-            title={
-              <Typography variant="body2" sx={{ maxWidth: 280 }}>
-                Данные шифруются на вашем устройстве. Мы не храним ключи и не можем прочитать ваши сообщения
-                и фото — даже по запросу. Это защита вашей приватности. На каждом новом телефоне или браузере
-                понадобится секретная фраза, которую вы создаёте при первом подключении.
-              </Typography>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default'
+      }}
+    >
+      <Paper
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: 3,
+          borderRadius: 0,
+          boxShadow: 'none'
+        }}
+      >
+        <Button
+          onClick={handleBack}
+          startIcon={<ArrowBackIcon />}
+          color="inherit"
+          sx={{
+            alignSelf: 'flex-start',
+            mb: 1,
+            ml: -1,
+            textTransform: 'uppercase',
+            lineHeight: 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            '& .MuiButton-startIcon': {
+              margin: 0,
+              marginRight: 1,
+              display: 'inline-flex',
+              alignItems: 'center'
             }
-            placement="top"
-            arrow
-            enterTouchDelay={0}
-            leaveTouchDelay={4000}
-          >
-            <IconButton
-              size="small"
-              sx={{ color: 'text.secondary', p: 0.3, mt: -0.3, flexShrink: 0 }}
-              aria-label="О шифровании и приватности"
-            >
-              <InfoOutlinedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+          }}
+        >
+          Назад
+        </Button>
+        <Typography variant="h5" fontWeight={500} sx={{ mb: 2 }}>
+          Добавление секретной фразы
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+          {`Я, как владелец Amorely, не могу прочитать ваши сообщения и посмотреть события.
+
+Это сделано для того, чтобы вы были уверены в приватности вашего контента. 
+
+Чтобы это работало, вам необходимо придумать секретную фразу и записать её в другой мессенджер или в блокнот.
+
+Важно: если вы её потеряете, мы с вами никак не сможем восстановить ваши данные — сообщения в чатах, текст и медиа в календаре.`}
+        </Typography>
 
         <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" sx={{ mb: 2 }}>
-          <Tab label="Создать" />
-          <Tab label="Ввести фразу" />
-          <Tab label="Файл" />
-          <Tab label="Другое устройство" />
+          <Tab label="Создать новую" />
+          <Tab label="Ввести готовую" />
+          {/* <Tab label="Файл" /> */}
+          {/* <Tab label="Другое устройство" /> */}
         </Tabs>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -218,34 +288,43 @@ const CryptoUnlockPage: React.FC = () => {
 
         {tab === 0 && (
           <Box>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              Мы подготовили для вас секретную фразу. Запишите её в надёжное место — заметки, менеджер паролей
-              или бумажный блокнот. Она понадобится, если вы зайдёте с другого телефона или браузера.
-            </Typography>
-            <Paper variant="outlined" sx={{ p: 1.5, mb: 1 }}>
-              <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-                {suggestedPhrase}
-              </Typography>
-            </Paper>
-            <Button
-              disabled={isLoading}
-              variant="outlined"
-              size="small"
-              startIcon={<ContentCopyIcon />}
-              onClick={handleCopySuggestedPhrase}
-              sx={{ mb: 2 }}
-            >
-              {phraseCopied ? 'Скопировано' : 'Скопировать фразу'}
-            </Button>
             <TextField
               fullWidth
-              label="Секретная фраза"
-              helperText="Можно оставить предложенную или придумать свою — главное, не потерять её"
+              multiline
+              minRows={3}
+              placeholder="Секретная фраза"
               value={passphrase}
               onChange={(event) => setPassphrase(event.target.value)}
               sx={{ mb: 2 }}
+              InputProps={{
+                endAdornment: passphrase ? (
+                  <InputAdornment position="end" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                    <IconButton
+                      size="small"
+                      aria-label="Очистить"
+                      onClick={() => setPassphrase('')}
+                      edge="end"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined
+              }}
             />
-            <Button disabled={isLoading} variant="contained" onClick={handleCreateKeys}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              <Button disabled={isLoading} variant="outlined" onClick={handleGeneratePassphrase}>
+                Сгенерировать случайную
+              </Button>
+              <Button
+                disabled={isLoading || !passphrase.trim()}
+                variant="outlined"
+                startIcon={<ContentCopyIcon />}
+                onClick={handleCopyPassphrase}
+              >
+                Скопировать
+              </Button>
+            </Box>
+            <Button disabled={isLoading} variant="contained" onClick={handleSaveClick}>
               Сохранить и продолжить
             </Button>
           </Box>
@@ -253,15 +332,11 @@ const CryptoUnlockPage: React.FC = () => {
 
         {tab === 1 && (
           <Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Если вы уже подключали другое устройство, введите ту же секретную фразу, которую сохраняли
-              тогда.
-            </Typography>
             <TextField
               fullWidth
               multiline
               minRows={3}
-              label="Секретная фраза"
+              placeholder="Секретная фраза"
               value={restorePhrase}
               onChange={(event) => setRestorePhrase(event.target.value)}
               sx={{ mb: 2 }}
@@ -272,7 +347,7 @@ const CryptoUnlockPage: React.FC = () => {
           </Box>
         )}
 
-        {tab === 2 && (
+        {/* {tab === 2 && (
           <Box>
             <Typography variant="body2" sx={{ mb: 2 }}>
               Если вы раньше сохраняли файл с настройками доступа на другом устройстве, выберите его здесь.
@@ -282,9 +357,9 @@ const CryptoUnlockPage: React.FC = () => {
               <input hidden type="file" accept=".json,.txt,.backup" onChange={handleFileRestore} />
             </Button>
           </Box>
-        )}
+        )} */}
 
-        {tab === 3 && (
+        {/* {tab === 3 && (
           <Box>
             <Typography variant="body2" sx={{ mb: 2 }}>
               На устройстве, где вы уже пользуетесь приложением, создайте код и передайте его сюда — через
@@ -308,9 +383,59 @@ const CryptoUnlockPage: React.FC = () => {
               onChange={(event) => setPairingPayload(event.target.value)}
             />
           </Box>
-        )}
+        )} */}
       </Paper>
-    </Container>
+
+      <ResponsiveDialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: (theme) => ({
+              bgcolor: theme.palette.mode === 'dark' ? '#2a2a2a' : theme.palette.grey[100],
+              backgroundImage: 'none'
+            })
+          }
+        }}
+      >
+        <DialogTitle>Вы уверены, что сохранили вашу фразу?</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            value={passphrase}
+            InputProps={{ readOnly: true }}
+            sx={{ mt: 1 }}
+          />
+          <Button
+            variant="outlined"
+            startIcon={<ContentCopyIcon />}
+            onClick={handleCopyInModal}
+            sx={{ mt: 2 }}
+          >
+            Скопировать
+          </Button>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)} disabled={isLoading}>
+            Отмена
+          </Button>
+          <Button variant="contained" onClick={handleConfirmCreateKeys} disabled={isLoading}>
+            Да, сохранил(а)
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
+
+      <CustomSnackbar
+        open={copyToastOpen}
+        message={copyToastMessage}
+        severity={copyToastSeverity}
+        onClose={() => setCopyToastOpen(false)}
+      />
+    </Box>
   );
 };
 
