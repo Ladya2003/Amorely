@@ -474,13 +474,17 @@ const SettingsPage: React.FC = () => {
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: 'flex-end',
           gap: 2,
           flexShrink: 0,
           mb: 1,
         }}
       >
-        <Typography variant="h4" component="h1" sx={{ fontSize: '1.7rem' }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{ fontSize: '1.7rem', lineHeight: 1, m: 0 }}
+        >
           Настройки
         </Typography>
         <LogoutButton size="small" />

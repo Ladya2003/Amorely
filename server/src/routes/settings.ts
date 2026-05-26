@@ -366,7 +366,7 @@ router.put('/theme', async (req: ExtendedRequest, res: Response) => {
     }
 
     if (primaryColor !== undefined) {
-      if (!['pink', 'purple', 'blue', 'dark-red', 'dark-green'].includes(primaryColor)) {
+      if (!['pink', 'purple', 'blue', 'orange', 'dark-red', 'dark-green'].includes(primaryColor)) {
         return res.status(400).json({ error: 'Некорректный основной цвет' });
       }
       user.primaryColor = primaryColor;

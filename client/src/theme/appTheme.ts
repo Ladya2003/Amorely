@@ -5,7 +5,7 @@ const headingFontFamily = '"Oswald", sans-serif';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
-export type PrimaryColorPreference = 'pink' | 'purple' | 'blue' | 'dark-red' | 'dark-green';
+export type PrimaryColorPreference = 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
 
 export interface PrimaryColorOption {
   id: PrimaryColorPreference;
@@ -17,6 +17,7 @@ export const primaryColorOptions: PrimaryColorOption[] = [
   { id: 'pink', name: 'Розовый', preview: '#ff4b8d' },
   { id: 'purple', name: 'Тёмно-розовый', preview: '#8a2be2' },
   { id: 'blue', name: 'Голубой', preview: '#1e90ff' },
+  { id: 'orange', name: 'Оранжевый', preview: '#ff8c00' },
   { id: 'dark-red', name: 'Красный', preview: '#8b0000' },
   { id: 'dark-green', name: 'Зелёный', preview: '#006400' },
 ];
@@ -36,6 +37,10 @@ const primaryPalettes: Record<
   blue: {
     light: { main: '#1e90ff', dark: '#1873cc', light: '#87cefa', contrastText: '#ffffff' },
     dark: { main: '#2b6cb0', dark: '#245a94', light: '#1a3d5c', contrastText: '#ffffff' },
+  },
+  orange: {
+    light: { main: '#ff8c00', dark: '#cc7000', light: '#ffb347', contrastText: '#ffffff' },
+    dark: { main: '#b87333', dark: '#9a6229', light: '#5c3818', contrastText: '#ffffff' },
   },
   'dark-red': {
     light: { main: '#8b0000', dark: '#6d0000', light: '#b22222', contrastText: '#ffffff' },
