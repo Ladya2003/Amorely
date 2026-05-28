@@ -20,8 +20,10 @@ import calendarRoutes from './routes/calendar';
 import { authMiddleware } from './middleware/auth';
 import relationshipsRoutes from './routes/relationships';
 import pushRoutes from './routes/push';
+import gamesRoutes from './routes/games';
 import { startFeedScheduler } from './utils/feedScheduler';
 import { getAllowedOrigins } from './utils/corsOrigins';
+import { migrateLegacyTapGameStates } from './games/tapGameService';
 
 dotenv.config();
 
@@ -35,9 +37,10 @@ const isLocalDev = process.env.NODE_ENV === 'development';
 const mongoUri = isLocalDev ? 'mongodb://localhost:27017/amorely' : process.env.MONGODB_URI || 'mongodb://localhost:27017/amorely';
 
 mongoose.connect(mongoUri)
-  .then(() => {
+  .then(async () => {
     console.log(`MongoDB подключена: ${isLocalDev ? 'локальная' : 'облачная'}`);
     console.log(`URI: ${mongoUri.replace(/\/\/.*@/, '//***@')}`); // Скрываем пароль в логах
+    await migrateLegacyTapGameStates();
   })
   .catch((err: any) => {
     console.error('Ошибка подключения к MongoDB:', err);
@@ -297,6 +300,9 @@ app.use('/api/relationships', authMiddleware, relationshipsRoutes);
 
 // Маршруты для календаря
 app.use('/api/calendar', authMiddleware, calendarRoutes);
+
+// Маршруты для игр
+app.use('/api/games', authMiddleware, gamesRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {

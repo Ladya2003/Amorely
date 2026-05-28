@@ -1,7 +1,10 @@
 import React from 'react';
 import { Box, Typography, Avatar, SxProps, Theme } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import GameBadges from '../Games/GameBadges';
+import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 
 export const getUserDisplayName = (user: {
   username: string;
@@ -28,6 +31,7 @@ const UserProfileChip: React.FC<UserProfileChipProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { badges } = useRelationshipBadges();
 
   if (!user) {
     return null;
@@ -36,21 +40,23 @@ const UserProfileChip: React.FC<UserProfileChipProps> = ({
   return (
     <Box
       onClick={() => navigate('/settings')}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        cursor: 'pointer',
-        borderRadius: 999,
-        py: 0.25,
-        pl: 0.25,
-        pr: 1.25,
-        bgcolor: 'rgba(255, 75, 141, 0.1)',
-        '&:hover': { bgcolor: 'rgba(255, 75, 141, 0.2)' },
-        minWidth: 0,
-        flexShrink: 0,
-        ...sx,
-      }}
+      sx={[
+        (theme) => ({
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          cursor: 'pointer',
+          borderRadius: 999,
+          py: 0.25,
+          pl: 0.25,
+          pr: 1.25,
+          bgcolor: alpha(theme.palette.primary.main, 0.1),
+          '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
+          minWidth: 0,
+          flexShrink: 0,
+        }),
+        ...(sx ? (Array.isArray(sx) ? sx : [sx]) : []),
+      ]}
     >
       <Avatar
         src={user.avatar}
@@ -59,13 +65,19 @@ const UserProfileChip: React.FC<UserProfileChipProps> = ({
       >
         {user.username.charAt(0).toUpperCase()}
       </Avatar>
-      <Typography
-        variant="body2"
-        noWrap
-        sx={{ fontWeight: 500, minWidth: 0, maxWidth: maxNameWidth }}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          minWidth: 0,
+          maxWidth: maxNameWidth,
+        }}
       >
-        {getUserDisplayName(user)}
-      </Typography>
+        <Typography variant="body2" noWrap component="span" sx={{ fontWeight: 500 }}>
+          {getUserDisplayName(user)}
+        </Typography>
+        <GameBadges badges={badges} displayGameId={user.displayBadgeGameId} size={16} />
+      </Box>
     </Box>
   );
 };

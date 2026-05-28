@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Message from '../models/message';
+import Relationship from '../models/relationship';
 import User from '../models/user';
 import { authMiddleware } from '../middleware/auth';
 import { isUserOnline } from '../presence';
@@ -290,11 +291,18 @@ router.get('/contacts/:contactId/profile', authMiddleware, async (req: any, res:
       return res.status(403).json({ error: 'Нет доступа к профилю пользователя' });
     }
 
-    const user = await User.findById(contactId).select('username email firstName lastName avatar bio birthday');
+    const user = await User.findById(contactId).select(
+      'username email firstName lastName avatar bio birthday displayBadgeGameId'
+    );
 
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
+
+    const relationship = await Relationship.findOne({
+      $or: [{ userId: contactId }, { partnerId: contactId }],
+      status: 'active',
+    });
 
     res.json({
       id: user._id.toString(),
@@ -306,7 +314,9 @@ router.get('/contacts/:contactId/profile', authMiddleware, async (req: any, res:
       email: user.email,
       bio: user.bio || '',
       birthday: user.birthday ? user.birthday.toISOString() : null,
-      avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`
+      avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
+      displayBadgeGameId: user.displayBadgeGameId || null,
+      badges: relationship?.badges || [],
     });
   } catch (error) {
     console.error('Ошибка при получении профиля контакта:', error);

@@ -9,6 +9,8 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import FeedPage from './pages/FeedPage';
 import ChatPage from './pages/ChatPage';
+import GamePage from './pages/GamePage';
+import GamePlayPage from './pages/GamePlayPage';
 import CalendarPage from './pages/CalendarPage';
 import NewsPage from './pages/NewsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -65,6 +67,8 @@ function App() {
                 >
                   <Route index element={<FeedPage />} />
                   <Route path="chat" element={<ChatPage />} />
+                  <Route path="chat/games/:gameId" element={<GamePage />} />
+                  <Route path="chat/games/:gameId/play" element={<GamePlayPage />} />
                   <Route path="legal/chat-rules" element={<ChatRulesPage />} />
                   <Route path="calendar" element={<CalendarPage />} />
                   <Route path="news" element={<NewsPage />} />

@@ -32,6 +32,8 @@ import { Contact } from './ChatList';
 import Message from './Message';
 import SharedEventCard from './SharedEventCard';
 import ContactProfileDialog from './ContactProfileDialog';
+import GameBadges from '../Games/GameBadges';
+import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
@@ -46,6 +48,11 @@ export interface MessageReplyRef {
   text: string;
   senderId: string;
 }
+
+export type ForwardSourceContext = {
+  message: MessageType;
+  peerId: string;
+};
 
 export interface MessageForwardRef {
   id: string;
@@ -116,7 +123,8 @@ interface ChatDialogProps {
     attachments?: File[],
     replyTo?: MessageReplyRef | null,
     forwardFrom?: MessageForwardRef | null,
-    sharedEvent?: SharedEventRef | null
+    sharedEvent?: SharedEventRef | null,
+    forwardSource?: ForwardSourceContext | null
   ) => void;
   onStartForwardMessage: (message: MessageType) => void;
   onOpenChatWithUser: (userId: string, forwardHint?: MessageForwardRef | null) => void;
@@ -127,6 +135,8 @@ interface ChatDialogProps {
   onScrollPositionChange?: (scrollTop: number) => void;
   pendingForwardMessage?: MessageForwardRef | null;
   onPendingForwardApplied?: () => void;
+  onCancelPendingForward?: () => void;
+  pendingForwardSource?: ForwardSourceContext | null;
   pendingForwardSharedEvent?: SharedEventRef | null;
   pendingSharedEvent?: SharedEventRef | null;
   onPendingSharedEventApplied?: () => void;
@@ -173,6 +183,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onScrollPositionChange,
   pendingForwardMessage = null,
   onPendingForwardApplied,
+  onCancelPendingForward,
+  pendingForwardSource = null,
   pendingForwardSharedEvent = null,
   pendingSharedEvent = null,
   onPendingSharedEventApplied,
@@ -183,6 +195,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   isLoading = false
 }) => {
   const { otherUnreadCount } = useUnreadMessages();
+  const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
   const [messageText, setMessageText] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentValidationError, setAttachmentValidationError] = useState<string | null>(null);
@@ -192,6 +205,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [replyingTo, setReplyingTo] = useState<MessageReplyRef | null>(null);
   const [forwardingMessage, setForwardingMessage] = useState<MessageForwardRef | null>(null);
   const [forwardingSharedEvent, setForwardingSharedEvent] = useState<SharedEventRef | null>(null);
+  const [forwardingSource, setForwardingSource] = useState<ForwardSourceContext | null>(null);
   const [sharingEvent, setSharingEvent] = useState<SharedEventRef | null>(null);
   const [editingMessage, setEditingMessage] = useState<MessageType | null>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -302,7 +316,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     };
   }, [attachments]);
 
-  // Сброс при смене контакта
+  const cancelForwardDraft = () => {
+    setForwardingMessage(null);
+    setForwardingSharedEvent(null);
+    setForwardingSource(null);
+    onCancelPendingForward?.();
+  };
+
+  // Сброс при смене контакта; черновик пересылки восстанавливается эффектом pendingForwardMessage ниже
   useEffect(() => {
     isInitialLoadRef.current = true;
     previousMessagesLengthRef.current = 0;
@@ -316,6 +337,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setReplyingTo(null);
     setForwardingMessage(null);
     setForwardingSharedEvent(null);
+    setForwardingSource(null);
     setSharingEvent(null);
     setEditingMessage(null);
     setContextMenu(null);
@@ -340,8 +362,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setSharingEvent(null);
     setForwardingMessage(pendingForwardMessage);
     setForwardingSharedEvent(pendingForwardSharedEvent || null);
+    setForwardingSource(pendingForwardSource || null);
     onPendingForwardApplied?.();
-  }, [pendingForwardMessage, pendingForwardSharedEvent, onPendingForwardApplied]);
+  }, [pendingForwardMessage, pendingForwardSharedEvent, pendingForwardSource, onPendingForwardApplied]);
 
   useEffect(() => {
     if (!pendingSharedEvent) return;
@@ -406,13 +429,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         [],
         null,
         forwardingMessage,
-        forwardingSharedEvent
+        forwardingSharedEvent,
+        forwardingSource
       );
       setMessageText('');
       setAttachments([]);
       setReplyingTo(null);
-      setForwardingMessage(null);
-      setForwardingSharedEvent(null);
+      cancelForwardDraft();
       return;
     }
 
@@ -578,8 +601,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const handleReplyFromContextMenu = () => {
     if (!contextMenu) return;
     setEditingMessage(null);
-    setForwardingMessage(null);
-    setForwardingSharedEvent(null);
+    cancelForwardDraft();
     setSharingEvent(null);
     setReplyingTo({
       id: contextMenu.message.id,
@@ -813,9 +835,19 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           <Typography
             variant="subtitle1"
             noWrap
-            sx={{ fontWeight: 600, lineHeight: 1.25, fontSize: '0.95rem' }}
+            sx={{
+              fontWeight: 600,
+              lineHeight: 1.25,
+              fontSize: '0.95rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              maxWidth: '100%',
+            }}
           >
             {contact.name}
+            {contact.isPartner && (
+              <GameBadges badges={badges} displayGameId={partnerDisplayBadgeGameId} size={14} />
+            )}
           </Typography>
           <Typography
             variant="caption"
@@ -1031,10 +1063,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             </Box>
             <IconButton
               size="small"
-              onClick={() => {
-                setForwardingMessage(null);
-                setForwardingSharedEvent(null);
-              }}
+              onClick={cancelForwardDraft}
               aria-label="Отменить пересылку"
             >
               <CloseIcon fontSize="small" />

@@ -195,6 +195,20 @@ class SocketService {
     this.socket.emit('stop_typing', receiverId);
   }
 
+  subscribeTapGame() {
+    if (!this.socket) {
+      throw new Error('Socket not initialized');
+    }
+    this.socket.emit('tap_game_subscribe');
+  }
+
+  tapGameTap() {
+    if (!this.socket) {
+      throw new Error('Socket not initialized');
+    }
+    this.socket.emit('tap_game_tap');
+  }
+
   disconnect() {
     if (this.socket) {
       if (this.onConnectHandler) {

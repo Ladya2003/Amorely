@@ -8,17 +8,13 @@ import {
   Button,
   Box,
   IconButton,
-  Slider,
   Typography,
-  ToggleButton,
-  ToggleButtonGroup
 } from '@mui/material';
 import ResponsiveDialog from '../../../UI/ResponsiveDialog';
 import CreateIcon from '@mui/icons-material/Create';
 import DeleteIcon from '@mui/icons-material/Delete';
-import BrushIcon from '@mui/icons-material/Brush';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import SignatureCanvas from 'react-signature-canvas';
+import DrawingToolsToolbar, { type DrawingTool } from '../../../Games/DrawingToolsToolbar';
 import { ColorTheme } from './ColorPicker';
 
 interface SignatureDialogProps {
@@ -39,7 +35,8 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 300, height: 200 });
   const [brushSize, setBrushSize] = useState(3);
-  const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
+  const [tool, setTool] = useState<DrawingTool>('pen');
+  const [penColor, setPenColor] = useState('#111111');
   const [isCanvasReady, setIsCanvasReady] = useState(false);
 
   // Обновляем размер холста при изменении размера контейнера
@@ -157,6 +154,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
     // Сбрасываем инструменты при открытии
     setTool('pen');
     setBrushSize(3);
+    setPenColor('#111111');
   };
 
   const handleClose = () => {
@@ -255,70 +253,15 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
 
   const dialogContent = (
     <Box sx={{ p: 3 }}>
-      {/* Панель инструментов */}
-      <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {/* Выбор инструмента */}
-        <Box>
-          <Typography variant="subtitle2" gutterBottom sx={{ color: colorTheme.preview }}>
-            Инструмент:
-          </Typography>
-          <ToggleButtonGroup
-            value={tool}
-            exclusive
-            onChange={(_, newTool) => newTool && setTool(newTool)}
-            size="small"
-            sx={{
-              '& .MuiToggleButton-root': {
-                color: colorTheme.preview,
-                borderColor: colorTheme.preview,
-                '&.Mui-selected': {
-                  bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.2')}`,
-                  color: colorTheme.preview,
-                  '&:hover': {
-                    bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.3')}`,
-                  }
-                }
-              }
-            }}
-          >
-            <ToggleButton value="pen">
-              <BrushIcon sx={{ mr: 0.5 }} />
-              Кисть
-            </ToggleButton>
-            <ToggleButton value="eraser">
-              <AutoFixHighIcon sx={{ mr: 0.5 }} />
-              Ластик
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-
-        {/* Размер кисти */}
-        <Box>
-          <Typography variant="subtitle2" gutterBottom sx={{ color: colorTheme.preview }}>
-            Размер: {brushSize}px
-          </Typography>
-          <Slider
-            value={brushSize}
-            onChange={(_, newValue) => setBrushSize(newValue as number)}
-            min={1}
-            max={10}
-            step={0.5}
-            valueLabelDisplay="auto"
-            sx={{
-              color: colorTheme.preview,
-              '& .MuiSlider-thumb': {
-                bgcolor: colorTheme.preview,
-              },
-              '& .MuiSlider-track': {
-                bgcolor: colorTheme.preview,
-              },
-              '& .MuiSlider-rail': {
-                bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.3')}`,
-              }
-            }}
-          />
-        </Box>
-      </Box>
+      <DrawingToolsToolbar
+        tool={tool}
+        onToolChange={setTool}
+        brushSize={brushSize}
+        onBrushSizeChange={setBrushSize}
+        penColor={penColor}
+        onPenColorChange={setPenColor}
+        accentColor={colorTheme.preview}
+      />
 
       <Box
         ref={containerRef}
@@ -347,7 +290,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
             style: { touchAction: 'none' }
           }}
           backgroundColor="rgba(245, 245, 245, 0)"
-          penColor="black"
+          penColor={penColor}
           minWidth={brushSize * 0.8}
           maxWidth={brushSize * 1.2}
           dotSize={brushSize}

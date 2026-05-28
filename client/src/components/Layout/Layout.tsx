@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -33,8 +33,22 @@ const Layout: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
-  const { showBottomNav } = useNavigation();
+  const { showBottomNav, setShowBottomNav } = useNavigation();
   const { totalUnreadCount } = useUnreadMessages();
+
+  const isGameRoute = location.pathname.startsWith('/chat/games/');
+
+  useEffect(() => {
+    if (!isMobile || !isGameRoute) {
+      return;
+    }
+
+    setShowBottomNav(false);
+
+    return () => {
+      setShowBottomNav(true);
+    };
+  }, [isGameRoute, isMobile, setShowBottomNav]);
   
   const hideChatTabBadge = location.pathname === '/chat';
   const chatTabIcon = (
@@ -67,7 +81,7 @@ const Layout: React.FC = () => {
   const getCurrentTab = (): number | false => {
     const path = location.pathname;
     if (path === '/') return 0;
-    if (path === '/chat') return 1;
+    if (path === '/chat' || path.startsWith('/chat/games')) return 1;
     if (path === '/calendar') return 2;
     if (path === '/news') return 3;
     if (path === '/settings') return 4;

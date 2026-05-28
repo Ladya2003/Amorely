@@ -47,7 +47,7 @@ router.get('/user/:id', async (req: ExtendedRequest, res: Response) => {
 router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { username, firstName, lastName, bio, birthday, theme } = req.body;
+    const { username, firstName, lastName, bio, birthday, theme, displayBadgeGameId } = req.body;
     const file = req.file as Express.Multer.File & { path: string, filename: string };
     
     const user = await User.findById(id);
@@ -66,11 +66,34 @@ router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Respo
       user.username = username;
     }
     
-    if (firstName) user.firstName = firstName;
-    if (lastName) user.lastName = lastName;
-    if (bio) user.bio = bio;
-    if (birthday) user.birthday = new Date(birthday);
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (bio !== undefined) user.bio = bio;
+    if (birthday !== undefined) {
+      user.birthday = birthday ? new Date(birthday) : undefined;
+    }
     if (theme) user.theme = theme;
+
+    if (displayBadgeGameId !== undefined) {
+      const normalized =
+        displayBadgeGameId === '' || displayBadgeGameId === 'auto' || displayBadgeGameId === null
+          ? null
+          : String(displayBadgeGameId);
+
+      if (normalized) {
+        const relationship = await Relationship.findOne({
+          $or: [{ userId: user._id }, { partnerId: user._id }],
+          status: 'active',
+        });
+
+        const hasBadge = relationship?.badges?.some((badge) => badge.gameId === normalized);
+        if (!hasBadge) {
+          return res.status(400).json({ error: 'У вас нет медали для выбранной игры' });
+        }
+      }
+
+      user.displayBadgeGameId = normalized;
+    }
     
     // Обновляем аватар, если он был загружен
     if (file) {

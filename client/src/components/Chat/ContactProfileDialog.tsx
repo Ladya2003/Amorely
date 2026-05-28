@@ -15,10 +15,14 @@ import axios from 'axios';
 import { API_URL } from '../../config';
 import ContentViewer from '../Calendar/ContentViewer';
 import { Contact } from './ChatList';
+import GameBadges from '../Games/GameBadges';
+import type { RelationshipBadge } from '../../utils/gameBadges';
 
 export interface ContactProfile extends Contact {
   bio?: string;
   birthday?: string | null;
+  badges?: RelationshipBadge[];
+  displayBadgeGameId?: string | null;
 }
 
 interface ContactProfileDialogProps {
@@ -186,11 +190,20 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
                 sx={{
                   width: 112,
                   height: 112,
-                  mb: 2,
+                  mb: 1.5,
                   cursor: avatarUrl ? 'pointer' : 'default',
-                  boxShadow: 2
+                  boxShadow: 2,
                 }}
               />
+
+              {profile?.badges && profile.badges.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                    Медали
+                  </Typography>
+                  <GameBadges badges={profile.badges} variant="all" size={20} />
+                </Box>
+              )}
 
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                 {fullName}

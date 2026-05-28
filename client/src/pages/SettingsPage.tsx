@@ -179,6 +179,13 @@ const SettingsPage: React.FC = () => {
     setUser(response.data.user);
     updateUser(response.data.user);
   };
+
+  const handleBadgePreferenceSaved = (displayBadgeGameId: string | null) => {
+    setUser((prev) => (prev ? { ...prev, displayBadgeGameId } : prev));
+    if (authUser) {
+      updateUser({ ...authUser, displayBadgeGameId });
+    }
+  };
   
   const handleAddPartner = async (partnerEmail: string, startDate: Date) => {
     try {
@@ -570,9 +577,10 @@ const SettingsPage: React.FC = () => {
             }}
           >
           {tabValue === 0 && user && (
-            <ProfileForm 
-              user={user} 
-              onSave={handleSaveProfile} 
+            <ProfileForm
+              user={user}
+              onSave={handleSaveProfile}
+              onBadgePreferenceSaved={handleBadgePreferenceSaved}
             />
           )}
           

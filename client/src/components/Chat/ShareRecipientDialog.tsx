@@ -155,7 +155,13 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
         </Typography>
         <List sx={{ p: 0 }}>
           {filteredContacts.map((contact) => (
-            <ListItemButton key={`share-contact-${contact.id}`} onClick={() => onSelect(contact)}>
+            <ListItemButton
+              key={`share-contact-${contact.id}`}
+              onClick={(event) => {
+                event.currentTarget.blur();
+                onSelect(contact);
+              }}
+            >
               <ListItemAvatar>
                 <Avatar alt={contact.name} src={contact.avatar} />
               </ListItemAvatar>
@@ -178,7 +184,13 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
             </Typography>
             <List sx={{ p: 0 }}>
               {filteredGlobalResults.map((user) => (
-                <ListItemButton key={`share-global-${user.id}`} onClick={() => onSelect(user)}>
+                <ListItemButton
+                  key={`share-global-${user.id}`}
+                  onClick={(event) => {
+                    event.currentTarget.blur();
+                    onSelect(user);
+                  }}
+                >
                   <ListItemAvatar>
                     <Avatar alt={user.name} src={user.avatar} />
                   </ListItemAvatar>

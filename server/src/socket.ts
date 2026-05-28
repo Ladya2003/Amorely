@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { notifyNewMessage } from './services/pushService';
 import { markUserOnline, markUserOffline, getOnlineUserIds } from './presence';
+import { attachGameSocketHandlers } from './games/gameSocketHandlers';
 
 interface ConnectedUser {
   userId: string;
@@ -52,6 +53,8 @@ export default function setupSocketIO(server: HttpServer) {
 
   io.on('connection', (socket: Socket) => {
     console.log('Новое подключение к сокету:', socket.id);
+
+    attachGameSocketHandlers(socket, io, connectedUsers);
 
     // Пользователь подключается и отправляет свой ID
     socket.on('user_connected', (userId: string) => {

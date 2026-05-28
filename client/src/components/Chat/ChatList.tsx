@@ -15,6 +15,8 @@ import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
+import GameBadges from '../Games/GameBadges';
+import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 
 export interface Contact {
   id: string;
@@ -72,6 +74,7 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
 }));
 
 const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selectedContactId, currentUserId }) => {
+  const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
   const formatLastMessageTimestamp = (timestamp: string) => {
     const messageDate = new Date(timestamp);
     const now = new Date();
@@ -179,11 +182,37 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
             <ListItemText
               secondaryTypographyProps={{ component: 'div' }}
               primary={
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle1" component="span">
-                    {contact.name}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                  <Box
+                    component="span"
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      minWidth: 0,
+                      flex: 1,
+                      gap: 0.5,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      component="span"
+                      noWrap
+                      sx={{
+                        fontWeight: hasUnreadIncoming ? 700 : 600,
+                        minWidth: 0,
+                      }}
+                    >
+                      {contact.name}
+                    </Typography>
+                    {contact.isPartner && (
+                      <GameBadges
+                        badges={badges}
+                        displayGameId={partnerDisplayBadgeGameId}
+                        size={16}
+                      />
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, flexShrink: 0 }}>
                     {renderLastMessageStatusIcon(contact)}
                     <Typography variant="caption" color="text.secondary">
                       {formatLastMessageTimestamp(contact.lastMessage.timestamp)}

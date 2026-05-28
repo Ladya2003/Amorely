@@ -14,6 +14,13 @@ const relationshipSchema = new mongoose.Schema({
     user: { type: String }, // Подпись первого партнера (userId)
     partner: { type: String } // Подпись второго партнера (partnerId)
   },
+  badges: [
+    {
+      gameId: { type: String, required: true },
+      rank: { type: Number, required: true, min: 1, max: 3 },
+      updatedAt: { type: Date, default: Date.now },
+    },
+  ],
   createdAt: { type: Date, default: Date.now }
 });
 

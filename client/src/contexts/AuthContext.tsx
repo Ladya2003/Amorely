@@ -21,6 +21,7 @@ interface User {
   partnerId?: string;
   theme?: 'light' | 'dark' | 'system';
   primaryColor?: 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
+  displayBadgeGameId?: string | null;
 }
 
 interface AuthContextType {

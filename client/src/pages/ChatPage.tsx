@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Tabs,
@@ -26,7 +26,13 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatList, { Contact } from '../components/Chat/ChatList';
-import ChatDialog, { MessageForwardRef, MessageReplyRef, MessageType, SharedEventRef } from '../components/Chat/ChatDialog';
+import ChatDialog, {
+  ForwardSourceContext,
+  MessageForwardRef,
+  MessageReplyRef,
+  MessageType,
+  SharedEventRef
+} from '../components/Chat/ChatDialog';
 import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import Games from '../components/Chat/Games';
 import UserProfileChip from '../components/UI/UserProfileChip';
@@ -41,6 +47,7 @@ import { useCrypto } from '../contexts/CryptoContext';
 import {
   decryptChatPayload,
   encryptChatPayload,
+  type ChatMediaEnvelope,
   type ChatPayloadV2,
   type EncryptedChatPayload
 } from '../crypto/cryptoService';
@@ -212,8 +219,25 @@ const getMessagePreviewText = (
   return message.text || '';
 };
 
+const getChatTabIndex = (tab?: string | null) => (tab === 'games' ? 1 : 0);
+
+const hasEncryptedMediaMessage = (message: MessageType) =>
+  Boolean(
+    message.encryptedPayload &&
+    message.attachments?.some(
+      (attachment) => attachment.encrypted || attachment.type === 'encrypted'
+    )
+  );
+
 const ChatPage: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = getChatTabIndex(searchParams.get('tab'));
+  const openGamesTabOnMount = initialTab === 1;
+  const skipChatRestoreRef = useRef(openGamesTabOnMount);
+
+  const [tabValue, setTabValue] = useState(() => initialTab);
   const [contacts, setContacts] = useState<ChatContact[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageType[]>([]);
@@ -234,8 +258,13 @@ const ChatPage: React.FC = () => {
   const [hasMoreGlobalSearch, setHasMoreGlobalSearch] = useState(false);
   const [forwardModalOpen, setForwardModalOpen] = useState(false);
   const [forwardSourceMessage, setForwardSourceMessage] = useState<MessageType | null>(null);
+  const forwardSourceRef = useRef<MessageType | null>(null);
   const [pendingForwardMessage, setPendingForwardMessage] = useState<MessageForwardRef | null>(null);
   const [pendingForwardSharedEvent, setPendingForwardSharedEvent] = useState<SharedEventRef | null>(null);
+  const [pendingForwardSource, setPendingForwardSource] = useState<{
+    message: MessageType;
+    peerId: string;
+  } | null>(null);
   const [pendingSharedEvent, setPendingSharedEvent] = useState<SharedEventRef | null>(null);
   const [deleteToast, setDeleteToast] = useState<{
     open: boolean;
@@ -249,8 +278,6 @@ const ChatPage: React.FC = () => {
   const [chatRulesAccepted, setChatRulesAccepted] = useState(false);
   const [isChatRulesChecked, setIsChatRulesChecked] = useState(false);
 
-  const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
   const { syncUnreadFromContacts, setActiveContactId } = useUnreadMessages();
@@ -466,6 +493,11 @@ const ChatPage: React.FC = () => {
   }, [CURRENT_USER_ID]);
 
   useEffect(() => {
+    if (skipChatRestoreRef.current) {
+      hasRestoredSelectedChatRef.current = true;
+      return;
+    }
+
     if (!CURRENT_USER_ID || selectedContactId || hasRestoredSelectedChatRef.current) {
       return;
     }
@@ -634,8 +666,12 @@ const ChatPage: React.FC = () => {
       sourceMessage: MessageType,
       forwardFrom: MessageForwardRef
     ) => {
-      if (!localDeviceKeys || !CURRENT_USER_ID || !sourceMessage.encryptedPayload) {
-        return;
+      if (!localDeviceKeys || !CURRENT_USER_ID) {
+        throw new Error('Для пересылки медиа нужны ключи шифрования на этом устройстве');
+      }
+
+      if (!sourceMessage.encryptedPayload) {
+        throw new Error('Исходное сообщение не содержит зашифрованных данных');
       }
 
       const decryptPeerId = resolvePeerIdForMessage(sourceMessage, sourcePeerId);
@@ -647,8 +683,13 @@ const ChatPage: React.FC = () => {
         { isOwnMessage }
       );
 
-      if (payload.version !== 2 || !payload.attachments?.length) {
-        return;
+      const mediaEnvelopes: ChatMediaEnvelope[] =
+        payload.version === 2 && payload.attachments?.length
+          ? payload.attachments
+          : sourceMessage.mediaEnvelopes || [];
+
+      if (!mediaEnvelopes.length) {
+        throw new Error('Не удалось получить данные медиа для пересылки');
       }
 
       const storedAttachments: StoredChatAttachment[] = (sourceMessage.attachments || [])
@@ -659,12 +700,18 @@ const ChatPage: React.FC = () => {
           publicId: attachment.publicId || '',
           encrypted: true as const
         }))
-        .filter((attachment) => attachment.publicId);
+        .filter((attachment) => Boolean(attachment.url));
+
+      if (!storedAttachments.length) {
+        throw new Error('Нет вложений для пересылки');
+      }
+
+      const payloadText = payload.version === 2 ? payload.text : payload.version === 1 ? payload.text : '';
 
       const encryptedPayload = await encryptChatPayload(localDeviceKeys, targetContactId, {
         version: 2,
-        text: payload.text || '',
-        attachments: payload.attachments
+        text: payloadText || '',
+        attachments: mediaEnvelopes
       } satisfies ChatPayloadV2);
 
       const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -683,15 +730,15 @@ const ChatPage: React.FC = () => {
         id: `temp-${uniqueSuffix}`,
         clientTempId,
         senderId: CURRENT_USER_ID,
-        text: payload.text || '',
+        text: payloadText || '',
         timestamp: new Date().toISOString(),
         forwardFrom,
         attachments: storedAttachments,
-        mediaEnvelopes: payload.attachments,
+        mediaEnvelopes,
         encryptedPayload
       };
 
-      if (selectedContactId === targetContactId) {
+      if (selectedContactIdRef.current === targetContactId) {
         setMessages((prev) => [...prev, optimisticMessage]);
       }
 
@@ -699,7 +746,7 @@ const ChatPage: React.FC = () => {
 
       updateContactLastMessage(
         targetContactId,
-        payload.text || 'Пересланное сообщение',
+        payloadText || 'Пересланное сообщение',
         optimisticMessage.timestamp,
         false,
         true,
@@ -712,7 +759,6 @@ const ChatPage: React.FC = () => {
       CURRENT_USER_ID,
       localDeviceKeys,
       resolvePeerIdForMessage,
-      selectedContactId,
       sendEncryptedSocketMessage,
       updateContactLastMessage,
       trackPendingSend
@@ -1220,7 +1266,23 @@ const ChatPage: React.FC = () => {
         items.map((item) => decryptMessageForDialog(item, contactId))
       );
 
-      setMessages((prevMessages) => appendOlder ? [...decryptedItems, ...prevMessages] : decryptedItems);
+      setMessages((prevMessages) => {
+        if (appendOlder) {
+          return [...decryptedItems, ...prevMessages];
+        }
+
+        if (selectedContactIdRef.current !== contactId) {
+          return prevMessages;
+        }
+
+        const pendingOutgoing = prevMessages.filter(
+          (message) =>
+            message.id.startsWith('temp-') &&
+            message.senderId === CURRENT_USER_ID
+        );
+
+        return [...decryptedItems, ...pendingOutgoing];
+      });
       setMessagesPage(page);
       setHasMoreMessages(hasMore);
     } catch (error: any) {
@@ -1244,14 +1306,21 @@ const ChatPage: React.FC = () => {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+
+    const nextParams = new URLSearchParams(searchParams);
     if (newValue === 1) {
+      nextParams.set('tab', 'games');
       saveSelectedChatId(null);
       setSelectedContactId(null);
+      skipChatRestoreRef.current = true;
       // Показываем нижнее меню при переходе на вкладку игр
       if (isMobile) {
         setShowBottomNav(true);
       }
+    } else {
+      nextParams.delete('tab');
     }
+    setSearchParams(nextParams, { replace: true });
   };
 
   const handleSelectContact = (contactId: string) => {
@@ -1288,8 +1357,17 @@ const ChatPage: React.FC = () => {
     setIsLoadingMoreGlobalSearch(false);
   };
 
+  const clearPendingForwardDraft = useCallback(() => {
+    setPendingForwardMessage(null);
+    setPendingForwardSharedEvent(null);
+    setPendingForwardSource(null);
+  }, []);
+
   const handleStartForwardMessage = (message: MessageType) => {
-    setForwardSourceMessage(message);
+    clearPendingForwardDraft();
+    const latestMessage = messages.find((item) => item.id === message.id) || message;
+    forwardSourceRef.current = latestMessage;
+    setForwardSourceMessage(latestMessage);
     setForwardModalOpen(true);
   };
 
@@ -1321,7 +1399,7 @@ const ChatPage: React.FC = () => {
 
   const handleSelectForwardTarget = (target: ShareRecipientContact) => {
     const sourcePeerId = selectedContactId;
-    const sourceMessage = forwardSourceMessage;
+    const sourceMessage = forwardSourceRef.current ?? forwardSourceMessage;
 
     ensureContactInList({
       id: target.id,
@@ -1331,45 +1409,53 @@ const ChatPage: React.FC = () => {
       avatar: target.avatar || ''
     });
 
-    if (sourceMessage && sourcePeerId) {
-      const forwardSenderMeta = resolveForwardSenderMeta(sourceMessage);
+    const openTargetChat = () => {
+      prepareDialogRestoreState(target.id);
+      saveSelectedChatId(target.id);
+      setSelectedContactId(target.id);
+      setForwardModalOpen(false);
+      forwardSourceRef.current = null;
+      setForwardSourceMessage(null);
+      if (isMobile) {
+        setShowBottomNav(false);
+      }
+    };
+
+    if (!sourceMessage || !sourcePeerId) {
+      openTargetChat();
+      return;
+    }
+
+    const applyForwardDraft = (messageForForward: MessageType) => {
+      const forwardSenderMeta = resolveForwardSenderMeta(messageForForward);
       const forwardFrom: MessageForwardRef = {
-        id: sourceMessage.id,
-        text: getForwardPreviewText(sourceMessage),
-        senderId: sourceMessage.senderId,
+        id: messageForForward.id,
+        text: getForwardPreviewText(messageForForward),
+        senderId: messageForForward.senderId,
         senderName: forwardSenderMeta.senderName,
         senderAvatar: forwardSenderMeta.senderAvatar
       };
 
-      const hasEncryptedMedia = Boolean(
-        sourceMessage.attachments?.some(
-          (attachment) => attachment.encrypted || attachment.type === 'encrypted'
-        ) && sourceMessage.encryptedPayload
-      );
+      setPendingForwardSharedEvent(messageForForward.sharedEvent || null);
+      setPendingForwardMessage(forwardFrom);
+      setPendingForwardSource({ message: messageForForward, peerId: sourcePeerId });
+      openTargetChat();
+    };
 
-      if (hasEncryptedMedia) {
-        void forwardEncryptedMessage(target.id, sourcePeerId, sourceMessage, forwardFrom).catch((error) => {
-          console.error('Ошибка пересылки зашифрованного медиа:', error);
-          setDeleteToast({
-            open: true,
-            message: 'Не удалось переслать зашифрованное медиа',
-            severity: 'error'
-          });
-        });
-      } else {
-        setPendingForwardSharedEvent(sourceMessage.sharedEvent || null);
-        setPendingForwardMessage(forwardFrom);
-      }
+    const latestMessage = messages.find((item) => item.id === sourceMessage.id) || sourceMessage;
+
+    if (
+      localDeviceKeys &&
+      latestMessage.encryptedPayload &&
+      !latestMessage.mediaEnvelopes?.length
+    ) {
+      void decryptMessageForDialog(latestMessage, sourcePeerId)
+        .then(applyForwardDraft)
+        .catch(() => applyForwardDraft(latestMessage));
+      return;
     }
 
-    prepareDialogRestoreState(target.id);
-    saveSelectedChatId(target.id);
-    setSelectedContactId(target.id);
-    setForwardModalOpen(false);
-    setForwardSourceMessage(null);
-    if (isMobile) {
-      setShowBottomNav(false);
-    }
+    applyForwardDraft(latestMessage);
   };
 
   const handleOpenChatWithUser = (userId: string, forwardHint?: MessageForwardRef | null) => {
@@ -1388,6 +1474,14 @@ const ChatPage: React.FC = () => {
       setShowBottomNav(false);
     }
   };
+
+  useEffect(() => {
+    const tabFromUrl = getChatTabIndex(searchParams.get('tab'));
+    setTabValue(tabFromUrl);
+    if (tabFromUrl === 1) {
+      skipChatRestoreRef.current = true;
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const state = location.state as {
@@ -1517,7 +1611,8 @@ const ChatPage: React.FC = () => {
     attachments?: File[],
     replyTo?: MessageReplyRef | null,
     forwardFrom?: MessageForwardRef | null,
-    sharedEvent?: SharedEventRef | null
+    sharedEvent?: SharedEventRef | null,
+    forwardSource?: ForwardSourceContext | null
   ) => {
     const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -1528,6 +1623,31 @@ const ChatPage: React.FC = () => {
     const hasFiles = Boolean(attachments && attachments.length > 0);
 
     if (!isForwardOnly && !isSharedEventOnly && !trimmedText && !hasFiles) return;
+
+    if (
+      isForwardOnly &&
+      forwardFrom &&
+      forwardSource &&
+      hasEncryptedMediaMessage(forwardSource.message)
+    ) {
+      const { message: sourceMessage, peerId: sourcePeerId } = forwardSource;
+      clearPendingForwardDraft();
+
+      void forwardEncryptedMessage(
+        selectedContactId,
+        sourcePeerId,
+        sourceMessage,
+        forwardFrom
+      ).catch((error) => {
+        console.error('Ошибка пересылки зашифрованного медиа:', error);
+        setDeleteToast({
+          open: true,
+          message: 'Не удалось переслать зашифрованное медиа',
+          severity: 'error'
+        });
+      });
+      return;
+    }
 
     if (hasFiles && !localDeviceKeys) {
       setDeleteToast({
@@ -1986,7 +2106,10 @@ const ChatPage: React.FC = () => {
                     onPendingForwardApplied={() => {
                       setPendingForwardMessage(null);
                       setPendingForwardSharedEvent(null);
+                      setPendingForwardSource(null);
                     }}
+                    onCancelPendingForward={clearPendingForwardDraft}
+                    pendingForwardSource={pendingForwardSource}
                     pendingForwardSharedEvent={pendingForwardSharedEvent}
                     pendingSharedEvent={pendingSharedEvent}
                     onPendingSharedEventApplied={() => setPendingSharedEvent(null)}
@@ -2025,6 +2148,7 @@ const ChatPage: React.FC = () => {
         open={forwardModalOpen}
         onClose={() => {
           setForwardModalOpen(false);
+          forwardSourceRef.current = null;
           setForwardSourceMessage(null);
         }}
         onSelect={handleSelectForwardTarget}

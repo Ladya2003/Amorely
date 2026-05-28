@@ -14,6 +14,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
+import DisplayBadgePicker from './DisplayBadgePicker';
 
 export interface UserProfile {
   _id: string;
@@ -24,11 +25,13 @@ export interface UserProfile {
   bio?: string;
   avatar?: string;
   birthday?: string;
+  displayBadgeGameId?: string | null;
 }
 
 interface ProfileFormProps {
   user: UserProfile;
   onSave: (userData: FormData) => Promise<void>;
+  onBadgePreferenceSaved?: (displayBadgeGameId: string | null) => void;
 }
 
 const SAVE_DEBOUNCE_MS = 800;
@@ -38,7 +41,7 @@ const formatBirthdayValue = (birthday?: string) => {
   return new Date(birthday).toISOString().split('T')[0];
 };
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferenceSaved }) => {
   const [username, setUsername] = useState(user.username || '');
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
@@ -294,6 +297,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave }) => {
                   multiline
                   rows={4}
                   variant="outlined"
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <DisplayBadgePicker
+                  userId={user._id}
+                  displayBadgeGameId={user.displayBadgeGameId}
+                  onSaved={(displayBadgeGameId) => onBadgePreferenceSaved?.(displayBadgeGameId)}
                 />
               </Grid>
             </Grid>
