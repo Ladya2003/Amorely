@@ -24,6 +24,7 @@
     "seed:beta-news": "ts-node scripts/seed-beta-news.ts",
     "seed:pwa-homescreen-news": "ts-node scripts/seed-pwa-homescreen-news.ts",
     "seed:games-announcement-news": "ts-node scripts/seed-games-announcement-news.ts",
+    "seed:news": "npm run seed:pwa-homescreen-news && npm run seed:games-announcement-news",
     "generate-vapid-keys": "ts-node scripts/generate-vapid-keys.ts"
   },
   "keywords": [],
@@ -54,12 +55,12 @@
     "multer-storage-cloudinary": "^4.0.0",
     "node-cron": "^4.2.1",
     "socket.io": "^4.8.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "nodemon": "^3.0.2",
-    "ts-node": "^10.9.2"
+    "nodemon": "^3.0.2"
   }
 }
