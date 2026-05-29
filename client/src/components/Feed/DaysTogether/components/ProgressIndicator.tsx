@@ -29,14 +29,12 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
       return {
         bgcolor: hasPhoto ? 'rgba(30, 30, 30, 0.78)' : 'rgba(255, 255, 255, 0.06)',
         backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
-        border: hasPhoto ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.1)',
       };
     }
 
     return {
       bgcolor: hasPhoto ? 'rgba(255, 255, 255, 0.7)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
       backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
-      border: hasPhoto ? '1px solid rgba(255, 75, 141, 0.2)' : `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
     };
   };
 
@@ -51,11 +49,9 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
           ...(isDarkMode
             ? {
                 bgcolor: 'rgba(46, 125, 50, 0.15)',
-                border: '1px solid rgba(76, 175, 80, 0.25)',
               }
             : {
                 bgcolor: hasPhoto ? 'rgba(76, 175, 80, 0.15)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
-                border: hasPhoto ? '1px solid rgba(76, 175, 80, 0.3)' : `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
               }),
         }}
       >

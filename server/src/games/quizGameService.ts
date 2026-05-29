@@ -3,12 +3,12 @@ import Relationship from '../models/relationship';
 import User from '../models/user';
 import QuizGameState from '../models/quizGameState';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
+import { getNextUtcMidnight, getUtcDayKey } from '../utils/dailyReset';
 import {
   QUIZ_LOBBY_COUNTDOWN_SEC,
   QUIZ_QUESTION_TIME_SEC,
   buildDailyBoard,
   getQuizCellKey,
-  getQuizCooldownMs,
   getQuizQuestionById,
   isQuizAnswerCorrect,
 } from './quizGameConfig';
@@ -67,6 +67,7 @@ export interface QuizGamePublicState {
   nextBoardAvailableAt: string | null;
   boardCells: QuizBoardCellPublic[];
   cellsRemaining: number;
+  isMyTurnToPick: boolean;
   currentQuestion: {
     cellKey: string;
     categoryId: string;
@@ -98,6 +99,12 @@ const getUniqueParticipantIds = (context: QuizGameContext) => [
   context.relationship.partnerId.toString(),
 ];
 
+const getOtherParticipantId = (participantIds: string[], currentId: string) =>
+  participantIds.find((id) => id !== currentId) ?? participantIds[0];
+
+const pickRandomParticipantId = (participantIds: string[]) =>
+  participantIds[Math.floor(Math.random() * participantIds.length)];
+
 export const resolveQuizGameContext = async (userId: string): Promise<QuizGameContext> => {
   const relationshipContext = await requireActiveRelationship(userId);
 
@@ -121,7 +128,30 @@ export const resolveQuizGameContext = async (userId: string): Promise<QuizGameCo
   };
 };
 
-const getBoardDayKey = () => new Date().toISOString().slice(0, 10);
+const getBoardDayKey = () => getUtcDayKey();
+
+const normalizeQuizCooldownToUtcMidnight = (state: any) => {
+  if (!state.nextBoardAvailableAt || state.nextBoardAvailableAt.getTime() <= Date.now()) {
+    return;
+  }
+  state.nextBoardAvailableAt = getNextUtcMidnight();
+};
+
+const syncBoardDayIfExpired = (state: any) => {
+  const today = getBoardDayKey();
+  if (!state.boardDayKey || state.boardDayKey === today || isOnCooldown(state)) {
+    return;
+  }
+
+  state.boardDayKey = null;
+  state.boardCells = [];
+  state.usedCellKeys = [];
+  state.sessionActive = false;
+  state.currentQuestion = null;
+  state.readyUserIds = [];
+  state.lobbyCountdownEndsAt = null;
+  state.pickerUserId = null;
+};
 
 const isOnCooldown = (state: any) =>
   Boolean(state.nextBoardAvailableAt && state.nextBoardAvailableAt.getTime() > Date.now());
@@ -156,10 +186,11 @@ const finishBoardIfComplete = (state: any) => {
   state.currentQuestion = null;
   state.readyUserIds = [];
   state.lobbyCountdownEndsAt = null;
-  state.nextBoardAvailableAt = new Date(Date.now() + getQuizCooldownMs());
+  state.pickerUserId = null;
+  state.nextBoardAvailableAt = getNextUtcMidnight();
 };
 
-const initializeBoardSession = (state: any) => {
+const initializeBoardSession = (state: any, participantIds: string[]) => {
   const boardDayKey = getBoardDayKey();
   state.boardDayKey = boardDayKey;
   state.boardCells = buildDailyBoard(boardDayKey);
@@ -167,9 +198,12 @@ const initializeBoardSession = (state: any) => {
   state.sessionActive = true;
   state.nextBoardAvailableAt = null;
   state.currentQuestion = null;
+  state.pickerUserId = new mongoose.Types.ObjectId(pickRandomParticipantId(participantIds));
 };
 
 const clearCooldownIfExpired = (state: any) => {
+  normalizeQuizCooldownToUtcMidnight(state);
+
   if (state.nextBoardAvailableAt && state.nextBoardAvailableAt.getTime() <= Date.now()) {
     state.nextBoardAvailableAt = null;
     state.boardDayKey = null;
@@ -179,6 +213,7 @@ const clearCooldownIfExpired = (state: any) => {
     state.currentQuestion = null;
     state.readyUserIds = [];
     state.lobbyCountdownEndsAt = null;
+    state.pickerUserId = null;
   }
 };
 
@@ -248,14 +283,16 @@ export const expireQuizQuestionIfNeeded = async (state: any, context: QuizGameCo
   return true;
 };
 
-const syncQuizLobby = async (state: any) => {
+const syncQuizLobby = async (state: any, context?: QuizGameContext) => {
   clearCooldownIfExpired(state);
+  syncBoardDayIfExpired(state);
 
   if (isOnCooldown(state)) {
     state.sessionActive = false;
     state.currentQuestion = null;
     state.readyUserIds = [];
     state.lobbyCountdownEndsAt = null;
+    state.pickerUserId = null;
     await state.save();
     return state;
   }
@@ -270,7 +307,17 @@ const syncQuizLobby = async (state: any) => {
   ) {
     state.readyUserIds = [];
     state.lobbyCountdownEndsAt = null;
-    initializeBoardSession(state);
+    if (context) {
+      initializeBoardSession(state, getUniqueParticipantIds(context));
+    } else {
+      const relationship = await Relationship.findById(state.relationshipId).select('userId partnerId');
+      if (relationship) {
+        initializeBoardSession(state, [
+          relationship.userId.toString(),
+          relationship.partnerId.toString(),
+        ]);
+      }
+    }
     await state.save();
     return state;
   }
@@ -372,6 +419,11 @@ export const formatQuizGameState = (state: any, viewerUserId: string): QuizGameP
       : null,
     boardCells,
     cellsRemaining,
+    isMyTurnToPick:
+      Boolean(state.sessionActive) &&
+      !onCooldown &&
+      !state.currentQuestion &&
+      state.pickerUserId?.toString() === viewerUserId,
     currentQuestion,
   };
 };
@@ -391,6 +443,7 @@ export const getOrCreateQuizGameState = async (context: QuizGameContext) => {
         readyUserIds: [],
         lobbyCountdownEndsAt: null,
         sessionActive: false,
+        pickerUserId: null,
         nextBoardAvailableAt: null,
         currentQuestion: null,
       });
@@ -412,7 +465,14 @@ export const getOrCreateQuizGameState = async (context: QuizGameContext) => {
     throw new QuizGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
 
-  return syncQuizLobby(refreshed);
+  if (refreshed.sessionActive && !refreshed.pickerUserId && !isOnCooldown(refreshed)) {
+    refreshed.pickerUserId = new mongoose.Types.ObjectId(
+      pickRandomParticipantId(getUniqueParticipantIds(context))
+    );
+    await refreshed.save();
+  }
+
+  return syncQuizLobby(refreshed, context);
 };
 
 export const setQuizPlayerReady = async (userId: string, context: QuizGameContext) => {
@@ -469,7 +529,7 @@ export const setQuizPlayerReady = async (userId: string, context: QuizGameContex
     }
   }
 
-  return syncQuizLobby(state);
+  return syncQuizLobby(state, context);
 };
 
 export const pickQuizQuestion = async (
@@ -486,6 +546,10 @@ export const pickQuizQuestion = async (
 
   if (state.currentQuestion) {
     throw new QuizGameError('QUESTION_ALREADY_ACTIVE', 'Уже открыт другой вопрос');
+  }
+
+  if (!state.pickerUserId || state.pickerUserId.toString() !== userId) {
+    throw new QuizGameError('NOT_YOUR_TURN', 'Сейчас ход вашего партнёра');
   }
 
   const cellKey = getQuizCellKey(categoryId, points);
@@ -508,6 +572,7 @@ export const pickQuizQuestion = async (
       _id: state._id,
       sessionActive: true,
       currentQuestion: null,
+      pickerUserId: new mongoose.Types.ObjectId(userId),
       usedCellKeys: { $nin: [cellKey] },
     },
     {
@@ -595,13 +660,18 @@ export const submitQuizAnswer = async (userId: string, context: QuizGameContext,
   return QuizGameState.findById(state._id);
 };
 
-export const dismissQuizReveal = async (context: QuizGameContext) => {
+export const dismissQuizReveal = async (userId: string, context: QuizGameContext) => {
   const state = await QuizGameState.findOne({ relationshipId: context.relationship._id });
   if (!state?.currentQuestion || state.currentQuestion.status !== 'revealed') {
     return state;
   }
 
   state.currentQuestion = null;
+
+  const participantIds = getUniqueParticipantIds(context);
+  const currentPicker = state.pickerUserId?.toString() ?? userId;
+  state.pickerUserId = new mongoose.Types.ObjectId(getOtherParticipantId(participantIds, currentPicker));
+
   finishBoardIfComplete(state);
   await state.save();
   return QuizGameState.findById(state._id);
@@ -614,7 +684,7 @@ export const syncQuizGameState = async (context: QuizGameContext) => {
   if (!refreshed) {
     throw new QuizGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
-  return syncQuizLobby(refreshed);
+  return syncQuizLobby(refreshed, context);
 };
 
 export const getQuizGameParticipantIds = (context: QuizGameContext): string[] =>

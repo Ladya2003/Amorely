@@ -6,7 +6,8 @@ import {
   Avatar, 
   Typography, 
   Box,
-  ListItemText
+  ListItemText,
+  Divider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ImageIcon from '@mui/icons-material/Image';
@@ -139,7 +140,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
   };
 
   return (
-    <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
+    <List sx={{ width: '100%', bgcolor: 'transparent', p: 0 }}>
       {contacts.map((contact, index) => (
         <React.Fragment key={contact.id}>
           {(() => {
@@ -166,8 +167,8 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                   <Box
                     sx={(theme) => ({
                       position: 'absolute',
-                      top: 2,
-                      left: 2,
+                      bottom: 0,
+                      right: 0,
                       width: 12,
                       height: 12,
                       borderRadius: '50%',
@@ -208,7 +209,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                       <GameBadges
                         badges={badges}
                         displayGameId={partnerDisplayBadgeGameId}
-                        size={16}
+                        size={22}
                       />
                     )}
                   </Box>
@@ -266,6 +267,18 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
           </StyledListItemButton>
             );
           })()}
+          {index < contacts.length - 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', px: 2 }}>
+              <Divider
+                sx={(theme) => ({
+                  width: '80%',
+                  borderColor: theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 0, 0, 0.08)',
+                })}
+              />
+            </Box>
+          )}
         </React.Fragment>
       ))}
     </List>

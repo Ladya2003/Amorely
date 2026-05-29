@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -13,13 +13,34 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import LockIcon from '@mui/icons-material/Lock';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import UserProfileChip from '../UI/UserProfileChip';
 import GameListItem from './GameListItem';
+import DailyResetBadge from '../Games/DailyResetBadge';
 import { GAMES } from './gamesData';
+import {
+  fetchGamesDailyReset,
+  type DailyResetGameId,
+  type GameDailyResetMap,
+} from '../../services/gamesService';
+
+const DAILY_RESET_GAME_IDS = new Set<DailyResetGameId>(['geo', 'draw', 'quiz']);
 
 const Games: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [dailyReset, setDailyReset] = useState<GameDailyResetMap | null>(null);
+
+  useEffect(() => {
+    const loadDailyReset = async () => {
+      try {
+        const data = await fetchGamesDailyReset();
+        setDailyReset(data);
+      } catch {
+        setDailyReset(null);
+      }
+    };
+
+    loadDailyReset();
+  }, []);
 
   const filteredGames = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -48,20 +69,21 @@ const Games: React.FC = () => {
           px: 2,
           pb: 1,
           pt: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
           flexShrink: 0,
           bgcolor: 'background.paper',
         }}
       >
-        <UserProfileChip maxNameWidth={80} />
         <TextField
           fullWidth
           size="small"
           placeholder="Поиск по названию игры"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 3,
+            },
+          }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -112,12 +134,22 @@ const Games: React.FC = () => {
           </Box>
         ) : (
           <Stack spacing={1.5}>
-            {filteredGames.map((game) => (
+            {filteredGames.map((game) => {
+              const showDailyReset =
+                DAILY_RESET_GAME_IDS.has(game.id as DailyResetGameId) &&
+                Boolean(dailyReset?.[game.id as DailyResetGameId]?.hasPlayed);
+
+              return (
               <Box key={game.id} sx={{ position: 'relative' }}>
                 <GameListItem
                   game={game}
                   onClick={() => navigate(`/chat/games/${game.id}`)}
                 />
+                {showDailyReset && (
+                  <Box sx={{ position: 'absolute', top: 12, right: 12, pointerEvents: 'none' }}>
+                    <DailyResetBadge />
+                  </Box>
+                )}
                 {!game.available && (
                   <Chip
                     icon={<LockIcon sx={{ fontSize: '14px !important' }} />}
@@ -132,7 +164,8 @@ const Games: React.FC = () => {
                   />
                 )}
               </Box>
-            ))}
+            );
+            })}
           </Stack>
         )}
       </Box>

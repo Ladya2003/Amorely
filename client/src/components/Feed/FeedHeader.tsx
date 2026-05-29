@@ -20,7 +20,7 @@ const FeedHeader: React.FC = () => {
           Лента
         </Typography>
         
-        <UserProfileChip sx={{ maxWidth: '42%' }} maxNameWidth="100%" />
+        <UserProfileChip sx={{ maxWidth: '60%', flex: '1 1 auto', minWidth: 0 }} maxNameWidth="100%" />
       </Box>
     </Box>
   );

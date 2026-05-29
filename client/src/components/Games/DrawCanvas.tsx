@@ -24,6 +24,11 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const drawingRef = useRef(false);
   const currentPointsRef = useRef<Array<{ x: number; y: number }>>([]);
+  const optimisticStrokesRef = useRef<DrawStroke[]>([]);
+  const pendingStrokeCountRef = useRef(0);
+  const lastServerStrokeCountRef = useRef(0);
+  const canvasSizeRef = useRef({ width: 0, height: 0, dpr: 0 });
+  const rafIdRef = useRef<number | null>(null);
 
   const effectiveWidth = tool === 'eraser' ? strokeWidth * 2.5 : strokeWidth;
   const isEraser = tool === 'eraser';
@@ -73,6 +78,24 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     []
   );
 
+  const reconcileOptimisticStrokes = useCallback(() => {
+    const serverCount = strokes.length;
+
+    if (serverCount < lastServerStrokeCountRef.current) {
+      optimisticStrokesRef.current = [];
+      pendingStrokeCountRef.current = 0;
+    } else {
+      const confirmed = serverCount - lastServerStrokeCountRef.current;
+      if (confirmed > 0 && pendingStrokeCountRef.current > 0) {
+        const toRemove = Math.min(confirmed, pendingStrokeCountRef.current);
+        optimisticStrokesRef.current = optimisticStrokesRef.current.slice(toRemove);
+        pendingStrokeCountRef.current -= toRemove;
+      }
+    }
+
+    lastServerStrokeCountRef.current = serverCount;
+  }, [strokes.length]);
+
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -80,14 +103,23 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
       return;
     }
 
+    reconcileOptimisticStrokes();
+
     const width = container.clientWidth;
     const height = Math.max(280, Math.round(width * 0.75));
     const dpr = window.devicePixelRatio || 1;
 
-    canvas.width = Math.floor(width * dpr);
-    canvas.height = Math.floor(height * dpr);
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    const prevSize = canvasSizeRef.current;
+    const needsResize =
+      prevSize.width !== width || prevSize.height !== height || prevSize.dpr !== dpr;
+
+    if (needsResize) {
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      canvasSizeRef.current = { width, height, dpr };
+    }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
@@ -99,6 +131,9 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     ctx.fillRect(0, 0, width, height);
 
     strokes.forEach((stroke) => paintStroke(ctx, stroke, width, height));
+    optimisticStrokesRef.current.forEach((stroke) =>
+      paintStroke(ctx, stroke, width, height)
+    );
 
     const livePoints = currentPointsRef.current;
     if (livePoints.length >= 2) {
@@ -114,7 +149,24 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
         height
       );
     }
-  }, [effectiveWidth, isEraser, paintStroke, strokeColor, strokes]);
+  }, [
+    effectiveWidth,
+    isEraser,
+    paintStroke,
+    reconcileOptimisticStrokes,
+    strokeColor,
+    strokes,
+  ]);
+
+  const scheduleRedraw = useCallback(() => {
+    if (rafIdRef.current !== null) {
+      return;
+    }
+    rafIdRef.current = window.requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      redraw();
+    });
+  }, [redraw]);
 
   useEffect(() => {
     redraw();
@@ -126,10 +178,19 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
       return;
     }
 
-    const observer = new ResizeObserver(() => redraw());
+    const observer = new ResizeObserver(() => scheduleRedraw());
     observer.observe(container);
     return () => observer.disconnect();
-  }, [redraw]);
+  }, [scheduleRedraw]);
+
+  useEffect(
+    () => () => {
+      if (rafIdRef.current !== null) {
+        window.cancelAnimationFrame(rafIdRef.current);
+      }
+    },
+    []
+  );
 
   const finishStroke = useCallback(() => {
     if (!drawingRef.current) {
@@ -138,16 +199,22 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     drawingRef.current = false;
     const points = currentPointsRef.current;
     currentPointsRef.current = [];
-    redraw();
 
-    if (points.length >= 2 && onStroke) {
-      onStroke({
+    if (points.length >= 2) {
+      const stroke: DrawStroke = {
         points,
         color: isEraser ? '#000000' : strokeColor,
         width: effectiveWidth,
         isEraser,
-      });
+      };
+      optimisticStrokesRef.current = [...optimisticStrokesRef.current, stroke];
+      pendingStrokeCountRef.current += 1;
+      redraw();
+      onStroke?.(stroke);
+      return;
     }
+
+    redraw();
   }, [effectiveWidth, isEraser, onStroke, redraw, strokeColor]);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -162,7 +229,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     event.currentTarget.setPointerCapture(event.pointerId);
     drawingRef.current = true;
     currentPointsRef.current = [point];
-    redraw();
+    scheduleRedraw();
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -181,7 +248,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     }
 
     currentPointsRef.current = [...points, point];
-    redraw();
+    scheduleRedraw();
   };
 
   const handlePointerUp = () => {

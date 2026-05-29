@@ -846,7 +846,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           >
             {contact.name}
             {contact.isPartner && (
-              <GameBadges badges={badges} displayGameId={partnerDisplayBadgeGameId} size={14} />
+              <GameBadges badges={badges} displayGameId={partnerDisplayBadgeGameId} size={22} />
             )}
           </Typography>
           <Typography

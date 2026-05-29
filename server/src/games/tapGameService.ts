@@ -50,19 +50,6 @@ export interface TapGamePublicState {
   partnerProgressThisRound: number;
 }
 
-const isOpenRound1Start = (state: {
-  round: number;
-  totalTaps: number;
-  userTapsThisRound: number;
-  partnerTapsThisRound: number;
-  roundStarterUserId?: mongoose.Types.ObjectId | null;
-}) =>
-  !state.roundStarterUserId &&
-  state.round === 1 &&
-  state.totalTaps === 0 &&
-  state.userTapsThisRound === 0 &&
-  state.partnerTapsThisRound === 0;
-
 const isRelationshipPrimaryUser = (relationship: TapGameRelationship, userId: string): boolean =>
   relationship.userId.toString() === userId;
 
@@ -94,8 +81,10 @@ export const formatTapGameState = (
     viewerUserId
   );
 
-  const openRound1Start = isOpenRound1Start(state);
-  const isMyTurn = openRound1Start || Boolean(activeUserId && activeUserId === viewerUserId);
+  const myPartComplete = myTapsThisRound >= state.targetTaps;
+  const partnerPartComplete = partnerProgressThisRound >= state.targetTaps;
+  const isMyTurn = !myPartComplete;
+  const waitingForPartner = myPartComplete && !partnerPartComplete;
 
   return {
     relationshipId: state.relationshipId.toString(),
@@ -119,8 +108,8 @@ export const formatTapGameState = (
         }
       : null,
     isMyTurn,
-    waitingForPartner: !isMyTurn,
-    isOpenRound1Start: openRound1Start,
+    waitingForPartner,
+    isOpenRound1Start: false,
     roundStarterUserId: state.roundStarterUserId
       ? state.roundStarterUserId.toString()
       : null,
@@ -129,30 +118,20 @@ export const formatTapGameState = (
   };
 };
 
-const assignActiveUserAfterProgress = (state: any, relationship: TapGameRelationship) => {
+const assignActiveUserAfterProgress = (state: any) => {
   const primaryDone = state.userTapsThisRound >= state.targetTaps;
   const secondaryDone = state.partnerTapsThisRound >= state.targetTaps;
 
-  if (primaryDone && secondaryDone) {
-    state.round += 1;
-    state.targetTaps *= TAP_TARGET_MULTIPLIER;
-    state.userTapsThisRound = 0;
-    state.partnerTapsThisRound = 0;
-    state.blockIndex = (state.round - 1) % TAP_BLOCKS.length;
-    if (state.roundStarterUserId) {
-      state.activeUserId = state.roundStarterUserId;
-    }
+  if (!primaryDone || !secondaryDone) {
     return;
   }
 
-  if (primaryDone && !secondaryDone) {
-    state.activeUserId = relationship.partnerId;
-    return;
-  }
-
-  if (!primaryDone && secondaryDone) {
-    state.activeUserId = relationship.userId;
-  }
+  state.round += 1;
+  state.targetTaps *= TAP_TARGET_MULTIPLIER;
+  state.userTapsThisRound = 0;
+  state.partnerTapsThisRound = 0;
+  state.blockIndex = (state.round - 1) % TAP_BLOCKS.length;
+  state.activeUserId = null;
 };
 
 const normalizeTapGameStateDocument = async (
@@ -225,13 +204,16 @@ export const getOrCreateTapGameState = async (userId: string, context: TapGameCo
 
 export const processTap = async (userId: string, context: TapGameContext) => {
   const state = await getOrCreateTapGameState(userId, context);
-  const openStart = isOpenRound1Start(state);
 
-  if (openStart) {
+  const primary = isRelationshipPrimaryUser(context.relationship, userId);
+  const currentTaps = primary ? state.userTapsThisRound : state.partnerTapsThisRound;
+
+  if (currentTaps >= state.targetTaps) {
+    throw new TapGameError('ROUND_PART_COMPLETE', 'Вы уже завершили свою часть раунда');
+  }
+
+  if (!state.roundStarterUserId && state.totalTaps === 0) {
     state.roundStarterUserId = new mongoose.Types.ObjectId(userId);
-    state.activeUserId = new mongoose.Types.ObjectId(userId);
-  } else if (!state.activeUserId || state.activeUserId.toString() !== userId) {
-    throw new TapGameError('NOT_YOUR_TURN', 'Сейчас не ваш ход');
   }
 
   let effectiveProgress = 1;
@@ -243,8 +225,6 @@ export const processTap = async (userId: string, context: TapGameContext) => {
     }
   }
 
-  const primary = isRelationshipPrimaryUser(context.relationship, userId);
-  const currentTaps = primary ? state.userTapsThisRound : state.partnerTapsThisRound;
   const remaining = Math.max(0, state.targetTaps - currentTaps);
   const appliedProgress = Math.min(effectiveProgress, remaining);
 
@@ -258,7 +238,7 @@ export const processTap = async (userId: string, context: TapGameContext) => {
   state.totalTaps += 1;
 
   const completedRound = state.round;
-  assignActiveUserAfterProgress(state, context.relationship);
+  assignActiveUserAfterProgress(state);
 
   let roundCompletionBonus = 0;
   if (state.round > completedRound) {

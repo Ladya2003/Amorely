@@ -120,6 +120,28 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
         <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
           {news.content}
         </Typography>
+
+        {news.images?.map((image, imageIndex) => (
+          <Box key={imageIndex} sx={{ mt: 2 }}>
+            {image.caption && (
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                {image.caption}
+              </Typography>
+            )}
+            <Box
+              component="img"
+              src={image.url}
+              alt={image.caption || news.title}
+              sx={{
+                width: '100%',
+                maxHeight: 480,
+                objectFit: 'contain',
+                borderRadius: 1,
+                display: 'block',
+              }}
+            />
+          </Box>
+        ))}
       </DialogContent>
     </ResponsiveDialog>
   );

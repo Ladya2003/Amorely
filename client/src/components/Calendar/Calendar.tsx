@@ -20,7 +20,6 @@ import { ru } from 'date-fns/locale';
 import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
 import PlansNotes from './PlansNotes';
-import UserProfileChip from '../UI/UserProfileChip';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   readCalendarUiPreferences,
@@ -181,16 +180,12 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
         <Box sx={{ 
           borderBottom: 1, 
           borderColor: 'divider', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
           p: 1
         }}>
           <Tabs value={tabValue} onChange={handleTabChange} aria-label="calendar tabs">
             <Tab icon={<CalendarMonthIcon />} label="Календарь" />
             <Tab icon={<ListAltIcon />} label="Планы" />
           </Tabs>
-          <UserProfileChip maxNameWidth={80} />
         </Box>
 
         {tabValue === 0 && (

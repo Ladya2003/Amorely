@@ -14,7 +14,16 @@ export interface GameDetailsResponse {
   game: GameCatalogEntry;
   hasPartner: boolean;
   partner: GamePartnerInfo | null;
+  dailyReset: GameDailyResetStatus | null;
 }
+
+export interface GameDailyResetStatus {
+  hasPlayed: boolean;
+}
+
+export type DailyResetGameId = 'geo' | 'draw' | 'quiz';
+
+export type GameDailyResetMap = Record<DailyResetGameId, GameDailyResetStatus | null>;
 
 export interface LeaderboardUser {
   id: string;
@@ -85,6 +94,13 @@ export const fetchGamesCatalog = async () => {
     headers: authHeaders(),
   });
   return response.data.games as GameCatalogEntry[];
+};
+
+export const fetchGamesDailyReset = async () => {
+  const response = await axios.get(`${API_URL}/api/games/daily-reset`, {
+    headers: authHeaders(),
+  });
+  return response.data.games as GameDailyResetMap;
 };
 
 export const fetchGameDetails = async (gameId: string) => {
@@ -171,6 +187,7 @@ export interface GeoGameState {
   lobbyCountdownSec: number;
   readyUserIds: string[];
   lobbySecondsRemaining: number;
+  waitingForPartnerResults: boolean;
   currentRound: {
     locationId: string;
     imageUrl: string;
@@ -263,6 +280,7 @@ export interface DrawGameState {
   lobbyCountdownSec: number;
   readyUserIds: string[];
   lobbySecondsRemaining: number;
+  waitingForPartnerResults: boolean;
   allScoredRoundsDone: boolean;
   currentRound: {
     wordId: string;
@@ -382,6 +400,7 @@ export interface QuizGameState {
   nextBoardAvailableAt: string | null;
   boardCells: QuizBoardCell[];
   cellsRemaining: number;
+  isMyTurnToPick: boolean;
   currentQuestion: {
     cellKey: string;
     categoryId: string;

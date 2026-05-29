@@ -264,19 +264,13 @@ const TapGamePlayPage: React.FC = () => {
               align="center"
               sx={{ fontWeight: 600 }}
             >
-              {state.isOpenRound1Start
-                ? 'Нажмите первым — вы будете начинать каждый новый раунд'
-                : 'Нажимайте на розовый блок'}
+              Нажимайте на розовый блок
             </Typography>
-          ) : state.myTapsThisRound >= state.targetTaps ? (
+          ) : state.waitingForPartner ? (
             <Typography variant="body2" color="text.secondary" align="center">
               Вы закончили — ждём партнёра
             </Typography>
-          ) : (
-            <Typography variant="body2" color="text.secondary" align="center">
-              Сейчас ход партнёра — блок станет активным, когда он нажмёт свою часть
-            </Typography>
-          )}
+          ) : null}
 
           <Box
             sx={{
@@ -325,7 +319,13 @@ const TapGamePlayPage: React.FC = () => {
               type="button"
               onClick={handleTap}
               disabled={!state.isMyTurn}
-              aria-label={state.isMyTurn ? 'Нажать на блок' : 'Сейчас не ваш ход'}
+              aria-label={
+                state.isMyTurn
+                  ? 'Нажать на блок'
+                  : state.waitingForPartner
+                    ? 'Вы уже завершили свою часть раунда'
+                    : 'Блок недоступен'
+              }
               sx={{
                 position: 'relative',
                 display: 'block',

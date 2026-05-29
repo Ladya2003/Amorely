@@ -41,14 +41,12 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
       return {
         bgcolor: hasPhoto ? 'rgba(30, 30, 30, 0.78)' : 'rgba(255, 255, 255, 0.06)',
         backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
       };
     }
 
     return {
       bgcolor: hasPhoto ? 'rgba(255, 255, 255, 0.7)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
       backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
-      border: `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
     };
   };
 

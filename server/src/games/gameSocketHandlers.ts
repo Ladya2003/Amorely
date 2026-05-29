@@ -129,10 +129,20 @@ export const attachGameSocketHandlers = (
           return;
         }
         io.to(socketData.socketId).emit('geo_game_state', {
-          state: formatGeoGameState(state),
+          state: formatGeoGameState(state, uid),
         });
       })
     );
+  };
+
+  const emitGeoStateToUser = (state: any, userId: string) => {
+    const socketData = connectedUsers.find((user) => user.userId === userId);
+    if (!socketData) {
+      return;
+    }
+    io.to(socketData.socketId).emit('geo_game_state', {
+      state: formatGeoGameState(state, userId),
+    });
   };
 
   socket.on('geo_game_subscribe', async () => {
@@ -234,9 +244,17 @@ export const attachGameSocketHandlers = (
       }
 
       const context = await resolveGeoGameContext(senderSocketData.userId);
-      const state = await advanceGeoRound(context);
+      const { state, allPartnersDismissed } = await advanceGeoRound(
+        senderSocketData.userId,
+        context
+      );
+      const participantUserIds = getGeoGameParticipantIds(context);
 
-      await emitGeoStateToPartners(state, getGeoGameParticipantIds(context));
+      if (allPartnersDismissed) {
+        await emitGeoStateToPartners(state, participantUserIds);
+      } else {
+        emitGeoStateToUser(state, senderSocketData.userId);
+      }
     } catch (error) {
       if (error instanceof GeoGameError) {
         socket.emit('geo_game_error', { message: error.message, code: error.code });
@@ -289,6 +307,21 @@ export const attachGameSocketHandlers = (
         });
       })
     );
+  };
+
+  const emitDrawStateToUser = async (
+    state: any,
+    userId: string,
+    context: Awaited<ReturnType<typeof resolveDrawGameContext>>
+  ) => {
+    const stateDoc = state?._id ? await DrawGameState.findById(state._id) : state;
+    const socketData = connectedUsers.find((user) => user.userId === userId);
+    if (!socketData || !stateDoc) {
+      return;
+    }
+    io.to(socketData.socketId).emit('draw_game_state', {
+      state: formatDrawGameState(stateDoc, userId),
+    });
   };
 
   socket.on('draw_game_subscribe', async () => {
@@ -429,9 +462,16 @@ export const attachGameSocketHandlers = (
       }
 
       const context = await resolveDrawGameContext(senderSocketData.userId);
-      const state = await advanceDrawRound(context);
+      const { state, allPartnersDismissed } = await advanceDrawRound(
+        senderSocketData.userId,
+        context
+      );
 
-      await emitDrawStateToPartners(state, context);
+      if (allPartnersDismissed) {
+        await emitDrawStateToPartners(state, context);
+      } else {
+        await emitDrawStateToUser(state, senderSocketData.userId, context);
+      }
     } catch (error) {
       if (error instanceof DrawGameError) {
         socket.emit('draw_game_error', { message: error.message, code: error.code });
@@ -578,7 +618,7 @@ export const attachGameSocketHandlers = (
       }
 
       const context = await resolveQuizGameContext(senderSocketData.userId);
-      const state = await dismissQuizReveal(context);
+      const state = await dismissQuizReveal(senderSocketData.userId, context);
 
       await emitQuizStateToPartners(state, getQuizGameParticipantIds(context));
     } catch (error) {

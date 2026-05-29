@@ -168,7 +168,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
           {colorBlock}
           {sizeBlock}
         </Box>
-        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignSelf: 'flex-start' }}>
           {sideContent}
         </Box>
       </Box>

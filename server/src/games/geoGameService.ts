@@ -3,6 +3,7 @@ import Relationship from '../models/relationship';
 import User from '../models/user';
 import GeoGameState from '../models/geoGameState';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
+import { getNextUtcMidnight, getUtcDayKey } from '../utils/dailyReset';
 import {
   GEO_LOBBY_COUNTDOWN_SEC,
   GEO_MAX_ROUNDS_PER_DAY,
@@ -68,6 +69,7 @@ export interface GeoGamePublicState {
   lobbyCountdownSec: number;
   readyUserIds: string[];
   lobbySecondsRemaining: number;
+  waitingForPartnerResults: boolean;
   currentRound: {
     locationId: string;
     imageUrl: string;
@@ -110,6 +112,43 @@ export const resolveGeoGameContext = async (userId: string): Promise<GeoGameCont
 
 const getSecondsRemaining = (deadlineAt: Date) =>
   Math.max(0, Math.ceil((deadlineAt.getTime() - Date.now()) / 1000));
+
+const getDismissedRevealUserIds = (round: any): string[] =>
+  (round?.dismissedRevealUserIds || []).map((id: { toString(): string }) => id.toString());
+
+const hasUserDismissedReveal = (round: any, userId: string) =>
+  round?.status === 'revealed' && getDismissedRevealUserIds(round).includes(userId);
+
+const shouldHideRevealFromViewer = (round: any, viewerUserId?: string) =>
+  Boolean(viewerUserId && hasUserDismissedReveal(round, viewerUserId));
+
+const startLobbyCountdownIfAllReady = async (
+  state: any,
+  participantIds: string[]
+) => {
+  const readyIds = new Set<string>(
+    (state.readyUserIds || []).map((id: { toString(): string }) => id.toString())
+  );
+  const allReady = participantIds.every((participantId) => readyIds.has(participantId));
+
+  if (!allReady || state.lobbyCountdownEndsAt || state.currentRound) {
+    return state;
+  }
+
+  const countdownEndsAt = new Date(Date.now() + GEO_LOBBY_COUNTDOWN_SEC * 1000);
+  const withCountdown = await GeoGameState.findOneAndUpdate(
+    {
+      _id: state._id,
+      currentRound: null,
+      lobbyCountdownEndsAt: null,
+    },
+    { $set: { lobbyCountdownEndsAt: countdownEndsAt } },
+    { new: true }
+  );
+
+  return withCountdown || state;
+};
+
 
 const buildRoundReveal = (
   locationId: string,
@@ -216,10 +255,8 @@ const finalizeRound = (state: any, timedOut: boolean) => {
   recordCompletedRound(state);
 };
 
-const getTodayDayKey = () => new Date().toISOString().slice(0, 10);
-
 const syncDailyRoundCounters = (state: any) => {
-  const today = getTodayDayKey();
+  const today = getUtcDayKey();
   if (state.roundsDayKey !== today) {
     state.roundsDayKey = today;
     state.roundsPlayedToday = 0;
@@ -241,7 +278,7 @@ const canPlayMoreRoundsToday = (state: any) => !hasReachedDailyRoundLimit(state)
 
 const recordCompletedRound = (state: any) => {
   state.roundsPlayedToday = getRoundsPlayedToday(state) + 1;
-  state.roundsDayKey = getTodayDayKey();
+  state.roundsDayKey = getUtcDayKey();
 };
 
 const finalizeRoundWithoutGuess = (state: any) => {
@@ -256,17 +293,10 @@ const awardRoundPoints = (state: any, pointsEarned: number) => {
   state.points += pointsEarned;
 };
 
-const getNextRoundsAvailableAt = () => {
-  const now = new Date();
-  return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0)
-  );
-};
-
 const buildGeoDailyMeta = (state: any) => {
   const roundsPlayedToday = getRoundsPlayedToday(state);
   const dailyLimitReached = roundsPlayedToday >= GEO_MAX_ROUNDS_PER_DAY;
-  const nextRoundsAvailableAt = dailyLimitReached ? getNextRoundsAvailableAt() : null;
+  const nextRoundsAvailableAt = dailyLimitReached ? getNextUtcMidnight() : null;
   const secondsUntilNextRounds = nextRoundsAvailableAt
     ? Math.max(0, Math.ceil((nextRoundsAvailableAt.getTime() - Date.now()) / 1000))
     : 0;
@@ -310,6 +340,7 @@ const startNewRoundOnDocument = (state: any) => {
     guesses: [],
     pointsEarned: null,
     timedOut: false,
+    dismissedRevealUserIds: [],
   };
 
   return true;
@@ -343,6 +374,7 @@ const buildNewRoundPayload = (state: any) => {
       guesses: [],
       pointsEarned: null,
       timedOut: false,
+      dismissedRevealUserIds: [],
     },
   };
 };
@@ -391,32 +423,36 @@ const startNewRound = (state: any) => {
   startNewRoundOnDocument(state);
 };
 
-export const formatGeoGameState = (state: any): GeoGamePublicState => {
-  const currentRound = state.currentRound
+export const formatGeoGameState = (state: any, viewerUserId?: string): GeoGamePublicState => {
+  const rawRound = state.currentRound;
+  const hideRevealFromViewer = shouldHideRevealFromViewer(rawRound, viewerUserId);
+  const roundForViewer = hideRevealFromViewer ? null : rawRound;
+
+  const currentRound = roundForViewer
     ? (() => {
-        const location = getGeoLocation(state.currentRound.locationId);
-        const roundGuesses = getRoundGuesses(state.currentRound);
+        const location = getGeoLocation(roundForViewer.locationId);
+        const roundGuesses = getRoundGuesses(roundForViewer);
         let reveal: GeoRoundReveal | null = null;
 
-        if (state.currentRound.status === 'revealed') {
-          if (state.currentRound.timedOut && roundGuesses.length === 0) {
-            reveal = buildTimeoutReveal(state.currentRound.locationId);
+        if (roundForViewer.status === 'revealed') {
+          if (roundForViewer.timedOut && roundGuesses.length === 0) {
+            reveal = buildTimeoutReveal(roundForViewer.locationId);
           } else {
             reveal = buildRoundReveal(
-              state.currentRound.locationId,
+              roundForViewer.locationId,
               roundGuesses,
-              Boolean(state.currentRound.timedOut)
+              Boolean(roundForViewer.timedOut)
             );
           }
         }
 
         return {
-          locationId: state.currentRound.locationId,
+          locationId: roundForViewer.locationId,
           imageUrl: location?.imageUrl || '',
-          startedAt: new Date(state.currentRound.startedAt).toISOString(),
-          deadlineAt: new Date(state.currentRound.deadlineAt).toISOString(),
-          status: state.currentRound.status,
-          secondsRemaining: getSecondsRemaining(new Date(state.currentRound.deadlineAt)),
+          startedAt: new Date(roundForViewer.startedAt).toISOString(),
+          deadlineAt: new Date(roundForViewer.deadlineAt).toISOString(),
+          status: roundForViewer.status,
+          secondsRemaining: getSecondsRemaining(new Date(roundForViewer.deadlineAt)),
           guesses: roundGuesses.map((guess: { userId: { toString(): string }; lat: number; lng: number }) => ({
             userId: guess.userId.toString(),
             lat: guess.lat,
@@ -434,6 +470,9 @@ export const formatGeoGameState = (state: any): GeoGamePublicState => {
   const lobbyCountdownEndsAt = state.lobbyCountdownEndsAt
     ? new Date(state.lobbyCountdownEndsAt)
     : null;
+  const waitingForPartnerResults = Boolean(
+    hideRevealFromViewer && rawRound?.status === 'revealed'
+  );
 
   return {
     relationshipId: state.relationshipId.toString(),
@@ -451,6 +490,7 @@ export const formatGeoGameState = (state: any): GeoGamePublicState => {
     lobbySecondsRemaining: lobbyCountdownEndsAt
       ? getSecondsRemaining(lobbyCountdownEndsAt)
       : 0,
+    waitingForPartnerResults,
     currentRound,
   };
 };
@@ -504,7 +544,7 @@ export const getOrCreateGeoGameState = async (context: GeoGameContext) => {
         roundsCompleted: 0,
         points: 0,
         usedLocationIds: [],
-        roundsDayKey: getTodayDayKey(),
+        roundsDayKey: getUtcDayKey(),
         roundsPlayedToday: 0,
         readyUserIds: [],
         lobbyCountdownEndsAt: null,
@@ -534,8 +574,18 @@ export const getOrCreateGeoGameState = async (context: GeoGameContext) => {
 export const setGeoPlayerReady = async (userId: string, context: GeoGameContext) => {
   let state = await getOrCreateGeoGameState(context);
 
-  if (state.currentRound) {
+  if (state.currentRound?.status === 'guessing') {
     throw new GeoGameError('ROUND_ALREADY_ACTIVE', 'Раунд уже идёт');
+  }
+
+  if (
+    state.currentRound?.status === 'revealed' &&
+    !hasUserDismissedReveal(state.currentRound, userId)
+  ) {
+    throw new GeoGameError(
+      'VIEW_RESULTS_FIRST',
+      'Сначала нажмите «Завершить» или «Следующий раунд» на экране результатов'
+    );
   }
 
   if (!canPlayMoreRoundsToday(state)) {
@@ -546,10 +596,19 @@ export const setGeoPlayerReady = async (userId: string, context: GeoGameContext)
   }
 
   const participantIds = getUniqueParticipantIds(context);
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  const readyFilter: Record<string, unknown> = { _id: state._id };
+
+  if (!state.currentRound) {
+    readyFilter.currentRound = null;
+  } else {
+    readyFilter['currentRound.status'] = 'revealed';
+    readyFilter['currentRound.dismissedRevealUserIds'] = userObjectId;
+  }
 
   const withReady = await GeoGameState.findOneAndUpdate(
-    { _id: state._id, currentRound: null },
-    { $addToSet: { readyUserIds: new mongoose.Types.ObjectId(userId) } },
+    readyFilter,
+    { $addToSet: { readyUserIds: userObjectId } },
     { new: true }
   );
 
@@ -558,33 +617,23 @@ export const setGeoPlayerReady = async (userId: string, context: GeoGameContext)
     if (!state) {
       throw new GeoGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
     }
-    if (state.currentRound) {
+    if (state.currentRound?.status === 'guessing') {
       throw new GeoGameError('ROUND_ALREADY_ACTIVE', 'Раунд уже идёт');
+    }
+    if (
+      state.currentRound?.status === 'revealed' &&
+      !hasUserDismissedReveal(state.currentRound, userId)
+    ) {
+      throw new GeoGameError(
+        'VIEW_RESULTS_FIRST',
+        'Сначала нажмите «Завершить» или «Следующий раунд» на экране результатов'
+      );
     }
   } else {
     state = withReady;
   }
 
-  const readyIds = new Set<string>(
-    (state.readyUserIds || []).map((id: { toString(): string }) => id.toString())
-  );
-  const allReady = participantIds.every((participantId) => readyIds.has(participantId));
-
-  if (allReady && !state.lobbyCountdownEndsAt) {
-    const countdownEndsAt = new Date(Date.now() + GEO_LOBBY_COUNTDOWN_SEC * 1000);
-    const withCountdown = await GeoGameState.findOneAndUpdate(
-      {
-        _id: state._id,
-        currentRound: null,
-        lobbyCountdownEndsAt: null,
-      },
-      { $set: { lobbyCountdownEndsAt: countdownEndsAt } },
-      { new: true }
-    );
-    if (withCountdown) {
-      state = withCountdown;
-    }
-  }
+  state = await startLobbyCountdownIfAllReady(state, participantIds);
 
   return syncGeoLobby(state);
 };
@@ -679,19 +728,49 @@ export const expireGeoRound = async (context: GeoGameContext) => {
   return state;
 };
 
-export const advanceGeoRound = async (context: GeoGameContext) => {
+export const advanceGeoRound = async (userId: string, context: GeoGameContext) => {
   const state = await GeoGameState.findOne({ relationshipId: context.relationship._id });
 
   if (!state?.currentRound || state.currentRound.status !== 'revealed') {
     throw new GeoGameError('ROUND_NOT_REVEALED', 'Сначала завершите текущий раунд');
   }
 
-  state.currentRound = null;
-  state.readyUserIds = [];
-  state.lobbyCountdownEndsAt = null;
+  const participantIds = getUniqueParticipantIds(context);
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
+  if (!Array.isArray(state.currentRound.dismissedRevealUserIds)) {
+    state.currentRound.dismissedRevealUserIds = [];
+  }
+
+  const alreadyDismissed = state.currentRound.dismissedRevealUserIds.some(
+    (id: { toString(): string }) => id.toString() === userId
+  );
+
+  if (!alreadyDismissed) {
+    state.currentRound.dismissedRevealUserIds.push(userObjectId);
+  }
+
+  const allPartnersDismissed = participantIds.every((participantId) =>
+    state.currentRound!.dismissedRevealUserIds.some(
+      (id: { toString(): string }) => id.toString() === participantId
+    )
+  );
+
+  if (allPartnersDismissed) {
+    state.currentRound = null;
+    state.lobbyCountdownEndsAt = null;
+    await state.save();
+
+    let synced = await syncGeoLobby(state);
+    synced = await startLobbyCountdownIfAllReady(synced, participantIds);
+    synced = await syncGeoLobby(synced);
+
+    return { state: synced, allPartnersDismissed: true };
+  }
+
   await state.save();
 
-  return syncGeoLobby(state);
+  return { state, allPartnersDismissed: false };
 };
 
 export const getGeoGameParticipantIds = (context: GeoGameContext): string[] => [

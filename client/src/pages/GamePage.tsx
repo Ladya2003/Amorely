@@ -16,6 +16,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import { getGameById } from '../components/Chat/gamesData';
 import GameLeaderboard from '../components/Games/GameLeaderboard';
 import GeoDailyLimitDialog from '../components/Games/GeoDailyLimitDialog';
+import DailyResetBadge from '../components/Games/DailyResetBadge';
 import {
   fetchGameDetails,
   fetchGameLeaderboard,
@@ -65,6 +66,7 @@ const GamePage: React.FC = () => {
           game: staticGame,
           hasPartner: false,
           partner: null,
+          dailyReset: null,
         });
       } finally {
         setLoading(false);
@@ -148,6 +150,7 @@ const GamePage: React.FC = () => {
   const game = details?.game || staticGame;
   const canPlay = game.available && (!game.requiresPartner || hasPartner);
   const geoDailyLimitReached = gameId === 'geo' && Boolean(geoState?.dailyLimitReached);
+  const showDailyReset = Boolean(details?.dailyReset?.hasPlayed);
   const playBlockedReason = !game.available
     ? 'Игра скоро появится'
     : game.requiresPartner && !hasPartner
@@ -202,9 +205,10 @@ const GamePage: React.FC = () => {
         <IconButton onClick={() => navigate('/chat?tab=games')} aria-label="Назад">
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, flex: 1 }} noWrap>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, flex: 1, color: 'text.primary' }} noWrap>
           {game.name}
         </Typography>
+        {showDailyReset && <DailyResetBadge />}
       </Box>
 
       <Tabs
@@ -256,7 +260,31 @@ const GamePage: React.FC = () => {
                 </Typography>
               ))}
             </Box>
+          </Stack>
+        ) : leaderboardLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Box sx={{ maxWidth: 640, mx: 'auto' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Глобальный рейтинг пар по общему счёту
+            </Typography>
+            <GameLeaderboard entries={leaderboard} />
+          </Box>
+        )}
+      </Box>
 
+      {!loading && tab === 0 && (
+        <Box
+          sx={{
+            flexShrink: 0,
+            px: 2,
+            pt: 1.5,
+            pb: 'max(16px, env(safe-area-inset-bottom, 0px))',
+          }}
+        >
+          <Stack spacing={1.5} sx={{ maxWidth: 640, mx: 'auto' }}>
             {playBlockedReason && (
               <Box
                 sx={{
@@ -289,23 +317,12 @@ const GamePage: React.FC = () => {
               </Typography>
             )}
 
-            <Button variant="contained" size="large" disabled={!canPlay} onClick={handlePlay}>
+            <Button variant="contained" size="large" fullWidth disabled={!canPlay} onClick={handlePlay}>
               Играть
             </Button>
           </Stack>
-        ) : leaderboardLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Box sx={{ maxWidth: 640, mx: 'auto' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Глобальный рейтинг пар по общему счёту
-            </Typography>
-            <GameLeaderboard entries={leaderboard} />
-          </Box>
-        )}
-      </Box>
+        </Box>
+      )}
 
       {gameId === 'geo' && geoState && (
         <GeoDailyLimitDialog

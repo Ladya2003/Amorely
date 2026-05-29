@@ -37,6 +37,7 @@ export interface QuizGameStateDocument extends Document {
   readyUserIds: mongoose.Types.ObjectId[];
   lobbyCountdownEndsAt: Date | null;
   sessionActive: boolean;
+  pickerUserId: mongoose.Types.ObjectId | null;
   nextBoardAvailableAt: Date | null;
   currentQuestion: QuizCurrentQuestion | null;
   createdAt: Date;
@@ -95,6 +96,7 @@ const quizGameStateSchema = new mongoose.Schema({
   readyUserIds: { type: [mongoose.Schema.Types.ObjectId], ref: 'User', default: [] },
   lobbyCountdownEndsAt: { type: Date, default: null },
   sessionActive: { type: Boolean, default: false },
+  pickerUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   nextBoardAvailableAt: { type: Date, default: null },
   currentQuestion: { type: quizCurrentQuestionSchema, default: null },
   createdAt: { type: Date, default: Date.now },

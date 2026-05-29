@@ -29,18 +29,10 @@ import {
   type QuizGameState,
 } from '../services/gamesService';
 import { fireRoundConfetti } from '../utils/roundConfetti';
+import { formatDailyResetCountdown } from '../utils/dailyReset';
 
 const QUIZ_GAME_INFO_PATH = '/chat/games/quiz';
 const POINT_TIERS = [100, 200, 300];
-
-const formatCooldown = (seconds: number) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) {
-    return `${hours} ч ${minutes} мин`;
-  }
-  return `${minutes} мин`;
-};
 
 const QuizGamePlayPage: React.FC = () => {
   const navigate = useNavigate();
@@ -356,7 +348,7 @@ const QuizGamePlayPage: React.FC = () => {
             Счёт пары: {state.totalScore}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Новые вопросы через {formatCooldown(state.cooldownSecondsRemaining)}
+            Новые вопросы через {formatDailyResetCountdown(Math.ceil(state.cooldownSecondsRemaining / 60))}
           </Typography>
         </Box>
       </Box>
@@ -506,6 +498,25 @@ const QuizGamePlayPage: React.FC = () => {
       </Box>
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 1 }}>
+        {!state.currentQuestion && (
+          <Typography
+            variant="body2"
+            align="center"
+            sx={{
+              mb: 1.5,
+              py: 1,
+              px: 1.5,
+              borderRadius: 1,
+              bgcolor: state.isMyTurnToPick ? 'primary.main' : 'action.selected',
+              color: state.isMyTurnToPick ? 'primary.contrastText' : 'text.secondary',
+              fontWeight: 600,
+            }}
+          >
+            {state.isMyTurnToPick
+              ? 'Ваш ход — выбирайте любую категорию'
+              : 'Сейчас ход вашего партнёра'}
+          </Typography>
+        )}
         <Table size="small" sx={{ tableLayout: 'fixed' }}>
           <TableHead>
             <TableRow>
@@ -533,7 +544,12 @@ const QuizGamePlayPage: React.FC = () => {
                       <Button
                         fullWidth
                         variant={used ? 'outlined' : 'contained'}
-                        disabled={used || submitting || Boolean(state.currentQuestion)}
+                        disabled={
+                          used ||
+                          submitting ||
+                          Boolean(state.currentQuestion) ||
+                          !state.isMyTurnToPick
+                        }
                         onClick={() => handlePickCell(category.id, points)}
                         sx={{
                           minHeight: 44,

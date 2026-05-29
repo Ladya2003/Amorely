@@ -278,7 +278,7 @@ const CryptoUnlockPage: React.FC = () => {
 
         <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" sx={{ mb: 2 }}>
           <Tab label="Создать новую" />
-          <Tab label="Ввести готовую" />
+          <Tab label="Она у меня уже есть" />
           {/* <Tab label="Файл" /> */}
           {/* <Tab label="Другое устройство" /> */}
         </Tabs>

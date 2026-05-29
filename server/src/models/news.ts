@@ -7,6 +7,10 @@ const newsSchema = new mongoose.Schema({
     url: { type: String },
     publicId: { type: String }
   },
+  images: [{
+    url: { type: String, required: true },
+    caption: { type: String }
+  }],
   category: { type: String, enum: ['update', 'event', 'announcement'], default: 'announcement' },
   isPublished: { type: Boolean, default: true },
   publishDate: { type: Date, default: Date.now },

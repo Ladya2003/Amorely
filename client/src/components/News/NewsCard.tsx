@@ -21,6 +21,10 @@ export interface NewsItem {
   image?: {
     url: string;
   };
+  images?: Array<{
+    url: string;
+    caption?: string;
+  }>;
   category: 'update' | 'event' | 'announcement';
   publishDate: string;
 }

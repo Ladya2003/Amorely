@@ -1901,35 +1901,60 @@ const ChatPage: React.FC = () => {
           bgcolor: 'background.paper',
           boxShadow: 'none'
         }}>
-          <Tabs 
-            value={tabValue} 
-            onChange={handleTabChange} 
-            aria-label="chat tabs"
-            variant="fullWidth"
-            sx={{
-              '& .MuiTab-iconWrapper': {
-                fontSize: '1rem'
-              },
-              '& .MuiTab-root': {
-                minHeight: 'auto',
-                padding: 0,
-                paddingTop: 2,
-                fontSize: '12px'
-              }
-            }}
-          >
-            <Tab icon={<ChatIcon fontSize="small" />} iconPosition="start" label="Чат" />
-            <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label="Игры" />
-          </Tabs>
-          {tabValue === 0 && (!isMobile || !selectedContactId) && (
-            <Box sx={{ px: 2, pb: 1, pt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', pt: 1 }}>
+            <Box
+              sx={{
+                width: '50%',
+                display: 'flex',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                minWidth: 0,
+                pl: 2,
+              }}
+            >
               <UserProfileChip maxNameWidth={80} />
+            </Box>
+            <Tabs 
+              value={tabValue} 
+              onChange={handleTabChange} 
+              aria-label="chat tabs"
+              variant="fullWidth"
+              sx={{
+                width: '50%',
+                '& .MuiTabs-flexContainer': {
+                  width: '100%',
+                },
+                '& .MuiTab-iconWrapper': {
+                  fontSize: '1rem',
+                },
+                '& .MuiTab-root': {
+                  minHeight: 'auto',
+                  padding: 0,
+                  paddingTop: 2,
+                  fontSize: '12px',
+                  flex: '1 1 50%',
+                  maxWidth: '50%',
+                  justifyContent: 'center',
+                },
+              }}
+            >
+              <Tab icon={<ChatIcon fontSize="small" />} iconPosition="start" label="Чат" />
+              <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label="Игры" />
+            </Tabs>
+          </Box>
+          {tabValue === 0 && (!isMobile || !selectedContactId) && (
+            <Box sx={{ px: 2, pb: 1, pt: 1 }}>
               <TextField
                 fullWidth
                 size="small"
                 placeholder="Поиск по логину или почте"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 3,
+                  },
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">

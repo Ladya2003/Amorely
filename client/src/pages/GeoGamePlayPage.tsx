@@ -10,6 +10,8 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useAuth } from '../contexts/AuthContext';
 import socketService from '../services/socketService';
 import {
@@ -23,6 +25,8 @@ import {
 } from '../services/gamesService';
 import GeoGuessMap, { type GeoMapMarker } from '../components/Games/GeoGuessMap';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
+import ContentViewer from '../components/Calendar/ContentViewer';
+import ResponsiveDialog from '../components/UI/ResponsiveDialog';
 import { fireRoundConfetti } from '../utils/roundConfetti';
 
 const MY_GUESS_COLOR = '#FF4B8D';
@@ -43,6 +47,8 @@ const GeoGamePlayPage: React.FC = () => {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [lobbySecondsLeft, setLobbySecondsLeft] = useState(0);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [mapViewerOpen, setMapViewerOpen] = useState(false);
   const roundLocationRef = useRef<string | null>(null);
   const [toast, setToast] = useState({
     open: false,
@@ -250,6 +256,16 @@ const GeoGamePlayPage: React.FC = () => {
     return () => window.clearInterval(timerId);
   }, [state?.inLobby, state?.lobbySecondsRemaining, applyState]);
 
+  useEffect(() => {
+    if (!mapViewerOpen) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [mapViewerOpen]);
+
   const handleReady = async () => {
     setSubmitting(true);
     try {
@@ -411,11 +427,18 @@ const GeoGamePlayPage: React.FC = () => {
                 ? ` · в пуле осталось: ${state.locationsRemaining}`
                 : ''}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-              {isCountdownActive
-                ? 'Оба партнёра готовы — раунд начнётся одновременно.'
-                : 'Нажмите «Готов», когда будете на месте. Раунд стартует, когда оба готовы.'}
-            </Typography>
+            {state.waitingForPartnerResults ? (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                Партнёр ещё смотрит результаты прошлого раунда. Можете нажать «Готов», когда будете
+                на месте.
+              </Typography>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                {isCountdownActive
+                  ? 'Оба партнёра готовы — раунд начнётся одновременно.'
+                  : 'Нажмите «Готов», когда будете на месте. Раунд стартует, когда оба готовы.'}
+              </Typography>
+            )}
 
             <Stack direction="row" spacing={4} sx={{ mb: 4 }}>
               <Stack alignItems="center" spacing={1}>
@@ -542,47 +565,50 @@ const GeoGamePlayPage: React.FC = () => {
     ? Math.max(0, Math.min(100, (secondsLeft / state.roundTimeSec) * 100))
     : 0;
   const isTimeLow = isGuessing && secondsLeft <= 10;
+  const mapInteractive = isGuessing && secondsLeft > 0 && !hasSubmittedMyGuess;
+
+  const roundTimerBar = isGuessing ? (
+    <Box
+      sx={{
+        flexShrink: 0,
+        bgcolor: 'background.paper',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        pt: 0.75,
+        pb: 0,
+      }}
+    >
+      <Typography
+        variant="caption"
+        align="center"
+        sx={{
+          display: 'block',
+          mb: 0.5,
+          fontWeight: 700,
+          color: isTimeLow ? 'error.main' : 'text.secondary',
+        }}
+      >
+        Осталось {secondsLeft} сек
+      </Typography>
+      <LinearProgress
+        variant="determinate"
+        value={timeProgress}
+        color={isTimeLow ? 'error' : 'primary'}
+        sx={{
+          height: 6,
+          borderRadius: 0,
+          bgcolor: 'action.selected',
+          '& .MuiLinearProgress-bar': {
+            transition: 'transform 1s linear',
+          },
+        }}
+      />
+    </Box>
+  ) : null;
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      {isGuessing && (
-        <Box
-          sx={{
-            flexShrink: 0,
-            bgcolor: 'background.paper',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            pt: 0.75,
-            pb: 0,
-          }}
-        >
-          <Typography
-            variant="caption"
-            align="center"
-            sx={{
-              display: 'block',
-              mb: 0.5,
-              fontWeight: 700,
-              color: isTimeLow ? 'error.main' : 'text.secondary',
-            }}
-          >
-            Осталось {secondsLeft} сек
-          </Typography>
-          <LinearProgress
-            variant="determinate"
-            value={timeProgress}
-            color={isTimeLow ? 'error' : 'primary'}
-            sx={{
-              height: 6,
-              borderRadius: 0,
-              bgcolor: 'action.selected',
-              '& .MuiLinearProgress-bar': {
-                transition: 'transform 1s linear',
-              },
-            }}
-          />
-        </Box>
-      )}
+      {roundTimerBar}
 
       <Box
         sx={{
@@ -621,24 +647,48 @@ const GeoGamePlayPage: React.FC = () => {
         }}
       >
         <Box
-          component="img"
-          src={round.imageUrl}
-          alt=""
           sx={{
-            width: '100%',
-            height: reveal ? { xs: 140, sm: 160 } : { xs: 180, sm: 220 },
-            objectFit: 'cover',
+            position: 'relative',
             flexShrink: 0,
-            bgcolor: 'grey.900',
           }}
-        />
+        >
+          <Box
+            component="img"
+            src={round.imageUrl}
+            alt=""
+            sx={{
+              display: 'block',
+              width: '100%',
+              height: reveal ? { xs: 140, sm: 160 } : { xs: 180, sm: 220 },
+              objectFit: 'cover',
+              bgcolor: 'grey.900',
+            }}
+          />
+          <IconButton
+            size="medium"
+            aria-label="Открыть фото на весь экран"
+            onClick={() => setImageViewerOpen(true)}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              bgcolor: 'rgba(0, 0, 0, 0.45)',
+              color: 'common.white',
+              '&:hover': {
+                bgcolor: 'rgba(0, 0, 0, 0.6)',
+              },
+            }}
+          >
+            <OpenInFullIcon fontSize="medium" />
+          </IconButton>
+        </Box>
 
         <Box
           sx={{
             position: 'relative',
             flexShrink: reveal ? 0 : undefined,
             flex: reveal ? 'none' : 1,
-            height: reveal ? { xs: 150, sm: 180 } : undefined,
+            height: reveal ? { xs: 225, sm: 270 } : undefined,
             minHeight: reveal ? undefined : { xs: 200, sm: 240 },
           }}
         >
@@ -647,9 +697,27 @@ const GeoGamePlayPage: React.FC = () => {
             markers={mapMarkers}
             actual={actual}
             showLines={Boolean(reveal)}
-            interactive={isGuessing && secondsLeft > 0 && !hasSubmittedMyGuess}
+            interactive={mapInteractive}
             onGuessChange={(lat, lng) => setDraftGuess({ lat, lng })}
           />
+          <IconButton
+            size="medium"
+            aria-label="Открыть карту на весь экран"
+            onClick={() => setMapViewerOpen(true)}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 1000,
+              bgcolor: 'rgba(0, 0, 0, 0.45)',
+              color: 'common.white',
+              '&:hover': {
+                bgcolor: 'rgba(0, 0, 0, 0.6)',
+              },
+            }}
+          >
+            <OpenInFullIcon fontSize="medium" />
+          </IconButton>
         </Box>
 
         {reveal ? (
@@ -760,6 +828,83 @@ const GeoGamePlayPage: React.FC = () => {
         severity={toast.severity}
         onClose={() => setToast((prev) => ({ ...prev, open: false }))}
       />
+
+      <ContentViewer
+        open={imageViewerOpen}
+        onClose={() => setImageViewerOpen(false)}
+        fullScreen
+        content={{
+          mediaUrl: round.imageUrl,
+          resourceType: 'image',
+        }}
+      />
+
+      <ResponsiveDialog
+        open={mapViewerOpen}
+        onClose={() => setMapViewerOpen(false)}
+        fullScreen
+        disableMobileDrawer
+      >
+        <Box
+          sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: 'grey.900',
+          }}
+        >
+          {roundTimerBar}
+          <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
+            <IconButton
+              onClick={() => setMapViewerOpen(false)}
+              aria-label="Закрыть"
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 1000,
+                color: 'common.white',
+                bgcolor: 'rgba(0, 0, 0, 0.45)',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.6)',
+                },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <GeoGuessMap
+              draftGuess={!hasSubmittedMyGuess && isGuessing ? draftGuess : null}
+              markers={mapMarkers}
+              actual={actual}
+              showLines={Boolean(reveal)}
+              interactive={mapInteractive}
+              onGuessChange={(lat, lng) => setDraftGuess({ lat, lng })}
+            />
+          </Box>
+          {isGuessing ? (
+            <Box
+              sx={{
+                flexShrink: 0,
+                p: 2,
+                pb: 'max(16px, env(safe-area-inset-bottom))',
+                borderTop: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={!draftGuess || submitting || secondsLeft <= 0 || hasSubmittedMyGuess}
+                onClick={handleSubmitGuess}
+              >
+                {hasSubmittedMyGuess ? 'Метка отправлена' : 'Подтвердить мою метку'}
+              </Button>
+            </Box>
+          ) : null}
+        </Box>
+      </ResponsiveDialog>
     </Box>
   );
 };

@@ -502,11 +502,18 @@ const DrawGamePlayPage: React.FC = () => {
                 Очки засчитываются только за 10 игр в день. Можете продолжить играть за интерес.
               </Alert>
             )}
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-              {isCountdownActive
-                ? 'Оба партнёра готовы — раунд начнётся одновременно.'
-                : 'Нажмите «Готов», когда будете на месте. Раунд стартует, когда оба готовы.'}
-            </Typography>
+            {state.waitingForPartnerResults ? (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                Партнёр ещё смотрит результаты прошлого раунда. Можете нажать «Готов», когда будете
+                на месте.
+              </Typography>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                {isCountdownActive
+                  ? 'Оба партнёра готовы — раунд начнётся одновременно.'
+                  : 'Нажмите «Готов», когда будете на месте. Раунд стартует, когда оба готовы.'}
+              </Typography>
+            )}
 
             <Stack direction="row" spacing={4} sx={{ mb: 4 }}>
               <Stack alignItems="center" spacing={1}>
@@ -692,7 +699,7 @@ const DrawGamePlayPage: React.FC = () => {
                 <DrawGuessChat
                   attempts={round.guessAttempts}
                   title="Догадки"
-                  fillHeight
+                  maxHeight={176}
                   titleColor="primary.main"
                 />
               ) : undefined

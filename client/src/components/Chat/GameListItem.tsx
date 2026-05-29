@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, ListItemButton, Typography } from '@mui/material';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import type { Game } from './gamesData';
 
@@ -10,10 +10,9 @@ interface GameListItemProps {
 
 const GameListItem: React.FC<GameListItemProps> = ({ game, onClick }) => {
   return (
-    <Box
-      component="button"
-      type="button"
+    <ListItemButton
       onClick={() => onClick?.(game)}
+      disabled={!onClick}
       sx={{
         display: 'flex',
         alignItems: 'flex-start',
@@ -24,9 +23,10 @@ const GameListItem: React.FC<GameListItemProps> = ({ game, onClick }) => {
         borderColor: 'divider',
         borderRadius: 2,
         bgcolor: 'background.paper',
-        cursor: onClick ? 'pointer' : 'default',
+        color: 'text.primary',
         textAlign: 'left',
         transition: 'background-color 0.2s, border-color 0.2s',
+        WebkitAppearance: 'none',
         '&:hover': onClick
           ? {
               bgcolor: 'action.hover',
@@ -61,7 +61,11 @@ const GameListItem: React.FC<GameListItemProps> = ({ game, onClick }) => {
       </Box>
 
       <Box sx={{ minWidth: 0, flex: 1, pt: 0.25 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }} noWrap>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 600, mb: 0.5, color: 'inherit' }}
+          noWrap
+        >
           {game.name}
         </Typography>
         <Typography
@@ -78,7 +82,7 @@ const GameListItem: React.FC<GameListItemProps> = ({ game, onClick }) => {
           {game.description}
         </Typography>
       </Box>
-    </Box>
+    </ListItemButton>
   );
 };
 

@@ -4,7 +4,6 @@ export { QUIZ_CATEGORIES, QUIZ_QUESTIONS };
 
 export const QUIZ_LOBBY_COUNTDOWN_SEC = 3;
 export const QUIZ_QUESTION_TIME_SEC = 30;
-export const QUIZ_COOLDOWN_HOURS = 24;
 export const QUIZ_POINT_TIERS = [100, 200, 300] as const;
 export const QUIZ_DAILY_CATEGORY_COUNT = 5;
 export const QUIZ_QUESTIONS_PER_CATEGORY = 40;
@@ -120,5 +119,3 @@ export const buildDailyBoard = (boardDayKey: string): QuizBoardCellPublic[] => {
 
 export const getQuizQuestionById = (questionId: string) =>
   QUIZ_QUESTIONS.find((question) => question.id === questionId) ?? null;
-
-export const getQuizCooldownMs = () => QUIZ_COOLDOWN_HOURS * 60 * 60 * 1000;

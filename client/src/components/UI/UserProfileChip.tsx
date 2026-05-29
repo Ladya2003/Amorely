@@ -23,11 +23,13 @@ export const getUserDisplayName = (user: {
 interface UserProfileChipProps {
   sx?: SxProps<Theme>;
   maxNameWidth?: number | string;
+  badgeSize?: number;
 }
 
 const UserProfileChip: React.FC<UserProfileChipProps> = ({
   sx,
   maxNameWidth = 96,
+  badgeSize = 22,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -69,6 +71,7 @@ const UserProfileChip: React.FC<UserProfileChipProps> = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
+          gap: 0.5,
           minWidth: 0,
           maxWidth: maxNameWidth,
         }}
@@ -76,7 +79,7 @@ const UserProfileChip: React.FC<UserProfileChipProps> = ({
         <Typography variant="body2" noWrap component="span" sx={{ fontWeight: 500 }}>
           {getUserDisplayName(user)}
         </Typography>
-        <GameBadges badges={badges} displayGameId={user.displayBadgeGameId} size={16} />
+        <GameBadges badges={badges} displayGameId={user.displayBadgeGameId} size={badgeSize} />
       </Box>
     </Box>
   );

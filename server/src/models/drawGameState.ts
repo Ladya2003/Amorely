@@ -27,6 +27,7 @@ export interface DrawCurrentRound {
   guessedByUserId: mongoose.Types.ObjectId | null;
   pointsEarned: number | null;
   wasCorrect: boolean | null;
+  dismissedRevealUserIds: mongoose.Types.ObjectId[];
 }
 
 export interface DrawGameStateDocument extends Document {
@@ -87,6 +88,11 @@ const drawCurrentRoundSchema = new mongoose.Schema(
     guessedByUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     pointsEarned: { type: Number, default: null },
     wasCorrect: { type: Boolean, default: null },
+    dismissedRevealUserIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
   },
   { _id: false }
 );

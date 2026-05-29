@@ -1,5 +1,9 @@
 import { Router, Response } from 'express';
 import { GAME_CATALOG, getGameById } from '../games/catalog';
+import {
+  getGameDailyResetStatus,
+  getSingleGameDailyResetStatus,
+} from '../games/gameDailyResetService';
 import { TAP_SHOP_ITEMS } from '../games/tapGameConfig';
 import {
   TapGameError,
@@ -64,6 +68,7 @@ const handleTapGameError = (error: unknown, res: Response): boolean => {
       error.code === 'NO_PARTNER'
         ? 403
         : error.code === 'NOT_YOUR_TURN' ||
+            error.code === 'ROUND_PART_COMPLETE' ||
             error.code === 'BOOST_ALREADY_ACTIVE' ||
             error.code === 'NOT_ENOUGH_POINTS'
           ? 409
@@ -149,6 +154,23 @@ router.get('/catalog', (_req, res: Response) => {
   res.json({ games: GAME_CATALOG });
 });
 
+router.get('/daily-reset', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const relationshipContext = await requireActiveRelationship(userId);
+
+    if (!relationshipContext) {
+      return res.json({ games: { geo: null, draw: null, quiz: null } });
+    }
+
+    const games = await getGameDailyResetStatus(relationshipContext.relationship._id);
+    res.json({ games });
+  } catch (error) {
+    console.error('Ошибка games/daily-reset:', error);
+    res.status(500).json({ error: 'Не удалось загрузить статус лимитов' });
+  }
+});
+
 router.get('/tap/state', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
@@ -222,7 +244,7 @@ router.get('/geo/state', async (req: any, res: Response) => {
     const state = await getOrCreateGeoGameState(context);
 
     res.json({
-      state: formatGeoGameState(state),
+      state: formatGeoGameState(state, userId),
     });
   } catch (error) {
     if (handleGeoGameError(error, res)) {
@@ -240,7 +262,7 @@ router.post('/geo/ready', async (req: any, res: Response) => {
     const state = await setGeoPlayerReady(userId, context);
 
     res.json({
-      state: formatGeoGameState(state),
+      state: formatGeoGameState(state, userId),
       participantUserIds: getGeoGameParticipantIds(context),
     });
   } catch (error) {
@@ -262,7 +284,7 @@ router.post('/geo/guess', async (req: any, res: Response) => {
     await updateGeoGameBadges();
 
     res.json({
-      state: formatGeoGameState(state),
+      state: formatGeoGameState(state, userId),
       participantUserIds: getGeoGameParticipantIds(context),
     });
   } catch (error) {
@@ -278,10 +300,10 @@ router.post('/geo/next-round', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const context = await resolveGeoGameContext(userId);
-    const state = await advanceGeoRound(context);
+    const { state } = await advanceGeoRound(userId, context);
 
     res.json({
-      state: formatGeoGameState(state),
+      state: formatGeoGameState(state, userId),
       participantUserIds: getGeoGameParticipantIds(context),
     });
   } catch (error) {
@@ -300,7 +322,7 @@ router.post('/geo/expire', async (req: any, res: Response) => {
     const state = await expireGeoRound(context);
 
     res.json({
-      state: formatGeoGameState(state),
+      state: formatGeoGameState(state, userId),
       participantUserIds: getGeoGameParticipantIds(context),
     });
   } catch (error) {
@@ -437,7 +459,7 @@ router.post('/draw/next-round', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const context = await resolveDrawGameContext(userId);
-    const state = await advanceDrawRound(context);
+    const { state } = await advanceDrawRound(userId, context);
 
     res.json({
       state: formatDrawGameState(state, userId),
@@ -543,7 +565,7 @@ router.post('/quiz/dismiss-reveal', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const context = await resolveQuizGameContext(userId);
-    const state = await dismissQuizReveal(context);
+    const state = await dismissQuizReveal(userId, context);
 
     res.json({
       state: formatQuizGameState(state, userId),
@@ -614,6 +636,9 @@ router.get('/:gameId', async (req: any, res: Response) => {
 
   const userId = req.userId as string;
   const relationshipContext = await requireActiveRelationship(userId);
+  const dailyReset = relationshipContext
+    ? await getSingleGameDailyResetStatus(req.params.gameId, relationshipContext.relationship._id)
+    : null;
 
   res.json({
     game,
@@ -627,6 +652,7 @@ router.get('/:gameId', async (req: any, res: Response) => {
           avatar: relationshipContext.partnerUser.avatar,
         }
       : null,
+    dailyReset,
   });
 });
 

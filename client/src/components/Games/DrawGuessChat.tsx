@@ -13,23 +13,29 @@ export interface DrawGuessChatProps {
   maxVisible?: number;
   /** Растянуть по высоте родительской колонки (для панели рисующего) */
   fillHeight?: boolean;
+  /** Максимальная высота ленты догадок в px */
+  maxHeight?: number;
   /** Цвет заголовка как у подписей панели инструментов (например primary.main) */
   titleColor?: string;
   /** Сторона своих сообщений в ленте (у угадывающего — слева) */
   ownGuessSide?: 'left' | 'right';
 }
 
+const DEFAULT_MAX_HEIGHT = 112;
+
 export default function DrawGuessChat({
   attempts = [],
   title = 'Догадки',
   maxVisible = 8,
   fillHeight = false,
+  maxHeight,
   titleColor,
   ownGuessSide = 'right',
 }: DrawGuessChatProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const safeAttempts = Array.isArray(attempts) ? attempts : [];
   const visibleAttempts = safeAttempts.slice(-maxVisible);
+  const scrollMaxHeight = maxHeight ?? (fillHeight ? undefined : DEFAULT_MAX_HEIGHT);
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -68,9 +74,9 @@ export default function DrawGuessChat({
       <Box
         ref={scrollRef}
         sx={{
-          flex: fillHeight ? 1 : undefined,
-          minHeight: fillHeight ? 80 : undefined,
-          maxHeight: fillHeight ? undefined : 112,
+          flex: fillHeight && scrollMaxHeight == null ? 1 : undefined,
+          minHeight: fillHeight && scrollMaxHeight == null ? 80 : undefined,
+          maxHeight: scrollMaxHeight,
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',

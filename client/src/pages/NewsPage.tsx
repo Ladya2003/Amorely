@@ -14,6 +14,10 @@ interface NewsItem {
   image?: {
     url: string;
   };
+  images?: Array<{
+    url: string;
+    caption?: string;
+  }>;
   category: 'update' | 'event' | 'announcement';
   publishDate: string;
 }
@@ -109,7 +113,7 @@ const NewsPage: React.FC = () => {
         <Typography variant="h4" component="h1" sx={{ fontSize: '1.7rem', fontWeight: 400 }}>
           Новости
         </Typography>
-        <UserProfileChip maxNameWidth={40} />
+        <UserProfileChip sx={{ maxWidth: '60%', flex: '1 1 auto', minWidth: 0 }} maxNameWidth="100%" />
       </Box>
       
       <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -153,8 +157,12 @@ const NewsPage: React.FC = () => {
         <Box>
           {news.map((item, index) => (
             <React.Fragment key={item._id}>
-              <Card sx={{ mb: 3, display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}>
-                {item.image && (
+              <Card sx={{
+                mb: 3,
+                display: 'flex',
+                flexDirection: item.images?.length ? 'column' : { xs: 'column', md: 'row' },
+              }}>
+                {item.image && !item.images?.length && (
                   <CardMedia
                     component="img"
                     sx={{ 
@@ -179,9 +187,30 @@ const NewsPage: React.FC = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     {format(new Date(item.publishDate), 'd MMMM yyyy', { locale: ru })}
                   </Typography>
-                  <Typography variant="body1" paragraph>
+                  <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line' }}>
                     {item.content}
                   </Typography>
+                  {item.images?.map((image, imageIndex) => (
+                    <Box key={imageIndex} sx={{ mb: 2 }}>
+                      {image.caption && (
+                        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                          {image.caption}
+                        </Typography>
+                      )}
+                      <Box
+                        component="img"
+                        src={image.url}
+                        alt={image.caption || item.title}
+                        sx={{
+                          width: '100%',
+                          maxHeight: 480,
+                          objectFit: 'contain',
+                          borderRadius: 1,
+                          display: 'block',
+                        }}
+                      />
+                    </Box>
+                  ))}
                 </CardContent>
               </Card>
               {index < news.length - 1 && <Divider sx={{ mb: 3 }} />}

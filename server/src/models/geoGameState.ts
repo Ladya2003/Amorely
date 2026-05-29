@@ -14,6 +14,7 @@ export interface GeoCurrentRound {
   guesses: GeoRoundGuess[];
   pointsEarned: number | null;
   timedOut: boolean;
+  dismissedRevealUserIds: mongoose.Types.ObjectId[];
 }
 
 export interface GeoGameStateDocument extends Document {
@@ -49,6 +50,11 @@ const geoCurrentRoundSchema = new mongoose.Schema(
     guesses: { type: [geoRoundGuessSchema], default: [] },
     pointsEarned: { type: Number, default: null },
     timedOut: { type: Boolean, default: false },
+    dismissedRevealUserIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
   },
   { _id: false }
 );
