@@ -1,20 +1,19 @@
-import React from 'react';
-import ResponsiveDialog from '../UI/ResponsiveDialog';
-import { 
-  DialogContent, 
-  DialogTitle, 
-  IconButton, 
-  Typography, 
-  Box, 
-  Chip, 
-  Divider 
+import React, { useEffect } from 'react';
+import {
+  Typography,
+  Box,
+  Chip,
+  IconButton,
+  AppBar,
+  Toolbar,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AnnouncementIcon from '@mui/icons-material/Announcement';
 import EventIcon from '@mui/icons-material/Event';
 import UpdateIcon from '@mui/icons-material/Update';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useNavigation } from '../../contexts/NavigationContext';
 import { NewsItem } from './NewsCard';
 
 interface NewsDetailProps {
@@ -24,7 +23,22 @@ interface NewsDetailProps {
 }
 
 const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
-  if (!news) return null;
+  const { setShowBottomNav } = useNavigation();
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setShowBottomNav(false);
+    return () => {
+      setShowBottomNav(true);
+    };
+  }, [open, setShowBottomNav]);
+
+  if (!open || !news) {
+    return null;
+  }
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -53,12 +67,12 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'update':
-        return 'info';
+        return 'primary';
       case 'event':
-        return 'success';
+        return 'secondary';
       case 'announcement':
       default:
-        return 'warning';
+        return 'success';
     }
   };
 
@@ -66,63 +80,65 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
     return format(new Date(dateString), 'd MMMM yyyy', { locale: ru });
   };
 
+  const galleryImages = news.images?.length
+    ? news.images
+    : news.image
+      ? [{ url: news.image.url }]
+      : [];
+
   return (
-    <ResponsiveDialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
-      fullWidth
-      scroll="paper"
+    <Box
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: (theme) => theme.zIndex.modal + 1,
+        bgcolor: 'background.default',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
     >
-      <DialogTitle sx={{ pr: 6, fontWeight: 400 }}>
-        {news.title}
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Chip 
-            icon={getCategoryIcon(news.category)} 
-            label={getCategoryLabel(news.category)} 
-            size="small" 
-            color={getCategoryColor(news.category) as any}
-          />
+      <AppBar position="static" color="default" elevation={1}>
+        <Toolbar sx={{ gap: 1, minHeight: { xs: 56, sm: 64 } }}>
+          <IconButton edge="start" onClick={onClose} aria-label="Назад">
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="subtitle1" noWrap sx={{ flex: 1, fontWeight: 500 }}>
+            {news.title}
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          px: 2,
+          py: 2,
+          pb: 3,
+        }}
+      >
+        <Typography variant="h5" component="h1" fontWeight={400} sx={{ mb: 1.5 }}>
+          {news.title}
+        </Typography>
+
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
             {formatDate(news.publishDate)}
           </Typography>
-        </Box>
-        
-        {news.image && (
-          <Box 
-            component="img" 
-            src={news.image.url} 
-            alt={news.title}
-            sx={{ 
-              width: '100%', 
-              maxHeight: 400, 
-              objectFit: 'contain', 
-              mb: 2,
-              borderRadius: 1
-            }}
+          <Chip
+            icon={getCategoryIcon(news.category)}
+            label={getCategoryLabel(news.category)}
+            size="small"
+            color={getCategoryColor(news.category) as 'primary' | 'secondary' | 'success'}
           />
-        )}
-        
-        <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line' }}>
+        </Box>
+
+        <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
           {news.content}
         </Typography>
 
-        {news.images?.map((image, imageIndex) => (
-          <Box key={imageIndex} sx={{ mt: 2 }}>
+        {galleryImages.map((image, imageIndex) => (
+          <Box key={imageIndex} sx={{ mb: 2 }}>
             {image.caption && (
               <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
                 {image.caption}
@@ -142,9 +158,9 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
             />
           </Box>
         ))}
-      </DialogContent>
-    </ResponsiveDialog>
+      </Box>
+    </Box>
   );
 };
 
-export default NewsDetail; 
+export default NewsDetail;

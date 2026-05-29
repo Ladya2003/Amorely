@@ -1947,7 +1947,7 @@ const ChatPage: React.FC = () => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Поиск по логину или почте"
+                placeholder="Глобальный поиск"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 sx={{
