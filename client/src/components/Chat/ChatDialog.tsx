@@ -117,7 +117,7 @@ interface ChatDialogProps {
   contact: Contact | null;
   messages: MessageType[];
   currentUserId: string;
-  onBack: (scrollTop?: number) => void;
+  onBack: () => void;
   onSendMessage: (
     text: string,
     attachments?: File[],
@@ -132,7 +132,6 @@ interface ChatDialogProps {
   onDeleteMessage: (messageId: string) => void;
   onReachMessagesStart?: () => void;
   onReachMessagesEnd?: () => void;
-  onScrollPositionChange?: (scrollTop: number) => void;
   pendingForwardMessage?: MessageForwardRef | null;
   onPendingForwardApplied?: () => void;
   onCancelPendingForward?: () => void;
@@ -143,7 +142,6 @@ interface ChatDialogProps {
   onSharedEventClick?: (eventId: string) => void;
   hasMoreMessages?: boolean;
   isLoadingOlder?: boolean;
-  initialScrollTop?: number | null;
   isLoading?: boolean;
 }
 
@@ -180,7 +178,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onDeleteMessage,
   onReachMessagesStart,
   onReachMessagesEnd,
-  onScrollPositionChange,
   pendingForwardMessage = null,
   onPendingForwardApplied,
   onCancelPendingForward,
@@ -191,7 +188,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onSharedEventClick,
   hasMoreMessages = false,
   isLoadingOlder = false,
-  initialScrollTop = null,
   isLoading = false
 }) => {
   const { otherUnreadCount } = useUnreadMessages();
@@ -201,6 +197,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [attachmentValidationError, setAttachmentValidationError] = useState<string | null>(null);
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<string[]>([]);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [newMessagesBelowCount, setNewMessagesBelowCount] = useState(0);
+  const [enteringMessageIds, setEnteringMessageIds] = useState<Set<string>>(() => new Set());
+  const isAtBottomRef = useRef(true);
+  const isAutoFollowingRef = useRef(false);
   const [hiddenDayBadgeKeys, setHiddenDayBadgeKeys] = useState<Record<string, boolean>>({});
   const [replyingTo, setReplyingTo] = useState<MessageReplyRef | null>(null);
   const [forwardingMessage, setForwardingMessage] = useState<MessageForwardRef | null>(null);
@@ -227,7 +227,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     prevScrollTop: number;
     prevScrollHeight: number;
   } | null>(null);
-  const hasAppliedInitialScrollRef = useRef<boolean>(false);
   const dayBadgeRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const highlightTimeoutRef = useRef<number | null>(null);
@@ -243,23 +242,18 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   useEffect(() => {
     // При первой загрузке скроллим вниз мгновенно
     if (isInitialLoadRef.current && messages.length > 0 && !isLoading) {
-      const container = messagesContainerRef.current;
-      if (container && initialScrollTop !== null && !hasAppliedInitialScrollRef.current) {
-        container.scrollTop = initialScrollTop;
-        hasAppliedInitialScrollRef.current = true;
-      } else {
-        scrollToBottom('auto');
-        // Небольшая задержка, чтобы дождаться применения скролла в DOM
-        setTimeout(() => {
-          if (isScrolledToBottom()) {
-            onReachMessagesEnd?.();
-          }
-        }, 0);
-      }
+      scrollToBottom('auto');
+      isAtBottomRef.current = true;
+      setNewMessagesBelowCount(0);
+      setTimeout(() => {
+        if (isScrolledToBottom()) {
+          onReachMessagesEnd?.();
+        }
+      }, 0);
       isInitialLoadRef.current = false;
       previousMessagesLengthRef.current = messages.length;
     } 
-    // При добавлении новых сообщений скроллим плавно
+    // При добавлении новых сообщений в конец
     else if (messages.length > previousMessagesLengthRef.current) {
       const currentFirstMessageId = messages[0]?.id || null;
       const hasPrependedMessages =
@@ -275,34 +269,64 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         }
         pendingTopLoadAdjustmentRef.current = null;
       } else {
-        scrollToBottom('smooth');
-        setTimeout(() => {
-          if (isScrolledToBottom()) {
-            onReachMessagesEnd?.();
-          }
-        }, 200);
+        const newMessages = messages.slice(previousMessagesLengthRef.current);
+        const incomingFromOtherCount = newMessages.filter(
+          (message) => message.senderId !== currentUserId
+        ).length;
+
+        if (newMessages.length > 0) {
+          const enteringIds = newMessages.map((message) => message.id);
+          setEnteringMessageIds((prev) => {
+            const next = new Set(prev);
+            enteringIds.forEach((id) => next.add(id));
+            return next;
+          });
+          window.setTimeout(() => {
+            setEnteringMessageIds((prev) => {
+              const next = new Set(prev);
+              enteringIds.forEach((id) => next.delete(id));
+              return next;
+            });
+          }, 280);
+        }
+
+        if (isAtBottomRef.current) {
+          isAutoFollowingRef.current = true;
+          setShowScrollToBottom(false);
+          setNewMessagesBelowCount(0);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              scrollToBottom('auto');
+              isAtBottomRef.current = true;
+              isAutoFollowingRef.current = false;
+              if (isScrolledToBottom()) {
+                onReachMessagesEnd?.();
+              }
+            });
+          });
+        } else if (incomingFromOtherCount > 0) {
+          setNewMessagesBelowCount((prev) => prev + incomingFromOtherCount);
+          setShowScrollToBottom(true);
+        } else {
+          scrollToBottom('smooth');
+          setTimeout(() => {
+            if (isScrolledToBottom()) {
+              isAtBottomRef.current = true;
+              setShowScrollToBottom(false);
+              onReachMessagesEnd?.();
+            }
+          }, 200);
+        }
       }
 
       previousMessagesLengthRef.current = messages.length;
     }
 
     previousFirstMessageIdRef.current = messages[0]?.id || null;
-    setShowScrollToBottom(!isScrolledToBottom());
-  }, [messages, isLoading, onReachMessagesEnd, initialScrollTop]);
-
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (
-      container &&
-      initialScrollTop !== null &&
-      !hasAppliedInitialScrollRef.current &&
-      messages.length > 0 &&
-      !isLoading
-    ) {
-      container.scrollTop = initialScrollTop;
-      hasAppliedInitialScrollRef.current = true;
+    if (!isAutoFollowingRef.current) {
+      setShowScrollToBottom(!isAtBottomRef.current);
     }
-  }, [initialScrollTop, messages.length, isLoading]);
+  }, [messages, isLoading, onReachMessagesEnd, currentUserId]);
 
   useEffect(() => {
     const nextUrls = attachments
@@ -329,7 +353,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     previousMessagesLengthRef.current = 0;
     previousFirstMessageIdRef.current = null;
     pendingTopLoadAdjustmentRef.current = null;
-    hasAppliedInitialScrollRef.current = false;
+    isAtBottomRef.current = true;
+    isAutoFollowingRef.current = false;
+    setNewMessagesBelowCount(0);
+    setEnteringMessageIds(new Set());
     setShowScrollToBottom(false);
     dayBadgeRefs.current = {};
     messageRefs.current = {};
@@ -543,11 +570,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   const handleMessagesScroll = () => {
     const container = messagesContainerRef.current;
-    if (container) {
-      onScrollPositionChange?.(container.scrollTop);
-    }
+    const atBottom = isScrolledToBottom();
 
-    setShowScrollToBottom(!isScrolledToBottom());
+    isAtBottomRef.current = atBottom;
+    if (!isAutoFollowingRef.current) {
+      setShowScrollToBottom(!atBottom);
+    }
     updateHiddenDayBadges();
 
     if (
@@ -564,24 +592,30 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       onReachMessagesStart();
     }
 
-    if (isScrolledToBottom()) {
+    if (atBottom) {
+      setNewMessagesBelowCount(0);
       onReachMessagesEnd?.();
     }
   };
 
   const handleBackClick = () => {
-    const container = messagesContainerRef.current;
-    const currentScrollTop = container?.scrollTop ?? 0;
-    onScrollPositionChange?.(currentScrollTop);
-    onBack(currentScrollTop);
+    onBack();
   };
 
   const handleScrollToBottomClick = () => {
     scrollToBottom('smooth');
+    isAtBottomRef.current = true;
+    setNewMessagesBelowCount(0);
     setTimeout(() => {
       setShowScrollToBottom(false);
+      if (isScrolledToBottom()) {
+        onReachMessagesEnd?.();
+      }
     }, 250);
   };
+
+  const scrollDownBadgeLabel =
+    newMessagesBelowCount > 99 ? '99+' : String(newMessagesBelowCount);
 
   const handleMessageContextMenu = (event: React.MouseEvent, message: MessageType) => {
     if (event.type === 'contextmenu') {
@@ -744,7 +778,16 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           sx={{
             borderRadius: 2,
             transition: 'background-color 200ms ease',
-            bgcolor: highlightedMessageId === message.id ? 'rgba(255, 235, 59, 0.35)' : 'transparent'
+            bgcolor: highlightedMessageId === message.id ? 'rgba(255, 235, 59, 0.35)' : 'transparent',
+            ...(enteringMessageIds.has(message.id)
+              ? {
+                  '@keyframes chatMessageEnter': {
+                    from: { opacity: 0, transform: 'translateY(6px)' },
+                    to: { opacity: 1, transform: 'translateY(0)' }
+                  },
+                  animation: 'chatMessageEnter 0.22s ease-out'
+                }
+              : {})
           }}
         >
           <Message
@@ -763,7 +806,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, onOpenChatWithUser, onSharedEventClick]);
+  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, onOpenChatWithUser, onSharedEventClick]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, string> = {};
@@ -905,22 +948,41 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             zIndex: 120
           }}
         >
-          <IconButton
+          <Badge
+            badgeContent={scrollDownBadgeLabel}
             color="primary"
-            onClick={handleScrollToBottomClick}
+            overlap="circular"
+            invisible={newMessagesBelowCount === 0}
             sx={{
-              bgcolor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider',
-              boxShadow: 2,
-              '&:hover': {
-                bgcolor: 'background.paper'
+              '& .MuiBadge-badge': {
+                fontSize: '0.7rem',
+                minWidth: 18,
+                height: 18,
+                fontWeight: 700
               }
             }}
-            aria-label="Прокрутить вниз"
           >
-            <KeyboardArrowDownIcon />
-          </IconButton>
+            <IconButton
+              color="primary"
+              onClick={handleScrollToBottomClick}
+              sx={{
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: 2,
+                '&:hover': {
+                  bgcolor: 'background.paper'
+                }
+              }}
+              aria-label={
+                newMessagesBelowCount > 0
+                  ? `Прокрутить вниз, новых сообщений: ${newMessagesBelowCount}`
+                  : 'Прокрутить вниз'
+              }
+            >
+              <KeyboardArrowDownIcon />
+            </IconButton>
+          </Badge>
         </Box>
       )}
 

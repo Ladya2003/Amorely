@@ -244,8 +244,6 @@ const ChatPage: React.FC = () => {
   const [messagesPage, setMessagesPage] = useState(1);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false);
-  const [isRestoringChatPosition, setIsRestoringChatPosition] = useState(false);
-  const [restoredScrollTop, setRestoredScrollTop] = useState<number | null>(null);
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [socket, setSocket] = useState<any | null>(null);
@@ -431,41 +429,6 @@ const ChatPage: React.FC = () => {
     return `chat:selected:${CURRENT_USER_ID}`;
   }, [CURRENT_USER_ID]);
 
-  const getChatScrollStorageKey = useCallback((contactId: string) => {
-    if (!CURRENT_USER_ID) return null;
-    return `chat:scroll:${CURRENT_USER_ID}:${contactId}`;
-  }, [CURRENT_USER_ID]);
-
-  const getSavedScrollState = useCallback((contactId: string) => {
-    const key = getChatScrollStorageKey(contactId);
-    if (!key) return null;
-
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return null;
-
-      const parsed = JSON.parse(raw) as { page?: number; scrollTop?: number };
-      const page = Math.max(1, Number(parsed.page) || 1);
-      const scrollTop = Math.max(0, Number(parsed.scrollTop) || 0);
-      return { page, scrollTop };
-    } catch (error) {
-      return null;
-    }
-  }, [getChatScrollStorageKey]);
-
-  const saveScrollState = useCallback((contactId: string, scrollTop: number) => {
-    const key = getChatScrollStorageKey(contactId);
-    if (!key) return;
-
-    const payload = {
-      page: Math.max(1, messagesPage),
-      scrollTop: Math.max(0, Math.round(scrollTop)),
-      savedAt: new Date().toISOString()
-    };
-
-    localStorage.setItem(key, JSON.stringify(payload));
-  }, [getChatScrollStorageKey, messagesPage]);
-
   const saveSelectedChatId = useCallback((contactId: string | null) => {
     const key = selectedChatStorageKey();
     if (!key) return;
@@ -477,16 +440,6 @@ const ChatPage: React.FC = () => {
 
     localStorage.removeItem(key);
   }, [selectedChatStorageKey]);
-
-  const prepareDialogRestoreState = useCallback((contactId: string) => {
-    const savedState = getSavedScrollState(contactId);
-    const targetPage = savedState?.page || 1;
-    const needsRestore = Boolean(savedState && (targetPage > 1 || (savedState.scrollTop ?? 0) > 0));
-
-    // Переключаемся в режим восстановления до первого рендера диалога
-    setIsRestoringChatPosition(needsRestore);
-    setRestoredScrollTop(null);
-  }, [getSavedScrollState]);
 
   useEffect(() => {
     hasRestoredSelectedChatRef.current = false;
@@ -510,9 +463,8 @@ const ChatPage: React.FC = () => {
     if (!savedContactId) return;
 
     setTabValue(0);
-    prepareDialogRestoreState(savedContactId);
     setSelectedContactId(savedContactId);
-  }, [CURRENT_USER_ID, selectedContactId, prepareDialogRestoreState, selectedChatStorageKey]);
+  }, [CURRENT_USER_ID, selectedContactId, selectedChatStorageKey]);
 
   const sortContactsByLastMessageDesc = useCallback((contactsToSort: ChatContact[]) => {
     return [...contactsToSort].sort((a, b) => {
@@ -1053,38 +1005,9 @@ const ChatPage: React.FC = () => {
   // Загрузка сообщений при выборе контакта
   useEffect(() => {
     if (selectedContactId) {
-      const initializeChat = async () => {
-        const savedState = getSavedScrollState(selectedContactId);
-        const targetPage = savedState?.page || 1;
-        const needsRestore = Boolean(savedState && (targetPage > 1 || (savedState.scrollTop ?? 0) > 0));
-
-        setRestoredScrollTop(null);
-        setIsRestoringChatPosition(needsRestore);
-        await fetchMessages(selectedContactId, 1, false);
-
-        try {
-          for (let page = 2; page <= targetPage; page += 1) {
-            if (selectedContactIdRef.current !== selectedContactId) {
-              return;
-            }
-            await fetchMessages(selectedContactId, page, true);
-          }
-
-          if (selectedContactIdRef.current === selectedContactId) {
-            setRestoredScrollTop(savedState?.scrollTop ?? null);
-          }
-        } finally {
-          if (selectedContactIdRef.current === selectedContactId) {
-            setIsRestoringChatPosition(false);
-          }
-        }
-      };
-
-      initializeChat();
-    } else {
-      setIsRestoringChatPosition(false);
+      void fetchMessages(selectedContactId, 1, false);
     }
-  }, [selectedContactId, getSavedScrollState]);
+  }, [selectedContactId]);
 
   // Управление видимостью нижнего меню и блокировка скролла страницы в открытом чате
   useEffect(() => {
@@ -1297,12 +1220,12 @@ const ChatPage: React.FC = () => {
   };
 
   const loadOlderMessages = useCallback(() => {
-    if (!selectedContactId || isLoadingMessages || isLoadingOlderMessages || isRestoringChatPosition || !hasMoreMessages) {
+    if (!selectedContactId || isLoadingMessages || isLoadingOlderMessages || !hasMoreMessages) {
       return;
     }
 
     fetchMessages(selectedContactId, messagesPage + 1, true);
-  }, [selectedContactId, isLoadingMessages, isLoadingOlderMessages, isRestoringChatPosition, hasMoreMessages, messagesPage]);
+  }, [selectedContactId, isLoadingMessages, isLoadingOlderMessages, hasMoreMessages, messagesPage]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -1324,7 +1247,6 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSelectContact = (contactId: string) => {
-    prepareDialogRestoreState(contactId);
     saveSelectedChatId(contactId);
     setSelectedContactId(contactId);
     // Скрываем нижнее меню на мобильных при открытии чата
@@ -1335,7 +1257,6 @@ const ChatPage: React.FC = () => {
 
   const handleSelectGlobalUser = (user: SearchUser) => {
     ensureContactInList(user);
-    prepareDialogRestoreState(user.id);
     saveSelectedChatId(user.id);
     setSelectedContactId(user.id);
     setSearchQuery('');
@@ -1410,7 +1331,6 @@ const ChatPage: React.FC = () => {
     });
 
     const openTargetChat = () => {
-      prepareDialogRestoreState(target.id);
       saveSelectedChatId(target.id);
       setSelectedContactId(target.id);
       setForwardModalOpen(false);
@@ -1467,7 +1387,6 @@ const ChatPage: React.FC = () => {
       email: '',
       avatar: forwardHint?.senderAvatar || ''
     });
-    prepareDialogRestoreState(userId);
     saveSelectedChatId(userId);
     setSelectedContactId(userId);
     if (isMobile) {
@@ -1505,7 +1424,6 @@ const ChatPage: React.FC = () => {
       avatar: state.targetUserAvatar || ''
     });
     setPendingSharedEvent(state.pendingSharedEvent);
-    prepareDialogRestoreState(state.targetUserId);
     saveSelectedChatId(state.targetUserId);
     setSelectedContactId(state.targetUserId);
     setTabValue(0);
@@ -1513,7 +1431,7 @@ const ChatPage: React.FC = () => {
       setShowBottomNav(false);
     }
     navigate(location.pathname, { replace: true, state: null });
-  }, [location.state, location.pathname, navigate, prepareDialogRestoreState, saveSelectedChatId, isMobile, setShowBottomNav]);
+  }, [location.state, location.pathname, navigate, saveSelectedChatId, isMobile, setShowBottomNav]);
 
   const loadMoreGlobalSearch = useCallback(() => {
     if (!debouncedSearchQuery || isSearching || isLoadingMoreGlobalSearch || !hasMoreGlobalSearch) {
@@ -1585,26 +1503,15 @@ const ChatPage: React.FC = () => {
     );
   }, [messages, selectedContactId, CURRENT_USER_ID]);
 
-  const handleBackToList = (scrollTop = 0) => {
-    if (selectedContactId) {
-      saveScrollState(selectedContactId, scrollTop);
-    }
+  const handleBackToList = () => {
     saveSelectedChatId(null);
     setSelectedContactId(null);
-    setRestoredScrollTop(null);
     void fetchContacts({ silent: true });
     // Показываем нижнее меню на мобильных при возврате к списку
     if (isMobile) {
       setShowBottomNav(true);
     }
   };
-
-  const handleDialogScrollPositionChange = useCallback((scrollTop: number) => {
-    setRestoredScrollTop(scrollTop);
-    if (selectedContactId) {
-      saveScrollState(selectedContactId, scrollTop);
-    }
-  }, [selectedContactId, saveScrollState]);
 
   const handleSendMessage = (
     text: string,
@@ -2126,7 +2033,6 @@ const ChatPage: React.FC = () => {
                     onDeleteMessage={handleDeleteMessage}
                     onReachMessagesStart={loadOlderMessages}
                     onReachMessagesEnd={handleReachMessagesEnd}
-                    onScrollPositionChange={handleDialogScrollPositionChange}
                     pendingForwardMessage={pendingForwardMessage}
                     onPendingForwardApplied={() => {
                       setPendingForwardMessage(null);
@@ -2141,8 +2047,7 @@ const ChatPage: React.FC = () => {
                     onSharedEventClick={handleSharedEventClick}
                     hasMoreMessages={hasMoreMessages}
                     isLoadingOlder={isLoadingOlderMessages}
-                    initialScrollTop={restoredScrollTop}
-                    isLoading={isLoadingMessages || isRestoringChatPosition}
+                    isLoading={isLoadingMessages}
                   />
                 ) : (
                   <Box 
