@@ -31,6 +31,18 @@ interface TapFloatText {
 
 const FLOAT_ANIMATION_MS = 750;
 
+const tapBlockInteractionSx = {
+  userSelect: 'none',
+  WebkitUserSelect: 'none',
+  MozUserSelect: 'none',
+  msUserSelect: 'none',
+  WebkitTouchCallout: 'none',
+  WebkitTapHighlightColor: 'transparent',
+  touchAction: 'manipulation',
+  WebkitUserDrag: 'none',
+  userDrag: 'none',
+} as const;
+
 const showRoundCompletionToast = (
   setToast: React.Dispatch<
     React.SetStateAction<{ open: boolean; message: string; severity: 'info' | 'error' | 'success' }>
@@ -318,6 +330,7 @@ const TapGamePlayPage: React.FC = () => {
               component="button"
               type="button"
               onClick={handleTap}
+              onContextMenu={(event) => event.preventDefault()}
               disabled={!state.isMyTurn}
               aria-label={
                 state.isMyTurn
@@ -345,6 +358,8 @@ const TapGamePlayPage: React.FC = () => {
                   ? '0 12px 32px rgba(255, 75, 141, 0.45)'
                   : '0 4px 16px rgba(0,0,0,0.12)',
                 animation: state.isMyTurn ? 'tapBlockPulse 1.6s ease-in-out infinite' : 'none',
+                ...tapBlockInteractionSx,
+                '&, & *': tapBlockInteractionSx,
                 '@keyframes tapBlockPulse': {
                   '0%, 100%': { boxShadow: '0 12px 32px rgba(255, 75, 141, 0.35)' },
                   '50%': { boxShadow: '0 16px 40px rgba(255, 75, 141, 0.65)' },

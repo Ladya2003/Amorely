@@ -82,6 +82,7 @@ export interface TapShopItem {
   cost: number;
   multiplier: number;
   uses: number;
+  minRound: number;
 }
 
 const authHeaders = () => {
@@ -335,6 +336,15 @@ export const postDrawGuess = async (guess: string) => {
   const response = await axios.post(
     `${API_URL}/api/games/draw/guess`,
     { guess },
+    { headers: authHeaders() }
+  );
+  return response.data as { state: DrawGameState };
+};
+
+export const postDrawClearStrokes = async () => {
+  const response = await axios.post(
+    `${API_URL}/api/games/draw/clear-strokes`,
+    {},
     { headers: authHeaders() }
   );
   return response.data as { state: DrawGameState };

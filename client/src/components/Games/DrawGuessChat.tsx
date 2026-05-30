@@ -25,7 +25,7 @@ const DEFAULT_MAX_HEIGHT = 112;
 
 export default function DrawGuessChat({
   attempts = [],
-  title = 'Догадки',
+  title = 'Догадки партнёра',
   maxVisible = 8,
   fillHeight = false,
   maxHeight,
@@ -43,10 +43,6 @@ export default function DrawGuessChat({
       node.scrollTop = node.scrollHeight;
     }
   }, [visibleAttempts.length, safeAttempts.length]);
-
-  if (visibleAttempts.length === 0) {
-    return null;
-  }
 
   return (
     <Box
@@ -75,7 +71,7 @@ export default function DrawGuessChat({
         ref={scrollRef}
         sx={{
           flex: fillHeight && scrollMaxHeight == null ? 1 : undefined,
-          minHeight: fillHeight && scrollMaxHeight == null ? 80 : undefined,
+          minHeight: fillHeight && scrollMaxHeight == null ? 80 : visibleAttempts.length === 0 ? 40 : undefined,
           maxHeight: scrollMaxHeight,
           overflowY: 'auto',
           display: 'flex',

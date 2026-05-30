@@ -604,6 +604,21 @@ export const appendDrawStroke = async (
   return state;
 };
 
+export const clearDrawStrokes = async (userId: string, context: DrawGameContext) => {
+  const state = await DrawGameState.findOne({ relationshipId: context.relationship._id });
+  if (!state?.currentRound || state.currentRound.status !== 'drawing') {
+    throw new DrawGameError('NOT_DRAWING', 'Сейчас нельзя очистить холст');
+  }
+
+  if (state.currentRound.drawerUserId.toString() !== userId) {
+    throw new DrawGameError('NOT_DRAWER', 'Очистить холст может только художник');
+  }
+
+  state.currentRound.strokes = [];
+  await state.save();
+  return state;
+};
+
 export const submitDrawFinishDrawing = async (
   userId: string,
   context: DrawGameContext,

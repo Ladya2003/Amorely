@@ -17,6 +17,7 @@ import { getGameById } from '../components/Chat/gamesData';
 import GameLeaderboard from '../components/Games/GameLeaderboard';
 import GeoDailyLimitDialog from '../components/Games/GeoDailyLimitDialog';
 import DailyResetBadge from '../components/Games/DailyResetBadge';
+import DailyResetInfoDialog from '../components/Games/DailyResetInfoDialog';
 import {
   fetchGameDetails,
   fetchGameLeaderboard,
@@ -50,6 +51,7 @@ const GamePage: React.FC = () => {
   const [geoState, setGeoState] = useState<GeoGameState | null>(null);
   const [geoDailyLimitDialogOpen, setGeoDailyLimitDialogOpen] = useState(false);
   const [pendingGeoDailyLimitDialog, setPendingGeoDailyLimitDialog] = useState(false);
+  const [dailyResetInfoOpen, setDailyResetInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!staticGame) {
@@ -208,7 +210,9 @@ const GamePage: React.FC = () => {
         <Typography variant="subtitle1" sx={{ fontWeight: 700, flex: 1, color: 'text.primary' }} noWrap>
           {game.name}
         </Typography>
-        {showDailyReset && <DailyResetBadge />}
+        {showDailyReset && (
+          <DailyResetBadge onClick={() => setDailyResetInfoOpen(true)} />
+        )}
       </Box>
 
       <Tabs
@@ -332,6 +336,12 @@ const GamePage: React.FC = () => {
           secondsUntilNextRounds={geoState.secondsUntilNextRounds}
         />
       )}
+
+      <DailyResetInfoDialog
+        open={dailyResetInfoOpen}
+        onClose={() => setDailyResetInfoOpen(false)}
+        gameName={game.name}
+      />
     </Box>
   );
 };

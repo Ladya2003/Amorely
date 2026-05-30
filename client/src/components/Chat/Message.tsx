@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, Avatar, Paper, IconButton } from '@mui/material';
-import ResponsiveDialog from '../UI/ResponsiveDialog';
-import CloseIcon from '@mui/icons-material/Close';
+import MediaViewerDialog from '../common/MediaViewerDialog';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { MessageType, MessageForwardRef } from './ChatDialog';
 import EncryptedAttachment from './EncryptedAttachment';
+import ChatVideoPlayer from '../common/ChatVideoPlayer';
 import SharedEventCard from './SharedEventCard';
 
 interface MessageProps {
@@ -56,6 +56,21 @@ const Message: React.FC<MessageProps> = ({
   const forwardFrom = message.forwardFrom;
   const sharedEvent = message.sharedEvent;
   const isPending = message.id.startsWith('temp-');
+
+  const hasVideoAttachment = useMemo(
+    () =>
+      Boolean(
+        message.attachments?.some((attachment, index) => {
+          if (attachment.type === 'video') return true;
+          return message.mediaEnvelopes?.[index]?.displayType === 'video';
+        })
+      ),
+    [message.attachments, message.mediaEnvelopes]
+  );
+
+  const isVideoOnlyBubble =
+    hasVideoAttachment && !message.text?.trim() && !sharedEvent;
+
   const actionsButtonRight = isOwn
     ? (message.editedAt ? 92 : 66)
     : (message.editedAt ? 68 : 44);
@@ -173,7 +188,12 @@ const Message: React.FC<MessageProps> = ({
           )}
 
           {message.attachments && message.attachments.length > 0 && (
-            <Box sx={{ mb: message.text ? 1 : 0 }}>
+            <Box
+              sx={{
+                mb: message.text ? 1 : 0,
+                pb: isVideoOnlyBubble ? 2.5 : 0
+              }}
+            >
               {message.attachments.map((attachment, index) => {
                 const envelope = message.mediaEnvelopes?.[index];
                 const isEncrypted = attachment.encrypted || attachment.type === 'encrypted';
@@ -187,7 +207,7 @@ const Message: React.FC<MessageProps> = ({
                       overflow: 'hidden'
                     }}
                   >
-                    {isEncrypted && envelope ? (
+                    {isEncrypted ? (
                       <EncryptedAttachment
                         cacheKey={`${message.id}-${index}`}
                         url={attachment.url}
@@ -207,15 +227,7 @@ const Message: React.FC<MessageProps> = ({
                         }}
                       />
                     ) : (
-                      <video
-                        src={attachment.url}
-                        controls
-                        style={{
-                          maxWidth: '100%',
-                          maxHeight: '200px',
-                          display: 'block'
-                        }}
-                      />
+                      <ChatVideoPlayer src={attachment.url} />
                     )}
                   </Box>
                 );
@@ -312,53 +324,18 @@ const Message: React.FC<MessageProps> = ({
         </Paper>
       </Box>
 
-      {/* Модальное окно для просмотра изображения */}
-      <ResponsiveDialog
+      <MediaViewerDialog
         open={Boolean(openImage)}
         onClose={handleCloseImage}
-        maxWidth="lg"
-        fullWidth
-        disableMobileDrawer
-        sx={{
-          '& .MuiDialog-paper': {
-            bgcolor: 'rgba(0, 0, 0, 0.9)',
-            boxShadow: 'none',
-            maxHeight: '90vh'
-          }
-        }}
-      >
-        <Box sx={{ position: 'relative' }}>
-          <IconButton
-            onClick={handleCloseImage}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: 'white',
-              bgcolor: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 1,
-              '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.7)'
+        content={
+          openImage
+            ? {
+                url: openImage,
+                resourceType: 'image'
               }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-          {openImage && (
-            <img
-              src={openImage}
-              alt="Full size"
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-                maxHeight: '90vh',
-                objectFit: 'contain'
-              }}
-            />
-          )}
-        </Box>
-      </ResponsiveDialog>
+            : null
+        }
+      />
     </Box>
   );
 };

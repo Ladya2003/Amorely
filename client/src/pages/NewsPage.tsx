@@ -16,12 +16,14 @@ import { ru } from 'date-fns/locale';
 import UserProfileChip from '../components/UI/UserProfileChip';
 import NewsDetail from '../components/News/NewsDetail';
 import { NewsItem } from '../components/News/NewsCard';
+import { useUnreadNews } from '../contexts/UnreadNewsContext';
 
 const NewsPage: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const { isNewsUnread, markNewsAsRead, syncNewsIds } = useUnreadNews();
 
   useEffect(() => {
     fetchNews();
@@ -42,7 +44,11 @@ const NewsPage: React.FC = () => {
 
       const response = await axios.get(`${API_URL}/api/news`, { params });
 
-      setNews(response.data.news);
+      const loadedNews: NewsItem[] = response.data.news;
+      setNews(loadedNews);
+      if (!selectedCategory) {
+        syncNewsIds(loadedNews.map((item) => item._id));
+      }
       setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при загрузке новостей:', error);
@@ -65,6 +71,11 @@ const NewsPage: React.FC = () => {
       default:
         return 'default';
     }
+  };
+
+  const handleOpenNews = (item: NewsItem) => {
+    setSelectedNews(item);
+    markNewsAsRead(item._id);
   };
 
   const getCategoryName = (category: string) => {
@@ -93,7 +104,7 @@ const NewsPage: React.FC = () => {
           <Typography variant="h4" component="h1" sx={{ fontSize: '1.7rem', fontWeight: 400 }}>
             Новости
           </Typography>
-          <UserProfileChip sx={{ maxWidth: '60%', flex: '1 1 auto', minWidth: 0 }} maxNameWidth="100%" />
+          <UserProfileChip sx={{ maxWidth: '60%' }} />
         </Box>
 
         <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -136,7 +147,27 @@ const NewsPage: React.FC = () => {
         ) : (
           <Box>
             {news.map((item) => (
-              <Card key={item._id} sx={{ borderRadius: 2.5, overflow: 'hidden', mb: 2 }}>
+              <Card
+                key={item._id}
+                sx={{ borderRadius: 2.5, overflow: 'hidden', mb: 2, position: 'relative' }}
+              >
+                  {isNewsUnread(item._id) && (
+                    <Chip
+                      label="NEW"
+                      size="small"
+                      color="error"
+                      sx={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        zIndex: 1,
+                        height: 22,
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                      }}
+                    />
+                  )}
                   <CardContent>
                     <Typography variant="h6" component="h2" fontWeight={400} sx={{ mb: 1 }}>
                       {item.title}
@@ -172,7 +203,7 @@ const NewsPage: React.FC = () => {
                       variant="text"
                       size="small"
                       sx={{ px: 0, minWidth: 0 }}
-                      onClick={() => setSelectedNews(item)}
+                      onClick={() => handleOpenNews(item)}
                     >
                       Читать полностью
                     </Button>

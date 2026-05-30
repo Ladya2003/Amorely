@@ -28,6 +28,7 @@ import {
   advanceDrawRound,
   fetchDrawGameState,
   postDrawClearGuessAttempts,
+  postDrawClearStrokes,
   postDrawGuess,
   postDrawReady,
   postDrawStroke,
@@ -336,6 +337,27 @@ const DrawGamePlayPage: React.FC = () => {
     }
   };
 
+  const handleClearStrokes = async () => {
+    setSubmitting(true);
+    try {
+      const socket = socketService.getSocket();
+      if (socket?.connected) {
+        socket.emit('draw_game_clear_strokes');
+      } else {
+        const result = await postDrawClearStrokes();
+        applyState(result.state);
+      }
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || 'Не удалось очистить холст',
+        severity: 'error',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmitGuess = async () => {
     const trimmed = guessInput.trim();
     const roundStatus = state?.currentRound?.status;
@@ -607,7 +629,7 @@ const DrawGamePlayPage: React.FC = () => {
   const showGuessInput =
     round.isGuesser && isRoundActive && !isRevealed && drawingSecondsLeft > 0;
   const guessAttempts = Array.isArray(round.guessAttempts) ? round.guessAttempts : [];
-  const showGuessChat = isRoundActive && !isRevealed && guessAttempts.length > 0;
+  const showGuessChat = isRoundActive && !isRevealed;
 
   const activeSeconds = drawingSecondsLeft;
   const activeMax = state.roundTimeDrawingSec;
@@ -694,11 +716,13 @@ const DrawGamePlayPage: React.FC = () => {
             onBrushSizeChange={setBrushSize}
             penColor={penColor}
             onPenColorChange={setPenColor}
+            onClearAll={handleClearStrokes}
+            clearAllDisabled={submitting || round.strokes.length === 0}
             sideContent={
-              showGuessChat && (round.guessAttempts?.length ?? 0) > 0 ? (
+              showGuessChat ? (
                 <DrawGuessChat
                   attempts={round.guessAttempts}
-                  title="Догадки"
+                  title="Догадки партнёра"
                   maxHeight={176}
                   titleColor="primary.main"
                 />

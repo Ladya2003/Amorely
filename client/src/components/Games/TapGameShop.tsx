@@ -57,7 +57,8 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
 
         <Grid container spacing={1.5}>
           {shopItems.map((item) => {
-            const canBuy = state.points >= item.cost && !state.activeBoost;
+            const isLocked = state.round < item.minRound;
+            const canBuy = !isLocked && state.points >= item.cost && !state.activeBoost;
             return (
               <Grid key={item.id} size={{ xs: 12 }}>
                 <Box
@@ -83,14 +84,20 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                       {item.description}
                     </Typography>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      disabled={!canBuy || buyingId === item.id}
-                      onClick={() => handleBuy(item.id)}
-                    >
-                      Купить за {item.cost}
-                    </Button>
+                    {isLocked ? (
+                      <Typography variant="caption" color="text.secondary">
+                        Доступно после {item.minRound - 1}-го раунда
+                      </Typography>
+                    ) : (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        disabled={!canBuy || buyingId === item.id}
+                        onClick={() => handleBuy(item.id)}
+                      >
+                        Купить за {item.cost}
+                      </Button>
+                    )}
                   </Box>
                 </Box>
               </Grid>

@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 import { prepareMediaForUpload } from '../utils/prepareMediaForUpload';
+import { isVideoFile } from '../utils/videoMetadata';
+import { getDisplayTypeFromFile, getVideoMimeType } from '../utils/videoMime';
 import { encryptFileForUpload } from './mediaCrypto';
 import { encryptMediaEnvelopeForPartner } from './contentCryptoService';
 import type { EncryptedTextPayload } from './contentCryptoService';
@@ -29,8 +31,7 @@ export type UploadedEncryptedContentFile = {
   encryptedMediaEnvelope: EncryptedTextPayload;
 };
 
-export const getDisplayTypeFromFile = (file: File): 'image' | 'video' =>
-  file.type.startsWith('video/') ? 'video' : 'image';
+export { getDisplayTypeFromFile } from '../utils/videoMime';
 
 export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncryptedFile[]> => {
   const token = localStorage.getItem('token');
@@ -61,7 +62,9 @@ export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncr
       mediaEnvelope: {
         mediaKey: encrypted.mediaKey,
         iv: encrypted.iv,
-        mimeType: preparedFile.type || 'application/octet-stream',
+        mimeType: isVideoFile(preparedFile)
+          ? getVideoMimeType(preparedFile)
+          : preparedFile.type || 'application/octet-stream',
         displayType: getDisplayTypeFromFile(preparedFile)
       },
       fileSize: preparedFile.size

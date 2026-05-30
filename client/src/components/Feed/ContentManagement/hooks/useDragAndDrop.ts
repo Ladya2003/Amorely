@@ -30,23 +30,19 @@ export const useDragAndDrop = (onContentReordered?: () => void) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      console.log('🔄 Отправляем запрос на изменение порядка:', { sourceId, targetId });
-
-      const response = await axios.put(`${API_URL}/api/feed/content/reorder`, {
+      await axios.put(`${API_URL}/api/feed/content/reorder`, {
         sourceId,
         targetId
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log('✅ Порядок изменен:', response.data);
-      
       if (onContentReordered) {
         onContentReordered();
       }
       
     } catch (error) {
-      console.error('❌ Ошибка при изменении порядка контента:', error);
+      console.error('Ошибка при изменении порядка контента:', error);
     }
   };
 
@@ -59,8 +55,7 @@ export const useDragAndDrop = (onContentReordered?: () => void) => {
   ) => {
     const startPos = getEventPos(e);
     const startTime = Date.now();
-    console.log('👆 Pointer down:', { itemId, startPos, eventType: e.type });
-    
+
     setDragStartPos(startPos);
     setDragStartTime(startTime);
     setDraggedItem(itemId);
@@ -70,16 +65,12 @@ export const useDragAndDrop = (onContentReordered?: () => void) => {
     let currentDragOverItem: string | null = null;
     
     const handlePointerMove = (moveEvent: MouseEvent | TouchEvent) => {
-      console.log('🔄 Pointer move detected:', { eventType: moveEvent.type });
-      
       const currentPos = getEventPos(moveEvent);
       const deltaX = currentPos.x - startPos.x;
       const deltaY = currentPos.y - startPos.y;
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       const timeElapsed = Date.now() - startTime;
-      
-      console.log('📊 Move data:', { distance, timeElapsed, deltaX, deltaY });
-      
+
       if (timeElapsed > 100 && distance > 3) {
         moveEvent.preventDefault();
         
@@ -87,12 +78,10 @@ export const useDragAndDrop = (onContentReordered?: () => void) => {
           dragActive = true;
           setIsDragging(true);
           document.body.style.overflow = 'hidden';
-          console.log('🔥 Drag started!', { itemId, distance, timeElapsed });
         }
-        
+
         setDragOffset({ x: deltaX, y: deltaY });
-        console.log('📱 Drag move:', { deltaX, deltaY, currentPos });
-        
+
         const elementBelow = document.elementFromPoint(currentPos.x, currentPos.y);
         const cardElement = elementBelow?.closest('[data-content-id]');
         if (cardElement) {
@@ -100,7 +89,6 @@ export const useDragAndDrop = (onContentReordered?: () => void) => {
           if (targetId && targetId !== itemId) {
             currentDragOverItem = targetId;
             setDragOverItem(targetId);
-            console.log('🎯 Drag over:', targetId);
           } else {
             currentDragOverItem = null;
             setDragOverItem(null);
@@ -113,14 +101,7 @@ export const useDragAndDrop = (onContentReordered?: () => void) => {
     };
 
     const handlePointerUp = () => {
-      console.log('👆 Pointer up:', { 
-        dragActive, 
-        currentDraggedItem, 
-        currentDragOverItem
-      });
-      
       if (dragActive && currentDraggedItem && currentDragOverItem && currentDraggedItem !== currentDragOverItem) {
-        console.log(`✅ Перемещение ${currentDraggedItem} на позицию ${currentDragOverItem}`);
         handleReorderContent(currentDraggedItem, currentDragOverItem);
       }
       
@@ -137,15 +118,12 @@ export const useDragAndDrop = (onContentReordered?: () => void) => {
       document.removeEventListener('touchend', handlePointerUp);
       
       document.body.style.overflow = '';
-      console.log('🧹 Cleanup completed');
     };
 
     document.addEventListener('mousemove', handlePointerMove);
     document.addEventListener('touchmove', handlePointerMove, { passive: false });
     document.addEventListener('mouseup', handlePointerUp);
     document.addEventListener('touchend', handlePointerUp);
-    
-    console.log('🎯 Event listeners added');
   };
 
   /**

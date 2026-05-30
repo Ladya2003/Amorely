@@ -17,8 +17,10 @@ export async function getCroppedImg(
   const canvas = document.createElement('canvas');
   const scaleX = image.naturalWidth / image.width;
   const scaleY = image.naturalHeight / image.height;
-  canvas.width = crop.width;
-  canvas.height = crop.height;
+  const outputWidth = Math.round(crop.width * scaleX);
+  const outputHeight = Math.round(crop.height * scaleY);
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
@@ -33,8 +35,8 @@ export async function getCroppedImg(
     crop.height * scaleY,
     0,
     0,
-    crop.width,
-    crop.height
+    outputWidth,
+    outputHeight
   );
 
   return new Promise((resolve, reject) => {
@@ -99,10 +101,10 @@ const ImageCropDialog: React.FC<ImageCropDialogProps> = ({
     setCrop(defaultCrop);
 
     const pixelCrop = {
-      x: Math.round((defaultCrop.x / 100) * img.naturalWidth),
-      y: Math.round((defaultCrop.y / 100) * img.naturalHeight),
-      width: Math.round((defaultCrop.width / 100) * img.naturalWidth),
-      height: Math.round((defaultCrop.height / 100) * img.naturalHeight),
+      x: Math.round((defaultCrop.x / 100) * img.width),
+      y: Math.round((defaultCrop.y / 100) * img.height),
+      width: Math.round((defaultCrop.width / 100) * img.width),
+      height: Math.round((defaultCrop.height / 100) * img.height),
       unit: 'px' as const,
     };
     setCompletedCrop(pixelCrop);
@@ -114,10 +116,10 @@ const ImageCropDialog: React.FC<ImageCropDialogProps> = ({
     const cropToUse =
       completedCrop ||
       (crop && {
-        x: Math.round((crop.x / 100) * imgRef.current.naturalWidth),
-        y: Math.round((crop.y / 100) * imgRef.current.naturalHeight),
-        width: Math.round((crop.width / 100) * imgRef.current.naturalWidth),
-        height: Math.round((crop.height / 100) * imgRef.current.naturalHeight),
+        x: Math.round((crop.x / 100) * imgRef.current.width),
+        y: Math.round((crop.y / 100) * imgRef.current.height),
+        width: Math.round((crop.width / 100) * imgRef.current.width),
+        height: Math.round((crop.height / 100) * imgRef.current.height),
         unit: 'px' as const,
       });
 

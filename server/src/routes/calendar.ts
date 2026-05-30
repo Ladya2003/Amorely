@@ -454,6 +454,63 @@ router.get('/events/:id', async (req: any, res: Response) => {
   }
 });
 
+const deleteEventMediaFromCloudinary = async (mediaItems: any[]) => {
+  for (const media of mediaItems) {
+    if (!media.publicId || media.publicId.startsWith('text_')) continue;
+    try {
+      await cloudinary.uploader.destroy(media.publicId, {
+        resource_type: media.encrypted ? 'raw' : (media.resourceType as any)
+      });
+    } catch (cloudinaryError) {
+      console.error('Ошибка при удалении из Cloudinary:', cloudinaryError);
+    }
+  }
+};
+
+const createTextOnlyEventContent = async (
+  eventId: string,
+  baseMedia: any,
+  fields: {
+    eventDate?: Date;
+    encryptedTitle?: any;
+    encryptedDescription?: any;
+    title?: string;
+    description?: string;
+    metadataSenderId?: string;
+    metadataRecipientId?: string;
+    showInFeed?: boolean;
+    isBirthdayEvent?: boolean;
+    isAnniversaryEvent?: boolean;
+  }
+) => {
+  const content = new Content({
+    userId: baseMedia.userId,
+    targetId: baseMedia.targetId,
+    url: '',
+    publicId: `text_${eventId}`,
+    resourceType: 'image',
+    fileSize: 0,
+    eventId,
+    eventDate: fields.eventDate || baseMedia.eventDate,
+    encrypted: Boolean(fields.encryptedTitle?.ciphertext || baseMedia.encrypted),
+    encryptedTitle: fields.encryptedTitle || baseMedia.encryptedTitle,
+    encryptedDescription: fields.encryptedDescription ?? baseMedia.encryptedDescription,
+    title: fields.title ?? baseMedia.title,
+    description: fields.description ?? baseMedia.description,
+    metadataSenderId: fields.metadataSenderId || baseMedia.metadataSenderId,
+    metadataRecipientId: fields.metadataRecipientId || baseMedia.metadataRecipientId,
+    showInFeed: fields.showInFeed ?? false,
+    isBirthdayEvent: fields.isBirthdayEvent ?? baseMedia.isBirthdayEvent,
+    isAnniversaryEvent: fields.isAnniversaryEvent ?? baseMedia.isAnniversaryEvent,
+    customDate: fields.eventDate || baseMedia.eventDate,
+    createdBy: baseMedia.createdBy,
+    lastEditedBy: fields.metadataSenderId,
+    lastEditedAt: new Date()
+  });
+
+  await content.save();
+};
+
 // Обновление события (обновляет все медиафайлы с данным eventId)
 router.put('/events/:id', async (req: any, res: Response) => {
   try {
@@ -468,7 +525,9 @@ router.put('/events/:id', async (req: any, res: Response) => {
       encryptionRecipientId,
       showInFeed,
       isBirthdayEvent,
-      isAnniversaryEvent
+      isAnniversaryEvent,
+      newMedia,
+      removeMediaIds
     } = req.body;
 
     // Находим все медиафайлы события
@@ -485,8 +544,9 @@ router.put('/events/:id', async (req: any, res: Response) => {
     }
 
     const partnerId = user.partnerId;
-    const isOwner = mediaFiles[0].userId.toString() === userId;
-    const isPartner = partnerId && mediaFiles[0].userId.toString() === partnerId.toString();
+    const baseMedia = mediaFiles[0];
+    const isOwner = baseMedia.userId.toString() === userId;
+    const isPartner = partnerId && baseMedia.userId.toString() === partnerId.toString();
     
     if (!isOwner && !isPartner) {
       return res.status(403).json({ error: 'Нет прав на редактирование этого события' });
@@ -522,7 +582,73 @@ router.put('/events/:id', async (req: any, res: Response) => {
     updateData.lastEditedBy = userId;
     updateData.lastEditedAt = new Date();
 
-    await Content.updateMany({ eventId: id }, { $set: updateData });
+    if (Array.isArray(removeMediaIds) && removeMediaIds.length > 0) {
+      const idsToRemove = new Set(removeMediaIds.map(String));
+      const mediaToDelete = mediaFiles.filter((item) => idsToRemove.has(item._id.toString()));
+
+      await deleteEventMediaFromCloudinary(mediaToDelete);
+      await Content.deleteMany({
+        eventId: id,
+        _id: { $in: mediaToDelete.map((item) => item._id) }
+      });
+    }
+
+    if (Array.isArray(newMedia) && newMedia.length > 0) {
+      await Content.deleteMany({ eventId: id, publicId: `text_${id}` });
+
+      for (const item of newMedia) {
+        if (!isValidEncryptedMediaItem(item)) {
+          return res.status(400).json({ error: 'Некорректные данные зашифрованного медиа' });
+        }
+
+        const displayType = item.mediaEnvelope?.displayType || item.resourceType || 'image';
+        const content = new Content({
+          userId: baseMedia.userId,
+          targetId: baseMedia.targetId,
+          url: item.url,
+          publicId: item.publicId,
+          resourceType: displayType === 'video' ? 'video' : 'image',
+          fileSize: item.fileSize || 0,
+          eventId: id,
+          eventDate: updateData.eventDate || baseMedia.eventDate,
+          encrypted: true,
+          ...buildStoredMediaFields(item),
+          encryptedTitle: updateData.encryptedTitle || baseMedia.encryptedTitle,
+          encryptedDescription: updateData.encryptedDescription ?? baseMedia.encryptedDescription,
+          title: updateData.title ?? baseMedia.title,
+          description: updateData.description ?? baseMedia.description,
+          metadataSenderId: updateData.metadataSenderId || userId,
+          metadataRecipientId: recipientId,
+          showInFeed: updateData.showInFeed ?? baseMedia.showInFeed ?? true,
+          isBirthdayEvent: updateData.isBirthdayEvent ?? baseMedia.isBirthdayEvent,
+          isAnniversaryEvent: updateData.isAnniversaryEvent ?? baseMedia.isAnniversaryEvent,
+          customDate: updateData.eventDate || baseMedia.eventDate,
+          createdBy: baseMedia.createdBy,
+          lastEditedBy: userId,
+          lastEditedAt: updateData.lastEditedAt
+        });
+
+        await content.save();
+      }
+    }
+
+    const remainingCount = await Content.countDocuments({ eventId: id });
+    if (remainingCount > 0) {
+      await Content.updateMany({ eventId: id }, { $set: updateData });
+    } else {
+      await createTextOnlyEventContent(id, baseMedia, {
+        eventDate: updateData.eventDate,
+        encryptedTitle: updateData.encryptedTitle,
+        encryptedDescription: updateData.encryptedDescription,
+        title: updateData.title,
+        description: updateData.description,
+        metadataSenderId: updateData.metadataSenderId,
+        metadataRecipientId: recipientId,
+        showInFeed: updateData.showInFeed,
+        isBirthdayEvent: updateData.isBirthdayEvent,
+        isAnniversaryEvent: updateData.isAnniversaryEvent
+      });
+    }
 
     res.json({
       message: 'Событие успешно обновлено',
@@ -561,17 +687,7 @@ router.delete('/events/:id', async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Нет прав на удаление этого события' });
     }
 
-    // Удаляем все файлы из Cloudinary
-    for (const media of mediaFiles) {
-      if (!media.publicId || media.publicId.startsWith('text_')) continue;
-      try {
-        await cloudinary.uploader.destroy(media.publicId, {
-          resource_type: media.encrypted ? 'raw' : (media.resourceType as any)
-        });
-      } catch (cloudinaryError) {
-        console.error('Ошибка при удалении из Cloudinary:', cloudinaryError);
-      }
-    }
+    await deleteEventMediaFromCloudinary(mediaFiles);
 
     // Удаляем все медиафайлы события из базы данных
     await Content.deleteMany({ eventId: id });

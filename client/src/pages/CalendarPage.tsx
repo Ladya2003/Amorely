@@ -288,7 +288,8 @@ const CalendarPage: React.FC = () => {
       description: event.description || '',
       eventDate: event.eventDate || event.createdAt,
       isBirthdayEvent: event.isBirthdayEvent || false,
-      isAnniversaryEvent: event.isAnniversaryEvent || false
+      isAnniversaryEvent: event.isAnniversaryEvent || false,
+      media: (event.media || []).filter((item) => item.url && item.url.trim().length > 0)
     });
     setEventDetailOpen(false); // Закрываем детальный просмотр
     setAddDialogOpen(true); // Открываем редактор
@@ -471,6 +472,8 @@ const CalendarPage: React.FC = () => {
     date: Date;
     title: string;
     description: string;
+    files: File[];
+    removeMediaIds: string[];
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
   }) => {
@@ -494,6 +497,11 @@ const CalendarPage: React.FC = () => {
         ? await encryptTextForPartner(keys, encryptionRecipientId, eventData.description)
         : undefined;
 
+      const uploaded =
+        eventData.files.length > 0
+          ? await encryptAndUploadContentFiles(eventData.files, keys, encryptionRecipientId)
+          : [];
+
       await axios.put(
         `${API_URL}/api/calendar/events/${eventId}`,
         {
@@ -502,7 +510,15 @@ const CalendarPage: React.FC = () => {
           encryptedDescription,
           encryptionRecipientId,
           isBirthdayEvent: eventData.isBirthdayEvent,
-          isAnniversaryEvent: eventData.isAnniversaryEvent
+          isAnniversaryEvent: eventData.isAnniversaryEvent,
+          newMedia: uploaded.map((item) => ({
+            url: item.url,
+            publicId: item.publicId,
+            fileSize: item.fileSize,
+            mediaEnvelope: item.mediaEnvelope,
+            encryptedMediaEnvelope: item.encryptedMediaEnvelope
+          })),
+          removeMediaIds: eventData.removeMediaIds
         },
         {
           headers: {

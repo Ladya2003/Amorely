@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import AppThemeProvider from './contexts/AppThemeProvider';
 import { NavigationProvider } from './contexts/NavigationContext';
 import { UnreadMessagesProvider } from './contexts/UnreadMessagesContext';
+import { UnreadNewsProvider } from './contexts/UnreadNewsContext';
 import { CryptoProvider } from './contexts/CryptoContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
@@ -42,6 +43,7 @@ function App() {
           <NavigationProvider>
             <Router basename={routerBasename}>
               <UnreadMessagesProvider>
+              <UnreadNewsProvider>
               <Routes>
                 {/* Публичный маршрут для аутентификации */}
                 <Route path="/auth" element={<AuthPage />} />
@@ -78,6 +80,7 @@ function App() {
                 {/* Перенаправление на главную страницу для неизвестных маршрутов */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </UnreadNewsProvider>
               </UnreadMessagesProvider>
             </Router>
           </NavigationProvider>

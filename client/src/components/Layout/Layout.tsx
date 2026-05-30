@@ -25,6 +25,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
+import { useUnreadNews } from '../../contexts/UnreadNewsContext';
 import { MOBILE_BOTTOM_NAV_OFFSET } from '../../constants/layout';
 
 const Layout: React.FC = () => {
@@ -35,6 +36,7 @@ const Layout: React.FC = () => {
   const { user } = useAuth();
   const { showBottomNav, setShowBottomNav } = useNavigation();
   const { totalUnreadCount } = useUnreadMessages();
+  const { unreadCount: unreadNewsCount } = useUnreadNews();
 
   const isGameRoute = location.pathname.startsWith('/chat/games/');
 
@@ -50,15 +52,25 @@ const Layout: React.FC = () => {
     };
   }, [isGameRoute, isMobile, setShowBottomNav]);
   
-  const hideChatTabBadge = location.pathname === '/chat';
   const chatTabIcon = (
     <Badge
       badgeContent={totalUnreadCount}
       color="error"
       max={99}
-      invisible={hideChatTabBadge || totalUnreadCount === 0}
+      invisible={totalUnreadCount === 0}
     >
       <ChatIcon />
+    </Badge>
+  );
+
+  const newsTabIcon = (
+    <Badge
+      badgeContent={unreadNewsCount}
+      color="error"
+      max={99}
+      invisible={unreadNewsCount === 0}
+    >
+      <NewspaperIcon />
     </Badge>
   );
   
@@ -130,7 +142,7 @@ const Layout: React.FC = () => {
                 <BottomNavigationAction label="Главная" icon={<HomeIcon />} />
                 <BottomNavigationAction label="Чат" icon={chatTabIcon} />
                 <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} />
-                <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} />
+                <BottomNavigationAction label="Новости" icon={newsTabIcon} />
                 <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} />
               </BottomNavigation>
             </Box>
@@ -248,7 +260,7 @@ const Layout: React.FC = () => {
             />
             <BottomNavigationAction label="Чат" icon={chatTabIcon} sx={{ px: 1 }} />
             <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} sx={{ px: 1 }} />
-            <BottomNavigationAction label="Новости" icon={<NewspaperIcon />} sx={{ px: 1 }} />
+            <BottomNavigationAction label="Новости" icon={newsTabIcon} sx={{ px: 1 }} />
             <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} sx={{ px: 1 }} />
           </BottomNavigation>
           </Box>

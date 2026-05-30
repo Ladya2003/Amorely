@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import {
@@ -8,13 +8,29 @@ import {
 
 interface DailyResetBadgeProps {
   sx?: object;
+  onClick?: (event: React.MouseEvent) => void;
 }
 
-const DailyResetBadge: React.FC<DailyResetBadgeProps> = ({ sx }) => {
-  const countdown = formatDailyResetCountdown(getMinutesUntilUtcMidnight());
+const DailyResetBadge: React.FC<DailyResetBadgeProps> = ({ sx, onClick }) => {
+  const [countdown, setCountdown] = useState(() =>
+    formatDailyResetCountdown(getMinutesUntilUtcMidnight())
+  );
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      setCountdown(formatDailyResetCountdown(getMinutesUntilUtcMidnight()));
+    };
+
+    const timerId = window.setInterval(updateCountdown, 60_000);
+    return () => window.clearInterval(timerId);
+  }, []);
 
   return (
     <Box
+      component={onClick ? 'button' : 'div'}
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      aria-label={onClick ? 'Подробнее о таймере сброса' : undefined}
       sx={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -25,6 +41,17 @@ const DailyResetBadge: React.FC<DailyResetBadgeProps> = ({ sx }) => {
         bgcolor: 'background.paper',
         border: '1px solid',
         borderColor: 'divider',
+        ...(onClick
+          ? {
+              cursor: 'pointer',
+              font: 'inherit',
+              color: 'inherit',
+              '&:hover': {
+                borderColor: 'primary.main',
+                bgcolor: 'action.hover',
+              },
+            }
+          : {}),
         ...sx,
       }}
     >

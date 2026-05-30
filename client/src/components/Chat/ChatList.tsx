@@ -159,8 +159,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                   src={contact.avatar} 
                   sx={{ 
                     width: 50, 
-                    height: 50,
-                    border: hasUnreadIncoming ? '2px solid #ff4b8d' : 'none'
+                    height: 50
                   }}
                 />
                 {contact.isOnline && (

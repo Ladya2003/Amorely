@@ -6,9 +6,10 @@ import type { Game } from './gamesData';
 interface GameListItemProps {
   game: Game;
   onClick?: (game: Game) => void;
+  reserveTopRightSpace?: boolean;
 }
 
-const GameListItem: React.FC<GameListItemProps> = ({ game, onClick }) => {
+const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, reserveTopRightSpace }) => {
   return (
     <ListItemButton
       onClick={() => onClick?.(game)}
@@ -60,7 +61,7 @@ const GameListItem: React.FC<GameListItemProps> = ({ game, onClick }) => {
         )}
       </Box>
 
-      <Box sx={{ minWidth: 0, flex: 1, pt: 0.25 }}>
+      <Box sx={{ minWidth: 0, flex: 1, pt: 0.25, pr: reserveTopRightSpace ? 5.5 : 0 }}>
         <Typography
           variant="subtitle1"
           sx={{ fontWeight: 600, mb: 0.5, color: 'inherit' }}

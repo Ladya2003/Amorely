@@ -1,9 +1,5 @@
-import {
-  MAX_VIDEO_DURATION_SEC,
-  MAX_VIDEO_UPLOAD_BYTES,
-  formatMegabytes
-} from './mediaLimits';
-import { getVideoDuration, isVideoFile } from './videoMetadata';
+import { MAX_VIDEO_UPLOAD_BYTES, formatMegabytes } from './mediaLimits';
+import { isVideoFile } from './videoMetadata';
 
 export const validateMediaFileSize = (file: File): string | undefined => {
   if (isVideoFile(file) && file.size > MAX_VIDEO_UPLOAD_BYTES) {
@@ -26,19 +22,8 @@ export const validateAndFilterMediaFiles = async (
       continue;
     }
 
-    if (isVideoFile(file)) {
-      try {
-        const duration = await getVideoDuration(file);
-        if (duration > MAX_VIDEO_DURATION_SEC) {
-          errors.push(`${file.name}: максимум ${MAX_VIDEO_DURATION_SEC} секунд`);
-          continue;
-        }
-      } catch {
-        // Браузер не смог прочитать метаданные (кодек, moov atom и т.д.) —
-        // не блокируем: файл маленький, проверим снова при загрузке.
-      }
-    }
-
+    // Длительность видео проверяем при отправке (prepareMediaForUpload), не при выборе файла —
+    // иначе iPhone MOV может «зависать» на metadata и повторный выбор того же файла не срабатывает.
     accepted.push(file);
   }
 

@@ -52,14 +52,10 @@ export default function setupSocketIO(server: HttpServer) {
   const connectedUsers: ConnectedUser[] = [];
 
   io.on('connection', (socket: Socket) => {
-    console.log('Новое подключение к сокету:', socket.id);
-
     attachGameSocketHandlers(socket, io, connectedUsers);
 
     // Пользователь подключается и отправляет свой ID
     socket.on('user_connected', (userId: string) => {
-      console.log(`Пользователь подключен: ${userId}`);
-      
       // Добавляем пользователя в список подключенных
       const existingUserIndex = connectedUsers.findIndex(user => user.userId === userId);
       if (existingUserIndex !== -1) {
@@ -356,7 +352,6 @@ export default function setupSocketIO(server: HttpServer) {
 
     // Пользователь отключается
     socket.on('disconnect', async () => {
-      console.log('Пользователь отключен:', socket.id);
       const index = connectedUsers.findIndex(user => user.socketId === socket.id);
       if (index !== -1) {
         const { userId } = connectedUsers[index];

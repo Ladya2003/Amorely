@@ -1,6 +1,7 @@
 import React, { useState, type ReactNode } from 'react';
 import {
   Box,
+  Button,
   IconButton,
   Popover,
   Slider,
@@ -11,6 +12,7 @@ import {
 import BrushIcon from '@mui/icons-material/Brush';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import PaletteIcon from '@mui/icons-material/Palette';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { HexColorPicker } from 'react-colorful';
 
 export type DrawingTool = 'pen' | 'eraser';
@@ -23,6 +25,7 @@ export const DEFAULT_PEN_COLORS = [
   '#f59e0b',
   '#ef4444',
   '#0ea5e9',
+  '#8B4513',
 ];
 
 export interface DrawingToolsToolbarProps {
@@ -37,6 +40,9 @@ export interface DrawingToolsToolbarProps {
   maxBrush?: number;
   /** Чат догадок справа (50%), на одной линии с колонкой «Инструмент» + «Цвет» */
   sideContent?: ReactNode;
+  /** Очистить весь холст (только для игры «Отгадай рисунок») */
+  onClearAll?: () => void;
+  clearAllDisabled?: boolean;
 }
 
 const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
@@ -50,6 +56,8 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
   minBrush = 1,
   maxBrush = 10,
   sideContent,
+  onClearAll,
+  clearAllDisabled = false,
 }) => {
   const [colorAnchor, setColorAnchor] = useState<HTMLElement | null>(null);
 
@@ -132,6 +140,18 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
           Ластик
         </ToggleButton>
       </ToggleButtonGroup>
+      {onClearAll && (
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<DeleteSweepIcon sx={{ fontSize: 18 }} />}
+          onClick={onClearAll}
+          disabled={clearAllDisabled}
+          sx={{ mt: 1 }}
+        >
+          Стереть всё
+        </Button>
+      )}
     </Box>
   );
 

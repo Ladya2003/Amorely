@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
   Typography,
@@ -15,32 +16,92 @@ import LockIcon from '@mui/icons-material/Lock';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import GameListItem from './GameListItem';
 import DailyResetBadge from '../Games/DailyResetBadge';
+import DailyResetInfoDialog from '../Games/DailyResetInfoDialog';
+import TapGameListBadge from '../Games/TapGameListBadge';
 import { GAMES } from './gamesData';
+import socketService from '../../services/socketService';
 import {
   fetchGamesDailyReset,
+  fetchTapGameState,
   type DailyResetGameId,
   type GameDailyResetMap,
+  type TapGameState,
 } from '../../services/gamesService';
+import { getMsUntilUtcMidnight } from '../../utils/dailyReset';
 
 const DAILY_RESET_GAME_IDS = new Set<DailyResetGameId>(['geo', 'draw', 'quiz']);
 
 const Games: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [dailyReset, setDailyReset] = useState<GameDailyResetMap | null>(null);
+  const [tapState, setTapState] = useState<TapGameState | null>(null);
+  const [dailyResetInfo, setDailyResetInfo] = useState<{ open: boolean; gameName?: string }>({
+    open: false,
+  });
+
+  const loadDailyReset = useCallback(async () => {
+    try {
+      const data = await fetchGamesDailyReset();
+      setDailyReset(data);
+    } catch {
+      setDailyReset(null);
+    }
+  }, []);
+
+  const loadTapState = useCallback(async () => {
+    try {
+      const data = await fetchTapGameState();
+      setTapState(data.state);
+    } catch {
+      setTapState(null);
+    }
+  }, []);
 
   useEffect(() => {
-    const loadDailyReset = async () => {
-      try {
-        const data = await fetchGamesDailyReset();
-        setDailyReset(data);
-      } catch {
-        setDailyReset(null);
+    loadDailyReset();
+    loadTapState();
+  }, [loadDailyReset, loadTapState]);
+
+  useEffect(() => {
+    const msUntilReset = getMsUntilUtcMidnight();
+    const timerId = window.setTimeout(() => {
+      loadDailyReset();
+    }, msUntilReset + 1_000);
+
+    return () => window.clearTimeout(timerId);
+  }, [dailyReset, loadDailyReset]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadDailyReset();
       }
     };
 
-    loadDailyReset();
-  }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [loadDailyReset]);
+
+  useEffect(() => {
+    if (!user?._id) {
+      return;
+    }
+
+    const socket = socketService.getSocket() || socketService.initialize(user._id);
+    socket.emit('tap_game_subscribe');
+
+    const handleTapState = (payload: { state: TapGameState }) => {
+      setTapState(payload.state);
+    };
+
+    socket.on('tap_game_state', handleTapState);
+
+    return () => {
+      socket.off('tap_game_state', handleTapState);
+    };
+  }, [user?._id]);
 
   const filteredGames = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -138,16 +199,29 @@ const Games: React.FC = () => {
               const showDailyReset =
                 DAILY_RESET_GAME_IDS.has(game.id as DailyResetGameId) &&
                 Boolean(dailyReset?.[game.id as DailyResetGameId]?.hasPlayed);
+              const showTapProgress = game.id === 'tap' && tapState?.hasPartner;
 
               return (
               <Box key={game.id} sx={{ position: 'relative' }}>
                 <GameListItem
                   game={game}
                   onClick={() => navigate(`/chat/games/${game.id}`)}
+                  reserveTopRightSpace={showTapProgress || showDailyReset || !game.available}
                 />
+                {showTapProgress && tapState && (
+                  <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
+                    <TapGameListBadge state={tapState} />
+                  </Box>
+                )}
                 {showDailyReset && (
-                  <Box sx={{ position: 'absolute', top: 12, right: 12, pointerEvents: 'none' }}>
-                    <DailyResetBadge />
+                  <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
+                    <DailyResetBadge
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        setDailyResetInfo({ open: true, gameName: game.name });
+                      }}
+                    />
                   </Box>
                 )}
                 {!game.available && (
@@ -169,6 +243,12 @@ const Games: React.FC = () => {
           </Stack>
         )}
       </Box>
+
+      <DailyResetInfoDialog
+        open={dailyResetInfo.open}
+        onClose={() => setDailyResetInfo({ open: false })}
+        gameName={dailyResetInfo.gameName}
+      />
     </Box>
   );
 };

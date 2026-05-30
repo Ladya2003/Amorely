@@ -9,10 +9,9 @@ import {
   useTheme,
   useMediaQuery,
   Chip,
-  Divider,
-  DialogContent
+  Divider
 } from '@mui/material';
-import ResponsiveDialog from '../UI/ResponsiveDialog';
+import MediaViewerDialog from '../common/MediaViewerDialog';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -461,140 +460,19 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
         </Box>
       </Drawer>
 
-      {/* Полноэкранный просмотр медиа */}
-      <ResponsiveDialog
+      <MediaViewerDialog
         open={mediaViewerOpen}
         onClose={() => setMediaViewerOpen(false)}
-        maxWidth="lg"
-        fullWidth
-        disableMobileDrawer
-      >
-        <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
-          <IconButton onClick={() => setMediaViewerOpen(false)} sx={{ color: 'white' }}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        
-        {/* Кнопки навигации в полноэкранном режиме */}
-        {mediaFiles.length > 1 && (
-          <>
-            <IconButton
-              sx={{
-                position: 'absolute',
-                left: 16,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                bgcolor: 'rgba(0,0,0,0.5)',
-                color: 'white',
-                zIndex: 1,
-                '&:hover': {
-                  bgcolor: 'rgba(0,0,0,0.7)'
-                }
-              }}
-              onClick={handlePrevMedia}
-            >
-              <ArrowBackIosNewIcon />
-            </IconButton>
-            <IconButton
-              sx={{
-                position: 'absolute',
-                right: 16,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                bgcolor: 'rgba(0,0,0,0.5)',
-                color: 'white',
-                zIndex: 1,
-                '&:hover': {
-                  bgcolor: 'rgba(0,0,0,0.7)'
-                }
-              }}
-              onClick={handleNextMedia}
-            >
-              <ArrowForwardIosIcon />
-            </IconButton>
-          </>
-        )}
-        
-        <DialogContent
-          sx={{
-            p: 0,
-            overflow: 'hidden',
-            bgcolor: 'black',
-            position: 'relative',
-            minHeight: '90vh',
-            ...swipeContainerSx
-          }}
-          {...swipeHandlers}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              width: '100%',
-              height: '90vh',
-              transform: `translateX(-${currentMediaIndex * 100}%)`,
-              transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            {mediaFiles.map((media) => (
-              <Box
-                key={media._id}
-                sx={{
-                  minWidth: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}
-              >
-                <DecryptedMedia
-                  cacheKey={`calendar-full-${event.eventId || event._id}-${media._id}`}
-                  url={media.url}
-                  resourceType={media.resourceType}
-                  encrypted={media.encrypted}
-                  mediaEnvelope={media.mediaEnvelope}
-                  imageStyle={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain' }}
-                  videoStyle={{ maxWidth: '100%', maxHeight: '90vh' }}
-                  loadingMinHeight={400}
-                />
-              </Box>
-            ))}
-          </Box>
-          
-          {/* Индикатор в полноэкранном режиме */}
-          {mediaFiles.length > 1 && (
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 16,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                display: 'flex',
-                gap: 1,
-                bgcolor: 'rgba(0,0,0,0.6)',
-                borderRadius: 3,
-                px: 2,
-                py: 1,
-                zIndex: 1
-              }}
-            >
-              {mediaFiles.map((_, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: index === currentMediaIndex ? 'white' : 'rgba(255,255,255,0.4)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onClick={() => setCurrentMediaIndex(index)}
-                />
-              ))}
-            </Box>
-          )}
-        </DialogContent>
-      </ResponsiveDialog>
+        content={null}
+        gallery={mediaFiles.map((media) => ({
+          url: media.url,
+          resourceType: media.resourceType,
+          cacheKey: `calendar-full-${event.eventId || event._id}-${media._id}`,
+          encrypted: media.encrypted,
+          mediaEnvelope: media.mediaEnvelope
+        }))}
+        initialIndex={currentMediaIndex}
+      />
     </>
   );
 };

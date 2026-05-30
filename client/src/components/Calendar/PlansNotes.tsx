@@ -40,6 +40,7 @@ import { VIDEO_LIMITS_HINT } from '../../utils/mediaLimits';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import ConfirmDeleteDialog from '../UI/ConfirmDeleteDialog';
 import DecryptedMedia from '../common/DecryptedMedia';
+import MediaViewerDialog from '../common/MediaViewerDialog';
 import { getUserDisplayName } from '../UI/UserProfileChip';
 import {
   readCalendarUiPreferences,
@@ -849,37 +850,21 @@ const PlansNotes: React.FC = () => {
         )}
       </ResponsiveDialog>
 
-      {/* Полноэкранный просмотр медиа */}
-      <ResponsiveDialog
+      <MediaViewerDialog
         open={mediaViewerOpen}
         onClose={() => setMediaViewerOpen(false)}
-        maxWidth="md"
-        fullWidth
-        disableMobileDrawer
-      >
-        <DialogContent sx={{ p: 0, bgcolor: 'black', position: 'relative' }}>
-          <IconButton
-            onClick={() => setMediaViewerOpen(false)}
-            sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1, color: 'white' }}
-          >
-            <CloseIcon />
-          </IconButton>
-          {viewerMedia && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300, p: 2 }}>
-              <DecryptedMedia
-                cacheKey={`plan-${viewerMedia.noteId}-${viewerMedia.media._id}-full`}
-                url={viewerMedia.media.url}
-                resourceType={viewerMedia.media.resourceType}
-                encrypted={viewerMedia.media.encrypted}
-                mediaEnvelope={viewerMedia.media.mediaEnvelope}
-                imageStyle={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }}
-                videoStyle={{ maxWidth: '100%', maxHeight: '80vh' }}
-                loadingMinHeight={200}
-              />
-            </Box>
-          )}
-        </DialogContent>
-      </ResponsiveDialog>
+        content={
+          viewerMedia
+            ? {
+                url: viewerMedia.media.url,
+                resourceType: viewerMedia.media.resourceType,
+                cacheKey: `plan-${viewerMedia.noteId}-${viewerMedia.media._id}-full`,
+                encrypted: viewerMedia.media.encrypted,
+                mediaEnvelope: viewerMedia.media.mediaEnvelope
+              }
+            : null
+        }
+      />
 
       <ConfirmDeleteDialog
         open={deleteOpen}

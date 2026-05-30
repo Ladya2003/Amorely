@@ -31,6 +31,16 @@ import { useAuth } from '../../contexts/AuthContext';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import { VIDEO_LIMITS_HINT } from '../../utils/mediaLimits';
 import ContentViewer from './ContentViewer';
+import DecryptedMedia from '../common/DecryptedMedia';
+import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
+
+interface EventMediaItem {
+  _id: string;
+  url: string;
+  resourceType: 'image' | 'video';
+  encrypted?: boolean;
+  mediaEnvelope?: ContentMediaEnvelope;
+}
 
 interface EventEditorDrawerProps {
   open: boolean;
@@ -43,6 +53,7 @@ interface EventEditorDrawerProps {
     eventDate: string;
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
+    media?: EventMediaItem[];
   } | null;
   onSave: (eventData: {
     date: Date;
@@ -56,6 +67,8 @@ interface EventEditorDrawerProps {
     date: Date;
     title: string;
     description: string;
+    files: File[];
+    removeMediaIds: string[];
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
   }) => Promise<void>;
@@ -105,6 +118,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [isBirthdayEvent, setIsBirthdayEvent] = useState(false);
   const [isAnniversaryEvent, setIsAnniversaryEvent] = useState(false);
+  const [existingMedia, setExistingMedia] = useState<EventMediaItem[]>([]);
+  const [removedMediaIds, setRemovedMediaIds] = useState<string[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerContent, setViewerContent] = useState<{
     mediaUrl: string;
@@ -182,6 +197,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setDescription(editEvent.description || '');
       setFiles([]);
       setPreviews([]);
+      setExistingMedia(
+        (editEvent.media || []).filter((item) => item.url && item.url.trim().length > 0)
+      );
+      setRemovedMediaIds([]);
       setIsBirthdayEvent(editEvent.isBirthdayEvent || false);
       setIsAnniversaryEvent(editEvent.isAnniversaryEvent || false);
     } else {
@@ -191,6 +210,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setDescription(hasDraft ? draft.description || '' : '');
       setFiles([]);
       setPreviews([]);
+      setExistingMedia([]);
+      setRemovedMediaIds([]);
     }
     
     setIsInitialized(true);
@@ -248,6 +269,11 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     setPreviews(newPreviews);
   };
 
+  const handleRemoveExistingMedia = (mediaId: string) => {
+    setExistingMedia((prev) => prev.filter((item) => item._id !== mediaId));
+    setRemovedMediaIds((prev) => [...prev, mediaId]);
+  };
+
   const handleSave = async () => {
     if (!selectedDate) {
       setError('Пожалуйста, выберите дату события');
@@ -269,6 +295,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           date: selectedDate,
           title: title.trim(),
           description: description.trim(),
+          files,
+          removeMediaIds: removedMediaIds,
           isBirthdayEvent,
           isAnniversaryEvent
         });
@@ -293,6 +321,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setDescription('');
       setFiles([]);
       setPreviews([]);
+      setExistingMedia([]);
+      setRemovedMediaIds([]);
       setSelectedDate(new Date());
       
       onClose();
@@ -467,43 +497,90 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           )}
 
           {/* Загрузка медиа */}
-          {!isEditMode && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                Фото и видео
-              </Typography>
-              <input
-                accept="image/*,video/*"
-                style={{ display: 'none' }}
-                id="event-media-upload"
-                multiple
-                type="file"
-                onChange={handleFileChange}
-              />
-              <label htmlFor="event-media-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<CloudUploadIcon />}
-                  fullWidth
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              Фото и видео
+            </Typography>
+            <input
+              accept="image/*,video/*"
+              style={{ display: 'none' }}
+              id="event-media-upload"
+              multiple
+              type="file"
+              onChange={handleFileChange}
+            />
+            <label htmlFor="event-media-upload">
+              <Button
+                variant="outlined"
+                component="span"
+                startIcon={<CloudUploadIcon />}
+                fullWidth
+                disabled={isSaving}
+              >
+                Добавить фото или видео
+              </Button>
+            </label>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). Фото необязательны. {VIDEO_LIMITS_HINT}
+            </Typography>
+          </Box>
+
+          {isEditMode && existingMedia.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+              {existingMedia.map((media) => (
+                <Box
+                  key={media._id}
+                  sx={{
+                    position: 'relative',
+                    width: 120,
+                    height: 120,
+                    borderRadius: 1,
+                    overflow: 'hidden',
+                    border: '2px solid',
+                    borderColor: 'divider'
+                  }}
                 >
-                  Добавить фото или видео
-                </Button>
-              </label>
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). Фото необязательны. {VIDEO_LIMITS_HINT}
-              </Typography>
+                  <DecryptedMedia
+                    cacheKey={`event-edit-${editEvent?.eventId}-${media._id}`}
+                    url={media.url}
+                    resourceType={media.resourceType}
+                    encrypted={media.encrypted}
+                    mediaEnvelope={media.mediaEnvelope}
+                    videoPreview={media.resourceType === 'video'}
+                    onImageClick={(blobUrl) => {
+                      setViewerContent({
+                        mediaUrl: blobUrl,
+                        resourceType: media.resourceType
+                      });
+                      setViewerOpen(true);
+                    }}
+                    imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    loadingMinHeight={120}
+                  />
+                  <IconButton
+                    size="small"
+                    sx={{
+                      position: 'absolute',
+                      top: 4,
+                      right: 4,
+                      bgcolor: 'background.paper',
+                      '&:hover': {
+                        bgcolor: 'error.light',
+                        color: 'white'
+                      }
+                    }}
+                    onClick={() => handleRemoveExistingMedia(media._id)}
+                    disabled={isSaving}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))}
             </Box>
           )}
-          
-          {isEditMode && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
-              Примечание: При редактировании нельзя изменить медиафайлы
-            </Typography>
-          )}
 
-          {/* Превью загруженных файлов */}
-          {!isEditMode && previews.length > 0 && (
+          {/* Превью новых файлов */}
+          {previews.length > 0 && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
               {previews.map((preview, index) => (
                 <Box

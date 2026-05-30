@@ -55,6 +55,7 @@ import { encryptAndUploadChatFiles, type StoredChatAttachment } from '../crypto/
 import { readChatRulesConsent, writeChatRulesConsent } from '../legal/chatRulesConsent';
 import { CHAT_RULES_SUMMARY } from '../legal/chatRulesContent';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
+import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 
 // Временные данные для демонстрации
@@ -305,6 +306,11 @@ const ChatPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const selectedContactIdRef = useRef<string | null>(null);
+  const isChatAtBottomRef = useRef(true);
+
+  const handleChatAtBottomChange = useCallback((atBottom: boolean) => {
+    isChatAtBottomRef.current = atBottom;
+  }, []);
 
   const resolvePeerIdForMessage = useCallback(
     (message: MessageType, dialogPeerId: string) =>
@@ -441,6 +447,19 @@ const ChatPage: React.FC = () => {
     localStorage.removeItem(key);
   }, [selectedChatStorageKey]);
 
+  const openContact = useCallback((contactId: string) => {
+    saveSelectedChatId(contactId);
+    isChatAtBottomRef.current = true;
+    setMessages([]);
+    setMessagesPage(1);
+    setHasMoreMessages(false);
+    setIsLoadingMessages(true);
+    setSelectedContactId(contactId);
+    if (isMobile) {
+      setShowBottomNav(false);
+    }
+  }, [saveSelectedChatId, isMobile, setShowBottomNav]);
+
   useEffect(() => {
     hasRestoredSelectedChatRef.current = false;
   }, [CURRENT_USER_ID]);
@@ -463,8 +482,8 @@ const ChatPage: React.FC = () => {
     if (!savedContactId) return;
 
     setTabValue(0);
-    setSelectedContactId(savedContactId);
-  }, [CURRENT_USER_ID, selectedContactId, selectedChatStorageKey]);
+    openContact(savedContactId);
+  }, [CURRENT_USER_ID, selectedContactId, selectedChatStorageKey, openContact]);
 
   const sortContactsByLastMessageDesc = useCallback((contactsToSort: ChatContact[]) => {
     return [...contactsToSort].sort((a, b) => {
@@ -728,13 +747,19 @@ const ChatPage: React.FC = () => {
 
     const onNewMessage = (message: MessageType) => {
       const isCurrentDialogOpen = selectedContactIdRef.current === message.senderId;
+      const shouldMarkAsRead = isCurrentDialogOpen && isChatAtBottomRef.current;
 
       const processIncoming = async () => {
         const messageForDialog = await decryptMessageForDialog(message, message.senderId);
+        const messageForState = shouldMarkAsRead
+          ? { ...messageForDialog, isRead: true }
+          : messageForDialog;
 
         if (isCurrentDialogOpen) {
-          setMessages((prevMessages) => [...prevMessages, messageForDialog]);
-          socketService.markMessageAsRead(message.id);
+          setMessages((prevMessages) => [...prevMessages, messageForState]);
+          if (shouldMarkAsRead) {
+            socketService.markMessageAsRead(message.id);
+          }
         }
 
         const hasMedia = message.attachments && message.attachments.length > 0;
@@ -744,13 +769,13 @@ const ChatPage: React.FC = () => {
             contact.id === message.senderId
               ? {
                   ...contact,
-                  unreadCount: isCurrentDialogOpen ? 0 : (contact.unreadCount || 0) + 1,
+                  unreadCount: shouldMarkAsRead ? 0 : (contact.unreadCount || 0) + 1,
                   lastMessage: {
                     id: message.id,
                     senderId: message.senderId,
                     text: displayText,
                     timestamp: message.timestamp,
-                    isRead: isCurrentDialogOpen,
+                    isRead: shouldMarkAsRead,
                     hasMedia,
                     isPending: false
                   }
@@ -1000,13 +1025,20 @@ const ChatPage: React.FC = () => {
   // Загрузка сообщений при выборе контакта
   useEffect(() => {
     selectedContactIdRef.current = selectedContactId;
-  }, [selectedContactId]);
 
-  // Загрузка сообщений при выборе контакта
-  useEffect(() => {
-    if (selectedContactId) {
-      void fetchMessages(selectedContactId, 1, false);
+    if (!selectedContactId) {
+      setMessages([]);
+      setMessagesPage(1);
+      setHasMoreMessages(false);
+      setIsLoadingMessages(false);
+      return;
     }
+
+    setMessages([]);
+    setMessagesPage(1);
+    setHasMoreMessages(false);
+    setIsLoadingMessages(true);
+    void fetchMessages(selectedContactId, 1, false);
   }, [selectedContactId]);
 
   // Управление видимостью нижнего меню и блокировка скролла страницы в открытом чате
@@ -1247,25 +1279,15 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSelectContact = (contactId: string) => {
-    saveSelectedChatId(contactId);
-    setSelectedContactId(contactId);
-    // Скрываем нижнее меню на мобильных при открытии чата
-    if (isMobile) {
-      setShowBottomNav(false);
-    }
+    openContact(contactId);
   };
 
   const handleSelectGlobalUser = (user: SearchUser) => {
     ensureContactInList(user);
-    saveSelectedChatId(user.id);
-    setSelectedContactId(user.id);
+    openContact(user.id);
     setSearchQuery('');
     setDebouncedSearchQuery('');
     setGlobalSearchResults([]);
-
-    if (isMobile) {
-      setShowBottomNav(false);
-    }
   };
 
   const handleClearSearch = () => {
@@ -1331,14 +1353,10 @@ const ChatPage: React.FC = () => {
     });
 
     const openTargetChat = () => {
-      saveSelectedChatId(target.id);
-      setSelectedContactId(target.id);
+      openContact(target.id);
       setForwardModalOpen(false);
       forwardSourceRef.current = null;
       setForwardSourceMessage(null);
-      if (isMobile) {
-        setShowBottomNav(false);
-      }
     };
 
     if (!sourceMessage || !sourcePeerId) {
@@ -1387,11 +1405,7 @@ const ChatPage: React.FC = () => {
       email: '',
       avatar: forwardHint?.senderAvatar || ''
     });
-    saveSelectedChatId(userId);
-    setSelectedContactId(userId);
-    if (isMobile) {
-      setShowBottomNav(false);
-    }
+    openContact(userId);
   };
 
   useEffect(() => {
@@ -1424,14 +1438,10 @@ const ChatPage: React.FC = () => {
       avatar: state.targetUserAvatar || ''
     });
     setPendingSharedEvent(state.pendingSharedEvent);
-    saveSelectedChatId(state.targetUserId);
-    setSelectedContactId(state.targetUserId);
+    openContact(state.targetUserId);
     setTabValue(0);
-    if (isMobile) {
-      setShowBottomNav(false);
-    }
     navigate(location.pathname, { replace: true, state: null });
-  }, [location.state, location.pathname, navigate, saveSelectedChatId, isMobile, setShowBottomNav]);
+  }, [location.state, location.pathname, navigate, openContact]);
 
   const loadMoreGlobalSearch = useCallback(() => {
     if (!debouncedSearchQuery || isSearching || isLoadingMoreGlobalSearch || !hasMoreGlobalSearch) {
@@ -1504,6 +1514,30 @@ const ChatPage: React.FC = () => {
   }, [messages, selectedContactId, CURRENT_USER_ID]);
 
   const handleBackToList = () => {
+    const contactId = selectedContactIdRef.current;
+    if (contactId) {
+      const unreadIncomingCount = messages.filter(
+        (message) => message.senderId === contactId && message.isRead === false
+      ).length;
+
+      if (unreadIncomingCount > 0) {
+        setContacts((prevContacts) =>
+          prevContacts.map((contact) =>
+            contact.id === contactId
+              ? {
+                  ...contact,
+                  unreadCount: unreadIncomingCount,
+                  lastMessage: contact.lastMessage.senderId === contactId
+                    ? { ...contact.lastMessage, isRead: false }
+                    : contact.lastMessage
+                }
+              : contact
+          )
+        );
+      }
+    }
+
+    isChatAtBottomRef.current = true;
     saveSelectedChatId(null);
     setSelectedContactId(null);
     void fetchContacts({ silent: true });
@@ -1577,7 +1611,7 @@ const ChatPage: React.FC = () => {
       forwardFrom: forwardFrom || undefined,
       sharedEvent: sharedEvent || undefined,
       attachments: attachments?.map((file) => ({
-        type: file.type.startsWith('image/') ? 'image' : 'video',
+        type: isVideoFile(file) ? 'video' : 'image',
         url: URL.createObjectURL(file)
       }))
     };
@@ -2033,6 +2067,7 @@ const ChatPage: React.FC = () => {
                     onDeleteMessage={handleDeleteMessage}
                     onReachMessagesStart={loadOlderMessages}
                     onReachMessagesEnd={handleReachMessagesEnd}
+                    onAtBottomChange={handleChatAtBottomChange}
                     pendingForwardMessage={pendingForwardMessage}
                     onPendingForwardApplied={() => {
                       setPendingForwardMessage(null);

@@ -18,6 +18,7 @@ import {
   advanceDrawRound,
   appendDrawStroke,
   clearDrawGuessAttempts,
+  clearDrawStrokes,
   formatDrawGameState,
   getDrawGameParticipantIds,
   getOrCreateDrawGameState,
@@ -410,6 +411,23 @@ export const attachGameSocketHandlers = (
       };
 
       const state = await appendDrawStroke(senderSocketData.userId, context, stroke);
+      await emitDrawStateToPartners(state, context);
+    } catch (error) {
+      if (error instanceof DrawGameError) {
+        socket.emit('draw_game_error', { message: error.message, code: error.code });
+      }
+    }
+  });
+
+  socket.on('draw_game_clear_strokes', async () => {
+    try {
+      const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
+      if (!senderSocketData) {
+        return;
+      }
+
+      const context = await resolveDrawGameContext(senderSocketData.userId);
+      const state = await clearDrawStrokes(senderSocketData.userId, context);
       await emitDrawStateToPartners(state, context);
     } catch (error) {
       if (error instanceof DrawGameError) {

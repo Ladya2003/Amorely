@@ -262,6 +262,13 @@ export const buyTapShopItem = async (userId: string, context: TapGameContext, it
     throw new TapGameError('BOOST_ALREADY_ACTIVE', 'Уже активен другой инструмент');
   }
 
+  if (state.round < shopItem.minRound) {
+    throw new TapGameError(
+      'ITEM_LOCKED',
+      `Предмет доступен после ${shopItem.minRound - 1}-го раунда`
+    );
+  }
+
   if (state.points < shopItem.cost) {
     throw new TapGameError('NOT_ENOUGH_POINTS', 'Недостаточно баллов');
   }

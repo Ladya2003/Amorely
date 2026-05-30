@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import DrawGameState from '../models/drawGameState';
 import GeoGameState from '../models/geoGameState';
 import QuizGameState from '../models/quizGameState';
+import { getUtcDayKey } from '../utils/dailyReset';
 
 export type DailyResetGameId = 'geo' | 'draw' | 'quiz';
 
@@ -11,36 +12,57 @@ export interface GameDailyResetStatus {
 
 export type GameDailyResetMap = Record<DailyResetGameId, GameDailyResetStatus | null>;
 
-const hasPlayedGeo = (state: { roundsCompleted?: number; usedLocationIds?: string[] }) =>
-  (state.roundsCompleted ?? 0) > 0 || (state.usedLocationIds?.length ?? 0) > 0;
+const hasPlayedGeoToday = (state: { roundsDayKey?: string | null; roundsPlayedToday?: number }) => {
+  const today = getUtcDayKey();
+  if (state.roundsDayKey !== today) {
+    return false;
+  }
+  return (state.roundsPlayedToday ?? 0) > 0;
+};
 
-const hasPlayedDraw = (state: { roundsCompleted?: number; usedWordIds?: string[] }) =>
-  (state.roundsCompleted ?? 0) > 0 || (state.usedWordIds?.length ?? 0) > 0;
+const hasPlayedDrawToday = (state: {
+  scoredRoundsDayKey?: string | null;
+  scoredRoundsToday?: number;
+}) => {
+  const today = getUtcDayKey();
+  if (state.scoredRoundsDayKey !== today) {
+    return false;
+  }
+  return (state.scoredRoundsToday ?? 0) > 0;
+};
 
-const hasPlayedQuiz = (state: {
+const hasPlayedQuizToday = (state: {
+  boardDayKey?: string | null;
   usedCellKeys?: string[];
-  totalScore?: number;
   nextBoardAvailableAt?: Date | null;
-}) =>
-  (state.usedCellKeys?.length ?? 0) > 0 ||
-  (state.totalScore ?? 0) > 0 ||
-  Boolean(state.nextBoardAvailableAt);
+}) => {
+  const today = getUtcDayKey();
+  if (
+    state.nextBoardAvailableAt &&
+    state.nextBoardAvailableAt.getTime() > Date.now()
+  ) {
+    return true;
+  }
+  return state.boardDayKey === today && (state.usedCellKeys?.length ?? 0) > 0;
+};
 
 export const getGameDailyResetStatus = async (
   relationshipId: mongoose.Types.ObjectId | string
 ): Promise<GameDailyResetMap> => {
   const [geoState, drawState, quizState] = await Promise.all([
-    GeoGameState.findOne({ relationshipId }).select('roundsCompleted usedLocationIds').lean(),
-    DrawGameState.findOne({ relationshipId }).select('roundsCompleted usedWordIds').lean(),
+    GeoGameState.findOne({ relationshipId }).select('roundsDayKey roundsPlayedToday').lean(),
+    DrawGameState.findOne({ relationshipId })
+      .select('scoredRoundsDayKey scoredRoundsToday')
+      .lean(),
     QuizGameState.findOne({ relationshipId })
-      .select('usedCellKeys totalScore nextBoardAvailableAt')
+      .select('boardDayKey usedCellKeys nextBoardAvailableAt')
       .lean(),
   ]);
 
   return {
-    geo: geoState && hasPlayedGeo(geoState) ? { hasPlayed: true } : null,
-    draw: drawState && hasPlayedDraw(drawState) ? { hasPlayed: true } : null,
-    quiz: quizState && hasPlayedQuiz(quizState) ? { hasPlayed: true } : null,
+    geo: geoState && hasPlayedGeoToday(geoState) ? { hasPlayed: true } : null,
+    draw: drawState && hasPlayedDrawToday(drawState) ? { hasPlayed: true } : null,
+    quiz: quizState && hasPlayedQuizToday(quizState) ? { hasPlayed: true } : null,
   };
 };
 

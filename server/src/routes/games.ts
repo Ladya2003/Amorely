@@ -21,6 +21,7 @@ import {
   advanceDrawRound,
   appendDrawStroke,
   clearDrawGuessAttempts,
+  clearDrawStrokes,
   formatDrawGameState,
   getDrawGameParticipantIds,
   getDrawLeaderboard,
@@ -70,7 +71,8 @@ const handleTapGameError = (error: unknown, res: Response): boolean => {
         : error.code === 'NOT_YOUR_TURN' ||
             error.code === 'ROUND_PART_COMPLETE' ||
             error.code === 'BOOST_ALREADY_ACTIVE' ||
-            error.code === 'NOT_ENOUGH_POINTS'
+            error.code === 'NOT_ENOUGH_POINTS' ||
+            error.code === 'ITEM_LOCKED'
           ? 409
           : error.code === 'ITEM_NOT_FOUND'
             ? 404
@@ -433,6 +435,25 @@ router.post('/draw/guess', async (req: any, res: Response) => {
     }
     console.error('Ошибка draw/guess:', error);
     res.status(500).json({ error: 'Не удалось отправить ответ' });
+  }
+});
+
+router.post('/draw/clear-strokes', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveDrawGameContext(userId);
+    const state = await clearDrawStrokes(userId, context);
+
+    res.json({
+      state: formatDrawGameState(state, userId),
+      participantUserIds: getDrawGameParticipantIds(context),
+    });
+  } catch (error) {
+    if (handleDrawGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка draw/clear-strokes:', error);
+    res.status(500).json({ error: 'Не удалось очистить холст' });
   }
 });
 

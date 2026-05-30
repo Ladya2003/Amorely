@@ -5,7 +5,7 @@ import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 interface EncryptedAttachmentProps {
   cacheKey: string;
   url: string;
-  envelope: ChatMediaEnvelope;
+  envelope?: ChatMediaEnvelope;
   onImageClick?: (blobUrl: string) => void;
 }
 
@@ -18,7 +18,7 @@ const EncryptedAttachment: React.FC<EncryptedAttachmentProps> = ({
   <DecryptedMedia
     cacheKey={cacheKey}
     url={url}
-    resourceType={envelope.displayType}
+    resourceType={envelope?.displayType || 'image'}
     encrypted
     mediaEnvelope={envelope}
     onImageClick={onImageClick}

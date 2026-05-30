@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
@@ -23,6 +23,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -38,6 +39,9 @@ import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
+import { isVideoFile } from '../../utils/videoMetadata';
+import { captureVideoPosterFromFile } from '../../utils/videoPoster';
+import MediaViewerDialog from '../common/MediaViewerDialog';
 import { formatContactPresence } from '../../utils/formatContactPresence';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 
@@ -132,6 +136,7 @@ interface ChatDialogProps {
   onDeleteMessage: (messageId: string) => void;
   onReachMessagesStart?: () => void;
   onReachMessagesEnd?: () => void;
+  onAtBottomChange?: (atBottom: boolean) => void;
   pendingForwardMessage?: MessageForwardRef | null;
   onPendingForwardApplied?: () => void;
   onCancelPendingForward?: () => void;
@@ -178,6 +183,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onDeleteMessage,
   onReachMessagesStart,
   onReachMessagesEnd,
+  onAtBottomChange,
   pendingForwardMessage = null,
   onPendingForwardApplied,
   onCancelPendingForward,
@@ -196,9 +202,17 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentValidationError, setAttachmentValidationError] = useState<string | null>(null);
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<string[]>([]);
+  const [attachmentVideoPosters, setAttachmentVideoPosters] = useState<Record<number, string>>({});
+  const [attachmentFileInputKey, setAttachmentFileInputKey] = useState(0);
+  const [isPickingAttachments, setIsPickingAttachments] = useState(false);
+  const [attachmentLightbox, setAttachmentLightbox] = useState<{
+    url: string;
+    mediaType: 'image' | 'video';
+  } | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [newMessagesBelowCount, setNewMessagesBelowCount] = useState(0);
   const [enteringMessageIds, setEnteringMessageIds] = useState<Set<string>>(() => new Set());
+  const [isMessagesViewportReady, setIsMessagesViewportReady] = useState(false);
   const isAtBottomRef = useRef(true);
   const isAutoFollowingRef = useRef(false);
   const [hiddenDayBadgeKeys, setHiddenDayBadgeKeys] = useState<Record<string, boolean>>({});
@@ -218,6 +232,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContentRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
   const isInitialLoadRef = useRef<boolean>(true);
@@ -230,6 +245,37 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const dayBadgeRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const highlightTimeoutRef = useRef<number | null>(null);
+  const initialScrollPinActiveRef = useRef(false);
+
+  const getScrollMetrics = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return null;
+
+    const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
+    const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+
+    return {
+      scrollTop: container.scrollTop,
+      scrollHeight: container.scrollHeight,
+      clientHeight: container.clientHeight,
+      maxTop,
+      distanceToBottom,
+      atBottom: distanceToBottom <= 40
+    };
+  };
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
+
+    if (behavior === 'auto') {
+      container.scrollTop = maxTop;
+    } else {
+      container.scrollTo({ top: maxTop, behavior });
+    }
+  };
 
   const isScrolledToBottom = () => {
     const container = messagesContainerRef.current;
@@ -239,22 +285,90 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     return container.scrollHeight - container.scrollTop - container.clientHeight <= thresholdPx;
   };
 
+  useLayoutEffect(() => {
+    if (isLoading) {
+      setIsMessagesViewportReady(false);
+      initialScrollPinActiveRef.current = false;
+      return;
+    }
+
+    if (!isInitialLoadRef.current) {
+      return;
+    }
+
+    if (messages.length === 0) {
+      return;
+    }
+
+    scrollToBottom('auto');
+    isAtBottomRef.current = isScrolledToBottom();
+    setNewMessagesBelowCount(0);
+    previousMessagesLengthRef.current = messages.length;
+    isInitialLoadRef.current = false;
+    previousFirstMessageIdRef.current = messages[0]?.id || null;
+    setIsMessagesViewportReady(true);
+    initialScrollPinActiveRef.current = true;
+
+    onAtBottomChange?.(isScrolledToBottom());
+
+    if (isScrolledToBottom()) {
+      onReachMessagesEnd?.();
+    }
+  }, [messages, isLoading, onReachMessagesEnd, onAtBottomChange]);
+
   useEffect(() => {
-    // При первой загрузке скроллим вниз мгновенно
-    if (isInitialLoadRef.current && messages.length > 0 && !isLoading) {
-      scrollToBottom('auto');
-      isAtBottomRef.current = true;
-      setNewMessagesBelowCount(0);
-      setTimeout(() => {
-        if (isScrolledToBottom()) {
-          onReachMessagesEnd?.();
-        }
-      }, 0);
-      isInitialLoadRef.current = false;
-      previousMessagesLengthRef.current = messages.length;
-    } 
+    if (!initialScrollPinActiveRef.current) {
+      return;
+    }
+
+    const content = messagesContentRef.current;
+    const container = messagesContainerRef.current;
+    if (!content || !container) {
+      return;
+    }
+
+    const pinScrollToBottom = (reason: string) => {
+      if (!initialScrollPinActiveRef.current || !isAtBottomRef.current) {
+        return;
+      }
+
+      const metrics = getScrollMetrics();
+      if (metrics && metrics.distanceToBottom > 2) {
+        scrollToBottom('auto');
+        isAtBottomRef.current = isScrolledToBottom();
+      }
+    };
+
+    const observer = new ResizeObserver(() => {
+      pinScrollToBottom('content-resize');
+    });
+    observer.observe(content);
+
+    const rafId = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        pinScrollToBottom('double-rAF');
+      });
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      initialScrollPinActiveRef.current = false;
+      observer.disconnect();
+    }, 3000);
+
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [isMessagesViewportReady, messages.length]);
+
+  useEffect(() => {
+    if (isInitialLoadRef.current) {
+      return;
+    }
+
     // При добавлении новых сообщений в конец
-    else if (messages.length > previousMessagesLengthRef.current) {
+    if (messages.length > previousMessagesLengthRef.current) {
       const currentFirstMessageId = messages[0]?.id || null;
       const hasPrependedMessages =
         previousFirstMessageIdRef.current !== null &&
@@ -274,7 +388,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           (message) => message.senderId !== currentUserId
         ).length;
 
-        if (newMessages.length > 0) {
+        const isBulkInitialAppend =
+          previousMessagesLengthRef.current === 0 && newMessages.length > 1;
+
+        if (newMessages.length > 0 && !isBulkInitialAppend) {
           const enteringIds = newMessages.map((message) => message.id);
           setEnteringMessageIds((prev) => {
             const next = new Set(prev);
@@ -330,13 +447,48 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   useEffect(() => {
     const nextUrls = attachments
-      .filter((file) => file.type.startsWith('image/'))
+      .filter((file) => file.type.startsWith('image/') || isVideoFile(file))
       .map((file) => URL.createObjectURL(file));
 
     setAttachmentPreviewUrls(nextUrls);
 
     return () => {
       nextUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [attachments]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadVideoPosters = async () => {
+      const posterEntries = await Promise.all(
+        attachments.map(async (file, index) => {
+          if (!isVideoFile(file)) {
+            return null;
+          }
+
+          const poster = await captureVideoPosterFromFile(file);
+          return poster ? ([index, poster] as const) : null;
+        })
+      );
+
+      if (cancelled) {
+        return;
+      }
+
+      const nextPosters: Record<number, string> = {};
+      posterEntries.forEach((entry) => {
+        if (entry) {
+          nextPosters[entry[0]] = entry[1];
+        }
+      });
+      setAttachmentVideoPosters(nextPosters);
+    };
+
+    void loadVideoPosters();
+
+    return () => {
+      cancelled = true;
     };
   }, [attachments]);
 
@@ -350,6 +502,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   // Сброс при смене контакта; черновик пересылки восстанавливается эффектом pendingForwardMessage ниже
   useEffect(() => {
     isInitialLoadRef.current = true;
+    initialScrollPinActiveRef.current = false;
     previousMessagesLengthRef.current = 0;
     previousFirstMessageIdRef.current = null;
     pendingTopLoadAdjustmentRef.current = null;
@@ -357,6 +510,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     isAutoFollowingRef.current = false;
     setNewMessagesBelowCount(0);
     setEnteringMessageIds(new Set());
+    setAttachmentLightbox(null);
+    setAttachmentVideoPosters({});
+    setIsMessagesViewportReady(false);
     setShowScrollToBottom(false);
     dayBadgeRefs.current = {};
     messageRefs.current = {};
@@ -402,19 +558,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setSharingEvent(pendingSharedEvent);
     onPendingSharedEventApplied?.();
   }, [pendingSharedEvent, onPendingSharedEventApplied]);
-
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const top = container.scrollHeight - container.clientHeight;
-    if (behavior === 'auto') {
-      container.scrollTop = top;
-      return;
-    }
-
-    container.scrollTo({ top, behavior });
-  };
 
   const scrollMessageIntoView = (messageId: string, behavior: ScrollBehavior = 'smooth') => {
     const container = messagesContainerRef.current;
@@ -494,24 +637,41 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   };
 
   const handleAttachmentClick = () => {
-    fileInputRef.current?.click();
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.value = '';
+    input.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
+    const input = e.target;
+    const selectedFiles = input.files ? Array.from(input.files) : [];
+    input.value = '';
 
-    const { accepted, errors } = await validateAndFilterMediaFiles(Array.from(e.target.files));
-    e.target.value = '';
-
-    if (errors.length > 0) {
-      setAttachmentValidationError(errors.join(' '));
-    } else {
-      setAttachmentValidationError(null);
+    if (selectedFiles.length === 0) {
+      return;
     }
 
-    if (accepted.length === 0) return;
+    setIsPickingAttachments(true);
 
-    setAttachments((prev) => [...prev, ...accepted]);
+    try {
+      const { accepted, errors } = await validateAndFilterMediaFiles(selectedFiles);
+
+      if (errors.length > 0) {
+        setAttachmentValidationError(errors.join(' '));
+      } else {
+        setAttachmentValidationError(null);
+      }
+
+      if (accepted.length === 0) {
+        return;
+      }
+
+      setAttachments((prev) => [...prev, ...accepted]);
+      setAttachmentFileInputKey((key) => key + 1);
+    } finally {
+      setIsPickingAttachments(false);
+    }
   };
 
   const updateHiddenDayBadges = useCallback(() => {
@@ -572,7 +732,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     const container = messagesContainerRef.current;
     const atBottom = isScrolledToBottom();
 
+    if (!atBottom && initialScrollPinActiveRef.current) {
+      initialScrollPinActiveRef.current = false;
+    }
+
     isAtBottomRef.current = atBottom;
+    onAtBottomChange?.(atBottom);
     if (!isAutoFollowingRef.current) {
       setShowScrollToBottom(!atBottom);
     }
@@ -809,18 +974,40 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, onOpenChatWithUser, onSharedEventClick]);
 
   const attachmentPreviewByIndex = useMemo(() => {
-    const result: Record<number, string> = {};
-    let imageCursor = 0;
+    const result: Record<number, { url: string; mediaType: 'image' | 'video' }> = {};
+    let mediaCursor = 0;
 
     attachments.forEach((file, index) => {
-      if (file.type.startsWith('image/')) {
-        result[index] = attachmentPreviewUrls[imageCursor] || '';
-        imageCursor += 1;
+      if (file.type.startsWith('image/') || isVideoFile(file)) {
+        result[index] = {
+          url: attachmentPreviewUrls[mediaCursor] || '',
+          mediaType: file.type.startsWith('image/') ? 'image' : 'video'
+        };
+        mediaCursor += 1;
       }
     });
 
     return result;
   }, [attachments, attachmentPreviewUrls]);
+
+  const handleRemoveAttachment = (index: number) => {
+    const removedPreview = attachmentPreviewByIndex[index];
+
+    setAttachments((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+
+    if (removedPreview?.url) {
+      setAttachmentLightbox((current) =>
+        current?.url === removedPreview.url ? null : current
+      );
+    }
+  };
+
+  const handleAttachmentPreviewOpen = (index: number) => {
+    const preview = attachmentPreviewByIndex[index];
+    if (!preview?.url) return;
+
+    setAttachmentLightbox(preview);
+  };
 
   if (!contact) return null;
 
@@ -914,9 +1101,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         flexGrow: 1, 
         overflow: 'auto', 
         p: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 0,
         bgcolor: 'background.default'
       }}
       ref={messagesContainerRef}
@@ -927,7 +1111,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             <CircularProgress color="primary" />
           </Box>
         ) : (
-          <>
+          <Box
+            ref={messagesContentRef}
+            sx={{
+              visibility: isMessagesViewportReady ? 'visible' : 'hidden'
+            }}
+          >
             {isLoadingOlder && (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
                 <CircularProgress size={18} color="primary" />
@@ -935,7 +1124,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             )}
             {renderedMessages}
             <div ref={messagesEndRef} />
-          </>
+          </Box>
         )}
       </Box>
 
@@ -1013,7 +1202,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           }}>
             {attachments.map((file, index) => (
               <Box 
-                key={index}
+                key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
                 sx={{ 
                   position: 'relative',
                   width: 60,
@@ -1021,15 +1210,76 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                   borderRadius: 1,
                   overflow: 'hidden',
                   border: '1px solid',
-                  borderColor: 'divider'
+                  borderColor: 'divider',
+                  flexShrink: 0
                 }}
               >
-                {file.type.startsWith('image/') ? (
-                  <img 
-                    src={attachmentPreviewByIndex[index] || ''}
-                    alt={`Attachment ${index}`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                {attachmentPreviewByIndex[index] ? (
+                  <Box
+                    component="button"
+                    type="button"
+                    aria-label={
+                      attachmentPreviewByIndex[index]?.mediaType === 'video'
+                        ? 'Открыть видео на весь экран'
+                        : 'Открыть превью на весь экран'
+                    }
+                    onClick={() => handleAttachmentPreviewOpen(index)}
+                    sx={{
+                      display: 'block',
+                      width: '100%',
+                      height: '100%',
+                      border: 0,
+                      p: 0,
+                      cursor: 'pointer',
+                      bgcolor: 'transparent',
+                      position: 'relative'
+                    }}
+                  >
+                    {attachmentPreviewByIndex[index]?.mediaType === 'video' ? (
+                      <>
+                        {attachmentVideoPosters[index] ? (
+                          <img
+                            src={attachmentVideoPosters[index]}
+                            alt=""
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              width: '100%',
+                              height: '100%',
+                              bgcolor: 'grey.800',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        )}
+                        <PlayCircleOutlineIcon
+                          sx={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            color: '#fff',
+                            fontSize: 28,
+                            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))',
+                            pointerEvents: 'none'
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <img
+                        src={attachmentPreviewByIndex[index]?.url || ''}
+                        alt={`Вложение ${index + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      />
+                    )}
+                  </Box>
                 ) : (
                   <Box 
                     sx={{ 
@@ -1046,6 +1296,30 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                     </Typography>
                   </Box>
                 )}
+                <IconButton
+                  size="small"
+                  aria-label="Удалить вложение"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleRemoveAttachment(index);
+                  }}
+                  sx={{
+                    position: 'absolute',
+                    top: 2,
+                    right: 2,
+                    zIndex: 2,
+                    width: 20,
+                    height: 20,
+                    p: 0,
+                    bgcolor: 'rgba(0, 0, 0, 0.55)',
+                    color: '#fff',
+                    '&:hover': {
+                      bgcolor: 'rgba(0, 0, 0, 0.75)'
+                    }
+                  }}
+                >
+                  <CloseIcon sx={{ fontSize: 14 }} />
+                </IconButton>
               </Box>
             ))}
           </Box>
@@ -1215,7 +1489,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={handleAttachmentClick}>
+                <IconButton onClick={handleAttachmentClick} disabled={isPickingAttachments}>
                   <AttachFileIcon />
                 </IconButton>
                 {/* <IconButton>
@@ -1245,7 +1519,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         <input
           type="file"
           multiple
-          accept="image/*,video/*"
+          key={attachmentFileInputKey}
+          accept="image/*,video/*,.mov,video/quicktime"
           style={{ display: 'none' }}
           ref={fileInputRef}
           onChange={handleFileChange}
@@ -1365,6 +1640,19 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </Button>
         </DialogActions>
       </ResponsiveDialog>
+
+      <MediaViewerDialog
+        open={Boolean(attachmentLightbox)}
+        onClose={() => setAttachmentLightbox(null)}
+        content={
+          attachmentLightbox
+            ? {
+                url: attachmentLightbox.url,
+                resourceType: attachmentLightbox.mediaType
+              }
+            : null
+        }
+      />
 
       <ContactProfileDialog
         open={profileDialogOpen}

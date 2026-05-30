@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { fetchDecryptedBlobUrl, getCachedBlobUrl } from '../../crypto/decryptedMediaCache';
+import { captureVideoPosterFromUrl } from '../../utils/videoPoster';
+import ChatVideoPlayer from './ChatVideoPlayer';
 
 interface DecryptedMediaProps {
   cacheKey: string;
@@ -16,59 +18,6 @@ interface DecryptedMediaProps {
   videoStyle?: React.CSSProperties;
   loadingMinHeight?: number;
 }
-
-const captureVideoPoster = (blobUrl: string): Promise<string | null> =>
-  new Promise((resolve) => {
-    const video = document.createElement('video');
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.src = blobUrl;
-
-    const cleanup = () => {
-      video.onloadedmetadata = null;
-      video.onseeked = null;
-      video.onerror = null;
-      video.removeAttribute('src');
-      video.load();
-    };
-
-    video.onerror = () => {
-      cleanup();
-      resolve(null);
-    };
-
-    video.onloadedmetadata = () => {
-      video.currentTime = Math.min(0.1, video.duration > 0 ? video.duration / 10 : 0.1);
-    };
-
-    video.onseeked = () => {
-      try {
-        if (!video.videoWidth || !video.videoHeight) {
-          cleanup();
-          resolve(null);
-          return;
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          cleanup();
-          resolve(null);
-          return;
-        }
-
-        ctx.drawImage(video, 0, 0);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
-      } catch {
-        resolve(null);
-      } finally {
-        cleanup();
-      }
-    };
-  });
 
 const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   cacheKey,
@@ -160,7 +109,7 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
     setPosterLoading(true);
     setVideoPosterUrl(null);
 
-    void captureVideoPoster(blobUrl).then((poster) => {
+    void captureVideoPosterFromUrl(blobUrl).then((poster) => {
       if (cancelled) return;
       setVideoPosterUrl(poster);
       setPosterLoading(false);
@@ -220,20 +169,7 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   }
 
   if (resourceType === 'video') {
-    return (
-      <video
-        src={blobUrl}
-        controls
-        playsInline
-        preload="auto"
-        style={{
-          maxWidth: '100%',
-          maxHeight: '200px',
-          display: 'block',
-          ...videoStyle
-        }}
-      />
-    );
+    return <ChatVideoPlayer src={blobUrl} style={videoStyle} />;
   }
 
   return (

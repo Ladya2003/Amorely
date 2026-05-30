@@ -44,7 +44,8 @@ export const encryptFileForUpload = async (file: File): Promise<EncryptedMediaPa
 export const decryptMediaBlob = async (
   encryptedBlob: Blob,
   mediaKeyBase64: string,
-  ivBase64: string
+  ivBase64: string,
+  mimeType = 'application/octet-stream'
 ): Promise<Blob> => {
   const mediaKey = await crypto.subtle.importKey(
     'raw',
@@ -59,7 +60,7 @@ export const decryptMediaBlob = async (
     mediaKey,
     encryptedBuffer
   );
-  return new Blob([decrypted]);
+  return new Blob([decrypted], { type: mimeType });
 };
 
 export const serializeMediaKeyEnvelope = (mediaKey: string, iv: string): string =>

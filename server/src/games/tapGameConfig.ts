@@ -71,6 +71,8 @@ export interface TapShopItem {
   cost: number;
   multiplier: number;
   uses: number;
+  /** Минимальный номер раунда, с которого предмет доступен в магазине. */
+  minRound: number;
 }
 
 export const TAP_SHOP_ITEMS: TapShopItem[] = [
@@ -82,24 +84,27 @@ export const TAP_SHOP_ITEMS: TapShopItem[] = [
     cost: 30,
     multiplier: 2,
     uses: 5,
+    minRound: 1,
   },
   {
     id: 'triple_tap',
     name: 'Четверной тык',
-    description: 'Следующие 10 нажатий засчитываются как ×4 балла.',
+    description: 'Следующие 15 нажатий засчитываются как ×4 балла.',
     imageUrl: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/quadro-touch-tikalka_pxht7m.jpg',
     cost: 80,
     multiplier: 4,
-    uses: 10,
+    uses: 15,
+    minRound: 6,
   },
   {
     id: 'mega_tap',
     name: 'Мега-тык',
-    description: 'Следующие 10 нажатий засчитываются как ×10 баллов.',
+    description: 'Следующие 15 нажатий засчитываются как ×10 баллов.',
     imageUrl: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/ten-touch-tikalka_twbh3g.jpg',
     cost: 200,
     multiplier: 10,
-    uses: 10,
+    uses: 15,
+    minRound: 6,
   },
 ];
 
