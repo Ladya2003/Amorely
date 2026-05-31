@@ -345,7 +345,11 @@ export const buildUsedWordIdsAfterPick = (usedWordIds: string[], pickedWordId: s
 };
 
 export const normalizeDrawGuess = (value: string) =>
-  value.trim().toLowerCase().replace(/\s+/g, ' ');
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/\s+/g, ' ');
 
 export const isDrawGuessCorrect = (guess: string, word: DrawWord) => {
   const normalized = normalizeDrawGuess(guess);

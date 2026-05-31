@@ -127,6 +127,29 @@ const MediaViewerDialog: React.FC<MediaViewerDialogProps> = ({
           touchAction: 'auto'
         }}
       >
+        <IconButton
+          onClick={onClose}
+          aria-label="Закрыть просмотр"
+          sx={{
+            position: 'fixed',
+            top: 'max(8px, env(safe-area-inset-top, 0px))',
+            right: 'max(8px, env(safe-area-inset-right, 0px))',
+            zIndex: 10,
+            width: 64,
+            height: 64,
+            color: '#fff',
+            bgcolor: 'rgba(0, 0, 0, 0.5)',
+            '& .MuiSvgIcon-root': {
+              fontSize: 36
+            },
+            '&:hover': {
+              bgcolor: 'rgba(0, 0, 0, 0.7)'
+            }
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+
         {hasNav && (
           <>
             <IconButton sx={{ ...navButtonSx, left: 8 }} onClick={handlePrev} aria-label="Предыдущее">
@@ -149,29 +172,6 @@ const MediaViewerDialog: React.FC<MediaViewerDialogProps> = ({
             touchAction: 'auto'
           }}
         >
-          <IconButton
-            onClick={onClose}
-            aria-label="Закрыть просмотр"
-            sx={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              transform: 'translateY(calc(-100% - 8px))',
-              zIndex: 2,
-              width: 64,
-              height: 64,
-              color: '#fff',
-              bgcolor: 'rgba(0, 0, 0, 0.5)',
-              '& .MuiSvgIcon-root': {
-                fontSize: 36
-              },
-              '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.7)'
-              }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
           {renderMedia(current)}
         </Box>
 

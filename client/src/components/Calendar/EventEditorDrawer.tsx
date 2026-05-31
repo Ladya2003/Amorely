@@ -77,6 +77,8 @@ interface EventEditorDrawerProps {
 const formatFileDate = (file: File) =>
   format(new Date(file.lastModified), 'd MMMM yyyy', { locale: ru });
 
+const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
+
 const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   open,
   onClose,
@@ -442,8 +444,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Расскажите о событии..."
             sx={{ mb: 3 }}
-            inputProps={{ maxLength: 500 }}
-            helperText={`${description.length}/500 символов`}
+            inputProps={{ maxLength: EVENT_DESCRIPTION_MAX_LENGTH }}
+            helperText={`${description.length}/${EVENT_DESCRIPTION_MAX_LENGTH} символов`}
           />
 
           {/* Чекбокс дня рождения */}

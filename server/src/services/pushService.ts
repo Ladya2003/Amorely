@@ -79,26 +79,56 @@ const getUserDisplayName = (user: UserDocument) => {
   return fullName || user.username;
 };
 
-const getMessagePreview = (text: string, hasEncryptedPayload: boolean, hasAttachments: boolean) => {
-  if (hasEncryptedPayload) {
-    return 'Новое сообщение';
+const truncatePreview = (value: string, maxLength = 120) =>
+  value.length > maxLength ? `${value.slice(0, maxLength - 3)}...` : value;
+
+const getMessagePreview = (params: {
+  text: string;
+  pushPreview?: string;
+  hasEncryptedPayload: boolean;
+  hasAttachments: boolean;
+  sharedEvent?: { title?: string };
+  forwardFrom?: { text?: string };
+}) => {
+  const pushPreview = params.pushPreview?.trim();
+  if (pushPreview) {
+    return truncatePreview(pushPreview);
   }
-  if (hasAttachments && !text.trim()) {
-    return 'Отправлено вложение';
+
+  const trimmed = params.text.trim();
+  if (trimmed) {
+    return truncatePreview(trimmed);
   }
-  const trimmed = text.trim();
-  if (!trimmed) {
-    return 'Новое сообщение';
+
+  if (params.sharedEvent?.title?.trim()) {
+    return truncatePreview(`Событие: ${params.sharedEvent.title.trim()}`);
   }
-  return trimmed.length > 120 ? `${trimmed.slice(0, 117)}...` : trimmed;
+
+  const forwardText = params.forwardFrom?.text?.trim();
+  if (forwardText) {
+    return truncatePreview(forwardText);
+  }
+
+  if (params.hasAttachments) {
+    return params.hasEncryptedPayload ? 'Зашифрованное медиа' : 'Отправлено вложение';
+  }
+
+  if (params.hasEncryptedPayload) {
+    return 'Зашифрованное сообщение';
+  }
+
+  return 'Новое сообщение';
 };
 
 export const notifyNewMessage = async (params: {
   receiverId: string;
   senderId: string;
   text: string;
+  pushPreview?: string;
   encryptedPayload?: unknown;
   attachments?: unknown[];
+  sharedEvent?: { title?: string };
+  forwardFrom?: { text?: string };
   chatUrl?: string;
 }) => {
   const receiver = await User.findById(params.receiverId);
@@ -112,11 +142,14 @@ export const notifyNewMessage = async (params: {
   }
 
   const senderName = getUserDisplayName(sender);
-  const body = getMessagePreview(
-    params.text,
-    Boolean(params.encryptedPayload),
-    Boolean(params.attachments?.length)
-  );
+  const body = getMessagePreview({
+    text: params.text,
+    pushPreview: params.pushPreview,
+    hasEncryptedPayload: Boolean(params.encryptedPayload),
+    hasAttachments: Boolean(params.attachments?.length),
+    sharedEvent: params.sharedEvent,
+    forwardFrom: params.forwardFrom,
+  });
 
   const badgeCount = await getTotalUnreadCount(params.receiverId);
 

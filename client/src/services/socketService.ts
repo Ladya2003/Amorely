@@ -121,7 +121,8 @@ class SocketService {
       previewMediaEnvelope?: unknown;
       eventDate?: string;
     } | null,
-    clientTempId?: string
+    clientTempId?: string,
+    pushPreview?: string
   ) {
     if (!this.socket) {
       throw new Error('Socket not initialized');
@@ -141,7 +142,8 @@ class SocketService {
       replyTo,
       forwardFrom,
       sharedEvent,
-      clientTempId
+      clientTempId,
+      pushPreview
     });
   }
 

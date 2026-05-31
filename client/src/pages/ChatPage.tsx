@@ -402,7 +402,8 @@ const ChatPage: React.FC = () => {
       replyTo: MessageReplyRef | null,
       forwardFrom: MessageForwardRef | null,
       clientTempId?: string,
-      sharedEvent: SharedEventRef | null = null
+      sharedEvent: SharedEventRef | null = null,
+      pushPreview?: string
     ) => {
       socketService.sendMessage(
         receiverId,
@@ -412,7 +413,8 @@ const ChatPage: React.FC = () => {
         replyTo,
         forwardFrom,
         sharedEvent,
-        clientTempId
+        clientTempId,
+        pushPreview
       );
     },
     []
@@ -688,13 +690,21 @@ const ChatPage: React.FC = () => {
       const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       const clientTempId = `client-temp-${uniqueSuffix}`;
 
+      const pushPreview = getMessagePreviewText({
+        text: payloadText,
+        attachments: storedAttachments,
+        forwardFrom,
+      });
+
       sendEncryptedSocketMessage(
         targetContactId,
         encryptedPayload,
         storedAttachments,
         null,
         forwardFrom,
-        clientTempId
+        clientTempId,
+        null,
+        pushPreview
       );
 
       const optimisticMessage: MessageType = {
@@ -1657,6 +1667,13 @@ const ChatPage: React.FC = () => {
           throw new Error('Не удалось зашифровать вложения');
         }
 
+        const pushPreview = getMessagePreviewText({
+          text: trimmedText,
+          attachments: storedAttachments.length > 0 ? storedAttachments : undefined,
+          forwardFrom: forwardFrom || undefined,
+          sharedEvent: sharedEvent || undefined,
+        });
+
         if (encryptedPayload) {
           sendEncryptedSocketMessage(
             selectedContactId,
@@ -1664,7 +1681,9 @@ const ChatPage: React.FC = () => {
             storedAttachments,
             replyTo || null,
             forwardFrom || null,
-            clientTempId
+            clientTempId,
+            sharedEvent || null,
+            pushPreview
           );
         } else {
           socketService.sendMessage(
@@ -1675,7 +1694,8 @@ const ChatPage: React.FC = () => {
             replyTo || null,
             forwardFrom || null,
             sharedEvent || null,
-            clientTempId
+            clientTempId,
+            pushPreview
           );
         }
       } catch (error) {

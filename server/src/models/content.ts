@@ -41,7 +41,7 @@ const contentSchema = new mongoose.Schema({
   // Поля для событий календаря
   eventId: { type: String }, // ID события для группировки медиафайлов
   title: { type: String }, // Заголовок события
-  description: { type: String }, // Описание события
+  description: { type: String, maxlength: 5000 }, // Описание события
   eventDate: { type: Date }, // Дата события (может отличаться от createdAt)
   showInFeed: { type: Boolean, default: true }, // Показывать ли в ленте
   isBirthdayEvent: { type: Boolean, default: false }, // Событие дня рождения

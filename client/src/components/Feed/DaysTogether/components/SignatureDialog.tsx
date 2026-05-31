@@ -3,12 +3,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Box,
   IconButton,
-  Typography,
 } from '@mui/material';
 import ResponsiveDialog from '../../../UI/ResponsiveDialog';
 import CreateIcon from '@mui/icons-material/Create';
@@ -251,6 +248,10 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
     }
   };
 
+  const preventDrawerSwipeClose = (event: React.TouchEvent) => {
+    (event.nativeEvent as TouchEvent & { defaultMuiPrevented?: boolean }).defaultMuiPrevented = true;
+  };
+
   const dialogContent = (
     <Box sx={{ p: 3 }}>
       <DrawingToolsToolbar
@@ -265,6 +266,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
 
       <Box
         ref={containerRef}
+        onTouchStart={preventDrawerSwipeClose}
         sx={{
           border: '2px solid',
           borderColor: colorTheme.preview,
@@ -273,7 +275,8 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
           height: 200,
           width: '100%',
           mb: 2,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          touchAction: 'none',
         }}
       >
         <SignatureCanvas
@@ -287,7 +290,8 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
             width: canvasSize.width,
             height: canvasSize.height,
             className: 'signature-canvas',
-            style: { touchAction: 'none' }
+            style: { touchAction: 'none' },
+            onTouchStart: preventDrawerSwipeClose,
           }}
           backgroundColor="rgba(245, 245, 245, 0)"
           penColor={penColor}

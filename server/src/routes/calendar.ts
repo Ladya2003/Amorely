@@ -16,6 +16,23 @@ import { resolvePartnerUserId } from '../utils/resolvePartnerId';
 
 const router = express.Router();
 
+const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
+
+const getValidatedEventDescription = (value: unknown): string | { error: string } => {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  const text = String(value);
+  if (text.length > EVENT_DESCRIPTION_MAX_LENGTH) {
+    return {
+      error: `Описание не может быть длиннее ${EVENT_DESCRIPTION_MAX_LENGTH} символов`,
+    };
+  }
+
+  return text;
+};
+
 // Настройка хранилища Cloudinary для multer
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -171,6 +188,11 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
       return res.status(400).json({ error: 'Требуются дата и заголовок события' });
     }
 
+    const validatedDescription = getValidatedEventDescription(description);
+    if (typeof validatedDescription !== 'string') {
+      return res.status(400).json({ error: validatedDescription.error });
+    }
+
     // Получаем информацию о пользователе и партнере
     const user = await User.findById(userId);
     if (!user) {
@@ -204,7 +226,7 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
           eventId: eventId, // Связываем все медиафайлы одного события
           eventDate: new Date(eventDate),
           title: title,
-          description: description || '',
+          description: validatedDescription,
           showInFeed: true,
           isBirthdayEvent: isBirthdayEvent === 'true' || isBirthdayEvent === true,
           isAnniversaryEvent: isAnniversaryEvent === 'true' || isAnniversaryEvent === true,
@@ -227,7 +249,7 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
         eventId: eventId,
         eventDate: new Date(eventDate),
         title: title,
-        description: description || '',
+        description: validatedDescription,
         showInFeed: false, // Текстовые события не показываем в ленте по умолчанию
         isBirthdayEvent: isBirthdayEvent === 'true' || isBirthdayEvent === true,
         isAnniversaryEvent: isAnniversaryEvent === 'true' || isAnniversaryEvent === true,
@@ -574,7 +596,11 @@ router.put('/events/:id', async (req: any, res: Response) => {
       updateData.metadataSenderId = userId;
       updateData.metadataRecipientId = recipientId;
     } else if (description !== undefined) {
-      updateData.description = description;
+      const validatedDescription = getValidatedEventDescription(description);
+      if (typeof validatedDescription !== 'string') {
+        return res.status(400).json({ error: validatedDescription.error });
+      }
+      updateData.description = validatedDescription;
     }
     if (showInFeed !== undefined) updateData.showInFeed = showInFeed;
     if (isBirthdayEvent !== undefined) updateData.isBirthdayEvent = isBirthdayEvent;

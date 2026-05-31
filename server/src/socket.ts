@@ -98,10 +98,22 @@ export default function setupSocketIO(server: HttpServer) {
         previewMediaEnvelope?: unknown;
         eventDate?: string;
       } | null,
-      clientTempId?: string
+      clientTempId?: string,
+      pushPreview?: string
     }) => {
       try {
-        const { receiverId, text, encryptedPayload, attachments, replyTo, forwardFrom, sharedEvent, clientTempId } = data;
+        const {
+          receiverId,
+          text,
+          encryptedPayload,
+          attachments,
+          replyTo,
+          forwardFrom,
+          sharedEvent,
+          clientTempId,
+          pushPreview
+        } = data;
+
         const senderSocketData = connectedUsers.find(user => user.socketId === socket.id);
         
         if (!senderSocketData) {
@@ -164,8 +176,11 @@ export default function setupSocketIO(server: HttpServer) {
             receiverId,
             senderId,
             text,
+            pushPreview,
             encryptedPayload,
             attachments,
+            sharedEvent: sharedEvent || undefined,
+            forwardFrom: sanitizedForwardFrom,
             chatUrl
           });
         }
