@@ -1540,7 +1540,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               bgcolor: 'background.paper',
             },
             '& .MuiInputBase-input': {
-              fontSize: '14px',
+              fontSize: '16px',
             },
           }}
         />

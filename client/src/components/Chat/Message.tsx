@@ -90,7 +90,7 @@ const Message: React.FC<MessageProps> = ({
           sx={{ width: 36, height: 36, mr: 1, mt: 0.5 }}
         />
       )}
-      <Box sx={{ maxWidth: '72%' }}>
+      <Box sx={{ maxWidth: isOwn ? '85%' : '72%' }}>
         <Paper 
           elevation={1} 
           sx={{ 
