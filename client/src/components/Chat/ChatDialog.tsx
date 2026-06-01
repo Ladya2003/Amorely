@@ -873,7 +873,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     handleDeleteModalClose();
   };
 
-  const handleReplyReferenceClick = (messageId: string) => {
+  const highlightMessage = (messageId: string) => {
     scrollMessageIntoView(messageId, 'smooth');
     setHighlightedMessageId(messageId);
 
@@ -884,6 +884,18 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       setHighlightedMessageId((current) => (current === messageId ? null : current));
       highlightTimeoutRef.current = null;
     }, 3000);
+  };
+
+  const handleReplyReferenceClick = (messageId: string) => {
+    highlightMessage(messageId);
+  };
+
+  const handleForwardSourceClick = (userId: string, forwardFrom: MessageForwardRef) => {
+    if (userId === contact?.id && forwardFrom.id) {
+      highlightMessage(forwardFrom.id);
+      return;
+    }
+    onOpenChatWithUser(userId, forwardFrom);
   };
 
   const contactName = contact?.name || '';
@@ -988,7 +1000,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             mb={messageSpacing}
             onOpenActions={handleMessageContextMenu}
             onReplyReferenceClick={handleReplyReferenceClick}
-            onForwardSourceClick={(userId, forwardFrom) => onOpenChatWithUser(userId, forwardFrom)}
+            onForwardSourceClick={handleForwardSourceClick}
             onSharedEventClick={onSharedEventClick}
           />
         </Box>
@@ -996,7 +1008,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, onOpenChatWithUser, onSharedEventClick]);
+  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, { url: string; mediaType: 'image' | 'video' }> = {};

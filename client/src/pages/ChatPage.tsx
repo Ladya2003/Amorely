@@ -57,6 +57,7 @@ import { CHAT_RULES_SUMMARY } from '../legal/chatRulesContent';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
 import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
+import { useVirtualKeyboardOpen } from '../hooks/useVirtualKeyboardOpen';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [
@@ -241,6 +242,7 @@ const ChatPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(() => initialTab);
   const [contacts, setContacts] = useState<ChatContact[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [chatReloadNonce, setChatReloadNonce] = useState(0);
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [messagesPage, setMessagesPage] = useState(1);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
@@ -452,6 +454,15 @@ const ChatPage: React.FC = () => {
   const openContact = useCallback((contactId: string) => {
     saveSelectedChatId(contactId);
     isChatAtBottomRef.current = true;
+
+    if (selectedContactIdRef.current === contactId) {
+      setChatReloadNonce((nonce) => nonce + 1);
+      if (isMobile) {
+        setShowBottomNav(false);
+      }
+      return;
+    }
+
     setMessages([]);
     setMessagesPage(1);
     setHasMoreMessages(false);
@@ -1049,7 +1060,7 @@ const ChatPage: React.FC = () => {
     setHasMoreMessages(false);
     setIsLoadingMessages(true);
     void fetchMessages(selectedContactId, 1, false);
-  }, [selectedContactId]);
+  }, [selectedContactId, chatReloadNonce]);
 
   // Управление видимостью нижнего меню и блокировка скролла страницы в открытом чате
   useEffect(() => {
@@ -1408,6 +1419,11 @@ const ChatPage: React.FC = () => {
 
   const handleOpenChatWithUser = (userId: string, forwardHint?: MessageForwardRef | null) => {
     if (!userId || userId === CURRENT_USER_ID) return;
+
+    if (selectedContactId === userId) {
+      return;
+    }
+
     ensureContactInList({
       id: userId,
       name: forwardHint?.senderName?.trim() || 'Пользователь',
@@ -1829,6 +1845,7 @@ const ChatPage: React.FC = () => {
   );
 
   const isMobileChatOpen = isMobile && Boolean(selectedContactId);
+  const isVirtualKeyboardOpen = useVirtualKeyboardOpen(isMobileChatOpen);
   const pageHeight = isMobile && selectedContactId ? '100dvh' : '100%';
   const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
   const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady;
@@ -1849,7 +1866,10 @@ const ChatPage: React.FC = () => {
         maxHeight: '100dvh',
         zIndex: (theme) => theme.zIndex.appBar,
         paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        // safe-area снизу оставляем только без клавиатуры — иначе на iOS пустая полоса над панелью «Готово»
+        paddingBottom: isVirtualKeyboardOpen
+          ? 0
+          : 'env(safe-area-inset-bottom, 0px)',
         boxSizing: 'border-box'
       } : {})
     }}>
