@@ -57,7 +57,7 @@ import { CHAT_RULES_SUMMARY } from '../legal/chatRulesContent';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
 import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
-import { useVirtualKeyboardOpen } from '../hooks/useVirtualKeyboardOpen';
+import { useVisualViewportLayout } from '../hooks/useVisualViewportLayout';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [
@@ -1845,32 +1845,32 @@ const ChatPage: React.FC = () => {
   );
 
   const isMobileChatOpen = isMobile && Boolean(selectedContactId);
-  const isVirtualKeyboardOpen = useVirtualKeyboardOpen(isMobileChatOpen);
+  const visualViewportLayout = useVisualViewportLayout(isMobileChatOpen);
   const pageHeight = isMobile && selectedContactId ? '100dvh' : '100%';
   const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
   const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady;
 
   return (
     <Box sx={{ 
-      height: pageHeight, // На мобильных убираем резерв под BottomNav в открытом диалоге
+      ...(!isMobileChatOpen ? { height: pageHeight } : {}),
       display: 'flex', 
       flexDirection: 'column',
-      overflow: 'hidden', // Блокируем скролл страницы, скролл только во внутренних контейнерах
+      overflow: 'hidden',
       ...(isMobileChatOpen ? {
         position: 'fixed',
-        top: 0,
+        top: visualViewportLayout.offsetTop,
         left: 0,
         right: 0,
-        bottom: 0,
         width: '100%',
-        maxHeight: '100dvh',
+        height: visualViewportLayout.height,
+        maxHeight: visualViewportLayout.height,
         zIndex: (theme) => theme.zIndex.appBar,
         paddingTop: 'env(safe-area-inset-top, 0px)',
-        // safe-area снизу оставляем только без клавиатуры — иначе на iOS пустая полоса над панелью «Готово»
-        paddingBottom: isVirtualKeyboardOpen
+        paddingBottom: visualViewportLayout.keyboardOpen
           ? 0
           : 'env(safe-area-inset-bottom, 0px)',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        overscrollBehavior: 'none',
       } : {})
     }}>
       {/* Скрываем табы когда открыт чат с контактом на мобильных */}
