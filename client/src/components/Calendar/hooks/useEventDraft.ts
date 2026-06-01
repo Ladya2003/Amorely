@@ -1,4 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import {
+  saveEventDraftMedia,
+  loadEventDraftMedia,
+  clearEventDraftMedia
+} from './eventDraftMediaStore';
 
 export interface EventDraft {
   id: string;
@@ -11,7 +16,26 @@ export interface EventDraft {
 }
 
 const DRAFT_KEY = 'calendar_event_draft';
-const AUTOSAVE_DELAY = 1000; // Автосохранение через 1 секунду после изменений
+const AUTOSAVE_DELAY = 1000;
+
+const filesFingerprint = (files: File[]) =>
+  files.map((f) => `${f.name}:${f.size}:${f.lastModified}`).join('|');
+
+const persistDraft = async (draftToPersist: EventDraft) => {
+  const draftToSave = {
+    ...draftToPersist,
+    timestamp: Date.now(),
+    files: [],
+    previews: []
+  };
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draftToSave));
+
+  if (draftToPersist.files.length > 0) {
+    await saveEventDraftMedia(draftToPersist.files);
+  } else {
+    await clearEventDraftMedia();
+  }
+};
 
 export const useEventDraft = () => {
   const [draft, setDraft] = useState<EventDraft>({
@@ -23,97 +47,109 @@ export const useEventDraft = () => {
     previews: [],
     timestamp: Date.now()
   });
-  
-  const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
-  // Загрузка черновика из localStorage при монтировании
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isDraftLoaded, setIsDraftLoaded] = useState(false);
+
   useEffect(() => {
-    const loadDraft = () => {
+    const loadDraft = async () => {
       try {
         const savedDraft = localStorage.getItem(DRAFT_KEY);
+        const savedFiles = await loadEventDraftMedia();
+
         if (savedDraft) {
           const parsed = JSON.parse(savedDraft);
-          // Восстанавливаем дату как объект Date
           if (parsed.date) {
             parsed.date = new Date(parsed.date);
           }
-          // Не восстанавливаем файлы и превью (их нельзя сохранить в localStorage)
-          parsed.files = [];
+          parsed.files = savedFiles;
           parsed.previews = [];
           setDraft(parsed);
+        } else if (savedFiles.length > 0) {
+          setDraft((prev) => ({ ...prev, files: savedFiles, previews: [] }));
         }
       } catch (error) {
         console.error('Ошибка при загрузке черновика:', error);
+      } finally {
+        setIsDraftLoaded(true);
       }
     };
 
     loadDraft();
   }, []);
 
-  // Автосохранение черновика в localStorage
   useEffect(() => {
     if (!hasChanges) return;
 
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       try {
-        setIsSaving(true);
-        const draftToSave = {
-          ...draft,
-          timestamp: Date.now(),
-          // Не сохраняем files и previews в localStorage
-          files: [],
-          previews: []
-        };
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(draftToSave));
+        await persistDraft(draft);
         setHasChanges(false);
-        setIsSaving(false);
       } catch (error) {
         console.error('Ошибка при сохранении черновика:', error);
-        setIsSaving(false);
       }
     }, AUTOSAVE_DELAY);
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [draft.title, draft.description, draft.date?.getTime(), hasChanges]); // Отслеживаем конкретные поля
+    return () => clearTimeout(timer);
+  }, [
+    draft.title,
+    draft.description,
+    draft.date?.getTime(),
+    filesFingerprint(draft.files),
+    hasChanges
+  ]);
 
-  // Обновление черновика
   const updateDraft = useCallback((updates: Partial<EventDraft>) => {
-    setDraft(prev => ({ ...prev, ...updates }));
+    setDraft((prev) => ({ ...prev, ...updates }));
     setHasChanges(true);
   }, []);
 
-  // Очистка черновика
-  const clearDraft = useCallback(() => {
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-      setDraft({
-        id: Date.now().toString(),
-        date: null,
-        title: '',
-        description: '',
-        files: [],
-        previews: [],
-        timestamp: Date.now()
-      });
-      setHasChanges(false);
-    } catch (error) {
-      console.error('Ошибка при очистке черновика:', error);
-    }
+  const flushDraft = useCallback(async (updates?: Partial<EventDraft>) => {
+    setDraft((prev) => {
+      const next = { ...prev, ...updates };
+      persistDraft(next)
+        .then(() => setHasChanges(false))
+        .catch((error) => console.error('Ошибка при сохранении черновика:', error));
+      return next;
+    });
   }, []);
 
-  // Проверка наличия черновика (вычисляемое значение, а не функция)
-  const hasDraft = !!(draft.title || draft.description || draft.date);
+  const clearDraft = useCallback(() => {
+    const clear = async () => {
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+        await clearEventDraftMedia();
+        setDraft({
+          id: Date.now().toString(),
+          date: null,
+          title: '',
+          description: '',
+          files: [],
+          previews: [],
+          timestamp: Date.now()
+        });
+        setHasChanges(false);
+      } catch (error) {
+        console.error('Ошибка при очистке черновика:', error);
+      }
+    };
+    clear();
+  }, []);
+
+  const hasDraft = !!(
+    draft.title ||
+    draft.description ||
+    draft.date ||
+    draft.files.length > 0
+  );
 
   return {
     draft,
     updateDraft,
+    flushDraft,
     clearDraft,
     hasDraft,
-    isSaving,
-    hasChanges
+    hasChanges,
+    isDraftLoaded
   };
 };
-

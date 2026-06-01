@@ -173,6 +173,12 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
     });
   } catch (error) {
     console.error('Ошибка при создании зашифрованного события:', error);
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).json({
+        error: 'Некорректные данные события',
+        details: error.message
+      });
+    }
     res.status(500).json({ error: 'Ошибка при создании зашифрованного события' });
   }
 });

@@ -84,12 +84,38 @@ const formatUploadError = (error: unknown): string => {
   return 'Unknown error';
 };
 
+/** Cloudinary Free: max raw file size 10 MB (E2EE uploads use resource_type raw). */
+const MAX_ENCRYPTED_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_ENCRYPTED_UPLOAD_MB = Math.round(MAX_ENCRYPTED_UPLOAD_BYTES / (1024 * 1024));
+
+const isUploadTooLargeError = (error: unknown): boolean => {
+  const multerCode =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code: unknown }).code)
+      : '';
+  if (multerCode === 'LIMIT_FILE_SIZE') return true;
+
+  const message = formatUploadError(error).toLowerCase();
+  return (
+    message.includes('file size too large') ||
+    message.includes('max file size') ||
+    message.includes('maximum is') ||
+    message.includes('too large')
+  );
+};
+
 const withMulter =
   (upload: RequestHandler, errorMessage = 'Ошибка при загрузке файлов'): RequestHandler =>
   (req, res, next) => {
     upload(req, res, (err) => {
       if (err) {
         console.error(errorMessage, formatUploadError(err));
+        if (isUploadTooLargeError(err)) {
+          return res.status(413).json({
+            error: `Файл слишком большой. Максимум ${MAX_ENCRYPTED_UPLOAD_MB} МБ для зашифрованного видео`,
+            details: formatUploadError(err)
+          });
+        }
         return res.status(500).json({
           error: errorMessage,
           details: formatUploadError(err)
@@ -98,8 +124,6 @@ const withMulter =
       next();
     });
   };
-
-const MAX_ENCRYPTED_UPLOAD_BYTES = 35 * 1024 * 1024;
 
 const uploadEncryptedChat = multer({
   storage: encryptedChatStorage,
@@ -163,11 +187,10 @@ app.post(
       return res.status(400).json({ error: 'Файлы не были загружены' });
     }
 
-    const maxVideoMb = 30;
     for (const file of files) {
       if (file.size > MAX_ENCRYPTED_UPLOAD_BYTES) {
         return res.status(413).json({
-          error: `Файл слишком большой. Максимум ${maxVideoMb} МБ для видео после сжатия`
+          error: `Файл слишком большой. Максимум ${MAX_ENCRYPTED_UPLOAD_MB} МБ для зашифрованного видео`
         });
       }
     }

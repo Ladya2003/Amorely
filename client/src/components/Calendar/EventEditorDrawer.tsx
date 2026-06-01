@@ -8,7 +8,6 @@ import {
   Box,
   TextField,
   Button,
-  Chip,
   useTheme,
   useMediaQuery,
   CircularProgress,
@@ -30,6 +29,7 @@ import { useEventDraft } from './hooks/useEventDraft';
 import { useAuth } from '../../contexts/AuthContext';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import { VIDEO_LIMITS_HINT } from '../../utils/mediaLimits';
+import { isVideoFile } from '../../utils/videoMetadata';
 import ContentViewer from './ContentViewer';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
@@ -108,7 +108,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         }),
   });
   
-  const { draft, updateDraft, clearDraft, hasDraft, isSaving: isAutosaving } = useEventDraft();
+  const { draft, updateDraft, flushDraft, clearDraft, hasDraft, isDraftLoaded } = useEventDraft();
   
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [title, setTitle] = useState('');
@@ -190,7 +190,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       return;
     }
 
-    if (isInitialized) return; // Уже инициализировано
+    if (isInitialized || !isDraftLoaded) return;
 
     if (isEditMode && editEvent) {
       // Режим редактирования - загружаем данные события
@@ -210,14 +210,29 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setSelectedDate(initialDate || draft.date || new Date());
       setTitle(hasDraft ? draft.title || '' : '');
       setDescription(hasDraft ? draft.description || '' : '');
-      setFiles([]);
-      setPreviews([]);
+      const draftFiles = hasDraft ? draft.files : [];
+      setFiles(draftFiles);
+      setPreviews((prev) => {
+        prev.forEach((url) => URL.revokeObjectURL(url));
+        return draftFiles.map((file) => URL.createObjectURL(file));
+      });
       setExistingMedia([]);
       setRemovedMediaIds([]);
     }
-    
+
     setIsInitialized(true);
-  }, [open, initialDate?.getTime(), editEvent?.eventId, isEditMode, hasDraft, draft.date, draft.title, draft.description]);
+  }, [
+    open,
+    initialDate?.getTime(),
+    editEvent?.eventId,
+    isEditMode,
+    hasDraft,
+    isDraftLoaded,
+    draft.date,
+    draft.title,
+    draft.description,
+    draft.files
+  ]);
 
   // Автосохранение изменений (только если не в режиме редактирования)
   useEffect(() => {
@@ -340,12 +355,20 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
   const handleClose = () => {
     setViewerOpen(false);
-    // Не очищаем черновик при закрытии - данные сохранятся для повторного открытия
+    if (!isEditMode && isInitialized) {
+      void flushDraft({
+        date: selectedDate,
+        title,
+        description,
+        files,
+        previews: []
+      });
+    }
     onClose();
   };
 
   const handleClearForm = () => {
-    // Очищаем форму и черновик
+    previews.forEach((url) => URL.revokeObjectURL(url));
     setTitle('');
     setDescription('');
     setFiles([]);
@@ -384,14 +407,6 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
               {isEditMode ? 'Редактировать событие' : 'Новое событие'}
             </Typography>
-            {isAutosaving && (
-              <Chip 
-                label="Сохранение..." 
-                size="small" 
-                color="default"
-                icon={<CircularProgress size={12} />}
-              />
-            )}
           </Toolbar>
         </AppBar>
 
@@ -438,7 +453,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           <TextField
             fullWidth
             multiline
-            rows={4}
+            minRows={4}
+            maxRows={8}
             label="Описание (необязательно)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -523,7 +539,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               </Button>
             </label>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). Фото необязательны. {VIDEO_LIMITS_HINT}
+              Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). {VIDEO_LIMITS_HINT}
             </Typography>
           </Box>
 
@@ -701,7 +717,11 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               disabled={!canSave || isSaving}
               startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
             >
-              {isSaving ? 'Сохранение...' : 'Сохранить'}
+              {isSaving
+                ? files.some(isVideoFile)
+                  ? 'Сжимаем видео...'
+                  : 'Сохранение...'
+                : 'Сохранить'}
             </Button>
           </Box>
         </Box>

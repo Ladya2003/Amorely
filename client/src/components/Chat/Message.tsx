@@ -239,6 +239,7 @@ const Message: React.FC<MessageProps> = ({
             <Typography
               variant="body1"
               sx={{
+                fontSize: '14px',
                 wordBreak: 'break-word',
                 lineHeight: 1.3,
                 mb: sharedEvent ? 0.8 : 0

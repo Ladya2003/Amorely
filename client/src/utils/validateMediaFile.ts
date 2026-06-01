@@ -1,9 +1,9 @@
-import { MAX_VIDEO_UPLOAD_BYTES, formatMegabytes } from './mediaLimits';
+import { MAX_VIDEO_SOURCE_BYTES, formatMegabytes } from './mediaLimits';
 import { isVideoFile } from './videoMetadata';
 
 export const validateMediaFileSize = (file: File): string | undefined => {
-  if (isVideoFile(file) && file.size > MAX_VIDEO_UPLOAD_BYTES) {
-    return `Максимальный размер видео — ${formatMegabytes(MAX_VIDEO_UPLOAD_BYTES)} МБ`;
+  if (isVideoFile(file) && file.size > MAX_VIDEO_SOURCE_BYTES) {
+    return `Максимальный размер видео — ${formatMegabytes(MAX_VIDEO_SOURCE_BYTES)} МБ`;
   }
 
   return undefined;

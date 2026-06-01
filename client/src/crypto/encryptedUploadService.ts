@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 import { API_URL } from '../config';
 import { prepareMediaForUpload } from '../utils/prepareMediaForUpload';
 import { isVideoFile } from '../utils/videoMetadata';
@@ -33,6 +33,12 @@ export type UploadedEncryptedContentFile = {
 
 export { getDisplayTypeFromFile } from '../utils/videoMime';
 
+const getUploadErrorMessage = (error: unknown): string | null => {
+  if (!isAxiosError(error)) return null;
+  const data = error.response?.data as { error?: string } | undefined;
+  return typeof data?.error === 'string' && data.error.length > 0 ? data.error : null;
+};
+
 export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncryptedFile[]> => {
   const token = localStorage.getItem('token');
   const uploads: UploadedEncryptedFile[] = [];
@@ -44,12 +50,17 @@ export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncr
     const formData = new FormData();
     formData.append('media', encrypted.encryptedBlob, uploadName);
 
-    const response = await axios.post(`${API_URL}/api/chat/upload-encrypted`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`
-      }
-    });
+    let response;
+    try {
+      response = await axios.post(`${API_URL}/api/chat/upload-encrypted`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      throw new Error(getUploadErrorMessage(error) || 'Не удалось загрузить зашифрованный файл');
+    }
 
     const item = response.data.uploads?.[0];
     if (!item?.url || !item?.publicId) {

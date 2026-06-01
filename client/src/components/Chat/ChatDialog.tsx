@@ -246,6 +246,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const highlightTimeoutRef = useRef<number | null>(null);
   const initialScrollPinActiveRef = useRef(false);
+  const userScrolledDuringPinRef = useRef(false);
 
   const getScrollMetrics = () => {
     const container = messagesContainerRef.current;
@@ -266,7 +267,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     const container = messagesContainerRef.current;
+    const endEl = messagesEndRef.current;
     if (!container) return;
+
+    if (endEl) {
+      endEl.scrollIntoView({ block: 'end', inline: 'nearest', behavior });
+      return;
+    }
 
     const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
 
@@ -284,6 +291,38 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     const thresholdPx = 40;
     return container.scrollHeight - container.scrollTop - container.clientHeight <= thresholdPx;
   };
+
+  // Сброс при смене контакта — useLayoutEffect, чтобы выполняться до эффекта готовности viewport
+  useLayoutEffect(() => {
+    isInitialLoadRef.current = true;
+    initialScrollPinActiveRef.current = false;
+    userScrolledDuringPinRef.current = false;
+    previousMessagesLengthRef.current = 0;
+    previousFirstMessageIdRef.current = null;
+    pendingTopLoadAdjustmentRef.current = null;
+    isAtBottomRef.current = true;
+    isAutoFollowingRef.current = false;
+    setNewMessagesBelowCount(0);
+    setEnteringMessageIds(new Set());
+    setAttachmentLightbox(null);
+    setAttachmentVideoPosters({});
+    setIsMessagesViewportReady(false);
+    setShowScrollToBottom(false);
+    dayBadgeRefs.current = {};
+    messageRefs.current = {};
+    setHiddenDayBadgeKeys({});
+    setReplyingTo(null);
+    setForwardingMessage(null);
+    setForwardingSharedEvent(null);
+    setForwardingSource(null);
+    setSharingEvent(null);
+    setEditingMessage(null);
+    setContextMenu(null);
+    setHighlightedMessageId(null);
+    setDeleteModalOpen(false);
+    setMessageToDelete(null);
+    setProfileDialogOpen(false);
+  }, [contact?.id]);
 
   useLayoutEffect(() => {
     if (isLoading) {
@@ -317,7 +356,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   }, [messages, isLoading, onReachMessagesEnd, onAtBottomChange]);
 
   useEffect(() => {
-    if (!initialScrollPinActiveRef.current) {
+    if (!isMessagesViewportReady) {
       return;
     }
 
@@ -327,8 +366,18 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       return;
     }
 
-    const pinScrollToBottom = (reason: string) => {
-      if (!initialScrollPinActiveRef.current || !isAtBottomRef.current) {
+    userScrolledDuringPinRef.current = false;
+
+    const markUserScroll = () => {
+      userScrolledDuringPinRef.current = true;
+    };
+
+    container.addEventListener('wheel', markUserScroll, { passive: true });
+    container.addEventListener('touchmove', markUserScroll, { passive: true });
+    container.addEventListener('pointerdown', markUserScroll);
+
+    const pinScrollToBottom = () => {
+      if (!initialScrollPinActiveRef.current || userScrolledDuringPinRef.current) {
         return;
       }
 
@@ -340,23 +389,25 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     };
 
     const observer = new ResizeObserver(() => {
-      pinScrollToBottom('content-resize');
+      pinScrollToBottom();
     });
     observer.observe(content);
 
     const rafId = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
-        pinScrollToBottom('double-rAF');
+        pinScrollToBottom();
       });
     });
 
     const timeoutId = window.setTimeout(() => {
       initialScrollPinActiveRef.current = false;
-      observer.disconnect();
-    }, 3000);
+    }, 5000);
 
     return () => {
       observer.disconnect();
+      container.removeEventListener('wheel', markUserScroll);
+      container.removeEventListener('touchmove', markUserScroll);
+      container.removeEventListener('pointerdown', markUserScroll);
       window.cancelAnimationFrame(rafId);
       window.clearTimeout(timeoutId);
     };
@@ -498,37 +549,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setForwardingSource(null);
     onCancelPendingForward?.();
   };
-
-  // Сброс при смене контакта; черновик пересылки восстанавливается эффектом pendingForwardMessage ниже
-  useEffect(() => {
-    isInitialLoadRef.current = true;
-    initialScrollPinActiveRef.current = false;
-    previousMessagesLengthRef.current = 0;
-    previousFirstMessageIdRef.current = null;
-    pendingTopLoadAdjustmentRef.current = null;
-    isAtBottomRef.current = true;
-    isAutoFollowingRef.current = false;
-    setNewMessagesBelowCount(0);
-    setEnteringMessageIds(new Set());
-    setAttachmentLightbox(null);
-    setAttachmentVideoPosters({});
-    setIsMessagesViewportReady(false);
-    setShowScrollToBottom(false);
-    dayBadgeRefs.current = {};
-    messageRefs.current = {};
-    setHiddenDayBadgeKeys({});
-    setReplyingTo(null);
-    setForwardingMessage(null);
-    setForwardingSharedEvent(null);
-    setForwardingSource(null);
-    setSharingEvent(null);
-    setEditingMessage(null);
-    setContextMenu(null);
-    setHighlightedMessageId(null);
-    setDeleteModalOpen(false);
-    setMessageToDelete(null);
-    setProfileDialogOpen(false);
-  }, [contact?.id]);
 
   useEffect(() => {
     return () => {
@@ -730,10 +750,15 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   const handleMessagesScroll = () => {
     const container = messagesContainerRef.current;
-    const atBottom = isScrolledToBottom();
+    let atBottom = isScrolledToBottom();
 
     if (!atBottom && initialScrollPinActiveRef.current) {
-      initialScrollPinActiveRef.current = false;
+      if (userScrolledDuringPinRef.current) {
+        initialScrollPinActiveRef.current = false;
+      } else {
+        scrollToBottom('auto');
+        atBottom = isScrolledToBottom();
+      }
     }
 
     isAtBottomRef.current = atBottom;
@@ -1481,7 +1506,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         <TextField
           fullWidth
           multiline
-          maxRows={4}
+          maxRows={8}
           placeholder="Введите сообщение..."
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
@@ -1513,6 +1538,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             mt: 1,
             '& .MuiOutlinedInput-root': {
               bgcolor: 'background.paper',
+            },
+            '& .MuiInputBase-input': {
+              fontSize: '14px',
             },
           }}
         />
