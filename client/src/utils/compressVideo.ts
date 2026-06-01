@@ -24,17 +24,125 @@ type CompressionProfile = {
   audioBitsPerSecond: number;
 };
 
-const pickRecorderMimeType = (): string | undefined => {
-  const candidates = [
-    'video/webm;codecs=vp8,opus',
-    'video/webm;codecs=vp8',
-    'video/webm;codecs=vp9,opus',
-    'video/webm;codecs=vp9',
-    'video/webm',
-    'video/mp4'
-  ];
+const RECORDER_MIME_WITH_AUDIO = [
+  'video/webm;codecs=vp9,opus',
+  'video/webm;codecs=vp8,opus',
+  'video/webm;codecs=vp9',
+  'video/webm;codecs=vp8',
+  'video/webm',
+  'video/mp4'
+];
 
+const RECORDER_MIME_VIDEO_ONLY = [
+  'video/webm;codecs=vp9',
+  'video/webm;codecs=vp8',
+  'video/webm',
+  'video/mp4'
+];
+
+const pickRecorderMimeType = (needsAudio: boolean): string | undefined => {
+  const candidates = needsAudio ? RECORDER_MIME_WITH_AUDIO : RECORDER_MIME_VIDEO_ONLY;
   return candidates.find((type) => MediaRecorder.isTypeSupported(type));
+};
+
+type AudioAttachment = {
+  hasAudio: boolean;
+  detach: () => void;
+};
+
+type ReencodeAudioCapture = {
+  canCaptureAudio: boolean;
+  attachAudioTo: (targetStream: MediaStream) => AudioAttachment;
+  cleanup: () => void;
+};
+
+/** Захват аудиодорожки для перекодирования (Safari/iPhone MOV не отдаёт звук через captureStream). */
+const createReencodeAudioCapture = async (video: HTMLVideoElement): Promise<ReencodeAudioCapture> => {
+  const noopCapture: ReencodeAudioCapture = {
+    canCaptureAudio: false,
+    attachAudioTo: () => ({ hasAudio: false, detach: () => {} }),
+    cleanup: () => {}
+  };
+
+  video.muted = false;
+  video.volume = 1;
+
+  const videoWithCapture = video as HTMLVideoElement & {
+    captureStream?: () => MediaStream;
+    mozCaptureStream?: () => MediaStream;
+  };
+
+  let captureStream: MediaStream | null = null;
+  try {
+    captureStream = videoWithCapture.captureStream?.() ?? videoWithCapture.mozCaptureStream?.() ?? null;
+    const captureAudioTrack = captureStream?.getAudioTracks()[0];
+    if (captureAudioTrack) {
+      return {
+        canCaptureAudio: true,
+        attachAudioTo: (targetStream) => {
+          const track = captureAudioTrack.clone();
+          targetStream.addTrack(track);
+          return {
+            hasAudio: true,
+            detach: () => {
+              targetStream.removeTrack(track);
+              track.stop();
+            }
+          };
+        },
+        cleanup: () => captureStream?.getTracks().forEach((track) => track.stop())
+      };
+    }
+    captureStream?.getTracks().forEach((track) => track.stop());
+    captureStream = null;
+  } catch {
+    captureStream?.getTracks().forEach((track) => track.stop());
+  }
+
+  const AudioContextCtor =
+    window.AudioContext ||
+    (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextCtor) {
+    return noopCapture;
+  }
+
+  try {
+    const audioContext = new AudioContextCtor();
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+
+    const elementSource = audioContext.createMediaElementSource(video);
+
+    return {
+      canCaptureAudio: true,
+      attachAudioTo: (targetStream) => {
+        const destination = audioContext.createMediaStreamDestination();
+        elementSource.connect(destination);
+        const track = destination.stream.getAudioTracks()[0];
+        if (!track) {
+          elementSource.disconnect(destination);
+          return { hasAudio: false, detach: () => elementSource.disconnect(destination) };
+        }
+
+        targetStream.addTrack(track);
+        return {
+          hasAudio: true,
+          detach: () => {
+            targetStream.removeTrack(track);
+            track.stop();
+            elementSource.disconnect(destination);
+          }
+        };
+      },
+      cleanup: () => {
+        elementSource.disconnect();
+        void audioContext.close();
+      }
+    };
+  } catch {
+    return noopCapture;
+  }
 };
 
 const scaleVideoDimensions = (width: number, height: number, maxDimension: number) => {
@@ -114,7 +222,8 @@ const reencodeVideo = async (
   file: File,
   metadata: VideoMetadata,
   mimeType: string,
-  profile: CompressionProfile
+  profile: CompressionProfile,
+  audioCapture: ReencodeAudioCapture
 ): Promise<File> => {
   const { video, duration, width, height } = metadata;
   const { width: targetWidth, height: targetHeight } = scaleVideoDimensions(
@@ -135,19 +244,14 @@ const reencodeVideo = async (
   }
 
   const canvasStream = canvas.captureStream(24);
-  const videoWithCapture = video as HTMLVideoElement & {
-    captureStream?: () => MediaStream;
-    mozCaptureStream?: () => MediaStream;
-  };
-  const sourceStream = videoWithCapture.captureStream?.() || videoWithCapture.mozCaptureStream?.();
-  sourceStream?.getAudioTracks().forEach((track) => canvasStream.addTrack(track));
+  const { hasAudio, detach: detachAudio } = audioCapture.attachAudioTo(canvasStream);
 
   const recorderOptions: MediaRecorderOptions = {
     mimeType,
     videoBitsPerSecond: profile.videoBitsPerSecond
   };
 
-  if (sourceStream?.getAudioTracks().length) {
+  if (hasAudio) {
     recorderOptions.audioBitsPerSecond = profile.audioBitsPerSecond;
   }
 
@@ -189,8 +293,8 @@ const reencodeVideo = async (
     recorder.stop();
   }
 
+  detachAudio();
   canvasStream.getTracks().forEach((track) => track.stop());
-  sourceStream?.getTracks().forEach((track) => track.stop());
 
   const blob = await recordingFinished;
   const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
@@ -228,21 +332,38 @@ const compressWithRetries = async (
 ): Promise<File> => {
   const profiles = buildCompressionProfiles(metadata.duration);
   const attempts: File[] = [];
+  const audioCapture = await createReencodeAudioCapture(metadata.video);
 
-  for (const profile of profiles) {
-    const compressed = await reencodeVideo(file, metadata, mimeType, profile);
-    attempts.push(compressed);
+  if (!audioCapture.canCaptureAudio && file.size <= MAX_VIDEO_UPLOAD_BYTES) {
+    audioCapture.cleanup();
+    return file;
+  }
 
-    if (compressed.size <= MAX_VIDEO_UPLOAD_BYTES) {
-      const best = pickBestCompressed(file, attempts);
-      if (!best) break;
+  if (!audioCapture.canCaptureAudio) {
+    audioCapture.cleanup();
+    throw new Error(
+      `Не удалось сохранить звук при сжатии видео. Выберите файл до ${formatMegabytes(MAX_VIDEO_UPLOAD_BYTES)} МБ.`
+    );
+  }
 
-      if (best.size < file.size || file.size > MAX_VIDEO_UPLOAD_BYTES) {
-        return best;
+  try {
+    for (const profile of profiles) {
+      const compressed = await reencodeVideo(file, metadata, mimeType, profile, audioCapture);
+      attempts.push(compressed);
+
+      if (compressed.size <= MAX_VIDEO_UPLOAD_BYTES) {
+        const best = pickBestCompressed(file, attempts);
+        if (!best) break;
+
+        if (best.size < file.size || file.size > MAX_VIDEO_UPLOAD_BYTES) {
+          return best;
+        }
+
+        return file;
       }
-
-      return file;
     }
+  } finally {
+    audioCapture.cleanup();
   }
 
   const best = pickBestCompressed(file, attempts);
@@ -288,7 +409,7 @@ export const compressVideoForUpload = async (file: File): Promise<File> => {
       return file;
     }
 
-    const mimeType = pickRecorderMimeType();
+    const mimeType = pickRecorderMimeType(true);
     if (!mimeType || typeof MediaRecorder === 'undefined') {
       if (file.size > MAX_VIDEO_UPLOAD_BYTES) {
         throw new Error(

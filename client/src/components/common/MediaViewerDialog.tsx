@@ -94,7 +94,7 @@ const MediaViewerDialog: React.FC<MediaViewerDialogProps> = ({
     }
 
     if (item.resourceType === 'video') {
-      return <ChatVideoPlayer src={item.url} autoPlay style={fullscreenMediaStyle} />;
+      return <ChatVideoPlayer src={item.url} style={fullscreenMediaStyle} />;
     }
 
     return <img src={item.url} alt="" style={fullscreenMediaStyle} draggable={false} />;
