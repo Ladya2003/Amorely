@@ -51,6 +51,8 @@ const QuizGamePlayPage: React.FC = () => {
   });
   const prevQuestionStatusRef = useRef<string | null>(null);
   const expireSyncRequestedRef = useRef(false);
+  const lobbySyncRequestedRef = useRef(false);
+  const lobbyExpireSyncDoneRef = useRef(false);
 
   const applyState = useCallback((nextState: QuizGameState) => {
     const question = nextState.currentQuestion;
@@ -89,6 +91,27 @@ const QuizGamePlayPage: React.FC = () => {
       setAnswerInput('');
     }
   }, []);
+
+  const requestLobbySync = useCallback(() => {
+    if (lobbySyncRequestedRef.current) {
+      return;
+    }
+    lobbySyncRequestedRef.current = true;
+
+    const socket = socketService.getSocket();
+    if (socket?.connected) {
+      socket.emit('quiz_game_sync');
+      window.setTimeout(() => {
+        lobbySyncRequestedRef.current = false;
+      }, 800);
+    } else {
+      syncQuizGameState()
+        .then((data) => applyState(data.state))
+        .finally(() => {
+          lobbySyncRequestedRef.current = false;
+        });
+    }
+  }, [applyState]);
 
   const loadState = useCallback(async () => {
     try {
@@ -144,31 +167,34 @@ const QuizGamePlayPage: React.FC = () => {
 
   useEffect(() => {
     if (!state?.inLobby) {
+      lobbyExpireSyncDoneRef.current = false;
       return;
     }
 
     setLobbySecondsLeft(state.lobbySecondsRemaining);
+
     if (state.lobbySecondsRemaining <= 0) {
+      if (!lobbyExpireSyncDoneRef.current) {
+        lobbyExpireSyncDoneRef.current = true;
+        requestLobbySync();
+      }
       return;
     }
+
+    lobbyExpireSyncDoneRef.current = false;
 
     const timerId = window.setInterval(() => {
       setLobbySecondsLeft((prev) => {
         const next = Math.max(0, prev - 1);
         if (next === 0 && prev > 0) {
-          const socket = socketService.getSocket();
-          if (socket?.connected) {
-            socket.emit('quiz_game_sync');
-          } else {
-            syncQuizGameState().then((data) => applyState(data.state));
-          }
+          requestLobbySync();
         }
         return next;
       });
     }, 1000);
 
     return () => window.clearInterval(timerId);
-  }, [state?.inLobby, state?.lobbySecondsRemaining, applyState]);
+  }, [state?.inLobby, state?.lobbySecondsRemaining, requestLobbySync]);
 
   useEffect(() => {
     const question = state?.currentQuestion;

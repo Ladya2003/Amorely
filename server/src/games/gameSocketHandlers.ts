@@ -501,8 +501,7 @@ export const attachGameSocketHandlers = (
     state: any,
     participantUserIds: string[]
   ) => {
-    const stateDoc = state?._id ? await QuizGameState.findById(state._id) : state;
-    if (!stateDoc) {
+    if (!state) {
       return;
     }
 
@@ -513,7 +512,7 @@ export const attachGameSocketHandlers = (
           return;
         }
         io.to(socketData.socketId).emit('quiz_game_state', {
-          state: formatQuizGameState(stateDoc, uid),
+          state: formatQuizGameState(state, uid),
         });
       })
     );

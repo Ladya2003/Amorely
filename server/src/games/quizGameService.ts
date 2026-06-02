@@ -137,10 +137,10 @@ const normalizeQuizCooldownToUtcMidnight = (state: any) => {
   state.nextBoardAvailableAt = getNextUtcMidnight();
 };
 
-const syncBoardDayIfExpired = (state: any) => {
+const syncBoardDayIfExpired = (state: any): boolean => {
   const today = getBoardDayKey();
   if (!state.boardDayKey || state.boardDayKey === today || isOnCooldown(state)) {
-    return;
+    return false;
   }
 
   state.boardDayKey = null;
@@ -151,6 +151,7 @@ const syncBoardDayIfExpired = (state: any) => {
   state.readyUserIds = [];
   state.lobbyCountdownEndsAt = null;
   state.pickerUserId = null;
+  return true;
 };
 
 const isOnCooldown = (state: any) =>
@@ -201,7 +202,7 @@ const initializeBoardSession = (state: any, participantIds: string[]) => {
   state.pickerUserId = new mongoose.Types.ObjectId(pickRandomParticipantId(participantIds));
 };
 
-const clearCooldownIfExpired = (state: any) => {
+const clearCooldownIfExpired = (state: any): boolean => {
   normalizeQuizCooldownToUtcMidnight(state);
 
   if (state.nextBoardAvailableAt && state.nextBoardAvailableAt.getTime() <= Date.now()) {
@@ -214,7 +215,10 @@ const clearCooldownIfExpired = (state: any) => {
     state.readyUserIds = [];
     state.lobbyCountdownEndsAt = null;
     state.pickerUserId = null;
+    return true;
   }
+
+  return false;
 };
 
 const resolveQuestionOnDocument = (state: any, participantIds: string[]) => {
@@ -284,8 +288,8 @@ export const expireQuizQuestionIfNeeded = async (state: any, context: QuizGameCo
 };
 
 const syncQuizLobby = async (state: any, context?: QuizGameContext) => {
-  clearCooldownIfExpired(state);
-  syncBoardDayIfExpired(state);
+  let dirty = clearCooldownIfExpired(state);
+  dirty = syncBoardDayIfExpired(state) || dirty;
 
   if (isOnCooldown(state)) {
     state.sessionActive = false;
@@ -298,6 +302,9 @@ const syncQuizLobby = async (state: any, context?: QuizGameContext) => {
   }
 
   if (state.sessionActive) {
+    if (dirty) {
+      await state.save();
+    }
     return state;
   }
 
@@ -322,12 +329,14 @@ const syncQuizLobby = async (state: any, context?: QuizGameContext) => {
     return state;
   }
 
+  if (dirty) {
+    await state.save();
+  }
+
   return state;
 };
 
 export const formatQuizGameState = (state: any, viewerUserId: string): QuizGamePublicState => {
-  clearCooldownIfExpired(state);
-
   const onCooldown = isOnCooldown(state);
   const inLobby = !onCooldown && !state.sessionActive && !state.currentQuestion;
   const lobbyCountdownEndsAt = state.lobbyCountdownEndsAt
