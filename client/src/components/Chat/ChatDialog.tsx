@@ -3,10 +3,10 @@ import {
   Box, 
   Typography, 
   IconButton, 
-  TextField, 
   Avatar, 
+  useMediaQuery,
+  useTheme,
   Paper,
-  InputAdornment,
   CircularProgress,
   Menu,
   MenuItem,
@@ -20,8 +20,6 @@ import {
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SendIcon from '@mui/icons-material/Send';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
@@ -44,8 +42,10 @@ import { captureVideoPosterFromFile } from '../../utils/videoPoster';
 import MediaViewerDialog from '../common/MediaViewerDialog';
 import { formatContactPresence } from '../../utils/formatContactPresence';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
+import { isIOSDevice } from '../../utils/isIOSDevice';
 import socketService from '../../services/socketService';
 import { useTypingAnimation } from '../../hooks/useTypingAnimation';
+import ChatMessageInput from './ChatMessageInput';
 
 const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
 
@@ -200,6 +200,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   isLoadingOlder = false,
   isLoading = false
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const useIOSContentEditableInput = isMobile && isIOSDevice();
   const { otherUnreadCount } = useUnreadMessages();
   const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
   const [messageText, setMessageText] = useState('');
@@ -215,7 +218,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [attachmentValidationError, setAttachmentValidationError] = useState<string | null>(null);
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<string[]>([]);
   const [attachmentVideoPosters, setAttachmentVideoPosters] = useState<Record<number, string>>({});
-  const [attachmentFileInputKey, setAttachmentFileInputKey] = useState(0);
   const [isPickingAttachments, setIsPickingAttachments] = useState(false);
   const [attachmentLightbox, setAttachmentLightbox] = useState<{
     url: string;
@@ -245,7 +247,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContentRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
   const isInitialLoadRef = useRef<boolean>(true);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -720,25 +721,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const handleAttachmentClick = () => {
-    const input = fileInputRef.current;
-    if (!input) return;
-    input.value = '';
-    input.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    const selectedFiles = input.files ? Array.from(input.files) : [];
-    input.value = '';
-
+  const processSelectedFiles = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) {
       return;
     }
@@ -759,10 +742,36 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       }
 
       setAttachments((prev) => [...prev, ...accepted]);
-      setAttachmentFileInputKey((key) => key + 1);
     } finally {
       setIsPickingAttachments(false);
     }
+  }, []);
+
+  const handleAttachmentClick = () => {
+    if (isPickingAttachments) {
+      return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*,video/*,.mov,video/quicktime';
+    input.style.display = 'none';
+
+    const cleanup = () => {
+      input.remove();
+    };
+
+    input.addEventListener('change', () => {
+      const selectedFiles = input.files ? Array.from(input.files) : [];
+      cleanup();
+      void processSelectedFiles(selectedFiles);
+    });
+
+    input.addEventListener('cancel', cleanup);
+
+    document.body.appendChild(input);
+    input.click();
   };
 
   const updateHiddenDayBadges = useCallback(() => {
@@ -1124,7 +1133,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      bgcolor: 'background.paper',
+      bgcolor: 'background.default',
       position: 'relative',
       overflow: 'hidden',
       fontFamily: CHAT_FONT_FAMILY,
@@ -1133,6 +1142,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       '& .MuiMenuItem-root': { fontFamily: CHAT_FONT_FAMILY },
     }}>
       {/* Заголовок чата - фиксированный */}
+      <Box sx={{ px: 1, pt: 1, flexShrink: 0, zIndex: 100 }}>
       <Paper 
         elevation={2}
         sx={{ 
@@ -1142,9 +1152,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           borderBottom: 1, 
           borderColor: 'divider',
           bgcolor: 'background.paper',
-          flexShrink: 0,
-          zIndex: 100,
-          borderRadius: 0
+          borderRadius: '16px',
         }}
       >
         <IconButton edge="start" onClick={handleBackClick} sx={{ mr: 1 }}>
@@ -1170,23 +1178,35 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           }}
         />
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          <Typography
-            variant="subtitle1"
-            noWrap
+          <Box
             sx={{
-              fontWeight: 600,
-              lineHeight: 1.25,
-              fontSize: '0.95rem',
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
-              maxWidth: '100%',
+              gap: 0.5,
+              minWidth: 0,
             }}
           >
-            {contact.name}
+            <Typography
+              variant="subtitle1"
+              noWrap
+              sx={{
+                fontWeight: 600,
+                lineHeight: 1.25,
+                fontSize: '0.95rem',
+                flex: 1,
+                minWidth: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {contact.name}
+            </Typography>
             {contact.isPartner && (
-              <GameBadges badges={badges} displayGameId={partnerDisplayBadgeGameId} size={22} />
+              <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                <GameBadges badges={badges} displayGameId={partnerDisplayBadgeGameId} size={22} />
+              </Box>
             )}
-          </Typography>
+          </Box>
           <Typography
             variant="caption"
             noWrap
@@ -1203,6 +1223,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </Typography>
         </Box>
       </Paper>
+      </Box>
 
       {/* Область сообщений */}
       <Box sx={{ 
@@ -1586,59 +1607,21 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </Box>
         )}
 
-        <TextField
-          fullWidth
-          multiline
-          maxRows={8}
-          placeholder="Введите сообщение..."
+        <ChatMessageInput
           value={messageText}
-          onChange={(e) => {
-            const nextText = e.target.value;
+          onChange={(nextText) => {
             setMessageText(nextText);
             notifyTypingActivity(nextText, contact?.id);
           }}
-          onKeyPress={handleKeyPress}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={handleAttachmentClick} disabled={isPickingAttachments}>
-                  <AttachFileIcon />
-                </IconButton>
-                {/* <IconButton>
-                  <EmojiEmotionsIcon />
-                </IconButton> */}
-                <IconButton 
-                  color="primary" 
-                  onClick={handleSendMessage}
-                  disabled={
-                    editingMessage
-                      ? !messageText.trim()
-                      : !forwardingMessage && !sharingEvent && !messageText.trim() && attachments.length === 0
-                  }
-                >
-                  <SendIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            mt: 1,
-            '& .MuiOutlinedInput-root': {
-              bgcolor: 'background.paper',
-            },
-            '& .MuiInputBase-input': {
-              fontSize: '16px',
-            },
-          }}
-        />
-        <input
-          type="file"
-          multiple
-          key={attachmentFileInputKey}
-          accept="image/*,video/*,.mov,video/quicktime"
-          style={{ display: 'none' }}
-          ref={fileInputRef}
-          onChange={handleFileChange}
+          onSend={handleSendMessage}
+          useContentEditable={useIOSContentEditableInput}
+          onAttachmentClick={handleAttachmentClick}
+          attachmentDisabled={isPickingAttachments}
+          sendDisabled={
+            editingMessage
+              ? !messageText.trim()
+              : !forwardingMessage && !sharingEvent && !messageText.trim() && attachments.length === 0
+          }
         />
       </Paper>
       <Menu
