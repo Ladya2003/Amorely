@@ -254,7 +254,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const pendingTopLoadAdjustmentRef = useRef<{
     prevScrollTop: number;
     prevScrollHeight: number;
+    anchorMessageId: string | null;
+    anchorOffsetFromTop: number;
   } | null>(null);
+  const isTopLoadPendingRef = useRef(false);
   const dayBadgeRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const highlightTimeoutRef = useRef<number | null>(null);
@@ -395,6 +398,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     previousMessagesLengthRef.current = 0;
     previousFirstMessageIdRef.current = null;
     pendingTopLoadAdjustmentRef.current = null;
+    isTopLoadPendingRef.current = false;
     isAtBottomRef.current = true;
     isAutoFollowingRef.current = false;
     setNewMessagesBelowCount(0);
@@ -529,6 +533,53 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     return () => viewport.removeEventListener('resize', handleViewportChange);
   }, [isMobile]);
 
+  const restoreScrollAfterPrepend = useCallback(() => {
+    const container = messagesContainerRef.current;
+    const pending = pendingTopLoadAdjustmentRef.current;
+    if (!container || !pending) {
+      return;
+    }
+
+    const { prevScrollTop, prevScrollHeight, anchorMessageId, anchorOffsetFromTop } = pending;
+
+    if (anchorMessageId) {
+      const anchorEl = messageRefs.current[anchorMessageId];
+      if (anchorEl) {
+        const currentOffset =
+          anchorEl.getBoundingClientRect().top - container.getBoundingClientRect().top;
+        container.scrollTop += currentOffset - anchorOffsetFromTop;
+        return;
+      }
+    }
+
+    const scrollDelta = container.scrollHeight - prevScrollHeight;
+    container.scrollTop = prevScrollTop + scrollDelta;
+  }, []);
+
+  useLayoutEffect(() => {
+    if (isInitialLoadRef.current) {
+      return;
+    }
+
+    const currentFirstMessageId = messages[0]?.id || null;
+    const hasPrependedMessages =
+      messages.length > previousMessagesLengthRef.current &&
+      previousFirstMessageIdRef.current !== null &&
+      currentFirstMessageId !== previousFirstMessageIdRef.current;
+
+    if (hasPrependedMessages) {
+      restoreScrollAfterPrepend();
+      pendingTopLoadAdjustmentRef.current = null;
+      isTopLoadPendingRef.current = false;
+      return;
+    }
+
+    if (!isLoadingOlder && isTopLoadPendingRef.current) {
+      pendingTopLoadAdjustmentRef.current = null;
+      isTopLoadPendingRef.current = false;
+    }
+  }, [messages, isLoadingOlder, restoreScrollAfterPrepend]);
+
   useEffect(() => {
     if (isInitialLoadRef.current) {
       return;
@@ -541,15 +592,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         previousFirstMessageIdRef.current !== null &&
         currentFirstMessageId !== previousFirstMessageIdRef.current;
 
-      if (hasPrependedMessages) {
-        const container = messagesContainerRef.current;
-        if (container && pendingTopLoadAdjustmentRef.current) {
-          const { prevScrollTop, prevScrollHeight } = pendingTopLoadAdjustmentRef.current;
-          const scrollDelta = container.scrollHeight - prevScrollHeight;
-          container.scrollTop = prevScrollTop + scrollDelta;
-        }
-        pendingTopLoadAdjustmentRef.current = null;
-      } else {
+      if (!hasPrependedMessages) {
         const newMessages = messages.slice(previousMessagesLengthRef.current);
         const incomingFromOtherCount = newMessages.filter(
           (message) => message.senderId !== currentUserId
@@ -899,12 +942,22 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       onReachMessagesStart &&
       hasMoreMessages &&
       !isLoadingOlder &&
+      !isTopLoadPendingRef.current &&
       container.scrollTop <= 120
     ) {
+      const anchorMessageId = messages[0]?.id ?? null;
+      const anchorEl = anchorMessageId ? messageRefs.current[anchorMessageId] : null;
+      const anchorOffsetFromTop = anchorEl
+        ? anchorEl.getBoundingClientRect().top - container.getBoundingClientRect().top
+        : 0;
+
       pendingTopLoadAdjustmentRef.current = {
         prevScrollTop: container.scrollTop,
-        prevScrollHeight: container.scrollHeight
+        prevScrollHeight: container.scrollHeight,
+        anchorMessageId,
+        anchorOffsetFromTop
       };
+      isTopLoadPendingRef.current = true;
       onReachMessagesStart();
     }
 
