@@ -44,6 +44,8 @@ import { captureVideoPosterFromFile } from '../../utils/videoPoster';
 import MediaViewerDialog from '../common/MediaViewerDialog';
 import { formatContactPresence } from '../../utils/formatContactPresence';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
+import socketService from '../../services/socketService';
+import { useTypingAnimation } from '../../hooks/useTypingAnimation';
 
 const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
 
@@ -119,6 +121,7 @@ export interface MessageType {
 
 interface ChatDialogProps {
   contact: Contact | null;
+  contactIsTyping?: boolean;
   messages: MessageType[];
   currentUserId: string;
   onBack: () => void;
@@ -173,6 +176,7 @@ const isMessageEditable = (message: MessageType, currentUserId: string) => {
 
 const ChatDialog: React.FC<ChatDialogProps> = ({ 
   contact, 
+  contactIsTyping = false,
   messages, 
   currentUserId, 
   onBack, 
@@ -199,6 +203,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const { otherUnreadCount } = useUnreadMessages();
   const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
   const [messageText, setMessageText] = useState('');
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingActiveRef = useRef(false);
+  const lastTypingEmitRef = useRef(0);
+  const showTypingStatus = Boolean(contactIsTyping && contact?.isOnline);
+  const typingStatusText = useTypingAnimation(showTypingStatus);
+  const presenceText = showTypingStatus
+    ? typingStatusText
+    : formatContactPresence(contact?.isOnline, contact?.lastSeen);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentValidationError, setAttachmentValidationError] = useState<string | null>(null);
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<string[]>([]);
@@ -247,6 +259,63 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const highlightTimeoutRef = useRef<number | null>(null);
   const initialScrollPinActiveRef = useRef(false);
   const userScrolledDuringPinRef = useRef(false);
+
+  const stopTypingForContact = useCallback((receiverId?: string | null) => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+
+    if (!receiverId || !isTypingActiveRef.current) {
+      return;
+    }
+
+    try {
+      socketService.stopTyping(receiverId);
+    } catch {
+      // Socket may be unavailable during teardown.
+    }
+
+    isTypingActiveRef.current = false;
+  }, []);
+
+  const notifyTypingActivity = useCallback((text: string, receiverId?: string | null) => {
+    if (!receiverId) {
+      return;
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+
+    if (!text.trim()) {
+      stopTypingForContact(receiverId);
+      return;
+    }
+
+    const now = Date.now();
+    if (!isTypingActiveRef.current || now - lastTypingEmitRef.current > 2000) {
+      try {
+        socketService.startTyping(receiverId);
+      } catch {
+        return;
+      }
+
+      isTypingActiveRef.current = true;
+      lastTypingEmitRef.current = now;
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      stopTypingForContact(receiverId);
+    }, 3000);
+  }, [stopTypingForContact]);
+
+  useEffect(() => {
+    return () => {
+      stopTypingForContact(contact?.id);
+    };
+  }, [contact?.id, stopTypingForContact]);
 
   const getScrollMetrics = () => {
     const container = messagesContainerRef.current;
@@ -600,6 +669,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   };
 
   const handleSendMessage = () => {
+    stopTypingForContact(contact?.id);
+
     const trimmedText = messageText.trim();
     if (editingMessage) {
       if (!trimmedText) return;
@@ -1121,14 +1192,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             noWrap
             sx={(theme) => ({
               display: 'block',
-              color: contact.isOnline
+              color: showTypingStatus || contact.isOnline
                 ? getOnlinePresenceColor(theme)
                 : theme.palette.text.secondary,
               lineHeight: 1.2,
-              fontWeight: contact.isOnline ? 600 : 400,
+              fontWeight: showTypingStatus || contact.isOnline ? 600 : 400,
             })}
           >
-            {formatContactPresence(contact.isOnline, contact.lastSeen)}
+            {presenceText}
           </Typography>
         </Box>
       </Paper>
@@ -1521,7 +1592,11 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           maxRows={8}
           placeholder="Введите сообщение..."
           value={messageText}
-          onChange={(e) => setMessageText(e.target.value)}
+          onChange={(e) => {
+            const nextText = e.target.value;
+            setMessageText(nextText);
+            notifyTypingActivity(nextText, contact?.id);
+          }}
           onKeyPress={handleKeyPress}
           InputProps={{
             endAdornment: (

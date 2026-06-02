@@ -276,6 +276,7 @@ const ChatPage: React.FC = () => {
     message: '',
     severity: 'success'
   });
+  const [typingByContactId, setTypingByContactId] = useState<Record<string, boolean>>({});
   const [chatRulesAccepted, setChatRulesAccepted] = useState(false);
   const [isChatRulesChecked, setIsChatRulesChecked] = useState(false);
 
@@ -766,7 +767,21 @@ const ChatPage: React.FC = () => {
     const newSocket = socketService.initialize(CURRENT_USER_ID);
     setSocket(newSocket);
 
+    const clearContactTyping = (userId: string) => {
+      setTypingByContactId((prev) => {
+        if (!prev[userId]) {
+          return prev;
+        }
+
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+    };
+
     const onNewMessage = (message: MessageType) => {
+      clearContactTyping(message.senderId);
+
       const isCurrentDialogOpen = selectedContactIdRef.current === message.senderId;
       const shouldMarkAsRead = isCurrentDialogOpen && isChatAtBottomRef.current;
 
@@ -987,6 +1002,7 @@ const ChatPage: React.FC = () => {
     };
 
     const onUserOffline = ({ userId, lastSeen }: { userId: string; lastSeen: string }) => {
+      clearContactTyping(userId);
       setContacts((prevContacts) =>
         prevContacts.map((contact) =>
           contact.id === userId ? { ...contact, isOnline: false, lastSeen } : contact
@@ -1004,6 +1020,16 @@ const ChatPage: React.FC = () => {
       );
     };
 
+    const onUserTyping = (userId: string) => {
+      setTypingByContactId((prev) => (
+        prev[userId] ? prev : { ...prev, [userId]: true }
+      ));
+    };
+
+    const onUserStopTyping = (userId: string) => {
+      clearContactTyping(userId);
+    };
+
     newSocket.on('new_message', onNewMessage);
     newSocket.on('message_sent', onMessageSent);
     newSocket.on('message_read', onMessageRead);
@@ -1013,6 +1039,8 @@ const ChatPage: React.FC = () => {
     newSocket.on('user_online', onUserOnline);
     newSocket.on('user_offline', onUserOffline);
     newSocket.on('presence_snapshot', onPresenceSnapshot);
+    newSocket.on('user_typing', onUserTyping);
+    newSocket.on('user_stop_typing', onUserStopTyping);
 
     return () => {
       newSocket.off('new_message', onNewMessage);
@@ -1024,6 +1052,8 @@ const ChatPage: React.FC = () => {
       newSocket.off('user_online', onUserOnline);
       newSocket.off('user_offline', onUserOffline);
       newSocket.off('presence_snapshot', onPresenceSnapshot);
+      newSocket.off('user_typing', onUserTyping);
+      newSocket.off('user_stop_typing', onUserStopTyping);
     };
   }, [
     CURRENT_USER_ID,
@@ -2097,6 +2127,9 @@ const ChatPage: React.FC = () => {
                 {selectedContactId && CURRENT_USER_ID ? (
                   <ChatDialog 
                     contact={selectedContact || null}
+                    contactIsTyping={Boolean(
+                      selectedContactId && typingByContactId[selectedContactId]
+                    )}
                     messages={messages}
                     currentUserId={CURRENT_USER_ID}
                     onBack={handleBackToList}
