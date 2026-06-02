@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Box, DialogContent, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
@@ -7,6 +7,7 @@ import ResponsiveDialog from '../UI/ResponsiveDialog';
 import DecryptedMedia from './DecryptedMedia';
 import ChatVideoPlayer from './ChatVideoPlayer';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
+import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 
 export interface MediaViewerContent {
   url: string;
@@ -61,21 +62,27 @@ const MediaViewerDialog: React.FC<MediaViewerDialogProps> = ({
     }
   }, [open, initialIndex]);
 
+  const hasNav = items.length > 1;
+
+  const handlePrev = useCallback(() => {
+    setIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
+  }, [items.length]);
+
+  const handleNext = useCallback(() => {
+    setIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
+  }, [items.length]);
+
+  const { swipeHandlers, swipeContainerSx } = useHorizontalSwipe({
+    enabled: hasNav && open,
+    onPrev: handlePrev,
+    onNext: handleNext
+  });
+
   const current = items[index] ?? null;
 
   if (!current) {
     return null;
   }
-
-  const hasNav = items.length > 1;
-
-  const handlePrev = () => {
-    setIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
-  };
-
-  const handleNext = () => {
-    setIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
-  };
 
   const renderMedia = (item: MediaViewerContent) => {
     if (item.cacheKey) {
@@ -169,8 +176,9 @@ const MediaViewerDialog: React.FC<MediaViewerDialogProps> = ({
             maxHeight: '100%',
             alignItems: 'center',
             justifyContent: 'center',
-            touchAction: 'auto'
+            ...(hasNav ? swipeContainerSx : { touchAction: 'auto' })
           }}
+          {...(hasNav ? swipeHandlers : {})}
         >
           {renderMedia(current)}
         </Box>

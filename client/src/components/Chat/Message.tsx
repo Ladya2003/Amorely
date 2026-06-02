@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, Avatar, Paper, IconButton } from '@mui/material';
-import MediaViewerDialog from '../common/MediaViewerDialog';
+import MediaViewerDialog, { type MediaViewerContent } from '../common/MediaViewerDialog';
+import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
@@ -9,6 +10,24 @@ import { MessageType, MessageForwardRef } from './ChatDialog';
 import EncryptedAttachment from './EncryptedAttachment';
 import ChatVideoPlayer from '../common/ChatVideoPlayer';
 import SharedEventCard from './SharedEventCard';
+
+const imagePreviewStyle: React.CSSProperties = {
+  width: '100%',
+  maxHeight: '200px',
+  objectFit: 'cover',
+  borderRadius: '16px',
+  display: 'block',
+  cursor: 'pointer'
+};
+
+function getAttachmentResourceType(
+  attachment: NonNullable<MessageType['attachments']>[number],
+  envelope?: ChatMediaEnvelope
+): 'image' | 'video' {
+  if (attachment.type === 'video') return 'video';
+  if (attachment.type === 'image') return 'image';
+  return envelope?.displayType === 'video' ? 'video' : 'image';
+}
 
 interface MessageProps {
   message: MessageType;
@@ -33,8 +52,8 @@ const Message: React.FC<MessageProps> = ({
   onForwardSourceClick,
   onSharedEventClick
 }) => {
-  const [openImage, setOpenImage] = useState<string | null>(null);
-  
+  const [imageGalleryInitialIndex, setImageGalleryInitialIndex] = useState<number | null>(null);
+
   const formattedTime = useMemo(() => (
     new Date(message.timestamp).toLocaleTimeString([], {
       hour: '2-digit',
@@ -43,12 +62,42 @@ const Message: React.FC<MessageProps> = ({
     })
   ), [message.timestamp]);
 
-  const handleImageClick = (url: string) => {
-    setOpenImage(url);
+  const attachmentItems = message.attachments ?? [];
+
+  const imageAttachmentIndices = useMemo(
+    () =>
+      attachmentItems
+        .map((attachment, index) => ({ attachment, index }))
+        .filter(
+          ({ attachment, index }) =>
+            getAttachmentResourceType(attachment, message.mediaEnvelopes?.[index]) === 'image'
+        )
+        .map(({ index }) => index),
+    [attachmentItems, message.mediaEnvelopes]
+  );
+
+  const imageGallery = useMemo((): MediaViewerContent[] => {
+    return imageAttachmentIndices.map((index) => {
+      const attachment = attachmentItems[index];
+      const envelope = message.mediaEnvelopes?.[index];
+      const isEncrypted = attachment.encrypted || attachment.type === 'encrypted';
+
+      return {
+        url: attachment.url,
+        resourceType: 'image' as const,
+        cacheKey: isEncrypted ? `${message.id}-${index}` : undefined,
+        encrypted: isEncrypted || undefined,
+        mediaEnvelope: envelope
+      };
+    });
+  }, [attachmentItems, imageAttachmentIndices, message.id, message.mediaEnvelopes]);
+
+  const handleOpenImageGallery = (initialIndex = 0) => {
+    setImageGalleryInitialIndex(initialIndex);
   };
 
-  const handleCloseImage = () => {
-    setOpenImage(null);
+  const handleCloseImageGallery = () => {
+    setImageGalleryInitialIndex(null);
   };
 
   const bubbleColor = isOwn ? 'primary.light' : 'background.paper';
@@ -71,6 +120,10 @@ const Message: React.FC<MessageProps> = ({
   const isVideoOnlyBubble =
     hasVideoAttachment && !message.text?.trim() && !sharedEvent;
 
+  const hasImageAttachment = imageAttachmentIndices.length > 0;
+  const isImageOnlyBubble =
+    hasImageAttachment && !hasVideoAttachment && !message.text?.trim() && !sharedEvent;
+
   const actionsButtonRight = isOwn
     ? (message.editedAt ? 92 : 66)
     : (message.editedAt ? 68 : 44);
@@ -90,11 +143,18 @@ const Message: React.FC<MessageProps> = ({
           sx={{ width: 36, height: 36, mr: 1, mt: 0.5 }}
         />
       )}
-      <Box sx={{ maxWidth: isOwn ? '85%' : '72%' }}>
+      <Box
+        sx={{
+          maxWidth: isOwn ? '85%' : '72%',
+          width: isImageOnlyBubble ? (isOwn ? '85%' : '72%') : 'fit-content'
+        }}
+      >
         <Paper 
           elevation={1} 
           sx={{ 
             position: 'relative',
+            width: hasImageAttachment ? '100%' : 'fit-content',
+            maxWidth: '100%',
             px: 1.5,
             pt: 1,
             pb: 1.15,
@@ -187,15 +247,94 @@ const Message: React.FC<MessageProps> = ({
             </Box>
           )}
 
-          {message.attachments && message.attachments.length > 0 && (
+          {attachmentItems.length > 0 && (
             <Box
               sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                width: hasImageAttachment ? '100%' : 'fit-content',
+                maxWidth: '100%',
                 mb: message.text ? 1 : 0,
-                pb: isVideoOnlyBubble ? 2.5 : 0
+                pb: isVideoOnlyBubble || isImageOnlyBubble ? 2.5 : 0
               }}
             >
-              {message.attachments.map((attachment, index) => {
+              {imageAttachmentIndices.length > 0 && (() => {
+                const firstImageIndex = imageAttachmentIndices[0];
+                const firstAttachment = attachmentItems[firstImageIndex];
+                const firstEnvelope = message.mediaEnvelopes?.[firstImageIndex];
+                const extraImageCount = imageAttachmentIndices.length - 1;
+                const isFirstEncrypted =
+                  firstAttachment.encrypted || firstAttachment.type === 'encrypted';
+
+                return (
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      width: '100%',
+                      mb: attachmentItems.some(
+                        (attachment, index) =>
+                          getAttachmentResourceType(attachment, message.mediaEnvelopes?.[index]) ===
+                          'video'
+                      )
+                        ? 1
+                        : 0,
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      lineHeight: 0
+                    }}
+                  >
+                    {isFirstEncrypted ? (
+                      <EncryptedAttachment
+                        cacheKey={`${message.id}-${firstImageIndex}`}
+                        url={firstAttachment.url}
+                        envelope={firstEnvelope}
+                        onImageClick={() => handleOpenImageGallery(0)}
+                        imageStyle={imagePreviewStyle}
+                      />
+                    ) : (
+                      <img
+                        src={firstAttachment.url}
+                        alt="Attachment"
+                        onClick={() => handleOpenImageGallery(0)}
+                        style={imagePreviewStyle}
+                      />
+                    )}
+                    {extraImageCount > 0 && (
+                      <Box
+                        aria-hidden
+                        sx={{
+                          position: 'absolute',
+                          top: 10,
+                          right: 10,
+                          minWidth: 40,
+                          height: 40,
+                          px: 1,
+                          borderRadius: '50%',
+                          bgcolor: 'rgba(0, 0, 0, 0.55)',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '16px',
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        +{extraImageCount}
+                      </Box>
+                    )}
+                  </Box>
+                );
+              })()}
+
+              {attachmentItems.map((attachment, index) => {
                 const envelope = message.mediaEnvelopes?.[index];
+                if (getAttachmentResourceType(attachment, envelope) !== 'video') {
+                  return null;
+                }
+
                 const isEncrypted = attachment.encrypted || attachment.type === 'encrypted';
 
                 return (
@@ -212,19 +351,6 @@ const Message: React.FC<MessageProps> = ({
                         cacheKey={`${message.id}-${index}`}
                         url={attachment.url}
                         envelope={envelope}
-                        onImageClick={handleImageClick}
-                      />
-                    ) : attachment.type === 'image' ? (
-                      <img
-                        src={attachment.url}
-                        alt="Attachment"
-                        onClick={() => handleImageClick(attachment.url)}
-                        style={{
-                          maxWidth: '100%',
-                          maxHeight: '200px',
-                          display: 'block',
-                          cursor: 'pointer'
-                        }}
                       />
                     ) : (
                       <ChatVideoPlayer src={attachment.url} />
@@ -281,10 +407,13 @@ const Message: React.FC<MessageProps> = ({
               bottom: 6,
               p: 0.1,
               borderRadius: 1,
-              bgcolor: isOwn ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.06)',
+              bgcolor: 'transparent',
+              border: '1px solid',
+              borderColor: isOwn ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.18)',
               color: isOwn ? 'rgba(255,255,255,0.95)' : 'text.secondary',
               '&:hover': {
-                bgcolor: isOwn ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.1)'
+                bgcolor: 'transparent',
+                borderColor: isOwn ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.32)'
               }
             }}
           >
@@ -326,16 +455,11 @@ const Message: React.FC<MessageProps> = ({
       </Box>
 
       <MediaViewerDialog
-        open={Boolean(openImage)}
-        onClose={handleCloseImage}
-        content={
-          openImage
-            ? {
-                url: openImage,
-                resourceType: 'image'
-              }
-            : null
-        }
+        open={imageGalleryInitialIndex !== null}
+        onClose={handleCloseImageGallery}
+        content={null}
+        gallery={imageGallery}
+        initialIndex={imageGalleryInitialIndex ?? 0}
       />
     </Box>
   );

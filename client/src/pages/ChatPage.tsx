@@ -58,6 +58,8 @@ import { getForwardPreviewText } from '../utils/getForwardPreviewText';
 import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import { useVisualViewportLayout } from '../hooks/useVisualViewportLayout';
+import { useDisableForeignFormFields } from '../hooks/useDisableForeignFormFields';
+import { isIOSDevice } from '../utils/isIOSDevice';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [
@@ -1876,6 +1878,7 @@ const ChatPage: React.FC = () => {
 
   const isMobileChatOpen = isMobile && Boolean(selectedContactId);
   const visualViewportLayout = useVisualViewportLayout(isMobileChatOpen);
+  useDisableForeignFormFields(isMobileChatOpen && isIOSDevice());
   const pageHeight = isMobile && selectedContactId ? '100dvh' : '100%';
   const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
   const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady;
@@ -2182,17 +2185,19 @@ const ChatPage: React.FC = () => {
           <Games />
         )}
       </Box>
-      <ShareRecipientDialog
-        open={forwardModalOpen}
-        onClose={() => {
-          setForwardModalOpen(false);
-          forwardSourceRef.current = null;
-          setForwardSourceMessage(null);
-        }}
-        onSelect={handleSelectForwardTarget}
-        title="Переслать сообщение"
-        contacts={contacts}
-      />
+      {forwardModalOpen && (
+        <ShareRecipientDialog
+          open={forwardModalOpen}
+          onClose={() => {
+            setForwardModalOpen(false);
+            forwardSourceRef.current = null;
+            setForwardSourceMessage(null);
+          }}
+          onSelect={handleSelectForwardTarget}
+          title="Переслать сообщение"
+          contacts={contacts}
+        />
+      )}
       <CustomSnackbar
         open={deleteToast.open}
         message={deleteToast.message}

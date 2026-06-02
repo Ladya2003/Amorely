@@ -202,7 +202,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const useIOSContentEditableInput = isMobile && isIOSDevice();
+  const useIOSAccessoryFix = isMobile && isIOSDevice();
   const { otherUnreadCount } = useUnreadMessages();
   const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
   const [messageText, setMessageText] = useState('');
@@ -1614,7 +1614,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             notifyTypingActivity(nextText, contact?.id);
           }}
           onSend={handleSendMessage}
-          useContentEditable={useIOSContentEditableInput}
+          useIOSAccessoryFix={useIOSAccessoryFix}
           onAttachmentClick={handleAttachmentClick}
           attachmentDisabled={isPickingAttachments}
           sendDisabled={

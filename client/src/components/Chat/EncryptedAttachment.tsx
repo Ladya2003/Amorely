@@ -7,13 +7,15 @@ interface EncryptedAttachmentProps {
   url: string;
   envelope?: ChatMediaEnvelope;
   onImageClick?: (blobUrl: string) => void;
+  imageStyle?: React.CSSProperties;
 }
 
 const EncryptedAttachment: React.FC<EncryptedAttachmentProps> = ({
   cacheKey,
   url,
   envelope,
-  onImageClick
+  onImageClick,
+  imageStyle
 }) => (
   <DecryptedMedia
     cacheKey={cacheKey}
@@ -22,6 +24,7 @@ const EncryptedAttachment: React.FC<EncryptedAttachmentProps> = ({
     encrypted
     mediaEnvelope={envelope}
     onImageClick={onImageClick}
+    imageStyle={imageStyle}
   />
 );
 
