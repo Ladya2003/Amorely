@@ -189,6 +189,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                       display: 'inline-flex',
                       alignItems: 'center',
                       minWidth: 0,
+                      maxWidth: '100%',
                       flex: 1,
                       gap: 0.5,
                     }}
@@ -200,16 +201,21 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                       sx={{
                         fontWeight: hasUnreadIncoming ? 700 : 600,
                         minWidth: 0,
+                        flexShrink: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {contact.name}
                     </Typography>
                     {contact.isPartner && (
-                      <GameBadges
-                        badges={badges}
-                        displayGameId={partnerDisplayBadgeGameId}
-                        size={22}
-                      />
+                      <Box component="span" sx={{ flexShrink: 0, display: 'inline-flex' }}>
+                        <GameBadges
+                          badges={badges}
+                          displayGameId={partnerDisplayBadgeGameId}
+                          size={22}
+                        />
+                      </Box>
                     )}
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, flexShrink: 0 }}>

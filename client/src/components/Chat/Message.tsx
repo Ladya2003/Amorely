@@ -39,6 +39,7 @@ interface MessageProps {
   onReplyReferenceClick?: (messageId: string) => void;
   onForwardSourceClick?: (userId: string, forwardFrom: MessageForwardRef) => void;
   onSharedEventClick?: (eventId: string) => void;
+  onContactAvatarClick?: () => void;
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -50,7 +51,8 @@ const Message: React.FC<MessageProps> = ({
   onOpenActions,
   onReplyReferenceClick,
   onForwardSourceClick,
-  onSharedEventClick
+  onSharedEventClick,
+  onContactAvatarClick
 }) => {
   const [imageGalleryInitialIndex, setImageGalleryInitialIndex] = useState<number | null>(null);
 
@@ -137,10 +139,17 @@ const Message: React.FC<MessageProps> = ({
       }}
     >
       {!isOwn && (
-        <Avatar 
-          alt={contactName} 
-          src={contactAvatar} 
-          sx={{ width: 36, height: 36, mr: 1, mt: 0.5 }}
+        <Avatar
+          alt={contactName}
+          src={contactAvatar}
+          onClick={onContactAvatarClick}
+          sx={{
+            width: 36,
+            height: 36,
+            mr: 1,
+            mt: 0.5,
+            cursor: onContactAvatarClick ? 'pointer' : 'default'
+          }}
         />
       )}
       <Box
@@ -241,7 +250,7 @@ const Message: React.FC<MessageProps> = ({
                     textOverflow: 'ellipsis'
                   }}
                 >
-                  Forwarded from {forwardFrom.senderName || forwardFrom.senderId}
+                  Переслано от {forwardFrom.senderName || forwardFrom.senderId}
                 </Typography>
               </Box>
             </Box>

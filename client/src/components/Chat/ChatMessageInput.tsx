@@ -13,6 +13,7 @@ type ChatMessageInputProps = {
   attachmentDisabled?: boolean;
   /** iOS Safari: unlock textarea on touch before focus to suppress the form accessory bar. */
   useIOSAccessoryFix?: boolean;
+  onFocus?: () => void;
 };
 
 const inputAdornment = (
@@ -51,6 +52,7 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   onAttachmentClick,
   attachmentDisabled = false,
   useIOSAccessoryFix = false,
+  onFocus,
 }) => {
   const [iosInputLocked, setIosInputLocked] = useState(useIOSAccessoryFix);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
@@ -112,6 +114,7 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
           }
         }}
         onBlur={lockIOSInput}
+        onFocus={onFocus}
         inputRef={inputRef}
         InputProps={{
           endAdornment: inputAdornment(

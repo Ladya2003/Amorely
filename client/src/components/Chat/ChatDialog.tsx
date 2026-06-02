@@ -362,6 +362,31 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     return container.scrollHeight - container.scrollTop - container.clientHeight <= thresholdPx;
   };
 
+  const pinScrollForKeyboard = () => {
+    scrollToBottom('auto');
+    isAtBottomRef.current = isScrolledToBottom();
+    if (isAtBottomRef.current) {
+      setShowScrollToBottom(false);
+      setNewMessagesBelowCount(0);
+    }
+  };
+
+  const schedulePinScrollForKeyboard = () => {
+    pinScrollForKeyboard();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(pinScrollForKeyboard);
+    });
+    window.setTimeout(pinScrollForKeyboard, 100);
+    window.setTimeout(pinScrollForKeyboard, 300);
+  };
+
+  const handleMessageInputFocus = () => {
+    if (!isMobile) {
+      return;
+    }
+    schedulePinScrollForKeyboard();
+  };
+
   // Сброс при смене контакта — useLayoutEffect, чтобы выполняться до эффекта готовности viewport
   useLayoutEffect(() => {
     isInitialLoadRef.current = true;
@@ -482,6 +507,27 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       window.clearTimeout(timeoutId);
     };
   }, [isMessagesViewportReady, messages.length]);
+
+  useEffect(() => {
+    if (!isMobile) {
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    if (!viewport) {
+      return;
+    }
+
+    const handleViewportChange = () => {
+      if (!document.activeElement?.closest('[data-chat-composer]')) {
+        return;
+      }
+      schedulePinScrollForKeyboard();
+    };
+
+    viewport.addEventListener('resize', handleViewportChange);
+    return () => viewport.removeEventListener('resize', handleViewportChange);
+  }, [isMobile]);
 
   useEffect(() => {
     if (isInitialLoadRef.current) {
@@ -1082,6 +1128,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             onReplyReferenceClick={handleReplyReferenceClick}
             onForwardSourceClick={handleForwardSourceClick}
             onSharedEventClick={onSharedEventClick}
+            onContactAvatarClick={() => setProfileDialogOpen(true)}
           />
         </Box>
       );
@@ -1177,13 +1224,26 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             flexShrink: 0
           }}
         />
-        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+        <Box
+          sx={{ flexGrow: 1, minWidth: 0, cursor: 'pointer' }}
+          onClick={() => setProfileDialogOpen(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setProfileDialogOpen(true);
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label={`Профиль ${contact.name}`}
+        >
           <Box
             sx={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: 0.5,
               minWidth: 0,
+              maxWidth: '100%',
             }}
           >
             <Typography
@@ -1193,8 +1253,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 fontWeight: 600,
                 lineHeight: 1.25,
                 fontSize: '0.95rem',
-                flex: 1,
                 minWidth: 0,
+                flexShrink: 1,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
               }}
@@ -1614,6 +1674,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             notifyTypingActivity(nextText, contact?.id);
           }}
           onSend={handleSendMessage}
+          onFocus={handleMessageInputFocus}
           useIOSAccessoryFix={useIOSAccessoryFix}
           onAttachmentClick={handleAttachmentClick}
           attachmentDisabled={isPickingAttachments}
