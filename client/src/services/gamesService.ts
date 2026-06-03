@@ -270,7 +270,6 @@ export interface DrawGameState {
   totalScore: number;
   roundsCompleted: number;
   scoredRoundsCompleted: number;
-  maxScoredRounds: number;
   scoredRoundsToday: number;
   maxScoredRoundsPerDay: number;
   dailyScoredLimitReached: boolean;
@@ -282,7 +281,6 @@ export interface DrawGameState {
   readyUserIds: string[];
   lobbySecondsRemaining: number;
   waitingForPartnerResults: boolean;
-  allScoredRoundsDone: boolean;
   currentRound: {
     wordId: string;
     drawerUserId: string;

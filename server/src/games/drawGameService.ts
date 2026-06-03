@@ -7,7 +7,6 @@ import { getUtcDayKey } from '../utils/dailyReset';
 import {
   DRAW_LOBBY_COUNTDOWN_SEC,
   DRAW_MAX_GUESS_ATTEMPTS_PER_ROUND,
-  DRAW_MAX_SCORED_ROUNDS,
   DRAW_MAX_SCORED_ROUNDS_PER_DAY,
   DRAW_ROUND_DRAWING_SEC,
   DRAW_ROUND_GUESSING_SEC,
@@ -49,7 +48,6 @@ export interface DrawGamePublicState {
   totalScore: number;
   roundsCompleted: number;
   scoredRoundsCompleted: number;
-  maxScoredRounds: number;
   scoredRoundsToday: number;
   maxScoredRoundsPerDay: number;
   dailyScoredLimitReached: boolean;
@@ -61,7 +59,6 @@ export interface DrawGamePublicState {
   readyUserIds: string[];
   lobbySecondsRemaining: number;
   waitingForPartnerResults: boolean;
-  allScoredRoundsDone: boolean;
   currentRound: {
     wordId: string;
     drawerUserId: string;
@@ -168,14 +165,10 @@ const getScoredRoundsToday = (state: any) => {
   return state.scoredRoundsToday ?? 0;
 };
 
-const hasCompletedAllScoredRounds = (state: { scoredRoundsCompleted?: number }) =>
-  (state.scoredRoundsCompleted ?? 0) >= DRAW_MAX_SCORED_ROUNDS;
-
 const hasReachedDailyScoredLimit = (state: any) =>
   getScoredRoundsToday(state) >= DRAW_MAX_SCORED_ROUNDS_PER_DAY;
 
-const canEarnRatingPoints = (state: any) =>
-  !hasCompletedAllScoredRounds(state) && !hasReachedDailyScoredLimit(state);
+const canEarnRatingPoints = (state: any) => !hasReachedDailyScoredLimit(state);
 
 const awardRoundPoints = (state: any, pointsEarned: number) => {
   if (!canEarnRatingPoints(state)) {
@@ -376,8 +369,7 @@ export const formatDrawGameState = (state: any, viewerUserId: string): DrawGameP
   const rawRound = state.currentRound;
   const hideRevealFromViewer = shouldHideRevealFromViewer(rawRound, viewerUserId);
   const roundForViewer = hideRevealFromViewer ? null : rawRound;
-  const allScoredRoundsDone = hasCompletedAllScoredRounds(state);
-  const inLobby = !roundForViewer && !allScoredRoundsDone;
+  const inLobby = !roundForViewer;
   const readyUserIds = (state.readyUserIds || []).map((id: { toString(): string }) => id.toString());
   const lobbyCountdownEndsAt = state.lobbyCountdownEndsAt
     ? new Date(state.lobbyCountdownEndsAt)
@@ -444,7 +436,6 @@ export const formatDrawGameState = (state: any, viewerUserId: string): DrawGameP
     totalScore: state.totalScore ?? 0,
     roundsCompleted: state.roundsCompleted ?? 0,
     scoredRoundsCompleted: state.scoredRoundsCompleted ?? 0,
-    maxScoredRounds: DRAW_MAX_SCORED_ROUNDS,
     ...ratingMeta,
     roundTimeDrawingSec: DRAW_ROUND_DRAWING_SEC,
     roundTimeGuessingSec: DRAW_ROUND_GUESSING_SEC,
@@ -455,7 +446,6 @@ export const formatDrawGameState = (state: any, viewerUserId: string): DrawGameP
       ? getSecondsRemaining(lobbyCountdownEndsAt)
       : 0,
     waitingForPartnerResults,
-    allScoredRoundsDone,
     currentRound,
   };
 };

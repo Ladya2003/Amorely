@@ -2,7 +2,6 @@ export const DRAW_LOBBY_COUNTDOWN_SEC = 3;
 export const DRAW_ROUND_DRAWING_SEC = 90;
 export const DRAW_ROUND_GUESSING_SEC = 60;
 export const DRAW_MAX_ROUND_POINTS = 1000;
-export const DRAW_MAX_SCORED_ROUNDS = 30;
 export const DRAW_MAX_SCORED_ROUNDS_PER_DAY = 10;
 export const DRAW_MAX_GUESS_ATTEMPTS_PER_ROUND = 40;
 

@@ -38,9 +38,6 @@ import {
 
 const DRAW_GAME_INFO_PATH = '/chat/games/draw';
 
-const isDrawSessionEnded = (gameState: DrawGameState) =>
-  gameState.allScoredRoundsDone && !gameState.currentRound && !gameState.inLobby;
-
 const DAILY_LIMIT_DIALOG_TEXT =
   'Очки засчитываются только за 10 игр в день. Можете продолжить играть за интерес — угадывания по-прежнему засчитываются, но баллы в рейтинг не идут.';
 
@@ -95,11 +92,6 @@ const DrawGamePlayPage: React.FC = () => {
 
   const applyState = useCallback(
     (nextState: DrawGameState) => {
-      if (isDrawSessionEnded(nextState)) {
-        navigate(DRAW_GAME_INFO_PATH);
-        return;
-      }
-
       const round = nextState.currentRound;
       const justRevealedCorrect =
         round?.status === 'revealed' &&
@@ -159,7 +151,7 @@ const DrawGamePlayPage: React.FC = () => {
         setGuessInput('');
       }
     },
-    [navigate, tryOpenDailyLimitDialog]
+    [tryOpenDailyLimitDialog]
   );
 
   const loadState = useCallback(async () => {
@@ -607,12 +599,12 @@ const DrawGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 6 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          {state.allScoredRoundsDone ? 'Все раунды рейтинга пройдены' : 'Раунд не активен'}
+          {state.dailyScoredLimitReached ? 'Лимит очков на сегодня исчерпан' : 'Раунд не активен'}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
-          {state.allScoredRoundsDone
-            ? `Вы набрали ${state.totalScore} очков за ${state.maxScoredRounds} раундов.`
-            : 'Все слова из набора уже использованы. Можно продолжить позже или сбросить прогресс в базе.'}
+          {state.dailyScoredLimitReached
+            ? `Сегодня засчитано ${state.scoredRoundsToday} из ${state.maxScoredRoundsPerDay} раундов с очками. Завтра лимит обновится.`
+            : 'Не удалось начать раунд. Попробуйте обновить страницу.'}
         </Typography>
         <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>К игре</Button>
       </Box>
@@ -838,11 +830,7 @@ const DrawGamePlayPage: React.FC = () => {
             disabled={submitting}
             onClick={handleNextRound}
           >
-            {state.allScoredRoundsDone
-              ? 'Завершить'
-              : reveal.wasCorrect
-                ? 'Следующий раунд'
-                : 'Играть дальше'}
+            {reveal.wasCorrect ? 'Следующий раунд' : 'Играть дальше'}
           </Button>
         )}
       </Box>
