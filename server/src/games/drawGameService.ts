@@ -123,6 +123,37 @@ const hasUserDismissedReveal = (round: any, userId: string) =>
 const shouldHideRevealFromViewer = (round: any, viewerUserId?: string) =>
   Boolean(viewerUserId && hasUserDismissedReveal(round, viewerUserId));
 
+export const getDrawGameParticipantIds = (context: DrawGameContext): string[] => [
+  context.relationship.userId.toString(),
+  context.relationship.partnerId.toString(),
+];
+
+const haveAllPartnersDismissedReveal = (round: any, participantIds: string[]) =>
+  round?.status === 'revealed' &&
+  participantIds.every((participantId) => getDismissedRevealUserIds(round).includes(participantId));
+
+const finalizeDismissedRevealIfComplete = async (state: any, participantIds: string[]) => {
+  if (!state || !haveAllPartnersDismissedReveal(state.currentRound, participantIds)) {
+    return state;
+  }
+
+  const cleared = await DrawGameState.findOneAndUpdate(
+    {
+      _id: state._id,
+      'currentRound.status': 'revealed',
+    },
+    {
+      $set: {
+        currentRound: null,
+        lobbyCountdownEndsAt: null,
+      },
+    },
+    { new: true }
+  );
+
+  return cleared || state;
+};
+
 const startLobbyCountdownIfAllReady = async (state: any, participantIds: string[]) => {
   const readyIds = new Set<string>(
     (state.readyUserIds || []).map((id: { toString(): string }) => id.toString())
@@ -374,8 +405,10 @@ export const formatDrawGameState = (state: any, viewerUserId: string): DrawGameP
   const lobbyCountdownEndsAt = state.lobbyCountdownEndsAt
     ? new Date(state.lobbyCountdownEndsAt)
     : null;
+  const partnersFinishedResults =
+    rawRound?.status === 'revealed' && getDismissedRevealUserIds(rawRound).length >= 2;
   const waitingForPartnerResults = Boolean(
-    hideRevealFromViewer && rawRound?.status === 'revealed'
+    hideRevealFromViewer && rawRound?.status === 'revealed' && !partnersFinishedResults
   );
 
   let currentRound: DrawGamePublicState['currentRound'] = null;
@@ -485,10 +518,15 @@ export const getOrCreateDrawGameState = async (context: DrawGameContext, viewerU
     throw new DrawGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
 
-  const syncedLobby = await syncDrawLobby(syncedTimers, context);
+  const participantIds = getDrawGameParticipantIds(context);
+  let syncedLobby = await syncDrawLobby(syncedTimers, context);
   if (!syncedLobby) {
     throw new DrawGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
+
+  syncedLobby = await finalizeDismissedRevealIfComplete(syncedLobby, participantIds);
+  syncedLobby = await startLobbyCountdownIfAllReady(syncedLobby, participantIds);
+  syncedLobby = (await syncDrawLobby(syncedLobby, context)) || syncedLobby;
 
   return { state: syncedLobby, publicState: formatDrawGameState(syncedLobby, viewerUserId) };
 };
@@ -552,6 +590,7 @@ export const setDrawPlayerReady = async (userId: string, context: DrawGameContex
     state = withReady;
   }
 
+  state = await finalizeDismissedRevealIfComplete(state, participantIds);
   state = await startLobbyCountdownIfAllReady(state, participantIds);
   const syncedLobby = await syncDrawLobby(state, context);
   if (!syncedLobby) {
@@ -751,24 +790,10 @@ export const advanceDrawRound = async (userId: string, context: DrawGameContext)
 
   if (!alreadyDismissed) {
     state.currentRound.dismissedRevealUserIds.push(userObjectId);
-  }
-
-  const allPartnersDismissed = participantIds.every((participantId) =>
-    state.currentRound!.dismissedRevealUserIds.some(
-      (id: { toString(): string }) => id.toString() === participantId
-    )
-  );
-
-  if (!allPartnersDismissed) {
     await state.save();
-    return { state, allPartnersDismissed: false };
   }
 
-  state.currentRound = null;
-  state.lobbyCountdownEndsAt = null;
-  await state.save();
-
-  let synced = await syncDrawLobby(state, context);
+  let synced = await finalizeDismissedRevealIfComplete(state, participantIds);
   if (!synced) {
     throw new DrawGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
@@ -776,13 +801,10 @@ export const advanceDrawRound = async (userId: string, context: DrawGameContext)
   synced = await startLobbyCountdownIfAllReady(synced, participantIds);
   synced = (await syncDrawLobby(synced, context)) || synced;
 
-  return { state: synced, allPartnersDismissed: true };
-};
+  const allPartnersDismissed = !synced.currentRound;
 
-export const getDrawGameParticipantIds = (context: DrawGameContext): string[] => [
-  context.relationship.userId.toString(),
-  context.relationship.partnerId.toString(),
-];
+  return { state: synced, allPartnersDismissed };
+};
 
 export const getDrawLeaderboard = async (limit = 50) => {
   const entries = await DrawGameState.find({ totalScore: { $gt: 0 } })
