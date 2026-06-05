@@ -27,6 +27,7 @@ declare module 'mongoose' {
         news: boolean;
       };
     };
+    role?: 'user' | 'admin';
     createdAt: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
   }

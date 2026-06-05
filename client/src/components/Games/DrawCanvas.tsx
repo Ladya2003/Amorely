@@ -12,6 +12,18 @@ export interface DrawCanvasProps {
   onStroke?: (stroke: DrawStroke) => void;
 }
 
+const drawCanvasInteractionSx = {
+  userSelect: 'none',
+  WebkitUserSelect: 'none',
+  MozUserSelect: 'none',
+  msUserSelect: 'none',
+  WebkitTouchCallout: 'none',
+  WebkitTapHighlightColor: 'transparent',
+  touchAction: 'none',
+  WebkitUserDrag: 'none',
+  userDrag: 'none',
+} as const;
+
 const DrawCanvas: React.FC<DrawCanvasProps> = ({
   strokes,
   canDraw,
@@ -192,6 +204,20 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     []
   );
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const preventSelection = (event: Event) => {
+      event.preventDefault();
+    };
+
+    container.addEventListener('selectstart', preventSelection);
+    return () => container.removeEventListener('selectstart', preventSelection);
+  }, []);
+
   const finishStroke = useCallback(() => {
     if (!drawingRef.current) {
       return;
@@ -221,6 +247,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     if (!canDraw) {
       return;
     }
+    event.preventDefault();
     const point = getNormalizedPoint(event.clientX, event.clientY);
     if (!point) {
       return;
@@ -265,7 +292,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
         overflow: 'hidden',
         border: '1px solid',
         borderColor: 'divider',
-        touchAction: 'none',
+        ...drawCanvasInteractionSx,
       }}
     >
       <canvas
@@ -274,10 +301,12 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onContextMenu={(event) => event.preventDefault()}
         style={{
           display: 'block',
           width: '100%',
           cursor: canDraw ? (isEraser ? 'cell' : 'crosshair') : 'default',
+          ...drawCanvasInteractionSx,
         }}
       />
     </Box>

@@ -98,6 +98,7 @@ const Layout: React.FC = () => {
     if (path === '/news') return 3;
     if (path === '/settings') return 4;
     if (path.startsWith('/legal/')) return false;
+    if (path.startsWith('/admin')) return false;
     return 0;
   };
   

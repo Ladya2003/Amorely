@@ -2,6 +2,9 @@
 export const GEO_MAP_ATTRIBUTION =
   'Карта: © OpenStreetMap contributors, © CARTO';
 
+export const GEO_PHOTOS_ATTRIBUTION =
+  'Фотографии: Wikimedia Commons (лицензии Creative Commons)';
+
 export const GEO_MAP_TILES = {
   voyager: {
     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',

@@ -38,6 +38,15 @@ import {
 
 const DRAW_GAME_INFO_PATH = '/chat/games/draw';
 
+const drawPageNoSelectSx = {
+  userSelect: 'none',
+  WebkitUserSelect: 'none',
+  MozUserSelect: 'none',
+  msUserSelect: 'none',
+  WebkitTouchCallout: 'none',
+  WebkitTapHighlightColor: 'transparent',
+} as const;
+
 const DAILY_LIMIT_DIALOG_TEXT =
   'Очки засчитываются только за 10 игр в день. Можете продолжить играть за интерес — угадывания по-прежнему засчитываются, но баллы в рейтинг не идут.';
 
@@ -532,6 +541,11 @@ const DrawGamePlayPage: React.FC = () => {
             <Stack direction="row" spacing={4} sx={{ mb: 4 }}>
               <Stack alignItems="center" spacing={1}>
                 <Box
+                  component="button"
+                  type="button"
+                  onClick={handleReady}
+                  disabled={isMeReady || submitting || isCountdownActive}
+                  aria-label={isMeReady ? 'Вы готовы' : 'Подтвердить готовность'}
                   sx={{
                     width: 48,
                     height: 48,
@@ -542,6 +556,10 @@ const DrawGamePlayPage: React.FC = () => {
                     justifyContent: 'center',
                     color: isMeReady ? 'success.contrastText' : 'text.secondary',
                     fontWeight: 700,
+                    border: 'none',
+                    p: 0,
+                    cursor:
+                      isMeReady || submitting || isCountdownActive ? 'default' : 'pointer',
                   }}
                 >
                   {isMeReady ? '✓' : '…'}
@@ -621,7 +639,9 @@ const DrawGamePlayPage: React.FC = () => {
   const showGuessInput =
     round.isGuesser && isRoundActive && !isRevealed && drawingSecondsLeft > 0;
   const guessAttempts = Array.isArray(round.guessAttempts) ? round.guessAttempts : [];
+  const myGuessAttempts = guessAttempts.filter((attempt) => attempt.isOwnGuess);
   const showGuessChat = isRoundActive && !isRevealed;
+  const showMyGuessChat = showGuessChat && myGuessAttempts.length > 0;
 
   const activeSeconds = drawingSecondsLeft;
   const activeMax = state.roundTimeDrawingSec;
@@ -629,7 +649,15 @@ const DrawGamePlayPage: React.FC = () => {
   const isTimeLow = activeSeconds <= 10 && isRoundActive;
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        ...drawPageNoSelectSx,
+      }}
+    >
       {isRoundActive && (
         <Box
           sx={{
@@ -695,9 +723,28 @@ const DrawGamePlayPage: React.FC = () => {
 
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {round.isDrawer && round.yourWord && isDrawing && (
-          <Typography variant="h5" align="center" sx={{ fontWeight: 800, mb: 2 }}>
-            {round.yourWord}
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <Box sx={{ position: 'relative' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                {round.yourWord}
+              </Typography>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{
+                  position: 'absolute',
+                  right: '100%',
+                  bottom: 0,
+                  mr: 1,
+                  fontWeight: 400,
+                  fontSize: 14,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                нарисуй
+              </Typography>
+            </Box>
+          </Box>
         )}
 
         {canDrawOnCanvas && (
@@ -785,9 +832,9 @@ const DrawGamePlayPage: React.FC = () => {
       >
         {showGuessInput && (
           <Stack spacing={1}>
-            {showGuessChat ? (
+            {showMyGuessChat ? (
               <DrawGuessChat
-                attempts={guessAttempts}
+                attempts={myGuessAttempts}
                 title="Ваши догадки"
                 ownGuessSide="left"
               />
@@ -809,6 +856,12 @@ const DrawGamePlayPage: React.FC = () => {
               }}
               disabled={submitting}
               autoComplete="off"
+              sx={{
+                '& input': {
+                  userSelect: 'text',
+                  WebkitUserSelect: 'text',
+                },
+              }}
             />
             <Button
               variant="contained"

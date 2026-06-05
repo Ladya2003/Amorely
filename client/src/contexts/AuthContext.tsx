@@ -22,6 +22,7 @@ interface User {
   theme?: 'light' | 'dark' | 'system';
   primaryColor?: 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
   displayBadgeGameId?: string | null;
+  role?: 'user' | 'admin';
 }
 
 interface AuthContextType {

@@ -18,6 +18,8 @@ import SettingsPage from './pages/SettingsPage';
 import ChatRulesPage from './pages/ChatRulesPage';
 import AuthPage from './pages/AuthPage';
 import CryptoUnlockPage from './pages/CryptoUnlockPage';
+import AdminPage from './pages/AdminPage';
+import AdminRoute from './components/Auth/AdminRoute';
 
 const getRouterBasename = (): string | undefined => {
   const publicUrl = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
@@ -75,6 +77,14 @@ function App() {
                   <Route path="calendar" element={<CalendarPage />} />
                   <Route path="news" element={<NewsPage />} />
                   <Route path="settings" element={<SettingsPage />} />
+                  <Route
+                    path="admin"
+                    element={
+                      <AdminRoute>
+                        <AdminPage />
+                      </AdminRoute>
+                    }
+                  />
                 </Route>
 
                 {/* Перенаправление на главную страницу для неизвестных маршрутов */}

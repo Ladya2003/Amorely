@@ -80,10 +80,10 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
     return format(new Date(dateString), 'd MMMM yyyy', { locale: ru });
   };
 
-  const galleryImages = news.images?.length
+  const galleryMedia = news.images?.length
     ? news.images
     : news.image
-      ? [{ url: news.image.url }]
+      ? [{ url: news.image.url, resourceType: 'image' as const }]
       : [];
 
   return (
@@ -137,25 +137,41 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
           {news.content}
         </Typography>
 
-        {galleryImages.map((image, imageIndex) => (
-          <Box key={imageIndex} sx={{ mb: 2 }}>
-            {image.caption && (
+        {galleryMedia.map((media, mediaIndex) => (
+          <Box key={mediaIndex} sx={{ mb: 2 }}>
+            {media.caption && (
               <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                {image.caption}
+                {media.caption}
               </Typography>
             )}
-            <Box
-              component="img"
-              src={image.url}
-              alt={image.caption || news.title}
-              sx={{
-                width: '100%',
-                maxHeight: 480,
-                objectFit: 'contain',
-                borderRadius: 1,
-                display: 'block',
-              }}
-            />
+            {(media.resourceType ?? 'image') === 'video' ? (
+              <Box
+                component="video"
+                src={media.url}
+                controls
+                playsInline
+                sx={{
+                  width: '100%',
+                  maxHeight: 480,
+                  borderRadius: 1,
+                  display: 'block',
+                  bgcolor: 'black',
+                }}
+              />
+            ) : (
+              <Box
+                component="img"
+                src={media.url}
+                alt={media.caption || news.title}
+                sx={{
+                  width: '100%',
+                  maxHeight: 480,
+                  objectFit: 'contain',
+                  borderRadius: 1,
+                  display: 'block',
+                }}
+              />
+            )}
           </Box>
         ))}
       </Box>

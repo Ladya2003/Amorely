@@ -21,6 +21,8 @@ import { authMiddleware } from './middleware/auth';
 import relationshipsRoutes from './routes/relationships';
 import pushRoutes from './routes/push';
 import gamesRoutes from './routes/games';
+import adminRoutes from './routes/admin';
+import { adminMiddleware } from './middleware/admin';
 import { startFeedScheduler } from './utils/feedScheduler';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { migrateLegacyTapGameStates } from './games/tapGameService';
@@ -326,6 +328,9 @@ app.use('/api/calendar', authMiddleware, calendarRoutes);
 
 // Маршруты для игр
 app.use('/api/games', authMiddleware, gamesRoutes);
+
+// Маршруты админ-панели
+app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {

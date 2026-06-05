@@ -24,6 +24,8 @@ export interface NewsItem {
   images?: Array<{
     url: string;
     caption?: string;
+    resourceType?: 'image' | 'video';
+    publicId?: string;
   }>;
   category: 'update' | 'event' | 'announcement';
   publishDate: string;
@@ -75,6 +77,10 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
     return format(new Date(dateString), 'd MMMM yyyy', { locale: ru });
   };
 
+  const coverMedia =
+    news.images?.[0] ??
+    (news.image ? { url: news.image.url, resourceType: 'image' as const } : null);
+
   return (
     <Card 
       elevation={2} 
@@ -90,13 +96,24 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
       }}
     >
       <CardActionArea onClick={() => onClick(news)}>
-        {news.image && (
-          <CardMedia
-            component="img"
-            height="140"
-            image={news.image.url}
-            alt={news.title}
-          />
+        {coverMedia && (
+          (coverMedia.resourceType ?? 'image') === 'video' ? (
+            <CardMedia
+              component="video"
+              height="140"
+              src={coverMedia.url}
+              muted
+              playsInline
+              sx={{ objectFit: 'cover' }}
+            />
+          ) : (
+            <CardMedia
+              component="img"
+              height="140"
+              image={coverMedia.url}
+              alt={news.title}
+            />
+          )
         )}
         <CardContent sx={{ flexGrow: 1 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>

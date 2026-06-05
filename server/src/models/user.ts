@@ -31,6 +31,7 @@ export interface UserDocument extends mongoose.Document {
     };
   };
   lastSeen?: Date;
+  role: 'user' | 'admin';
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -68,6 +69,7 @@ const userSchema = new mongoose.Schema({
     }
   },
   lastSeen: { type: Date },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
   createdAt: { type: Date, default: Date.now }
 });
 

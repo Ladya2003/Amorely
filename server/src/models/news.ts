@@ -9,6 +9,8 @@ const newsSchema = new mongoose.Schema({
   },
   images: [{
     url: { type: String, required: true },
+    publicId: { type: String },
+    resourceType: { type: String, enum: ['image', 'video'], default: 'image' },
     caption: { type: String }
   }],
   category: { type: String, enum: ['update', 'event', 'announcement'], default: 'announcement' },

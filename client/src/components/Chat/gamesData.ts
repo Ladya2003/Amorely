@@ -1,4 +1,4 @@
-import { GEO_MAP_ATTRIBUTION } from '../../config/geoMapTiles';
+import { GEO_MAP_ATTRIBUTION, GEO_PHOTOS_ATTRIBUTION } from '../../config/geoMapTiles';
 
 export interface GameCatalogEntry {
   id: string;
@@ -47,9 +47,10 @@ export const GAMES: GameCatalogEntry[] = [
       'Чем ближе метка к реальной точке, тем больше очков получает партнёр; очки обоих суммируются.',
       'Каждый подтверждает только свою метку — у пары две независимые догадки за раунд.',
       'Каждый день — до 5 мест для угадывания; на следующий день лимит обновляется.',
-      'Когда все 30 локаций пройдены, пул начинается сначала.',
+      'Когда все 200 локаций пройдены, пул начинается сначала.',
       'Рейтинг строится по суммарному счёту пары за все раунды.',
       GEO_MAP_ATTRIBUTION,
+      GEO_PHOTOS_ATTRIBUTION,
     ],
   },
   {

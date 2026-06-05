@@ -54,6 +54,9 @@ export default function DrawGuessChat({
         minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
       }}
     >
       <Typography

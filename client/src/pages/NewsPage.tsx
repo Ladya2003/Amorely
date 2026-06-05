@@ -4,10 +4,10 @@ import {
   Typography,
   Box,
   Card,
+  CardActionArea,
   CardContent,
   Chip,
   CircularProgress,
-  Button,
 } from '@mui/material';
 import axios from 'axios';
 import { API_URL } from '../config';
@@ -151,23 +151,25 @@ const NewsPage: React.FC = () => {
                 key={item._id}
                 sx={{ borderRadius: 2.5, overflow: 'hidden', mb: 2, position: 'relative' }}
               >
-                  {isNewsUnread(item._id) && (
-                    <Chip
-                      label="NEW"
-                      size="small"
-                      color="error"
-                      sx={{
-                        position: 'absolute',
-                        top: 12,
-                        right: 12,
-                        zIndex: 1,
-                        height: 22,
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                      }}
-                    />
-                  )}
+                {isNewsUnread(item._id) && (
+                  <Chip
+                    label="NEW"
+                    size="small"
+                    color="error"
+                    sx={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      zIndex: 1,
+                      height: 22,
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                )}
+                <CardActionArea onClick={() => handleOpenNews(item)}>
                   <CardContent>
                     <Typography variant="h6" component="h2" fontWeight={400} sx={{ mb: 1 }}>
                       {item.title}
@@ -193,21 +195,17 @@ const NewsPage: React.FC = () => {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         whiteSpace: 'pre-line',
-                        mb: 1.5,
+                        mb: 1,
                       }}
                     >
                       {item.content}
                     </Typography>
 
-                    <Button
-                      variant="text"
-                      size="small"
-                      sx={{ px: 0, minWidth: 0 }}
-                      onClick={() => handleOpenNews(item)}
-                    >
+                    <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
                       Читать полностью
-                    </Button>
+                    </Typography>
                   </CardContent>
+                </CardActionArea>
               </Card>
             ))}
           </Box>

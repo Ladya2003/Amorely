@@ -424,6 +424,11 @@ const QuizGamePlayPage: React.FC = () => {
           <Stack direction="row" spacing={4} sx={{ mb: 4 }}>
             <Stack alignItems="center" spacing={1}>
               <Box
+                component="button"
+                type="button"
+                onClick={handleReady}
+                disabled={isMeReady || submitting || isCountdownActive}
+                aria-label={isMeReady ? 'Вы готовы' : 'Подтвердить готовность'}
                 sx={{
                   width: 48,
                   height: 48,
@@ -434,6 +439,10 @@ const QuizGamePlayPage: React.FC = () => {
                   justifyContent: 'center',
                   color: isMeReady ? 'success.contrastText' : 'text.secondary',
                   fontWeight: 700,
+                  border: 'none',
+                  p: 0,
+                  cursor:
+                    isMeReady || submitting || isCountdownActive ? 'default' : 'pointer',
                 }}
               >
                 {isMeReady ? '✓' : '…'}

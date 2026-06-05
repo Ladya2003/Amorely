@@ -104,6 +104,23 @@ export const UnreadNewsProvider: React.FC<UnreadNewsProviderProps> = ({ children
     void refreshUnreadNews();
   }, [isAuthenticated, userId, refreshUnreadNews]);
 
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshUnreadNews();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated, userId, refreshUnreadNews]);
+
   const value = useMemo(
     () => ({
       unreadCount,
