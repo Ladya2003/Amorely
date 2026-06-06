@@ -25,6 +25,9 @@ async function main() {
   const doc = await News.create({
     title,
     content,
+    translations: {
+      ru: { title, content },
+    },
     category: 'announcement',
     isPublished: true,
     publishDate: new Date(),

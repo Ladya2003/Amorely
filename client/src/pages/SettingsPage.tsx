@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { 
   Container, 
@@ -23,6 +24,8 @@ import ProfileForm, { UserProfile } from '../components/Settings/ProfileForm';
 import PartnerForm, { Partner } from '../components/Settings/PartnerForm';
 import ThemeSettings from '../components/Settings/ThemeSettings';
 import { PrimaryColorPreference } from '../theme/appTheme';
+import { AppLocale, resolveAppLocale } from '../localization/locale';
+import { setAppLocale } from '../localization';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
@@ -48,6 +51,7 @@ const getSettingsTabIndex = (tab?: string | null) => {
 };
 
 const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user: authUser, updateUser } = useAuth();
   const [searchParams] = useSearchParams();
   const [tabValue, setTabValue] = useState(() => getSettingsTabIndex(searchParams.get('tab')));
@@ -56,6 +60,7 @@ const SettingsPage: React.FC = () => {
   const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [primaryColor, setPrimaryColor] = useState<PrimaryColorPreference>('pink');
+  const [locale, setLocale] = useState<AppLocale>('ru');
   const [notificationSettings, setNotificationSettings] = useState<any>(null);
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
@@ -89,7 +94,7 @@ const SettingsPage: React.FC = () => {
       // Получаем токен из localStorage
       const token = localStorage.getItem('token');
       if (!token) {
-        setError('Не авторизован. Пожалуйста, войдите в систему.');
+        setError(t('settings.errors.notAuthorized'));
         setIsLoading(false);
         return;
       }
@@ -106,6 +111,7 @@ const SettingsPage: React.FC = () => {
       setUser(user);
       setTheme(user.theme || 'system');
       setPrimaryColor(user.primaryColor || 'pink');
+      setLocale(resolveAppLocale(user.locale));
       const loadedNotificationSettings = user.notificationSettings || {
         email: {
           newContent: true,
@@ -154,7 +160,7 @@ const SettingsPage: React.FC = () => {
       setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при загрузке данных пользователя:', error);
-      setError('Не удалось загрузить данные пользователя. Пожалуйста, попробуйте позже.');
+      setError(t('settings.errors.loadFailed'));
       setIsLoading(false);
     }
   };
@@ -166,7 +172,7 @@ const SettingsPage: React.FC = () => {
   const handleSaveProfile = async (formData: FormData) => {
     const token = localStorage.getItem('token');
     if (!token) {
-      throw new Error('Не авторизован');
+      throw new Error(t('settings.errors.notAuthorizedShort'));
     }
 
     const response = await axios.put(`${API_URL}/api/settings/user/${user?._id}`, formData, {
@@ -194,7 +200,7 @@ const SettingsPage: React.FC = () => {
       // Получаем токен из localStorage
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('settings.errors.notAuthorizedShort'));
       }
       
       // Отправляем запрос на добавление партнера
@@ -222,7 +228,7 @@ const SettingsPage: React.FC = () => {
       if (error.response && error.response.data) {
         throw error.response.data;
       }
-      throw { error: 'Не удалось добавить партнера' };
+      throw { error: t('settings.errors.addPartnerFailed') };
     }
   };
 
@@ -233,7 +239,7 @@ const SettingsPage: React.FC = () => {
       // Получаем токен из localStorage
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('settings.errors.notAuthorizedShort'));
       }
       
       // Отправляем запрос на удаление партнера
@@ -254,7 +260,7 @@ const SettingsPage: React.FC = () => {
       if (error.response && error.response.data) {
         throw error.response.data;
       }
-      throw { error: 'Не удалось удалить партнера' };
+      throw { error: t('settings.errors.removePartnerFailed') };
     }
   };
   
@@ -263,7 +269,7 @@ const SettingsPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('settings.errors.notAuthorizedShort'));
       }
 
       setTheme(newTheme);
@@ -288,12 +294,48 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleLocaleChange = async (newLocale: AppLocale) => {
+    const previousLocale = locale;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error(t('settings.errors.notAuthorizedShort'));
+      }
+
+      setLocale(newLocale);
+      setAppLocale(newLocale);
+      if (authUser) {
+        updateUser({ ...authUser, locale: newLocale });
+      }
+
+      await axios.put(
+        `${API_URL}/api/settings/theme`,
+        {
+          userId: user?._id,
+          locale: newLocale,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Ошибка при изменении языка:', error);
+      setLocale(previousLocale);
+      setAppLocale(previousLocale);
+      if (authUser) {
+        updateUser({ ...authUser, locale: previousLocale });
+      }
+    }
+  };
+
   const handlePrimaryColorChange = async (newPrimaryColor: PrimaryColorPreference) => {
     const previousPrimaryColor = primaryColor;
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('settings.errors.notAuthorizedShort'));
       }
 
       setPrimaryColor(newPrimaryColor);
@@ -325,7 +367,7 @@ const SettingsPage: React.FC = () => {
       // Получаем токен из localStorage
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('settings.errors.notAuthorizedShort'));
       }
       
       // Отправляем запрос на изменение пароля
@@ -423,7 +465,7 @@ const SettingsPage: React.FC = () => {
       
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('settings.errors.notAuthorizedShort'));
       }
       
       await axios.put(`${API_URL}/api/settings/notifications`, {
@@ -492,7 +534,7 @@ const SettingsPage: React.FC = () => {
           component="h1"
           sx={{ fontSize: '1.7rem', lineHeight: 1, m: 0 }}
         >
-          Настройки
+          {t('settings.title')}
         </Typography>
         <LogoutButton size="small" />
       </Box>
@@ -536,27 +578,27 @@ const SettingsPage: React.FC = () => {
             >
               <Tab 
                 icon={<PersonIcon />} 
-                label="Профиль" 
+                label={t('settings.tabs.profile')} 
                 iconPosition="start"
               />
               <Tab 
                 icon={<PeopleIcon />} 
-                label="Партнер" 
+                label={t('settings.tabs.partner')} 
                 iconPosition="start"
               />
               <Tab 
                 icon={<PaletteIcon />} 
-                label="Тема" 
+                label={t('settings.tabs.theme')} 
                 iconPosition="start"
               />
               <Tab 
                 icon={<NotificationsIcon />} 
-                label="Уведомления" 
+                label={t('settings.tabs.notifications')} 
                 iconPosition="start"
               />
               <Tab 
                 icon={<SecurityIcon />} 
-                label="Безопасность" 
+                label={t('settings.tabs.security')} 
                 iconPosition="start"
               />
             </Tabs>
@@ -601,6 +643,8 @@ const SettingsPage: React.FC = () => {
               onThemeChange={handleThemeChange}
               currentPrimaryColor={primaryColor}
               onPrimaryColorChange={handlePrimaryColorChange}
+              currentLocale={locale}
+              onLocaleChange={handleLocaleChange}
             />
           )}
           

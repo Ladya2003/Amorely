@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Tooltip, Typography } from '@mui/material';
 import { GAME_BADGE_ICONS } from '../Chat/gamesData';
 import { getGameName, type RelationshipBadge } from '../../utils/gameBadges';
@@ -10,6 +11,7 @@ interface GameBadgeIconProps {
 }
 
 const GameBadgeIcon: React.FC<GameBadgeIconProps> = ({ badge, size = 16, showTooltip = true }) => {
+  const { t } = useTranslation();
   const iconUrl = GAME_BADGE_ICONS[badge.gameId];
   const showRank = badge.rank >= 1 && badge.rank <= 3;
   const rankSize = Math.max(8, Math.round(size * 0.55));
@@ -96,7 +98,7 @@ const GameBadgeIcon: React.FC<GameBadgeIconProps> = ({ badge, size = 16, showToo
   }
 
   return (
-    <Tooltip title={`Топ-${badge.rank} · ${getGameName(badge.gameId)}`}>
+    <Tooltip title={t('games.badge.tooltip', { rank: badge.rank, game: getGameName(badge.gameId) })}>
       {content}
     </Tooltip>
   );

@@ -1,3 +1,5 @@
+import { getDrawWordAcceptedGuesses } from '../i18n/drawI18n';
+
 export const DRAW_LOBBY_COUNTDOWN_SEC = 3;
 export const DRAW_ROUND_DRAWING_SEC = 90;
 export const DRAW_ROUND_GUESSING_SEC = 60;
@@ -352,8 +354,13 @@ export const normalizeDrawGuess = (value: string) =>
 
 export const isDrawGuessCorrect = (guess: string, word: DrawWord) => {
   const normalized = normalizeDrawGuess(guess);
-  const label = normalizeDrawGuess(word.label);
-  return normalized === label || (word.hint ? normalized === normalizeDrawGuess(word.hint) : false);
+  if (!normalized) {
+    return false;
+  }
+
+  return getDrawWordAcceptedGuesses(word).some(
+    (accepted) => normalizeDrawGuess(accepted) === normalized
+  );
 };
 
 export const calculateDrawGuessScore = (secondsTaken: number): number => {

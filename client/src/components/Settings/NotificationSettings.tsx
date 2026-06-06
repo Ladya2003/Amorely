@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   Typography, 
@@ -49,6 +50,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   onPushMasterToggle,
   isEnablingPush
 }) => {
+  const { t } = useTranslation();
+
   const handlePushChange = (setting: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     onSettingChange('push', setting, event.target.checked);
   };
@@ -62,7 +65,7 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   return (
     <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
-        Уведомления
+        {t('settings.notifications.title')}
       </Typography>
       <Divider sx={{ mb: 3 }} />
 
@@ -71,7 +74,7 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
           <ListSubheader component="div" sx={{ bgcolor: 'transparent' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <NotificationsIcon sx={{ mr: 1 }} />
-              <Typography variant="subtitle1">Push-уведомления</Typography>
+              <Typography variant="subtitle1">{t('settings.notifications.pushTitle')}</Typography>
             </Box>
           </ListSubheader>
         }
@@ -81,8 +84,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
             <NotificationsIcon />
           </ListItemIcon>
           <ListItemText 
-            primary="Включить" 
-            secondary="Работает только с рабочего стола телефона"
+            primary={t('settings.notifications.pushEnable')} 
+            secondary={t('settings.notifications.pushEnableHint')}
           />
           <Switch
             edge="end"
@@ -99,8 +102,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                 <FavoriteIcon />
               </ListItemIcon>
               <ListItemText 
-                primary="Новый контент от партнера" 
-                secondary="Получать уведомления, когда партнер добавляет новый контент"
+                primary={t('settings.notifications.pushNewContent')} 
+                secondary={t('settings.notifications.pushNewContentHint')}
               />
               <Switch
                 edge="end"
@@ -113,8 +116,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                 <ChatIcon />
               </ListItemIcon>
               <ListItemText 
-                primary="Сообщения" 
-                secondary="Получать уведомления о новых сообщениях"
+                primary={t('settings.notifications.pushMessages')} 
+                secondary={t('settings.notifications.pushMessagesHint')}
               />
               <Switch
                 edge="end"
@@ -127,8 +130,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                 <EventIcon />
               </ListItemIcon>
               <ListItemText 
-                primary="События" 
-                secondary="Получать уведомления о важных датах и событиях"
+                primary={t('settings.notifications.pushEvents')} 
+                secondary={t('settings.notifications.pushEventsHint')}
               />
               <Switch
                 edge="end"
@@ -141,8 +144,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                 <NewReleasesIcon />
               </ListItemIcon>
               <ListItemText 
-                primary="Новости" 
-                secondary="Получать уведомления о новостях и обновлениях приложения"
+                primary={t('settings.notifications.pushNews')} 
+                secondary={t('settings.notifications.pushNewsHint')}
               />
               <Switch
                 edge="end"

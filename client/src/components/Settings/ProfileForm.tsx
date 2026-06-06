@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   TextField, 
@@ -42,6 +43,7 @@ const formatBirthdayValue = (birthday?: string) => {
 };
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferenceSaved }) => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState(user.username || '');
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
@@ -109,12 +111,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
       setSuccessToastOpen(true);
     } catch (saveError) {
       console.error('Ошибка при сохранении профиля:', saveError);
-      setError('Не удалось сохранить изменения. Пожалуйста, попробуйте еще раз.');
+      setError(t('settings.profile.errors.saveFailed'));
     } finally {
       isSavingRef.current = false;
       setIsSaving(false);
     }
-  }, [buildFormData, onSave, username]);
+  }, [buildFormData, onSave, username, t]);
 
   useEffect(() => {
     if (!isMountedRef.current) {
@@ -141,7 +143,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('Выберите файл изображения');
+      setError(t('settings.profile.errors.imageRequired'));
       return;
     }
 
@@ -173,10 +175,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
   return (
     <Paper elevation={0} sx={{ p: 3, mb: 0, bgcolor: 'transparent' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
-        Личная информация
+        {t('settings.profile.personalInfo')}
         {isSaving && (
           <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1.5 }}>
-            Сохранение...
+            {t('settings.profile.saving')}
           </Typography>
         )}
       </Typography>
@@ -230,7 +232,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
               />
             </Box>
             <Typography variant="body2" color="text.secondary" align="center">
-              Нажмите на фото, чтобы открыть его на весь экран. Иконка камеры — для загрузки нового фото
+              {t('settings.profile.avatarHint')}
             </Typography>
           </Grid>
           
@@ -243,13 +245,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                   value={user.email}
                   disabled
                   variant="outlined"
-                  helperText="Email нельзя изменить"
+                  helperText={t('settings.profile.emailHelper')}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label="Логин"
+                  label={t('settings.profile.username')}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -259,7 +261,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
-                  label="Имя"
+                  label={t('settings.profile.firstName')}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   variant="outlined"
@@ -268,7 +270,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
-                  label="Фамилия"
+                  label={t('settings.profile.lastName')}
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   variant="outlined"
@@ -277,7 +279,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label="День рождения"
+                  label={t('settings.profile.birthday')}
                   type="date"
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
@@ -285,13 +287,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                   InputLabelProps={{
                     shrink: true,
                   }}
-                  helperText="Укажите дату рождения для отображения событий в ленте на день рождения"
+                  helperText={t('settings.profile.birthdayHelper')}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label="О себе"
+                  label={t('settings.profile.bio')}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   multiline
@@ -317,7 +319,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
         originalFile={pendingAvatarFile}
         onClose={handleCropDialogClose}
         onConfirm={handleAvatarCropped}
-        title="Обрезать фото профиля"
+        title={t('settings.profile.cropTitle')}
         aspect={1}
       />
 
@@ -345,7 +347,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
 
       <CustomSnackbar
         open={successToastOpen}
-        message="Профиль успешно сохранён"
+        message={t('settings.profile.saveSuccess')}
         severity="success"
         onClose={() => setSuccessToastOpen(false)}
       />

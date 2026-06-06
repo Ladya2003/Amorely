@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Avatar, Paper, IconButton } from '@mui/material';
 import MediaViewerDialog, { type MediaViewerContent } from '../common/MediaViewerDialog';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
@@ -54,6 +55,7 @@ const Message: React.FC<MessageProps> = ({
   onSharedEventClick,
   onContactAvatarClick
 }) => {
+  const { t } = useTranslation();
   const [imageGalleryInitialIndex, setImageGalleryInitialIndex] = useState<number | null>(null);
 
   const formattedTime = useMemo(() => (
@@ -126,9 +128,9 @@ const Message: React.FC<MessageProps> = ({
   const isImageOnlyBubble =
     hasImageAttachment && !hasVideoAttachment && !message.text?.trim() && !sharedEvent;
 
-  const actionsButtonRight = isOwn
-    ? (message.editedAt ? 92 : 66)
-    : (message.editedAt ? 68 : 44);
+  const footerReserveWidth = isOwn
+    ? (message.editedAt ? 118 : 94)
+    : (message.editedAt ? 96 : 74);
 
   return (
     <Box 
@@ -195,7 +197,7 @@ const Message: React.FC<MessageProps> = ({
                   color: isOwn ? 'rgba(255,255,255,0.9)' : 'primary.main'
                 }}
               >
-                Ответ
+                {t('chat.messageBubble.reply')}
               </Typography>
               <Typography
                 variant="body2"
@@ -206,7 +208,7 @@ const Message: React.FC<MessageProps> = ({
                   textOverflow: 'ellipsis'
                 }}
               >
-                {replyTo.text || 'Медиафайл'}
+                {replyTo.text || t('chat.message.media')}
               </Typography>
             </Box>
           )}
@@ -250,7 +252,9 @@ const Message: React.FC<MessageProps> = ({
                     textOverflow: 'ellipsis'
                   }}
                 >
-                  Переслано от {forwardFrom.senderName || forwardFrom.senderId}
+                  {t('chat.messageBubble.forwardedFrom', {
+                    name: forwardFrom.senderName || forwardFrom.senderId,
+                  })}
                 </Typography>
               </Box>
             </Box>
@@ -386,7 +390,7 @@ const Message: React.FC<MessageProps> = ({
                 aria-hidden
                 sx={{
                   display: 'inline-block',
-                  width: isOwn ? '94px' : '74px',
+                  width: `${footerReserveWidth}px`,
                   height: '1px'
                 }}
               />
@@ -403,63 +407,78 @@ const Message: React.FC<MessageProps> = ({
             </Box>
           )}
 
-          <IconButton
-            size="small"
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenActions?.(event, message);
-            }}
-            aria-label="Действия с сообщением"
+          <Box
             sx={{
-              position: 'absolute',
-              right: actionsButtonRight,
-              bottom: 6,
-              p: 0.1,
-              borderRadius: 1,
-              bgcolor: 'transparent',
-              border: '1px solid',
-              borderColor: isOwn ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.18)',
-              color: isOwn ? 'rgba(255,255,255,0.95)' : 'text.secondary',
-              '&:hover': {
-                bgcolor: 'transparent',
-                borderColor: isOwn ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.32)'
-              }
-            }}
-          >
-            <MoreHorizIcon sx={{ fontSize: '14px' }} />
-          </IconButton>
-
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.25,
               position: 'absolute',
               right: 10,
               bottom: 5,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.75,
               lineHeight: 1,
-              fontSize: '12px',
-              opacity: isOwn ? 0.8 : 0.7,
-              color: isOwn ? 'rgba(255,255,255,0.9)' : 'text.secondary'
             }}
           >
             {message.editedAt ? (
-              <Box component="span" sx={{ mr: 0 }}>
-                ред.
-              </Box>
+              <Typography
+                component="span"
+                variant="caption"
+                sx={{
+                  fontSize: '12px',
+                  opacity: isOwn ? 0.8 : 0.7,
+                  color: isOwn ? 'rgba(255,255,255,0.9)' : 'text.secondary',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t('chat.message.edited')}
+              </Typography>
             ) : null}
-            {formattedTime}
-            {isOwn ? (
-              isPending ? (
-                <ScheduleIcon sx={{ fontSize: 13, ml: 0.25 }} />
-              ) : message.isRead ? (
-                <DoneAllIcon sx={{ fontSize: 14, ml: 0.25 }} />
-              ) : (
-                <DoneIcon sx={{ fontSize: 14, ml: 0.25 }} />
-              )
-            ) : null}
-          </Typography>
+            <IconButton
+              size="small"
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpenActions?.(event, message);
+              }}
+              aria-label={t('chat.dialog.messageActions')}
+              sx={{
+                p: 0.1,
+                borderRadius: 1,
+                bgcolor: 'transparent',
+                border: '1px solid',
+                borderColor: isOwn ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.18)',
+                color: isOwn ? 'rgba(255,255,255,0.95)' : 'text.secondary',
+                '&:hover': {
+                  bgcolor: 'transparent',
+                  borderColor: isOwn ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.32)',
+                },
+              }}
+            >
+              <MoreHorizIcon sx={{ fontSize: '14px' }} />
+            </IconButton>
+            <Typography
+              component="span"
+              variant="caption"
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.25,
+                fontSize: '12px',
+                opacity: isOwn ? 0.8 : 0.7,
+                color: isOwn ? 'rgba(255,255,255,0.9)' : 'text.secondary',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {formattedTime}
+              {isOwn ? (
+                isPending ? (
+                  <ScheduleIcon sx={{ fontSize: 13, ml: 0.25 }} />
+                ) : message.isRead ? (
+                  <DoneAllIcon sx={{ fontSize: 14, ml: 0.25 }} />
+                ) : (
+                  <DoneIcon sx={{ fontSize: 14, ml: 0.25 }} />
+                )
+              ) : null}
+            </Typography>
+          </Box>
         </Paper>
       </Box>
 

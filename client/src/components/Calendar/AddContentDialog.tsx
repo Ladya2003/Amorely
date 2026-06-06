@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-import { 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  Button, 
-  Box, 
+import {
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Box,
   Typography,
   IconButton
 } from '@mui/material';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { formatCalendarDate } from '../../localization/calendarHelpers';
 
 interface AddContentDialogProps {
   open: boolean;
@@ -22,6 +22,7 @@ interface AddContentDialogProps {
 }
 
 const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date, onSave }) => {
+  const { t, i18n } = useTranslation();
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
 
@@ -29,9 +30,8 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
       setFiles([...files, ...newFiles]);
-      
-      // Создаем URL превью для каждого файла
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
       setPreviews([...previews, ...newPreviews]);
     }
   };
@@ -42,32 +42,32 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
     setFiles(newFiles);
 
     const newPreviews = [...previews];
-    URL.revokeObjectURL(newPreviews[index]); // Освобождаем URL
+    URL.revokeObjectURL(newPreviews[index]);
     newPreviews.splice(index, 1);
     setPreviews(newPreviews);
   };
 
   const handleSave = () => {
     onSave(files);
-    // Очищаем состояние
-    previews.forEach(url => URL.revokeObjectURL(url));
+    previews.forEach((url) => URL.revokeObjectURL(url));
     setFiles([]);
     setPreviews([]);
     onClose();
   };
 
   const handleClose = () => {
-    // Очищаем состояние при закрытии
-    previews.forEach(url => URL.revokeObjectURL(url));
+    previews.forEach((url) => URL.revokeObjectURL(url));
     setFiles([]);
     setPreviews([]);
     onClose();
   };
 
+  const formattedDate = date ? formatCalendarDate(date, i18n.language) : '';
+
   return (
     <ResponsiveDialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        Добавить контент на {date ? format(date, 'd MMMM yyyy', { locale: ru }) : ''}
+        {t('calendar.addContent.title', { date: formattedDate })}
       </DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 2 }}>
@@ -86,52 +86,52 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
               startIcon={<CloudUploadIcon />}
               sx={{ mb: 2 }}
             >
-              Выбрать фото или видео
+              {t('calendar.addContent.selectMedia')}
             </Button>
           </label>
           <Typography variant="body2" color="text.secondary">
-            Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV)
+            {t('calendar.media.supported')}
           </Typography>
         </Box>
 
         {previews.length > 0 && (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {previews.map((preview, index) => (
-              <Box 
-                key={index} 
-                sx={{ 
+              <Box
+                key={index}
+                sx={{
                   position: 'relative',
                   width: 100,
                   height: 100
                 }}
               >
                 {files[index].type.startsWith('image/') ? (
-                  <img 
-                    src={preview} 
-                    alt={`Preview ${index}`} 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
+                  <img
+                    src={preview}
+                    alt={`Preview ${index}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
                       objectFit: 'cover',
                       borderRadius: '4px'
-                    }} 
+                    }}
                   />
                 ) : (
-                  <video 
+                  <video
                     src={preview}
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
+                    style={{
+                      width: '100%',
+                      height: '100%',
                       objectFit: 'cover',
                       borderRadius: '4px'
                     }}
                   />
                 )}
-                <IconButton 
-                  size="small" 
-                  sx={{ 
-                    position: 'absolute', 
-                    top: -8, 
+                <IconButton
+                  size="small"
+                  sx={{
+                    position: 'absolute',
+                    top: -8,
                     right: -8,
                     bgcolor: 'background.paper',
                     '&:hover': {
@@ -149,18 +149,18 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Отмена</Button>
-        <Button 
-          onClick={handleSave} 
-          variant="contained" 
+        <Button onClick={handleClose}>{t('calendar.common.cancel')}</Button>
+        <Button
+          onClick={handleSave}
+          variant="contained"
           color="primary"
           disabled={files.length === 0}
         >
-          Сохранить
+          {t('calendar.common.save')}
         </Button>
       </DialogActions>
     </ResponsiveDialog>
   );
 };
 
-export default AddContentDialog; 
+export default AddContentDialog;

@@ -1,0 +1,1057 @@
+{
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "profile": "Profile",
+      "partner": "Partner",
+      "theme": "Theme",
+      "notifications": "Notifications",
+      "security": "Security"
+    },
+    "errors": {
+      "notAuthorized": "Not authorized",
+      "notAuthorizedShort": "Not authorized",
+      "loadFailed": "Could not load user data. Please try again later.",
+      "addPartnerFailed": "Could not add partner",
+      "removePartnerFailed": "Could not remove partner",
+      "notAuthorizedLogin": "Not authorized. Please sign in.",
+      "themeChangeFailed": "Could not change theme. Please try again.",
+      "localeChangeFailed": "Could not change language. Please try again.",
+      "colorChangeFailed": "Could not change primary color. Please try again.",
+      "passwordChangeFailed": "Could not change password. Check your current password.",
+      "pushToggleFailed": "Could not toggle push notifications. Please try again.",
+      "notificationUpdateFailed": "Could not update notification settings. Please try again."
+    },
+    "profile": {
+      "personalInfo": "Personal information",
+      "saving": "Saving...",
+      "avatarHint": "Tap the photo to view it full screen. Use the camera icon to upload a new photo.",
+      "emailHelper": "Email cannot be changed",
+      "username": "Username",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "birthday": "Birthday",
+      "birthdayHelper": "Enter your birthday to show birthday events in the feed",
+      "bio": "About me",
+      "cropTitle": "Crop profile photo",
+      "saveSuccess": "Profile saved successfully",
+      "errors": {
+        "saveFailed": "Failed to save changes. Please try again.",
+        "imageRequired": "Please select an image file"
+      },
+      "title": "Personal information",
+      "emailReadonly": "Email cannot be changed",
+      "birthdayHint": "Add your birthday to show birthday events in the feed",
+      "savedToast": "Profile saved successfully",
+      "selectImageFile": "Select an image file",
+      "saveFailed": "Could not save changes. Please try again."
+    },
+    "partner": {
+      "title": "Partner",
+      "remove": "Remove",
+      "add": "Add",
+      "relationshipStartDate": "Relationship start date",
+      "relationshipStartDateLockedHelper": "The relationship start date cannot be changed after adding a partner",
+      "noPartner": "You do not have a partner yet",
+      "noPartnerHint": "Add a partner to see days together and share content with each other",
+      "addPartnerDialog": "Add partner",
+      "searchLabel": "Search by email or username",
+      "searchHelper": "Enter at least 3 characters to search",
+      "searching": "Searching...",
+      "noUsersFound": "No users found",
+      "selectedPartner": "Selected partner:",
+      "relationshipStartDateHelper": "Enter the start date of your relationship",
+      "cancel": "Cancel",
+      "adding": "Adding...",
+      "confirmTitle": "Confirmation",
+      "confirmRemove": "Are you sure you want to remove your partner? This action cannot be undone.",
+      "removing": "Removing...",
+      "addSuccess": "Partner added successfully",
+      "errors": {
+        "selectPartnerAndDate": "Select a partner and enter the relationship start date",
+        "addFailed": "Failed to add partner. Please try again."
+      },
+      "delete": "Remove",
+      "startDate": "Relationship start date",
+      "startDateLocked": "The start date cannot be changed after adding a partner",
+      "addDialogTitle": "Add partner",
+      "searchHint": "Enter at least 3 characters to search",
+      "notFound": "No users found",
+      "startDateHint": "Enter the start date of your relationship",
+      "deleteConfirmTitle": "Confirm",
+      "deleteConfirmBody": "Are you sure you want to remove your partner? This action cannot be undone.",
+      "addedToast": "Partner added successfully",
+      "selectPartnerAndDate": "Select a partner and enter the relationship start date",
+      "addFailed": "Could not add partner. Please try again.",
+      "removeFailed": "Could not remove partner"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "pushTitle": "Push notifications",
+      "pushEnable": "Enable",
+      "pushEnableHint": "Works only when installed to your phone home screen",
+      "pushNewContent": "New content from partner",
+      "pushNewContentHint": "Get notified when your partner adds new content",
+      "pushMessages": "Messages",
+      "pushMessagesHint": "Get notified about new messages",
+      "pushEvents": "Events",
+      "pushEventsHint": "Get notified about important dates and events",
+      "pushNews": "News",
+      "pushNewsHint": "Get notified about news and app updates",
+      "newContent": "New content from partner",
+      "newContentHint": "Get notified when your partner adds new content",
+      "messages": "Messages",
+      "messagesHint": "Get notified about new messages",
+      "events": "Events",
+      "eventsHint": "Get notified about important dates and events",
+      "news": "News",
+      "newsHint": "Get notified about news and app updates"
+    },
+    "security": {
+      "title": "Security",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "passwordMinHelper": "At least 8 characters",
+      "changing": "Changing...",
+      "changePassword": "Change password",
+      "success": "Password changed successfully",
+      "errors": {
+        "fillAll": "Please fill in all fields",
+        "passwordMismatch": "New password and confirmation do not match",
+        "passwordTooShort": "New password must be at least 8 characters",
+        "changeFailed": "Failed to change password. Check your current password."
+      },
+      "newPasswordHint": "At least 8 characters",
+      "fillAllFields": "Please fill in all fields",
+      "passwordsMismatch": "New password and confirmation do not match",
+      "minLength": "New password must be at least 8 characters",
+      "changeFailed": "Could not change password. Check your current password.",
+      "changeSuccess": "Password changed successfully"
+    },
+    "badge": {
+      "title": "Badge next to name",
+      "noBadges": "No badges yet — reach the top 3 couples in any game.",
+      "description": "One badge is shown in chat and the header. By default — the best (top 1, else 2, else 3).",
+      "auto": "Auto (best badge)",
+      "gameRank": "{{game}} · top {{rank}}",
+      "save": "Save badge",
+      "errors": {
+        "saveFailed": "Failed to save badge"
+      },
+      "hint": "One badge is shown in chat and the header. By default — the best (top 1, else 2, else 3).",
+      "saveFailed": "Could not save badge"
+    },
+    "logout": {
+      "button": "Log out",
+      "confirmTitle": "Confirm logout",
+      "closeAria": "Close",
+      "confirmBody": "You can simply log out (your passphrase stays on this device) or log out and delete your passphrase.",
+      "logoutAndRemoveKeys": "Log out and delete passphrase",
+      "dialogTitle": "Confirm logout",
+      "dialogBody": "You can log out and keep your passphrase on this device, or log out and delete your passphrase.",
+      "logoutAndDelete": "Log out and delete passphrase",
+      "logout": "Log out"
+    },
+    "language": "Language",
+    "languageHint": "Affects the interface and game texts on your device.",
+    "themeTitle": "Theme settings",
+    "themeLegend": "Choose a theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "primaryColor": "Primary color",
+    "themeHint": "Your choices apply across the entire app.",
+    "colors": {
+      "pink": "Pink",
+      "purple": "Dark pink",
+      "blue": "Sky blue",
+      "orange": "Orange",
+      "dark-red": "Red",
+      "dark-green": "Green"
+    },
+    "common": {
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "confirm": "Confirm",
+      "close": "Close",
+      "saving": "Saving..."
+    },
+    "success": {
+      "profileSaved": "Profile saved successfully",
+      "partnerAdded": "Partner added successfully",
+      "passwordChanged": "Password changed successfully"
+    }
+  },
+  "games": {
+    "tap": {
+      "name": "Tap Together",
+      "description": "Tap the block with your partner, clear rounds, and earn points for shop upgrades.",
+      "rules": [
+        "This game is only for couples with a linked partner in settings.",
+        "At the start of a round, both can tap immediately — no need to wait.",
+        "The next round starts when both finish their part (e.g. 15/15).",
+        "Each new round requires 3× more taps.",
+        "Points are awarded for each tap and for completing a round — round rewards grow with difficulty.",
+        "Spend points in the shop on tools that speed up progress.",
+        "Quad and mega tap unlock after round 5 — 15 boosted taps each (×4 and ×10).",
+        "The leaderboard ranks pairs by total taps."
+      ],
+      "shop": {
+        "title": "Shop",
+        "yourPoints": "Your points: {{points}}",
+        "activeBoost": "Active: ×{{multiplier}} ({{remaining}} taps)",
+        "availableAfterRound": "Available after round {{round}}",
+        "buyFor": "Buy for {{cost}}",
+        "close": "Close",
+        "items": {
+          "double_tap": {
+            "name": "Double tap",
+            "description": "Next 5 taps count as ×2 points."
+          },
+          "triple_tap": {
+            "name": "Quad tap",
+            "description": "Next 15 taps count as ×4 points."
+          },
+          "mega_tap": {
+            "name": "Mega tap",
+            "description": "Next 15 taps count as ×10 points."
+          }
+        }
+      },
+      "play": {
+        "roundGoal": "Round {{round}}: {{current}}/{{goal}}",
+        "shop": "Shop",
+        "activeBoostHint": "Active: ×{{multiplier}}",
+        "tapPinkBlock": "Tap the pink block",
+        "waitingPartner": "Waiting for partner",
+        "tapBlock": "Tap",
+        "tapBlockDone": "Done",
+        "tapBlockDisabled": "Unavailable",
+        "tapLabel": "Tap",
+        "youProgress": "You: {{current}}/{{goal}}",
+        "partnerProgress": "Partner: {{current}}/{{goal}}",
+        "totalTaps": "Total taps: {{count}}",
+        "roundComplete": "Round complete!",
+        "targetAndPoints": "Goal: {{target}} taps · Points: {{points}}",
+        "activeBoostLine": "Active ×{{multiplier}} · {{remaining}} taps left",
+        "finishedWaiting": "You're done — waiting for partner",
+        "tapCta": "Tap!",
+        "tapBlockAria": "Tap the block",
+        "tapBlockDoneAria": "You already finished your part of the round",
+        "tapBlockDisabledAria": "Block unavailable",
+        "totalPairTaps": "Total pair taps: {{count}}",
+        "roundCompleteBonus": "Round complete! +{{bonus}} points"
+      }
+    },
+    "geo": {
+      "name": "Guess the Location",
+      "description": "Guess where the place is on the map and compete with other couples.",
+      "mapAttribution": "Map: © OpenStreetMap contributors, © CARTO",
+      "photosAttribution": "Photos: Wikimedia Commons (Creative Commons licenses)",
+      "rules": [
+        "This game is only for couples with a linked partner.",
+        "Before each round, both press Ready — then a 3-second countdown and one round starts.",
+        "Each round has a time limit — each partner places their own marker on the map.",
+        "The closer the marker to the real spot, the more points; both partners' scores are summed.",
+        "Each confirms only their own marker — two independent guesses per round.",
+        "Up to 5 locations per day; the limit resets the next day.",
+        "When all 200 locations are done, the pool starts over.",
+        "The leaderboard ranks pairs by total score across all rounds."
+      ],
+      "play": {
+        "readyToRound": "Ready for round {{round}}",
+        "readyToRoundQuestion": "Ready for the round?",
+        "pairScoreToday": "Pair score: {{score}} · Today: {{today}}/{{max}}",
+        "poolRemaining": " · {{count}} left in pool",
+        "dailyAllDone": "All done for today",
+        "dailyAllDoneBody": "You completed all 5 locations. New ones tomorrow.",
+        "dailyGuessedAll": "You guessed {{count}} places today. New rounds tomorrow.",
+        "restartGame": "Go back to the game description and start again.",
+        "restartHint": "When all 200 locations are done, the pool starts over.",
+        "openPhotoFullscreen": "Open photo fullscreen",
+        "openMapFullscreen": "Open map fullscreen",
+        "timedOut": "Time's up",
+        "timedOutNoGuess": "Time's up — no one placed a marker in time",
+        "youResult": "You: {{points}} pts",
+        "partnerResult": "Partner: {{points}} pts",
+        "youDistance": "{{distance}} km · +{{points}} pts",
+        "missed": "Miss",
+        "missedGuessYou": "didn't make it (+0)",
+        "missedGuessPartner": "didn't make it (+0)",
+        "points": "pts",
+        "totalPoints": "Total: {{points}} pts",
+        "totalEarned": "Total: +{{points}} pts",
+        "markerSent": "Marker sent",
+        "markerSentWaiting": "Your marker was sent. Waiting for your partner...",
+        "markerHint": "Tap the map to place your marker",
+        "markerHintBoth": "Each places their own marker. Both partners' scores are added.",
+        "confirmMarker": "Confirm marker",
+        "confirmMyMarker": "Confirm my marker",
+        "markerSubmitted": "Marker sent",
+        "close": "Close"
+      }
+    },
+    "draw": {
+      "name": "Guess the Drawing",
+      "description": "One draws, the other guesses — like Gartic, but for your couple.",
+      "rules": [
+        "This game is only for couples with a linked partner.",
+        "Before each round, both press Ready — then a 3-second countdown and start.",
+        "Artist and guesser swap each round.",
+        "90 seconds per round: one draws, the other can guess while drawing continues.",
+        "The faster you guess, the more points.",
+        "Up to 10 scored rounds per day count for the leaderboard — then play for fun."
+      ],
+      "play": {
+        "dailyLimitDialogTitle": "Today's point limit",
+        "dailyLimitDialogBodyFull": "Points count for only 10 games per day. You can keep playing for fun — guesses still count, but points won't affect the leaderboard.",
+        "limitExhaustedToast": "Points count for only 10 games per day. Today's limit is reached — play for fun.",
+        "lastScoredRound": "+{{points}} points. That was your last scored game for today ({{scored}}/{{max}}). From here on — for fun.",
+        "remainingRounds": "+{{points}} points. Rounds left today: {{remaining}}",
+        "pairScoreTodayScored": "Pair score: {{score}} · Scored today: {{today}}/{{max}}",
+        "dailyLimitLobby": "Points count for only 10 games per day. You can keep playing for fun.",
+        "waitingPartnerResults": "Your partner is still viewing the last round's results. Press Ready when you're set.",
+        "dailyLimitExhaustedTitle": "Today's point limit reached",
+        "scoredTodaySummary": "Scored {{scored}} of {{max}} rounds with points today. The limit resets tomorrow.",
+        "wrongGuessText": "Answer «{{guess}}» is wrong",
+        "secretWordLabel": "Secret word:",
+        "guessedWithPoints": "Guessed! +{{points}} points",
+        "guessedLimitForFun": "Guessed! Today's point limit — playing for fun",
+        "scoredTodayExhausted": "Scored today: {{scored}}/{{max}} — limit reached",
+        "dailyLimitShort": "Points count for only 10 games per day",
+        "remainingRoundsLabel": "Rounds left today: {{remaining}}",
+        "guessHintRated": "Guess while your partner draws — the faster, the more points",
+        "guessHintForFun": "Guess for fun — today's leaderboard point limit is already reached",
+        "scoreLine": "Score: {{score}} · Today: {{today}}/{{max}}",
+        "nobodyGuessed": "Nobody guessed — too bad",
+        "roundStartFailedBody": "Failed to start the round. Try refreshing the page."
+      }
+    },
+    "quiz": {
+      "name": "Your Own Game",
+      "description": "A game board with categories and questions — answer together and score points.",
+      "rules": [
+        "This game is only for couples with a linked partner.",
+        "Before the board, both press Ready — then a 3-second countdown and start.",
+        "First turn is random between partners, then turns alternate.",
+        "On your turn, pick any cell: category and value. 30 seconds to answer.",
+        "Each enters one answer. Correct answers earn the cell value (100, 200, or 300).",
+        "If both are correct, points are summed. Played cells cannot be picked again.",
+        "Each day — 5 random categories and a new question set (15 cells).",
+        "After all questions, the board refreshes the next day.",
+        "The leaderboard ranks pairs by total score."
+      ],
+      "play": {
+        "boardComplete": "Board complete!",
+        "pairScore": "Pair score: {{score}}",
+        "newQuestionsIn": "New questions in {{duration}}",
+        "bothReadyBoard": "Both ready — let's go!",
+        "bothReadyOpen": "Both ready — the board will open at the same time.",
+        "pressReadyBoard": "Press Ready to start",
+        "pressReadyStart": "Press Ready. The round starts when both partners are set.",
+        "yourTurn": "Your turn",
+        "yourTurnPick": "Your turn — pick any category",
+        "partnerTurn": "Partner's turn",
+        "partnerTurnPick": "Your partner's turn now",
+        "scoreRemaining": "Score: {{score}} · Questions left: {{count}}",
+        "answerSent": "Answer sent",
+        "answerSentWaiting": "Your answer was sent. Waiting for your partner…",
+        "partnerAnswered": "Partner answered",
+        "partnerAnsweredYourTurn": "Your partner already answered. Your turn!",
+        "oneAnswerEach": "Each enters one answer",
+        "oneAnswerUntilTimer": "Each answers once until the timer ends",
+        "answerSubmitted": "Answer submitted",
+        "correctAnswer": "Correct answer: {{answer}}",
+        "answerLabel": "«{{text}}» — {{points}} pts",
+        "noAnswer": "No answer",
+        "didNotAnswer": "didn't answer",
+        "pointsForQuestion": "+{{points}} pts",
+        "pointsForQuestionTotal": "For this question: +{{points}} pts",
+        "backToBoard": "Back to board"
+      }
+    },
+    "tab": "Games",
+    "list": {
+      "searchPlaceholder": "Search by game name",
+      "clearSearch": "Clear search",
+      "notFound": "No games found",
+      "emptyList": "No games in the list",
+      "emptyHint": "Games for you and your partner will appear here",
+      "tryDifferentQuery": "Try a different search",
+      "comingSoon": "Coming soon"
+    },
+    "page": {
+      "notFound": "Game not found",
+      "backToList": "Back to games",
+      "tabGame": "Game",
+      "tabLeaderboard": "Leaderboard",
+      "leaderboardSubtitle": "Global couple leaderboard by total score",
+      "comingSoon": "This game is coming soon",
+      "addPartner": "Add your partner in settings to play together",
+      "geoDailyLimitHint": "You guessed all {{count}} places today. New rounds will open later.",
+      "play": "Play"
+    },
+    "common": {
+      "back": "Back",
+      "you": "You",
+      "partner": "Partner",
+      "ready": "Ready",
+      "waitingPartner": "Waiting for partner…",
+      "readyToPlay": "Ready to play?",
+      "startingSoon": "Starting soon!",
+      "bothReady": "Both partners are ready — the round will start at the same time.",
+      "pressReady": "Press Ready when you are set. The round starts when both are ready.",
+      "youReadyAria": "You are ready",
+      "confirmReadyAria": "Confirm ready",
+      "goToSettings": "Go to settings",
+      "needPartner": "Partner required",
+      "loadFailed": "Failed to load game",
+      "partnerRequired": "You need a partner to play. Add them in profile settings.",
+      "partnerRequiredShort": "Partner required",
+      "backToGame": "Back to game",
+      "send": "Send",
+      "understood": "Got it",
+      "close": "Close",
+      "round": "Round",
+      "forFun": "For fun",
+      "pairScore": "Pair score",
+      "pairScoreToday": "Pair score today",
+      "pairScoreTodayPool": "Pair score today (pool)",
+      "pairScoreTodayScored": "Scored points today",
+      "scoreToday": "Points today",
+      "scoreTodayScored": "Scored points today",
+      "secondsLeft": "{{seconds}} sec left",
+      "waitingPartnerResults": "Waiting for partner results",
+      "partnerViewingPastRound": "Your partner is still viewing the last round's results. Press Ready when you're set.",
+      "roundNotActive": "Round not active",
+      "dailyLimitTitle": "Daily limit",
+      "dailyLimitExhausted": "Daily limit reached",
+      "roundStartFailed": "Failed to start round",
+      "nextRound": "Next round",
+      "playMore": "Keep playing",
+      "finish": "Finish",
+      "yourAnswer": "Your answer",
+      "yourGuesses": "Your guesses",
+      "partnerGuesses": "Partner guesses",
+      "drawWord": "draw",
+      "errors": {
+        "readyFailed": "Failed to confirm ready",
+        "loadFailed": "Failed to load",
+        "guessFailed": "Failed to submit guess",
+        "clearCanvasFailed": "Failed to clear canvas",
+        "strokeFailed": "Failed to send stroke",
+        "advanceFailed": "Failed to advance",
+        "tapFailed": "Failed to register tap",
+        "buyFailed": "Failed to buy item",
+        "pickFailed": "Failed to pick cell",
+        "answerFailed": "Failed to submit answer",
+        "submitFailed": "Failed to submit",
+        "startRoundFailed": "Failed to start round"
+      }
+    },
+    "leaderboard": {
+      "empty": "No one has played yet"
+    },
+    "badge": {
+      "tooltip": "Top-{{rank}} · {{game}}"
+    },
+    "dailyReset": {
+      "title": "Reset timer",
+      "playedTodayNamed": "You already played «{{gameName}}» today. ",
+      "playedTodayGeneric": "You already played this game today. ",
+      "timerHint": "The timer shows how long until the daily limit resets.",
+      "resetHint": "The limit resets at 03:00 Moscow time (00:00 UTC). You can play again after that.",
+      "untilReset": "Until reset:",
+      "understood": "Got it",
+      "badgeAria": "More about the reset timer"
+    },
+    "geoDailyLimit": {
+      "title": "All done for today",
+      "body": "You can guess up to {{count}} places per day. You have completed all rounds for today.",
+      "nextAvailable": "New places will be available in",
+      "understood": "Got it"
+    },
+    "waitDuration": {
+      "soon": "soon",
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
+      "minutes": "{{minutes}} min",
+      "lessThanMinute": "less than a minute"
+    }
+  },
+  "nav": {
+    "settings": "Settings",
+    "home": "Home",
+    "chat": "Chat",
+    "calendar": "Calendar",
+    "news": "News"
+  },
+  "feed": {
+    "title": "Feed",
+    "contentOfDay": "Content of the day",
+    "contentUpdateTooltip": "The selection updates at 02:00 and 17:00 (Europe/Minsk)",
+    "contentUpdateAriaLabel": "Content update information",
+    "emptyPlaceholder": "No content available yet\n\n📅 Add your events in the\nCalendar with photos and videos",
+    "noContent": "No content available",
+    "birthday": "Birthday",
+    "anniversary": "Anniversary",
+    "day_one": "day",
+    "day_other": "days",
+    "daysTogether": "{{count}} {{daysWord}} together",
+    "since": "Since {{date}}",
+    "addPartnerTitle": "Add your partner in settings",
+    "addPartnerDescription": "To see how many days you have been together, add your partner and the relationship start date",
+    "signatureUser": "User signature",
+    "signaturePartner": "Partner signature",
+    "signature": "Signature",
+    "achievementsTitle": "Achievements",
+    "untilAnniversary": "⏳ Until the next anniversary:",
+    "progress": {
+      "allMilestones": "🎉 All milestones reached! You are legends! 💎",
+      "nextMilestone": "Until the next milestone:",
+      "percentDone": "{{percent}}% complete",
+      "daysRemaining": "{{count}} {{daysWord}} left"
+    },
+    "validation": {
+      "fileTooLarge": "File is too large. Maximum size: {{max}} MB",
+      "invalidFormat": "Invalid file format. Use JPG, PNG, GIF, or WebP",
+      "generic": "Validation error"
+    },
+    "export": {
+      "tooltip": "Download card",
+      "success": "Card saved successfully! 📸",
+      "error": "Failed to export card"
+    },
+    "colorPicker": {
+      "changeTheme": "Change color theme",
+      "pickColor": "Pick any color",
+      "selectTheme": "Choose a color theme:",
+      "back": "Back",
+      "currentColor": "Current color: {{color}}",
+      "themes": {
+        "custom": "🎨 Custom color",
+        "pink": "💕 Pink love",
+        "purple": "💜 Purple passion",
+        "blue": "💙 Blue sky",
+        "red": "❤️ Red passion",
+        "orange": "🧡 Orange warmth",
+        "green": "💚 Green tenderness",
+        "teal": "💎 Teal dream",
+        "gold": "✨ Golden glow",
+        "sunset": "🌅 Sunset",
+        "lavender": "💐 Lavender",
+        "dark-purple": "🌑 Dark passion",
+        "dark-blue": "🌌 Midnight",
+        "dark-red": "🍷 Dark rose",
+        "dark-green": "🌲 Dark forest",
+        "navy": "⚓ Ocean depth",
+        "black-elegant": "🖤 Elegant black",
+        "black-silver": "🌫️ Black silver",
+        "black-blue": "🌃 Black blue",
+        "black-purple": "🌌 Cosmic darkness"
+      }
+    },
+    "signatureDialog": {
+      "title": "Add signature",
+      "clear": "Clear",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "status": {
+      "lt3": "The very beginning of our love story 💕",
+      "lt7": "The first magical days together ✨",
+      "lt14": "Week by week — discovering each other 🌸",
+      "lt30": "The first month of unforgettable moments 🌟",
+      "lt60": "Two months of happiness and butterflies 🦋",
+      "lt90": "Three months of love and tenderness 💑",
+      "lt120": "Four months together — our little world 🌍",
+      "lt180": "Half a year of love and understanding 💝",
+      "lt270": "Nine months — like the birth of our love 🎈",
+      "lt365": "Almost a year together — our love grows stronger 💕",
+      "lt548": "More than a year of love and care 💖",
+      "lt730": "A year and a half — our love like a sturdy oak 🌳",
+      "lt1095": "Two years together — our story continues 📖",
+      "lt1460": "Three years of love — unstoppable together 👑",
+      "lt1825": "Four years — our love like a precious gem 💎",
+      "lt2190": "Five years together — half a decade of happiness 🎊",
+      "lt2555": "Six years — our bond grows deeper 🌊",
+      "lt2920": "Seven years — we have been through it all 🌈",
+      "lt3650": "Eight years of love — a true fortress 🏰",
+      "lt4380": "Ten years together — a whole era of love 🎭",
+      "lt5475": "Twelve years — our love ages like fine wine 🍷",
+      "lt7300": "Fifteen years together — we are one 💫",
+      "lt10950": "Twenty years of love — our legend ⭐",
+      "lt14600": "Twenty-five years — silver anniversary is near! 🥈",
+      "lt18250": "Thirty years together — pearl strength 📿",
+      "default": "A lifetime of love — eternal and endless 💎✨"
+    },
+    "milestones": {
+      "week1": {
+        "title": "First week",
+        "description": "{{days}} days together"
+      },
+      "week2": {
+        "title": "Two weeks",
+        "description": "{{days}} days together"
+      },
+      "month1": {
+        "title": "Month of love",
+        "description": "{{days}} days together"
+      },
+      "month2": {
+        "title": "Two months",
+        "description": "{{days}} days together"
+      },
+      "month3": {
+        "title": "Three months",
+        "description": "{{days}} days together"
+      },
+      "days100": {
+        "title": "First hundred!",
+        "description": "{{days}} days together"
+      },
+      "month6": {
+        "title": "Half a year",
+        "description": "{{days}} days together"
+      },
+      "month9": {
+        "title": "Nine months",
+        "description": "{{days}} days together"
+      },
+      "year1": {
+        "title": "One year together!",
+        "description": "{{days}} days together"
+      },
+      "year1_5": {
+        "title": "A year and a half",
+        "description": "{{days}} days together"
+      },
+      "year2": {
+        "title": "Two years!",
+        "description": "{{days}} days together"
+      },
+      "year3": {
+        "title": "Three years!",
+        "description": "{{days}} days together"
+      },
+      "year4": {
+        "title": "Four years!",
+        "description": "{{days}} days together"
+      },
+      "year5": {
+        "title": "Five years!",
+        "description": "{{days}} days together"
+      },
+      "year7": {
+        "title": "Seven years!",
+        "description": "{{days}} days together"
+      },
+      "year10": {
+        "title": "Ten years!",
+        "description": "{{days}} days together"
+      },
+      "year15": {
+        "title": "Fifteen years!",
+        "description": "{{days}} days together"
+      },
+      "year20": {
+        "title": "Twenty years!",
+        "description": "{{days}} days together"
+      },
+      "year25": {
+        "title": "Silver anniversary!",
+        "description": "{{days}} days together"
+      },
+      "year30": {
+        "title": "Pearl anniversary!",
+        "description": "{{days}} days together"
+      }
+    },
+    "achievements": {
+      "first_week": {
+        "title": "First week",
+        "description": "The first magical days together"
+      },
+      "two_weeks": {
+        "title": "Two weeks",
+        "description": "Discovering each other"
+      },
+      "first_month": {
+        "title": "Month of love",
+        "description": "A month of unforgettable moments!"
+      },
+      "two_months": {
+        "title": "Two months",
+        "description": "Happiness and butterflies"
+      },
+      "three_months": {
+        "title": "Three months",
+        "description": "Love and tenderness"
+      },
+      "century": {
+        "title": "First hundred",
+        "description": "100 days — amazing!"
+      },
+      "half_year": {
+        "title": "Half a year of happiness",
+        "description": "Love and understanding"
+      },
+      "nine_months": {
+        "title": "Nine months",
+        "description": "Like the birth of our love"
+      },
+      "first_year": {
+        "title": "One year together",
+        "description": "A whole year of love and care!"
+      },
+      "year_and_half": {
+        "title": "A year and a half",
+        "description": "Love like a sturdy oak"
+      },
+      "two_years": {
+        "title": "Two years",
+        "description": "Our story continues"
+      },
+      "three_years": {
+        "title": "Three years",
+        "description": "Unstoppable together"
+      },
+      "four_years": {
+        "title": "Four years",
+        "description": "Love like a precious gem"
+      },
+      "five_years": {
+        "title": "Five years",
+        "description": "Half a decade of happiness!"
+      },
+      "seven_years": {
+        "title": "Seven years",
+        "description": "Through it all together"
+      },
+      "ten_years": {
+        "title": "Ten years",
+        "description": "A whole era of love!"
+      },
+      "fifteen_years": {
+        "title": "Fifteen years",
+        "description": "We are one"
+      },
+      "twenty_years": {
+        "title": "Twenty years",
+        "description": "Our legend!"
+      },
+      "silver_wedding": {
+        "title": "Silver anniversary",
+        "description": "25 years together — incredible!"
+      },
+      "pearl_wedding": {
+        "title": "Pearl anniversary",
+        "description": "30 years — pearl strength"
+      }
+    }
+  },
+  "drawingTools": {
+    "tool": "Tool",
+    "brush": "Brush",
+    "eraser": "Eraser",
+    "color": "Color",
+    "size": "Size: {{size}}px",
+    "colorAria": "Color {{color}}",
+    "customColor": "Custom color",
+    "clearAll": "Clear all"
+  },
+  "chat": {
+    "tab": "Chat",
+    "globalSearch": "Global search",
+    "clearSearch": "Clear search",
+    "yourChats": "Your chats",
+    "nothingFound": "Nothing found",
+    "selectContact": "Select a contact to start chatting",
+    "self": "You",
+    "user": "User",
+    "rules": {
+      "title": "Chat rules",
+      "summary": "Amorely is for couples to communicate within applicable law. Harassment, threats, illegal content, and other misuse of chat features are prohibited. By tapping \"Agree\", you confirm that you have read the rules and agree to follow them.",
+      "readMore": "Read the full rules",
+      "accept": "Agree",
+      "decline": "Disagree"
+    },
+    "message": {
+      "media": "Media file",
+      "forwarded": "Forwarded message",
+      "encrypted": "Encrypted message",
+      "encryptedMedia": "Encrypted media",
+      "event": "Event: {{title}}",
+      "noMessages": "No messages",
+      "decryptFailed": "Failed to decrypt message",
+      "deleted": "Message deleted",
+      "noText": "No text",
+      "noTextPreview": "Message with no text",
+      "edited": "edited"
+    },
+    "errors": {
+      "sendFailed": "Failed to send the message. Check your connection and try again.",
+      "sendFailedGeneric": "Failed to send message",
+      "deleteFailed": "Failed to delete message",
+      "editFailed": "Failed to edit message",
+      "forwardEncryptedFailed": "Failed to forward encrypted media",
+      "forwardMediaKeys": "Encryption keys are required on this device to forward media",
+      "forwardNoEncrypted": "The source message contains no encrypted data",
+      "forwardMediaData": "Failed to get media data for forwarding",
+      "forwardNoAttachments": "No attachments to forward",
+      "encryptMediaKeys": "Encryption keys are required on this device to send media",
+      "encryptKeys": "No keys available to encrypt media",
+      "encryptAttachments": "Failed to encrypt attachments"
+    },
+    "input": {
+      "placeholder": "Type a message..."
+    },
+    "dialog": {
+      "reply": "Reply",
+      "edit": "Edit",
+      "forward": "Forward",
+      "delete": "Delete",
+      "deleteTitle": "Delete message?",
+      "deleteConfirm": "Are you sure you want to delete this message for you and your chat partner?",
+      "cancel": "Cancel",
+      "replyTo": "Reply to message",
+      "cancelReply": "Cancel reply",
+      "forwarding": "Forwarding message",
+      "cancelForward": "Cancel forward",
+      "shareEvent": "Share event",
+      "cancelShareEvent": "Cancel event share",
+      "editing": "Editing message",
+      "cancelEdit": "Cancel editing",
+      "scrollDown": "Scroll down",
+      "scrollDownNew": "Scroll down, new messages: {{count}}",
+      "profileAria": "Profile {{name}}",
+      "openVideoFullscreen": "Open video fullscreen",
+      "openPreviewFullscreen": "Open preview fullscreen",
+      "attachmentAlt": "Attachment {{index}}",
+      "removeAttachment": "Remove attachment",
+      "messageActions": "Message actions"
+    },
+    "messageBubble": {
+      "reply": "Reply",
+      "forwardedFrom": "Forwarded from {{name}}"
+    },
+    "presence": {
+      "online": "Online",
+      "offline": "Offline",
+      "lastSeenToday": "last seen today at {{time}}",
+      "lastSeenYesterday": "last seen yesterday at {{time}}",
+      "lastSeenDate": "last seen on {{date}} at {{time}}",
+      "typing": "Typing"
+    },
+    "share": {
+      "selectRecipient": "Select recipient",
+      "forwardMessage": "Forward message",
+      "searchPlaceholder": "Search chat, username, or email",
+      "yourChats": "Your chats",
+      "globalSearch": "Global search",
+      "usersNotFound": "No users found"
+    },
+    "profile": {
+      "title": "Profile",
+      "closeAria": "Close profile",
+      "medals": "Medals",
+      "defaultName": "Contact",
+      "placeholderBio1": "{{name}} has not added a bio yet — surprises are not only in chat.",
+      "placeholderBio2": "About {{name}}, one thing is clear: chatting with this person is never boring.",
+      "placeholderBio3": "{{name}} prefers mystery over a long bio. Fair enough.",
+      "placeholderBio4": "{{name}}'s biography is in progress. For now, good chat and great mood matter most.",
+      "placeholderBio5": "{{name}} keeps the bio secret or has not added one yet"
+    },
+    "event": {
+      "label": "Event"
+    }
+  },
+  "calendar": {
+    "tabs": {
+      "calendar": "Calendar",
+      "plans": "Plans"
+    },
+    "weekdays": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ],
+    "createEvent": "Create event",
+    "untitled": "Untitled",
+    "readOnly": "View only",
+    "actions": {
+      "share": "Share",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "delete": {
+      "title": "Delete event?",
+      "message": "Are you sure you want to delete this event? All related photos and videos will be permanently deleted.",
+      "deleting": "Deleting...",
+      "confirm": "Delete",
+      "body": "Are you sure you want to delete this event? All related photos and videos will be permanently removed.",
+      "failed": "Failed to delete event"
+    },
+    "event": {
+      "newTitle": "New event",
+      "editTitle": "Edit event",
+      "dateLabel": "Event date",
+      "titleLabel": "Event title",
+      "titlePlaceholder": "e.g. First date",
+      "titleShort": "Title",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "Tell us about the event...",
+      "charCount": "{{current}}/{{max}} characters",
+      "birthdayLabel": "🎂 Count as birthday",
+      "birthdayHint": "This event will appear in the feed on the birthday",
+      "anniversaryLabel": "💕 Count as anniversary",
+      "anniversaryHint": "This event will appear in the feed on the relationship anniversary",
+      "clearForm": "Clear form",
+      "save": "Save",
+      "saving": "Saving...",
+      "compressingVideo": "Compressing video...",
+      "new": "New event",
+      "edit": "Edit event",
+      "date": "Event date",
+      "title": "Event title",
+      "description": "Description (optional)",
+      "birthdayFlag": "🎂 Mark as birthday",
+      "anniversaryFlag": "💕 Mark as anniversary",
+      "clearDraft": "Clear draft",
+      "noTitle": "Untitled",
+      "textOnly": "Text-only event",
+      "fileCount_one": "{{count}} file",
+      "fileCount_other": "{{count}} files"
+    },
+    "fields": {
+      "description": "Description"
+    },
+    "media": {
+      "sectionTitle": "Photos and videos",
+      "addButton": "Add photo or video",
+      "formatsHint": "Supported formats: images (JPG, PNG, GIF) and videos (MP4, MOV).",
+      "videoHint": "Video: up to {{sourceMb}} MB and {{durationSec}} sec. Automatically compressed to {{uploadMb}} MB before upload.",
+      "photosAndVideos": "Photos and videos",
+      "addPhotosOrVideos": "Add photos or videos",
+      "supported": "Supported: images (JPG, PNG, GIF) and videos (MP4, MOV)",
+      "supportedWithHint": "Supported: images (JPG, PNG, GIF) and videos (MP4, MOV). {{hint}}",
+      "videoMaxSize": "Maximum video size is {{max}} MB"
+    },
+    "meta": {
+      "created": "Created",
+      "author": "Author: {{username}}",
+      "lastEdited": "Last edited",
+      "editor": "Editor: {{username}}"
+    },
+    "eventList": {
+      "title": "Events",
+      "textOnly": "Text-only event",
+      "file_one": "{{count}} file",
+      "file_other": "{{count}} files"
+    },
+    "birthday": "Birthday",
+    "anniversary": "Anniversary",
+    "errors": {
+      "dateRequired": "Please select an event date",
+      "titleRequired": "Enter a title",
+      "saveFailed": "Failed to save event. Please try again.",
+      "deleteFailed": "Failed to delete event",
+      "selectDate": "Please select an event date",
+      "enterTitle": "Please enter an event title",
+      "saveEventFailed": "Failed to save event. Please try again.",
+      "loadNotesFailed": "Failed to load notes",
+      "categoryRequired": "Enter a category",
+      "saveNoteFailed": "Failed to save note",
+      "notAuthorized": "Not authorized",
+      "unlockCrypto": "Unlock encryption keys on /crypto/unlock",
+      "encryptionRecipient": "Could not determine encryption recipient",
+      "notAuthorizedShort": "User not authorized"
+    },
+    "tab": "Calendar",
+    "plansTab": "Plans",
+    "detail": {
+      "readOnly": "View only",
+      "share": "Share",
+      "edit": "Edit",
+      "delete": "Delete",
+      "date": "Event date",
+      "birthday": "Birthday",
+      "anniversary": "Anniversary",
+      "title": "Title",
+      "description": "Description",
+      "created": "Created",
+      "author": "Author: {{name}}",
+      "lastEdit": "Last edited",
+      "editor": "Editor: {{name}}"
+    },
+    "list": {
+      "eventsOn": "Events on {{date}}"
+    },
+    "addContent": {
+      "title": "Add content for {{date}}",
+      "selectMedia": "Select photos or videos"
+    },
+    "plans": {
+      "subtitle": "Shared notes for your couple",
+      "newNote": "New note",
+      "editNote": "Edit note",
+      "all": "All",
+      "empty": "No notes yet",
+      "emptyCategory": "No notes in «{{category}}» yet",
+      "title": "Title",
+      "category": "Category",
+      "categoryPlaceholder": "e.g. Travel, Gifts, Dreams...",
+      "content": "Note text",
+      "contentPlaceholder": "Write anything you want...",
+      "encryptedMedia": "Photos and videos (encrypted)",
+      "createdBy": "Created by {{name}}",
+      "editedBy": "Edited by {{name}}",
+      "deleteConfirm": "Delete note «{{title}}»? It will disappear for your partner too.",
+      "create": "Create"
+    },
+    "common": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete",
+      "edit": "Edit",
+      "create": "Create",
+      "saving": "Saving...",
+      "noText": "No text",
+      "unknown": "Unknown"
+    }
+  },
+  "news": {
+    "title": "News",
+    "empty": "No news found",
+    "readMore": "Read more",
+    "newBadge": "NEW",
+    "filter": {
+      "all": "All",
+      "updates": "Updates",
+      "events": "Events",
+      "announcements": "Announcements",
+      "byCategory": "Filter by category:"
+    },
+    "categories": {
+      "update": "Update",
+      "event": "Event",
+      "announcement": "Announcement"
+    },
+    "aria": {
+      "back": "Back",
+      "categoryFilter": "News category filter",
+      "allCategories": "All categories",
+      "announcements": "Announcements",
+      "events": "Events",
+      "updates": "Updates"
+    },
+    "errors": {
+      "loadFailed": "Could not load news"
+    }
+  }
+}

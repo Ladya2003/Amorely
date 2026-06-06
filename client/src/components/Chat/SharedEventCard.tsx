@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ImageIcon from '@mui/icons-material/Image';
@@ -45,6 +46,7 @@ const SharedEventCard: React.FC<SharedEventCardProps> = ({
   compact = false,
   onClick
 }) => {
+  const { t } = useTranslation();
   const { localDeviceKeys } = useCrypto();
   const { user } = useAuth();
   const partnerId = usePartnerId();
@@ -200,7 +202,7 @@ const SharedEventCard: React.FC<SharedEventCardProps> = ({
             mb: 0.25
           }}
         >
-          Событие
+          {t('chat.event.label')}
         </Typography>
         <Typography
           variant="body2"

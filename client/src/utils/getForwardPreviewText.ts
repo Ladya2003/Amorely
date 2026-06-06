@@ -1,12 +1,13 @@
+import type { TFunction } from 'i18next';
 import type { MessageType } from '../components/Chat/ChatDialog';
+import { getChatMessagePreview } from '../localization/chatHelpers';
 
 export const getForwardPreviewText = (
+  t: TFunction,
   message: Pick<MessageType, 'text' | 'attachments' | 'sharedEvent' | 'forwardFrom'>
 ): string => {
   const trimmedText = message.text?.trim();
   if (trimmedText) return trimmedText;
-  if (message.sharedEvent?.title) return `Событие: ${message.sharedEvent.title}`;
-  if (message.attachments?.length) return 'Медиафайл';
   if (message.forwardFrom?.text?.trim()) return message.forwardFrom.text.trim();
-  return 'Пересланное сообщение';
+  return getChatMessagePreview(t, message);
 };

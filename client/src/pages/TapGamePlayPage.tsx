@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Box,
   Button,
@@ -47,6 +49,7 @@ const showRoundCompletionToast = (
   setToast: React.Dispatch<
     React.SetStateAction<{ open: boolean; message: string; severity: 'info' | 'error' | 'success' }>
   >,
+  t: TFunction,
   roundCompletionBonus?: number
 ) => {
   if (!roundCompletionBonus || roundCompletionBonus <= 0) {
@@ -57,13 +60,14 @@ const showRoundCompletionToast = (
 
   setToast({
     open: true,
-    message: `Раунд пройден! +${roundCompletionBonus} баллов`,
+    message: t('games.tap.play.roundCompleteBonus', { bonus: roundCompletionBonus }),
     severity: 'success',
   });
 };
 
 const TapGamePlayPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [state, setState] = useState<TapGameState | null>(null);
   const [shopItems, setShopItems] = useState<TapShopItem[]>([]);
@@ -94,20 +98,18 @@ const TapGamePlayPage: React.FC = () => {
       setShopItems(data.shopItems);
     } catch (error: any) {
       if (error?.response?.data?.code === 'NO_PARTNER') {
-        setBlockedReason(
-          error.response.data.error || 'Для игры нужен партнёр. Добавьте его в настройках профиля.'
-        );
+        setBlockedReason(error.response.data.error || t('games.common.partnerRequired'));
         return;
       }
       setToast({
         open: true,
-        message: 'Не удалось загрузить игру',
+        message: t('games.common.loadFailed'),
         severity: 'error',
       });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadState();
@@ -123,12 +125,12 @@ const TapGamePlayPage: React.FC = () => {
 
     const handleState = (payload: { state: TapGameState; roundCompletionBonus?: number }) => {
       setState(payload.state);
-      showRoundCompletionToast(setToast, payload.roundCompletionBonus);
+      showRoundCompletionToast(setToast, t, payload.roundCompletionBonus);
     };
 
     const handleError = (payload: { message?: string; code?: string }) => {
       if (payload.code === 'NO_PARTNER') {
-        setBlockedReason(payload.message || 'Для игры нужен партнёр. Добавьте его в настройках профиля.');
+        setBlockedReason(payload.message || t('games.common.partnerRequired'));
         return;
       }
       if (payload.message) {
@@ -143,7 +145,7 @@ const TapGamePlayPage: React.FC = () => {
       socket.off('tap_game_state', handleState);
       socket.off('tap_game_error', handleError);
     };
-  }, [user?._id]);
+  }, [user?._id, t]);
 
   const handleTap = async () => {
     if (!state?.isMyTurn) {
@@ -164,12 +166,12 @@ const TapGamePlayPage: React.FC = () => {
       } else {
         const result = await postTapGameTap();
         setState(result.state);
-        showRoundCompletionToast(setToast, result.roundCompletionBonus);
+        showRoundCompletionToast(setToast, t, result.roundCompletionBonus);
       }
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось нажать',
+        message: error?.response?.data?.error || t('games.common.errors.tapFailed'),
         severity: 'error',
       });
     }
@@ -187,16 +189,16 @@ const TapGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 4 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          Нужен партнёр
+          {t('games.common.needPartner')}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           {blockedReason}
         </Typography>
         <Stack direction="row" spacing={1} justifyContent="center">
           <Button variant="contained" onClick={() => navigate('/settings')}>
-            Перейти в настройки
+            {t('games.common.goToSettings')}
           </Button>
-          <Button onClick={() => navigate('/chat/games/tap')}>Назад</Button>
+          <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
         </Stack>
       </Box>
     );
@@ -206,9 +208,9 @@ const TapGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Не удалось загрузить игру
+          {t('games.common.loadFailed')}
         </Typography>
-        <Button onClick={() => navigate('/chat/games/tap')}>Назад</Button>
+        <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
       </Box>
     );
   }
@@ -231,15 +233,15 @@ const TapGamePlayPage: React.FC = () => {
           flexShrink: 0,
         }}
       >
-        <IconButton onClick={() => navigate('/chat/games/tap')} aria-label="Назад">
+        <IconButton onClick={() => navigate('/chat/games/tap')} aria-label={t('games.common.back')}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Раунд {state.round}
+            {t('games.common.round')} {state.round}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Цель: {state.targetTaps} нажатий · Баллы: {state.points}
+            {t('games.tap.play.targetAndPoints', { target: state.targetTaps, points: state.points })}
           </Typography>
         </Box>
         <Button
@@ -248,7 +250,7 @@ const TapGamePlayPage: React.FC = () => {
           startIcon={<StorefrontIcon />}
           onClick={() => setShopOpen(true)}
         >
-          Магазин
+          {t('games.tap.play.shop')}
         </Button>
       </Box>
 
@@ -265,7 +267,10 @@ const TapGamePlayPage: React.FC = () => {
         <Stack spacing={2} sx={{ width: '100%', maxWidth: 420 }}>
           {state.activeBoost && (
             <Typography variant="body2" color="primary.main" align="center">
-              Активно ×{state.activeBoost.multiplier} · осталось {state.activeBoost.remainingUses} наж.
+              {t('games.tap.play.activeBoostLine', {
+                multiplier: state.activeBoost.multiplier,
+                remaining: state.activeBoost.remainingUses,
+              })}
             </Typography>
           )}
 
@@ -276,11 +281,11 @@ const TapGamePlayPage: React.FC = () => {
               align="center"
               sx={{ fontWeight: 600 }}
             >
-              Нажимайте на розовый блок
+              {t('games.tap.play.tapPinkBlock')}
             </Typography>
           ) : state.waitingForPartner ? (
             <Typography variant="body2" color="text.secondary" align="center">
-              Вы закончили — ждём партнёра
+              {t('games.tap.play.finishedWaiting')}
             </Typography>
           ) : null}
 
@@ -334,10 +339,10 @@ const TapGamePlayPage: React.FC = () => {
               disabled={!state.isMyTurn}
               aria-label={
                 state.isMyTurn
-                  ? 'Нажать на блок'
+                  ? t('games.tap.play.tapBlockAria')
                   : state.waitingForPartner
-                    ? 'Вы уже завершили свою часть раунда'
-                    : 'Блок недоступен'
+                    ? t('games.tap.play.tapBlockDoneAria')
+                    : t('games.tap.play.tapBlockDisabledAria')
               }
               sx={{
                 position: 'relative',
@@ -402,7 +407,7 @@ const TapGamePlayPage: React.FC = () => {
                       pointerEvents: 'none',
                     }}
                   >
-                    Жми!
+                    {t('games.tap.play.tapCta')}
                   </Typography>
                 )}
               </Box>
@@ -411,14 +416,20 @@ const TapGamePlayPage: React.FC = () => {
 
           <Box>
             <Typography variant="body2" sx={{ mb: 0.5 }}>
-              Вы: {state.myTapsThisRound}/{state.targetTaps}
+              {t('games.tap.play.youProgress', {
+                current: state.myTapsThisRound,
+                goal: state.targetTaps,
+              })}
             </Typography>
             <LinearProgress variant="determinate" value={myProgress} sx={{ height: 8, borderRadius: 999 }} />
           </Box>
 
           <Box>
             <Typography variant="body2" sx={{ mb: 0.5 }}>
-              Партнёр: {state.partnerProgressThisRound}/{state.targetTaps}
+              {t('games.tap.play.partnerProgress', {
+                current: state.partnerProgressThisRound,
+                goal: state.targetTaps,
+              })}
             </Typography>
             <LinearProgress
               variant="determinate"
@@ -429,7 +440,7 @@ const TapGamePlayPage: React.FC = () => {
           </Box>
 
           <Typography variant="caption" color="text.secondary" align="center">
-            Всего нажатий пары: {state.totalTaps}
+            {t('games.tap.play.totalPairTaps', { count: state.totalTaps })}
           </Typography>
         </Stack>
       </Box>

@@ -17,12 +17,14 @@ import {
   Paper,
   Select,
   Switch,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
@@ -40,17 +42,25 @@ import {
   updateAdminNews,
 } from '../../services/adminService';
 import { useUnreadNews } from '../../contexts/UnreadNewsContext';
+import {
+  AppLocale,
+  LOCALE_LABELS,
+  SUPPORTED_LOCALES,
+} from '../../localization/locale';
+import {
+  createEmptyNewsTranslations,
+  normalizeNewsTranslations,
+  NewsLocaleContent,
+} from '../../localization/newsContent';
 
 type NewsFormState = {
-  title: string;
-  content: string;
+  translations: Record<AppLocale, NewsLocaleContent>;
   category: 'update' | 'event' | 'announcement';
   isPublished: boolean;
 };
 
 const emptyForm = (): NewsFormState => ({
-  title: '',
-  content: '',
+  translations: createEmptyNewsTranslations(),
   category: 'announcement',
   isPublished: true,
 });
@@ -89,6 +99,7 @@ const AdminNews: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingNews, setEditingNews] = useState<AdminNewsItem | null>(null);
   const [form, setForm] = useState<NewsFormState>(emptyForm());
+  const [activeLocale, setActiveLocale] = useState<AppLocale>('ru');
   const [files, setFiles] = useState<File[]>([]);
   const [existingMedia, setExistingMedia] = useState<ExistingMediaItem[]>([]);
   const [removedMediaPublicIds, setRemovedMediaPublicIds] = useState<string[]>([]);
@@ -128,6 +139,7 @@ const AdminNews: React.FC = () => {
   const openCreateDialog = () => {
     setEditingNews(null);
     setForm(emptyForm());
+    setActiveLocale('ru');
     resetMediaState();
     setDialogOpen(true);
   };
@@ -135,11 +147,11 @@ const AdminNews: React.FC = () => {
   const openEditDialog = (item: AdminNewsItem) => {
     setEditingNews(item);
     setForm({
-      title: item.title,
-      content: item.content,
+      translations: normalizeNewsTranslations(item),
       category: item.category,
       isPublished: item.isPublished ?? true,
     });
+    setActiveLocale('ru');
     setFiles([]);
     setExistingMedia(getNewsExistingMedia(item));
     setRemovedMediaPublicIds([]);
@@ -150,6 +162,7 @@ const AdminNews: React.FC = () => {
     setDialogOpen(false);
     setEditingNews(null);
     setForm(emptyForm());
+    setActiveLocale('ru');
     resetMediaState();
   };
 
@@ -160,9 +173,24 @@ const AdminNews: React.FC = () => {
     }
   };
 
+  const updateLocaleField = (locale: AppLocale, field: keyof NewsLocaleContent, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [locale]: {
+          ...prev.translations[locale],
+          [field]: value,
+        },
+      },
+    }));
+  };
+
   const handleSave = async () => {
-    if (!form.title.trim() || !form.content.trim()) {
-      setError('Заполните заголовок и текст');
+    const russian = form.translations.ru;
+    if (!russian.title.trim() || !russian.content.trim()) {
+      setError('Заполните заголовок и текст на русском языке');
+      setActiveLocale('ru');
       return;
     }
 
@@ -171,8 +199,9 @@ const AdminNews: React.FC = () => {
       setError(null);
 
       const formData = new FormData();
-      formData.append('title', form.title.trim());
-      formData.append('content', form.content.trim());
+      formData.append('translations', JSON.stringify(form.translations));
+      formData.append('title', russian.title.trim());
+      formData.append('content', russian.content.trim());
       formData.append('category', form.category);
       formData.append('isPublished', String(form.isPublished));
       files.forEach((file) => formData.append('media', file));
@@ -230,11 +259,18 @@ const AdminNews: React.FC = () => {
     return existing.length;
   };
 
+  const getFilledLocales = (item: AdminNewsItem) => {
+    const translations = normalizeNewsTranslations(item);
+    return SUPPORTED_LOCALES.filter((locale) => translations[locale].title.trim().length > 0);
+  };
+
+  const activeTranslation = form.translations[activeLocale];
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          Создание, редактирование и публикация новостей
+          Создание, редактирование и публикация новостей на разных языках
         </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateDialog}>
           Новая новость
@@ -252,7 +288,8 @@ const AdminNews: React.FC = () => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Заголовок</TableCell>
+                <TableCell>Заголовок (RU)</TableCell>
+                <TableCell>Языки</TableCell>
                 <TableCell>Категория</TableCell>
                 <TableCell>Медиа</TableCell>
                 <TableCell>Статус</TableCell>
@@ -263,7 +300,14 @@ const AdminNews: React.FC = () => {
             <TableBody>
               {news.map((item) => (
                 <TableRow key={item._id} hover>
-                  <TableCell>{item.title}</TableCell>
+                  <TableCell>{normalizeNewsTranslations(item).ru.title || item.title}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {getFilledLocales(item).map((locale) => (
+                        <Chip key={locale} size="small" label={locale.toUpperCase()} variant="outlined" />
+                      ))}
+                    </Box>
+                  </TableCell>
                   <TableCell>{getCategoryLabel(item.category)}</TableCell>
                   <TableCell>{getMediaCount(item)}</TableCell>
                   <TableCell>
@@ -288,7 +332,7 @@ const AdminNews: React.FC = () => {
               ))}
               {news.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={7} align="center">
                     Новостей пока нет
                   </TableCell>
                 </TableRow>
@@ -298,23 +342,60 @@ const AdminNews: React.FC = () => {
         </TableContainer>
       )}
 
-      <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="sm">
+      <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="md">
         <DialogTitle>{editingNews ? 'Редактировать новость' : 'Новая новость'}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+          <Tabs
+            value={activeLocale}
+            onChange={(_event, value: AppLocale) => setActiveLocale(value)}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            {SUPPORTED_LOCALES.map((locale) => {
+              const hasContent = Boolean(form.translations[locale].title.trim());
+              return (
+                <Tab
+                  key={locale}
+                  value={locale}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <span>{LOCALE_LABELS[locale]}</span>
+                      {locale === 'ru' && (
+                        <Chip size="small" label="*" color="primary" sx={{ height: 18, fontSize: '0.65rem' }} />
+                      )}
+                      {hasContent && locale !== 'ru' && (
+                        <Chip size="small" label="✓" color="success" sx={{ height: 18, minWidth: 22, fontSize: '0.65rem' }} />
+                      )}
+                    </Box>
+                  }
+                />
+              );
+            })}
+          </Tabs>
+
           <TextField
-            label="Заголовок"
-            value={form.title}
-            onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+            label={`Заголовок (${LOCALE_LABELS[activeLocale]})`}
+            value={activeTranslation.title}
+            onChange={(event) => updateLocaleField(activeLocale, 'title', event.target.value)}
             fullWidth
+            required={activeLocale === 'ru'}
           />
           <TextField
-            label="Текст"
-            value={form.content}
-            onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
+            label={`Текст (${LOCALE_LABELS[activeLocale]})`}
+            value={activeTranslation.content}
+            onChange={(event) => updateLocaleField(activeLocale, 'content', event.target.value)}
             fullWidth
             multiline
-            minRows={5}
+            minRows={6}
+            required={activeLocale === 'ru'}
           />
+
+          {activeLocale === 'ru' && (
+            <Typography variant="caption" color="text.secondary">
+              Русский заголовок и текст обязательны. Остальные языки можно заполнить по желанию.
+            </Typography>
+          )}
+
           <FormControl fullWidth>
             <InputLabel>Категория</InputLabel>
             <Select

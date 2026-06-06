@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -14,6 +15,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LockIcon from '@mui/icons-material/Lock';
 import { getGameById } from '../components/Chat/gamesData';
+import { getGameRules, getGeoAttributionRules } from '../localization/gameHelpers';
 import GameLeaderboard from '../components/Games/GameLeaderboard';
 import GeoDailyLimitDialog from '../components/Games/GeoDailyLimitDialog';
 import DailyResetBadge from '../components/Games/DailyResetBadge';
@@ -35,6 +37,7 @@ type GeoGameInfoLocationState = {
 };
 
 const GamePage: React.FC = () => {
+  const { t } = useTranslation();
   const { gameId = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -143,21 +146,27 @@ const GamePage: React.FC = () => {
   if (!staticGame) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography sx={{ mb: 2 }}>Игра не найдена</Typography>
-        <Button onClick={() => navigate('/chat?tab=games')}>К списку игр</Button>
+        <Typography sx={{ mb: 2 }}>{t('games.page.notFound')}</Typography>
+        <Button onClick={() => navigate('/chat?tab=games')}>{t('games.page.backToList')}</Button>
       </Box>
     );
   }
 
   const game = details?.game || staticGame;
+  const gameName = t(`games.${game.id}.name`, { defaultValue: game.name });
+  const gameDescription = t(`games.${game.id}.description`, { defaultValue: game.description });
   const canPlay = game.available && (!game.requiresPartner || hasPartner);
   const geoDailyLimitReached = gameId === 'geo' && Boolean(geoState?.dailyLimitReached);
   const showDailyReset = Boolean(details?.dailyReset?.hasPlayed);
   const playBlockedReason = !game.available
-    ? 'Игра скоро появится'
+    ? t('games.page.comingSoon')
     : game.requiresPartner && !hasPartner
-      ? 'Добавьте партнёра в настройках, чтобы играть вместе'
+      ? t('games.page.addPartner')
       : null;
+  const displayRules =
+    game.id === 'geo'
+      ? [...getGameRules(t, game.id, game.rules), ...getGeoAttributionRules(t)]
+      : getGameRules(t, game.id, game.rules);
 
   const handleCloseGeoDailyLimitDialog = () => {
     setGeoDailyLimitDialogOpen(false);
@@ -204,11 +213,11 @@ const GamePage: React.FC = () => {
           flexShrink: 0,
         }}
       >
-        <IconButton onClick={() => navigate('/chat?tab=games')} aria-label="Назад">
+        <IconButton onClick={() => navigate('/chat?tab=games')} aria-label={t('games.common.back')}>
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="subtitle1" sx={{ fontWeight: 700, flex: 1, color: 'text.primary' }} noWrap>
-          {game.name}
+          {gameName}
         </Typography>
         {showDailyReset && (
           <DailyResetBadge onClick={() => setDailyResetInfoOpen(true)} />
@@ -221,8 +230,8 @@ const GamePage: React.FC = () => {
         variant="fullWidth"
         sx={{ flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
       >
-        <Tab label="Игра" />
-        <Tab label="Рейтинг" disabled={!game.available} />
+        <Tab label={t('games.page.tabGame')} />
+        <Tab label={t('games.page.tabLeaderboard')} disabled={!game.available} />
       </Tabs>
 
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
@@ -235,12 +244,12 @@ const GamePage: React.FC = () => {
             <Box
               component="img"
               src={game.imageUrl}
-              alt={game.name}
+              alt={gameName}
               sx={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 2 }}
             />
 
             <Typography variant="body1" color="text.secondary">
-              {game.description}
+              {gameDescription}
             </Typography>
 
             {game.rulesImages.length > 0 && (
@@ -258,7 +267,7 @@ const GamePage: React.FC = () => {
             )}
 
             <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
-              {game.rules.map((rule) => (
+              {displayRules.map((rule) => (
                 <Typography key={rule} component="li" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                   {rule}
                 </Typography>
@@ -272,9 +281,9 @@ const GamePage: React.FC = () => {
         ) : (
           <Box sx={{ maxWidth: 640, mx: 'auto' }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Глобальный рейтинг пар по общему счёту
+              {t('games.page.leaderboardSubtitle')}
             </Typography>
-            <GameLeaderboard entries={leaderboard} />
+            <GameLeaderboard entries={leaderboard} emptyMessage={t('games.leaderboard.empty')} />
           </Box>
         )}
       </Box>
@@ -307,7 +316,7 @@ const GamePage: React.FC = () => {
                     <>
                       {' '}
                       <Link component={RouterLink} to="/settings">
-                        Перейти в настройки
+                        {t('games.common.goToSettings')}
                       </Link>
                     </>
                   )}
@@ -317,12 +326,12 @@ const GamePage: React.FC = () => {
 
             {geoDailyLimitReached && geoState && (
               <Typography variant="body2" color="text.secondary">
-                Сегодня вы угадали все {geoState.maxRoundsPerDay} мест. Новые раунды откроются позже.
+                {t('games.page.geoDailyLimitHint', { count: geoState.maxRoundsPerDay })}
               </Typography>
             )}
 
             <Button variant="contained" size="large" fullWidth disabled={!canPlay} onClick={handlePlay}>
-              Играть
+              {t('games.page.play')}
             </Button>
           </Stack>
         </Box>
@@ -340,7 +349,7 @@ const GamePage: React.FC = () => {
       <DailyResetInfoDialog
         open={dailyResetInfoOpen}
         onClose={() => setDailyResetInfoOpen(false)}
-        gameName={game.name}
+        gameName={gameName}
       />
     </Box>
   );

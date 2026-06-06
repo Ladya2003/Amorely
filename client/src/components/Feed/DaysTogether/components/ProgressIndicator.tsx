@@ -1,6 +1,7 @@
 // Индикатор прогресса до следующей вехи
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, LinearProgress, Chip, useTheme } from '@mui/material';
 import { Milestone } from '../types';
 import { getDaysWord } from '../utils/helpers';
@@ -21,6 +22,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   theme,
   hasPhoto = false
 }) => {
+  const { t } = useTranslation();
   const muiTheme = useTheme();
   const isDarkMode = muiTheme.palette.mode === 'dark';
 
@@ -63,7 +65,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             color: hasPhoto || isDarkMode ? 'success.main' : theme.preview
           }}
         >
-          🎉 Все вехи достигнуты! Вы - легенды! 💎
+          {t('feed.progress.allMilestones')}
         </Typography>
       </Box>
     );
@@ -87,7 +89,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             color: hasPhoto || isDarkMode ? 'text.secondary' : theme.preview
           }}
         >
-          До следующей отметки:
+          {t('feed.progress.nextMilestone')}
         </Typography>
         <Chip
           label={`${nextMilestone.icon} ${nextMilestone.title}`}
@@ -140,7 +142,10 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             color: theme.preview
           }}
         >
-          {daysRemaining} {getDaysWord(daysRemaining)} осталось
+          {t('feed.progress.daysRemaining', {
+            count: daysRemaining,
+            daysWord: getDaysWord(daysRemaining, t),
+          })}
         </Typography>
       </Box>
     </Box>

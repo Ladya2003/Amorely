@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   Typography, 
@@ -16,7 +17,7 @@ import GridViewIcon from '@mui/icons-material/GridView';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import AddIcon from '@mui/icons-material/Add';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { formatCalendarMonthYear, getCalendarWeekdays } from '../../localization/calendarHelpers';
 import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
 import PlansNotes from './PlansNotes';
@@ -60,7 +61,9 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddContent, onContentClick }) => {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const weekdays = getCalendarWeekdays(t);
   const skipNextSaveRef = useRef(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -183,8 +186,8 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
           p: 1
         }}>
           <Tabs value={tabValue} onChange={handleTabChange} aria-label="calendar tabs">
-            <Tab icon={<CalendarMonthIcon />} label="Календарь" />
-            <Tab icon={<ListAltIcon />} label="Планы" />
+            <Tab icon={<CalendarMonthIcon />} label={t('calendar.tab')} />
+            <Tab icon={<ListAltIcon />} label={t('calendar.plansTab')} />
           </Tabs>
         </Box>
 
@@ -202,7 +205,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
                   &lt;
                 </IconButton>
                 <Typography variant="h6" sx={{ fontWeight: 400 }}>
-                  {format(currentDate, 'LLLL yyyy', { locale: ru })}
+                  {formatCalendarMonthYear(currentDate, i18n.language)}
                 </Typography>
                 <IconButton onClick={handleNextMonth}>
                   &gt;
@@ -245,7 +248,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
                   }
                 }}
               >
-                Создать событие
+                {t('calendar.createEvent')}
               </Button>
             </Box>
           </>
@@ -259,7 +262,7 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
             {view === 'circles' ? (
               <Box>
                 <Grid container spacing={1} sx={{ mb: 1 }}>
-                  {['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map((day, index) => (
+                  {weekdays.map((day, index) => (
                     <Grid size={{ xs: 12/7 }} key={index}>
                       <Typography align="center" variant="body2" color="text.secondary">
                         {day}

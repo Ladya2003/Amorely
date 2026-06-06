@@ -11,18 +11,25 @@ import {
   Radio,
   useTheme,
   Tooltip,
+  MenuItem,
+  Select,
+  InputLabel,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import CheckIcon from '@mui/icons-material/Check';
 import { ThemePreference, PrimaryColorPreference, primaryColorOptions } from '../../theme/appTheme';
+import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/locale';
 
 interface ThemeSettingsProps {
   currentTheme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
   currentPrimaryColor: PrimaryColorPreference;
   onPrimaryColorChange: (color: PrimaryColorPreference) => void;
+  currentLocale: AppLocale;
+  onLocaleChange: (locale: AppLocale) => void;
 }
 
 const ThemeSettings: React.FC<ThemeSettingsProps> = ({
@@ -30,8 +37,11 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
   onThemeChange,
   currentPrimaryColor,
   onPrimaryColorChange,
+  currentLocale,
+  onLocaleChange,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const handleThemeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onThemeChange(event.target.value as ThemePreference);
@@ -40,12 +50,33 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
   return (
     <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
-        Настройки темы
+        {t('settings.themeTitle')}
       </Typography>
       <Divider sx={{ mb: 3 }} />
 
+      <FormControl fullWidth sx={{ mb: 3 }}>
+        <InputLabel id="locale-select-label">{t('settings.language')}</InputLabel>
+        <Select
+          labelId="locale-select-label"
+          value={currentLocale}
+          label={t('settings.language')}
+          onChange={(event) => onLocaleChange(event.target.value as AppLocale)}
+        >
+          {SUPPORTED_LOCALES.map((locale) => (
+            <MenuItem key={locale} value={locale}>
+              {LOCALE_LABELS[locale]}
+            </MenuItem>
+          ))}
+        </Select>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          {t('settings.languageHint')}
+        </Typography>
+      </FormControl>
+
+      <Divider sx={{ mb: 3 }} />
+
       <FormControl component="fieldset">
-        <FormLabel component="legend">Выберите тему оформления</FormLabel>
+        <FormLabel component="legend">{t('settings.themeLegend')}</FormLabel>
         <RadioGroup
           aria-label="theme"
           name="theme-radio-buttons-group"
@@ -58,7 +89,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <LightModeIcon sx={{ mr: 1, color: theme.palette.mode === 'dark' ? 'inherit' : 'warning.main' }} />
-                <Typography>Светлая</Typography>
+                <Typography>{t('settings.themeLight')}</Typography>
               </Box>
             }
           />
@@ -68,7 +99,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <DarkModeIcon sx={{ mr: 1, color: theme.palette.mode === 'dark' ? 'info.main' : 'inherit' }} />
-                <Typography>Темная</Typography>
+                <Typography>{t('settings.themeDark')}</Typography>
               </Box>
             }
           />
@@ -78,7 +109,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
             label={
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <SettingsBrightnessIcon sx={{ mr: 1 }} />
-                <Typography>Системная</Typography>
+                <Typography>{t('settings.themeSystem')}</Typography>
               </Box>
             }
           />
@@ -88,16 +119,17 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
       <Divider sx={{ my: 3 }} />
 
       <FormControl component="fieldset">
-        <FormLabel component="legend">Основной цвет</FormLabel>
+        <FormLabel component="legend">{t('settings.primaryColor')}</FormLabel>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mt: 1.5 }}>
           {primaryColorOptions.map((option) => {
             const isSelected = currentPrimaryColor === option.id;
+            const colorLabel = t(`settings.colors.${option.id}`, { defaultValue: option.name });
             return (
-              <Tooltip key={option.id} title={option.name} arrow>
+              <Tooltip key={option.id} title={colorLabel} arrow>
                 <Box
                   onClick={() => onPrimaryColorChange(option.id)}
                   role="button"
-                  aria-label={option.name}
+                  aria-label={colorLabel}
                   aria-pressed={isSelected}
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -140,12 +172,17 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
           })}
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {primaryColorOptions.find((o) => o.id === currentPrimaryColor)?.name}
+          {(() => {
+            const selected = primaryColorOptions.find((o) => o.id === currentPrimaryColor);
+            return selected
+              ? t(`settings.colors.${selected.id}`, { defaultValue: selected.name })
+              : null;
+          })()}
         </Typography>
       </FormControl>
 
       <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-        Выбранные настройки будут применены ко всему приложению.
+        {t('settings.themeHint')}
       </Typography>
     </Paper>
   );

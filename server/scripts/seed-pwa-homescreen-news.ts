@@ -34,6 +34,9 @@ async function main() {
     {
       title,
       content,
+      translations: {
+        ru: { title, content },
+      },
       category: 'update',
       isPublished: true,
       publishDate: new Date(),

@@ -49,6 +49,7 @@ import {
   syncQuizGameState,
   updateQuizGameBadges,
 } from './quizGameService';
+import { getUserLocale } from '../utils/userLocale';
 
 interface ConnectedUser {
   userId: string;
@@ -129,20 +130,22 @@ export const attachGameSocketHandlers = (
         if (!socketData) {
           return;
         }
+        const locale = await getUserLocale(uid);
         io.to(socketData.socketId).emit('geo_game_state', {
-          state: formatGeoGameState(state, uid),
+          state: formatGeoGameState(state, uid, locale),
         });
       })
     );
   };
 
-  const emitGeoStateToUser = (state: any, userId: string) => {
+  const emitGeoStateToUser = async (state: any, userId: string) => {
     const socketData = connectedUsers.find((user) => user.userId === userId);
     if (!socketData) {
       return;
     }
+    const locale = await getUserLocale(userId);
     io.to(socketData.socketId).emit('geo_game_state', {
-      state: formatGeoGameState(state, userId),
+      state: formatGeoGameState(state, userId, locale),
     });
   };
 
@@ -254,7 +257,7 @@ export const attachGameSocketHandlers = (
       if (allPartnersDismissed) {
         await emitGeoStateToPartners(state, participantUserIds);
       } else {
-        emitGeoStateToUser(state, senderSocketData.userId);
+        await emitGeoStateToUser(state, senderSocketData.userId);
       }
     } catch (error) {
       if (error instanceof GeoGameError) {
@@ -303,8 +306,9 @@ export const attachGameSocketHandlers = (
         if (!socketData || !stateDoc) {
           return;
         }
+        const locale = await getUserLocale(uid);
         io.to(socketData.socketId).emit('draw_game_state', {
-          state: formatDrawGameState(stateDoc, uid),
+          state: formatDrawGameState(stateDoc, uid, locale),
         });
       })
     );
@@ -320,8 +324,9 @@ export const attachGameSocketHandlers = (
     if (!socketData || !stateDoc) {
       return;
     }
+    const locale = await getUserLocale(userId);
     io.to(socketData.socketId).emit('draw_game_state', {
-      state: formatDrawGameState(stateDoc, userId),
+      state: formatDrawGameState(stateDoc, userId, locale),
     });
   };
 
@@ -511,8 +516,9 @@ export const attachGameSocketHandlers = (
         if (!socketData) {
           return;
         }
+        const locale = await getUserLocale(uid);
         io.to(socketData.socketId).emit('quiz_game_state', {
-          state: formatQuizGameState(state, uid),
+          state: formatQuizGameState(state, uid, locale),
         });
       })
     );

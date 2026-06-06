@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import {
   DialogTitle,
@@ -13,8 +14,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DescriptionIcon from '@mui/icons-material/Description';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { formatCalendarDate } from '../../localization/calendarHelpers';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
@@ -47,6 +47,8 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
   date,
   onSelectEvent
 }) => {
+  const { t, i18n } = useTranslation();
+
   const handleEventClick = (eventId: string) => {
     onSelectEvent(eventId);
     onClose();
@@ -57,7 +59,9 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6" sx={{ fontWeight: 500 }}>
-            События {date && format(date, 'd MMMM yyyy', { locale: ru })}
+            {date
+              ? t('calendar.list.eventsOn', { date: formatCalendarDate(date, i18n.language) })
+              : t('calendar.list.eventsOn', { date: '' })}
           </Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
@@ -119,7 +123,7 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
                     </Box>
                   )}
                   <ListItemText
-                    primary={event.title || 'Без названия'}
+                    primary={event.title || t('calendar.event.noTitle')}
                     secondary={
                       <Box component="span" sx={{ display: 'block' }}>
                         {event.description && (
@@ -140,8 +144,8 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
                           sx={{ display: 'block' }}
                         >
                           {hasMedia
-                            ? `${event.media!.length} ${event.media!.length === 1 ? 'файл' : 'файла'}`
-                            : 'Текстовое событие'}
+                            ? t('calendar.event.fileCount', { count: event.media!.length })
+                            : t('calendar.event.textOnly')}
                         </Typography>
                       </Box>
                     }

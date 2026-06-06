@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -35,6 +36,7 @@ const QUIZ_GAME_INFO_PATH = '/chat/games/quiz';
 const POINT_TIERS = [100, 200, 300];
 
 const QuizGamePlayPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [state, setState] = useState<QuizGameState | null>(null);
@@ -120,11 +122,11 @@ const QuizGamePlayPage: React.FC = () => {
     } catch (error: any) {
       if (error?.response?.data?.code === 'NO_PARTNER') {
         setBlockedReason(
-          error.response.data.error || 'Для игры нужен партнёр. Добавьте его в настройках профиля.'
+          error.response.data.error || t('games.common.partnerRequired')
         );
         return;
       }
-      setToast({ open: true, message: 'Не удалось загрузить игру', severity: 'error' });
+      setToast({ open: true, message: t('games.common.loadFailed'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -148,7 +150,7 @@ const QuizGamePlayPage: React.FC = () => {
 
     const handleError = (payload: { message?: string; code?: string }) => {
       if (payload.code === 'NO_PARTNER') {
-        setBlockedReason(payload.message || 'Для игры нужен партнёр.');
+        setBlockedReason(payload.message || t('games.common.partnerRequiredShort'));
         return;
       }
       if (payload.message) {
@@ -234,7 +236,7 @@ const QuizGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось подтвердить готовность',
+        message: error?.response?.data?.error || t('games.common.errors.readyFailed'),
         severity: 'error',
       });
     } finally {
@@ -255,7 +257,7 @@ const QuizGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось открыть вопрос',
+        message: error?.response?.data?.error || t('games.common.errors.pickFailed'),
         severity: 'error',
       });
     } finally {
@@ -281,7 +283,7 @@ const QuizGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось отправить ответ',
+        message: error?.response?.data?.error || t('games.common.errors.answerFailed'),
         severity: 'error',
       });
     } finally {
@@ -302,7 +304,7 @@ const QuizGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось продолжить',
+        message: error?.response?.data?.error || t('games.common.errors.advanceFailed'),
         severity: 'error',
       });
     } finally {
@@ -322,13 +324,13 @@ const QuizGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 4 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          Нужен партнёр
+          {t('games.common.needPartner')}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           {blockedReason}
         </Typography>
         <Button variant="contained" onClick={() => navigate('/settings')}>
-          Перейти в настройки
+          {t('games.common.goToSettings')}
         </Button>
       </Box>
     );
@@ -338,9 +340,9 @@ const QuizGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Не удалось загрузить игру
+          {t('games.common.loadFailed')}
         </Typography>
-        <Button onClick={() => navigate(QUIZ_GAME_INFO_PATH)}>Назад</Button>
+        <Button onClick={() => navigate(QUIZ_GAME_INFO_PATH)}>{t('games.common.back')}</Button>
       </Box>
     );
   }
@@ -349,11 +351,11 @@ const QuizGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ px: 1, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label="Назад">
+          <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label={t('games.common.back')}>
             <ArrowBackIcon />
           </IconButton>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Своя игра
+            {t('games.quiz.name')}
           </Typography>
         </Box>
         <Box
@@ -368,13 +370,15 @@ const QuizGamePlayPage: React.FC = () => {
           }}
         >
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Поле пройдено!
+            {t('games.quiz.play.boardComplete')}
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Счёт пары: {state.totalScore}
+            {t('games.quiz.play.pairScore', { score: state.totalScore })}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Новые вопросы через {formatDailyResetCountdown(Math.ceil(state.cooldownSecondsRemaining / 60))}
+            {t('games.quiz.play.newQuestionsIn', {
+              duration: formatDailyResetCountdown(Math.ceil(state.cooldownSecondsRemaining / 60)),
+            })}
           </Typography>
         </Box>
       </Box>
@@ -390,11 +394,11 @@ const QuizGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ px: 1, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label="Назад">
+          <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label={t('games.common.back')}>
             <ArrowBackIcon />
           </IconButton>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Своя игра
+            {t('games.quiz.name')}
           </Typography>
         </Box>
         <Box
@@ -411,15 +415,15 @@ const QuizGamePlayPage: React.FC = () => {
           }}
         >
           <Typography variant="h6" sx={{ mb: 1 }}>
-            {isCountdownActive ? 'Скоро начнём!' : 'Готовы к игре?'}
+            {isCountdownActive ? t('games.common.startingSoon') : t('games.common.readyToPlay')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Счёт пары: {state.totalScore}
+            {t('games.quiz.play.pairScore', { score: state.totalScore })}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
             {isCountdownActive
-              ? 'Оба готовы — поле откроется одновременно.'
-              : 'Нажмите «Готов». Раунд стартует, когда оба партнёра на месте.'}
+              ? t('games.quiz.play.bothReadyOpen')
+              : t('games.quiz.play.pressReadyStart')}
           </Typography>
           <Stack direction="row" spacing={4} sx={{ mb: 4 }}>
             <Stack alignItems="center" spacing={1}>
@@ -428,7 +432,7 @@ const QuizGamePlayPage: React.FC = () => {
                 type="button"
                 onClick={handleReady}
                 disabled={isMeReady || submitting || isCountdownActive}
-                aria-label={isMeReady ? 'Вы готовы' : 'Подтвердить готовность'}
+                aria-label={isMeReady ? t('games.common.youReadyAria') : t('games.common.confirmReadyAria')}
                 sx={{
                   width: 48,
                   height: 48,
@@ -447,7 +451,7 @@ const QuizGamePlayPage: React.FC = () => {
               >
                 {isMeReady ? '✓' : '…'}
               </Box>
-              <Typography variant="caption">Вы</Typography>
+              <Typography variant="caption">{t('games.common.you')}</Typography>
             </Stack>
             <Stack alignItems="center" spacing={1}>
               <Box
@@ -465,7 +469,7 @@ const QuizGamePlayPage: React.FC = () => {
               >
                 {isPartnerReady ? '✓' : '…'}
               </Box>
-              <Typography variant="caption">Партнёр</Typography>
+              <Typography variant="caption">{t('games.common.partner')}</Typography>
             </Stack>
           </Stack>
           {isCountdownActive ? (
@@ -479,7 +483,7 @@ const QuizGamePlayPage: React.FC = () => {
               disabled={isMeReady || submitting}
               onClick={handleReady}
             >
-              {isMeReady ? 'Ждём партнёра…' : 'Готов'}
+              {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
             </Button>
           )}
         </Box>
@@ -519,15 +523,18 @@ const QuizGamePlayPage: React.FC = () => {
           flexShrink: 0,
         }}
       >
-        <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label="Назад">
+        <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label={t('games.common.back')}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Своя игра
+            {t('games.quiz.name')}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Счёт: {state.totalScore} · Осталось вопросов: {state.cellsRemaining}
+            {t('games.quiz.play.scoreRemaining', {
+              score: state.totalScore,
+              count: state.cellsRemaining,
+            })}
           </Typography>
         </Box>
       </Box>
@@ -548,8 +555,8 @@ const QuizGamePlayPage: React.FC = () => {
             }}
           >
             {state.isMyTurnToPick
-              ? 'Ваш ход — выбирайте любую категорию'
-              : 'Сейчас ход вашего партнёра'}
+              ? t('games.quiz.play.yourTurnPick')
+              : t('games.quiz.play.partnerTurnPick')}
           </Typography>
         )}
         <Table size="small" sx={{ tableLayout: 'fixed' }}>
@@ -617,7 +624,7 @@ const QuizGamePlayPage: React.FC = () => {
           {isAnswering && (
             <Box sx={{ flexShrink: 0 }}>
               <Typography variant="caption" align="center" sx={{ display: 'block', py: 0.75, fontWeight: 700 }}>
-                Осталось {questionSecondsLeft} сек
+                {t('games.common.secondsLeft', { seconds: questionSecondsLeft })}
               </Typography>
               <LinearProgress variant="determinate" value={timeProgress} sx={{ height: 6, borderRadius: 0 }} />
             </Box>
@@ -635,14 +642,14 @@ const QuizGamePlayPage: React.FC = () => {
               <Stack spacing={1.5}>
                 <Typography variant="body2" color="text.secondary" align="center">
                   {question.myAnswerSubmitted
-                    ? 'Ваш ответ отправлен. Ждём партнёра…'
+                    ? t('games.quiz.play.answerSentWaiting')
                     : question.partnerAnswerSubmitted
-                      ? 'Партнёр уже ответил. Ваш ход!'
-                      : 'Каждый отвечает один раз до конца таймера'}
+                      ? t('games.quiz.play.partnerAnsweredYourTurn')
+                      : t('games.quiz.play.oneAnswerUntilTimer')}
                 </Typography>
                 <TextField
                   fullWidth
-                  placeholder="Ваш ответ"
+                  placeholder={t('games.common.yourAnswer')}
                   value={answerInput}
                   onChange={(event) => setAnswerInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -660,7 +667,9 @@ const QuizGamePlayPage: React.FC = () => {
                   disabled={!answerInput.trim() || question.myAnswerSubmitted || submitting}
                   onClick={handleSubmitAnswer}
                 >
-                  {question.myAnswerSubmitted ? 'Ответ отправлен' : 'Отправить'}
+                  {question.myAnswerSubmitted
+                    ? t('games.quiz.play.answerSent')
+                    : t('games.common.send')}
                 </Button>
               </Stack>
             )}
@@ -668,28 +677,31 @@ const QuizGamePlayPage: React.FC = () => {
             {isRevealed && reveal && (
               <Stack spacing={1.5}>
                 <Typography variant="body2" color="text.secondary" align="center">
-                  Правильный ответ: <strong>{reveal.correctAnswer}</strong>
+                  {t('games.quiz.play.correctAnswer', { answer: reveal.correctAnswer })}
                 </Typography>
                 {reveal.answers.map((entry) => {
                   const isMe = entry.userId === user?._id;
                   return (
                     <Typography key={entry.userId} variant="body2" align="center">
-                      {isMe ? 'Вы' : 'Партнёр'}:{' '}
+                      {isMe ? t('games.common.you') : t('games.common.partner')}:{' '}
                       {entry.text ? (
-                        <>
-                          «{entry.text}» — {entry.isCorrect ? `+${entry.pointsEarned}` : '0'} очков
-                        </>
+                        t('games.quiz.play.answerLabel', {
+                          text: entry.text,
+                          points: entry.isCorrect ? entry.pointsEarned : 0,
+                        })
                       ) : (
-                        <>не ответили</>
+                        t('games.quiz.play.didNotAnswer')
                       )}
                     </Typography>
                   );
                 })}
                 <Typography variant="body1" align="center" sx={{ fontWeight: 700 }}>
-                  За вопрос: +{reveal.pointsAwardedTotal} очков
+                  {t('games.quiz.play.pointsForQuestionTotal', {
+                    points: reveal.pointsAwardedTotal,
+                  })}
                 </Typography>
                 <Button variant="contained" size="large" fullWidth onClick={handleDismissReveal} disabled={submitting}>
-                  К полю
+                  {t('games.quiz.play.backToBoard')}
                 </Button>
               </Stack>
             )}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   List, 
   ListItemButton,
@@ -18,6 +19,7 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import GameBadges from '../Games/GameBadges';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
+import { formatChatListTimestamp } from '../../localization/chatHelpers';
 
 export interface Contact {
   id: string;
@@ -75,26 +77,10 @@ const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
 }));
 
 const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selectedContactId, currentUserId }) => {
+  const { t, i18n } = useTranslation();
   const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
-  const formatLastMessageTimestamp = (timestamp: string) => {
-    const messageDate = new Date(timestamp);
-    const now = new Date();
-
-    const isToday =
-      messageDate.getFullYear() === now.getFullYear() &&
-      messageDate.getMonth() === now.getMonth() &&
-      messageDate.getDate() === now.getDate();
-
-    if (isToday) {
-      return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-    }
-
-    return messageDate.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
+  const formatLastMessageTimestamp = (timestamp: string) =>
+    formatChatListTimestamp(timestamp, i18n.language);
 
   const renderContactIndicators = (contact: Contact) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
@@ -242,7 +228,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                         color="text.secondary"
                         noWrap
                       >
-                        Медиафайл
+                        {t('chat.message.media')}
                       </Typography>
                     </Box>
                     {renderContactIndicators(contact)}

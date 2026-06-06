@@ -1,6 +1,7 @@
 // Кнопка для экспорта открытки как изображения
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IconButton, CircularProgress, Tooltip } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import html2canvas from 'html2canvas';
@@ -13,6 +14,7 @@ interface ExportButtonProps {
 }
 
 const ExportButton: React.FC<ExportButtonProps> = ({ targetId, colorTheme }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,14 +55,14 @@ const ExportButton: React.FC<ExportButtonProps> = ({ targetId, colorTheme }) => 
       }, 'image/png');
     } catch (err) {
       console.error('Error exporting image:', err);
-      setError('Не удалось экспортировать открытку');
+      setError(t('feed.export.error'));
       setLoading(false);
     }
   };
 
   return (
     <>
-      <Tooltip title="Скачать открытку" arrow>
+      <Tooltip title={t('feed.export.tooltip')} arrow>
         <IconButton
           onClick={handleExport}
           disabled={loading}
@@ -79,7 +81,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({ targetId, colorTheme }) => 
 
       <CustomSnackbar
         open={success}
-        message="Открытка успешно сохранена! 📸"
+        message={t('feed.export.success')}
         severity="success"
         onClose={() => setSuccess(false)}
       />

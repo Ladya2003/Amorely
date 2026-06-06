@@ -16,6 +16,9 @@ import {
   buildUsedWordIdsAfterPick,
   pickRandomDrawWord,
 } from './drawGameConfig';
+import { getDrawWordLabel } from '../i18n/drawI18n';
+import { AppLocale } from '../i18n/locales';
+import { getUserLocale } from '../utils/userLocale';
 
 export interface DrawGameRelationship {
   _id: mongoose.Types.ObjectId;
@@ -396,7 +399,11 @@ const finalizeCorrectGuess = async (
   await state.save();
 };
 
-export const formatDrawGameState = (state: any, viewerUserId: string): DrawGamePublicState => {
+export const formatDrawGameState = (
+  state: any,
+  viewerUserId: string,
+  viewerLocale: AppLocale = 'ru'
+): DrawGamePublicState => {
   const rawRound = state.currentRound;
   const hideRevealFromViewer = shouldHideRevealFromViewer(rawRound, viewerUserId);
   const roundForViewer = hideRevealFromViewer ? null : rawRound;
@@ -426,7 +433,7 @@ export const formatDrawGameState = (state: any, viewerUserId: string): DrawGameP
 
     if (round.status === 'revealed' && word) {
       reveal = {
-        word: word.label,
+        word: getDrawWordLabel(word, viewerLocale),
         guessText: round.guessText,
         wasCorrect: Boolean(round.wasCorrect),
         pointsEarned: round.pointsEarned ?? 0,
@@ -454,7 +461,10 @@ export const formatDrawGameState = (state: any, viewerUserId: string): DrawGameP
           isOwnGuess: attempt.userId.toString() === viewerUserId,
         })
       ),
-      yourWord: isDrawer && round.status === 'drawing' ? word?.label ?? null : null,
+      yourWord:
+        isDrawer && round.status === 'drawing' && word
+          ? getDrawWordLabel(word, viewerLocale)
+          : null,
       isDrawer,
       isGuesser,
       reveal,
@@ -483,7 +493,12 @@ export const formatDrawGameState = (state: any, viewerUserId: string): DrawGameP
   };
 };
 
-export const getOrCreateDrawGameState = async (context: DrawGameContext, viewerUserId: string) => {
+export const getOrCreateDrawGameState = async (
+  context: DrawGameContext,
+  viewerUserId: string,
+  viewerLocale?: AppLocale
+) => {
+  const locale = viewerLocale ?? (await getUserLocale(viewerUserId));
   const relationshipId = context.relationship._id;
   let state = await DrawGameState.findOne({ relationshipId });
 
@@ -528,11 +543,12 @@ export const getOrCreateDrawGameState = async (context: DrawGameContext, viewerU
   syncedLobby = await startLobbyCountdownIfAllReady(syncedLobby, participantIds);
   syncedLobby = (await syncDrawLobby(syncedLobby, context)) || syncedLobby;
 
-  return { state: syncedLobby, publicState: formatDrawGameState(syncedLobby, viewerUserId) };
+  return { state: syncedLobby, publicState: formatDrawGameState(syncedLobby, viewerUserId, locale) };
 };
 
 export const setDrawPlayerReady = async (userId: string, context: DrawGameContext) => {
-  const { state: initialState } = await getOrCreateDrawGameState(context, userId);
+  const locale = await getUserLocale(userId);
+  const { state: initialState } = await getOrCreateDrawGameState(context, userId, locale);
   let state = initialState;
 
   if (
@@ -597,7 +613,7 @@ export const setDrawPlayerReady = async (userId: string, context: DrawGameContex
     throw new DrawGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
 
-  return { state: syncedLobby, publicState: formatDrawGameState(syncedLobby, userId) };
+  return { state: syncedLobby, publicState: formatDrawGameState(syncedLobby, userId, locale) };
 };
 
 export const appendDrawStroke = async (

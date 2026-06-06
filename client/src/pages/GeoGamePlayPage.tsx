@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -38,6 +39,7 @@ const isGeoGameSessionEnded = (gameState: GeoGameState) =>
   !gameState.currentRound && !gameState.inLobby && gameState.dailyLimitReached;
 
 const GeoGamePlayPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [state, setState] = useState<GeoGameState | null>(null);
@@ -123,13 +125,13 @@ const GeoGamePlayPage: React.FC = () => {
     } catch (error: any) {
       if (error?.response?.data?.code === 'NO_PARTNER') {
         setBlockedReason(
-          error.response.data.error || 'Для игры нужен партнёр. Добавьте его в настройках профиля.'
+          error.response.data.error || t('games.common.partnerRequired')
         );
         return;
       }
       setToast({
         open: true,
-        message: 'Не удалось загрузить игру',
+        message: t('games.common.loadFailed'),
         severity: 'error',
       });
     } finally {
@@ -155,7 +157,7 @@ const GeoGamePlayPage: React.FC = () => {
 
     const handleError = (payload: { message?: string; code?: string }) => {
       if (payload.code === 'NO_PARTNER') {
-        setBlockedReason(payload.message || 'Для игры нужен партнёр. Добавьте его в настройках профиля.');
+        setBlockedReason(payload.message || t('games.common.partnerRequired'));
         return;
       }
       if (payload.message) {
@@ -279,7 +281,7 @@ const GeoGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось подтвердить готовность',
+        message: error?.response?.data?.error || t('games.common.errors.readyFailed'),
         severity: 'error',
       });
     } finally {
@@ -304,7 +306,7 @@ const GeoGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось отправить ответ',
+        message: error?.response?.data?.error || t('games.common.errors.guessFailed'),
         severity: 'error',
       });
     } finally {
@@ -326,7 +328,7 @@ const GeoGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось начать раунд',
+        message: error?.response?.data?.error || t('games.common.errors.startRoundFailed'),
         severity: 'error',
       });
     } finally {
@@ -346,16 +348,16 @@ const GeoGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 4 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          Нужен партнёр
+          {t('games.common.needPartner')}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           {blockedReason}
         </Typography>
         <Stack direction="row" spacing={1} justifyContent="center">
           <Button variant="contained" onClick={() => navigate('/settings')}>
-            Перейти в настройки
+            {t('games.common.goToSettings')}
           </Button>
-          <Button onClick={() => navigate('/chat/games/geo')}>Назад</Button>
+          <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.back')}</Button>
         </Stack>
       </Box>
     );
@@ -365,9 +367,9 @@ const GeoGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Не удалось загрузить игру
+          {t('games.common.loadFailed')}
         </Typography>
-        <Button onClick={() => navigate('/chat/games/geo')}>Назад</Button>
+        <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.back')}</Button>
       </Box>
     );
   }
@@ -392,15 +394,15 @@ const GeoGamePlayPage: React.FC = () => {
               borderColor: 'divider',
             }}
           >
-            <IconButton onClick={() => navigate('/chat/games/geo')} aria-label="Назад">
+            <IconButton onClick={() => navigate('/chat/games/geo')} aria-label={t('games.common.back')}>
               <ArrowBackIcon />
             </IconButton>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                Угадай локацию
+                {t('games.geo.name')}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Раунд {state.roundsCompleted + 1}
+                {t('games.common.round')} {state.roundsCompleted + 1}
               </Typography>
             </Box>
           </Box>
@@ -419,24 +421,27 @@ const GeoGamePlayPage: React.FC = () => {
             }}
           >
             <Typography variant="h6" sx={{ mb: 1 }}>
-              {isCountdownActive ? 'Скоро начнём!' : 'Готовы к раунду?'}
+              {isCountdownActive ? t('games.common.startingSoon') : t('games.geo.play.readyToRoundQuestion')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Счёт пары: {state.totalScore} · Сегодня: {state.roundsPlayedToday}/{state.maxRoundsPerDay}
+              {t('games.geo.play.pairScoreToday', {
+                score: state.totalScore,
+                today: state.roundsPlayedToday,
+                max: state.maxRoundsPerDay,
+              })}
               {state.locationsRemaining < state.locationsTotal
-                ? ` · в пуле осталось: ${state.locationsRemaining}`
+                ? t('games.geo.play.poolRemaining', { count: state.locationsRemaining })
                 : ''}
             </Typography>
             {state.waitingForPartnerResults ? (
               <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                Партнёр ещё смотрит результаты прошлого раунда. Можете нажать «Готов», когда будете
-                на месте.
+                {t('games.common.partnerViewingPastRound')}
               </Typography>
             ) : (
               <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                 {isCountdownActive
-                  ? 'Оба партнёра готовы — раунд начнётся одновременно.'
-                  : 'Нажмите «Готов», когда будете на месте. Раунд стартует, когда оба готовы.'}
+                  ? t('games.common.bothReady')
+                  : t('games.common.pressReady')}
               </Typography>
             )}
 
@@ -447,7 +452,7 @@ const GeoGamePlayPage: React.FC = () => {
                   type="button"
                   onClick={handleReady}
                   disabled={isMeReady || submitting || isCountdownActive}
-                  aria-label={isMeReady ? 'Вы готовы' : 'Подтвердить готовность'}
+                  aria-label={isMeReady ? t('games.common.youReadyAria') : t('games.common.confirmReadyAria')}
                   sx={{
                     width: 48,
                     height: 48,
@@ -466,7 +471,7 @@ const GeoGamePlayPage: React.FC = () => {
                 >
                   {isMeReady ? '✓' : '…'}
                 </Box>
-                <Typography variant="caption">Вы</Typography>
+                <Typography variant="caption">{t('games.common.you')}</Typography>
               </Stack>
               <Stack alignItems="center" spacing={1}>
                 <Box
@@ -484,7 +489,7 @@ const GeoGamePlayPage: React.FC = () => {
                 >
                   {isPartnerReady ? '✓' : '…'}
                 </Box>
-                <Typography variant="caption">Партнёр</Typography>
+                <Typography variant="caption">{t('games.common.partner')}</Typography>
               </Stack>
             </Stack>
 
@@ -499,7 +504,7 @@ const GeoGamePlayPage: React.FC = () => {
                 disabled={isMeReady || submitting}
                 onClick={handleReady}
               >
-                {isMeReady ? 'Ждём партнёра…' : 'Готов'}
+                {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
               </Button>
             )}
           </Box>
@@ -510,14 +515,14 @@ const GeoGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 6 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          {state.dailyLimitReached ? 'На сегодня всё' : 'Раунд не активен'}
+          {state.dailyLimitReached ? t('games.geo.play.dailyAllDone') : t('games.common.roundNotActive')}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           {state.dailyLimitReached
-            ? `Вы угадали ${state.maxRoundsPerDay} мест за сегодня. Новые раунды — завтра.`
-            : 'Вернитесь к описанию игры и начните заново.'}
+            ? t('games.geo.play.dailyGuessedAll', { count: state.maxRoundsPerDay })
+            : t('games.geo.play.restartGame')}
         </Typography>
-        <Button onClick={() => navigate('/chat/games/geo')}>К игре</Button>
+        <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.backToGame')}</Button>
       </Box>
     );
   }
@@ -597,7 +602,7 @@ const GeoGamePlayPage: React.FC = () => {
           color: isTimeLow ? 'error.main' : 'text.secondary',
         }}
       >
-        Осталось {secondsLeft} сек
+        {t('games.common.secondsLeft', { seconds: secondsLeft })}
       </Typography>
       <LinearProgress
         variant="determinate"
@@ -632,15 +637,19 @@ const GeoGamePlayPage: React.FC = () => {
           flexShrink: 0,
         }}
       >
-        <IconButton onClick={() => navigate('/chat/games/geo')} aria-label="Назад">
+        <IconButton onClick={() => navigate('/chat/games/geo')} aria-label={t('games.common.back')}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.25 }}>
-            Раунд {state.roundsCompleted + (isGuessing ? 1 : 0)}
+            {t('games.common.round')} {state.roundsCompleted + (isGuessing ? 1 : 0)}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Счёт пары: {state.totalScore} · Сегодня: {state.roundsPlayedToday}/{state.maxRoundsPerDay}
+            {t('games.geo.play.pairScoreToday', {
+              score: state.totalScore,
+              today: state.roundsPlayedToday,
+              max: state.maxRoundsPerDay,
+            })}
           </Typography>
         </Box>
       </Box>
@@ -675,7 +684,7 @@ const GeoGamePlayPage: React.FC = () => {
           />
           <IconButton
             size="medium"
-            aria-label="Открыть фото на весь экран"
+            aria-label={t('games.geo.play.openPhotoFullscreen')}
             onClick={() => setImageViewerOpen(true)}
             sx={{
               position: 'absolute',
@@ -711,7 +720,7 @@ const GeoGamePlayPage: React.FC = () => {
           />
           <IconButton
             size="medium"
-            aria-label="Открыть карту на весь экран"
+            aria-label={t('games.geo.play.openMapFullscreen')}
             onClick={() => setMapViewerOpen(true)}
             sx={{
               position: 'absolute',
@@ -733,7 +742,7 @@ const GeoGamePlayPage: React.FC = () => {
           <Stack spacing={1.5} sx={{ p: 2, flexShrink: 0 }}>
             {reveal.timedOut && reveal.guesses.length === 0 ? (
               <Typography variant="body1" color="error.main" align="center" sx={{ fontWeight: 600 }}>
-                Время вышло — никто не успел поставить метку
+                {t('games.geo.play.timedOutNoGuess')}
               </Typography>
             ) : null}
             <Typography variant="h6" sx={{ fontWeight: 700, textAlign: 'center' }}>
@@ -744,30 +753,34 @@ const GeoGamePlayPage: React.FC = () => {
             </Typography>
             <Stack spacing={0.75}>
               <Typography variant="body2" align="center">
-                Вы:{' '}
+                {t('games.common.you')}:{' '}
                 {myRevealResult?.submitted ? (
-                  <>
-                    <strong>{myRevealResult.distanceKm} км</strong> · +{myRevealResult.pointsEarned}{' '}
-                    очков
-                  </>
+                  <strong>
+                    {t('games.geo.play.youDistance', {
+                      distance: myRevealResult.distanceKm,
+                      points: myRevealResult.pointsEarned,
+                    })}
+                  </strong>
                 ) : (
-                  <>не успели (+0)</>
+                  t('games.geo.play.missedGuessYou')
                 )}
               </Typography>
               <Typography variant="body2" align="center">
-                Партнёр:{' '}
+                {t('games.common.partner')}:{' '}
                 {partnerRevealResult?.submitted ? (
-                  <>
-                    <strong>{partnerRevealResult.distanceKm} км</strong> · +
-                    {partnerRevealResult.pointsEarned} очков
-                  </>
+                  <strong>
+                    {t('games.geo.play.youDistance', {
+                      distance: partnerRevealResult.distanceKm,
+                      points: partnerRevealResult.pointsEarned,
+                    })}
+                  </strong>
                 ) : (
-                  <>не успел (+0)</>
+                  t('games.geo.play.missedGuessPartner')
                 )}
               </Typography>
             </Stack>
             <Typography variant="body1" align="center" sx={{ fontWeight: 700 }}>
-              Итого: +{reveal.totalPointsEarned} очков
+              {t('games.geo.play.totalEarned', { points: reveal.totalPointsEarned })}
             </Typography>
           </Stack>
         ) : null}
@@ -787,8 +800,8 @@ const GeoGamePlayPage: React.FC = () => {
           <Stack spacing={1}>
             <Typography variant="body2" color="text.secondary" align="center">
               {waitingForPartner
-                ? 'Ваша метка отправлена. Ждём ответ партнёра...'
-                : 'Каждый ставит свою метку. Очки обоих партнёров суммируются.'}
+                ? t('games.geo.play.markerSentWaiting')
+                : t('games.geo.play.markerHintBoth')}
             </Typography>
             {!waitingForPartner && (
               <Stack direction="row" spacing={2} justifyContent="center">
@@ -796,13 +809,13 @@ const GeoGamePlayPage: React.FC = () => {
                   <Box component="span" sx={{ color: MY_GUESS_COLOR, fontWeight: 700 }}>
                     ●
                   </Box>{' '}
-                  Вы
+                  {t('games.common.you')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   <Box component="span" sx={{ color: PARTNER_GUESS_COLOR, fontWeight: 700 }}>
                     ●
                   </Box>{' '}
-                  Партнёр
+                  {t('games.common.partner')}
                 </Typography>
               </Stack>
             )}
@@ -813,7 +826,9 @@ const GeoGamePlayPage: React.FC = () => {
               disabled={!draftGuess || submitting || secondsLeft <= 0 || hasSubmittedMyGuess}
               onClick={handleSubmitGuess}
             >
-              {hasSubmittedMyGuess ? 'Метка отправлена' : 'Подтвердить мою метку'}
+              {hasSubmittedMyGuess
+                ? t('games.geo.play.markerSubmitted')
+                : t('games.geo.play.confirmMyMarker')}
             </Button>
           </Stack>
         ) : reveal ? (
@@ -825,8 +840,8 @@ const GeoGamePlayPage: React.FC = () => {
             onClick={handleNextRound}
           >
             {state.dailyLimitReached || state.roundsRemainingToday <= 0
-              ? 'Завершить'
-              : 'Следующий раунд'}
+              ? t('games.common.finish')
+              : t('games.common.nextRound')}
           </Button>
         ) : null}
       </Box>
@@ -866,7 +881,7 @@ const GeoGamePlayPage: React.FC = () => {
           <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
             <IconButton
               onClick={() => setMapViewerOpen(false)}
-              aria-label="Закрыть"
+              aria-label={t('games.common.close')}
               sx={{
                 position: 'absolute',
                 top: 8,
@@ -908,7 +923,9 @@ const GeoGamePlayPage: React.FC = () => {
                 disabled={!draftGuess || submitting || secondsLeft <= 0 || hasSubmittedMyGuess}
                 onClick={handleSubmitGuess}
               >
-                {hasSubmittedMyGuess ? 'Метка отправлена' : 'Подтвердить мою метку'}
+                {hasSubmittedMyGuess
+                  ? t('games.geo.play.markerSubmitted')
+                  : t('games.geo.play.confirmMyMarker')}
               </Button>
             </Box>
           ) : null}

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Typography,
   Box,
@@ -11,9 +12,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AnnouncementIcon from '@mui/icons-material/Announcement';
 import EventIcon from '@mui/icons-material/Event';
 import UpdateIcon from '@mui/icons-material/Update';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import { useNavigation } from '../../contexts/NavigationContext';
+import { formatCalendarDate } from '../../localization/calendarHelpers';
+import { getNewsCategoryLabel } from '../../localization/newsHelpers';
 import { NewsItem } from './NewsCard';
 
 interface NewsDetailProps {
@@ -23,6 +24,7 @@ interface NewsDetailProps {
 }
 
 const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
+  const { t, i18n } = useTranslation();
   const { setShowBottomNav } = useNavigation();
 
   useEffect(() => {
@@ -52,18 +54,6 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
     }
   };
 
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case 'update':
-        return 'Обновление';
-      case 'event':
-        return 'Событие';
-      case 'announcement':
-      default:
-        return 'Анонс';
-    }
-  };
-
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'update':
@@ -74,10 +64,6 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
       default:
         return 'success';
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'd MMMM yyyy', { locale: ru });
   };
 
   const galleryMedia = news.images?.length
@@ -123,11 +109,11 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            {formatDate(news.publishDate)}
+            {formatCalendarDate(new Date(news.publishDate), i18n.language)}
           </Typography>
           <Chip
             icon={getCategoryIcon(news.category)}
-            label={getCategoryLabel(news.category)}
+            label={getNewsCategoryLabel(t, news.category)}
             size="small"
             color={getCategoryColor(news.category) as 'primary' | 'secondary' | 'success'}
           />

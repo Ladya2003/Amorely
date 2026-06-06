@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Container,
   Typography,
@@ -11,14 +12,15 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { API_URL } from '../config';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import UserProfileChip from '../components/UI/UserProfileChip';
+import { formatCalendarDate } from '../localization/calendarHelpers';
+import { getNewsCategoryLabel } from '../localization/newsHelpers';
 import NewsDetail from '../components/News/NewsDetail';
 import { NewsItem } from '../components/News/NewsCard';
 import { useUnreadNews } from '../contexts/UnreadNewsContext';
 
 const NewsPage: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -27,7 +29,7 @@ const NewsPage: React.FC = () => {
 
   useEffect(() => {
     fetchNews();
-  }, [selectedCategory]);
+  }, [selectedCategory, i18n.language]);
 
   const fetchNews = async () => {
     try {
@@ -51,7 +53,7 @@ const NewsPage: React.FC = () => {
       }
       setIsLoading(false);
     } catch (error) {
-      console.error('Ошибка при загрузке новостей:', error);
+      console.error(t('news.errors.loadFailed'), error);
       setIsLoading(false);
     }
   };
@@ -78,19 +80,6 @@ const NewsPage: React.FC = () => {
     markNewsAsRead(item._id);
   };
 
-  const getCategoryName = (category: string) => {
-    switch (category) {
-      case 'update':
-        return 'Обновление';
-      case 'event':
-        return 'Событие';
-      case 'announcement':
-        return 'Анонс';
-      default:
-        return category;
-    }
-  };
-
   return (
     <>
       <Container maxWidth="md" sx={{ py: 4 }}>
@@ -109,19 +98,19 @@ const NewsPage: React.FC = () => {
 
         <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Chip
-            label="Все"
+            label={t('news.filter.all')}
             onClick={() => handleCategoryClick(null)}
             color={selectedCategory === null ? 'primary' : 'default'}
             variant={selectedCategory === null ? 'filled' : 'outlined'}
           />
           <Chip
-            label="Обновления"
+            label={t('news.filter.updates')}
             onClick={() => handleCategoryClick('update')}
             color={selectedCategory === 'update' ? 'primary' : 'default'}
             variant={selectedCategory === 'update' ? 'filled' : 'outlined'}
           />
           <Chip
-            label="События"
+            label={t('news.filter.events')}
             onClick={() => handleCategoryClick('event')}
             color={selectedCategory === 'event' ? 'secondary' : 'default'}
             variant={selectedCategory === 'event' ? 'filled' : 'outlined'}
@@ -141,7 +130,7 @@ const NewsPage: React.FC = () => {
         ) : news.length === 0 ? (
           <Box sx={{ textAlign: 'center', my: 4 }}>
             <Typography variant="body1" color="text.secondary">
-              Новости не найдены
+              {t('news.empty')}
             </Typography>
           </Box>
         ) : (
@@ -153,7 +142,7 @@ const NewsPage: React.FC = () => {
               >
                 {isNewsUnread(item._id) && (
                   <Chip
-                    label="NEW"
+                    label={t('news.newBadge')}
                     size="small"
                     color="error"
                     sx={{
@@ -177,10 +166,10 @@ const NewsPage: React.FC = () => {
 
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 1.5 }}>
                       <Typography variant="body2" color="text.secondary">
-                        {format(new Date(item.publishDate), 'd MMMM yyyy', { locale: ru })}
+                        {formatCalendarDate(new Date(item.publishDate), i18n.language)}
                       </Typography>
                       <Chip
-                        label={getCategoryName(item.category)}
+                        label={getNewsCategoryLabel(t, item.category)}
                         size="small"
                         color={getCategoryColor(item.category) as 'primary' | 'secondary' | 'success'}
                       />
@@ -202,7 +191,7 @@ const NewsPage: React.FC = () => {
                     </Typography>
 
                     <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
-                      Читать полностью
+                      {t('news.readMore')}
                     </Typography>
                   </CardContent>
                 </CardActionArea>

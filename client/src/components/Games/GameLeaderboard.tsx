@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import { getUserDisplayName } from '../UI/UserProfileChip';
 import type { LeaderboardEntry } from '../../services/gamesService';
@@ -15,12 +16,14 @@ const getPairLabel = (entry: LeaderboardEntry) =>
 
 const GameLeaderboard: React.FC<GameLeaderboardProps> = ({
   entries,
-  emptyMessage = 'Пока никто не играл',
+  emptyMessage,
 }) => {
+  const { t } = useTranslation();
+  const resolvedEmptyMessage = emptyMessage ?? t('games.leaderboard.empty');
   if (entries.length === 0) {
     return (
       <Box sx={{ py: 6, textAlign: 'center' }}>
-        <Typography color="text.secondary">{emptyMessage}</Typography>
+        <Typography color="text.secondary">{resolvedEmptyMessage}</Typography>
       </Box>
     );
   }

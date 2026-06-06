@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Card, 
   CardContent, 
@@ -8,16 +9,19 @@ import {
   Chip, 
   CardActionArea 
 } from '@mui/material';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import AnnouncementIcon from '@mui/icons-material/Announcement';
+import { formatCalendarDate } from '../../localization/calendarHelpers';
+import { getNewsCategoryLabel } from '../../localization/newsHelpers';
 import EventIcon from '@mui/icons-material/Event';
 import UpdateIcon from '@mui/icons-material/Update';
+
+import type { NewsTranslations } from '../../localization/newsContent';
 
 export interface NewsItem {
   _id: string;
   title: string;
   content: string;
+  translations?: NewsTranslations;
   image?: {
     url: string;
   };
@@ -37,6 +41,8 @@ interface NewsCardProps {
 }
 
 const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
+  const { t, i18n } = useTranslation();
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'update':
@@ -46,18 +52,6 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
       case 'announcement':
       default:
         return <AnnouncementIcon fontSize="small" />;
-    }
-  };
-
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case 'update':
-        return 'Обновление';
-      case 'event':
-        return 'Событие';
-      case 'announcement':
-      default:
-        return 'Анонс';
     }
   };
 
@@ -71,10 +65,6 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
       default:
         return 'warning';
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'd MMMM yyyy', { locale: ru });
   };
 
   const coverMedia =
@@ -119,13 +109,13 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Chip 
               icon={getCategoryIcon(news.category)} 
-              label={getCategoryLabel(news.category)} 
+              label={getNewsCategoryLabel(t, news.category)} 
               size="small" 
               color={getCategoryColor(news.category) as any}
               sx={{ height: 24 }}
             />
             <Typography variant="caption" color="text.secondary">
-              {formatDate(news.publishDate)}
+              {formatCalendarDate(new Date(news.publishDate), i18n.language)}
             </Typography>
           </Box>
           <Typography variant="h6" component="h2" fontWeight={400} gutterBottom>

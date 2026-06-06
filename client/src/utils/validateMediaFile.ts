@@ -1,9 +1,12 @@
+import i18n from '../localization';
 import { MAX_VIDEO_SOURCE_BYTES, formatMegabytes } from './mediaLimits';
 import { isVideoFile } from './videoMetadata';
 
 export const validateMediaFileSize = (file: File): string | undefined => {
   if (isVideoFile(file) && file.size > MAX_VIDEO_SOURCE_BYTES) {
-    return `Максимальный размер видео — ${formatMegabytes(MAX_VIDEO_SOURCE_BYTES)} МБ`;
+    return i18n.t('calendar.media.videoMaxSize', {
+      max: formatMegabytes(MAX_VIDEO_SOURCE_BYTES),
+    });
   }
 
   return undefined;

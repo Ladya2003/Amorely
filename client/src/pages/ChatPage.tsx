@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -53,8 +54,8 @@ import {
 } from '../crypto/cryptoService';
 import { encryptAndUploadChatFiles, type StoredChatAttachment } from '../crypto/chatMediaService';
 import { readChatRulesConsent, writeChatRulesConsent } from '../legal/chatRulesConsent';
-import { CHAT_RULES_SUMMARY } from '../legal/chatRulesContent';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
+import { getChatMessagePreview } from '../localization/chatHelpers';
 import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import { useVisualViewportLayout } from '../hooks/useVisualViewportLayout';
@@ -196,33 +197,6 @@ type ChatContact = Contact & {
   isPartner?: boolean;
 };
 
-const getMessagePreviewText = (
-  message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'encryptedPayload' | 'mediaEnvelopes'>
-) => {
-  const hasMedia = Boolean(message.attachments && message.attachments.length > 0);
-  const hasEncryptedMedia = Boolean(
-    message.attachments?.some((attachment) => attachment.encrypted || attachment.type === 'encrypted')
-  );
-  const hasDecryptedMedia = Boolean(message.mediaEnvelopes && message.mediaEnvelopes.length > 0);
-
-  if (message.text?.trim()) {
-    return message.text;
-  }
-
-  if (hasDecryptedMedia || (hasMedia && !message.encryptedPayload)) {
-    return 'Медиафайл';
-  }
-
-  if (!message.text && message.forwardFrom) return 'Пересланное сообщение';
-  if (!message.text && message.sharedEvent) return `Событие: ${message.sharedEvent.title}`;
-
-  if (message.encryptedPayload && hasEncryptedMedia) return 'Зашифрованное медиа';
-  if (message.encryptedPayload) return 'Зашифрованное сообщение';
-
-  if (hasMedia) return 'Медиафайл';
-  return message.text || '';
-};
-
 const getChatTabIndex = (tab?: string | null) => (tab === 'games' ? 1 : 0);
 
 const hasEncryptedMediaMessage = (message: MessageType) =>
@@ -234,7 +208,13 @@ const hasEncryptedMediaMessage = (message: MessageType) =>
   );
 
 const ChatPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const previewMessage = useCallback(
+    (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'encryptedPayload' | 'mediaEnvelopes'>) =>
+      getChatMessagePreview(t, message),
+    [t]
+  );
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = getChatTabIndex(searchParams.get('tab'));
@@ -347,10 +327,10 @@ const ChatPage: React.FC = () => {
         }
         return { ...message, text: payload.text };
       } catch (error) {
-        return { ...message, text: 'Не удалось расшифровать сообщение' };
+        return { ...message, text: t('chat.message.decryptFailed') };
       }
     },
-    [localDeviceKeys, resolvePeerIdForMessage, CURRENT_USER_ID]
+    [localDeviceKeys, resolvePeerIdForMessage, CURRENT_USER_ID, t]
   );
 
   const decryptContactsLastMessages = useCallback(
@@ -386,7 +366,7 @@ const ChatPage: React.FC = () => {
               ...contact,
               lastMessage: {
                 ...lastMessage,
-                text: getMessagePreviewText(decrypted),
+                text: previewMessage(decrypted),
                 hasMedia
               }
             };
@@ -557,7 +537,7 @@ const ChatPage: React.FC = () => {
               ...contact.lastMessage,
               id: '',
               senderId: '',
-              text: 'Нет сообщений',
+              text: t('chat.message.noMessages'),
               timestamp: new Date().toISOString(),
               isRead: true,
               hasMedia: false,
@@ -574,7 +554,7 @@ const ChatPage: React.FC = () => {
             ...contact.lastMessage,
             id: nextLastMessage.id,
             senderId: nextLastMessage.senderId,
-            text: getMessagePreviewText(nextLastMessage),
+            text: previewMessage(nextLastMessage),
             timestamp: nextLastMessage.timestamp,
             isRead: Boolean(nextLastMessage.isRead),
             hasMedia,
@@ -583,7 +563,7 @@ const ChatPage: React.FC = () => {
         };
       }))
     );
-  }, [CURRENT_USER_ID, sortContactsByLastMessageDesc]);
+  }, [CURRENT_USER_ID, previewMessage, sortContactsByLastMessageDesc, t]);
 
   const resolvePendingSend = useCallback((clientTempId?: string) => {
     if (!clientTempId) {
@@ -635,7 +615,7 @@ const ChatPage: React.FC = () => {
     const timeoutId = setTimeout(() => {
       failPendingSend(
         clientTempId,
-        'Не удалось отправить сообщение. Проверьте соединение и попробуйте снова.'
+        t('chat.errors.sendFailed')
       );
     }, PENDING_SEND_TIMEOUT_MS);
 
@@ -644,7 +624,7 @@ const ChatPage: React.FC = () => {
       contactId,
       timeoutId
     });
-  }, [failPendingSend]);
+  }, [failPendingSend, t]);
 
   const forwardEncryptedMessage = useCallback(
     async (
@@ -654,11 +634,11 @@ const ChatPage: React.FC = () => {
       forwardFrom: MessageForwardRef
     ) => {
       if (!localDeviceKeys || !CURRENT_USER_ID) {
-        throw new Error('Для пересылки медиа нужны ключи шифрования на этом устройстве');
+        throw new Error(t('chat.errors.forwardMediaKeys'));
       }
 
       if (!sourceMessage.encryptedPayload) {
-        throw new Error('Исходное сообщение не содержит зашифрованных данных');
+        throw new Error(t('chat.errors.forwardNoEncrypted'));
       }
 
       const decryptPeerId = resolvePeerIdForMessage(sourceMessage, sourcePeerId);
@@ -676,7 +656,7 @@ const ChatPage: React.FC = () => {
           : sourceMessage.mediaEnvelopes || [];
 
       if (!mediaEnvelopes.length) {
-        throw new Error('Не удалось получить данные медиа для пересылки');
+        throw new Error(t('chat.errors.forwardMediaData'));
       }
 
       const storedAttachments: StoredChatAttachment[] = (sourceMessage.attachments || [])
@@ -690,7 +670,7 @@ const ChatPage: React.FC = () => {
         .filter((attachment) => Boolean(attachment.url));
 
       if (!storedAttachments.length) {
-        throw new Error('Нет вложений для пересылки');
+        throw new Error(t('chat.errors.forwardNoAttachments'));
       }
 
       const payloadText = payload.version === 2 ? payload.text : payload.version === 1 ? payload.text : '';
@@ -704,7 +684,7 @@ const ChatPage: React.FC = () => {
       const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       const clientTempId = `client-temp-${uniqueSuffix}`;
 
-      const pushPreview = getMessagePreviewText({
+      const pushPreview = previewMessage({
         text: payloadText,
         attachments: storedAttachments,
         forwardFrom,
@@ -741,7 +721,7 @@ const ChatPage: React.FC = () => {
 
       updateContactLastMessage(
         targetContactId,
-        payloadText || 'Пересланное сообщение',
+        payloadText || t('chat.message.forwarded'),
         optimisticMessage.timestamp,
         false,
         true,
@@ -755,6 +735,7 @@ const ChatPage: React.FC = () => {
       localDeviceKeys,
       resolvePeerIdForMessage,
       sendEncryptedSocketMessage,
+      t,
       updateContactLastMessage,
       trackPendingSend
     ]
@@ -801,7 +782,7 @@ const ChatPage: React.FC = () => {
         }
 
         const hasMedia = message.attachments && message.attachments.length > 0;
-        const displayText = getMessagePreviewText(messageForDialog);
+        const displayText = previewMessage(messageForDialog);
         setContacts((prevContacts) =>
           sortContactsByLastMessageDesc(prevContacts.map((contact) =>
             contact.id === message.senderId
@@ -859,7 +840,7 @@ const ChatPage: React.FC = () => {
 
         if (selectedContactIdRef.current) {
           const hasMedia = message.attachments && message.attachments.length > 0;
-          const displayText = getMessagePreviewText(messageForDialog);
+          const displayText = previewMessage(messageForDialog);
           updateContactLastMessage(
             selectedContactIdRef.current,
             displayText,
@@ -924,7 +905,7 @@ const ChatPage: React.FC = () => {
               ...contact,
               lastMessage: {
                 ...contact.lastMessage,
-                text: getMessagePreviewText(messageForDialog),
+                text: previewMessage(messageForDialog),
                 hasMedia
               }
             };
@@ -949,7 +930,7 @@ const ChatPage: React.FC = () => {
         pendingDeleteRef.current = null;
         setDeleteToast({
           open: true,
-          message: 'Сообщение удалено',
+          message: t('chat.message.deleted'),
           severity: 'success'
         });
       }
@@ -978,13 +959,13 @@ const ChatPage: React.FC = () => {
 
         setDeleteToast({
           open: true,
-          message: payload?.message || 'Не удалось удалить сообщение',
+          message: payload?.message || t('chat.errors.deleteFailed'),
           severity: 'error'
         });
         return;
       }
 
-      const errorMessage = payload?.message || 'Не удалось отправить сообщение';
+      const errorMessage = payload?.message || t('chat.errors.sendFailedGeneric');
       if (payload.clientTempId) {
         failPendingSend(payload.clientTempId, errorMessage);
         return;
@@ -1228,7 +1209,7 @@ const ChatPage: React.FC = () => {
         lastMessage: {
           id: '',
           senderId: '',
-          text: 'Нет сообщений',
+          text: t('chat.message.noMessages'),
           timestamp: new Date().toISOString(),
           isRead: true,
           hasMedia: false,
@@ -1373,7 +1354,7 @@ const ChatPage: React.FC = () => {
     }
 
     if (message.senderId === CURRENT_USER_ID) {
-      const selfName = user?.firstName || user?.username || 'Вы';
+      const selfName = user?.firstName || user?.username || t('chat.self');
       const selfAvatar = user?.avatar || '';
       return { senderName: selfName, senderAvatar: selfAvatar };
     }
@@ -1421,7 +1402,7 @@ const ChatPage: React.FC = () => {
       const forwardSenderMeta = resolveForwardSenderMeta(messageForForward);
       const forwardFrom: MessageForwardRef = {
         id: messageForForward.id,
-        text: getForwardPreviewText(messageForForward),
+        text: getForwardPreviewText(t, messageForForward),
         senderId: messageForForward.senderId,
         senderName: forwardSenderMeta.senderName,
         senderAvatar: forwardSenderMeta.senderAvatar
@@ -1458,7 +1439,7 @@ const ChatPage: React.FC = () => {
 
     ensureContactInList({
       id: userId,
-      name: forwardHint?.senderName?.trim() || 'Пользователь',
+      name: forwardHint?.senderName?.trim() || t('chat.user'),
       username: forwardHint?.senderName?.trim() || userId.slice(0, 8),
       email: '',
       avatar: forwardHint?.senderAvatar || ''
@@ -1490,7 +1471,7 @@ const ChatPage: React.FC = () => {
 
     ensureContactInList({
       id: state.targetUserId,
-      name: state.targetUserName?.trim() || 'Пользователь',
+      name: state.targetUserName?.trim() || t('chat.user'),
       username: state.targetUsername?.trim() || state.targetUserId.slice(0, 8),
       email: state.targetUserEmail || '',
       avatar: state.targetUserAvatar || ''
@@ -1641,7 +1622,7 @@ const ChatPage: React.FC = () => {
         console.error('Ошибка пересылки зашифрованного медиа:', error);
         setDeleteToast({
           open: true,
-          message: 'Не удалось переслать зашифрованное медиа',
+          message: t('chat.errors.forwardEncryptedFailed'),
           severity: 'error'
         });
       });
@@ -1651,7 +1632,7 @@ const ChatPage: React.FC = () => {
     if (hasFiles && !localDeviceKeys) {
       setDeleteToast({
         open: true,
-        message: 'Для отправки медиа нужны ключи шифрования на этом устройстве',
+        message: t('chat.errors.encryptMediaKeys'),
         severity: 'error'
       });
       return;
@@ -1678,7 +1659,11 @@ const ChatPage: React.FC = () => {
     trackPendingSend(clientTempId, newMessage, selectedContactId);
     updateContactLastMessage(
       selectedContactId,
-      trimmedText || (sharedEvent ? `Событие: ${sharedEvent.title}` : (forwardFrom ? 'Пересланное сообщение' : (hasFiles ? 'Медиафайл' : ''))),
+      trimmedText || (sharedEvent
+        ? t('chat.message.event', { title: sharedEvent.title })
+        : (forwardFrom
+          ? t('chat.message.forwarded')
+          : (hasFiles ? t('chat.message.media') : ''))),
       newMessage.timestamp,
       false,
       hasFiles,
@@ -1700,7 +1685,7 @@ const ChatPage: React.FC = () => {
         }
 
         if (hasFiles && !localDeviceKeys) {
-          throw new Error('Нет ключей для шифрования медиа');
+          throw new Error(t('chat.errors.encryptKeys'));
         }
 
         if (localDeviceKeys && (trimmedText || mediaEnvelopes.length > 0)) {
@@ -1712,10 +1697,10 @@ const ChatPage: React.FC = () => {
         }
 
         if (hasFiles && !encryptedPayload) {
-          throw new Error('Не удалось зашифровать вложения');
+          throw new Error(t('chat.errors.encryptAttachments'));
         }
 
-        const pushPreview = getMessagePreviewText({
+        const pushPreview = previewMessage({
           text: trimmedText,
           attachments: storedAttachments.length > 0 ? storedAttachments : undefined,
           forwardFrom: forwardFrom || undefined,
@@ -1750,7 +1735,7 @@ const ChatPage: React.FC = () => {
         console.error('Ошибка при отправке сообщения:', error);
         failPendingSend(
           clientTempId,
-          error instanceof Error ? error.message : 'Не удалось отправить сообщение'
+          error instanceof Error ? error.message : t('chat.errors.sendFailedGeneric')
         );
       }
     };
@@ -1804,7 +1789,7 @@ const ChatPage: React.FC = () => {
       try {
         if (originalMessage.encryptedPayload) {
           if (!localDeviceKeys) {
-            throw new Error('Нет ключей шифрования');
+            throw new Error(t('chat.errors.encryptKeys'));
           }
 
           const encryptedPayload = await encryptChatPayload(localDeviceKeys, selectedContactId, {
@@ -1824,7 +1809,7 @@ const ChatPage: React.FC = () => {
         console.error('Ошибка при редактировании сообщения:', error);
         setDeleteToast({
           open: true,
-          message: 'Не удалось отредактировать сообщение',
+          message: t('chat.errors.editFailed'),
           severity: 'error'
         });
       }
@@ -1842,7 +1827,7 @@ const ChatPage: React.FC = () => {
       if (!messageToDelete) {
         setDeleteToast({
           open: true,
-          message: 'Не удалось удалить сообщение',
+          message: t('chat.errors.deleteFailed'),
           severity: 'error'
         });
         return prevMessages;
@@ -1952,8 +1937,8 @@ const ChatPage: React.FC = () => {
                 },
               }}
             >
-              <Tab icon={<ChatIcon fontSize="small" />} iconPosition="start" label="Чат" />
-              <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label="Игры" />
+              <Tab icon={<ChatIcon fontSize="small" />} iconPosition="start" label={t('chat.tab')} />
+              <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label={t('games.tab')} />
             </Tabs>
           </Box>
           {tabValue === 0 && (!isMobile || !selectedContactId) && (
@@ -1961,7 +1946,7 @@ const ChatPage: React.FC = () => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Глобальный поиск"
+                placeholder={t('chat.globalSearch')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 sx={{
@@ -1981,7 +1966,7 @@ const ChatPage: React.FC = () => {
                         <CircularProgress size={18} />
                       ) : (
                         searchQuery && (
-                          <IconButton size="small" onClick={handleClearSearch} aria-label="Очистить поиск">
+                          <IconButton size="small" onClick={handleClearSearch} aria-label={t('chat.clearSearch')}>
                             <CloseIcon fontSize="small" />
                           </IconButton>
                         )
@@ -2030,20 +2015,20 @@ const ChatPage: React.FC = () => {
             aria-labelledby="chat-rules-consent-title"
           >
             <Typography id="chat-rules-consent-title" variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Правила чата
+              {t('chat.rules.title')}
             </Typography>
             <Typography variant="body2" color="text.primary" sx={{ mb: 2, lineHeight: 1.6 }}>
-              {CHAT_RULES_SUMMARY}
+              {t('chat.rules.summary')}
             </Typography>
             <Link component={RouterLink} to="/legal/chat-rules" variant="body2" sx={{ mb: 2 }}>
-              Подробнее — полный текст правил
+              {t('chat.rules.readMore')}
             </Link>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 1 }}>
               <Button variant="contained" color="primary" onClick={handleChatRulesAccept} fullWidth>
-                Согласен
+                {t('chat.rules.accept')}
               </Button>
               <Button variant="outlined" color="inherit" onClick={handleChatRulesDecline} fullWidth>
-                Не согласен
+                {t('chat.rules.decline')}
               </Button>
             </Stack>
           </Paper>
@@ -2066,7 +2051,7 @@ const ChatPage: React.FC = () => {
                     {filteredExistingContacts.length > 0 && (
                       <Box>
                         <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
-                          Ваши чаты
+                          {t('chat.yourChats')}
                         </Typography>
                         <ChatList
                           contacts={filteredExistingContacts}
@@ -2078,7 +2063,7 @@ const ChatPage: React.FC = () => {
                     )}
 
                     <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
-                      Глобальный поиск
+                      {t('chat.globalSearch')}
                     </Typography>
                     <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
                       {filteredGlobalResults.map((user) => (
@@ -2095,7 +2080,7 @@ const ChatPage: React.FC = () => {
                       {!isSearching && filteredGlobalResults.length === 0 && (
                         <Box sx={{ px: 2, py: 1.5 }}>
                           <Typography variant="body2" color="text.secondary">
-                            Ничего не найдено
+                            {t('chat.nothingFound')}
                           </Typography>
                         </Box>
                       )}
@@ -2173,7 +2158,7 @@ const ChatPage: React.FC = () => {
                     <Box sx={{ textAlign: 'center', p: 3 }}>
                       <ChatIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
                       <Box sx={{ typography: 'h6', color: 'text.secondary' }}>
-                        Выберите контакт для начала общения
+                        {t('chat.selectContact')}
                       </Box>
                     </Box>
                   </Box>
@@ -2194,7 +2179,7 @@ const ChatPage: React.FC = () => {
             setForwardSourceMessage(null);
           }}
           onSelect={handleSelectForwardTarget}
-          title="Переслать сообщение"
+          title={t('chat.share.forwardMessage')}
           contacts={contacts}
         />
       )}

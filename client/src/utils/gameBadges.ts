@@ -1,12 +1,15 @@
 import { GAMES } from '../components/Chat/gamesData';
+import i18n from '../localization';
 
 export interface RelationshipBadge {
   gameId: string;
   rank: number;
 }
 
-export const getGameName = (gameId: string): string =>
-  GAMES.find((game) => game.id === gameId)?.name ?? gameId;
+export const getGameName = (gameId: string): string => {
+  const fallback = GAMES.find((game) => game.id === gameId)?.name ?? gameId;
+  return i18n.t(`games.${gameId}.name`, { defaultValue: fallback });
+};
 
 /** Лучший ранг по каждой игре (только топ-1..3). */
 export const getBestBadgesByGame = (badges: RelationshipBadge[]): RelationshipBadge[] =>

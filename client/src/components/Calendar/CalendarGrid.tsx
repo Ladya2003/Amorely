@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Grid, Box, Typography } from '@mui/material';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { formatCalendarDate, formatCalendarMonthYear } from '../../localization/calendarHelpers';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -43,6 +44,7 @@ interface CalendarGridProps {
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMonthChange, onContentClick }) => {
+  const { i18n } = useTranslation();
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isScrollingProgrammatically = useRef(false);
@@ -131,14 +133,14 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                   textTransform: 'capitalize'
                 }}
               >
-                {format(month.monthDate, 'LLLL yyyy', { locale: ru })}
+                {formatCalendarMonthYear(month.monthDate, i18n.language)}
               </Typography>
 
               {/* Дни месяца */}
               {month.days.map((day, dayIndex) => (
                 <Box key={dayIndex} sx={{ mb: 3 }}>
                   <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                    {format(day.date, 'd MMMM yyyy', { locale: ru })}
+                    {formatCalendarDate(day.date, i18n.language)}
                   </Typography>
                   <Grid container spacing={1}>
                     {/* Для каждого события показываем все его медиафайлы */}

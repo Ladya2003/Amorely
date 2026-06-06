@@ -1,0 +1,1009 @@
+{
+  "settings": {
+    "title": "Paramètres",
+    "tabs": {
+      "profile": "Profil",
+      "partner": "Partenaire",
+      "theme": "Thème",
+      "notifications": "Notifications",
+      "security": "Sécurité"
+    },
+    "errors": {
+      "notAuthorized": "Non autorisé",
+      "notAuthorizedShort": "Non autorisé",
+      "loadFailed": "Impossible de charger les données. Réessayez plus tard.",
+      "addPartnerFailed": "Impossible d’ajouter le partenaire",
+      "removePartnerFailed": "Impossible de supprimer le partenaire",
+      "notAuthorizedLogin": "Non autorisé. Veuillez vous connecter.",
+      "themeChangeFailed": "Impossible de changer le thème. Réessayez.",
+      "localeChangeFailed": "Impossible de changer la langue. Réessayez.",
+      "colorChangeFailed": "Impossible de changer la couleur principale. Réessayez.",
+      "passwordChangeFailed": "Impossible de changer le mot de passe. Vérifiez le mot de passe actuel.",
+      "pushToggleFailed": "Impossible de basculer les notifications push. Réessayez.",
+      "notificationUpdateFailed": "Impossible de mettre à jour les notifications. Réessayez."
+    },
+    "profile": {
+      "personalInfo": "Informations personnelles",
+      "saving": "Enregistrement...",
+      "avatarHint": "Appuyez sur la photo pour l’afficher en plein écran. L’icône appareil photo permet d’en télécharger une nouvelle.",
+      "emailHelper": "L'e-mail ne peut pas être modifié",
+      "username": "Identifiant",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "birthday": "Date de naissance",
+      "birthdayHelper": "Indiquez votre date de naissance pour afficher les événements d'anniversaire dans le fil",
+      "bio": "À propos de moi",
+      "cropTitle": "Recadrer la photo de profil",
+      "saveSuccess": "Profil enregistré avec succès",
+      "errors": {
+        "saveFailed": "Impossible d'enregistrer les modifications. Veuillez réessayer.",
+        "imageRequired": "Veuillez sélectionner un fichier image"
+      },
+      "title": "Informations personnelles",
+      "emailReadonly": "L’e-mail ne peut pas être modifié",
+      "birthdayHint": "Indiquez votre anniversaire pour afficher les événements dans le fil",
+      "savedToast": "Profil enregistré avec succès",
+      "selectImageFile": "Sélectionnez un fichier image",
+      "saveFailed": "Impossible d’enregistrer les modifications. Réessayez."
+    },
+    "partner": {
+      "title": "Partenaire",
+      "remove": "Supprimer",
+      "add": "Ajouter",
+      "relationshipStartDate": "Date de début de la relation",
+      "relationshipStartDateLockedHelper": "La date de début ne peut pas être modifiée après l'ajout d'un partenaire",
+      "noPartner": "Vous n’avez pas encore de partenaire",
+      "noPartnerHint": "Ajoutez un partenaire pour voir vos jours ensemble et partager du contenu",
+      "addPartnerDialog": "Ajouter un partenaire",
+      "searchLabel": "Recherche par e-mail ou identifiant",
+      "searchHelper": "Saisissez au moins 3 caractères pour rechercher",
+      "searching": "Recherche...",
+      "noUsersFound": "Aucun utilisateur trouvé",
+      "selectedPartner": "Partenaire sélectionné :",
+      "relationshipStartDateHelper": "Indiquez la date de début de votre relation",
+      "cancel": "Annuler",
+      "adding": "Ajout...",
+      "confirmTitle": "Confirmation",
+      "confirmRemove": "Voulez-vous vraiment supprimer votre partenaire ? Cette action est irréversible.",
+      "removing": "Suppression...",
+      "addSuccess": "Partenaire ajouté avec succès",
+      "errors": {
+        "selectPartnerAndDate": "Sélectionnez un partenaire et indiquez la date de début de la relation",
+        "addFailed": "Impossible d'ajouter le partenaire. Veuillez réessayer."
+      },
+      "delete": "Supprimer",
+      "startDate": "Date de début de la relation",
+      "startDateLocked": "La date de début ne peut pas être modifiée après l’ajout du partenaire",
+      "addDialogTitle": "Ajouter un partenaire",
+      "searchHint": "Saisissez au moins 3 caractères pour rechercher",
+      "notFound": "Aucun utilisateur trouvé",
+      "startDateHint": "Indiquez la date de début de votre relation",
+      "deleteConfirmTitle": "Confirmation",
+      "deleteConfirmBody": "Voulez-vous vraiment supprimer votre partenaire ? Cette action est irréversible.",
+      "addedToast": "Partenaire ajouté avec succès",
+      "selectPartnerAndDate": "Sélectionnez un partenaire et indiquez la date de début",
+      "addFailed": "Impossible d’ajouter le partenaire. Réessayez.",
+      "removeFailed": "Impossible de supprimer le partenaire"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "pushTitle": "Notifications push",
+      "pushEnable": "Activer",
+      "pushEnableHint": "Fonctionne uniquement si l’app est installée sur l’écran d’accueil du téléphone",
+      "pushNewContent": "Nouveau contenu du partenaire",
+      "pushNewContentHint": "Recevoir une notification quand votre partenaire ajoute du contenu",
+      "pushMessages": "Messages",
+      "pushMessagesHint": "Recevoir une notification pour les nouveaux messages",
+      "pushEvents": "Événements",
+      "pushEventsHint": "Recevoir une notification pour les dates et événements importants",
+      "pushNews": "Actualités",
+      "pushNewsHint": "Recevoir une notification pour les actualités et mises à jour de l'app",
+      "newContent": "Nouveau contenu du partenaire",
+      "newContentHint": "Être notifié quand votre partenaire ajoute du contenu",
+      "messages": "Messages",
+      "messagesHint": "Être notifié des nouveaux messages",
+      "events": "Événements",
+      "eventsHint": "Être notifié des dates et événements importants",
+      "news": "Actualités",
+      "newsHint": "Être notifié des actualités et mises à jour de l’application"
+    },
+    "security": {
+      "title": "Sécurité",
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le nouveau mot de passe",
+      "passwordMinHelper": "Au moins 8 caractères",
+      "changing": "Modification...",
+      "changePassword": "Changer le mot de passe",
+      "success": "Mot de passe modifié avec succès",
+      "errors": {
+        "fillAll": "Veuillez remplir tous les champs",
+        "passwordMismatch": "Le nouveau mot de passe et la confirmation ne correspondent pas",
+        "passwordTooShort": "Le nouveau mot de passe doit contenir au moins 8 caractères",
+        "changeFailed": "Impossible de changer le mot de passe. Vérifiez le mot de passe actuel."
+      },
+      "newPasswordHint": "Au moins 8 caractères",
+      "fillAllFields": "Veuillez remplir tous les champs",
+      "passwordsMismatch": "Le nouveau mot de passe et la confirmation ne correspondent pas",
+      "minLength": "Le nouveau mot de passe doit contenir au moins 8 caractères",
+      "changeFailed": "Impossible de changer le mot de passe. Vérifiez le mot de passe actuel.",
+      "changeSuccess": "Mot de passe modifié avec succès"
+    },
+    "badge": {
+      "title": "Médaille à côté du nom",
+      "noBadges": "Pas encore de médailles — atteignez le top 3 des couples dans un jeu.",
+      "description": "Une médaille s'affiche dans le chat et l'en-tête. Par défaut — la meilleure (top 1, sinon 2, sinon 3).",
+      "auto": "Auto (meilleure médaille)",
+      "gameRank": "{{game}} · top {{rank}}",
+      "save": "Enregistrer la médaille",
+      "errors": {
+        "saveFailed": "Impossible d'enregistrer la médaille"
+      },
+      "hint": "Une médaille s’affiche dans le chat et l’en-tête. Par défaut, la meilleure (top 1, sinon 2, sinon 3).",
+      "saveFailed": "Impossible d’enregistrer la médaille"
+    },
+    "logout": {
+      "button": "Se déconnecter",
+      "confirmTitle": "Confirmer la déconnexion",
+      "closeAria": "Fermer",
+      "confirmBody": "Vous pouvez simplement vous déconnecter (votre phrase secrète reste sur l'appareil) ou vous déconnecter et supprimer votre phrase.",
+      "logoutAndRemoveKeys": "Se déconnecter et supprimer la phrase",
+      "dialogTitle": "Confirmer la déconnexion",
+      "dialogBody": "Vous pouvez vous déconnecter en conservant la phrase secrète sur l’appareil, ou vous déconnecter et supprimer la phrase.",
+      "logoutAndDelete": "Se déconnecter et supprimer la phrase secrète",
+      "logout": "Se déconnecter"
+    },
+    "language": "Langue",
+    "languageHint": "Affecte l'interface et les textes des jeux sur votre appareil.",
+    "themeTitle": "Paramètres du thème",
+    "themeLegend": "Choisir un thème",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeSystem": "Système",
+    "primaryColor": "Couleur principale",
+    "themeHint": "Vos choix s'appliquent à toute l'application.",
+    "colors": {
+      "pink": "Rose",
+      "purple": "Rose foncé",
+      "blue": "Bleu ciel",
+      "orange": "Orange",
+      "dark-red": "Rouge",
+      "dark-green": "Vert"
+    },
+    "common": {
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "confirm": "Confirmer",
+      "close": "Fermer",
+      "saving": "Enregistrement..."
+    },
+    "success": {
+      "profileSaved": "Profil enregistré avec succès",
+      "partnerAdded": "Partenaire ajouté avec succès",
+      "passwordChanged": "Mot de passe modifié avec succès"
+    }
+  },
+  "games": {
+    "tap": {
+      "name": "Tap Together",
+      "description": "Touchez le bloc avec votre partenaire, terminez les manches et gagnez des points.",
+      "rules": [
+        "Ce jeu est réservé aux couples avec partenaire lié dans les paramètres.",
+        "Au début de la manche, les deux peuvent taper tout de suite — pas besoin d'attendre.",
+        "La manche suivante commence quand les deux ont terminé (ex. 15/15).",
+        "Chaque nouvelle manche exige 3× plus de taps.",
+        "Points par tap et pour finir la manche — la récompense augmente avec la difficulté.",
+        "Dépensez vos points en boutique pour des outils qui accélèrent la progression.",
+        "Tap quadruple et méga débloqués après la manche 5 — 15 taps boostés (×4 et ×10).",
+        "Classement par nombre total de taps du couple."
+      ],
+      "shop": {
+        "title": "Boutique",
+        "yourPoints": "Vos points : {{points}}",
+        "activeBoost": "Actif : ×{{multiplier}} ({{remaining}} taps)",
+        "availableAfterRound": "Disponible après la manche {{round}}",
+        "buyFor": "Acheter pour {{cost}}",
+        "close": "Fermer",
+        "items": {
+          "double_tap": {
+            "name": "Double tap",
+            "description": "Les 5 prochains taps valent ×2 points."
+          },
+          "triple_tap": {
+            "name": "Tap quadruple",
+            "description": "Les 15 prochains taps valent ×4 points."
+          },
+          "mega_tap": {
+            "name": "Méga tap",
+            "description": "Les 15 prochains taps valent ×10 points."
+          }
+        }
+      },
+      "play": {
+        "roundGoal": "Manche {{round}} : {{current}}/{{goal}}",
+        "shop": "Boutique",
+        "activeBoostHint": "Actif : ×{{multiplier}}",
+        "tapPinkBlock": "Tapez sur le bloc rose",
+        "waitingPartner": "En attente du partenaire",
+        "tapBlock": "Taper",
+        "tapBlockDone": "Terminé",
+        "tapBlockDisabled": "Indisponible",
+        "tapLabel": "Tap",
+        "youProgress": "Vous : {{current}}/{{goal}}",
+        "partnerProgress": "Partenaire : {{current}}/{{goal}}",
+        "totalTaps": "Taps totaux : {{count}}",
+        "roundComplete": "Manche terminée !",
+        "targetAndPoints": "Objectif : {{target}} taps · Points : {{points}}",
+        "activeBoostLine": "Actif ×{{multiplier}} · {{remaining}} taps restants",
+        "finishedWaiting": "Vous avez terminé — en attente du partenaire",
+        "tapCta": "Tape !",
+        "tapBlockAria": "Appuyer sur le bloc",
+        "tapBlockDoneAria": "Vous avez déjà terminé votre partie du round",
+        "tapBlockDisabledAria": "Bloc indisponible",
+        "totalPairTaps": "Total des taps du couple : {{count}}",
+        "roundCompleteBonus": "Manche terminée ! +{{bonus}} points"
+      }
+    },
+    "geo": {
+      "name": "Devine le lieu",
+      "description": "Devinez où se trouve le lieu sur la carte et rivalisez avec d'autres couples.",
+      "mapAttribution": "Carte : © OpenStreetMap contributors, © CARTO",
+      "photosAttribution": "Photos : Wikimedia Commons (licences Creative Commons)",
+      "rules": [
+        "Ce jeu est réservé aux couples avec partenaire lié.",
+        "Avant chaque manche, les deux appuient sur Prêt — puis compte à rebours de 3 s et départ.",
+        "Chaque manche a un temps limité — chacun place son propre marqueur sur la carte.",
+        "Plus le marqueur est proche, plus de points ; les scores des deux sont additionnés.",
+        "Chacun confirme uniquement son marqueur — deux tentatives indépendantes par manche.",
+        "Jusqu'à 5 lieux par jour ; la limite se réinitialise le lendemain.",
+        "Quand les 200 lieux sont faits, le pool recommence.",
+        "Classement par score total du couple."
+      ],
+      "play": {
+        "readyToRound": "Prêts pour la manche {{round}}",
+        "readyToRoundQuestion": "Prêts pour la manche ?",
+        "pairScoreToday": "Score du couple : {{score}} · Aujourd'hui : {{today}}/{{max}}",
+        "poolRemaining": " · reste dans le pool : {{count}}",
+        "dailyAllDone": "Tout est fait pour aujourd'hui",
+        "dailyAllDoneBody": "Vous avez fait les 5 lieux. Nouveaux demain.",
+        "dailyGuessedAll": "Vous avez deviné {{count}} lieux aujourd'hui. Nouvelles manches demain.",
+        "restartGame": "Retournez à la description du jeu et recommencez.",
+        "restartHint": "Quand les 200 lieux sont faits, le pool recommence.",
+        "openPhotoFullscreen": "Ouvrir la photo en plein écran",
+        "openMapFullscreen": "Ouvrir la carte en plein écran",
+        "timedOut": "Temps écoulé",
+        "timedOutNoGuess": "Temps écoulé — personne n'a placé de marqueur à temps",
+        "youResult": "Vous : {{points}} pts",
+        "partnerResult": "Partenaire : {{points}} pts",
+        "youDistance": "{{distance}} km · +{{points}} pts",
+        "missed": "Raté",
+        "missedGuessYou": "pas à temps (+0)",
+        "missedGuessPartner": "pas à temps (+0)",
+        "points": "pts",
+        "totalPoints": "Total : {{points}} pts",
+        "totalEarned": "Total : +{{points}} pts",
+        "markerSent": "Marqueur envoyé",
+        "markerSentWaiting": "Votre marqueur a été envoyé. En attente du partenaire...",
+        "markerHint": "Appuyez sur la carte pour placer votre marqueur",
+        "markerHintBoth": "Chacun place son marqueur. Les points des deux partenaires s'additionnent.",
+        "confirmMarker": "Confirmer le marqueur",
+        "confirmMyMarker": "Confirmer mon marqueur",
+        "markerSubmitted": "Marqueur envoyé",
+        "close": "Fermer"
+      }
+    },
+    "draw": {
+      "name": "Devine le dessin",
+      "description": "L'un dessine, l'autre devine — comme Gartic, mais pour votre couple.",
+      "rules": [
+        "Ce jeu est réservé aux couples avec partenaire lié.",
+        "Avant chaque manche, les deux appuient sur Prêt — puis compte à rebours de 3 s et départ.",
+        "Artiste et devineur alternent à chaque manche.",
+        "90 secondes par manche : l'un dessine, l'autre peut deviner pendant le dessin.",
+        "Plus vite vous devinez, plus de points.",
+        "Jusqu'à 10 manches comptabilisées par jour — ensuite pour le plaisir."
+      ],
+      "play": {
+        "dailyLimitDialogTitle": "Limite de points pour aujourd'hui",
+        "dailyLimitDialogBodyFull": "Les points ne comptent que pour 10 parties par jour. Vous pouvez continuer pour le plaisir — les devinettes comptent toujours, mais les points n'entrent pas dans le classement.",
+        "limitExhaustedToast": "Les points ne comptent que pour 10 parties par jour. La limite d'aujourd'hui est atteinte — jouez pour le plaisir.",
+        "lastScoredRound": "+{{points}} points. C'était votre dernière partie avec points aujourd'hui ({{scored}}/{{max}}). Ensuite — pour le plaisir.",
+        "remainingRounds": "+{{points}} points. Manches restantes aujourd'hui : {{remaining}}",
+        "pairScoreTodayScored": "Score du couple : {{score}} · Avec points aujourd'hui : {{today}}/{{max}}",
+        "dailyLimitLobby": "Les points ne comptent que pour 10 parties par jour. Vous pouvez continuer pour le plaisir.",
+        "waitingPartnerResults": "Votre partenaire consulte encore les résultats de la manche précédente. Appuyez sur « Prêt » quand vous êtes prêt.",
+        "dailyLimitExhaustedTitle": "Limite de points d'aujourd'hui atteinte",
+        "scoredTodaySummary": "Aujourd'hui, {{scored}} manches sur {{max}} avec points ont été comptabilisées. La limite se réinitialise demain.",
+        "wrongGuessText": "La réponse « {{guess}} » est incorrecte",
+        "secretWordLabel": "Mot secret :",
+        "guessedWithPoints": "Deviné ! +{{points}} points",
+        "guessedLimitForFun": "Deviné ! Limite de points d'aujourd'hui — vous jouez pour le plaisir",
+        "scoredTodayExhausted": "Avec points aujourd'hui : {{scored}}/{{max}} — limite atteinte",
+        "dailyLimitShort": "Les points ne comptent que pour 10 parties par jour",
+        "remainingRoundsLabel": "Manches restantes aujourd'hui : {{remaining}}",
+        "guessHintRated": "Devinez pendant que votre partenaire dessine — plus vite, plus de points",
+        "guessHintForFun": "Devinez pour le plaisir — la limite de points du classement d'aujourd'hui est déjà atteinte",
+        "scoreLine": "Score : {{score}} · Aujourd'hui : {{today}}/{{max}}",
+        "nobodyGuessed": "Personne n'a deviné — dommage",
+        "roundStartFailedBody": "Impossible de démarrer la manche. Essayez d'actualiser la page."
+      }
+    },
+    "quiz": {
+      "name": "Votre propre jeu",
+      "description": "Un plateau avec catégories et questions — répondez ensemble et marquez des points.",
+      "rules": [
+        "Ce jeu est réservé aux couples avec partenaire lié.",
+        "Avant le plateau, les deux appuient sur Prêt — puis compte à rebours de 3 s et départ.",
+        "Premier tour aléatoire, puis alternance.",
+        "À votre tour, choisissez une case : catégorie et valeur. 30 secondes pour répondre.",
+        "Chacun entre une réponse. Bonne réponse = points de la case (100, 200 ou 300).",
+        "Si les deux ont raison, les points s'additionnent. Cases jouées non rejouables.",
+        "Chaque jour — 5 catégories aléatoires et nouveau set de questions (15 cases).",
+        "Après toutes les questions, le plateau se renouvelle le lendemain.",
+        "Classement par score total du couple."
+      ],
+      "play": {
+        "boardComplete": "Plateau terminé !",
+        "pairScore": "Score du couple : {{score}}",
+        "newQuestionsIn": "Nouvelles questions dans {{duration}}",
+        "bothReadyBoard": "Tous les deux prêts — c'est parti !",
+        "bothReadyOpen": "Tous les deux prêts — le plateau s'ouvrira en même temps.",
+        "pressReadyBoard": "Appuyez sur Prêt pour commencer",
+        "pressReadyStart": "Appuyez sur Prêt. La manche commence quand les deux partenaires sont prêts.",
+        "yourTurn": "Votre tour",
+        "yourTurnPick": "Votre tour — choisissez une catégorie",
+        "partnerTurn": "Tour du partenaire",
+        "partnerTurnPick": "C'est au tour de votre partenaire",
+        "scoreRemaining": "Score : {{score}} · Questions restantes : {{count}}",
+        "answerSent": "Réponse envoyée",
+        "answerSentWaiting": "Votre réponse a été envoyée. En attente du partenaire…",
+        "partnerAnswered": "Le partenaire a répondu",
+        "partnerAnsweredYourTurn": "Le partenaire a déjà répondu. À vous !",
+        "oneAnswerEach": "Chacun entre une réponse",
+        "oneAnswerUntilTimer": "Chacun répond une fois avant la fin du minuteur",
+        "answerSubmitted": "Réponse soumise",
+        "correctAnswer": "Bonne réponse : {{answer}}",
+        "answerLabel": "«{{text}}» — {{points}} pts",
+        "noAnswer": "Pas de réponse",
+        "didNotAnswer": "pas de réponse",
+        "pointsForQuestion": "+{{points}} pts",
+        "pointsForQuestionTotal": "Pour la question : +{{points}} pts",
+        "backToBoard": "Retour au plateau"
+      }
+    },
+    "tab": "Jeux",
+    "list": {
+      "searchPlaceholder": "Search by game name",
+      "clearSearch": "Effacer la recherche",
+      "notFound": "No games found",
+      "emptyList": "No games in the list",
+      "emptyHint": "Games for you and your partner will appear here",
+      "tryDifferentQuery": "Try a different search",
+      "comingSoon": "Bientôt"
+    },
+    "page": {
+      "notFound": "Jeu introuvable",
+      "backToList": "Retour aux jeux",
+      "tabGame": "Jeu",
+      "tabLeaderboard": "Classement",
+      "leaderboardSubtitle": "Global couple leaderboard by total score",
+      "comingSoon": "This game is coming soon",
+      "addPartner": "Add your partner in settings to play together",
+      "geoDailyLimitHint": "You guessed all {{count}} places today. New rounds will open later.",
+      "play": "Jouer"
+    },
+    "common": {
+      "back": "Retour",
+      "you": "Vous",
+      "partner": "Partenaire",
+      "ready": "Prêt",
+      "waitingPartner": "Waiting for partner…",
+      "readyToPlay": "Ready to play?",
+      "startingSoon": "Starting soon!",
+      "bothReady": "Both partners are ready — the round will start at the same time.",
+      "pressReady": "Press Ready when you are set. The round starts when both are ready.",
+      "youReadyAria": "Vous êtes prêt",
+      "confirmReadyAria": "Confirmer la disponibilité",
+      "goToSettings": "Aller aux paramètres",
+      "needPartner": "Partenaire requis",
+      "loadFailed": "Échec du chargement du jeu",
+      "partnerRequired": "You need a partner to play. Add them in profile settings.",
+      "partnerRequiredShort": "Partenaire requis",
+      "backToGame": "Retour au jeu",
+      "send": "Envoyer",
+      "understood": "Compris",
+      "close": "Fermer",
+      "round": "Manche",
+      "forFun": "Pour le plaisir",
+      "pairScore": "Score du couple",
+      "pairScoreToday": "Score du couple aujourd'hui",
+      "pairScoreTodayPool": "Score du couple aujourd'hui (pool)",
+      "pairScoreTodayScored": "Points comptabilisés aujourd'hui",
+      "scoreToday": "Points aujourd'hui",
+      "scoreTodayScored": "Points comptabilisés aujourd'hui",
+      "secondsLeft": "{{seconds}} s restantes",
+      "waitingPartnerResults": "En attente des résultats du partenaire",
+      "partnerViewingPastRound": "Votre partenaire consulte encore les résultats de la manche précédente. Appuyez sur Prêt quand vous êtes prêt.",
+      "roundNotActive": "Manche inactive",
+      "dailyLimitTitle": "Limite quotidienne",
+      "dailyLimitExhausted": "Limite quotidienne atteinte",
+      "roundStartFailed": "Échec du démarrage de la manche",
+      "nextRound": "Manche suivante",
+      "playMore": "Keep playing",
+      "finish": "Terminer",
+      "yourAnswer": "Votre réponse",
+      "yourGuesses": "Vos tentatives",
+      "partnerGuesses": "Tentatives du partenaire",
+      "drawWord": "draw",
+      "errors": {
+        "readyFailed": "Échec de la confirmation",
+        "loadFailed": "Échec du chargement",
+        "guessFailed": "Échec de l'envoi de la tentative",
+        "clearCanvasFailed": "Échec de l'effacement du canvas",
+        "strokeFailed": "Échec de l'envoi du trait",
+        "advanceFailed": "Échec de l'avancement",
+        "tapFailed": "Échec de l'enregistrement du tap",
+        "buyFailed": "Échec de l'achat",
+        "pickFailed": "Échec du choix de case",
+        "answerFailed": "Échec de l'envoi de la réponse",
+        "submitFailed": "Échec de l'envoi",
+        "startRoundFailed": "Échec du démarrage de la manche"
+      }
+    },
+    "leaderboard": {
+      "empty": "No one has played yet"
+    },
+    "badge": {
+      "tooltip": "Top-{{rank}} · {{game}}"
+    },
+    "dailyReset": {
+      "title": "Reset timer",
+      "playedTodayNamed": "You already played «{{gameName}}» today. ",
+      "playedTodayGeneric": "You already played this game today. ",
+      "timerHint": "The timer shows how long until the daily limit resets.",
+      "resetHint": "The limit resets at 03:00 Moscow time (00:00 UTC). You can play again after that.",
+      "untilReset": "Until reset:",
+      "understood": "Compris",
+      "badgeAria": "More about the reset timer"
+    },
+    "geoDailyLimit": {
+      "title": "All done for today",
+      "body": "You can guess up to {{count}} places per day. You have completed all rounds for today.",
+      "nextAvailable": "New places will be available in",
+      "understood": "Compris"
+    },
+    "waitDuration": {
+      "soon": "bientôt",
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
+      "minutes": "{{minutes}} min",
+      "lessThanMinute": "moins d'une minute"
+    }
+  },
+  "nav": {
+    "settings": "Paramètres",
+    "home": "Accueil",
+    "chat": "Chat",
+    "calendar": "Calendrier",
+    "news": "Actualités"
+  },
+  "feed": {
+    "title": "Fil",
+    "contentOfDay": "Contenu du jour",
+    "contentUpdateTooltip": "La sélection est mise à jour à 02:00 et 17:00 (Europe/Minsk)",
+    "contentUpdateAriaLabel": "Informations sur la mise à jour du contenu",
+    "emptyPlaceholder": "Pas encore de contenu disponible\n\n📅 Ajoutez vos événements dans le\nCalendrier avec photos et vidéos",
+    "noContent": "Aucun contenu disponible",
+    "birthday": "Anniversaire",
+    "anniversary": "Fête",
+    "day_one": "jour",
+    "day_other": "jours",
+    "daysTogether": "{{count}} {{daysWord}} ensemble",
+    "since": "Depuis le {{date}}",
+    "addPartnerTitle": "Ajoutez votre partenaire dans les paramètres",
+    "addPartnerDescription": "Pour voir le nombre de jours ensemble, ajoutez votre partenaire et la date de début de la relation",
+    "signatureUser": "Signature de l'utilisateur",
+    "signaturePartner": "Signature du partenaire",
+    "signature": "Signature",
+    "achievementsTitle": "Succès",
+    "untilAnniversary": "⏳ Jusqu'au prochain anniversaire :",
+    "progress": {
+      "allMilestones": "🎉 Tous les jalons atteints ! Vous êtes des légendes ! 💎",
+      "nextMilestone": "Jusqu'au prochain jalon :",
+      "percentDone": "{{percent}}% terminé",
+      "daysRemaining": "Il reste {{count}} {{daysWord}}"
+    },
+    "validation": {
+      "fileTooLarge": "Fichier trop volumineux. Taille maximale : {{max}} Mo",
+      "invalidFormat": "Format non valide. Utilisez JPG, PNG, GIF ou WebP",
+      "generic": "Erreur de validation"
+    },
+    "export": {
+      "tooltip": "Télécharger la carte",
+      "success": "Carte enregistrée avec succès ! 📸",
+      "error": "Impossible d'exporter la carte"
+    },
+    "colorPicker": {
+      "changeTheme": "Changer le thème de couleur",
+      "pickColor": "Choisir une couleur",
+      "selectTheme": "Choisissez un thème de couleur :",
+      "back": "Retour",
+      "currentColor": "Couleur actuelle : {{color}}",
+      "themes": {
+        "custom": "🎨 Couleur personnalisée",
+        "pink": "💕 Amour rose",
+        "purple": "💜 Passion violette",
+        "blue": "💙 Ciel bleu",
+        "red": "❤️ Passion rouge",
+        "orange": "🧡 Chaleur orange",
+        "green": "💚 Tendresse verte",
+        "teal": "💎 Rêve turquoise",
+        "gold": "✨ Éclat doré",
+        "sunset": "🌅 Coucher de soleil",
+        "lavender": "💐 Lavande",
+        "dark-purple": "🌑 Passion sombre",
+        "dark-blue": "🌌 Minuit",
+        "dark-red": "🍷 Rose sombre",
+        "dark-green": "🌲 Forêt sombre",
+        "navy": "⚓ Profondeur marine",
+        "black-elegant": "🖤 Noir élégant",
+        "black-silver": "🌫️ Argent noir",
+        "black-blue": "🌃 Bleu noir",
+        "black-purple": "🌌 Obscurité cosmique"
+      }
+    },
+    "signatureDialog": {
+      "title": "Ajouter une signature",
+      "clear": "Effacer",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "status": {
+      "lt3": "Le tout début de notre histoire d'amour 💕",
+      "lt7": "Les premiers jours magiques ensemble ✨",
+      "lt14": "Semaine après semaine, on se découvre 🌸",
+      "lt30": "Le premier mois de moments inoubliables 🌟",
+      "lt60": "Deux mois de bonheur et de papillons 🦋",
+      "lt90": "Trois mois d'amour et de tendresse 💑",
+      "lt120": "Quatre mois ensemble — notre petit monde 🌍",
+      "lt180": "Six mois d'amour et de compréhension 💝",
+      "lt270": "Neuf mois — comme la naissance de notre amour 🎈",
+      "lt365": "Presque un an ensemble — notre amour se renforce 💕",
+      "lt548": "Plus d'un an d'amour et d'attention 💖",
+      "lt730": "Un an et demi — notre amour comme un chêne solide 🌳",
+      "lt1095": "Deux ans ensemble — notre histoire continue 📖",
+      "lt1460": "Trois ans d'amour — invincibles ensemble 👑",
+      "lt1825": "Quatre ans — notre amour comme une pierre précieuse 💎",
+      "lt2190": "Cinq ans ensemble — une demi-décennie de bonheur 🎊",
+      "lt2555": "Six ans — notre lien devient plus profond 🌊",
+      "lt2920": "Sept ans — nous avons tout traversé ensemble 🌈",
+      "lt3650": "Huit ans d'amour — une vraie forteresse 🏰",
+      "lt4380": "Dix ans ensemble — toute une époque d'amour 🎭",
+      "lt5475": "Douze ans — notre amour s'améliore avec le temps 🍷",
+      "lt7300": "Quinze ans ensemble — nous ne faisons qu'un 💫",
+      "lt10950": "Vingt ans d'amour — notre légende ⭐",
+      "lt14600": "Vingt-cinq ans — noces d'argent bientôt ! 🥈",
+      "lt18250": "Trente ans ensemble — force de perle 📿",
+      "default": "Un amour pour la vie — éternel et infini 💎✨"
+    },
+    "milestones": {
+      "week1": {
+        "title": "Première semaine",
+        "description": "{{days}} jours ensemble"
+      },
+      "week2": {
+        "title": "Deux semaines",
+        "description": "{{days}} jours ensemble"
+      },
+      "month1": {
+        "title": "Mois d'amour",
+        "description": "{{days}} jours ensemble"
+      },
+      "month2": {
+        "title": "Deux mois",
+        "description": "{{days}} jours ensemble"
+      },
+      "month3": {
+        "title": "Trois mois",
+        "description": "{{days}} jours ensemble"
+      },
+      "days100": {
+        "title": "Première centaine !",
+        "description": "{{days}} jours ensemble"
+      },
+      "month6": {
+        "title": "Six mois",
+        "description": "{{days}} jours ensemble"
+      },
+      "month9": {
+        "title": "Neuf mois",
+        "description": "{{days}} jours ensemble"
+      },
+      "year1": {
+        "title": "Un an ensemble !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year1_5": {
+        "title": "Un an et demi",
+        "description": "{{days}} jours ensemble"
+      },
+      "year2": {
+        "title": "Deux ans !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year3": {
+        "title": "Trois ans !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year4": {
+        "title": "Quatre ans !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year5": {
+        "title": "Cinq ans !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year7": {
+        "title": "Sept ans !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year10": {
+        "title": "Dix ans !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year15": {
+        "title": "Quinze ans !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year20": {
+        "title": "Vingt ans !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year25": {
+        "title": "Noces d'argent !",
+        "description": "{{days}} jours ensemble"
+      },
+      "year30": {
+        "title": "Noces de perle !",
+        "description": "{{days}} jours ensemble"
+      }
+    },
+    "achievements": {
+      "first_week": {
+        "title": "Première semaine",
+        "description": "Les premiers jours magiques ensemble"
+      },
+      "two_weeks": {
+        "title": "Deux semaines",
+        "description": "On se découvre"
+      },
+      "first_month": {
+        "title": "Mois d'amour",
+        "description": "Un mois de moments inoubliables !"
+      },
+      "two_months": {
+        "title": "Deux mois",
+        "description": "Bonheur et papillons"
+      },
+      "three_months": {
+        "title": "Trois mois",
+        "description": "Amour et tendresse"
+      },
+      "century": {
+        "title": "Première centaine",
+        "description": "100 jours — génial !"
+      },
+      "half_year": {
+        "title": "Six mois de bonheur",
+        "description": "Amour et compréhension"
+      },
+      "nine_months": {
+        "title": "Neuf mois",
+        "description": "Comme la naissance de notre amour"
+      },
+      "first_year": {
+        "title": "Un an ensemble",
+        "description": "Une année entière d'amour et d'attention !"
+      },
+      "year_and_half": {
+        "title": "Un an et demi",
+        "description": "Amour comme un chêne solide"
+      },
+      "two_years": {
+        "title": "Deux ans",
+        "description": "Notre histoire continue"
+      },
+      "three_years": {
+        "title": "Trois ans",
+        "description": "Invincibles ensemble"
+      },
+      "four_years": {
+        "title": "Quatre ans",
+        "description": "Amour comme une pierre précieuse"
+      },
+      "five_years": {
+        "title": "Cinq ans",
+        "description": "Une demi-décennie de bonheur !"
+      },
+      "seven_years": {
+        "title": "Sept ans",
+        "description": "Tout traversé ensemble"
+      },
+      "ten_years": {
+        "title": "Dix ans",
+        "description": "Toute une époque d'amour !"
+      },
+      "fifteen_years": {
+        "title": "Quinze ans",
+        "description": "Nous ne faisons qu'un"
+      },
+      "twenty_years": {
+        "title": "Vingt ans",
+        "description": "Notre légende !"
+      },
+      "silver_wedding": {
+        "title": "Noces d'argent",
+        "description": "25 ans ensemble — incroyable !"
+      },
+      "pearl_wedding": {
+        "title": "Noces de perle",
+        "description": "30 ans — force de perle"
+      }
+    }
+  },
+  "drawingTools": {
+    "tool": "Outil",
+    "brush": "Pinceau",
+    "eraser": "Gomme",
+    "color": "Couleur",
+    "size": "Taille : {{size}}px",
+    "colorAria": "Couleur {{color}}",
+    "customColor": "Couleur personnalisée",
+    "clearAll": "Tout effacer"
+  },
+  "chat": {
+    "tab": "Chat",
+    "globalSearch": "Recherche globale",
+    "clearSearch": "Effacer la recherche",
+    "yourChats": "Vos discussions",
+    "nothingFound": "Rien trouvé",
+    "selectContact": "Sélectionnez un contact pour commencer à discuter",
+    "self": "Vous",
+    "user": "Utilisateur",
+    "rules": {
+      "title": "Règles du chat",
+      "summary": "Amorely est destiné aux couples pour communiquer dans le cadre de la loi applicable. Le harcèlement, les menaces, les contenus illégaux et tout autre abus du chat sont interdits. En appuyant sur « Accepter », vous confirmez avoir lu les règles et vous engagez à les respecter.",
+      "readMore": "Lire les règles complètes",
+      "accept": "Accepter",
+      "decline": "Refuser"
+    },
+    "message": {
+      "media": "Fichier multimédia",
+      "forwarded": "Message transféré",
+      "encrypted": "Message chiffré",
+      "encryptedMedia": "Média chiffré",
+      "event": "Événement : {{title}}",
+      "noMessages": "Aucun message",
+      "decryptFailed": "Impossible de déchiffrer le message",
+      "deleted": "Message supprimé",
+      "noText": "Sans texte",
+      "noTextPreview": "Message sans texte",
+      "edited": "modif."
+    },
+    "errors": {
+      "sendFailed": "Échec de l'envoi. Vérifiez la connexion et réessayez.",
+      "sendFailedGeneric": "Échec de l'envoi du message",
+      "deleteFailed": "Échec de la suppression du message",
+      "editFailed": "Échec de la modification du message",
+      "forwardEncryptedFailed": "Échec du transfert du média chiffré",
+      "forwardMediaKeys": "Des clés de chiffrement sont requises sur cet appareil pour transférer des médias",
+      "forwardNoEncrypted": "Le message source ne contient pas de données chiffrées",
+      "forwardMediaData": "Impossible d'obtenir les données média pour le transfert",
+      "forwardNoAttachments": "Aucune pièce jointe à transférer",
+      "encryptMediaKeys": "Des clés de chiffrement sont requises sur cet appareil pour envoyer des médias",
+      "encryptKeys": "Aucune clé pour chiffrer les médias",
+      "encryptAttachments": "Échec du chiffrement des pièces jointes"
+    },
+    "input": {
+      "placeholder": "Saisissez un message..."
+    },
+    "dialog": {
+      "reply": "Répondre",
+      "edit": "Modifier",
+      "forward": "Transférer",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer le message ?",
+      "deleteConfirm": "Voulez-vous vraiment supprimer ce message pour vous et votre interlocuteur ?",
+      "cancel": "Annuler",
+      "replyTo": "Réponse au message",
+      "cancelReply": "Annuler la réponse",
+      "forwarding": "Message à transférer",
+      "cancelForward": "Annuler le transfert",
+      "shareEvent": "Partager l'événement",
+      "cancelShareEvent": "Annuler le partage de l'événement",
+      "editing": "Modification du message",
+      "cancelEdit": "Annuler la modification",
+      "scrollDown": "Défiler vers le bas",
+      "scrollDownNew": "Défiler vers le bas, nouveaux messages : {{count}}",
+      "profileAria": "Profil de {{name}}",
+      "openVideoFullscreen": "Ouvrir la vidéo en plein écran",
+      "openPreviewFullscreen": "Ouvrir l'aperçu en plein écran",
+      "attachmentAlt": "Pièce jointe {{index}}",
+      "removeAttachment": "Supprimer la pièce jointe",
+      "messageActions": "Actions sur le message"
+    },
+    "messageBubble": {
+      "reply": "Réponse",
+      "forwardedFrom": "Transféré de {{name}}"
+    },
+    "presence": {
+      "online": "En ligne",
+      "offline": "Hors ligne",
+      "lastSeenToday": "vu(e) aujourd'hui à {{time}}",
+      "lastSeenYesterday": "vu(e) hier à {{time}}",
+      "lastSeenDate": "vu(e) le {{date}} à {{time}}",
+      "typing": "Écrit"
+    },
+    "share": {
+      "selectRecipient": "Choisir le destinataire",
+      "forwardMessage": "Transférer le message",
+      "searchPlaceholder": "Rechercher chat, identifiant ou e-mail",
+      "yourChats": "Vos discussions",
+      "globalSearch": "Recherche globale",
+      "usersNotFound": "Aucun utilisateur trouvé"
+    },
+    "profile": {
+      "title": "Profil",
+      "closeAria": "Fermer le profil",
+      "medals": "Médailles",
+      "defaultName": "Contact",
+      "placeholderBio1": "{{name}} n'a pas encore ajouté de description — les surprises ne sont pas que dans le chat.",
+      "placeholderBio2": "Sur {{name}}, une chose est sûre : la discussion n'est jamais ennuyeuse.",
+      "placeholderBio3": "{{name}} préfère le mystère à une longue description. On respecte.",
+      "placeholderBio4": "La biographie de {{name}} est en cours. Pour l'instant, bon chat et bonne humeur.",
+      "placeholderBio5": "{{name}} garde la description secrète ou ne l'a pas encore ajoutée"
+    },
+    "event": {
+      "label": "Événement"
+    }
+  },
+  "calendar": {
+    "tab": "Calendrier",
+    "plansTab": "Plans",
+    "createEvent": "Créer un événement",
+    "weekdays": [
+      "lun",
+      "mar",
+      "mer",
+      "jeu",
+      "ven",
+      "sam",
+      "dim"
+    ],
+    "event": {
+      "new": "Nouvel événement",
+      "edit": "Modifier l'événement",
+      "date": "Date de l'événement",
+      "title": "Titre de l'événement",
+      "titlePlaceholder": "ex. Premier rendez-vous",
+      "description": "Description (facultatif)",
+      "descriptionPlaceholder": "Parlez de l'événement...",
+      "charCount": "{{current}}/{{max}} caractères",
+      "birthdayFlag": "🎂 Associer à l'anniversaire",
+      "birthdayHint": "Cet événement apparaîtra dans le fil le jour de l'anniversaire",
+      "anniversaryFlag": "💕 Associer à l'anniversaire de couple",
+      "anniversaryHint": "Cet événement apparaîtra dans le fil à l'anniversaire de la relation",
+      "clearDraft": "Effacer le brouillon",
+      "compressingVideo": "Compression de la vidéo...",
+      "noTitle": "Sans titre",
+      "textOnly": "Événement texte seul",
+      "fileCount_one": "{{count}} fichier",
+      "fileCount_other": "{{count}} fichiers"
+    },
+    "detail": {
+      "readOnly": "Lecture seule",
+      "share": "Partager",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "date": "Date de l'événement",
+      "birthday": "Anniversaire",
+      "anniversary": "Anniversaire de couple",
+      "title": "Titre",
+      "description": "Description",
+      "created": "Créé",
+      "author": "Auteur : {{name}}",
+      "lastEdit": "Dernière modification",
+      "editor": "Éditeur : {{name}}"
+    },
+    "list": {
+      "eventsOn": "Événements du {{date}}"
+    },
+    "delete": {
+      "title": "Supprimer l'événement ?",
+      "body": "Voulez-vous vraiment supprimer cet événement ? Toutes les photos et vidéos associées seront définitivement supprimées.",
+      "deleting": "Suppression...",
+      "failed": "Impossible de supprimer l'événement"
+    },
+    "addContent": {
+      "title": "Ajouter du contenu pour le {{date}}",
+      "selectMedia": "Choisir des photos ou vidéos"
+    },
+    "plans": {
+      "subtitle": "Notes partagées pour votre couple",
+      "newNote": "Nouvelle note",
+      "editNote": "Modifier la note",
+      "all": "Toutes",
+      "empty": "Pas encore de notes",
+      "emptyCategory": "Pas encore de notes dans « {{category}} »",
+      "title": "Titre",
+      "category": "Catégorie",
+      "categoryPlaceholder": "ex. Voyages, Cadeaux, Rêves...",
+      "content": "Texte de la note",
+      "contentPlaceholder": "Écrivez ce que vous voulez...",
+      "encryptedMedia": "Photos et vidéos (chiffrées)",
+      "createdBy": "Créé par {{name}}",
+      "editedBy": "Modifié par {{name}}",
+      "deleteConfirm": "Supprimer la note « {{title}} » ? Elle disparaîtra aussi pour votre partenaire.",
+      "create": "Créer"
+    },
+    "media": {
+      "photosAndVideos": "Photos et vidéos",
+      "addPhotosOrVideos": "Ajouter des photos ou vidéos",
+      "supported": "Pris en charge : images (JPG, PNG, GIF) et vidéos (MP4, MOV)",
+      "supportedWithHint": "Pris en charge : images (JPG, PNG, GIF) et vidéos (MP4, MOV). {{hint}}",
+      "videoHint": "Vidéo : jusqu'à {{sourceMb}} Mo et {{durationSec}} s. Compressée automatiquement à {{uploadMb}} Mo avant l'envoi.",
+      "videoMaxSize": "Taille maximale de la vidéo : {{max}} Mo"
+    },
+    "common": {
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "create": "Créer",
+      "saving": "Enregistrement...",
+      "noText": "Sans texte",
+      "unknown": "Inconnu"
+    },
+    "errors": {
+      "selectDate": "Veuillez choisir une date d'événement",
+      "enterTitle": "Veuillez saisir un titre d'événement",
+      "saveEventFailed": "Impossible d'enregistrer l'événement. Réessayez.",
+      "loadNotesFailed": "Impossible de charger les notes",
+      "titleRequired": "Indiquez un titre",
+      "categoryRequired": "Indiquez une catégorie",
+      "saveNoteFailed": "Impossible d'enregistrer la note",
+      "notAuthorized": "Non autorisé",
+      "unlockCrypto": "Déverrouillez les clés de chiffrement sur /crypto/unlock",
+      "encryptionRecipient": "Impossible de déterminer le destinataire du chiffrement",
+      "notAuthorizedShort": "Utilisateur non autorisé"
+    }
+  },
+  "news": {
+    "title": "Actualités",
+    "empty": "Aucune actualité trouvée",
+    "readMore": "Lire la suite",
+    "newBadge": "NOUVEAU",
+    "filter": {
+      "all": "Toutes",
+      "updates": "Mises à jour",
+      "events": "Événements",
+      "announcements": "Annonces",
+      "byCategory": "Filtrer par catégorie :"
+    },
+    "categories": {
+      "update": "Mise à jour",
+      "event": "Événement",
+      "announcement": "Annonce"
+    },
+    "aria": {
+      "back": "Retour",
+      "categoryFilter": "Filtre des catégories d'actualités",
+      "allCategories": "Toutes les catégories",
+      "announcements": "Annonces",
+      "events": "Événements",
+      "updates": "Mises à jour"
+    },
+    "errors": {
+      "loadFailed": "Impossible de charger les actualités"
+    }
+  }
+}

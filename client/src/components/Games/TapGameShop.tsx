@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -29,6 +30,7 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
   onPurchased,
   onError,
 }) => {
+  const { t } = useTranslation();
   const [buyingId, setBuyingId] = useState<string | null>(null);
 
   const handleBuy = async (itemId: string) => {
@@ -38,7 +40,7 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
       onPurchased(nextState);
       onClose();
     } catch (error: any) {
-      onError(error?.response?.data?.error || 'Не удалось купить предмет');
+      onError(error?.response?.data?.error || t('games.common.errors.buyFailed'));
     } finally {
       setBuyingId(null);
     }
@@ -46,12 +48,19 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
 
   return (
     <ResponsiveDialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pb: 1 }}>Магазин</DialogTitle>
+      <DialogTitle sx={{ pb: 1 }}>{t('games.tap.shop.title')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Ваши баллы: <strong>{state.points}</strong>
+          {t('games.tap.shop.yourPoints', { points: state.points })}
           {state.activeBoost && (
-            <> · Активно: ×{state.activeBoost.multiplier} ({state.activeBoost.remainingUses} наж.)</>
+            <>
+              {' '}
+              ·{' '}
+              {t('games.tap.shop.activeBoost', {
+                multiplier: state.activeBoost.multiplier,
+                remaining: state.activeBoost.remainingUses,
+              })}
+            </>
           )}
         </Typography>
 
@@ -59,6 +68,11 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
           {shopItems.map((item) => {
             const isLocked = state.round < item.minRound;
             const canBuy = !isLocked && state.points >= item.cost && !state.activeBoost;
+            const itemName = t(`games.tap.shop.items.${item.id}.name`, { defaultValue: item.name });
+            const itemDescription = t(`games.tap.shop.items.${item.id}.description`, {
+              defaultValue: item.description,
+            });
+
             return (
               <Grid key={item.id} size={{ xs: 12 }}>
                 <Box
@@ -74,19 +88,19 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
                   <Box
                     component="img"
                     src={item.imageUrl}
-                    alt={item.name}
+                    alt={itemName}
                     sx={{ width: 72, height: 72, borderRadius: 1.5, objectFit: 'cover', flexShrink: 0 }}
                   />
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      {item.name}
+                      {itemName}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {item.description}
+                      {itemDescription}
                     </Typography>
                     {isLocked ? (
                       <Typography variant="caption" color="text.secondary">
-                        Доступно после {item.minRound - 1}-го раунда
+                        {t('games.tap.shop.availableAfterRound', { round: item.minRound - 1 })}
                       </Typography>
                     ) : (
                       <Button
@@ -95,7 +109,7 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
                         disabled={!canBuy || buyingId === item.id}
                         onClick={() => handleBuy(item.id)}
                       >
-                        Купить за {item.cost}
+                        {t('games.tap.shop.buyFor', { cost: item.cost })}
                       </Button>
                     )}
                   </Box>
@@ -106,7 +120,7 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
         </Grid>
       </DialogContent>
       <DialogActions sx={{ px: 2, pb: 2 }}>
-        <Button onClick={onClose}>Закрыть</Button>
+        <Button onClick={onClose}>{t('games.tap.shop.close')}</Button>
       </DialogActions>
     </ResponsiveDialog>
   );

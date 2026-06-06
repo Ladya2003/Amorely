@@ -1,4 +1,5 @@
 import React, { useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -59,12 +60,13 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
   onClearAll,
   clearAllDisabled = false,
 }) => {
+  const { t } = useTranslation();
   const [colorAnchor, setColorAnchor] = useState<HTMLElement | null>(null);
 
   const colorBlock = (
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="subtitle2" gutterBottom sx={{ color: accentColor }}>
-        Цвет
+        {t('drawingTools.color')}
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
         {DEFAULT_PEN_COLORS.map((color) => (
@@ -72,7 +74,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
             key={color}
             component="button"
             type="button"
-            aria-label={`Цвет ${color}`}
+            aria-label={t('drawingTools.colorAria', { color })}
             onClick={() => {
               onPenColorChange(color);
               onToolChange('pen');
@@ -92,7 +94,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
         <IconButton
           size="small"
           onClick={(event) => setColorAnchor(event.currentTarget)}
-          aria-label="Свой цвет"
+          aria-label={t('drawingTools.customColor')}
           sx={{
             border: '1px solid',
             borderColor: 'divider',
@@ -123,7 +125,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
   const toolBlock = (
     <Box>
       <Typography variant="subtitle2" gutterBottom sx={{ color: accentColor }}>
-        Инструмент
+        {t('drawingTools.tool')}
       </Typography>
       <ToggleButtonGroup
         value={tool}
@@ -133,11 +135,11 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
       >
         <ToggleButton value="pen">
           <BrushIcon sx={{ mr: 0.5, fontSize: 18 }} />
-          Кисть
+          {t('drawingTools.brush')}
         </ToggleButton>
         <ToggleButton value="eraser">
           <AutoFixHighIcon sx={{ mr: 0.5, fontSize: 18 }} />
-          Ластик
+          {t('drawingTools.eraser')}
         </ToggleButton>
       </ToggleButtonGroup>
       {onClearAll && (
@@ -149,7 +151,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
           disabled={clearAllDisabled}
           sx={{ mt: 1 }}
         >
-          Стереть всё
+          {t('drawingTools.clearAll')}
         </Button>
       )}
     </Box>
@@ -158,7 +160,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
   const sizeBlock = (
     <Box>
       <Typography variant="subtitle2" gutterBottom sx={{ color: accentColor }}>
-        Размер: {brushSize}px
+        {t('drawingTools.size', { size: brushSize })}
       </Typography>
       <Slider
         value={brushSize}

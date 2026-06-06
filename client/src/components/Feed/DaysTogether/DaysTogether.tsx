@@ -1,6 +1,7 @@
 // Главный компонент DaysTogether с улучшениями
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { DaysTogetherProps } from './types';
@@ -27,6 +28,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
   currentUserId,
   relationshipOwnerId
 }) => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   
   // Определяем, является ли текущий пользователь владельцем отношений
@@ -47,7 +49,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
   } = useDaysTogether({ daysCount, relationshipStartDate });
 
   // Получаем цвета выбранной темы
-  const currentTheme = getThemeById(selectedTheme);
+  const currentTheme = getThemeById(selectedTheme, t);
   const gradientColors = currentTheme.colors.join(', ');
   const hasBackgroundImage = true;
 
@@ -71,10 +73,10 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
         onClick={() => navigate('/settings?tab=partner')}
       >
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
-          Добавьте партнера в настройках
+          {t('feed.addPartnerTitle')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Чтобы видеть количество дней вместе, добавьте вашего партнера и дату начала отношений
+          {t('feed.addPartnerDescription')}
         </Typography>
       </Paper>
     );
@@ -199,7 +201,10 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             WebkitTextStroke: '0.5px rgba(0,0,0,0.2)',
           }}
         >
-          {daysCount} {getDaysWord(daysCount)} вместе
+          {t('feed.daysTogether', {
+            count: daysCount,
+            daysWord: getDaysWord(daysCount, t),
+          })}
         </Typography>
 
         {/* Статус отношений */}
@@ -213,7 +218,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             textShadow: hasBackgroundImage ? '0 1px 2px rgba(0,0,0,0.3)' : `0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.2')}`
           }}
         >
-          {getRelationshipStatus(daysCount)}
+          {getRelationshipStatus(daysCount, t)}
         </Typography>
 
         {/* Дата начала */}
@@ -226,7 +231,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             textShadow: hasBackgroundImage ? '0 1px 2px rgba(0,0,0,0.2)' : `0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.15')}`
           }}
         >
-          С {formatDate(relationshipStartDate)}
+          {t('feed.since', { date: formatDate(relationshipStartDate, i18n.language) })}
         </Typography>
 
         {/* Прогресс до следующей вехи */}
@@ -266,7 +271,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             {signatures?.user && (
               <img
                 src={signatures.user}
-                alt="Подпись пользователя"
+                alt={t('feed.signatureUser')}
                 style={{
                   maxWidth: signatures?.partner ? '45%' : '100%',
                   maxHeight: '100px',
@@ -277,7 +282,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             {signatures?.partner && (
               <img
                 src={signatures.partner}
-                alt="Подпись партнера"
+                alt={t('feed.signaturePartner')}
                 style={{
                   maxWidth: signatures?.user ? '45%' : '100%',
                   maxHeight: '100px',
@@ -289,7 +294,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             {!signatures?.user && !signatures?.partner && signature && (
               <img
                 src={signature}
-                alt="Подпись"
+                alt={t('feed.signature')}
                 style={{
                   maxWidth: '100%',
                   maxHeight: '100px',

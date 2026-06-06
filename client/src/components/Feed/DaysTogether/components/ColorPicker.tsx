@@ -1,6 +1,8 @@
 // Компонент выбора цветовой темы для градиента
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Box,
   Button,
@@ -34,11 +36,17 @@ const hexToRgb = (hex: string): [number, number, number] => {
   ];
 };
 
-const buildCustomTheme = (hex: string): ColorTheme => {
+const getThemeName = (themeId: string, t: TFunction, fallback: string): string => {
+  const key = themeId.startsWith('custom:') ? 'custom' : themeId;
+  return t(`feed.colorPicker.themes.${key}`, { defaultValue: fallback });
+};
+
+const buildCustomTheme = (hex: string, t?: TFunction): ColorTheme => {
   const [r, g, b] = hexToRgb(hex);
+  const fallbackName = '🎨 Свой цвет';
   return {
     id: `custom:${hex}`,
-    name: '🎨 Свой цвет',
+    name: t ? getThemeName(`custom:${hex}`, t, fallbackName) : fallbackName,
     colors: [
       `rgba(${r}, ${g}, ${b}, 0.7)`,
       `rgba(${r}, ${g}, ${b}, 0.5)`,
@@ -48,12 +56,19 @@ const buildCustomTheme = (hex: string): ColorTheme => {
   };
 };
 
-export const getThemeById = (themeId: string): ColorTheme => {
+export const getThemeById = (themeId: string, t?: TFunction): ColorTheme => {
   if (themeId?.startsWith('custom:')) {
     const hex = themeId.split(':')[1] || '#ff4b8d';
-    return buildCustomTheme(hex);
+    return buildCustomTheme(hex, t);
   }
-  return colorThemes.find(t => t.id === themeId) || colorThemes[0];
+  const theme = colorThemes.find((item) => item.id === themeId) || colorThemes[0];
+  if (!t) {
+    return theme;
+  }
+  return {
+    ...theme,
+    name: getThemeName(theme.id, t, theme.name),
+  };
 };
 
 export const colorThemes: ColorTheme[] = [
@@ -179,6 +194,7 @@ interface ColorPickerProps {
 }
 
 const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange }) => {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [draftCustomColor, setDraftCustomColor] = useState(() =>
     selectedTheme.startsWith('custom:') ? (selectedTheme.split(':')[1] || '#ff4b8d') : '#ff4b8d'
@@ -209,7 +225,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
   };
 
   const open = Boolean(anchorEl);
-  const currentTheme = getThemeById(selectedTheme);
+  const currentTheme = getThemeById(selectedTheme, t);
   const isCustomSelected = selectedTheme.startsWith('custom:');
   const selectedCustomColor = draftCustomColor;
 
@@ -235,7 +251,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
 
   return (
     <>
-      <Tooltip title="Изменить цветовую тему" arrow>
+      <Tooltip title={t('feed.colorPicker.changeTheme')} arrow>
         <IconButton
           onClick={handleClick}
           sx={{
@@ -266,7 +282,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
       >
         <Box sx={{ p: 2, maxWidth: 320 }}>
           <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Выберите цветовую тему:
+            {t('feed.colorPicker.selectTheme')}
           </Typography>
           
           {!showCustomPicker ? (
@@ -280,7 +296,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
                 overflowY: 'auto'
               }}
             >
-              <Tooltip title="Выбрать любой цвет" arrow>
+              <Tooltip title={t('feed.colorPicker.pickColor')} arrow>
                 <Box
                   onClick={() => {
                     onThemeChange(`custom:${draftCustomColor}`);
@@ -310,7 +326,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
               </Tooltip>
 
               {colorThemes.map((theme) => (
-                <Tooltip key={theme.id} title={theme.name} arrow>
+                <Tooltip key={theme.id} title={getThemeName(theme.id, t, theme.name)} arrow>
                   <Box
                     onClick={() => handleThemeSelect(theme.id)}
                     sx={{
@@ -340,7 +356,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
                 onClick={() => setShowCustomPicker(false)}
                 sx={{ mb: 1 }}
               >
-                Назад
+                {t('feed.colorPicker.back')}
               </Button>
               <HexColorPicker
                 color={draftCustomColor}
@@ -355,7 +371,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
                 variant="caption"
                 sx={{ mt: 1, display: 'block', textAlign: 'center', color: 'text.secondary' }}
               >
-                Текущий цвет: {draftCustomColor.toUpperCase()}
+                {t('feed.colorPicker.currentColor', { color: draftCustomColor.toUpperCase() })}
               </Typography>
             </Box>
           )}

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 import { NewsItem } from '../components/News/NewsCard';
+import type { NewsTranslations } from '../localization/newsContent';
 
 export type DashboardMetricKey =
   | 'totalUsers'
@@ -106,6 +107,7 @@ export interface AdminHealthInfo {
 }
 
 export interface AdminNewsItem extends NewsItem {
+  translations?: NewsTranslations;
   isPublished?: boolean;
   updatedAt?: string;
   image?: {

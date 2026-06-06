@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Avatar,
   Box,
@@ -17,6 +18,7 @@ import ContentViewer from '../Calendar/ContentViewer';
 import { Contact } from './ChatList';
 import GameBadges from '../Games/GameBadges';
 import type { RelationshipBadge } from '../../utils/gameBadges';
+import { formatChatBirthday, getChatPlaceholderBio } from '../../localization/chatHelpers';
 
 export interface ContactProfile extends Contact {
   bio?: string;
@@ -31,43 +33,8 @@ interface ContactProfileDialogProps {
   contact: Contact | null;
 }
 
-const PLACEHOLDER_BIOS = [
-  (name: string) =>
-    `${name} пока не оставил(а) описание — видимо, сюрпризы любит не только в переписке.`,
-  (name: string) =>
-    `О ${name} пока известно только одно: с этим человеком переписка точно не скучная.`,
-  (name: string) =>
-    `${name} решил(а), что лучше загадочности, чем длинного описания. Уважаем.`,
-  (name: string) =>
-    `Биография ${name} в разработке. Пока что главное — хороший чат и отличное настроение.`,
-  (name: string) =>
-    `${name} хранит описание в секрете или еще пока не добавил(а)`
-];
-
-const getPlaceholderBio = (name: string, seed: string) => {
-  const safeName = name.trim() || 'Собеседник';
-  let hash = 0;
-
-  for (let index = 0; index < seed.length; index += 1) {
-    hash = (hash + seed.charCodeAt(index) * (index + 1)) % PLACEHOLDER_BIOS.length;
-  }
-
-  return PLACEHOLDER_BIOS[hash](safeName);
-};
-
-const formatBirthday = (birthday?: string | null) => {
-  if (!birthday) return null;
-
-  const date = new Date(birthday);
-  if (Number.isNaN(date.getTime())) return null;
-
-  return date.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long'
-  });
-};
-
 const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClose, contact }) => {
+  const { t, i18n } = useTranslation();
   const [profile, setProfile] = useState<ContactProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
@@ -133,10 +100,10 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
     const trimmedBio = displayProfile.bio?.trim();
     if (trimmedBio) return trimmedBio;
 
-    return getPlaceholderBio(fullName, displayProfile.id);
-  }, [displayProfile, fullName]);
+    return getChatPlaceholderBio(t, fullName, displayProfile.id);
+  }, [displayProfile, fullName, t]);
 
-  const birthdayLabel = formatBirthday(displayProfile?.birthday);
+  const birthdayLabel = formatChatBirthday(displayProfile?.birthday, i18n.language);
   const avatarUrl = displayProfile?.avatar || '';
 
   const handleClose = () => {
@@ -166,8 +133,8 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
             pb: 1
           }}
         >
-          Профиль
-          <IconButton onClick={handleClose} aria-label="Закрыть профиль" size="small">
+          {t('chat.profile.title')}
+          <IconButton onClick={handleClose} aria-label={t('chat.profile.closeAria')} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
@@ -199,7 +166,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
               {profile?.badges && profile.badges.length > 0 && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                    Медали
+                    {t('chat.profile.medals')}
                   </Typography>
                   <GameBadges badges={profile.badges} variant="all" size={20} />
                 </Box>

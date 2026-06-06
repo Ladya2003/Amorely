@@ -5,6 +5,7 @@ import Relationship from '../models/relationship';
 import Content from '../models/content';
 import Message from '../models/message';
 import News from '../models/news';
+import { formatNewsForAdmin } from '../i18n/newsContent';
 import PushSubscription from '../models/pushSubscription';
 import CryptoDevice from '../models/cryptoDevice';
 import TapGameState from '../models/tapGameState';
@@ -752,7 +753,7 @@ router.get('/news', async (req: ExtendedRequest, res: Response) => {
     ]);
 
     res.json({
-      news,
+      news: news.map((item) => formatNewsForAdmin(item)),
       pagination: {
         total,
         page,

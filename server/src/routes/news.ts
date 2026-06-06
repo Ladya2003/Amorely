@@ -4,6 +4,19 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import News from '../models/news';
 import { adminMiddleware } from '../middleware/admin';
+import {
+  formatNewsForAdmin,
+  formatNewsForClient,
+  normalizeNewsTranslations,
+  parseNewsTranslationsInput,
+  syncLegacyNewsFields,
+} from '../i18n/newsContent';
+import { resolveLocale } from '../i18n/locales';
+import { getUserLocale } from '../utils/userLocale';
+
+interface AuthRequest extends Request {
+  userId?: string;
+}
 
 const router = express.Router();
 
@@ -103,10 +116,21 @@ const syncCoverImage = (news: any) => {
   news.set('image', undefined);
 };
 
+const resolveRequestLocale = async (req: AuthRequest) => {
+  if (typeof req.query.locale === 'string' && req.query.locale.trim()) {
+    return resolveLocale(req.query.locale);
+  }
+  if (req.userId) {
+    return getUserLocale(req.userId);
+  }
+  return resolveLocale(null);
+};
+
 // Получение всех опубликованных новостей
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const { category, limit = 10, page = 1 } = req.query;
+    const locale = await resolveRequestLocale(req);
 
     const query: Record<string, unknown> = { isPublished: true };
 
@@ -121,7 +145,7 @@ router.get('/', async (req: Request, res: Response) => {
     const total = await News.countDocuments(query);
 
     res.json({
-      news,
+      news: news.map((item) => formatNewsForClient(item, locale)),
       pagination: {
         total,
         page: Number(page),
@@ -136,9 +160,10 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Получение конкретной новости по ID
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const locale = await resolveRequestLocale(req);
 
     const news = await News.findById(id);
 
@@ -146,7 +171,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Новость не найдена' });
     }
 
-    res.json(news);
+    res.json(formatNewsForClient(news, locale));
   } catch (error) {
     console.error('Ошибка при получении новости:', error);
     res.status(500).json({ error: 'Ошибка при получении новости' });
@@ -156,29 +181,37 @@ router.get('/:id', async (req: Request, res: Response) => {
 // Создание новой новости (только для админов)
 router.post('/', adminMiddleware, upload.array('media'), async (req: Request, res: Response) => {
   try {
-    const { title, content, category, isPublished } = req.body;
+    const { title, content, category, isPublished, translations } = req.body;
     const files = (req.files as Express.Multer.File[]) ?? [];
 
-    if (!title || !content) {
-      return res.status(400).json({ error: 'Не указаны обязательные поля' });
+    const parsedTranslations = parseNewsTranslationsInput(translations);
+    const effectiveTranslations =
+      parsedTranslations ??
+      normalizeNewsTranslations({
+        title: typeof title === 'string' ? title : '',
+        content: typeof content === 'string' ? content : '',
+      });
+
+    if (!effectiveTranslations.ru?.title?.trim() || !effectiveTranslations.ru?.content?.trim()) {
+      return res.status(400).json({ error: 'Не указаны обязательные поля (русский заголовок и текст)' });
     }
 
     const images = buildMediaFromFiles(files);
     const newNews = new News({
-      title,
-      content,
       category: category || 'announcement',
       isPublished: isPublished === 'true' || isPublished === true,
       images,
+      translations: effectiveTranslations,
     });
 
+    syncLegacyNewsFields(newNews);
     syncCoverImage(newNews);
 
     const savedNews = await newNews.save();
 
     res.status(201).json({
       message: 'Новость успешно создана',
-      news: savedNews,
+      news: formatNewsForAdmin(savedNews),
     });
   } catch (error) {
     console.error('Ошибка при создании новости:', error);
@@ -190,7 +223,7 @@ router.post('/', adminMiddleware, upload.array('media'), async (req: Request, re
 router.put('/:id', adminMiddleware, upload.array('media'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, content, category, isPublished, removedMediaPublicIds } = req.body;
+    const { title, content, category, isPublished, removedMediaPublicIds, translations } = req.body;
     const files = (req.files as Express.Multer.File[]) ?? [];
 
     const news = await News.findById(id);
@@ -199,12 +232,19 @@ router.put('/:id', adminMiddleware, upload.array('media'), async (req: Request, 
       return res.status(404).json({ error: 'Новость не найдена' });
     }
 
-    if (title) {
-      news.title = title;
+    const parsedTranslations = parseNewsTranslationsInput(translations);
+    if (parsedTranslations) {
+      news.set('translations', parsedTranslations);
+    } else if (title || content) {
+      const currentTranslations = normalizeNewsTranslations(news);
+      currentTranslations.ru = {
+        title: typeof title === 'string' ? title.trim() : currentTranslations.ru?.title ?? news.title ?? '',
+        content:
+          typeof content === 'string' ? content.trim() : currentTranslations.ru?.content ?? news.content ?? '',
+      };
+      news.set('translations', currentTranslations);
     }
-    if (content) {
-      news.content = content;
-    }
+
     if (category) {
       news.category = category;
     }
@@ -240,6 +280,7 @@ router.put('/:id', adminMiddleware, upload.array('media'), async (req: Request, 
       news.set('images', [...(news.images ?? []), ...newMedia]);
     }
 
+    syncLegacyNewsFields(news);
     syncCoverImage(news);
     news.updatedAt = new Date();
 
@@ -247,7 +288,7 @@ router.put('/:id', adminMiddleware, upload.array('media'), async (req: Request, 
 
     res.json({
       message: 'Новость успешно обновлена',
-      news: updatedNews,
+      news: formatNewsForAdmin(updatedNews),
     });
   } catch (error) {
     console.error('Ошибка при обновлении новости:', error);

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   Typography, 
@@ -41,6 +42,7 @@ import { isVideoFile } from '../../utils/videoMetadata';
 import { captureVideoPosterFromFile } from '../../utils/videoPoster';
 import MediaViewerDialog from '../common/MediaViewerDialog';
 import { formatContactPresence } from '../../utils/formatContactPresence';
+import { formatChatDayBadge } from '../../localization/chatHelpers';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import { isIOSDevice } from '../../utils/isIOSDevice';
 import socketService from '../../services/socketService';
@@ -200,6 +202,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   isLoadingOlder = false,
   isLoading = false
 }) => {
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const useIOSAccessoryFix = isMobile && isIOSDevice();
@@ -210,10 +213,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const isTypingActiveRef = useRef(false);
   const lastTypingEmitRef = useRef(0);
   const showTypingStatus = Boolean(contactIsTyping && contact?.isOnline);
-  const typingStatusText = useTypingAnimation(showTypingStatus);
+  const typingStatusText = useTypingAnimation(showTypingStatus, t('chat.presence.typing'));
   const presenceText = showTypingStatus
     ? typingStatusText
-    : formatContactPresence(contact?.isOnline, contact?.lastSeen);
+    : formatContactPresence(contact?.isOnline, contact?.lastSeen, t, i18n.language);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentValidationError, setAttachmentValidationError] = useState<string | null>(null);
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<string[]>([]);
@@ -776,7 +779,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         onSendMessage(trimmedText, [], null, null, null);
       }
       onSendMessage(
-        forwardingSharedEvent ? '' : (forwardingMessage.text || 'Пересланное сообщение'),
+        forwardingSharedEvent ? '' : (forwardingMessage.text || t('chat.message.forwarded')),
         [],
         null,
         forwardingMessage,
@@ -1008,7 +1011,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setSharingEvent(null);
     setReplyingTo({
       id: contextMenu.message.id,
-      text: contextMenu.message.text || (contextMenu.message.attachments?.length ? 'Медиафайл' : ''),
+      text: contextMenu.message.text || (contextMenu.message.attachments?.length ? t('chat.message.media') : ''),
       senderId: contextMenu.message.senderId
     });
     setContextMenu(null);
@@ -1140,10 +1143,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 backdropFilter: 'blur(2px)'
               }}
             >
-              {currentDate.toLocaleDateString('ru-RU', {
-                day: 'numeric',
-                month: 'long'
-              })}
+              {formatChatDayBadge(currentDate, i18n.language)}
             </Box>
           </Box>
         );
@@ -1288,7 +1288,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           }}
           role="button"
           tabIndex={0}
-          aria-label={`Профиль ${contact.name}`}
+          aria-label={t('chat.dialog.profileAria', { name: contact.name })}
         >
           <Box
             sx={{
@@ -1407,8 +1407,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               }}
               aria-label={
                 newMessagesBelowCount > 0
-                  ? `Прокрутить вниз, новых сообщений: ${newMessagesBelowCount}`
-                  : 'Прокрутить вниз'
+                  ? t('chat.dialog.scrollDownNew', { count: newMessagesBelowCount })
+                  : t('chat.dialog.scrollDown')
               }
             >
               <KeyboardArrowDownIcon />
@@ -1462,8 +1462,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                     type="button"
                     aria-label={
                       attachmentPreviewByIndex[index]?.mediaType === 'video'
-                        ? 'Открыть видео на весь экран'
-                        : 'Открыть превью на весь экран'
+                        ? t('chat.dialog.openVideoFullscreen')
+                        : t('chat.dialog.openPreviewFullscreen')
                     }
                     onClick={() => handleAttachmentPreviewOpen(index)}
                     sx={{
@@ -1517,7 +1517,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                     ) : (
                       <img
                         src={attachmentPreviewByIndex[index]?.url || ''}
-                        alt={`Вложение ${index + 1}`}
+                        alt={t('chat.dialog.attachmentAlt', { index: index + 1 })}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       />
                     )}
@@ -1540,7 +1540,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 )}
                 <IconButton
                   size="small"
-                  aria-label="Удалить вложение"
+                  aria-label={t('chat.dialog.removeAttachment')}
                   onClick={(event) => {
                     event.stopPropagation();
                     handleRemoveAttachment(index);
@@ -1584,7 +1584,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           >
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
-                Ответ на сообщение
+                {t('chat.dialog.replyTo')}
               </Typography>
               <Typography
                 variant="body2"
@@ -1595,7 +1595,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                   textOverflow: 'ellipsis'
                 }}
               >
-                {replyingTo.text || 'Медиафайл'}
+                {replyingTo.text || t('chat.message.media')}
               </Typography>
             </Box>
             <IconButton size="small" onClick={() => setReplyingTo(null)} aria-label="Отменить ответ">
@@ -1621,7 +1621,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           >
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="caption" color="info.main" sx={{ fontWeight: 600 }}>
-                Пересылаемое сообщение
+                {t('chat.dialog.forwarding')}
               </Typography>
               {forwardingSharedEvent ? (
                 <SharedEventCard sharedEvent={forwardingSharedEvent} compact />
@@ -1635,14 +1635,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                     textOverflow: 'ellipsis'
                   }}
                 >
-                  {forwardingMessage.text || 'Пересланное сообщение'}
+                  {forwardingMessage.text || t('chat.message.forwarded')}
                 </Typography>
               )}
             </Box>
             <IconButton
               size="small"
               onClick={cancelForwardDraft}
-              aria-label="Отменить пересылку"
+              aria-label={t('chat.dialog.cancelForward')}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -1666,11 +1666,11 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           >
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
-                Поделиться событием
+                {t('chat.dialog.shareEvent')}
               </Typography>
               <SharedEventCard sharedEvent={sharingEvent} compact />
             </Box>
-            <IconButton size="small" onClick={() => setSharingEvent(null)} aria-label="Отменить отправку события">
+            <IconButton size="small" onClick={() => setSharingEvent(null)} aria-label={t('chat.dialog.cancelShareEvent')}>
               <CloseIcon fontSize="small" />
             </IconButton>
           </Box>
@@ -1693,7 +1693,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           >
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
-                Редактирование сообщения
+                {t('chat.dialog.editing')}
               </Typography>
               <Typography
                 variant="body2"
@@ -1704,7 +1704,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                   textOverflow: 'ellipsis'
                 }}
               >
-                {editingMessage.text || 'Без текста'}
+                {editingMessage.text || t('chat.message.noText')}
               </Typography>
             </Box>
             <IconButton
@@ -1713,7 +1713,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 setEditingMessage(null);
                 setMessageText('');
               }}
-              aria-label="Отменить редактирование"
+              aria-label={t('chat.dialog.cancelEdit')}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -1731,6 +1731,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           useIOSAccessoryFix={useIOSAccessoryFix}
           onAttachmentClick={handleAttachmentClick}
           attachmentDisabled={isPickingAttachments}
+          placeholder={t('chat.input.placeholder')}
           sendDisabled={
             editingMessage
               ? !messageText.trim()
@@ -1760,7 +1761,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
             <ForwardOutlinedIcon sx={{ fontSize: 16 }} />
           </ListItemIcon>
-          Ответить
+          {t('chat.dialog.reply')}
         </MenuItem>
         {contextMenu && isMessageEditable(contextMenu.message, currentUserId) && (
           <MenuItem
@@ -1775,7 +1776,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
               <EditOutlinedIcon sx={{ fontSize: 16 }} />
             </ListItemIcon>
-            Редактировать
+            {t('chat.dialog.edit')}
           </MenuItem>
         )}
         <MenuItem
@@ -1790,7 +1791,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
             <ReplyOutlinedIcon sx={{ fontSize: 16 }} />
           </ListItemIcon>
-          Переслать
+          {t('chat.dialog.forward')}
         </MenuItem>
         <MenuItem
           onClick={handleDeleteFromContextMenu}
@@ -1805,7 +1806,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
             <DeleteOutlineIcon sx={{ fontSize: 16 }} />
           </ListItemIcon>
-          Удалить
+          {t('chat.dialog.delete')}
         </MenuItem>
       </Menu>
       <ResponsiveDialog
@@ -1814,10 +1815,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={{ pb: 1 }}>Удалить сообщение?</DialogTitle>
+        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.deleteTitle')}</DialogTitle>
         <DialogContent sx={{ pt: '8px !important' }}>
           <Typography variant="body2" sx={{ mb: 1.5 }}>
-            Вы точно хотите удалить сообщение для вас и вашего собеседника?
+            {t('chat.dialog.deleteConfirm')}
           </Typography>
           <Paper
             variant="outlined"
@@ -1839,16 +1840,16 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 textOverflow: 'ellipsis'
               }}
             >
-              {messageToDelete?.text || (messageToDelete?.attachments?.length ? 'Медиафайл' : 'Сообщение без текста')}
+              {messageToDelete?.text || (messageToDelete?.attachments?.length ? t('chat.message.media') : t('chat.message.noTextPreview'))}
             </Typography>
           </Paper>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={handleDeleteModalClose} variant="text">
-            Отмена
+            {t('chat.dialog.cancel')}
           </Button>
           <Button onClick={handleConfirmDelete} color="error" variant="contained">
-            Удалить
+            {t('chat.dialog.delete')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>

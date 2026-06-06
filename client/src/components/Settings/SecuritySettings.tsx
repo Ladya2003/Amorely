@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   Typography, 
@@ -17,6 +18,7 @@ interface SecuritySettingsProps {
 }
 
 const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, isLoading }) => {
+  const { t } = useTranslation();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -28,40 +30,38 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
     setError(null);
     setSuccess(null);
     
-    // Валидация
     if (!oldPassword || !newPassword || !confirmPassword) {
-      setError('Пожалуйста, заполните все поля');
+      setError(t('settings.security.errors.fillAll'));
       return;
     }
     
     if (newPassword !== confirmPassword) {
-      setError('Новый пароль и подтверждение не совпадают');
+      setError(t('settings.security.errors.passwordMismatch'));
       return;
     }
     
     if (newPassword.length < 8) {
-      setError('Новый пароль должен содержать не менее 8 символов');
+      setError(t('settings.security.errors.passwordTooShort'));
       return;
     }
     
     try {
       await onChangePassword(oldPassword, newPassword);
-      setSuccess('Пароль успешно изменен');
+      setSuccess(t('settings.security.success'));
       
-      // Очищаем поля
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
       console.error('Ошибка при изменении пароля:', error);
-      setError('Не удалось изменить пароль. Проверьте правильность текущего пароля.');
+      setError(t('settings.security.errors.changeFailed'));
     }
   };
   
   return (
     <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
-        Безопасность
+        {t('settings.security.title')}
       </Typography>
       <Divider sx={{ mb: 3 }} />
       
@@ -83,7 +83,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
             <TextField
               fullWidth
               type="password"
-              label="Текущий пароль"
+              label={t('settings.security.currentPassword')}
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               required
@@ -94,19 +94,19 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
             <TextField
               fullWidth
               type="password"
-              label="Новый пароль"
+              label={t('settings.security.newPassword')}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
               variant="outlined"
-              helperText="Минимум 8 символов"
+              helperText={t('settings.security.passwordMinHelper')}
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               type="password"
-              label="Подтверждение нового пароля"
+              label={t('settings.security.confirmPassword')}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -121,7 +121,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
               startIcon={<LockIcon />}
               disabled={isLoading}
             >
-              {isLoading ? 'Изменение...' : 'Изменить пароль'}
+              {isLoading ? t('settings.security.changing') : t('settings.security.changePassword')}
             </Button>
           </Grid>
         </Grid>
@@ -130,4 +130,4 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
   );
 };
 
-export default SecuritySettings; 
+export default SecuritySettings;

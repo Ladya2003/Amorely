@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Drawer,
   AppBar,
@@ -23,12 +24,14 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { ru } from 'date-fns/locale';
-import { format } from 'date-fns';
 import { useEventDraft } from './hooks/useEventDraft';
 import { useAuth } from '../../contexts/AuthContext';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
-import { VIDEO_LIMITS_HINT } from '../../utils/mediaLimits';
+import {
+  formatCalendarDate,
+  getDateFnsLocale,
+  getVideoLimitsHint
+} from '../../localization/calendarHelpers';
 import { isVideoFile } from '../../utils/videoMetadata';
 import ContentViewer from './ContentViewer';
 import DecryptedMedia from '../common/DecryptedMedia';
@@ -74,10 +77,8 @@ interface EventEditorDrawerProps {
   }) => Promise<void>;
 }
 
-const formatFileDate = (file: File) =>
-  format(new Date(file.lastModified), 'd MMMM yyyy', { locale: ru });
-
 const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
+const TITLE_MAX_LENGTH = 100;
 
 const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   open,
@@ -87,6 +88,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   onSave,
   onUpdate
 }) => {
+  const { t, i18n } = useTranslation();
   const isEditMode = !!editEvent;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -293,12 +295,12 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
   const handleSave = async () => {
     if (!selectedDate) {
-      setError('Пожалуйста, выберите дату события');
+      setError(t('calendar.errors.selectDate'));
       return;
     }
 
     if (!title.trim()) {
-      setError('Пожалуйста, введите заголовок события');
+      setError(t('calendar.errors.enterTitle'));
       return;
     }
 
@@ -346,7 +348,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     } catch (error) {
       console.error('Ошибка при сохранении события:', error);
       const message =
-        error instanceof Error ? error.message : 'Не удалось сохранить событие. Попробуйте еще раз.';
+        error instanceof Error ? error.message : t('calendar.errors.saveEventFailed');
       setError(message);
     } finally {
       setIsSaving(false);
@@ -405,7 +407,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               <CloseIcon />
             </IconButton>
             <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
-              {isEditMode ? 'Редактировать событие' : 'Новое событие'}
+              {isEditMode ? t('calendar.event.edit') : t('calendar.event.new')}
             </Typography>
           </Toolbar>
         </AppBar>
@@ -419,9 +421,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           )}
 
           {/* Выбор даты */}
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={getDateFnsLocale(i18n.language)}>
             <DatePicker
-              label="Дата события"
+              label={t('calendar.event.date')}
               value={selectedDate}
               onChange={(newDate) => setSelectedDate(newDate)}
               slotProps={{
@@ -439,14 +441,14 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           {/* Заголовок */}
           <TextField
             fullWidth
-            label="Заголовок события"
+            label={t('calendar.event.title')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Например: Первое свидание"
+            placeholder={t('calendar.event.titlePlaceholder')}
             sx={{ mb: 3 }}
             required
-            inputProps={{ maxLength: 100 }}
-            helperText={`${title.length}/100 символов`}
+            inputProps={{ maxLength: TITLE_MAX_LENGTH }}
+            helperText={t('calendar.event.charCount', { current: title.length, max: TITLE_MAX_LENGTH })}
           />
 
           {/* Описание */}
@@ -455,13 +457,13 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             multiline
             minRows={4}
             maxRows={8}
-            label="Описание (необязательно)"
+            label={t('calendar.event.description')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Расскажите о событии..."
+            placeholder={t('calendar.event.descriptionPlaceholder')}
             sx={{ mb: 3 }}
             inputProps={{ maxLength: EVENT_DESCRIPTION_MAX_LENGTH }}
-            helperText={`${description.length}/${EVENT_DESCRIPTION_MAX_LENGTH} символов`}
+            helperText={t('calendar.event.charCount', { current: description.length, max: EVENT_DESCRIPTION_MAX_LENGTH })}
           />
 
           {/* Чекбокс дня рождения */}
@@ -478,10 +480,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                 label={
                   <Box>
                     <Typography variant="body2" fontWeight="medium">
-                      🎂 Отнести ко дню рождения
+                      {t('calendar.event.birthdayFlag')}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                      Это событие будет показываться в ленте на день рождения
+                      {t('calendar.event.birthdayHint')}
                     </Typography>
                   </Box>
                 }
@@ -503,10 +505,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                 label={
                   <Box>
                     <Typography variant="body2" fontWeight="medium">
-                      💕 Отнести к годовщине
+                      {t('calendar.event.anniversaryFlag')}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                      Это событие будет показываться в ленте на годовщину отношений
+                      {t('calendar.event.anniversaryHint')}
                     </Typography>
                   </Box>
                 }
@@ -517,7 +519,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           {/* Загрузка медиа */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              Фото и видео
+              {t('calendar.media.photosAndVideos')}
             </Typography>
             <input
               accept="image/*,video/*"
@@ -535,11 +537,11 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                 fullWidth
                 disabled={isSaving}
               >
-                Добавить фото или видео
+                {t('calendar.media.addPhotosOrVideos')}
               </Button>
             </label>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). {VIDEO_LIMITS_HINT}
+              {t('calendar.media.supported')} {getVideoLimitsHint(t)}
             </Typography>
           </Box>
 
@@ -667,7 +669,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                       textAlign: 'center'
                     }}
                   >
-                    {formatFileDate(files[index])}
+                    {formatCalendarDate(new Date(files[index].lastModified), i18n.language)}
                   </Typography>
                 </Box>
               ))}
@@ -696,7 +698,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               disabled={isSaving}
               startIcon={<DeleteIcon />}
             >
-              Очистить данные
+              {t('calendar.event.clearDraft')}
             </Button>
           )}
           
@@ -707,7 +709,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               onClick={handleClose}
               disabled={isSaving}
             >
-              Отмена
+              {t('calendar.common.cancel')}
             </Button>
             <Button
               fullWidth
@@ -719,9 +721,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             >
               {isSaving
                 ? files.some(isVideoFile)
-                  ? 'Сжимаем видео...'
-                  : 'Сохранение...'
-                : 'Сохранить'}
+                  ? t('calendar.event.compressingVideo')
+                  : t('calendar.common.saving')
+                : t('calendar.common.save')}
             </Button>
           </Box>
         </Box>

@@ -60,6 +60,7 @@ import {
   updateQuizGameBadges,
 } from '../games/quizGameService';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
+import { getUserLocale } from '../utils/userLocale';
 
 const router = Router();
 
@@ -246,7 +247,7 @@ router.get('/geo/state', async (req: any, res: Response) => {
     const state = await getOrCreateGeoGameState(context);
 
     res.json({
-      state: formatGeoGameState(state, userId),
+      state: formatGeoGameState(state, userId, await getUserLocale(userId)),
     });
   } catch (error) {
     if (handleGeoGameError(error, res)) {
@@ -264,7 +265,7 @@ router.post('/geo/ready', async (req: any, res: Response) => {
     const state = await setGeoPlayerReady(userId, context);
 
     res.json({
-      state: formatGeoGameState(state, userId),
+      state: formatGeoGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getGeoGameParticipantIds(context),
     });
   } catch (error) {
@@ -286,7 +287,7 @@ router.post('/geo/guess', async (req: any, res: Response) => {
     await updateGeoGameBadges();
 
     res.json({
-      state: formatGeoGameState(state, userId),
+      state: formatGeoGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getGeoGameParticipantIds(context),
     });
   } catch (error) {
@@ -305,7 +306,7 @@ router.post('/geo/next-round', async (req: any, res: Response) => {
     const { state } = await advanceGeoRound(userId, context);
 
     res.json({
-      state: formatGeoGameState(state, userId),
+      state: formatGeoGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getGeoGameParticipantIds(context),
     });
   } catch (error) {
@@ -324,7 +325,7 @@ router.post('/geo/expire', async (req: any, res: Response) => {
     const state = await expireGeoRound(context);
 
     res.json({
-      state: formatGeoGameState(state, userId),
+      state: formatGeoGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getGeoGameParticipantIds(context),
     });
   } catch (error) {
@@ -384,8 +385,9 @@ router.post('/draw/stroke', async (req: any, res: Response) => {
       width: width || 4,
     });
 
+    const locale = await getUserLocale(userId);
     res.json({
-      state: formatDrawGameState(state, userId),
+      state: formatDrawGameState(state, userId, locale),
       participantUserIds: getDrawGameParticipantIds(context),
     });
   } catch (error) {
@@ -404,7 +406,7 @@ router.post('/draw/finish-drawing', async (req: any, res: Response) => {
     const state = await submitDrawFinishDrawing(userId, context, true);
 
     res.json({
-      state: formatDrawGameState(state, userId),
+      state: formatDrawGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getDrawGameParticipantIds(context),
     });
   } catch (error) {
@@ -426,7 +428,7 @@ router.post('/draw/guess', async (req: any, res: Response) => {
     await updateDrawGameBadges();
 
     res.json({
-      state: formatDrawGameState(state, userId),
+      state: formatDrawGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getDrawGameParticipantIds(context),
     });
   } catch (error) {
@@ -445,7 +447,7 @@ router.post('/draw/clear-strokes', async (req: any, res: Response) => {
     const state = await clearDrawStrokes(userId, context);
 
     res.json({
-      state: formatDrawGameState(state, userId),
+      state: formatDrawGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getDrawGameParticipantIds(context),
     });
   } catch (error) {
@@ -464,7 +466,7 @@ router.post('/draw/clear-guess-attempts', async (req: any, res: Response) => {
     const state = await clearDrawGuessAttempts(context);
 
     res.json({
-      state: formatDrawGameState(state, userId),
+      state: formatDrawGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getDrawGameParticipantIds(context),
     });
   } catch (error) {
@@ -483,7 +485,7 @@ router.post('/draw/next-round', async (req: any, res: Response) => {
     const { state } = await advanceDrawRound(userId, context);
 
     res.json({
-      state: formatDrawGameState(state, userId),
+      state: formatDrawGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getDrawGameParticipantIds(context),
     });
   } catch (error) {
@@ -502,7 +504,7 @@ router.get('/quiz/state', async (req: any, res: Response) => {
     const state = await getOrCreateQuizGameState(context);
 
     res.json({
-      state: formatQuizGameState(state, userId),
+      state: formatQuizGameState(state, userId, await getUserLocale(userId)),
     });
   } catch (error) {
     if (handleQuizGameError(error, res)) {
@@ -520,7 +522,7 @@ router.post('/quiz/ready', async (req: any, res: Response) => {
     const state = await setQuizPlayerReady(userId, context);
 
     res.json({
-      state: formatQuizGameState(state, userId),
+      state: formatQuizGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getQuizGameParticipantIds(context),
     });
   } catch (error) {
@@ -547,7 +549,7 @@ router.post('/quiz/pick', async (req: any, res: Response) => {
     await updateQuizGameBadges();
 
     res.json({
-      state: formatQuizGameState(state, userId),
+      state: formatQuizGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getQuizGameParticipantIds(context),
     });
   } catch (error) {
@@ -570,7 +572,7 @@ router.post('/quiz/answer', async (req: any, res: Response) => {
     await updateQuizGameBadges();
 
     res.json({
-      state: formatQuizGameState(state!, userId),
+      state: formatQuizGameState(state!, userId, await getUserLocale(userId)),
       participantUserIds: getQuizGameParticipantIds(context),
     });
   } catch (error) {
@@ -589,7 +591,7 @@ router.post('/quiz/dismiss-reveal', async (req: any, res: Response) => {
     const state = await dismissQuizReveal(userId, context);
 
     res.json({
-      state: formatQuizGameState(state, userId),
+      state: formatQuizGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getQuizGameParticipantIds(context),
     });
   } catch (error) {
@@ -608,7 +610,7 @@ router.post('/quiz/sync', async (req: any, res: Response) => {
     const state = await syncQuizGameState(context);
 
     res.json({
-      state: formatQuizGameState(state, userId),
+      state: formatQuizGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getQuizGameParticipantIds(context),
     });
   } catch (error) {

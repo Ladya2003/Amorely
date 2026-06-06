@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
@@ -25,6 +26,7 @@ const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
   displayBadgeGameId,
   onSaved,
 }) => {
+  const { t } = useTranslation();
   const { badges } = useRelationshipBadges();
   const availableBadges = getBestBadgesByGame(badges);
   const [selected, setSelected] = useState<string>(displayBadgeGameId || 'auto');
@@ -51,7 +53,7 @@ const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
 
       onSaved(response.data.user?.displayBadgeGameId ?? null);
     } catch {
-      setError('Не удалось сохранить медаль');
+      setError(t('settings.badge.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -61,10 +63,10 @@ const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
     return (
       <Box sx={{ mt: 2 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
-          Медаль рядом с именем
+          {t('settings.badge.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Пока нет медалей — попадите в топ-3 пар в любой игре.
+          {t('settings.badge.noBadges')}
         </Typography>
       </Box>
     );
@@ -73,17 +75,17 @@ const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
   return (
     <Box sx={{ mt: 2 }}>
       <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
-        Медаль рядом с именем
+        {t('settings.badge.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-        В чате и в шапке показывается одна медаль. По умолчанию — лучшая (топ-1, иначе 2, иначе 3).
+        {t('settings.badge.description')}
       </Typography>
 
       <RadioGroup value={selected} onChange={(event) => setSelected(event.target.value)}>
         <FormControlLabel
           value="auto"
           control={<Radio size="small" />}
-          label="Авто (лучшая медаль)"
+          label={t('settings.badge.auto')}
         />
         {availableBadges.map((badge) => (
           <FormControlLabel
@@ -95,7 +97,7 @@ const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
               <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
                 <GameBadgeIcon badge={badge} size={22} showTooltip={false} />
                 <Typography variant="body2">
-                  {getGameName(badge.gameId)} · топ-{badge.rank}
+                  {t('settings.badge.gameRank', { game: getGameName(badge.gameId), rank: badge.rank })}
                 </Typography>
               </Box>
             }
@@ -116,7 +118,7 @@ const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
         disabled={saving || selected === (displayBadgeGameId || 'auto')}
         onClick={handleSave}
       >
-        {saving ? <CircularProgress size={18} /> : 'Сохранить медаль'}
+        {saving ? <CircularProgress size={18} /> : t('settings.badge.save')}
       </Button>
     </Box>
   );

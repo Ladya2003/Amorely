@@ -14,6 +14,7 @@ export interface UserDocument extends mongoose.Document {
   birthday?: Date;
   partnerId?: mongoose.Types.ObjectId;
   theme: 'light' | 'dark' | 'system';
+  locale?: string;
   primaryColor: 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
   displayBadgeGameId?: string | null;
   notificationSettings?: {
@@ -52,6 +53,7 @@ const userSchema = new mongoose.Schema({
   birthday: { type: Date },
   partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
+  locale: { type: String, default: 'ru' },
   primaryColor: { type: String, enum: ['pink', 'purple', 'blue', 'orange', 'dark-red', 'dark-green'], default: 'pink' },
   displayBadgeGameId: { type: String, default: null },
   notificationSettings: {

@@ -47,7 +47,7 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   value,
   onChange,
   onSend,
-  placeholder = 'Введите сообщение...',
+  placeholder = '',
   sendDisabled = false,
   onAttachmentClick,
   attachmentDisabled = false,

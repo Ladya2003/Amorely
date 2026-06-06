@@ -4,6 +4,9 @@ import User from '../models/user';
 import GeoGameState from '../models/geoGameState';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
 import { getNextUtcMidnight, getUtcDayKey } from '../utils/dailyReset';
+import { localizeGeoLocation } from '../i18n/geoI18n';
+import { AppLocale } from '../i18n/locales';
+import { getUserLocale } from '../utils/userLocale';
 import {
   GEO_LOBBY_COUNTDOWN_SEC,
   GEO_MAX_ROUNDS_PER_DAY,
@@ -153,12 +156,15 @@ const startLobbyCountdownIfAllReady = async (
 const buildRoundReveal = (
   locationId: string,
   roundGuesses: Array<{ userId: mongoose.Types.ObjectId | string; lat: number; lng: number }>,
-  timedOut: boolean
+  timedOut: boolean,
+  viewerLocale: AppLocale
 ): GeoRoundReveal => {
   const location = getGeoLocation(locationId);
   if (!location) {
     throw new GeoGameError('LOCATION_NOT_FOUND', 'Локация не найдена');
   }
+
+  const labels = localizeGeoLocation(location, viewerLocale);
 
   const guessResults: GeoGuessResult[] = roundGuesses.map((guess) => {
     const distanceKm = haversineDistanceKm(guess.lat, guess.lng, location.lat, location.lng);
@@ -178,37 +184,39 @@ const buildRoundReveal = (
 
   return {
     locationId: location.id,
-    name: location.name,
+    name: labels.name,
     imageUrl: location.imageUrl,
     actualLat: location.lat,
     actualLng: location.lng,
     guesses: guessResults,
     totalPointsEarned,
     timedOut,
-    continent: location.continent,
-    country: location.country,
-    city: location.city,
+    continent: labels.continent,
+    country: labels.country,
+    city: labels.city,
   };
 };
 
-const buildTimeoutReveal = (locationId: string): GeoRoundReveal => {
+const buildTimeoutReveal = (locationId: string, viewerLocale: AppLocale): GeoRoundReveal => {
   const location = getGeoLocation(locationId);
   if (!location) {
     throw new GeoGameError('LOCATION_NOT_FOUND', 'Локация не найдена');
   }
 
+  const labels = localizeGeoLocation(location, viewerLocale);
+
   return {
     locationId: location.id,
-    name: location.name,
+    name: labels.name,
     imageUrl: location.imageUrl,
     actualLat: location.lat,
     actualLng: location.lng,
     guesses: [],
     totalPointsEarned: 0,
     timedOut: true,
-    continent: location.continent,
-    country: location.country,
-    city: location.city,
+    continent: labels.continent,
+    country: labels.country,
+    city: labels.city,
   };
 };
 
@@ -423,7 +431,11 @@ const startNewRound = (state: any) => {
   startNewRoundOnDocument(state);
 };
 
-export const formatGeoGameState = (state: any, viewerUserId?: string): GeoGamePublicState => {
+export const formatGeoGameState = (
+  state: any,
+  viewerUserId?: string,
+  viewerLocale: AppLocale = 'ru'
+): GeoGamePublicState => {
   const rawRound = state.currentRound;
   const hideRevealFromViewer = shouldHideRevealFromViewer(rawRound, viewerUserId);
   const roundForViewer = hideRevealFromViewer ? null : rawRound;
@@ -436,12 +448,13 @@ export const formatGeoGameState = (state: any, viewerUserId?: string): GeoGamePu
 
         if (roundForViewer.status === 'revealed') {
           if (roundForViewer.timedOut && roundGuesses.length === 0) {
-            reveal = buildTimeoutReveal(roundForViewer.locationId);
+            reveal = buildTimeoutReveal(roundForViewer.locationId, viewerLocale);
           } else {
             reveal = buildRoundReveal(
               roundForViewer.locationId,
               roundGuesses,
-              Boolean(roundForViewer.timedOut)
+              Boolean(roundForViewer.timedOut),
+              viewerLocale
             );
           }
         }
@@ -705,9 +718,15 @@ export const submitGeoGuess = async (
   }
 
   const roundStatus = freshState.currentRound.status as 'guessing' | 'revealed';
+  const viewerLocale = await getUserLocale(userId);
   const reveal =
     roundStatus === 'revealed'
-      ? buildRoundReveal(freshState.currentRound.locationId, getRoundGuesses(freshState.currentRound), false)
+      ? buildRoundReveal(
+          freshState.currentRound.locationId,
+          getRoundGuesses(freshState.currentRound),
+          false,
+          viewerLocale
+        )
       : null;
 
   return { state: freshState, reveal };

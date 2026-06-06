@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -47,9 +48,6 @@ const drawPageNoSelectSx = {
   WebkitTapHighlightColor: 'transparent',
 } as const;
 
-const DAILY_LIMIT_DIALOG_TEXT =
-  'Очки засчитываются только за 10 игр в день. Можете продолжить играть за интерес — угадывания по-прежнему засчитываются, но баллы в рейтинг не идут.';
-
 const getDailyLimitAckStorageKey = (relationshipId: string) => {
   const dayKey = new Date().toISOString().slice(0, 10);
   return `amorely_draw_daily_limit_ack_${relationshipId}_${dayKey}`;
@@ -63,6 +61,7 @@ const acknowledgeDailyLimitToday = (relationshipId: string) => {
 };
 
 const DrawGamePlayPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [state, setState] = useState<DrawGameState | null>(null);
@@ -119,14 +118,17 @@ const DrawGamePlayPage: React.FC = () => {
           if (earnedPoints === 0) {
             setToast({
               open: true,
-              message:
-                'Очки засчитываются только за 10 игр в день. Сегодня лимит исчерпан — играйте за интерес.',
+              message: t('games.draw.play.limitExhaustedToast'),
               severity: 'info',
             });
           } else {
             setToast({
               open: true,
-              message: `+${earnedPoints} очков. Это была последняя игра с очками на сегодня (${nextState.scoredRoundsToday}/${nextState.maxScoredRoundsPerDay}). Дальше — за интерес.`,
+              message: t('games.draw.play.lastScoredRound', {
+                points: earnedPoints,
+                scored: nextState.scoredRoundsToday,
+                max: nextState.maxScoredRoundsPerDay,
+              }),
               severity: 'success',
             });
           }
@@ -137,7 +139,10 @@ const DrawGamePlayPage: React.FC = () => {
           );
           setToast({
             open: true,
-            message: `+${earnedPoints} очков. Сегодня осталось раундов: ${remaining}`,
+            message: t('games.draw.play.remainingRounds', {
+              points: earnedPoints,
+              remaining,
+            }),
             severity: 'success',
           });
         }
@@ -160,7 +165,7 @@ const DrawGamePlayPage: React.FC = () => {
         setGuessInput('');
       }
     },
-    [tryOpenDailyLimitDialog]
+    [t, tryOpenDailyLimitDialog]
   );
 
   const loadState = useCallback(async () => {
@@ -169,20 +174,18 @@ const DrawGamePlayPage: React.FC = () => {
       applyState(data.state);
     } catch (error: any) {
       if (error?.response?.data?.code === 'NO_PARTNER') {
-        setBlockedReason(
-          error.response.data.error || 'Для игры нужен партнёр. Добавьте его в настройках профиля.'
-        );
+        setBlockedReason(error.response.data.error || t('games.common.partnerRequired'));
         return;
       }
       setToast({
         open: true,
-        message: 'Не удалось загрузить игру',
+        message: t('games.common.loadFailed'),
         severity: 'error',
       });
     } finally {
       setLoading(false);
     }
-  }, [applyState]);
+  }, [applyState, t]);
 
   useEffect(() => {
     loadState();
@@ -239,7 +242,7 @@ const DrawGamePlayPage: React.FC = () => {
 
     const handleError = (payload: { message?: string; code?: string }) => {
       if (payload.code === 'NO_PARTNER') {
-        setBlockedReason(payload.message || 'Для игры нужен партнёр. Добавьте его в настройках профиля.');
+        setBlockedReason(payload.message || t('games.common.partnerRequired'));
         return;
       }
       if (payload.message) {
@@ -254,7 +257,7 @@ const DrawGamePlayPage: React.FC = () => {
       socket.off('draw_game_state', handleState);
       socket.off('draw_game_error', handleError);
     };
-  }, [user?._id, applyState]);
+  }, [user?._id, applyState, t]);
 
   useEffect(() => {
     if (!state?.inLobby) {
@@ -312,7 +315,7 @@ const DrawGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось подтвердить готовность',
+        message: error?.response?.data?.error || t('games.common.errors.readyFailed'),
         severity: 'error',
       });
     } finally {
@@ -332,7 +335,7 @@ const DrawGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось сохранить штрих',
+        message: error?.response?.data?.error || t('games.common.errors.strokeFailed'),
         severity: 'error',
       });
     }
@@ -351,7 +354,7 @@ const DrawGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось очистить холст',
+        message: error?.response?.data?.error || t('games.common.errors.clearCanvasFailed'),
         severity: 'error',
       });
     } finally {
@@ -384,7 +387,7 @@ const DrawGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось отправить ответ',
+        message: error?.response?.data?.error || t('games.common.errors.guessFailed'),
         severity: 'error',
       });
     } finally {
@@ -399,15 +402,15 @@ const DrawGamePlayPage: React.FC = () => {
       maxWidth="sm"
       fullWidth
     >
-      <DialogTitle>Лимит очков на сегодня</DialogTitle>
+      <DialogTitle>{t('games.draw.play.dailyLimitDialogTitle')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary">
-          {DAILY_LIMIT_DIALOG_TEXT}
+          {t('games.draw.play.dailyLimitDialogBodyFull')}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button variant="contained" onClick={handleDismissDailyLimitDialog}>
-          Понятно
+          {t('games.common.understood')}
         </Button>
       </DialogActions>
     </ResponsiveDialog>
@@ -426,7 +429,7 @@ const DrawGamePlayPage: React.FC = () => {
     } catch (error: any) {
       setToast({
         open: true,
-        message: error?.response?.data?.error || 'Не удалось продолжить',
+        message: error?.response?.data?.error || t('games.common.errors.advanceFailed'),
         severity: 'error',
       });
     } finally {
@@ -446,16 +449,16 @@ const DrawGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 4 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          Нужен партнёр
+          {t('games.common.needPartner')}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           {blockedReason}
         </Typography>
         <Stack direction="row" spacing={1} justifyContent="center">
           <Button variant="contained" onClick={() => navigate('/settings')}>
-            Перейти в настройки
+            {t('games.common.goToSettings')}
           </Button>
-          <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>Назад</Button>
+          <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>{t('games.common.back')}</Button>
         </Stack>
       </Box>
     );
@@ -465,9 +468,9 @@ const DrawGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Не удалось загрузить игру
+          {t('games.common.loadFailed')}
         </Typography>
-        <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>Назад</Button>
+        <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>{t('games.common.back')}</Button>
       </Box>
     );
   }
@@ -492,11 +495,14 @@ const DrawGamePlayPage: React.FC = () => {
               borderColor: 'divider',
             }}
           >
-            <IconButton onClick={() => navigate(DRAW_GAME_INFO_PATH)} aria-label="Назад">
+            <IconButton
+              onClick={() => navigate(DRAW_GAME_INFO_PATH)}
+              aria-label={t('games.common.back')}
+            >
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Угадай рисунок
+              {t('games.draw.name')}
             </Typography>
           </Box>
 
@@ -514,27 +520,29 @@ const DrawGamePlayPage: React.FC = () => {
             }}
           >
             <Typography variant="h6" sx={{ mb: 1 }}>
-              {isCountdownActive ? 'Скоро начнём!' : 'Готовы к игре?'}
+              {isCountdownActive ? t('games.common.startingSoon') : t('games.common.readyToPlay')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Счёт пары: {state.totalScore} · Сегодня с очками: {state.scoredRoundsToday}/
-              {state.maxScoredRoundsPerDay}
+              {t('games.draw.play.pairScoreTodayScored', {
+                score: state.totalScore,
+                today: state.scoredRoundsToday,
+                max: state.maxScoredRoundsPerDay,
+              })}
             </Typography>
             {state.dailyScoredLimitReached && (
               <Alert severity="info" sx={{ mb: 2, textAlign: 'left' }}>
-                Очки засчитываются только за 10 игр в день. Можете продолжить играть за интерес.
+                {t('games.draw.play.dailyLimitLobby')}
               </Alert>
             )}
             {state.waitingForPartnerResults ? (
               <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                Партнёр ещё смотрит результаты прошлого раунда. Можете нажать «Готов», когда будете
-                на месте.
+                {t('games.draw.play.waitingPartnerResults')}
               </Typography>
             ) : (
               <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                 {isCountdownActive
-                  ? 'Оба партнёра готовы — раунд начнётся одновременно.'
-                  : 'Нажмите «Готов», когда будете на месте. Раунд стартует, когда оба готовы.'}
+                  ? t('games.common.bothReady')
+                  : t('games.common.pressReady')}
               </Typography>
             )}
 
@@ -545,7 +553,9 @@ const DrawGamePlayPage: React.FC = () => {
                   type="button"
                   onClick={handleReady}
                   disabled={isMeReady || submitting || isCountdownActive}
-                  aria-label={isMeReady ? 'Вы готовы' : 'Подтвердить готовность'}
+                  aria-label={
+                    isMeReady ? t('games.common.youReadyAria') : t('games.common.confirmReadyAria')
+                  }
                   sx={{
                     width: 48,
                     height: 48,
@@ -564,7 +574,7 @@ const DrawGamePlayPage: React.FC = () => {
                 >
                   {isMeReady ? '✓' : '…'}
                 </Box>
-                <Typography variant="caption">Вы</Typography>
+                <Typography variant="caption">{t('games.common.you')}</Typography>
               </Stack>
               <Stack alignItems="center" spacing={1}>
                 <Box
@@ -582,7 +592,7 @@ const DrawGamePlayPage: React.FC = () => {
                 >
                   {isPartnerReady ? '✓' : '…'}
                 </Box>
-                <Typography variant="caption">Партнёр</Typography>
+                <Typography variant="caption">{t('games.common.partner')}</Typography>
               </Stack>
             </Stack>
 
@@ -597,7 +607,7 @@ const DrawGamePlayPage: React.FC = () => {
                 disabled={isMeReady || submitting}
                 onClick={handleReady}
               >
-                {isMeReady ? 'Ждём партнёра…' : 'Готов'}
+                {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
               </Button>
             )}
           </Box>
@@ -617,14 +627,19 @@ const DrawGamePlayPage: React.FC = () => {
     return (
       <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 6 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          {state.dailyScoredLimitReached ? 'Лимит очков на сегодня исчерпан' : 'Раунд не активен'}
+          {state.dailyScoredLimitReached
+            ? t('games.draw.play.dailyLimitExhaustedTitle')
+            : t('games.common.roundNotActive')}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           {state.dailyScoredLimitReached
-            ? `Сегодня засчитано ${state.scoredRoundsToday} из ${state.maxScoredRoundsPerDay} раундов с очками. Завтра лимит обновится.`
-            : 'Не удалось начать раунд. Попробуйте обновить страницу.'}
+            ? t('games.draw.play.scoredTodaySummary', {
+                scored: state.scoredRoundsToday,
+                max: state.maxScoredRoundsPerDay,
+              })
+            : t('games.draw.play.roundStartFailedBody')}
         </Typography>
-        <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>К игре</Button>
+        <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>{t('games.common.backToGame')}</Button>
       </Box>
     );
   }
@@ -679,7 +694,7 @@ const DrawGamePlayPage: React.FC = () => {
               color: isTimeLow ? 'error.main' : 'text.secondary',
             }}
           >
-            Осталось {activeSeconds} сек
+            {t('games.common.secondsLeft', { seconds: activeSeconds })}
           </Typography>
           <LinearProgress
             variant="determinate"
@@ -703,20 +718,32 @@ const DrawGamePlayPage: React.FC = () => {
           flexShrink: 0,
         }}
       >
-        <IconButton onClick={() => navigate(DRAW_GAME_INFO_PATH)} aria-label="Назад">
+        <IconButton
+          onClick={() => navigate(DRAW_GAME_INFO_PATH)}
+          aria-label={t('games.common.back')}
+        >
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.25 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Раунд {state.roundsCompleted + (isRevealed ? 0 : 1)}
+              {t('games.common.round')} {state.roundsCompleted + (isRevealed ? 0 : 1)}
             </Typography>
             {!state.canEarnRatingPoints && (
-              <Chip label="За интерес" size="small" color="default" sx={{ height: 22 }} />
+              <Chip
+                label={t('games.common.forFun')}
+                size="small"
+                color="default"
+                sx={{ height: 22 }}
+              />
             )}
           </Stack>
           <Typography variant="caption" color="text.secondary">
-            Счёт: {state.totalScore} · Сегодня: {state.scoredRoundsToday}/{state.maxScoredRoundsPerDay}
+            {t('games.draw.play.scoreLine', {
+              score: state.totalScore,
+              today: state.scoredRoundsToday,
+              max: state.maxScoredRoundsPerDay,
+            })}
           </Typography>
         </Box>
       </Box>
@@ -741,7 +768,7 @@ const DrawGamePlayPage: React.FC = () => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                нарисуй
+                {t('games.common.drawWord')}
               </Typography>
             </Box>
           </Box>
@@ -761,7 +788,7 @@ const DrawGamePlayPage: React.FC = () => {
               showGuessChat ? (
                 <DrawGuessChat
                   attempts={round.guessAttempts}
-                  title="Догадки партнёра"
+                  title={t('games.common.partnerGuesses')}
                   maxHeight={176}
                   titleColor="primary.main"
                 />
@@ -788,20 +815,27 @@ const DrawGamePlayPage: React.FC = () => {
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 700 }}>
                   {reveal.pointsEarned > 0
-                    ? `Угадано! +${reveal.pointsEarned} очков`
-                    : 'Угадано! Сегодня лимит очков — играете за интерес'}
+                    ? t('games.draw.play.guessedWithPoints', { points: reveal.pointsEarned })
+                    : t('games.draw.play.guessedLimitForFun')}
                 </Typography>
                 {state.dailyScoredLimitReached && (
                   <Typography variant="body2" color="text.secondary">
                     {reveal.pointsEarned > 0
-                      ? `Сегодня с очками: ${state.scoredRoundsToday}/${state.maxScoredRoundsPerDay} — лимит исчерпан`
-                      : 'Очки засчитываются только за 10 игр в день'}
+                      ? t('games.draw.play.scoredTodayExhausted', {
+                          scored: state.scoredRoundsToday,
+                          max: state.maxScoredRoundsPerDay,
+                        })
+                      : t('games.draw.play.dailyLimitShort')}
                   </Typography>
                 )}
                 {!state.dailyScoredLimitReached && state.canEarnRatingPoints && (
                   <Typography variant="body2" color="text.secondary">
-                    Сегодня осталось раундов:{' '}
-                    {Math.max(0, state.maxScoredRoundsPerDay - state.scoredRoundsToday)}
+                    {t('games.draw.play.remainingRoundsLabel', {
+                      remaining: Math.max(
+                        0,
+                        state.maxScoredRoundsPerDay - state.scoredRoundsToday
+                      ),
+                    })}
                   </Typography>
                 )}
               </>
@@ -809,11 +843,11 @@ const DrawGamePlayPage: React.FC = () => {
               <>
                 <Typography variant="body1" color="error.main" sx={{ fontWeight: 600 }}>
                   {reveal.guessText
-                    ? `Ответ «${reveal.guessText}» — неверно`
-                    : 'Никто не угадал — увы и жаль'}
+                    ? t('games.draw.play.wrongGuessText', { guess: reveal.guessText })
+                    : t('games.draw.play.nobodyGuessed')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Загаданное слово: <strong>{reveal.word}</strong>
+                  {t('games.draw.play.secretWordLabel')} <strong>{reveal.word}</strong>
                 </Typography>
               </>
             )}
@@ -835,18 +869,18 @@ const DrawGamePlayPage: React.FC = () => {
             {showMyGuessChat ? (
               <DrawGuessChat
                 attempts={myGuessAttempts}
-                title="Ваши догадки"
+                title={t('games.common.yourGuesses')}
                 ownGuessSide="left"
               />
             ) : null}
             <Typography variant="body2" color="text.secondary" align="center">
               {state.canEarnRatingPoints
-                ? 'Угадывайте, пока партнёр рисует — чем быстрее, тем больше очков'
-                : 'Угадывайте за интерес — сегодня лимит очков в рейтинг уже исчерпан'}
+                ? t('games.draw.play.guessHintRated')
+                : t('games.draw.play.guessHintForFun')}
             </Typography>
             <TextField
               fullWidth
-              placeholder="Ваш ответ"
+              placeholder={t('games.common.yourAnswer')}
               value={guessInput}
               onChange={(event) => setGuessInput(event.target.value)}
               onKeyDown={(event) => {
@@ -870,7 +904,7 @@ const DrawGamePlayPage: React.FC = () => {
               disabled={!guessInput.trim() || submitting}
               onClick={handleSubmitGuess}
             >
-              Отправить
+              {t('games.common.send')}
             </Button>
           </Stack>
         )}
@@ -883,7 +917,7 @@ const DrawGamePlayPage: React.FC = () => {
             disabled={submitting}
             onClick={handleNextRound}
           >
-            {reveal.wasCorrect ? 'Следующий раунд' : 'Играть дальше'}
+            {reveal.wasCorrect ? t('games.common.nextRound') : t('games.common.playMore')}
           </Button>
         )}
       </Box>

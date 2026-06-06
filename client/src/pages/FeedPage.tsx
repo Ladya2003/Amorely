@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Box, Container, Fab, Badge, CircularProgress, Typography, Tooltip, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
@@ -29,6 +30,7 @@ interface UserContentItem {
 }
 
 const FeedPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { localDeviceKeys } = useCrypto();
@@ -361,23 +363,23 @@ const FeedPage: React.FC = () => {
         onContentClick={handleContentClick}
         onEventClick={handleEventClick}
         navigateTo="/calendar"
-        placeholder={'Еще нету доступного контента\n\n📅 Добавьте ваши события в\nКалендаре с фото и видео'}
+        placeholder={t('feed.emptyPlaceholder')}
         currentIndex={currentIndex}
         setCurrentIndex={setCurrentIndex}
       />
       
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 4, gap: 0.5 }}>
         <Typography variant="body2" color="text.secondary">
-          Контент дня
+          {t('feed.contentOfDay')}
         </Typography>
         <Tooltip
-          title="Подборка обновляется в 02:00 и 17:00 (Europe/Minsk)"
+          title={t('feed.contentUpdateTooltip')}
           placement="top"
           arrow
           enterTouchDelay={0}
           leaveTouchDelay={3000}
         >
-          <IconButton size="small" sx={{ color: 'text.secondary', p: 0.3 }} aria-label="Информация об обновлении контента">
+          <IconButton size="small" sx={{ color: 'text.secondary', p: 0.3 }} aria-label={t('feed.contentUpdateAriaLabel')}>
             <InfoOutlinedIcon fontSize="small" />
           </IconButton>
         </Tooltip>

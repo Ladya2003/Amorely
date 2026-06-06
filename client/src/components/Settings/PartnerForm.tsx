@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   TextField, 
@@ -22,7 +23,7 @@ import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { ru } from 'date-fns/locale';
+import { getDateFnsLocale } from '../../localization/calendarHelpers';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -57,6 +58,8 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   onRemovePartner, 
   isLoading 
 }) => {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = getDateFnsLocale(i18n.language);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Partner[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
@@ -124,7 +127,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
 
   const handleAddPartner = async () => {
     if (!selectedPartner || !startDate) {
-      setError('Выберите партнера и укажите дату начала отношений');
+      setError(t('settings.partner.errors.selectPartnerAndDate'));
       return;
     }
 
@@ -139,7 +142,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
       if (error.response && error.response.data && error.response.data.error) {
         setError(error.response.data.error);
       } else {
-        setError('Не удалось добавить партнера. Пожалуйста, попробуйте еще раз.');
+        setError(t('settings.partner.errors.addFailed'));
       }
       setIsSubmitting(false);
     }
@@ -176,7 +179,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
     <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" sx={{ fontWeight: 400 }}>
-          Партнер
+          {t('settings.partner.title')}
         </Typography>
         {partner ? (
           <Button 
@@ -186,7 +189,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             onClick={handleOpenConfirmDialog}
             disabled={isLoading}
           >
-            Удалить
+            {t('settings.partner.remove')}
           </Button>
         ) : (
           <Button 
@@ -196,7 +199,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             onClick={handleOpenDialog}
             disabled={isLoading}
           >
-            Добавить
+            {t('settings.partner.add')}
           </Button>
         )}
       </Box>
@@ -235,9 +238,9 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             </Box>
           </Box>
           
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateFnsLocale}>
             <DatePicker
-              label="Дата начала отношений"
+              label={t('settings.partner.relationshipStartDate')}
               value={startDate}
               onChange={(newValue) => setStartDate(newValue)}
               disabled
@@ -245,7 +248,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                 textField: {
                   fullWidth: true,
                   variant: 'outlined',
-                  helperText: 'Дату начала отношений нельзя изменить после добавления партнера'
+                  helperText: t('settings.partner.relationshipStartDateLockedHelper')
                 }
               }}
             />
@@ -254,17 +257,16 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
       ) : (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="body1" color="text.secondary" gutterBottom>
-            У вас пока нет партнера
+            {t('settings.partner.noPartner')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Добавьте партнера, чтобы видеть количество дней, проведенных вместе, и обмениваться контентом
+            {t('settings.partner.noPartnerHint')}
           </Typography>
         </Box>
       )}
       
-      {/* Диалог добавления партнера */}
       <ResponsiveDialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Добавить партнера</DialogTitle>
+        <DialogTitle>{t('settings.partner.addPartnerDialog')}</DialogTitle>
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -274,7 +276,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           
           <TextField
             fullWidth
-            label="Поиск по email или логину"
+            label={t('settings.partner.searchLabel')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             margin="normal"
@@ -286,13 +288,13 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                 </InputAdornment>
               ),
             }}
-            helperText="Введите минимум 3 символа для поиска"
+            helperText={t('settings.partner.searchHelper')}
           />
           
           {isSearching ? (
             <Box sx={{ textAlign: 'center', py: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Поиск...
+                {t('settings.partner.searching')}
               </Typography>
             </Box>
           ) : searchResults.length > 0 ? (
@@ -329,7 +331,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           ) : searchQuery.length >= 3 ? (
             <Box sx={{ textAlign: 'center', py: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Пользователи не найдены
+                {t('settings.partner.noUsersFound')}
               </Typography>
             </Box>
           ) : null}
@@ -337,7 +339,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           {selectedPartner && (
             <Box sx={{ mt: 3 }}>
               <Typography variant="subtitle1" gutterBottom>
-                Выбранный партнер:
+                {t('settings.partner.selectedPartner')}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
                 <Avatar 
@@ -357,9 +359,9 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                 </Box>
               </Box>
               
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateFnsLocale}>
                 <DatePicker
-                  label="Дата начала отношений"
+                  label={t('settings.partner.relationshipStartDate')}
                   value={startDate}
                   onChange={(newValue) => setStartDate(newValue)}
                   slotProps={{
@@ -368,7 +370,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                       margin: 'normal',
                       variant: 'outlined',
                       required: true,
-                      helperText: 'Укажите дату начала ваших отношений'
+                      helperText: t('settings.partner.relationshipStartDateHelper')
                     }
                   }}
                   disableFuture
@@ -378,35 +380,34 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} disabled={isSubmitting}>Отмена</Button>
+          <Button onClick={handleCloseDialog} disabled={isSubmitting}>{t('settings.partner.cancel')}</Button>
           <Button 
             onClick={handleAddPartner} 
             variant="contained" 
             color="primary"
             disabled={!selectedPartner || !startDate || isLoading || isSubmitting}
           >
-            {isSubmitting ? 'Добавление...' : 'Добавить'}
+            {isSubmitting ? t('settings.partner.adding') : t('settings.partner.add')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>
       
-      {/* Диалог подтверждения удаления */}
       <ResponsiveDialog open={confirmDialogOpen} onClose={handleCloseConfirmDialog}>
-        <DialogTitle>Подтверждение</DialogTitle>
+        <DialogTitle>{t('settings.partner.confirmTitle')}</DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            Вы уверены, что хотите удалить партнера? Это действие нельзя отменить.
+            {t('settings.partner.confirmRemove')}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseConfirmDialog} disabled={isLoading}>Отмена</Button>
+          <Button onClick={handleCloseConfirmDialog} disabled={isLoading}>{t('settings.partner.cancel')}</Button>
           <Button 
             onClick={handleRemovePartner} 
             variant="contained" 
             color="error"
             disabled={isLoading}
           >
-            {isLoading ? 'Удаление...' : 'Удалить'}
+            {isLoading ? t('settings.partner.removing') : t('settings.partner.remove')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>
@@ -427,7 +428,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
 
       <CustomSnackbar
         open={successToastOpen}
-        message="Партнер успешно добавлен"
+        message={t('settings.partner.addSuccess')}
         severity="success"
         onClose={() => setSuccessToastOpen(false)}
       />
@@ -435,4 +436,4 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   );
 };
 
-export default PartnerForm; 
+export default PartnerForm;

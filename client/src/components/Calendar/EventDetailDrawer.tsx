@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Drawer,
   AppBar,
@@ -22,8 +23,10 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import {
+  formatCalendarDate,
+  formatCalendarDateTime
+} from '../../localization/calendarHelpers';
 import DecryptedMedia from '../common/DecryptedMedia';
 import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
@@ -76,6 +79,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
   onShare,
   readOnly = false
 }) => {
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
@@ -119,7 +123,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
   if (!event) return null;
 
   const eventDate = new Date(event.eventDate || event.createdAt);
-  const eventTitle = event.title || 'Без названия';
+  const eventTitle = event.title || t('calendar.event.noTitle');
   const currentMedia = mediaFiles[currentMediaIndex];
 
   const handleOpenMediaViewer = () => {
@@ -161,7 +165,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               </Typography>
               {readOnly && (
                 <Chip
-                  label="Только просмотр"
+                  label={t('calendar.detail.readOnly')}
                   size="small"
                   sx={{ mr: 1 }}
                 />
@@ -171,7 +175,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                   color="inherit"
                   onClick={() => onShare(event)}
                   aria-label="share"
-                  title="Поделиться"
+                  title={t('calendar.detail.share')}
                 >
                   <ReplyOutlinedIcon />
                 </IconButton>
@@ -181,7 +185,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                   color="inherit"
                   onClick={() => onEdit(event)}
                   aria-label="edit"
-                  title="Редактировать"
+                  title={t('calendar.detail.edit')}
                 >
                   <EditIcon />
                 </IconButton>
@@ -191,7 +195,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                   color="inherit"
                   onClick={() => onDelete(event.eventId || event._id)}
                   aria-label="delete"
-                  title="Удалить"
+                  title={t('calendar.detail.delete')}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -375,16 +379,16 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                 <CalendarTodayIcon sx={{ color: 'primary.main', mr: 1 }} />
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Дата события
+                    {t('calendar.detail.date')}
                   </Typography>
                   <Typography variant="body1" fontWeight="medium">
-                    {format(eventDate, 'd MMMM yyyy', { locale: ru })}
+                    {formatCalendarDate(eventDate, i18n.language)}
                   </Typography>
                 </Box>
                 {event.isBirthdayEvent && (
                   <Chip
                     icon={<CakeIcon />}
-                    label="День рождения"
+                    label={t('calendar.detail.birthday')}
                     color="secondary"
                     size="small"
                   />
@@ -392,7 +396,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                 {event.isAnniversaryEvent && (
                   <Chip
                     icon={<FavoriteIcon />}
-                    label="Годовщина"
+                    label={t('calendar.detail.anniversary')}
                     color="error"
                     size="small"
                     // sx={{ ml: 1 }}
@@ -405,7 +409,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               {/* Заголовок */}
               <Box sx={{ mb: 3 }}>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Заголовок
+                  {t('calendar.detail.title')}
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 400 }}>
                   {eventTitle}
@@ -416,7 +420,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               {event.description && (
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Описание
+                    {t('calendar.detail.description')}
                   </Typography>
                   <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                     {event.description}
@@ -429,14 +433,14 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               {/* Метаданные */}
               <Box>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Создано
+                  {t('calendar.detail.created')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" display="block">
-                  {format(new Date(event.createdAt), 'd MMMM yyyy в HH:mm', { locale: ru })}
+                  {formatCalendarDateTime(new Date(event.createdAt), i18n.language)}
                 </Typography>
                 {event.createdBy && (
                   <Typography variant="caption" color="text.secondary">
-                    Автор: {event.createdBy.username}
+                    {t('calendar.detail.author', { name: event.createdBy.username })}
                   </Typography>
                 )}
               </Box>
@@ -445,13 +449,13 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               {event.lastEditedBy && event.lastEditedAt && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Последнее изменение
+                    {t('calendar.detail.lastEdit')}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" display="block">
-                    {format(new Date(event.lastEditedAt), 'd MMMM yyyy в HH:mm', { locale: ru })}
+                    {formatCalendarDateTime(new Date(event.lastEditedAt), i18n.language)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Редактор: {event.lastEditedBy.username}
+                    {t('calendar.detail.editor', { name: event.lastEditedBy.username })}
                   </Typography>
                 </Box>
               )}

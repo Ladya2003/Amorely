@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, ListItemButton, Typography } from '@mui/material';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import type { Game } from './gamesData';
@@ -10,6 +11,10 @@ interface GameListItemProps {
 }
 
 const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, reserveTopRightSpace }) => {
+  const { t } = useTranslation();
+  const gameName = t(`games.${game.id}.name`, { defaultValue: game.name });
+  const gameDescription = t(`games.${game.id}.description`, { defaultValue: game.description });
+
   return (
     <ListItemButton
       onClick={() => onClick?.(game)}
@@ -53,7 +58,7 @@ const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, reserveTopRi
           <Box
             component="img"
             src={game.imageUrl}
-            alt={game.name}
+            alt={gameName}
             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
@@ -67,7 +72,7 @@ const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, reserveTopRi
           sx={{ fontWeight: 600, mb: 0.5, color: 'inherit' }}
           noWrap
         >
-          {game.name}
+          {gameName}
         </Typography>
         <Typography
           variant="body2"
@@ -80,7 +85,7 @@ const GameListItem: React.FC<GameListItemProps> = ({ game, onClick, reserveTopRi
             lineHeight: 1.45,
           }}
         >
-          {game.description}
+          {gameDescription}
         </Typography>
       </Box>
     </ListItemButton>

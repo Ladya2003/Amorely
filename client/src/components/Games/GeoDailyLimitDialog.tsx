@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
   DialogActions,
@@ -7,21 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-
-const formatWaitDuration = (seconds: number) => {
-  if (seconds <= 0) {
-    return 'скоро';
-  }
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) {
-    return `${hours} ч ${minutes} мин`;
-  }
-  if (minutes > 0) {
-    return `${minutes} мин`;
-  }
-  return 'меньше минуты';
-};
+import { formatGameWaitDuration } from '../../localization/gameHelpers';
 
 interface GeoDailyLimitDialogProps {
   open: boolean;
@@ -36,6 +23,7 @@ const GeoDailyLimitDialog: React.FC<GeoDailyLimitDialogProps> = ({
   maxRoundsPerDay,
   secondsUntilNextRounds: initialSeconds,
 }) => {
+  const { t } = useTranslation();
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
 
   useEffect(() => {
@@ -56,20 +44,19 @@ const GeoDailyLimitDialog: React.FC<GeoDailyLimitDialogProps> = ({
 
   return (
     <ResponsiveDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>На сегодня всё</DialogTitle>
+      <DialogTitle>{t('games.geoDailyLimit.title')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          Каждый день можно угадать не больше {maxRoundsPerDay} мест. Вы уже прошли все раунды на
-          сегодня.
+          {t('games.geoDailyLimit.body', { count: maxRoundsPerDay })}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Следующие места будут доступны через{' '}
-          <strong>{formatWaitDuration(secondsLeft)}</strong>.
+          {t('games.geoDailyLimit.nextAvailable')}{' '}
+          <strong>{formatGameWaitDuration(t, secondsLeft)}</strong>.
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button variant="contained" onClick={onClose}>
-          Понятно
+          {t('games.geoDailyLimit.understood')}
         </Button>
       </DialogActions>
     </ResponsiveDialog>

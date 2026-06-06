@@ -23,8 +23,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ImageIcon from '@mui/icons-material/Image';
 import axios from 'axios';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { API_URL } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
@@ -36,7 +35,11 @@ import {
 import { encryptAndUploadContentFiles } from '../../crypto/encryptedUploadService';
 import { loadLocalKeys, type LocalDeviceKeys } from '../../crypto/cryptoService';
 import { useEncryptionRecipientId, usePartnerId } from '../../hooks/usePartnerId';
-import { VIDEO_LIMITS_HINT } from '../../utils/mediaLimits';
+import {
+  formatCalendarDateTime,
+  getDateFnsLocale,
+  getVideoLimitsHint
+} from '../../localization/calendarHelpers';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import ConfirmDeleteDialog from '../UI/ConfirmDeleteDialog';
 import DecryptedMedia from '../common/DecryptedMedia';
@@ -93,6 +96,7 @@ const emptyForm: NoteFormState = {
 };
 
 const PlansNotes: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { localDeviceKeys, ensureLocalKeys } = useCrypto();
   const encryptionRecipientId = useEncryptionRecipientId();
@@ -138,14 +142,14 @@ const PlansNotes: React.FC = () => {
     await ensureLocalKeys();
     if (localDeviceKeys) return localDeviceKeys;
     if (!user?._id) {
-      throw new Error('Пользователь не авторизован');
+      throw new Error(t('calendar.errors.notAuthorizedShort'));
     }
     const loaded = await loadLocalKeys(user._id);
     if (!loaded) {
-      throw new Error('Разблокируйте ключи шифрования на странице /crypto/unlock');
+      throw new Error(t('calendar.errors.unlockCrypto'));
     }
     return loaded;
-  }, [localDeviceKeys, ensureLocalKeys, user?._id]);
+  }, [localDeviceKeys, ensureLocalKeys, user?._id, t]);
 
   const decryptNoteMedia = useCallback(
     async (note: PlanNote): Promise<PlanNote> => {
@@ -190,7 +194,7 @@ const PlansNotes: React.FC = () => {
       setCategories(response.data.categories || []);
     } catch (err) {
       console.error('Ошибка загрузки заметок:', err);
-      setError('Не удалось загрузить заметки');
+      setError(t('calendar.errors.loadNotesFailed'));
     } finally {
       if (isFirstFetch) {
         setIsInitialLoading(false);
@@ -199,7 +203,7 @@ const PlansNotes: React.FC = () => {
         setIsRefreshingNotes(false);
       }
     }
-  }, [selectedCategory, decryptNotesList]);
+  }, [selectedCategory, decryptNotesList, t]);
 
   useEffect(() => {
     if (!user?._id) {
@@ -308,11 +312,11 @@ const PlansNotes: React.FC = () => {
 
   const handleSave = async () => {
     if (!form.title.trim()) {
-      setFormError('Укажите заголовок');
+      setFormError(t('calendar.errors.titleRequired'));
       return;
     }
     if (!form.category.trim()) {
-      setFormError('Укажите категорию');
+      setFormError(t('calendar.errors.categoryRequired'));
       return;
     }
 
@@ -322,7 +326,7 @@ const PlansNotes: React.FC = () => {
 
       const keys = await resolveKeys();
       if (!encryptionRecipientId) {
-        throw new Error('Не удалось определить получателя шифрования');
+        throw new Error(t('calendar.errors.encryptionRecipient'));
       }
 
       const uploaded =
@@ -364,7 +368,11 @@ const PlansNotes: React.FC = () => {
         const decrypted = await decryptNoteMedia(response.data);
         setNotes((prev) => [decrypted, ...prev]);
         if (!categories.includes(decrypted.category)) {
-          setCategories((prev) => [...prev, decrypted.category].sort((a, b) => a.localeCompare(b, 'ru')));
+          setCategories((prev) =>
+            [...prev, decrypted.category].sort((a, b) =>
+              a.localeCompare(b, getDateFnsLocale(i18n.language).code)
+            )
+          );
         }
       }
 
@@ -375,7 +383,7 @@ const PlansNotes: React.FC = () => {
       void fetchNotes();
     } catch (err: any) {
       console.error('Ошибка сохранения заметки:', err);
-      setFormError(err.response?.data?.error || err.message || 'Не удалось сохранить заметку');
+      setFormError(err.response?.data?.error || err.message || t('calendar.errors.saveNoteFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -401,10 +409,10 @@ const PlansNotes: React.FC = () => {
   };
 
   const formatDate = (dateStr: string) =>
-    format(new Date(dateStr), 'd MMMM yyyy, HH:mm', { locale: ru });
+    formatCalendarDateTime(new Date(dateStr), i18n.language);
 
   const renderAuthor = (author?: PlanNoteUser) => {
-    if (!author) return 'Неизвестно';
+    if (!author) return t('calendar.common.unknown');
     return getUserDisplayName(author);
   };
 
@@ -486,7 +494,7 @@ const PlansNotes: React.FC = () => {
         }}
       >
         <Typography variant="subtitle1" color="text.secondary" sx={{ minWidth: 0 }}>
-          Общие заметки для вашей пары
+          {t('calendar.plans.subtitle')}
         </Typography>
         {!isInitialLoading && (
           <Button
@@ -501,7 +509,7 @@ const PlansNotes: React.FC = () => {
               }
             }}
           >
-            Новая заметка
+            {t('calendar.plans.newNote')}
           </Button>
         )}
       </Box>
@@ -509,7 +517,7 @@ const PlansNotes: React.FC = () => {
       {categories.length > 0 && (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
           <Chip
-            label="Все"
+            label={t('calendar.plans.all')}
             clickable
             color={selectedCategory === null ? 'primary' : 'default'}
             variant={selectedCategory === null ? 'filled' : 'outlined'}
@@ -553,8 +561,8 @@ const PlansNotes: React.FC = () => {
           >
             <Typography color="text.secondary">
               {selectedCategory
-                ? `В категории «${selectedCategory}» пока нет заметок`
-                : 'Пока нет заметок'}
+                ? t('calendar.plans.emptyCategory', { category: selectedCategory })
+                : t('calendar.plans.empty')}
             </Typography>
           </Paper>
         )}
@@ -625,7 +633,7 @@ const PlansNotes: React.FC = () => {
       {/* Форма создания / редактирования */}
       <ResponsiveDialog open={formOpen} onClose={() => !isSaving && setFormOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {editingNote ? 'Редактировать заметку' : 'Новая заметка'}
+          {editingNote ? t('calendar.plans.editNote') : t('calendar.plans.newNote')}
           <IconButton onClick={() => setFormOpen(false)} disabled={isSaving} size="small">
             <CloseIcon />
           </IconButton>
@@ -633,7 +641,7 @@ const PlansNotes: React.FC = () => {
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           {formError && <Alert severity="error">{formError}</Alert>}
           <TextField
-            label="Заголовок"
+            label={t('calendar.plans.title')}
             value={form.title}
             onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
             fullWidth
@@ -649,26 +657,26 @@ const PlansNotes: React.FC = () => {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Категория"
-                placeholder="Например: Путешествия, Подарки, Мечты..."
+                label={t('calendar.plans.category')}
+                placeholder={t('calendar.plans.categoryPlaceholder')}
                 inputProps={{ ...params.inputProps, maxLength: 100 }}
               />
             )}
           />
           <TextField
-            label="Текст заметки"
+            label={t('calendar.plans.content')}
             value={form.content}
             onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
             fullWidth
             multiline
             minRows={5}
-            placeholder="Запишите всё, что хотите..."
+            placeholder={t('calendar.plans.contentPlaceholder')}
             inputProps={{ maxLength: 10000 }}
           />
 
           <Box>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              Фото и видео (зашифрованы)
+              {t('calendar.plans.encryptedMedia')}
             </Typography>
             <input
               accept="image/*,video/*"
@@ -686,11 +694,11 @@ const PlansNotes: React.FC = () => {
                 fullWidth
                 disabled={isSaving}
               >
-                Добавить фото или видео
+                {t('calendar.media.addPhotosOrVideos')}
               </Button>
             </label>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              {VIDEO_LIMITS_HINT}
+              {getVideoLimitsHint(t)}
             </Typography>
           </Box>
 
@@ -768,10 +776,14 @@ const PlansNotes: React.FC = () => {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setFormOpen(false)} disabled={isSaving}>
-            Отмена
+            {t('calendar.common.cancel')}
           </Button>
           <Button variant="contained" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Сохранение...' : editingNote ? 'Сохранить' : 'Создать'}
+            {isSaving
+              ? t('calendar.common.saving')
+              : editingNote
+                ? t('calendar.common.save')
+                : t('calendar.plans.create')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>
@@ -794,13 +806,13 @@ const PlansNotes: React.FC = () => {
                 variant="body1"
                 sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', mb: 2 }}
               >
-                {viewingNote.content || 'Без текста'}
+                {viewingNote.content || t('calendar.common.noText')}
               </Typography>
 
               {viewingNote.media && viewingNote.media.length > 0 && (
                 <>
                   <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                    Фото и видео
+                    {t('calendar.media.photosAndVideos')}
                   </Typography>
                   {renderMediaGrid(viewingNote._id, viewingNote.media, (media) => {
                     setViewerMedia({ noteId: viewingNote._id, media });
@@ -815,7 +827,8 @@ const PlansNotes: React.FC = () => {
                     {viewingNote.createdBy?.username?.[0]?.toUpperCase()}
                   </Avatar>
                   <Typography variant="caption" color="text.secondary">
-                    Создал(а) {renderAuthor(viewingNote.createdBy)} · {formatDate(viewingNote.createdAt)}
+                    {t('calendar.plans.createdBy', { name: renderAuthor(viewingNote.createdBy) })} ·{' '}
+                    {formatDate(viewingNote.createdAt)}
                   </Typography>
                 </Box>
                 {viewingNote.lastEditedBy &&
@@ -825,7 +838,8 @@ const PlansNotes: React.FC = () => {
                         {viewingNote.lastEditedBy.username?.[0]?.toUpperCase()}
                       </Avatar>
                       <Typography variant="caption" color="text.secondary">
-                        Изменил(а) {renderAuthor(viewingNote.lastEditedBy)} · {formatDate(viewingNote.updatedAt)}
+                        {t('calendar.plans.editedBy', { name: renderAuthor(viewingNote.lastEditedBy) })} ·{' '}
+                        {formatDate(viewingNote.updatedAt)}
                       </Typography>
                     </Box>
                   )}
@@ -840,10 +854,10 @@ const PlansNotes: React.FC = () => {
                   setDeleteOpen(true);
                 }}
               >
-                Удалить
+                {t('calendar.common.delete')}
               </Button>
               <Button variant="contained" startIcon={<EditIcon />} onClick={() => openEditForm(viewingNote)}>
-                Редактировать
+                {t('calendar.common.edit')}
               </Button>
             </DialogActions>
           </>
@@ -874,7 +888,7 @@ const PlansNotes: React.FC = () => {
         isLoading={isDeleting}
         message={
           noteToDelete
-            ? `Удалить заметку «${noteToDelete.title}»? Она исчезнет и у вашего партнёра.`
+            ? t('calendar.plans.deleteConfirm', { title: noteToDelete.title })
             : undefined
         }
       />

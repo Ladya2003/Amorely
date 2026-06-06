@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
@@ -19,6 +20,7 @@ import DailyResetBadge from '../Games/DailyResetBadge';
 import DailyResetInfoDialog from '../Games/DailyResetInfoDialog';
 import TapGameListBadge from '../Games/TapGameListBadge';
 import { GAMES } from './gamesData';
+import { getLocalizedGameName } from '../../localization/gameHelpers';
 import socketService from '../../services/socketService';
 import {
   fetchGamesDailyReset,
@@ -32,6 +34,7 @@ import { getMsUntilUtcMidnight } from '../../utils/dailyReset';
 const DAILY_RESET_GAME_IDS = new Set<DailyResetGameId>(['geo', 'draw', 'quiz']);
 
 const Games: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,8 +111,11 @@ const Games: React.FC = () => {
     if (!query) {
       return GAMES;
     }
-    return GAMES.filter((game) => game.name.toLowerCase().includes(query));
-  }, [searchQuery]);
+    return GAMES.filter((game) => {
+      const name = getLocalizedGameName(t, game.id, game.name);
+      return name.toLowerCase().includes(query);
+    });
+  }, [searchQuery, t]);
 
   const handleClearSearch = () => {
     setSearchQuery('');
@@ -137,7 +143,7 @@ const Games: React.FC = () => {
         <TextField
           fullWidth
           size="small"
-          placeholder="Поиск по названию игры"
+          placeholder={t('games.list.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           sx={{
@@ -153,7 +159,11 @@ const Games: React.FC = () => {
             ),
             endAdornment: searchQuery ? (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={handleClearSearch} aria-label="Очистить поиск">
+                <IconButton
+                  size="small"
+                  onClick={handleClearSearch}
+                  aria-label={t('games.list.clearSearch')}
+                >
                   <CloseIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>
@@ -185,12 +195,10 @@ const Games: React.FC = () => {
           >
             <SportsEsportsIcon sx={{ fontSize: 56, color: 'text.secondary', mb: 2, opacity: 0.6 }} />
             <Typography variant="h6" color="text.secondary" sx={{ mb: 0.5 }}>
-              {searchQuery.trim() ? 'Игры не найдены' : 'Нет игр в списке'}
+              {searchQuery.trim() ? t('games.list.notFound') : t('games.list.emptyList')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {searchQuery.trim()
-                ? 'Попробуйте изменить запрос'
-                : 'Здесь будет список игр для вас и вашей пары'}
+              {searchQuery.trim() ? t('games.list.tryDifferentQuery') : t('games.list.emptyHint')}
             </Typography>
           </Box>
         ) : (
@@ -200,6 +208,7 @@ const Games: React.FC = () => {
                 DAILY_RESET_GAME_IDS.has(game.id as DailyResetGameId) &&
                 Boolean(dailyReset?.[game.id as DailyResetGameId]?.hasPlayed);
               const showTapProgress = game.id === 'tap' && tapState?.hasPartner;
+              const gameName = getLocalizedGameName(t, game.id, game.name);
 
               return (
               <Box key={game.id} sx={{ position: 'relative' }}>
@@ -219,7 +228,7 @@ const Games: React.FC = () => {
                       onClick={(event) => {
                         event.stopPropagation();
                         event.preventDefault();
-                        setDailyResetInfo({ open: true, gameName: game.name });
+                        setDailyResetInfo({ open: true, gameName });
                       }}
                     />
                   </Box>
@@ -227,7 +236,7 @@ const Games: React.FC = () => {
                 {!game.available && (
                   <Chip
                     icon={<LockIcon sx={{ fontSize: '14px !important' }} />}
-                    label="Скоро"
+                    label={t('games.list.comingSoon')}
                     size="small"
                     sx={{
                       position: 'absolute',

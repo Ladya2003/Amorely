@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export const useTypingAnimation = (active: boolean, intervalMs = 500): string => {
+export const useTypingAnimation = (active: boolean, baseText = '', intervalMs = 500): string => {
   const [dots, setDots] = useState(0);
 
   useEffect(() => {
@@ -20,5 +20,5 @@ export const useTypingAnimation = (active: boolean, intervalMs = 500): string =>
     return '';
   }
 
-  return `Печатает${'.'.repeat(dots)}`;
+  return `${baseText}${'.'.repeat(dots)}`;
 };

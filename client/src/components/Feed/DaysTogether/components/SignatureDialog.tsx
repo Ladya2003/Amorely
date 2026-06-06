@@ -1,6 +1,7 @@
 // Диалог для создания подписи
 
 import React, { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DialogTitle,
   Button,
@@ -27,6 +28,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
   onRemoveSignature,
   colorTheme
 }) => {
+  const { t } = useTranslation();
   const signatureRef = useRef<SignatureCanvas | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -325,7 +327,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
             }
           }}
         >
-          Очистить
+          {t('feed.signatureDialog.clear')}
         </Button>
         <Button 
           onClick={handleClose}
@@ -336,7 +338,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
             }
           }}
         >
-          Отмена
+          {t('feed.signatureDialog.cancel')}
         </Button>
         <Button 
           onClick={handleSave} 
@@ -348,7 +350,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
             }
           }}
         >
-          Сохранить
+          {t('feed.signatureDialog.save')}
         </Button>
       </Box>
     </Box>
@@ -387,7 +389,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
       </Box>
 
       <ResponsiveDialog open={dialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>Добавить подпись</DialogTitle>
+        <DialogTitle>{t('feed.signatureDialog.title')}</DialogTitle>
         {dialogContent}
       </ResponsiveDialog>
     </>

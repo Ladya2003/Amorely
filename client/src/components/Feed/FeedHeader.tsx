@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
 import UserProfileChip from '../UI/UserProfileChip';
 import { useAuth } from '../../contexts/AuthContext';
 
 const FeedHeader: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
@@ -37,7 +39,7 @@ const FeedHeader: React.FC = () => {
             }),
           }}
         >
-          Лента
+          {t('feed.title')}
         </Typography>
         
         <UserProfileChip sx={{ maxWidth: '60%' }} />

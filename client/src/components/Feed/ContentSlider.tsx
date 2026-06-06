@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, IconButton, Typography, CircularProgress, Paper, Chip } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -47,6 +48,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
   navigateTo, 
   onEmptyClick 
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handlePrev = () => {
@@ -138,7 +140,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
             fontWeight: (navigateTo || onEmptyClick) ? 500 : 400
           }}
         >
-          {placeholder || 'Нет доступного контента'}
+          {placeholder || t('feed.noContent')}
         </Typography>
       </Paper>
     );
@@ -244,7 +246,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                   {item.isBirthdayEvent && (
                     <Chip
                       icon={<CakeIcon />}
-                      label="День рождения"
+                      label={t('feed.birthday')}
                       color="secondary"
                       size="small"
                     />
@@ -252,7 +254,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                   {item.isAnniversaryEvent && (
                     <Chip
                       icon={<FavoriteIcon />}
-                      label="Годовщина"
+                      label={t('feed.anniversary')}
                       color="error"
                       size="small"
                     />

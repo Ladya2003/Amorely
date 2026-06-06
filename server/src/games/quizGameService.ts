@@ -12,6 +12,9 @@ import {
   getQuizQuestionById,
   isQuizAnswerCorrect,
 } from './quizGameConfig';
+import { getQuizCategoryName, getQuizCorrectAnswer, getQuizQuestionText } from '../i18n/quizI18n';
+import { AppLocale } from '../i18n/locales';
+import { getUserLocale } from '../utils/userLocale';
 
 export interface QuizGameRelationship {
   _id: mongoose.Types.ObjectId;
@@ -336,7 +339,11 @@ const syncQuizLobby = async (state: any, context?: QuizGameContext) => {
   return state;
 };
 
-export const formatQuizGameState = (state: any, viewerUserId: string): QuizGamePublicState => {
+export const formatQuizGameState = (
+  state: any,
+  viewerUserId: string,
+  viewerLocale: AppLocale = 'ru'
+): QuizGamePublicState => {
   const onCooldown = isOnCooldown(state);
   const inLobby = !onCooldown && !state.sessionActive && !state.currentQuestion;
   const lobbyCountdownEndsAt = state.lobbyCountdownEndsAt
@@ -346,7 +353,7 @@ export const formatQuizGameState = (state: any, viewerUserId: string): QuizGameP
   const boardCells: QuizBoardCellPublic[] = (state.boardCells || []).map((cell: any) => ({
     cellKey: cell.cellKey,
     categoryId: cell.categoryId,
-    categoryName: cell.categoryName,
+    categoryName: getQuizCategoryName(cell.categoryId, cell.categoryName, viewerLocale),
     points: cell.points,
     used: Boolean(cell.used) || (state.usedCellKeys || []).includes(cell.cellKey),
   }));
@@ -356,9 +363,19 @@ export const formatQuizGameState = (state: any, viewerUserId: string): QuizGameP
   let currentQuestion: QuizGamePublicState['currentQuestion'] = null;
   if (state.currentQuestion) {
     const configQuestion = getQuizQuestionById(state.currentQuestion.questionId);
-    const categoryName =
-      boardCells.find((cell) => cell.categoryId === state.currentQuestion.categoryId)?.categoryName ||
-      state.currentQuestion.categoryId;
+    const storedCategoryName =
+      (state.boardCells || []).find(
+        (cell: { categoryId: string; categoryName: string }) =>
+          cell.categoryId === state.currentQuestion.categoryId
+      )?.categoryName || state.currentQuestion.categoryId;
+    const categoryName = getQuizCategoryName(
+      state.currentQuestion.categoryId,
+      storedCategoryName,
+      viewerLocale
+    );
+    const localizedQuestionText = configQuestion
+      ? getQuizQuestionText(configQuestion, viewerLocale)
+      : '';
 
     const myAnswer = state.currentQuestion.answers?.find(
       (entry: { userId: { toString(): string } }) => entry.userId.toString() === viewerUserId
@@ -373,8 +390,10 @@ export const formatQuizGameState = (state: any, viewerUserId: string): QuizGameP
             cellKey: state.currentQuestion.cellKey,
             categoryId: state.currentQuestion.categoryId,
             points: state.currentQuestion.points,
-            questionText: configQuestion?.text ?? '',
-            correctAnswer: configQuestion?.answers[0] ?? '',
+            questionText: localizedQuestionText,
+            correctAnswer: configQuestion
+              ? getQuizCorrectAnswer(configQuestion, viewerLocale)
+              : '',
             answers: (state.currentQuestion.answers || []).map(
               (entry: {
                 userId: { toString(): string };
@@ -399,7 +418,7 @@ export const formatQuizGameState = (state: any, viewerUserId: string): QuizGameP
       categoryId: state.currentQuestion.categoryId,
       categoryName,
       points: state.currentQuestion.points,
-      questionText: configQuestion?.text ?? '',
+      questionText: localizedQuestionText,
       status: state.currentQuestion.status,
       secondsRemaining:
         state.currentQuestion.status === 'answering'

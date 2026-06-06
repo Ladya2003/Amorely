@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -29,6 +30,7 @@ import { useUnreadNews } from '../../contexts/UnreadNewsContext';
 import { MOBILE_BOTTOM_NAV_OFFSET } from '../../constants/layout';
 
 const Layout: React.FC = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -140,11 +142,11 @@ const Layout: React.FC = () => {
                 }}
                 sx={{ bgcolor: 'transparent' }}
               >
-                <BottomNavigationAction label="Главная" icon={<HomeIcon />} />
-                <BottomNavigationAction label="Чат" icon={chatTabIcon} />
-                <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} />
-                <BottomNavigationAction label="Новости" icon={newsTabIcon} />
-                <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} />
+                <BottomNavigationAction label={t('nav.home')} icon={<HomeIcon />} />
+                <BottomNavigationAction label={t('nav.chat')} icon={chatTabIcon} />
+                <BottomNavigationAction label={t('nav.calendar')} icon={<CalendarMonthIcon />} />
+                <BottomNavigationAction label={t('nav.news')} icon={newsTabIcon} />
+                <BottomNavigationAction label={t('nav.settings')} icon={<SettingsIcon />} />
               </BottomNavigation>
             </Box>
             
@@ -173,7 +175,7 @@ const Layout: React.FC = () => {
             >
               <MenuItem onClick={() => handleNavigate('/settings')}>
                 <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
-                Настройки
+                {t('nav.settings')}
               </MenuItem>
             </Menu>
           </Toolbar>
@@ -255,14 +257,14 @@ const Layout: React.FC = () => {
             }}
           >
             <BottomNavigationAction
-              label="Главная"
+              label={t('nav.home')}
               icon={<HomeIcon />}
               sx={{ px: 1 }}
             />
-            <BottomNavigationAction label="Чат" icon={chatTabIcon} sx={{ px: 1 }} />
-            <BottomNavigationAction label="Календарь" icon={<CalendarMonthIcon />} sx={{ px: 1 }} />
-            <BottomNavigationAction label="Новости" icon={newsTabIcon} sx={{ px: 1 }} />
-            <BottomNavigationAction label="Настройки" icon={<SettingsIcon />} sx={{ px: 1 }} />
+            <BottomNavigationAction label={t('nav.chat')} icon={chatTabIcon} sx={{ px: 1 }} />
+            <BottomNavigationAction label={t('nav.calendar')} icon={<CalendarMonthIcon />} sx={{ px: 1 }} />
+            <BottomNavigationAction label={t('nav.news')} icon={newsTabIcon} sx={{ px: 1 }} />
+            <BottomNavigationAction label={t('nav.settings')} icon={<SettingsIcon />} sx={{ px: 1 }} />
           </BottomNavigation>
           </Box>
         </Paper>

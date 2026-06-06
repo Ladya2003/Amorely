@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Button, 
   Typography, 
@@ -19,6 +20,7 @@ interface LogoutButtonProps {
 }
 
 const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
+  const { t } = useTranslation();
   const { logout } = useAuth();
   const { clearLocalKeys } = useCrypto();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -52,7 +54,7 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
         onClick={handleOpenDialog}
         sx={settingsActionButtonSx}
       >
-        Выйти
+        {t('settings.logout.button')}
       </Button>
       
       <ResponsiveDialog open={dialogOpen} onClose={handleCloseDialog}>
@@ -64,14 +66,14 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
             p: '16px',
           }}
         >
-          Подтверждение выхода
-          <IconButton onClick={handleCloseDialog} aria-label="Закрыть" size="small">
+          {t('settings.logout.confirmTitle')}
+          <IconButton onClick={handleCloseDialog} aria-label={t('settings.logout.closeAria')} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ p: '16px' }}>
           <Typography variant="body1">
-            Вы можете просто выйти из аккаунта (ключевая фраза сохранится на устройстве) или выйти и удалить вашу фразу.
+            {t('settings.logout.confirmBody')}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
@@ -80,10 +82,10 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
             color="warning"
             sx={{ justifyContent: 'flex-start', textAlign: 'left', mr: 2 }}
           >
-            Выйти и удалить ключевую фразу
+            {t('settings.logout.logoutAndRemoveKeys')}
           </Button>
           <Button onClick={handleLogout} color="error" sx={{ flexShrink: 0 }}>
-            Выйти
+            {t('settings.logout.button')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>
@@ -91,4 +93,4 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
   );
 };
 
-export default LogoutButton; 
+export default LogoutButton;

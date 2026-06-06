@@ -25,7 +25,7 @@ const DEFAULT_MAX_HEIGHT = 112;
 
 export default function DrawGuessChat({
   attempts = [],
-  title = 'Догадки партнёра',
+  title,
   maxVisible = 8,
   fillHeight = false,
   maxHeight,

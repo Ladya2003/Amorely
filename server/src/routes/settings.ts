@@ -6,6 +6,7 @@ import User, { UserDocument } from '../models/user';
 import Relationship from '../models/relationship';
 import mongoose from 'mongoose';
 import { ExtendedRequest } from '../types/mongoose';
+import { isSupportedLocale, resolveLocale } from '../i18n/locales';
 
 const router = express.Router();
 
@@ -370,7 +371,7 @@ router.put('/notifications', async (req: ExtendedRequest, res: Response) => {
 router.put('/theme', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId;
-    const { theme, primaryColor } = req.body;
+    const { theme, primaryColor, locale } = req.body;
 
     if (!userId) {
       return res.status(401).json({ error: 'Не авторизован' });
@@ -395,12 +396,21 @@ router.put('/theme', async (req: ExtendedRequest, res: Response) => {
       user.primaryColor = primaryColor;
     }
 
+    if (locale !== undefined) {
+      const normalizedLocale = resolveLocale(String(locale));
+      if (!isSupportedLocale(normalizedLocale)) {
+        return res.status(400).json({ error: 'Некорректный язык' });
+      }
+      user.locale = normalizedLocale;
+    }
+
     await user.save();
 
     res.json({
       message: 'Настройки темы обновлены',
       theme: user.theme,
-      primaryColor: user.primaryColor
+      primaryColor: user.primaryColor,
+      locale: user.locale,
     });
   } catch (error) {
     console.error('Ошибка при обновлении темы:', error);

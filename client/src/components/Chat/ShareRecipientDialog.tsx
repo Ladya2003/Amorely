@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import {
   DialogTitle,
@@ -42,9 +43,11 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
   open,
   onClose,
   onSelect,
-  title = 'Выберите получателя',
+  title,
   contacts
 }) => {
+  const { t } = useTranslation();
+  const dialogTitle = title ?? t('chat.share.selectRecipient');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [globalResults, setGlobalResults] = useState<ShareRecipientContact[]>([]);
@@ -120,7 +123,7 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
 
   return (
     <ResponsiveDialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pb: 1 }}>{title}</DialogTitle>
+      <DialogTitle sx={{ pb: 1 }}>{dialogTitle}</DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         <TextField
           fullWidth
@@ -151,7 +154,7 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
           sx={{ mb: 1.5 }}
         />
         <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
-          Ваши чаты
+          {t('chat.share.yourChats')}
         </Typography>
         <List sx={{ p: 0 }}>
           {filteredContacts.map((contact) => (
@@ -180,7 +183,7 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
           <>
             <Divider sx={{ my: 1.25 }} />
             <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
-              Глобальный поиск
+              {t('chat.share.globalSearch')}
             </Typography>
             <List sx={{ p: 0 }}>
               {filteredGlobalResults.map((user) => (
@@ -202,7 +205,7 @@ const ShareRecipientDialog: React.FC<ShareRecipientDialogProps> = ({
               ))}
               {!isSearching && filteredGlobalResults.length === 0 && (
                 <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 1 }}>
-                  Пользователи не найдены
+                  {t('chat.share.usersNotFound')}
                 </Typography>
               )}
             </List>

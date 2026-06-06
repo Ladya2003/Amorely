@@ -1,6 +1,7 @@
 // Карточка достижений и вех
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -10,6 +11,7 @@ import {
   Tooltip,
   useTheme,
 } from '@mui/material';
+import { getDaysWord } from '../utils/helpers';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -33,6 +35,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
   theme,
   hasPhoto = false
 }) => {
+  const { t } = useTranslation();
   const muiTheme = useTheme();
   const isDarkMode = muiTheme.palette.mode === 'dark';
 
@@ -74,7 +77,7 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <EmojiEventsIcon sx={{ color: theme.preview }} />
           <Typography variant="subtitle1" fontWeight="bold" sx={{ color: hasPhoto || isDarkMode ? 'text.primary' : theme.preview }}>
-            Достижения
+            {t('feed.achievementsTitle')}
           </Typography>
           <Chip
             label={achievements.length}
@@ -163,26 +166,16 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
             }}
           >
             <Typography variant="body2" sx={{ color: hasPhoto || isDarkMode ? 'text.secondary' : `${theme.preview}CC` }} gutterBottom>
-              ⏳ До следующей годовщины:
+              {t('feed.untilAnniversary')}
             </Typography>
             <Typography variant="h6" fontWeight="bold" sx={{ color: theme.preview }}>
-              {daysUntilAnniversary} {getDaysWord(daysUntilAnniversary)}
+              {daysUntilAnniversary} {getDaysWord(daysUntilAnniversary, t)}
             </Typography>
           </Box>
         )}
       </Collapse>
     </Box>
   );
-};
-
-// Вспомогательная функция для локализации
-const getDaysWord = (count: number): string => {
-  const lastDigit = count % 10;
-  const lastTwoDigits = count % 100;
-  
-  if (lastDigit === 1 && lastTwoDigits !== 11) return 'день';
-  if ([2, 3, 4].includes(lastDigit) && ![12, 13, 14].includes(lastTwoDigits)) return 'дня';
-  return 'дней';
 };
 
 export default MilestoneCard;

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import {
@@ -17,6 +18,7 @@ const DailyResetInfoDialog: React.FC<DailyResetInfoDialogProps> = ({
   onClose,
   gameName,
 }) => {
+  const { t } = useTranslation();
   const [countdown, setCountdown] = useState(() =>
     formatDailyResetCountdown(getMinutesUntilUtcMidnight())
   );
@@ -37,24 +39,24 @@ const DailyResetInfoDialog: React.FC<DailyResetInfoDialogProps> = ({
 
   return (
     <ResponsiveDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Таймер сброса</DialogTitle>
+      <DialogTitle>{t('games.dailyReset.title')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
           {gameName
-            ? `Вы уже играли в «${gameName}» сегодня. `
-            : 'Вы уже играли в эту игру сегодня. '}
-          Таймер показывает, сколько осталось до обновления дневного лимита.
+            ? t('games.dailyReset.playedTodayNamed', { gameName })
+            : t('games.dailyReset.playedTodayGeneric')}
+          {t('games.dailyReset.timerHint')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          Лимит сбрасывается в 03:00 по Москве (00:00 UTC). После этого можно снова играть.
+          {t('games.dailyReset.resetHint')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          До сброса: <strong>{countdown}</strong>
+          {t('games.dailyReset.untilReset')} <strong>{countdown}</strong>
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button variant="contained" onClick={onClose}>
-          Понятно
+          {t('games.dailyReset.understood')}
         </Button>
       </DialogActions>
     </ResponsiveDialog>

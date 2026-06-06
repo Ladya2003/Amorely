@@ -7,6 +7,7 @@ import {
   registerServiceWorker,
   subscribeToPush
 } from '../services/pushNotifications';
+import { setAppLocale } from '../localization';
 
 interface User {
   _id: string;
@@ -23,6 +24,7 @@ interface User {
   primaryColor?: 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
   displayBadgeGameId?: string | null;
   role?: 'user' | 'admin';
+  locale?: string;
 }
 
 interface AuthContextType {
@@ -72,6 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const response = await axios.get(`${API_URL}/api/auth/me`);
           setUser(response.data);
           setIsAuthenticated(true);
+          if (response.data?.locale) {
+            setAppLocale(response.data.locale);
+          }
 
           if (
             isPushSupported() &&
@@ -118,6 +123,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(newToken);
       setUser(userData);
       setIsAuthenticated(true);
+      if (userData?.locale) {
+        setAppLocale(userData.locale);
+      }
       return response;
     } catch (error: any) {
       console.error('Ошибка входа:', error);

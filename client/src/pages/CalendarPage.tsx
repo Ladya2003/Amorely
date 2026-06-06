@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from '@mui/material';
 import ResponsiveDialog from '../components/UI/ResponsiveDialog';
 import Calendar from '../components/Calendar/Calendar';
@@ -62,6 +63,7 @@ interface ContentItem {
 }
 
 const CalendarPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { localDeviceKeys, ensureLocalKeys } = useCrypto();
@@ -150,7 +152,7 @@ const CalendarPage: React.FC = () => {
   const openSharedEventById = async (eventId: string) => {
     const token = localStorage.getItem('token');
     if (!token) {
-      throw new Error('Не авторизован');
+      throw new Error(t('calendar.errors.notAuthorized'));
     }
 
     const response = await axios.get(`${API_URL}/api/calendar/events/${encodeURIComponent(eventId)}`, {
@@ -360,7 +362,7 @@ const CalendarPage: React.FC = () => {
       const token = localStorage.getItem('token');
       
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('calendar.errors.notAuthorized'));
       }
 
       await axios.delete(`${API_URL}/api/calendar/events/${eventToDelete}`, {
@@ -378,7 +380,7 @@ const CalendarPage: React.FC = () => {
       setEventToDelete(null);
     } catch (error) {
       console.error('Ошибка при удалении события:', error);
-      alert('Не удалось удалить событие');
+      alert(t('calendar.delete.failed'));
     } finally {
       setIsDeleting(false);
     }
@@ -394,11 +396,11 @@ const CalendarPage: React.FC = () => {
     await ensureLocalKeys();
     if (localDeviceKeys) return localDeviceKeys;
     if (!user?._id) {
-      throw new Error('Пользователь не авторизован');
+      throw new Error(t('calendar.errors.notAuthorizedShort'));
     }
     const loaded = await loadLocalKeys(user._id);
     if (!loaded) {
-      throw new Error('Разблокируйте ключи шифрования на странице /crypto/unlock');
+      throw new Error(t('calendar.errors.unlockCrypto'));
     }
     return loaded;
   };
@@ -414,12 +416,12 @@ const CalendarPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('calendar.errors.notAuthorized'));
       }
 
       const keys = await resolveKeysForEncrypt();
       if (!encryptionRecipientId) {
-        throw new Error('Не удалось определить получателя шифрования');
+        throw new Error(t('calendar.errors.encryptionRecipient'));
       }
 
       const encryptedTitle = await encryptTextForPartner(
@@ -480,12 +482,12 @@ const CalendarPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Не авторизован');
+        throw new Error(t('calendar.errors.notAuthorized'));
       }
 
       const keys = await resolveKeysForEncrypt();
       if (!encryptionRecipientId) {
-        throw new Error('Не удалось определить получателя шифрования');
+        throw new Error(t('calendar.errors.encryptionRecipient'));
       }
 
       const encryptedTitle = await encryptTextForPartner(
@@ -594,7 +596,7 @@ const CalendarPage: React.FC = () => {
           setEventToShare(null);
         }}
         onSelect={handleSelectShareTarget}
-        title="Поделиться событием"
+        title={t('chat.dialog.shareEvent')}
         contacts={shareContacts}
       />
       
@@ -615,15 +617,15 @@ const CalendarPage: React.FC = () => {
         open={deleteDialogOpen}
         onClose={handleCancelDelete}
       >
-        <DialogTitle>Удалить событие?</DialogTitle>
+        <DialogTitle>{t('calendar.delete.title')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Вы уверены, что хотите удалить это событие? Все связанные фото и видео будут удалены без возможности восстановления.
+            {t('calendar.delete.body')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelDelete} disabled={isDeleting}>
-            Отмена
+            {t('calendar.common.cancel')}
           </Button>
           <Button 
             onClick={handleConfirmDelete} 
@@ -632,7 +634,7 @@ const CalendarPage: React.FC = () => {
             disabled={isDeleting}
             startIcon={isDeleting ? <CircularProgress size={20} /> : null}
           >
-            {isDeleting ? 'Удаление...' : 'Удалить'}
+            {isDeleting ? t('calendar.delete.deleting') : t('calendar.common.delete')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>

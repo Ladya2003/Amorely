@@ -1,6 +1,7 @@
 // Компонент загрузки и обрезки фото с валидацией
 
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   IconButton,
   Box,
@@ -25,6 +26,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   onRemovePhoto, 
   colorTheme 
 }) => {
+  const { t } = useTranslation();
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,15 +37,15 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const sizeValidation = validateFileSize(file, 100);
+    const sizeValidation = validateFileSize(file, t, 100);
     if (!sizeValidation.valid) {
-      setError(sizeValidation.error || 'Ошибка валидации');
+      setError(sizeValidation.error || t('feed.validation.generic'));
       return;
     }
 
-    const typeValidation = validateFileType(file);
+    const typeValidation = validateFileType(file, t);
     if (!typeValidation.valid) {
-      setError(typeValidation.error || 'Ошибка валидации');
+      setError(typeValidation.error || t('feed.validation.generic'));
       return;
     }
 

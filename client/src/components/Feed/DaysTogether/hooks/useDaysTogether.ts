@@ -1,6 +1,7 @@
 // Хук для управления логикой DaysTogether
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Milestone, Achievement } from '../types';
 import {
   calculateMilestones,
@@ -16,6 +17,7 @@ interface UseDaysTogetherProps {
 }
 
 export const useDaysTogether = ({ daysCount, relationshipStartDate }: UseDaysTogetherProps) => {
+  const { t, i18n } = useTranslation();
   const [showAchievements, setShowAchievements] = useState(false);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [nextMilestone, setNextMilestone] = useState<Milestone | null>(null);
@@ -32,12 +34,12 @@ export const useDaysTogether = ({ daysCount, relationshipStartDate }: UseDaysTog
   // Вычисляем все данные при изменении daysCount
   useEffect(() => {
     if (daysCount) {
-      setMilestones(calculateMilestones(daysCount));
-      setNextMilestone(getNextMilestone(daysCount));
-      setProgress(calculateProgressToNextMilestone(daysCount));
-      setAchievements(getAchievements(daysCount));
+      setMilestones(calculateMilestones(daysCount, t));
+      setNextMilestone(getNextMilestone(daysCount, t));
+      setProgress(calculateProgressToNextMilestone(daysCount, t));
+      setAchievements(getAchievements(daysCount, t));
     }
-  }, [daysCount]);
+  }, [daysCount, t, i18n.language]);
 
   // Вычисляем дни до годовщины
   useEffect(() => {
