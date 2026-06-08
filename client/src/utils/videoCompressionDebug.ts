@@ -1,5 +1,5 @@
 /** TODO: убрать после исправления сжатия на мобильных. */
-export const SHOW_VIDEO_COMPRESSION_DEBUG = true;
+export const SHOW_VIDEO_COMPRESSION_DEBUG = false;
 
 const serializeValue = (value: unknown): string => {
   if (value === undefined) return 'undefined';
@@ -77,6 +77,7 @@ export const wrapVideoCompressionError = (
 
 export const formatErrorForUser = (error: unknown, fallback: string): string => {
   if (error instanceof VideoCompressionDebugError) {
+    if (!SHOW_VIDEO_COMPRESSION_DEBUG) return error.message;
     return `${error.message}\n\n— DEBUG —\n${error.debugInfo}`;
   }
 

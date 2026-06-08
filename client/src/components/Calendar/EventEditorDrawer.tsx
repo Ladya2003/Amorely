@@ -171,6 +171,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   } | null>(null);
   const [lockedToastOpen, setLockedToastOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [multiVideoWarningOpen, setMultiVideoWarningOpen] = useState(false);
 
   const saveAbortRef = useRef<AbortController | null>(null);
   const saveSnapshotRef = useRef<SaveSnapshot | null>(null);
@@ -321,8 +322,28 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
     if (accepted.length === 0) return;
 
-    setFiles((prev) => [...prev, ...accepted]);
-    setPreviews((prev) => [...prev, ...accepted.map((file) => URL.createObjectURL(file))]);
+    const acceptedVideos = accepted.filter(isVideoFile);
+    const existingNewVideos = files.filter(isVideoFile).length;
+    let toAdd = accepted;
+    let showMultiVideoWarning = false;
+
+    if (acceptedVideos.length > 1) {
+      const firstVideo = acceptedVideos[0];
+      toAdd = accepted.filter((file) => !isVideoFile(file) || file === firstVideo);
+      showMultiVideoWarning = true;
+    } else if (acceptedVideos.length === 1 && existingNewVideos >= 1) {
+      toAdd = accepted.filter((file) => !isVideoFile(file));
+      showMultiVideoWarning = true;
+    }
+
+    if (showMultiVideoWarning) {
+      setMultiVideoWarningOpen(true);
+    }
+
+    if (toAdd.length === 0) return;
+
+    setFiles((prev) => [...prev, ...toAdd]);
+    setPreviews((prev) => [...prev, ...toAdd.map((file) => URL.createObjectURL(file))]);
   };
 
   const handlePreviewClick = (index: number) => {
@@ -604,13 +625,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         >
           {error && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-              <Typography
-                component="pre"
-                variant="body2"
-                sx={{ m: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit' }}
-              >
-                {error}
-              </Typography>
+              {error}
             </Alert>
           )}
 
@@ -983,6 +998,23 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             variant="contained"
           >
             {t('calendar.event.clearForm')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
+
+      <ResponsiveDialog
+        open={multiVideoWarningOpen}
+        onClose={() => setMultiVideoWarningOpen(false)}
+      >
+        <DialogTitle>{t('calendar.event.multiVideoWarningTitle')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t('calendar.event.multiVideoWarningMessage')}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMultiVideoWarningOpen(false)} variant="contained">
+            {t('calendar.event.multiVideoWarningOk')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>
