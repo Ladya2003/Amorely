@@ -2,7 +2,10 @@ import { prepareMediaForUpload } from './prepareMediaForUpload';
 import { isVideoFile } from './videoMetadata';
 import { throwIfAborted } from './saveAbort';
 
-const DEFAULT_MAX_CONCURRENCY = 2;
+export const getDefaultMaxConcurrency = (): number => {
+  if (typeof navigator === 'undefined') return 2;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 1 : 2;
+};
 
 export type PrepareMediaProgress = {
   index: number;
@@ -53,7 +56,7 @@ export const prepareAllMediaForUpload = async (
 
   return runWithConcurrency(
     files,
-    options?.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY,
+    options?.maxConcurrency ?? getDefaultMaxConcurrency(),
     async (file, index) => {
       const isVideo = isVideoFile(file);
       const videoIndex = isVideo ? ++nextVideoIndex : 0;

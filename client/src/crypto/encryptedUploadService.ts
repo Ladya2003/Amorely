@@ -3,6 +3,7 @@ import { API_URL } from '../config';
 import {
   prepareAllMediaForUpload,
   runWithConcurrency,
+  getDefaultMaxConcurrency,
   type ParallelPrepareOptions
 } from '../utils/parallelMediaPrepare';
 import { isSaveAborted, throwIfAborted } from '../utils/saveAbort';
@@ -64,7 +65,7 @@ export const encryptAndUploadFiles = async (
     onPrepareStart: options?.onPrepareStart
   });
 
-  const concurrency = options?.maxPrepareConcurrency ?? 2;
+  const concurrency = options?.maxPrepareConcurrency ?? getDefaultMaxConcurrency();
 
   return runWithConcurrency(
     preparedFiles,

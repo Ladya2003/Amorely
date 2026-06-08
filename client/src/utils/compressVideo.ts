@@ -11,6 +11,7 @@ import {
   formatMegabytes
 } from './mediaLimits';
 import { SaveAbortedError, throwIfAborted } from './saveAbort';
+import { wrapVideoCompressionError } from './videoCompressionDebug';
 import {
   cleanupVideoMetadata,
   getVideoDuration,
@@ -395,11 +396,17 @@ const resetVideoForReencode = async (video: HTMLVideoElement) => {
   await wait(80);
 };
 
+const isMobileBrowser = (): boolean =>
+  typeof navigator !== 'undefined' &&
+  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+const PLAYBACK_START_TIMEOUT_MS = isMobileBrowser() ? 30_000 : 10_000;
+
 const waitForPlaybackStart = async (
   video: HTMLVideoElement,
   signal?: AbortSignal
 ): Promise<void> => {
-  const deadline = Date.now() + 10_000;
+  const deadline = Date.now() + PLAYBACK_START_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
     throwIfAborted(signal);
@@ -423,7 +430,13 @@ const waitForPlaybackStart = async (
     await wait(50);
   }
 
-  throw new Error('video_playback_timeout');
+  throw wrapVideoCompressionError(new Error('video_playback_timeout'), {
+    stage: 'waitForPlaybackStart',
+    videoReadyState: video.readyState,
+    videoPaused: video.paused,
+    videoCurrentTime: video.currentTime,
+    videoNetworkState: video.networkState
+  });
 };
 
 const finalizeRecorder = async (recorder: MediaRecorder): Promise<void> => {
@@ -506,7 +519,14 @@ const reencodeVideo = async (
 
   const recordingFinished = new Promise<Blob>((resolve, reject) => {
     recorder.onstop = () => resolve(new Blob(chunks, { type: outputMimeType }));
-    recorder.onerror = () => reject(new Error('Ошибка сжатия видео'));
+    recorder.onerror = (event) =>
+      reject(
+        wrapVideoCompressionError(new Error('Ошибка сжатия видео'), {
+          stage: 'MediaRecorder.onerror',
+          recorderState: recorder.state,
+          recorderError: (event as Event & { error?: unknown }).error ?? null
+        })
+      );
   });
 
   ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
@@ -856,13 +876,28 @@ export const compressVideoForUpload = async (
     }
 
     if (error instanceof Error && (error.message.includes('МБ') || error.message.includes('секунд'))) {
-      throw error;
+      throw wrapVideoCompressionError(error, {
+        fileName: file.name,
+        fileSizeBytes: file.size,
+        fileMimeType: file.type,
+        stage: 'compressVideoForUpload',
+        durationSec: metadata.duration,
+        width: metadata.width,
+        height: metadata.height
+      });
     }
 
     if (file.size > MAX_VIDEO_UPLOAD_BYTES) {
-      throw new Error(
-        `Не удалось сжать видео. Попробуйте более короткий ролик или файл до ${formatMegabytes(MAX_VIDEO_UPLOAD_BYTES)} МБ.`
-      );
+      throw wrapVideoCompressionError(error, {
+        fileName: file.name,
+        fileSizeBytes: file.size,
+        fileMimeType: file.type,
+        stage: 'compressVideoForUpload',
+        durationSec: metadata.duration,
+        width: metadata.width,
+        height: metadata.height,
+        fallbackMessage: `Не удалось сжать видео. Попробуйте более короткий ролик или файл до ${formatMegabytes(MAX_VIDEO_UPLOAD_BYTES)} МБ.`
+      });
     }
 
     return file;

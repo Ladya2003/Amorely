@@ -30,7 +30,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import { deleteUploadedEncryptedFiles } from '../../crypto/encryptedUploadService';
 import { isSaveAborted } from '../../utils/saveAbort';
-import { isVideoCompressionError } from '../../utils/compressVideo';
+import { formatErrorForUser } from '../../utils/videoCompressionDebug';
 import type { PrepareMediaProgress } from '../../utils/parallelMediaPrepare';
 import { assertFilesReadable } from '../../utils/validateReadableFiles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -455,15 +455,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         return;
       }
       console.error('Ошибка при сохранении события:', error);
-      if (isVideoCompressionError(error)) {
-        console.error('Детали сжатия видео:', error.details);
-      }
       const message =
         error instanceof Error && error.message === 'UNREADABLE_MEDIA'
           ? t('calendar.errors.unreadableMedia')
-          : error instanceof Error
-            ? error.message
-            : t('calendar.errors.saveEventFailed');
+          : formatErrorForUser(error, t('calendar.errors.saveEventFailed'));
       setError(message);
     } finally {
       if (!abortController.signal.aborted) {
@@ -609,7 +604,13 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         >
           {error && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-              {error}
+              <Typography
+                component="pre"
+                variant="body2"
+                sx={{ m: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit' }}
+              >
+                {error}
+              </Typography>
             </Alert>
           )}
 
