@@ -211,12 +211,16 @@ const tryAudioContextCapture = async (video: HTMLVideoElement): Promise<Reencode
       await audioContext.resume();
     }
 
-    const elementSource = audioContext.createMediaElementSource(video);
+    let elementSource: MediaElementAudioSourceNode | null = null;
     let activeDestination: MediaStreamAudioDestinationNode | null = null;
 
     return {
       canCaptureAudio: true,
       attachAudioTo: (targetStream) => {
+        if (!elementSource) {
+          elementSource = audioContext.createMediaElementSource(video);
+        }
+
         const destination = audioContext.createMediaStreamDestination();
         activeDestination = destination;
         elementSource.connect(destination);
@@ -224,7 +228,10 @@ const tryAudioContextCapture = async (video: HTMLVideoElement): Promise<Reencode
         if (!track) {
           elementSource.disconnect(destination);
           activeDestination = null;
-          return { hasAudio: false, detach: () => elementSource.disconnect(destination) };
+          return {
+            hasAudio: false,
+            detach: () => elementSource?.disconnect(destination)
+          };
         }
 
         targetStream.addTrack(track);
@@ -233,7 +240,7 @@ const tryAudioContextCapture = async (video: HTMLVideoElement): Promise<Reencode
           detach: () => {
             targetStream.removeTrack(track);
             track.stop();
-            elementSource.disconnect(destination);
+            elementSource?.disconnect(destination);
             if (activeDestination === destination) {
               activeDestination = null;
             }
@@ -241,11 +248,11 @@ const tryAudioContextCapture = async (video: HTMLVideoElement): Promise<Reencode
         };
       },
       cleanup: () => {
-        if (activeDestination) {
+        if (activeDestination && elementSource) {
           elementSource.disconnect(activeDestination);
           activeDestination = null;
         }
-        elementSource.disconnect();
+        elementSource?.disconnect();
         void audioContext.close();
       }
     };
@@ -400,43 +407,143 @@ const isMobileBrowser = (): boolean =>
   typeof navigator !== 'undefined' &&
   /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-const PLAYBACK_START_TIMEOUT_MS = isMobileBrowser() ? 30_000 : 10_000;
+const isSafariBrowser = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|Edg/i.test(ua);
+};
+
+const PLAYBACK_START_TIMEOUT_MS =
+  isMobileBrowser() || isSafariBrowser() ? 45_000 : 15_000;
+
+const startVideoPlayback = async (
+  video: HTMLVideoElement,
+  allowMutedFallback: boolean
+): Promise<void> => {
+  video.playsInline = true;
+  video.setAttribute('playsinline', 'true');
+
+  try {
+    video.muted = false;
+    video.volume = 1;
+    await video.play();
+    return;
+  } catch (unmutedError) {
+    if (!allowMutedFallback) {
+      throw unmutedError;
+    }
+  }
+
+  video.muted = true;
+  await video.play();
+  video.muted = false;
+  video.volume = 1;
+};
+
+const buildPlaybackDebugContext = (video: HTMLVideoElement, stage: string) => ({
+  stage,
+  videoReadyState: video.readyState,
+  videoPaused: video.paused,
+  videoCurrentTime: video.currentTime,
+  videoNetworkState: video.networkState,
+  videoMuted: video.muted,
+  videoEnded: video.ended
+});
 
 const waitForPlaybackStart = async (
   video: HTMLVideoElement,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  options?: { allowMutedFallback?: boolean }
 ): Promise<void> => {
-  const deadline = Date.now() + PLAYBACK_START_TIMEOUT_MS;
+  throwIfAborted(signal);
 
-  while (Date.now() < deadline) {
-    throwIfAborted(signal);
-
-    if (!video.paused && (video.currentTime > 0.01 || video.readyState >= 3)) {
-      return;
-    }
-
-    if (video.ended) {
-      return;
-    }
-
-    if (video.paused) {
-      try {
-        await video.play();
-      } catch {
-        await wait(50);
-      }
-    }
-
-    await wait(50);
+  if (!video.paused && (video.currentTime > 0 || video.readyState >= 2)) {
+    return;
   }
 
-  throw wrapVideoCompressionError(new Error('video_playback_timeout'), {
-    stage: 'waitForPlaybackStart',
-    videoReadyState: video.readyState,
-    videoPaused: video.paused,
-    videoCurrentTime: video.currentTime,
-    videoNetworkState: video.networkState
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('timeupdate', onTimeUpdate);
+      video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('error', onError);
+    };
+
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve();
+    };
+
+    const fail = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(
+        wrapVideoCompressionError(
+          error instanceof Error ? error : new Error('video_playback_failed'),
+          buildPlaybackDebugContext(video, 'waitForPlaybackStart')
+        )
+      );
+    };
+
+    const onPlaying = () => finish();
+    const onTimeUpdate = () => {
+      if (video.currentTime > 0) finish();
+    };
+    const onCanPlay = () => {
+      if (!video.paused) finish();
+    };
+    const onError = () => fail(new Error('video_playback_error'));
+
+    const timer = setTimeout(() => {
+      fail(new Error('video_playback_timeout'));
+    }, PLAYBACK_START_TIMEOUT_MS);
+
+    video.addEventListener('playing', onPlaying);
+    video.addEventListener('timeupdate', onTimeUpdate);
+    video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('error', onError);
+
+    void startVideoPlayback(video, options?.allowMutedFallback ?? true).catch(fail);
   });
+};
+
+const seekVideoToStart = async (video: HTMLVideoElement): Promise<void> => {
+  video.pause();
+
+  if (video.currentTime <= 0.01) {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      video.removeEventListener('seeked', onSeeked);
+      reject(new Error('seek_to_start_timeout'));
+    }, 5000);
+
+    const onSeeked = () => {
+      clearTimeout(timer);
+      video.removeEventListener('seeked', onSeeked);
+      resolve();
+    };
+
+    video.addEventListener('seeked', onSeeked);
+    video.currentTime = 0;
+  });
+};
+
+const prewarmVideoBeforeAudioCapture = async (
+  video: HTMLVideoElement,
+  signal?: AbortSignal
+): Promise<void> => {
+  await waitForPlaybackStart(video, signal, { allowMutedFallback: true });
+  await seekVideoToStart(video);
+  await wait(80);
 };
 
 const finalizeRecorder = async (recorder: MediaRecorder): Promise<void> => {
@@ -478,6 +585,12 @@ const reencodeVideo = async (
 
   await resetVideoForReencode(video);
 
+  const willAttachAudio = withAudio && Boolean(audioCapture?.canCaptureAudio);
+
+  if (willAttachAudio) {
+    await prewarmVideoBeforeAudioCapture(video, signal);
+  }
+
   const canvas = document.createElement('canvas');
   canvas.width = targetWidth;
   canvas.height = targetHeight;
@@ -491,7 +604,7 @@ const reencodeVideo = async (
   let detachAudio = () => {};
   let hasAudio = false;
 
-  if (withAudio && audioCapture) {
+  if (willAttachAudio && audioCapture) {
     const attachment = audioCapture.attachAudioTo(canvasStream);
     hasAudio = attachment.hasAudio;
     detachAudio = attachment.detach;
@@ -531,7 +644,17 @@ const reencodeVideo = async (
 
   ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
   recorder.start(250);
-  await waitForPlaybackStart(video, signal);
+
+  if (willAttachAudio) {
+    try {
+      await startVideoPlayback(video, true);
+    } catch (playError) {
+      throw wrapVideoCompressionError(playError, buildPlaybackDebugContext(video, 'recording_playback'));
+    }
+    await wait(120);
+  } else {
+    await waitForPlaybackStart(video, signal);
+  }
 
   await new Promise<void>((resolve, reject) => {
     const renderFrame = () => {
