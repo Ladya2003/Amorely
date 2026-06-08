@@ -19,6 +19,7 @@ import {
   encryptTextForPartner
 } from '../crypto/contentCryptoService';
 import { encryptAndUploadContentFiles } from '../crypto/encryptedUploadService';
+import { isVideoCompressionError } from '../utils/compressVideo';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
 import { loadLocalKeys, type LocalDeviceKeys } from '../crypto/cryptoService';
 import { buildSharedEventRef, prepareEventForShare, type EventLikeForShare } from '../utils/buildSharedEventRef';
@@ -405,14 +406,20 @@ const CalendarPage: React.FC = () => {
     return loaded;
   };
 
-  const handleSaveEvent = async (eventData: {
-    date: Date;
-    title: string;
-    description: string;
-    files: File[];
-    isBirthdayEvent?: boolean;
-    isAnniversaryEvent?: boolean;
-  }) => {
+  const handleSaveEvent = async (
+    eventData: {
+      date: Date;
+      title: string;
+      description: string;
+      files: File[];
+      isBirthdayEvent?: boolean;
+      isAnniversaryEvent?: boolean;
+    },
+    saveOptions?: {
+      signal?: AbortSignal;
+      onFileUploaded?: (publicId: string) => void;
+    }
+  ) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -435,7 +442,12 @@ const CalendarPage: React.FC = () => {
 
       const uploaded =
         eventData.files.length > 0
-          ? await encryptAndUploadContentFiles(eventData.files, keys, encryptionRecipientId)
+          ? await encryptAndUploadContentFiles(
+              eventData.files,
+              keys,
+              encryptionRecipientId,
+              saveOptions
+            )
           : [];
 
       await axios.post(
@@ -459,18 +471,24 @@ const CalendarPage: React.FC = () => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          signal: saveOptions?.signal
         }
       );
 
       await fetchContent();
     } catch (error) {
       console.error('Ошибка при сохранении события:', error);
+      if (isVideoCompressionError(error)) {
+        console.error('Детали сжатия видео:', error.details);
+      }
       throw error;
     }
   };
 
-  const handleUpdateEvent = async (eventId: string, eventData: {
+  const handleUpdateEvent = async (
+    eventId: string,
+    eventData: {
     date: Date;
     title: string;
     description: string;
@@ -478,7 +496,12 @@ const CalendarPage: React.FC = () => {
     removeMediaIds: string[];
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
-  }) => {
+    },
+    saveOptions?: {
+      signal?: AbortSignal;
+      onFileUploaded?: (publicId: string) => void;
+    }
+  ) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -501,7 +524,12 @@ const CalendarPage: React.FC = () => {
 
       const uploaded =
         eventData.files.length > 0
-          ? await encryptAndUploadContentFiles(eventData.files, keys, encryptionRecipientId)
+          ? await encryptAndUploadContentFiles(
+              eventData.files,
+              keys,
+              encryptionRecipientId,
+              saveOptions
+            )
           : [];
 
       await axios.put(
@@ -525,7 +553,8 @@ const CalendarPage: React.FC = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`
-          }
+          },
+          signal: saveOptions?.signal
         }
       );
 
@@ -533,6 +562,9 @@ const CalendarPage: React.FC = () => {
       await fetchContent();
     } catch (error) {
       console.error('Ошибка при обновлении события:', error);
+      if (isVideoCompressionError(error)) {
+        console.error('Детали сжатия видео:', error.details);
+      }
       throw error;
     }
   };

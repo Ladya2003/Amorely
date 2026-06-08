@@ -38,6 +38,7 @@ const NewsPage: React.FC = () => {
       const params: Record<string, string | number> = {
         page: 1,
         limit: 50,
+        locale: i18n.language,
       };
 
       if (selectedCategory) {
@@ -90,8 +91,13 @@ const NewsPage: React.FC = () => {
           gap: 2,
           mb: 3,
         }}>
-          <Typography variant="h4" component="h1" sx={{ fontSize: '1.7rem', fontWeight: 400 }}>
-            Новости
+          <Typography
+            key={i18n.language}
+            variant="h4"
+            component="h1"
+            sx={{ fontSize: '1.7rem', fontWeight: 400 }}
+          >
+            {t('news.title')}
           </Typography>
           <UserProfileChip sx={{ maxWidth: '60%' }} />
         </Box>
@@ -116,7 +122,7 @@ const NewsPage: React.FC = () => {
             variant={selectedCategory === 'event' ? 'filled' : 'outlined'}
           />
           <Chip
-            label="Анонсы"
+            label={t('news.filter.announcements')}
             onClick={() => handleCategoryClick('announcement')}
             color={selectedCategory === 'announcement' ? 'success' : 'default'}
             variant={selectedCategory === 'announcement' ? 'filled' : 'outlined'}
@@ -135,12 +141,15 @@ const NewsPage: React.FC = () => {
           </Box>
         ) : (
           <Box>
-            {news.map((item) => (
+            {news.map((item) => {
+              const showNewBadge = isNewsUnread(item._id);
+
+              return (
               <Card
                 key={item._id}
                 sx={{ borderRadius: 2.5, overflow: 'hidden', mb: 2, position: 'relative' }}
               >
-                {isNewsUnread(item._id) && (
+                {showNewBadge && (
                   <Chip
                     label={t('news.newBadge')}
                     size="small"
@@ -159,8 +168,13 @@ const NewsPage: React.FC = () => {
                   />
                 )}
                 <CardActionArea onClick={() => handleOpenNews(item)}>
-                  <CardContent>
-                    <Typography variant="h6" component="h2" fontWeight={400} sx={{ mb: 1 }}>
+                  <CardContent sx={showNewBadge ? { pt: 3 } : undefined}>
+                    <Typography
+                      variant="h6"
+                      component="h2"
+                      fontWeight={400}
+                      sx={{ mb: 1, ...(showNewBadge && { pr: 7 }) }}
+                    >
                       {item.title}
                     </Typography>
 
@@ -196,7 +210,8 @@ const NewsPage: React.FC = () => {
                   </CardContent>
                 </CardActionArea>
               </Card>
-            ))}
+              );
+            })}
           </Box>
         )}
       </Container>

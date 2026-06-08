@@ -219,6 +219,36 @@ app.post(
   }
 });
 
+app.post(
+  '/api/chat/delete-uploaded-encrypted',
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const publicIds = Array.isArray(req.body?.publicIds)
+        ? req.body.publicIds.filter((id: unknown) => typeof id === 'string' && id.length > 0)
+        : [];
+
+      if (publicIds.length === 0) {
+        return res.status(400).json({ error: 'Не указаны файлы для удаления' });
+      }
+
+      await Promise.all(
+        publicIds.map((publicId: string) =>
+          cloudinary.uploader.destroy(publicId, { resource_type: 'raw' })
+        )
+      );
+
+      res.json({ message: 'Загруженные файлы удалены', deleted: publicIds.length });
+    } catch (error) {
+      console.error('Ошибка при удалении загруженных файлов:', error);
+      res.status(500).json({
+        error: 'Ошибка при удалении загруженных файлов',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
 // Маршрут для загрузки медиа в Cloudinary (legacy / feed)
 app.post('/api/upload', authMiddleware, upload.array('media'), async (req: Request, res: Response) => {
   try {

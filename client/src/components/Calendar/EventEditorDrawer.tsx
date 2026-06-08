@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Drawer,
@@ -20,7 +20,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import CustomSnackbar from '../UI/CustomSnackbar';
+import { deleteUploadedEncryptedFiles } from '../../crypto/encryptedUploadService';
+import { isSaveAborted } from '../../utils/saveAbort';
+import { isVideoCompressionError } from '../../utils/compressVideo';
+import { assertFilesReadable } from '../../utils/validateReadableFiles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -58,24 +64,49 @@ interface EventEditorDrawerProps {
     isAnniversaryEvent?: boolean;
     media?: EventMediaItem[];
   } | null;
-  onSave: (eventData: {
-    date: Date;
-    title: string;
-    description: string;
-    files: File[];
-    isBirthdayEvent?: boolean;
-    isAnniversaryEvent?: boolean;
-  }) => Promise<void>;
-  onUpdate?: (eventId: string, eventData: {
-    date: Date;
-    title: string;
-    description: string;
-    files: File[];
-    removeMediaIds: string[];
-    isBirthdayEvent?: boolean;
-    isAnniversaryEvent?: boolean;
-  }) => Promise<void>;
+  onSave: (
+    eventData: {
+      date: Date;
+      title: string;
+      description: string;
+      files: File[];
+      isBirthdayEvent?: boolean;
+      isAnniversaryEvent?: boolean;
+    },
+    saveOptions?: {
+      signal?: AbortSignal;
+      onFileUploaded?: (publicId: string) => void;
+    }
+  ) => Promise<void>;
+  onUpdate?: (
+    eventId: string,
+    eventData: {
+      date: Date;
+      title: string;
+      description: string;
+      files: File[];
+      removeMediaIds: string[];
+      isBirthdayEvent?: boolean;
+      isAnniversaryEvent?: boolean;
+    },
+    saveOptions?: {
+      signal?: AbortSignal;
+      onFileUploaded?: (publicId: string) => void;
+    }
+  ) => Promise<void>;
 }
+
+type SaveSnapshot = {
+  selectedDate: Date | null;
+  title: string;
+  description: string;
+  files: File[];
+  previews: string[];
+  isBirthdayEvent: boolean;
+  isAnniversaryEvent: boolean;
+  existingMedia: EventMediaItem[];
+  removedMediaIds: string[];
+};
 
 const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
 const TITLE_MAX_LENGTH = 100;
@@ -129,6 +160,17 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     mediaUrl: string;
     resourceType: 'image' | 'video';
   } | null>(null);
+  const [lockedToastOpen, setLockedToastOpen] = useState(false);
+
+  const saveAbortRef = useRef<AbortController | null>(null);
+  const saveSnapshotRef = useRef<SaveSnapshot | null>(null);
+  const uploadedPublicIdsRef = useRef<string[]>([]);
+
+  const showLockedToast = useCallback(() => {
+    if (isSaving) {
+      setLockedToastOpen(true);
+    }
+  }, [isSaving]);
 
   // Функция для проверки, находится ли дата в диапазоне дня рождения
   const isDateNearBirthday = (date: Date | null): boolean => {
@@ -236,9 +278,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     draft.files
   ]);
 
-  // Автосохранение изменений (только если не в режиме редактирования)
+  // Автосохранение изменений (только если не в режиме редактирования и не идёт сохранение)
   useEffect(() => {
-    if (!open || !isInitialized || isEditMode) return;
+    if (!open || !isInitialized || isEditMode || isSaving) return;
 
     const timer = setTimeout(() => {
       updateDraft({
@@ -251,9 +293,13 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [selectedDate?.getTime(), title, description, files.length, previews.length, open, isInitialized, isEditMode, updateDraft]);
+  }, [selectedDate?.getTime(), title, description, files.length, previews.length, open, isInitialized, isEditMode, isSaving, updateDraft]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isSaving) {
+      showLockedToast();
+      return;
+    }
     if (!event.target.files) return;
 
     const { accepted, errors } = await validateAndFilterMediaFiles(Array.from(event.target.files));
@@ -278,6 +324,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleRemoveFile = (index: number) => {
+    if (isSaving) {
+      showLockedToast();
+      return;
+    }
     const newFiles = [...files];
     newFiles.splice(index, 1);
     setFiles(newFiles);
@@ -289,11 +339,17 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleRemoveExistingMedia = (mediaId: string) => {
+    if (isSaving) {
+      showLockedToast();
+      return;
+    }
     setExistingMedia((prev) => prev.filter((item) => item._id !== mediaId));
     setRemovedMediaIds((prev) => [...prev, mediaId]);
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
+
     if (!selectedDate) {
       setError(t('calendar.errors.selectDate'));
       return;
@@ -305,36 +361,69 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     }
 
     try {
+      await assertFilesReadable(files);
+    } catch {
+      setError(t('calendar.errors.unreadableMedia'));
+      return;
+    }
+
+    saveSnapshotRef.current = {
+      selectedDate,
+      title,
+      description,
+      files: [...files],
+      previews: [...previews],
+      isBirthdayEvent,
+      isAnniversaryEvent,
+      existingMedia: [...existingMedia],
+      removedMediaIds: [...removedMediaIds]
+    };
+    uploadedPublicIdsRef.current = [];
+
+    const abortController = new AbortController();
+    saveAbortRef.current = abortController;
+
+    const saveOptions = {
+      signal: abortController.signal,
+      onFileUploaded: (publicId: string) => {
+        uploadedPublicIdsRef.current = [...uploadedPublicIdsRef.current, publicId];
+      }
+    };
+
+    try {
       setIsSaving(true);
       setError(null);
       
       if (isEditMode && editEvent && onUpdate) {
-        // Режим редактирования
-        await onUpdate(editEvent.eventId, {
-          date: selectedDate,
-          title: title.trim(),
-          description: description.trim(),
-          files,
-          removeMediaIds: removedMediaIds,
-          isBirthdayEvent,
-          isAnniversaryEvent
-        });
+        await onUpdate(
+          editEvent.eventId,
+          {
+            date: selectedDate,
+            title: title.trim(),
+            description: description.trim(),
+            files,
+            removeMediaIds: removedMediaIds,
+            isBirthdayEvent,
+            isAnniversaryEvent
+          },
+          saveOptions
+        );
       } else {
-        // Режим создания
-        await onSave({
-          date: selectedDate,
-          title: title.trim(),
-          description: description.trim(),
-          files,
-          isBirthdayEvent,
-          isAnniversaryEvent
-        });
+        await onSave(
+          {
+            date: selectedDate,
+            title: title.trim(),
+            description: description.trim(),
+            files,
+            isBirthdayEvent,
+            isAnniversaryEvent
+          },
+          saveOptions
+        );
         
-        // Очищаем черновик после успешного создания
         clearDraft();
       }
       
-      // Очищаем локальное состояние
       previews.forEach(url => URL.revokeObjectURL(url));
       setTitle('');
       setDescription('');
@@ -346,13 +435,56 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       
       onClose();
     } catch (error) {
+      if (isSaveAborted(error)) {
+        return;
+      }
       console.error('Ошибка при сохранении события:', error);
+      if (isVideoCompressionError(error)) {
+        console.error('Детали сжатия видео:', error.details);
+      }
       const message =
-        error instanceof Error ? error.message : t('calendar.errors.saveEventFailed');
+        error instanceof Error && error.message === 'UNREADABLE_MEDIA'
+          ? t('calendar.errors.unreadableMedia')
+          : error instanceof Error
+            ? error.message
+            : t('calendar.errors.saveEventFailed');
       setError(message);
     } finally {
-      setIsSaving(false);
+      if (!abortController.signal.aborted) {
+        setIsSaving(false);
+        saveAbortRef.current = null;
+        saveSnapshotRef.current = null;
+        uploadedPublicIdsRef.current = [];
+      }
     }
+  };
+
+  const handleCancelSave = async () => {
+    if (!isSaving) return;
+
+    saveAbortRef.current?.abort();
+
+    const uploadedIds = [...uploadedPublicIdsRef.current];
+    await deleteUploadedEncryptedFiles(uploadedIds);
+
+    const snapshot = saveSnapshotRef.current;
+    if (snapshot) {
+      setSelectedDate(snapshot.selectedDate);
+      setTitle(snapshot.title);
+      setDescription(snapshot.description);
+      setFiles(snapshot.files);
+      setPreviews(snapshot.previews);
+      setIsBirthdayEvent(snapshot.isBirthdayEvent);
+      setIsAnniversaryEvent(snapshot.isAnniversaryEvent);
+      setExistingMedia(snapshot.existingMedia);
+      setRemovedMediaIds(snapshot.removedMediaIds);
+    }
+
+    setError(null);
+    setIsSaving(false);
+    saveAbortRef.current = null;
+    saveSnapshotRef.current = null;
+    uploadedPublicIdsRef.current = [];
   };
 
   const handleClose = () => {
@@ -370,6 +502,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleClearForm = () => {
+    if (isSaving) {
+      showLockedToast();
+      return;
+    }
     previews.forEach((url) => URL.revokeObjectURL(url));
     setTitle('');
     setDescription('');
@@ -386,7 +522,15 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     <Drawer
       anchor="right"
       open={open}
-      onClose={handleClose}
+      onClose={(_event, reason) => {
+        if (isSaving) {
+          if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+            showLockedToast();
+          }
+          return;
+        }
+        handleClose();
+      }}
       PaperProps={{
         sx: {
           width: isMobile ? '100%' : '500px',
@@ -401,7 +545,13 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             <IconButton
               edge="start"
               color="inherit"
-              onClick={handleClose}
+              onClick={() => {
+                if (isSaving) {
+                  showLockedToast();
+                  return;
+                }
+                handleClose();
+              }}
               aria-label="close"
             >
               <CloseIcon />
@@ -413,7 +563,15 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         </AppBar>
 
         {/* Основной контент */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto', p: 3 }}>
+        <Box
+          sx={{ flexGrow: 1, overflow: 'auto', p: 3 }}
+          onClickCapture={(event) => {
+            if (!isSaving) return;
+            const target = event.target as HTMLElement;
+            if (target.closest('button, a, [role="button"]')) return;
+            showLockedToast();
+          }}
+        >
           {error && (
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
               {error}
@@ -426,6 +584,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               label={t('calendar.event.date')}
               value={selectedDate}
               onChange={(newDate) => setSelectedDate(newDate)}
+              disabled={isSaving}
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -447,6 +606,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             placeholder={t('calendar.event.titlePlaceholder')}
             sx={{ mb: 3 }}
             required
+            disabled={isSaving}
             inputProps={{ maxLength: TITLE_MAX_LENGTH }}
             helperText={t('calendar.event.charCount', { current: title.length, max: TITLE_MAX_LENGTH })}
           />
@@ -462,6 +622,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t('calendar.event.descriptionPlaceholder')}
             sx={{ mb: 3 }}
+            disabled={isSaving}
             inputProps={{ maxLength: EVENT_DESCRIPTION_MAX_LENGTH }}
             helperText={t('calendar.event.charCount', { current: description.length, max: EVENT_DESCRIPTION_MAX_LENGTH })}
           />
@@ -475,6 +636,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                     checked={isBirthdayEvent}
                     onChange={(e) => setIsBirthdayEvent(e.target.checked)}
                     color="primary"
+                    disabled={isSaving}
                   />
                 }
                 label={
@@ -500,6 +662,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                     checked={isAnniversaryEvent}
                     onChange={(e) => setIsAnniversaryEvent(e.target.checked)}
                     color="primary"
+                    disabled={isSaving}
                   />
                 }
                 label={
@@ -577,23 +740,24 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                     imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     loadingMinHeight={120}
                   />
-                  <IconButton
-                    size="small"
-                    sx={{
-                      position: 'absolute',
-                      top: 4,
-                      right: 4,
-                      bgcolor: 'background.paper',
-                      '&:hover': {
-                        bgcolor: 'error.light',
-                        color: 'white'
-                      }
-                    }}
-                    onClick={() => handleRemoveExistingMedia(media._id)}
-                    disabled={isSaving}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  {!isSaving && (
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        bgcolor: 'background.paper',
+                        '&:hover': {
+                          bgcolor: 'error.light',
+                          color: 'white'
+                        }
+                      }}
+                      onClick={() => handleRemoveExistingMedia(media._id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  )}
                 </Box>
               ))}
             </Box>
@@ -637,25 +801,27 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                       }}
                     />
                   )}
-                  <IconButton
-                    size="small"
-                    sx={{
-                      position: 'absolute',
-                      top: 4,
-                      right: 4,
-                      bgcolor: 'background.paper',
-                      '&:hover': {
-                        bgcolor: 'error.light',
-                        color: 'white'
-                      }
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFile(index);
-                    }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  {!isSaving && (
+                    <IconButton
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        bgcolor: 'background.paper',
+                        '&:hover': {
+                          bgcolor: 'error.light',
+                          color: 'white'
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveFile(index);
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  )}
                   <Typography
                     variant="caption"
                     sx={{
@@ -688,19 +854,34 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             gap: 1
           }}
         >
-          {/* Показываем кнопку очистки, если есть данные и не в режиме редактирования */}
-          {!isEditMode && (title || description || files.length > 0) && (
-            <Button
-              fullWidth
-              variant="text"
-              size="small"
-              onClick={handleClearForm}
-              disabled={isSaving}
-              startIcon={<DeleteIcon />}
-            >
-              {t('calendar.event.clearDraft')}
-            </Button>
-          )}
+          {(!isEditMode && (title || description || files.length > 0)) || isSaving ? (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {!isEditMode && (title || description || files.length > 0) && (
+                <Button
+                  sx={{ flex: 1 }}
+                  variant="text"
+                  size="small"
+                  onClick={handleClearForm}
+                  disabled={isSaving}
+                  startIcon={<DeleteIcon />}
+                >
+                  {t('calendar.event.clearDraft')}
+                </Button>
+              )}
+              {isSaving && (
+                <Button
+                  sx={{ flex: !isEditMode && (title || description || files.length > 0) ? undefined : 1 }}
+                  variant="outlined"
+                  size="small"
+                  color="warning"
+                  onClick={handleCancelSave}
+                  startIcon={<StopCircleIcon />}
+                >
+                  {t('calendar.event.cancelSave')}
+                </Button>
+              )}
+            </Box>
+          ) : null}
           
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
@@ -734,6 +915,12 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         onClose={() => setViewerOpen(false)}
         content={viewerContent}
         stackAboveParentModal
+      />
+      <CustomSnackbar
+        open={lockedToastOpen}
+        message={t('calendar.event.savingLockedWarning')}
+        severity="warning"
+        onClose={() => setLockedToastOpen(false)}
       />
     </>
   );

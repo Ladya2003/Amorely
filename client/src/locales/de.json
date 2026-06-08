@@ -894,6 +894,8 @@
       "anniversaryHint": "Dieses Ereignis erscheint im Feed am Beziehungsjahrestag",
       "clearDraft": "Entwurf löschen",
       "compressingVideo": "Video wird komprimiert...",
+      "cancelSave": "Speichern abbrechen",
+      "savingLockedWarning": "Speichern läuft. Bitte warten oder «Speichern abbrechen» tippen.",
       "noTitle": "Ohne Titel",
       "textOnly": "Nur-Text-Ereignis",
       "fileCount_one": "{{count}} Datei",
@@ -974,7 +976,8 @@
       "notAuthorized": "Nicht autorisiert",
       "unlockCrypto": "Entsperrt die Verschlüsselungsschlüssel unter /crypto/unlock",
       "encryptionRecipient": "Verschlüsselungsempfänger konnte nicht ermittelt werden",
-      "notAuthorizedShort": "Benutzer nicht autorisiert"
+      "notAuthorizedShort": "Benutzer nicht autorisiert",
+      "unreadableMedia": "Datei konnte nicht gelesen werden. Entfernt das beschädigte Medium und fügt es erneut hinzu."
     }
   },
   "news": {

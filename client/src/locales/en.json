@@ -915,6 +915,8 @@
       "save": "Save",
       "saving": "Saving...",
       "compressingVideo": "Compressing video...",
+      "cancelSave": "Cancel save",
+      "savingLockedWarning": "Save in progress. Please wait or tap Cancel save.",
       "new": "New event",
       "edit": "Edit event",
       "date": "Event date",
@@ -970,7 +972,8 @@
       "notAuthorized": "Not authorized",
       "unlockCrypto": "Unlock encryption keys on /crypto/unlock",
       "encryptionRecipient": "Could not determine encryption recipient",
-      "notAuthorizedShort": "User not authorized"
+      "notAuthorizedShort": "User not authorized",
+      "unreadableMedia": "Could not read a file. Remove the damaged media and add it again."
     },
     "tab": "Calendar",
     "plansTab": "Plans",

@@ -278,8 +278,7 @@ export const decryptContentFields = async (
         currentUserId,
         fallbackPartnerId
       );
-    } catch (error) {
-      console.error('Не удалось расшифровать заголовок:', error);
+    } catch {
       result.title = 'Не удалось расшифровать';
     }
   }
@@ -293,8 +292,7 @@ export const decryptContentFields = async (
         currentUserId,
         fallbackPartnerId
       );
-    } catch (error) {
-      console.error('Не удалось расшифровать описание:', error);
+    } catch {
       result.description = '';
     }
   }
@@ -326,8 +324,7 @@ export const enrichItemWithDecryptedMedia = async <T extends RawContentFields>(
       return item as T & { mediaEnvelope?: ContentMediaEnvelope };
     }
     return { ...item, mediaEnvelope };
-  } catch (error) {
-    console.error('Не удалось расшифровать медиа:', error);
+  } catch {
     return item as T & { mediaEnvelope?: ContentMediaEnvelope };
   }
 };

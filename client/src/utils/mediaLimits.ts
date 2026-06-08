@@ -28,7 +28,7 @@ export const VIDEO_COMPRESSION_MARGIN = 0.88;
 export const MIN_VIDEO_BITRATE = 220_000;
 
 /** Сколько раз перекодируем с усилением сжатия, пока не влезет в лимит. */
-export const MAX_VIDEO_COMPRESSION_PASSES = 5;
+export const MAX_VIDEO_COMPRESSION_PASSES = 7;
 
 export const formatMegabytes = (bytes: number): string =>
   String(Math.round(bytes / (1024 * 1024)));

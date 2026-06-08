@@ -7,12 +7,13 @@ import {
   MIN_VIDEO_BITRATE,
   VIDEO_AUDIO_BITRATE,
   VIDEO_BITRATE,
-  VIDEO_COMPRESSION_MARGIN,
   VIDEO_SKIP_BELOW_BYTES,
   formatMegabytes
 } from './mediaLimits';
+import { SaveAbortedError, throwIfAborted } from './saveAbort';
 import {
   cleanupVideoMetadata,
+  getVideoDuration,
   isVideoFile,
   loadVideoMetadata,
   type VideoMetadata
@@ -23,6 +24,97 @@ type CompressionProfile = {
   videoBitsPerSecond: number;
   audioBitsPerSecond: number;
 };
+
+export type CompressionPassLog = {
+  pass: number;
+  mode: 'audio' | 'video_only' | 'video_only_fallback';
+  maxDimension: number;
+  videoBitsPerSecond: number;
+  audioBitsPerSecond: number;
+  outputSizeBytes: number;
+  outputSizeMb: string;
+  underLimit: boolean;
+  playable: boolean;
+  playableReason?: string;
+  durationSec?: number;
+};
+
+const MIN_VALID_OUTPUT_BYTES = 4096;
+
+export type VideoCompressionFailureDetails = {
+  fileName: string;
+  sourceSizeBytes: number;
+  sourceSizeMb: string;
+  sourceMimeType: string;
+  durationSec: number;
+  width: number;
+  height: number;
+  recorderMimeType: string;
+  uploadLimitBytes: number;
+  uploadLimitMb: string;
+  passesPlanned: number;
+  passes: CompressionPassLog[];
+  acceptedAttempts: number;
+  smallestOutputBytes: number | null;
+  reason: 'all_over_limit' | 'no_valid_output' | 'no_audio_capture';
+};
+
+export class VideoCompressionError extends Error {
+  readonly details: VideoCompressionFailureDetails;
+
+  constructor(message: string, details: VideoCompressionFailureDetails) {
+    super(message);
+    this.name = 'VideoCompressionError';
+    this.details = details;
+    logVideoCompressionFailure(details, message);
+  }
+}
+
+export const isVideoCompressionError = (error: unknown): error is VideoCompressionError =>
+  error instanceof VideoCompressionError;
+
+const logVideoCompressionFailure = (
+  details: VideoCompressionFailureDetails,
+  message: string
+): void => {
+  console.groupCollapsed(`[compressVideo] ${message}`);
+  console.error('Сообщение:', message);
+  console.table(
+    details.passes.map((pass) => ({
+      pass: pass.pass,
+      mode: pass.mode,
+      resolution: pass.maxDimension,
+      videoKbps: Math.round(pass.videoBitsPerSecond / 1000),
+      audioKbps: Math.round(pass.audioBitsPerSecond / 1000),
+      sizeMb: pass.outputSizeMb,
+      under10Mb: pass.underLimit,
+      playable: pass.playable,
+      note: pass.playableReason ?? ''
+    }))
+  );
+  console.error('Исходник:', {
+    fileName: details.fileName,
+    sizeMb: details.sourceSizeMb,
+    durationSec: details.durationSec,
+    resolution: `${details.width}x${details.height}`,
+    mimeType: details.sourceMimeType,
+    recorderMimeType: details.recorderMimeType
+  });
+  console.error('Итог:', {
+    reason: details.reason,
+    passesPlanned: details.passesPlanned,
+    acceptedAttempts: details.acceptedAttempts,
+    smallestOutputMb:
+      details.smallestOutputBytes != null
+        ? formatMegabytes(details.smallestOutputBytes)
+        : null,
+    limitMb: details.uploadLimitMb
+  });
+  console.groupEnd();
+};
+
+const formatBytesMb = (bytes: number): string =>
+  `${(bytes / (1024 * 1024)).toFixed(2)} МБ (${bytes.toLocaleString()} байт)`;
 
 const RECORDER_MIME_WITH_AUDIO = [
   'video/webm;codecs=vp9,opus',
@@ -56,17 +148,21 @@ type ReencodeAudioCapture = {
   cleanup: () => void;
 };
 
-/** Захват аудиодорожки для перекодирования (Safari/iPhone MOV не отдаёт звук через captureStream). */
-const createReencodeAudioCapture = async (video: HTMLVideoElement): Promise<ReencodeAudioCapture> => {
-  const noopCapture: ReencodeAudioCapture = {
-    canCaptureAudio: false,
-    attachAudioTo: () => ({ hasAudio: false, detach: () => {} }),
-    cleanup: () => {}
-  };
+const noopAudioCapture: ReencodeAudioCapture = {
+  canCaptureAudio: false,
+  attachAudioTo: () => ({ hasAudio: false, detach: () => {} }),
+  cleanup: () => {}
+};
 
-  video.muted = false;
-  video.volume = 1;
+const prefersAudioContextCapture = (sourceMimeType?: string, fileName?: string): boolean => {
+  const mime = sourceMimeType?.toLowerCase() ?? '';
+  if (mime.includes('quicktime') || mime.includes('mp4')) {
+    return true;
+  }
+  return /\.(mov|mp4|m4v)$/i.test(fileName ?? '');
+};
 
+const tryCaptureStreamAudioCapture = (video: HTMLVideoElement): ReencodeAudioCapture => {
   const videoWithCapture = video as HTMLVideoElement & {
     captureStream?: () => MediaStream;
     mozCaptureStream?: () => MediaStream;
@@ -76,34 +172,36 @@ const createReencodeAudioCapture = async (video: HTMLVideoElement): Promise<Reen
   try {
     captureStream = videoWithCapture.captureStream?.() ?? videoWithCapture.mozCaptureStream?.() ?? null;
     const captureAudioTrack = captureStream?.getAudioTracks()[0];
-    if (captureAudioTrack) {
-      return {
-        canCaptureAudio: true,
-        attachAudioTo: (targetStream) => {
-          const track = captureAudioTrack.clone();
-          targetStream.addTrack(track);
-          return {
-            hasAudio: true,
-            detach: () => {
-              targetStream.removeTrack(track);
-              track.stop();
-            }
-          };
-        },
-        cleanup: () => captureStream?.getTracks().forEach((track) => track.stop())
-      };
+    if (!captureAudioTrack) {
+      captureStream?.getTracks().forEach((track) => track.stop());
+      return noopAudioCapture;
     }
-    captureStream?.getTracks().forEach((track) => track.stop());
-    captureStream = null;
+
+    return {
+      canCaptureAudio: true,
+      attachAudioTo: (targetStream) => {
+        targetStream.addTrack(captureAudioTrack);
+        return {
+          hasAudio: true,
+          detach: () => {
+            targetStream.removeTrack(captureAudioTrack);
+          }
+        };
+      },
+      cleanup: () => captureStream?.getTracks().forEach((track) => track.stop())
+    };
   } catch {
     captureStream?.getTracks().forEach((track) => track.stop());
+    return noopAudioCapture;
   }
+};
 
+const tryAudioContextCapture = async (video: HTMLVideoElement): Promise<ReencodeAudioCapture> => {
   const AudioContextCtor =
     window.AudioContext ||
     (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContextCtor) {
-    return noopCapture;
+    return noopAudioCapture;
   }
 
   try {
@@ -113,15 +211,18 @@ const createReencodeAudioCapture = async (video: HTMLVideoElement): Promise<Reen
     }
 
     const elementSource = audioContext.createMediaElementSource(video);
+    let activeDestination: MediaStreamAudioDestinationNode | null = null;
 
     return {
       canCaptureAudio: true,
       attachAudioTo: (targetStream) => {
         const destination = audioContext.createMediaStreamDestination();
+        activeDestination = destination;
         elementSource.connect(destination);
         const track = destination.stream.getAudioTracks()[0];
         if (!track) {
           elementSource.disconnect(destination);
+          activeDestination = null;
           return { hasAudio: false, detach: () => elementSource.disconnect(destination) };
         }
 
@@ -132,17 +233,88 @@ const createReencodeAudioCapture = async (video: HTMLVideoElement): Promise<Reen
             targetStream.removeTrack(track);
             track.stop();
             elementSource.disconnect(destination);
+            if (activeDestination === destination) {
+              activeDestination = null;
+            }
           }
         };
       },
       cleanup: () => {
+        if (activeDestination) {
+          elementSource.disconnect(activeDestination);
+          activeDestination = null;
+        }
         elementSource.disconnect();
         void audioContext.close();
       }
     };
   } catch {
-    return noopCapture;
+    return noopAudioCapture;
   }
+};
+
+/** Захват аудиодорожки для перекодирования (Safari/iPhone MOV не отдаёт звук через captureStream). */
+const createReencodeAudioCapture = async (
+  video: HTMLVideoElement,
+  sourceMimeType?: string,
+  fileName?: string
+): Promise<ReencodeAudioCapture> => {
+  video.muted = false;
+  video.volume = 1;
+
+  type AudioCaptureStrategy = (targetVideo: HTMLVideoElement) => Promise<ReencodeAudioCapture>;
+  const strategies: AudioCaptureStrategy[] = prefersAudioContextCapture(sourceMimeType, fileName)
+    ? [tryAudioContextCapture, async (targetVideo) => tryCaptureStreamAudioCapture(targetVideo)]
+    : [async (targetVideo) => tryCaptureStreamAudioCapture(targetVideo), tryAudioContextCapture];
+
+  for (const strategy of strategies) {
+    const capture = await strategy(video);
+    if (capture.canCaptureAudio) {
+      return capture;
+    }
+  }
+
+  return noopAudioCapture;
+};
+
+const disposeClonedVideo = (video: HTMLVideoElement) => {
+  video.pause();
+  video.removeAttribute('src');
+  video.load();
+};
+
+const cloneMetadataForReencode = async (metadata: VideoMetadata): Promise<VideoMetadata> => {
+  const video = document.createElement('video');
+  video.preload = 'auto';
+  video.muted = false;
+  video.volume = 1;
+  video.playsInline = true;
+  video.setAttribute('playsinline', 'true');
+  video.src = metadata.objectUrl;
+
+  await new Promise<void>((resolve, reject) => {
+    const onReady = () => {
+      video.removeEventListener('loadeddata', onReady);
+      video.removeEventListener('error', onError);
+      resolve();
+    };
+    const onError = () => {
+      video.removeEventListener('loadeddata', onReady);
+      video.removeEventListener('error', onError);
+      reject(new Error('Не удалось подготовить видео для сжатия'));
+    };
+    video.addEventListener('loadeddata', onReady);
+    video.addEventListener('error', onError);
+    video.load();
+  });
+
+  return {
+    video,
+    objectUrl: metadata.objectUrl,
+    duration: metadata.duration,
+    width: metadata.width,
+    height: metadata.height
+  };
 };
 
 const scaleVideoDimensions = (width: number, height: number, maxDimension: number) => {
@@ -162,9 +334,12 @@ const scaleVideoDimensions = (width: number, height: number, maxDimension: numbe
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Запас ниже лимита: MediaRecorder часто даёт файл крупнее заданного битрейта. */
+const BITRATE_ESTIMATE_MARGIN = 0.72;
+
 const estimateVideoBitrate = (durationSec: number): number => {
   const safeDuration = Math.max(durationSec, 1);
-  const targetBytes = MAX_VIDEO_UPLOAD_BYTES * VIDEO_COMPRESSION_MARGIN;
+  const targetBytes = MAX_VIDEO_UPLOAD_BYTES * BITRATE_ESTIMATE_MARGIN;
   const audioBytes = (VIDEO_AUDIO_BITRATE / 8) * safeDuration;
   const videoBytes = Math.max(0, targetBytes - audioBytes);
   const estimated = Math.floor((videoBytes * 8) / safeDuration);
@@ -180,7 +355,9 @@ const buildCompressionProfiles = (durationSec: number): CompressionProfile[] => 
     { maxDimension: MAX_VIDEO_WIDTH, videoBitsPerSecond: 700_000, audioBitsPerSecond: VIDEO_AUDIO_BITRATE },
     { maxDimension: 960, videoBitsPerSecond: 520_000, audioBitsPerSecond: 80_000 },
     { maxDimension: 720, videoBitsPerSecond: 380_000, audioBitsPerSecond: 64_000 },
-    { maxDimension: 480, videoBitsPerSecond: MIN_VIDEO_BITRATE, audioBitsPerSecond: 48_000 }
+    { maxDimension: 480, videoBitsPerSecond: MIN_VIDEO_BITRATE, audioBitsPerSecond: 48_000 },
+    { maxDimension: 360, videoBitsPerSecond: 180_000, audioBitsPerSecond: 32_000 },
+    { maxDimension: 320, videoBitsPerSecond: 150_000, audioBitsPerSecond: 32_000 }
   ];
 
   const seen = new Set<string>();
@@ -218,13 +395,67 @@ const resetVideoForReencode = async (video: HTMLVideoElement) => {
   await wait(80);
 };
 
+const waitForPlaybackStart = async (
+  video: HTMLVideoElement,
+  signal?: AbortSignal
+): Promise<void> => {
+  const deadline = Date.now() + 10_000;
+
+  while (Date.now() < deadline) {
+    throwIfAborted(signal);
+
+    if (!video.paused && (video.currentTime > 0.01 || video.readyState >= 3)) {
+      return;
+    }
+
+    if (video.ended) {
+      return;
+    }
+
+    if (video.paused) {
+      try {
+        await video.play();
+      } catch {
+        await wait(50);
+      }
+    }
+
+    await wait(50);
+  }
+
+  throw new Error('video_playback_timeout');
+};
+
+const finalizeRecorder = async (recorder: MediaRecorder): Promise<void> => {
+  if (recorder.state === 'recording') {
+    recorder.requestData();
+    await wait(400);
+    recorder.stop();
+    return;
+  }
+
+  if (recorder.state === 'paused') {
+    recorder.resume();
+    recorder.requestData();
+    await wait(400);
+    recorder.stop();
+  }
+};
+
+type ReencodeVideoResult = {
+  file: File;
+  recordedAudio: boolean;
+};
+
 const reencodeVideo = async (
   file: File,
   metadata: VideoMetadata,
   mimeType: string,
   profile: CompressionProfile,
-  audioCapture: ReencodeAudioCapture
-): Promise<File> => {
+  audioCapture: ReencodeAudioCapture | null,
+  signal?: AbortSignal,
+  withAudio = true
+): Promise<ReencodeVideoResult> => {
   const { video, duration, width, height } = metadata;
   const { width: targetWidth, height: targetHeight } = scaleVideoDimensions(
     width,
@@ -244,7 +475,14 @@ const reencodeVideo = async (
   }
 
   const canvasStream = canvas.captureStream(24);
-  const { hasAudio, detach: detachAudio } = audioCapture.attachAudioTo(canvasStream);
+  let detachAudio = () => {};
+  let hasAudio = false;
+
+  if (withAudio && audioCapture) {
+    const attachment = audioCapture.attachAudioTo(canvasStream);
+    hasAudio = attachment.hasAudio;
+    detachAudio = attachment.detach;
+  }
 
   const recorderOptions: MediaRecorderOptions = {
     mimeType,
@@ -264,16 +502,24 @@ const reencodeVideo = async (
     }
   };
 
+  const outputMimeType = toBaseMimeType(mimeType);
+
   const recordingFinished = new Promise<Blob>((resolve, reject) => {
-    recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
+    recorder.onstop = () => resolve(new Blob(chunks, { type: outputMimeType }));
     recorder.onerror = () => reject(new Error('Ошибка сжатия видео'));
   });
 
-  recorder.start(500);
-  await video.play();
+  ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+  recorder.start(250);
+  await waitForPlaybackStart(video, signal);
 
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     const renderFrame = () => {
+      if (signal?.aborted) {
+        reject(new SaveAbortedError());
+        return;
+      }
+
       if (video.ended || video.currentTime >= duration - 0.05) {
         resolve();
         return;
@@ -287,11 +533,8 @@ const reencodeVideo = async (
   });
 
   video.pause();
-  await wait(300);
-
-  if (recorder.state !== 'inactive') {
-    recorder.stop();
-  }
+  await wait(200);
+  await finalizeRecorder(recorder);
 
   detachAudio();
   canvasStream.getTracks().forEach((track) => track.stop());
@@ -300,10 +543,101 @@ const reencodeVideo = async (
   const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
   const baseName = file.name.replace(/\.[^.]+$/, '') || 'video';
 
-  return new File([blob], `${baseName}.${extension}`, {
-    type: mimeType,
-    lastModified: Date.now()
-  });
+  return {
+    file: new File([blob], `${baseName}.${extension}`, {
+      type: outputMimeType,
+      lastModified: Date.now()
+    }),
+    recordedAudio: withAudio && hasAudio
+  };
+};
+
+const toBaseMimeType = (mimeType: string): string => mimeType.split(';')[0].trim();
+
+const inspectCompressedVideo = async (
+  file: File
+): Promise<{ playable: boolean; durationSec?: number; reason?: string }> => {
+  if (file.size < MIN_VALID_OUTPUT_BYTES) {
+    return { playable: false, reason: 'output_too_small' };
+  }
+
+  try {
+    const durationSec = await getVideoDuration(file);
+    if (Number.isFinite(durationSec) && durationSec > 0) {
+      return { playable: true, durationSec };
+    }
+  } catch {
+    // Свежий WebM от MediaRecorder иногда не отдаёт duration сразу, но воспроизводится.
+  }
+
+  return { playable: true, reason: 'duration_metadata_unavailable' };
+};
+
+const encodeProfileAttempt = async (
+  file: File,
+  metadata: VideoMetadata,
+  profile: CompressionProfile,
+  signal?: AbortSignal
+): Promise<{ file: File; mode: CompressionPassLog['mode'] }> => {
+  const mimeWithAudio = pickRecorderMimeType(true);
+  const mimeVideoOnly = pickRecorderMimeType(false);
+
+  if (!mimeVideoOnly && !mimeWithAudio) {
+    throw new Error('Браузер не поддерживает сжатие видео');
+  }
+
+  if (mimeWithAudio) {
+    const freshMetadata = await cloneMetadataForReencode(metadata);
+    const freshAudioCapture = await createReencodeAudioCapture(
+      freshMetadata.video,
+      file.type,
+      file.name
+    );
+
+    try {
+      const audioAttempt = await reencodeVideo(
+        file,
+        freshMetadata,
+        mimeWithAudio,
+        profile,
+        freshAudioCapture,
+        signal,
+        true
+      );
+
+      if (
+        audioAttempt.recordedAudio &&
+        audioAttempt.file.size >= MIN_VALID_OUTPUT_BYTES
+      ) {
+        return { file: audioAttempt.file, mode: 'audio' };
+      }
+    } finally {
+      freshAudioCapture.cleanup();
+      disposeClonedVideo(freshMetadata.video);
+    }
+  }
+
+  const videoMetadata = await cloneMetadataForReencode(metadata);
+  const outputMimeType = mimeVideoOnly ?? mimeWithAudio!;
+
+  try {
+    const videoOnly = await reencodeVideo(
+      file,
+      videoMetadata,
+      outputMimeType,
+      profile,
+      null,
+      signal,
+      false
+    );
+
+    return {
+      file: videoOnly.file,
+      mode: mimeWithAudio ? 'video_only_fallback' : 'video_only'
+    };
+  } finally {
+    disposeClonedVideo(videoMetadata.video);
+  }
 };
 
 const pickBestCompressed = (original: File, candidates: File[]): File | null => {
@@ -325,45 +659,120 @@ const shouldSkipVideoCompression = (file: File, metadata: VideoMetadata): boolea
   return metadata.width <= MAX_VIDEO_WIDTH && metadata.height <= MAX_VIDEO_WIDTH;
 };
 
+const buildFailureDetails = (
+  file: File,
+  metadata: VideoMetadata,
+  mimeType: string,
+  profiles: CompressionProfile[],
+  passLogs: CompressionPassLog[],
+  attempts: File[],
+  reason: VideoCompressionFailureDetails['reason']
+): VideoCompressionFailureDetails => {
+  const allOutputs = passLogs.map((pass) => pass.outputSizeBytes);
+  const smallestOutputBytes =
+    allOutputs.length > 0 ? Math.min(...allOutputs) : attempts.length > 0
+      ? Math.min(...attempts.map((item) => item.size))
+      : null;
+
+  return {
+    fileName: file.name,
+    sourceSizeBytes: file.size,
+    sourceSizeMb: formatBytesMb(file.size),
+    sourceMimeType: file.type || 'unknown',
+    durationSec: metadata.duration,
+    width: metadata.width,
+    height: metadata.height,
+    recorderMimeType: mimeType,
+    uploadLimitBytes: MAX_VIDEO_UPLOAD_BYTES,
+    uploadLimitMb: formatBytesMb(MAX_VIDEO_UPLOAD_BYTES),
+    passesPlanned: profiles.length,
+    passes: passLogs,
+    acceptedAttempts: attempts.length,
+    smallestOutputBytes,
+    reason
+  };
+};
+
+const throwCompressionFailure = (
+  file: File,
+  metadata: VideoMetadata,
+  mimeType: string,
+  profiles: CompressionProfile[],
+  passLogs: CompressionPassLog[],
+  attempts: File[],
+  reason: VideoCompressionFailureDetails['reason']
+): never => {
+  const details = buildFailureDetails(file, metadata, mimeType, profiles, passLogs, attempts, reason);
+  const smallestMb =
+    details.smallestOutputBytes != null
+      ? formatMegabytes(details.smallestOutputBytes)
+      : null;
+
+  let message = `Не удалось сжать видео до ${formatMegabytes(MAX_VIDEO_UPLOAD_BYTES)} МБ.`;
+  if (reason === 'no_audio_capture') {
+    message =
+      `Не удалось сохранить звук при сжатии видео. Выберите файл до ${formatMegabytes(MAX_VIDEO_UPLOAD_BYTES)} МБ.`;
+  } else if (reason === 'all_over_limit' && smallestMb) {
+    message += ` Наименьший результат: ${smallestMb} МБ. Попробуйте более короткий ролик.`;
+  } else if (reason === 'no_valid_output') {
+    message += ' Ни один проход не дал пригодный файл. Подробности — в консоли.';
+  } else {
+    message += ' Попробуйте более короткий ролик. Подробности — в консоли.';
+  }
+
+  throw new VideoCompressionError(message, details);
+};
+
 const compressWithRetries = async (
   file: File,
   metadata: VideoMetadata,
-  mimeType: string
+  mimeType: string,
+  signal?: AbortSignal
 ): Promise<File> => {
   const profiles = buildCompressionProfiles(metadata.duration);
   const attempts: File[] = [];
-  const audioCapture = await createReencodeAudioCapture(metadata.video);
+  const passLogs: CompressionPassLog[] = [];
 
-  if (!audioCapture.canCaptureAudio && file.size <= MAX_VIDEO_UPLOAD_BYTES) {
-    audioCapture.cleanup();
-    return file;
-  }
-
-  if (!audioCapture.canCaptureAudio) {
-    audioCapture.cleanup();
-    throw new Error(
-      `Не удалось сохранить звук при сжатии видео. Выберите файл до ${formatMegabytes(MAX_VIDEO_UPLOAD_BYTES)} МБ.`
+  for (let index = 0; index < profiles.length; index += 1) {
+    const profile = profiles[index];
+    throwIfAborted(signal);
+    const { file: compressed, mode } = await encodeProfileAttempt(
+      file,
+      metadata,
+      profile,
+      signal
     );
-  }
+    const inspection = await inspectCompressedVideo(compressed);
+    const passLog: CompressionPassLog = {
+      pass: index + 1,
+      mode,
+      maxDimension: profile.maxDimension,
+      videoBitsPerSecond: profile.videoBitsPerSecond,
+      audioBitsPerSecond: profile.audioBitsPerSecond,
+      outputSizeBytes: compressed.size,
+      outputSizeMb: formatBytesMb(compressed.size),
+      underLimit: compressed.size <= MAX_VIDEO_UPLOAD_BYTES,
+      playable: inspection.playable,
+      playableReason: inspection.reason,
+      durationSec: inspection.durationSec
+    };
+    passLogs.push(passLog);
 
-  try {
-    for (const profile of profiles) {
-      const compressed = await reencodeVideo(file, metadata, mimeType, profile, audioCapture);
-      attempts.push(compressed);
-
-      if (compressed.size <= MAX_VIDEO_UPLOAD_BYTES) {
-        const best = pickBestCompressed(file, attempts);
-        if (!best) break;
-
-        if (best.size < file.size || file.size > MAX_VIDEO_UPLOAD_BYTES) {
-          return best;
-        }
-
-        return file;
-      }
+    if (!inspection.playable) {
+      continue;
     }
-  } finally {
-    audioCapture.cleanup();
+    attempts.push(compressed);
+
+    if (compressed.size <= MAX_VIDEO_UPLOAD_BYTES) {
+      const best = pickBestCompressed(file, attempts);
+      if (!best) break;
+
+      if (best.size < file.size || file.size > MAX_VIDEO_UPLOAD_BYTES) {
+        return best;
+      }
+
+      return file;
+    }
   }
 
   const best = pickBestCompressed(file, attempts);
@@ -371,14 +780,25 @@ const compressWithRetries = async (
     return best.size < file.size || file.size > MAX_VIDEO_UPLOAD_BYTES ? best : file;
   }
 
-  throw new Error(
-    `Не удалось сжать видео до ${formatMegabytes(MAX_VIDEO_UPLOAD_BYTES)} МБ. ` +
-      'Попробуйте более короткий ролик.'
-  );
+  if (attempts.length > 0 || passLogs.some((pass) => pass.outputSizeBytes > 0)) {
+    return throwCompressionFailure(file, metadata, mimeType, profiles, passLogs, attempts, 'all_over_limit');
+  }
+
+  return throwCompressionFailure(file, metadata, mimeType, profiles, passLogs, attempts, 'no_valid_output');
+};
+
+export type CompressVideoOptions = {
+  signal?: AbortSignal;
 };
 
 /** Сжимает видео перед E2EE-загрузкой и проверяет лимиты размера/длительности. */
-export const compressVideoForUpload = async (file: File): Promise<File> => {
+export const compressVideoForUpload = async (
+  file: File,
+  options?: CompressVideoOptions
+): Promise<File> => {
+  const signal = options?.signal;
+  throwIfAborted(signal);
+
   if (!isVideoFile(file)) return file;
 
   if (file.size > MAX_VIDEO_SOURCE_BYTES) {
@@ -419,8 +839,12 @@ export const compressVideoForUpload = async (file: File): Promise<File> => {
       return file;
     }
 
-    return await compressWithRetries(file, metadata, mimeType);
+    return await compressWithRetries(file, metadata, mimeType, signal);
   } catch (error) {
+    if (error instanceof SaveAbortedError || error instanceof VideoCompressionError) {
+      throw error;
+    }
+
     if (error instanceof Error && (error.message.includes('МБ') || error.message.includes('секунд'))) {
       throw error;
     }

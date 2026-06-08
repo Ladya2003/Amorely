@@ -1,12 +1,18 @@
 import axios, { isAxiosError } from 'axios';
 import { API_URL } from '../config';
 import { prepareMediaForUpload } from '../utils/prepareMediaForUpload';
+import { isSaveAborted, throwIfAborted } from '../utils/saveAbort';
 import { isVideoFile } from '../utils/videoMetadata';
 import { getDisplayTypeFromFile, getVideoMimeType } from '../utils/videoMime';
 import { encryptFileForUpload } from './mediaCrypto';
 import { encryptMediaEnvelopeForPartner } from './contentCryptoService';
 import type { EncryptedTextPayload } from './contentCryptoService';
 import type { LocalDeviceKeys } from './cryptoService';
+
+export type EncryptedUploadOptions = {
+  signal?: AbortSignal;
+  onFileUploaded?: (publicId: string) => void;
+};
 
 export type UploadedEncryptedFile = {
   url: string;
@@ -39,12 +45,17 @@ const getUploadErrorMessage = (error: unknown): string | null => {
   return typeof data?.error === 'string' && data.error.length > 0 ? data.error : null;
 };
 
-export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncryptedFile[]> => {
+export const encryptAndUploadFiles = async (
+  files: File[],
+  options?: EncryptedUploadOptions
+): Promise<UploadedEncryptedFile[]> => {
   const token = localStorage.getItem('token');
   const uploads: UploadedEncryptedFile[] = [];
 
   for (const file of files) {
-    const preparedFile = await prepareMediaForUpload(file);
+    throwIfAborted(options?.signal);
+    const preparedFile = await prepareMediaForUpload(file, { signal: options?.signal });
+    throwIfAborted(options?.signal);
     const encrypted = await encryptFileForUpload(preparedFile);
     const uploadName = `encrypted-${Date.now()}-${Math.random().toString(36).slice(2)}.enc`;
     const formData = new FormData();
@@ -56,9 +67,13 @@ export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncr
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
-        }
+        },
+        signal: options?.signal
       });
     } catch (error) {
+      if (isSaveAborted(error)) {
+        throw error;
+      }
       throw new Error(getUploadErrorMessage(error) || 'Не удалось загрузить зашифрованный файл');
     }
 
@@ -66,6 +81,8 @@ export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncr
     if (!item?.url || !item?.publicId) {
       throw new Error('Не удалось загрузить зашифрованный файл');
     }
+
+    options?.onFileUploaded?.(item.publicId);
 
     uploads.push({
       url: item.url,
@@ -85,13 +102,37 @@ export const encryptAndUploadFiles = async (files: File[]): Promise<UploadedEncr
   return uploads;
 };
 
+export const deleteUploadedEncryptedFiles = async (publicIds: string[]): Promise<void> => {
+  const uniqueIds = Array.from(new Set(publicIds.filter(Boolean)));
+  if (uniqueIds.length === 0) return;
+
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  try {
+    await axios.post(
+      `${API_URL}/api/chat/delete-uploaded-encrypted`,
+      { publicIds: uniqueIds },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Не удалось удалить загруженные файлы при отмене:', error);
+  }
+};
+
 /** Загрузка медиа для ленты/календаря: ключ файла шифруется ECDH для партнёра. */
 export const encryptAndUploadContentFiles = async (
   files: File[],
   localKeys: LocalDeviceKeys,
-  partnerUserId: string
+  partnerUserId: string,
+  options?: EncryptedUploadOptions
 ): Promise<UploadedEncryptedContentFile[]> => {
-  const uploads = await encryptAndUploadFiles(files);
+  const uploads = await encryptAndUploadFiles(files, options);
 
   return Promise.all(
     uploads.map(async (item) => {

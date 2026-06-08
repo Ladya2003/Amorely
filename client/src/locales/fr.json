@@ -894,6 +894,8 @@
       "anniversaryHint": "Cet événement apparaîtra dans le fil à l'anniversaire de la relation",
       "clearDraft": "Effacer le brouillon",
       "compressingVideo": "Compression de la vidéo...",
+      "cancelSave": "Annuler l'enregistrement",
+      "savingLockedWarning": "Enregistrement en cours. Patientez ou appuyez sur « Annuler l'enregistrement ».",
       "noTitle": "Sans titre",
       "textOnly": "Événement texte seul",
       "fileCount_one": "{{count}} fichier",
@@ -974,7 +976,8 @@
       "notAuthorized": "Non autorisé",
       "unlockCrypto": "Déverrouillez les clés de chiffrement sur /crypto/unlock",
       "encryptionRecipient": "Impossible de déterminer le destinataire du chiffrement",
-      "notAuthorizedShort": "Utilisateur non autorisé"
+      "notAuthorizedShort": "Utilisateur non autorisé",
+      "unreadableMedia": "Impossible de lire un fichier. Supprimez le média endommagé et ajoutez-le à nouveau."
     }
   },
   "news": {

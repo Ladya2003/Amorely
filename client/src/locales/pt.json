@@ -894,6 +894,8 @@
       "anniversaryHint": "Este evento aparecerá no feed no aniversário do relacionamento",
       "clearDraft": "Limpar rascunho",
       "compressingVideo": "Comprimindo vídeo...",
+      "cancelSave": "Cancelar salvamento",
+      "savingLockedWarning": "Salvamento em andamento. Aguarde ou toque em «Cancelar salvamento».",
       "noTitle": "Sem título",
       "textOnly": "Evento só de texto",
       "fileCount_one": "{{count}} arquivo",
@@ -974,7 +976,8 @@
       "notAuthorized": "Não autorizado",
       "unlockCrypto": "Desbloqueie as chaves de criptografia em /crypto/unlock",
       "encryptionRecipient": "Não foi possível determinar o destinatário da criptografia",
-      "notAuthorizedShort": "Usuário não autorizado"
+      "notAuthorizedShort": "Usuário não autorizado",
+      "unreadableMedia": "Não foi possível ler um arquivo. Remova a mídia danificada e adicione-a novamente."
     }
   },
   "news": {
