@@ -14,8 +14,13 @@ import {
   CircularProgress,
   Alert,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -26,6 +31,7 @@ import CustomSnackbar from '../UI/CustomSnackbar';
 import { deleteUploadedEncryptedFiles } from '../../crypto/encryptedUploadService';
 import { isSaveAborted } from '../../utils/saveAbort';
 import { isVideoCompressionError } from '../../utils/compressVideo';
+import type { PrepareMediaProgress } from '../../utils/parallelMediaPrepare';
 import { assertFilesReadable } from '../../utils/validateReadableFiles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -76,6 +82,7 @@ interface EventEditorDrawerProps {
     saveOptions?: {
       signal?: AbortSignal;
       onFileUploaded?: (publicId: string) => void;
+      onPrepareStart?: (progress: PrepareMediaProgress) => void;
     }
   ) => Promise<void>;
   onUpdate?: (
@@ -92,6 +99,7 @@ interface EventEditorDrawerProps {
     saveOptions?: {
       signal?: AbortSignal;
       onFileUploaded?: (publicId: string) => void;
+      onPrepareStart?: (progress: PrepareMediaProgress) => void;
     }
   ) => Promise<void>;
 }
@@ -149,6 +157,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [compressProgress, setCompressProgress] = useState<PrepareMediaProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isBirthdayEvent, setIsBirthdayEvent] = useState(false);
@@ -161,6 +170,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     resourceType: 'image' | 'video';
   } | null>(null);
   const [lockedToastOpen, setLockedToastOpen] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   const saveAbortRef = useRef<AbortController | null>(null);
   const saveSnapshotRef = useRef<SaveSnapshot | null>(null);
@@ -387,11 +397,17 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       signal: abortController.signal,
       onFileUploaded: (publicId: string) => {
         uploadedPublicIdsRef.current = [...uploadedPublicIdsRef.current, publicId];
+      },
+      onPrepareStart: (progress: PrepareMediaProgress) => {
+        if (progress.isVideo) {
+          setCompressProgress(progress);
+        }
       }
     };
 
     try {
       setIsSaving(true);
+      setCompressProgress(null);
       setError(null);
       
       if (isEditMode && editEvent && onUpdate) {
@@ -452,6 +468,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     } finally {
       if (!abortController.signal.aborted) {
         setIsSaving(false);
+        setCompressProgress(null);
         saveAbortRef.current = null;
         saveSnapshotRef.current = null;
         uploadedPublicIdsRef.current = [];
@@ -482,6 +499,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
     setError(null);
     setIsSaving(false);
+    setCompressProgress(null);
     saveAbortRef.current = null;
     saveSnapshotRef.current = null;
     uploadedPublicIdsRef.current = [];
@@ -501,21 +519,38 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     onClose();
   };
 
-  const handleClearForm = () => {
+  const handleClearFormClick = () => {
     if (isSaving) {
       showLockedToast();
       return;
     }
+    setClearConfirmOpen(true);
+  };
+
+  const handleConfirmClearForm = () => {
     previews.forEach((url) => URL.revokeObjectURL(url));
     setTitle('');
     setDescription('');
     setFiles([]);
     setPreviews([]);
     setSelectedDate(initialDate || new Date());
-    clearDraft();
+    if (isEditMode) {
+      setRemovedMediaIds((prev) =>
+        Array.from(new Set([...prev, ...existingMedia.map((item) => item._id)]))
+      );
+      setExistingMedia([]);
+      setIsBirthdayEvent(false);
+      setIsAnniversaryEvent(false);
+    } else {
+      clearDraft();
+    }
+    setClearConfirmOpen(false);
   };
 
   const canSave = selectedDate && title.trim().length > 0;
+  const hasFormContent = isEditMode
+    ? !!(title || description || files.length > 0 || existingMedia.length > 0)
+    : !!(title || description || files.length > 0);
 
   return (
     <>
@@ -854,14 +889,14 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             gap: 1
           }}
         >
-          {(!isEditMode && (title || description || files.length > 0)) || isSaving ? (
+          {(hasFormContent || isSaving) ? (
             <Box sx={{ display: 'flex', gap: 1 }}>
-              {!isEditMode && (title || description || files.length > 0) && (
+              {hasFormContent && (
                 <Button
                   sx={{ flex: 1 }}
                   variant="text"
                   size="small"
-                  onClick={handleClearForm}
+                  onClick={handleClearFormClick}
                   disabled={isSaving}
                   startIcon={<DeleteIcon />}
                 >
@@ -870,7 +905,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               )}
               {isSaving && (
                 <Button
-                  sx={{ flex: !isEditMode && (title || description || files.length > 0) ? undefined : 1 }}
+                  sx={{ flex: hasFormContent ? undefined : 1 }}
                   variant="outlined"
                   size="small"
                   color="warning"
@@ -901,9 +936,14 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
             >
               {isSaving
-                ? files.some(isVideoFile)
-                  ? t('calendar.event.compressingVideo')
-                  : t('calendar.common.saving')
+                ? compressProgress && compressProgress.total > 1
+                  ? t('calendar.event.compressingVideos', {
+                      current: compressProgress.index,
+                      total: compressProgress.total
+                    })
+                  : files.some(isVideoFile)
+                    ? t('calendar.event.compressingVideo')
+                    : t('calendar.common.saving')
                 : t('calendar.common.save')}
             </Button>
           </Box>
@@ -922,6 +962,29 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         severity="warning"
         onClose={() => setLockedToastOpen(false)}
       />
+      <ResponsiveDialog
+        open={clearConfirmOpen}
+        onClose={() => setClearConfirmOpen(false)}
+      >
+        <DialogTitle>{t('calendar.event.clearConfirmTitle')}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t('calendar.event.clearConfirmMessage')}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setClearConfirmOpen(false)}>
+            {t('calendar.common.cancel')}
+          </Button>
+          <Button
+            onClick={handleConfirmClearForm}
+            color="error"
+            variant="contained"
+          >
+            {t('calendar.event.clearForm')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
     </>
   );
 };

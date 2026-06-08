@@ -573,10 +573,16 @@ const inspectCompressedVideo = async (
   return { playable: true, reason: 'duration_metadata_unavailable' };
 };
 
+type AudioEncodeState = {
+  /** Аудио на этом файле не удалось — на следующих проходах не пробуем снова. */
+  skipAudio: boolean;
+};
+
 const encodeProfileAttempt = async (
   file: File,
   metadata: VideoMetadata,
   profile: CompressionProfile,
+  audioState: AudioEncodeState,
   signal?: AbortSignal
 ): Promise<{ file: File; mode: CompressionPassLog['mode'] }> => {
   const mimeWithAudio = pickRecorderMimeType(true);
@@ -586,7 +592,7 @@ const encodeProfileAttempt = async (
     throw new Error('Браузер не поддерживает сжатие видео');
   }
 
-  if (mimeWithAudio) {
+  if (mimeWithAudio && !audioState.skipAudio) {
     const freshMetadata = await cloneMetadataForReencode(metadata);
     const freshAudioCapture = await createReencodeAudioCapture(
       freshMetadata.video,
@@ -611,6 +617,8 @@ const encodeProfileAttempt = async (
       ) {
         return { file: audioAttempt.file, mode: 'audio' };
       }
+
+      audioState.skipAudio = true;
     } finally {
       freshAudioCapture.cleanup();
       disposeClonedVideo(freshMetadata.video);
@@ -732,6 +740,7 @@ const compressWithRetries = async (
   const profiles = buildCompressionProfiles(metadata.duration);
   const attempts: File[] = [];
   const passLogs: CompressionPassLog[] = [];
+  const audioState: AudioEncodeState = { skipAudio: false };
 
   for (let index = 0; index < profiles.length; index += 1) {
     const profile = profiles[index];
@@ -740,6 +749,7 @@ const compressWithRetries = async (
       file,
       metadata,
       profile,
+      audioState,
       signal
     );
     const inspection = await inspectCompressedVideo(compressed);

@@ -1,6 +1,10 @@
 import axios, { isAxiosError } from 'axios';
 import { API_URL } from '../config';
-import { prepareMediaForUpload } from '../utils/prepareMediaForUpload';
+import {
+  prepareAllMediaForUpload,
+  runWithConcurrency,
+  type ParallelPrepareOptions
+} from '../utils/parallelMediaPrepare';
 import { isSaveAborted, throwIfAborted } from '../utils/saveAbort';
 import { isVideoFile } from '../utils/videoMetadata';
 import { getDisplayTypeFromFile, getVideoMimeType } from '../utils/videoMime';
@@ -12,6 +16,8 @@ import type { LocalDeviceKeys } from './cryptoService';
 export type EncryptedUploadOptions = {
   signal?: AbortSignal;
   onFileUploaded?: (publicId: string) => void;
+  onPrepareStart?: ParallelPrepareOptions['onPrepareStart'];
+  maxPrepareConcurrency?: number;
 };
 
 export type UploadedEncryptedFile = {
@@ -50,56 +56,65 @@ export const encryptAndUploadFiles = async (
   options?: EncryptedUploadOptions
 ): Promise<UploadedEncryptedFile[]> => {
   const token = localStorage.getItem('token');
-  const uploads: UploadedEncryptedFile[] = [];
 
-  for (const file of files) {
-    throwIfAborted(options?.signal);
-    const preparedFile = await prepareMediaForUpload(file, { signal: options?.signal });
-    throwIfAborted(options?.signal);
-    const encrypted = await encryptFileForUpload(preparedFile);
-    const uploadName = `encrypted-${Date.now()}-${Math.random().toString(36).slice(2)}.enc`;
-    const formData = new FormData();
-    formData.append('media', encrypted.encryptedBlob, uploadName);
+  throwIfAborted(options?.signal);
+  const preparedFiles = await prepareAllMediaForUpload(files, {
+    signal: options?.signal,
+    maxConcurrency: options?.maxPrepareConcurrency,
+    onPrepareStart: options?.onPrepareStart
+  });
 
-    let response;
-    try {
-      response = await axios.post(`${API_URL}/api/chat/upload-encrypted`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
-        },
-        signal: options?.signal
-      });
-    } catch (error) {
-      if (isSaveAborted(error)) {
-        throw error;
+  const concurrency = options?.maxPrepareConcurrency ?? 2;
+
+  return runWithConcurrency(
+    preparedFiles,
+    concurrency,
+    async (preparedFile) => {
+      throwIfAborted(options?.signal);
+      const encrypted = await encryptFileForUpload(preparedFile);
+      const uploadName = `encrypted-${Date.now()}-${Math.random().toString(36).slice(2)}.enc`;
+      const formData = new FormData();
+      formData.append('media', encrypted.encryptedBlob, uploadName);
+
+      let response;
+      try {
+        response = await axios.post(`${API_URL}/api/chat/upload-encrypted`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          },
+          signal: options?.signal
+        });
+      } catch (error) {
+        if (isSaveAborted(error)) {
+          throw error;
+        }
+        throw new Error(getUploadErrorMessage(error) || 'Не удалось загрузить зашифрованный файл');
       }
-      throw new Error(getUploadErrorMessage(error) || 'Не удалось загрузить зашифрованный файл');
-    }
 
-    const item = response.data.uploads?.[0];
-    if (!item?.url || !item?.publicId) {
-      throw new Error('Не удалось загрузить зашифрованный файл');
-    }
+      const item = response.data.uploads?.[0];
+      if (!item?.url || !item?.publicId) {
+        throw new Error('Не удалось загрузить зашифрованный файл');
+      }
 
-    options?.onFileUploaded?.(item.publicId);
+      options?.onFileUploaded?.(item.publicId);
 
-    uploads.push({
-      url: item.url,
-      publicId: item.publicId,
-      mediaEnvelope: {
-        mediaKey: encrypted.mediaKey,
-        iv: encrypted.iv,
-        mimeType: isVideoFile(preparedFile)
-          ? getVideoMimeType(preparedFile)
-          : preparedFile.type || 'application/octet-stream',
-        displayType: getDisplayTypeFromFile(preparedFile)
-      },
-      fileSize: preparedFile.size
-    });
-  }
-
-  return uploads;
+      return {
+        url: item.url,
+        publicId: item.publicId,
+        mediaEnvelope: {
+          mediaKey: encrypted.mediaKey,
+          iv: encrypted.iv,
+          mimeType: isVideoFile(preparedFile)
+            ? getVideoMimeType(preparedFile)
+            : preparedFile.type || 'application/octet-stream',
+          displayType: getDisplayTypeFromFile(preparedFile)
+        },
+        fileSize: preparedFile.size
+      };
+    },
+    options?.signal
+  );
 };
 
 export const deleteUploadedEncryptedFiles = async (publicIds: string[]): Promise<void> => {

@@ -20,6 +20,7 @@ import {
 } from '../crypto/contentCryptoService';
 import { encryptAndUploadContentFiles } from '../crypto/encryptedUploadService';
 import { isVideoCompressionError } from '../utils/compressVideo';
+import type { PrepareMediaProgress } from '../utils/parallelMediaPrepare';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
 import { loadLocalKeys, type LocalDeviceKeys } from '../crypto/cryptoService';
 import { buildSharedEventRef, prepareEventForShare, type EventLikeForShare } from '../utils/buildSharedEventRef';
@@ -418,6 +419,7 @@ const CalendarPage: React.FC = () => {
     saveOptions?: {
       signal?: AbortSignal;
       onFileUploaded?: (publicId: string) => void;
+      onPrepareStart?: (progress: PrepareMediaProgress) => void;
     }
   ) => {
     try {
@@ -500,6 +502,7 @@ const CalendarPage: React.FC = () => {
     saveOptions?: {
       signal?: AbortSignal;
       onFileUploaded?: (publicId: string) => void;
+      onPrepareStart?: (progress: PrepareMediaProgress) => void;
     }
   ) => {
     try {
