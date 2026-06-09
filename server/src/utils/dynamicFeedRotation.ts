@@ -250,19 +250,35 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
     return fetchFullFeedForPair(ownerId, partnerId);
   }
 
-  if (state.lastGeneratedSlot === slotKey) {
-    const selectedIds = getIdsFromSlots(state.currentSlots);
-    if (selectedIds.length === 0) {
-      return fetchFullFeedForPair(ownerId, partnerId);
-    }
-    const docs = await Content.find({
-      _id: { $in: selectedIds.map((id) => new mongoose.Types.ObjectId(id)) }
-    }).sort({ eventDate: -1, createdAt: -1 });
+  const sortDocsBySlotOrder = (selectedIds: string[], docs: any[]) => {
     const orderMap = new Map(selectedIds.map((id, index) => [id, index]));
     docs.sort(
       (a, b) => (orderMap.get(a._id.toString()) ?? 999) - (orderMap.get(b._id.toString()) ?? 999)
     );
     return docs;
+  };
+
+  const fetchDocsForSlotIds = async (selectedIds: string[]) => {
+    if (selectedIds.length === 0) {
+      return [];
+    }
+
+    const docs = await Content.find({
+      _id: { $in: selectedIds.map((id) => new mongoose.Types.ObjectId(id)) }
+    }).sort({ eventDate: -1, createdAt: -1 });
+
+    return sortDocsBySlotOrder(selectedIds, docs);
+  };
+
+  if (state.lastGeneratedSlot === slotKey) {
+    const cachedIds = getIdsFromSlots(state.currentSlots);
+    const cachedDocs = await fetchDocsForSlotIds(cachedIds);
+
+    if (cachedDocs.length > 0 && cachedDocs.length === cachedIds.length) {
+      return cachedDocs;
+    }
+
+    // Слот уже записан, но контент удалён или неполный — перегенерируем при заходе на ленту.
   }
 
   const contentPool = await Content.find({
@@ -365,14 +381,7 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
     return fetchFullFeedForPair(ownerId, partnerId);
   }
 
-  const docs = await Content.find({
-    _id: { $in: selectedIds.map((id) => new mongoose.Types.ObjectId(id)) }
-  }).sort({ eventDate: -1, createdAt: -1 });
-
-  const orderMap = new Map(selectedIds.map((id, index) => [id, index]));
-  docs.sort((a, b) => (orderMap.get(a._id.toString()) ?? 999) - (orderMap.get(b._id.toString()) ?? 999));
-
-  return docs;
+  return fetchDocsForSlotIds(selectedIds);
 };
 
 export const refreshDynamicFeedForAllActiveRelationships = async (now: Date = new Date()) => {

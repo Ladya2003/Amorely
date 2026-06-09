@@ -5,9 +5,19 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Partner } from '../components/Settings/PartnerForm';
 
 export const PARTNER_CHANGED_EVENT = 'amorely:partner-changed';
+export const PARTNER_UNLINKED_EVENT = 'amorely:partner-unlinked';
+export const BREAKUP_INITIATED_EVENT = 'amorely:breakup-initiated';
 
 export const notifyPartnerChanged = () => {
   window.dispatchEvent(new CustomEvent(PARTNER_CHANGED_EVENT));
+};
+
+export const notifyPartnerUnlinked = () => {
+  window.dispatchEvent(new CustomEvent(PARTNER_UNLINKED_EVENT));
+};
+
+export const notifyBreakupInitiated = () => {
+  window.dispatchEvent(new CustomEvent(BREAKUP_INITIATED_EVENT));
 };
 
 export const useRelationship = () => {

@@ -22,7 +22,8 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import ProfileForm, { UserProfile } from '../components/Settings/ProfileForm';
 import PartnerForm from '../components/Settings/PartnerForm';
-import { notifyPartnerChanged, useRelationship } from '../hooks/useRelationship';
+import { notifyBreakupInitiated, notifyPartnerChanged, useRelationship } from '../hooks/useRelationship';
+import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 import ThemeSettings from '../components/Settings/ThemeSettings';
 import { PrimaryColorPreference } from '../theme/appTheme';
 import { AppLocale, resolveAppLocale } from '../localization/locale';
@@ -226,7 +227,7 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleRemovePartner = async () => {
+  const handleRemovePartner = async (options: { keepEvents: boolean; keepPlans: boolean }) => {
     try {
       setIsLoading(true);
       
@@ -240,6 +241,10 @@ const SettingsPage: React.FC = () => {
       await axios.delete(`${API_URL}/api/relationships`, {
         headers: {
           Authorization: `Bearer ${token}`
+        },
+        data: {
+          keepEvents: options.keepEvents,
+          keepPlans: options.keepPlans
         }
       });
       
@@ -249,7 +254,9 @@ const SettingsPage: React.FC = () => {
       }
 
       await refreshRelationship();
+      notifyBreakupInitiated();
       notifyPartnerChanged();
+      notifyCalendarEventsChanged();
       
       setIsLoading(false);
     } catch (error: any) {

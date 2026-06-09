@@ -20,6 +20,8 @@ import AuthPage from './pages/AuthPage';
 import CryptoUnlockPage from './pages/CryptoUnlockPage';
 import AdminPage from './pages/AdminPage';
 import AdminRoute from './components/Auth/AdminRoute';
+import PartnerBreakupNotifier from './components/Settings/PartnerBreakupNotifier';
+import CalendarPartnerMigrationRunner from './components/Calendar/CalendarPartnerMigrationRunner';
 
 const getRouterBasename = (): string | undefined => {
   const publicUrl = (process.env.PUBLIC_URL || '').replace(/\/$/, '');
@@ -41,7 +43,9 @@ function App() {
   return (
     <AuthProvider>
       <AppThemeProvider>
+        <PartnerBreakupNotifier />
         <CryptoProvider>
+          <CalendarPartnerMigrationRunner />
           <NavigationProvider>
             <Router basename={routerBasename}>
               <UnreadMessagesProvider>

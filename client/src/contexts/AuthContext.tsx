@@ -10,7 +10,8 @@ import {
 import i18next from '../localization';
 import { setAppLocale } from '../localization';
 import socketService from '../services/socketService';
-import { notifyPartnerChanged } from '../hooks/useRelationship';
+import { notifyPartnerChanged, notifyPartnerUnlinked } from '../hooks/useRelationship';
+import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 
 interface User {
   _id: string;
@@ -139,6 +140,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handlePartnerUnlinked = () => {
       void refreshUser().finally(() => {
         notifyPartnerChanged();
+        notifyPartnerUnlinked();
+        notifyCalendarEventsChanged();
       });
     };
 

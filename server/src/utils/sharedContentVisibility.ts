@@ -1,5 +1,12 @@
 import { fieldMatchesUserId, hasActivePartner, normalizeIdStr } from './normalizeId';
 
+export type BreakupViewContext = {
+  exPartnerId: string;
+  relationshipLinkedAt: Date;
+  keepEvents: boolean;
+  keepPlans: boolean;
+};
+
 type PartnerLinkField = 'partnerId' | 'targetId';
 type MaybeObjectId = { toString(): string } | string | null | undefined;
 
@@ -13,6 +20,7 @@ const partnerEventAccessConditions = (
   relationshipStartDate?: Date | null
 ) => {
   const conditions: Record<string, unknown>[] = [
+    { 'encryptedTitlePartner.ciphertext': { $exists: true, $ne: '' } },
     {
       $and: [
         fieldMatchesUserId('targetId', viewerId),
@@ -73,16 +81,47 @@ const encryptedForViewerByOtherAuthor = (
   ]
 });
 
+const exPartnerSharedContentDuringRelationship = (
+  exPartnerId: string,
+  relationshipLinkedAt: Date,
+  viewerId: string
+) => ({
+  $and: [
+    {
+      $or: [
+        fieldMatchesUserId('userId', exPartnerId),
+        fieldMatchesUserId('createdBy', exPartnerId)
+      ]
+    },
+    { createdAt: { $gte: relationshipLinkedAt } },
+    { 'encryptedTitlePartner.ciphertext': { $exists: true, $ne: '' } },
+    {
+      $or: [
+        fieldMatchesUserId('metadataRecipientId', viewerId),
+        fieldMatchesUserId('partnerId', viewerId),
+        fieldMatchesUserId('targetId', viewerId)
+      ]
+    }
+  ]
+});
+
 export const buildSharedVisibilityQuery = (
   userId: string,
   partnerId?: string | null,
   partnerLinkField: PartnerLinkField = 'partnerId',
-  relationshipStartDate?: Date | null
+  relationshipStartDate?: Date | null,
+  breakupViewContext?: BreakupViewContext | null,
+  contentKind: 'events' | 'plans' = 'events'
 ) => {
   const normalizedUserId = normalizeIdStr(userId);
   if (!normalizedUserId) {
     return { userId: { $exists: false } };
   }
+
+  const shouldKeepExPartnerContent =
+    contentKind === 'plans'
+      ? breakupViewContext?.keepPlans
+      : breakupViewContext?.keepEvents;
 
   if (hasActivePartner(normalizedUserId, partnerId)) {
     const normalizedPartnerId = normalizeIdStr(partnerId)!;
@@ -101,13 +140,27 @@ export const buildSharedVisibilityQuery = (
     };
   }
 
+  const soloVisibility: Record<string, unknown>[] = [
+    fieldMatchesUserId('userId', normalizedUserId),
+    fieldMatchesUserId('createdBy', normalizedUserId)
+  ];
+
+  if (
+    shouldKeepExPartnerContent &&
+    breakupViewContext?.exPartnerId &&
+    breakupViewContext.relationshipLinkedAt
+  ) {
+    soloVisibility.push(
+      exPartnerSharedContentDuringRelationship(
+        breakupViewContext.exPartnerId,
+        breakupViewContext.relationshipLinkedAt,
+        normalizedUserId
+      )
+    );
+  }
+
   return {
-    $or: [
-      fieldMatchesUserId('userId', normalizedUserId),
-      fieldMatchesUserId('createdBy', normalizedUserId),
-      fieldMatchesUserId(partnerLinkField, normalizedUserId),
-      fieldMatchesUserId('metadataRecipientId', normalizedUserId)
-    ]
+    $or: soloVisibility
   };
 };
 
@@ -138,12 +191,19 @@ export const canAccessSharedContent = (
   userId: string,
   partnerId?: string | null,
   partnerLinkField: PartnerLinkField = 'partnerId',
-  relationshipStartDate?: Date | null
+  relationshipStartDate?: Date | null,
+  breakupViewContext?: BreakupViewContext | null,
+  contentKind: 'events' | 'plans' = 'events'
 ): boolean => {
   const normalizedUserId = normalizeIdStr(userId);
   if (!normalizedUserId) {
     return false;
   }
+
+  const shouldKeepExPartnerContent =
+    contentKind === 'plans'
+      ? breakupViewContext?.keepPlans
+      : breakupViewContext?.keepEvents;
 
   const authorId = normalizeIdStr(item.userId);
   const createdById = normalizeIdStr(item.createdBy);
@@ -172,7 +232,7 @@ export const canAccessSharedContent = (
     }
 
     const hasPartnerCopy = Boolean(item.encryptedTitlePartner?.ciphertext);
-    if (encryptedForViewer && hasPartnerCopy) {
+    if (hasPartnerCopy) {
       return true;
     }
 
@@ -182,10 +242,32 @@ export const canAccessSharedContent = (
     );
   }
 
-  return (
-    authorId === normalizedUserId ||
-    createdById === normalizedUserId ||
-    linkedPartnerId === normalizedUserId ||
-    metadataRecipientId === normalizedUserId
-  );
+  if (authorId === normalizedUserId || createdById === normalizedUserId) {
+    return true;
+  }
+
+  if (
+    shouldKeepExPartnerContent &&
+    breakupViewContext?.exPartnerId &&
+    breakupViewContext.relationshipLinkedAt
+  ) {
+    const isExPartnerAuthor =
+      authorId === breakupViewContext.exPartnerId ||
+      createdById === breakupViewContext.exPartnerId;
+
+    if (
+      isExPartnerAuthor &&
+      isOnOrAfterRelationshipStart(item.createdAt, breakupViewContext.relationshipLinkedAt)
+    ) {
+      const hasPartnerCopy = Boolean(item.encryptedTitlePartner?.ciphertext);
+      const intendedForViewer =
+        metadataRecipientId === normalizedUserId ||
+        linkedPartnerId === normalizedUserId ||
+        targetId === normalizedUserId;
+
+      return hasPartnerCopy && intendedForViewer;
+    }
+  }
+
+  return false;
 };

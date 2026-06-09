@@ -23,7 +23,6 @@ import pushRoutes from './routes/push';
 import gamesRoutes from './routes/games';
 import adminRoutes from './routes/admin';
 import { adminMiddleware } from './middleware/admin';
-import { startFeedScheduler } from './utils/feedScheduler';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { migrateLegacyTapGameStates } from './games/tapGameService';
 
@@ -364,6 +363,5 @@ app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {
-  startFeedScheduler();
   console.log(`Сервер запущен на порту ${PORT}`);
 });

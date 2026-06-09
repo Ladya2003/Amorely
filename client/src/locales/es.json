@@ -65,6 +65,15 @@
       "adding": "Añadiendo...",
       "confirmTitle": "Confirmación",
       "confirmRemove": "¿Seguro que quieres eliminar a tu pareja? Esta acción no se puede deshacer.",
+      "breakupTitle": "Ruptura",
+      "breakupMessage": "Lo sentimos mucho. Elige qué contenido publicado durante la relación quieres conservar.",
+      "breakupHint": "Los eventos y planes se conservan por defecto. Desmarca una casilla para eliminar el contenido publicado durante la relación. El contenido creado antes de la relación no se modificará.",
+      "keepEvents": "Eventos",
+      "keepPlans": "Planes",
+      "breakupReceivedTitle": "Tu pareja rompió contigo",
+      "breakupReceivedMessage": "Lo sentimos mucho, tu pareja ha terminado la relación. Elige qué contenido publicado durante la relación quieres conservar.",
+      "breakupContinue": "Continuar",
+      "breakupProcessing": "Procesando...",
       "removing": "Eliminando...",
       "addSuccess": "Pareja añadida correctamente",
       "errors": {
@@ -491,6 +500,16 @@
     "contentOfDay": "Contenido del día",
     "contentUpdateTooltip": "La selección se actualiza a las 02:00 y 17:00 (Europe/Minsk)",
     "contentUpdateAriaLabel": "Información sobre la actualización del contenido",
+    "localeBanner": {
+      "title": "Tu idioma está configurado en: {{language}}",
+      "description": "Para cambiarlo, ve a Ajustes → Tema o toca este banner.",
+      "closeAriaLabel": "Cerrar banner"
+    },
+    "installBanner": {
+      "title": "Te recomendamos añadir la app a la pantalla de inicio",
+      "learnMore": "Toca para saber más",
+      "closeAriaLabel": "Cerrar banner"
+    },
     "emptyPlaceholder": "Aún no hay contenido disponible\n\n📅 Añade tus eventos en el\nCalendario con fotos y vídeos",
     "noContent": "No hay contenido disponible",
     "birthday": "Cumpleaños",

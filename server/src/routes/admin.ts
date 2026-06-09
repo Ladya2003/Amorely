@@ -715,9 +715,9 @@ router.get('/health', async (_req: ExtendedRequest, res: Response) => {
         readyState: mongoose.connection.readyState,
       },
       feedScheduler: {
-        schedule: '0 2,17 * * *',
+        schedule: 'on-demand',
         timezone: 'Europe/Minsk',
-        description: 'Ротация ленты в 02:00 и 17:00',
+        description: 'Ротация ленты при открытии главной после 02:00 и 17:00 (Europe/Minsk)',
       },
       storage: {
         totalBytes: storageAgg[0]?.totalBytes ?? 0,

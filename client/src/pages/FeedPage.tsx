@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, Container, Fab, Badge, CircularProgress, Typography, Tooltip, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -8,6 +8,8 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import FeedHeader from '../components/Feed/FeedHeader';
+import LocaleBanner from '../components/Feed/LocaleBanner';
+import InstallAppBanner from '../components/Feed/InstallAppBanner';
 import ContentSlider, { ContentItem } from '../components/Feed/ContentSlider';
 import DaysTogether from '../components/Feed/DaysTogether';
 import ContentManagementDialog from '../components/Feed/ContentManagement';
@@ -33,6 +35,7 @@ interface UserContentItem {
 const FeedPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { localDeviceKeys } = useCrypto();
   const partnerId = usePartnerId();
@@ -45,7 +48,7 @@ const FeedPage: React.FC = () => {
   const [partnerContent, setPartnerContent] = useState<ContentItem[]>([]);
   const [selfContent, setSelfContent] = useState<ContentItem[]>([]);
   const [userContent, setUserContent] = useState<UserContentItem[]>([]); // Контент для управления
-  const [isLoading, setIsLoading] = useState(true);
+  const [isContentLoading, setIsContentLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   
   // Состояние для отношений
@@ -61,29 +64,41 @@ const FeedPage: React.FC = () => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
 
-  // Загрузка данных при монтировании компонента
+  // Загрузка данных при монтировании и при возврате на главную
   useEffect(() => {
-    fetchUserData();
-    fetchContent();
-    fetchUserContent();
-  }, [localDeviceKeys, user?._id, partnerId]);
+    void fetchUserData();
+    void fetchUserContent();
+
+    if (location.pathname === '/') {
+      void fetchContent();
+    }
+  }, [localDeviceKeys, user?._id, partnerId, location.pathname]);
 
   useEffect(() => {
     const handlePartnerChanged = () => {
       void fetchUserData();
-      void fetchContent();
+      if (location.pathname === '/') {
+        void fetchContent();
+      }
+    };
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted && location.pathname === '/') {
+        void fetchContent();
+      }
     };
 
     window.addEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
+    window.addEventListener('pageshow', handlePageShow);
     return () => {
       window.removeEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
+      window.removeEventListener('pageshow', handlePageShow);
     };
-  }, [localDeviceKeys, user?._id, partnerId]);
+  }, [localDeviceKeys, user?._id, partnerId, location.pathname]);
   
   // Функция для загрузки данных об отношениях
   const fetchUserData = async () => {
     try {
-      setIsLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/api/feed/relationship`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -160,9 +175,13 @@ const FeedPage: React.FC = () => {
   // Функция для загрузки контента
   const fetchContent = async () => {
     try {
+      setIsContentLoading(true);
+      setPartnerContent([]);
+      setCurrentIndex(0);
+
       const token = localStorage.getItem('token');
       if (!token) {
-        setIsLoading(false);
+        setIsContentLoading(false);
         return;
       }
       
@@ -216,11 +235,10 @@ const FeedPage: React.FC = () => {
       }
 
       setPartnerContent(formattedContent);
-      
-      setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при загрузке контента:', error);
-      setIsLoading(false);
+    } finally {
+      setIsContentLoading(false);
     }
   };
   
@@ -251,11 +269,11 @@ const FeedPage: React.FC = () => {
     resetRotation?: boolean
   ) => {
     try {
-      setIsLoading(true);
+      setIsContentLoading(true);
       
       const token = localStorage.getItem('token');
       if (!token) {
-        setIsLoading(false);
+        setIsContentLoading(false);
         return;
       }
       
@@ -312,11 +330,9 @@ const FeedPage: React.FC = () => {
       // Обновляем контент после загрузки/обновления
       fetchContent();
       fetchUserContent();
-      
-      setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при добавлении контента:', error);
-      setIsLoading(false);
+      setIsContentLoading(false);
       throw error; // Пробрасываем ошибку для обработки в AddContentDialog
     }
   };
@@ -369,10 +385,13 @@ const FeedPage: React.FC = () => {
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <FeedHeader />
-      
+
+      <LocaleBanner />
+      <InstallAppBanner />
+
       <ContentSlider 
         content={partnerContent} 
-        isLoading={isLoading}
+        isLoading={isContentLoading}
         onContentClick={handleContentClick}
         onEventClick={handleEventClick}
         navigateTo="/calendar"

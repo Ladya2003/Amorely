@@ -20,6 +20,7 @@ import {
   InputAdornment
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
+import BreakupContentDialog from './BreakupContentDialog';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -41,12 +42,17 @@ export interface Partner {
   avatar?: string;
 }
 
+export interface BreakupContentOptions {
+  keepEvents: boolean;
+  keepPlans: boolean;
+}
+
 interface PartnerFormProps {
   userId: string;
   partner: Partner | null;
   relationshipStartDate: string | null;
   onAddPartner: (partnerEmail: string, startDate: Date) => Promise<void>;
-  onRemovePartner: () => Promise<void>;
+  onRemovePartner: (options: BreakupContentOptions) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -65,7 +71,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(relationshipStartDate ? new Date(relationshipStartDate) : null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [breakupDialogOpen, setBreakupDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successToastOpen, setSuccessToastOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -148,18 +154,18 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
     }
   };
 
-  const handleOpenConfirmDialog = () => {
-    setConfirmDialogOpen(true);
+  const handleOpenBreakupDialog = () => {
+    setBreakupDialogOpen(true);
   };
 
-  const handleCloseConfirmDialog = () => {
-    setConfirmDialogOpen(false);
+  const handleCloseBreakupDialog = () => {
+    setBreakupDialogOpen(false);
   };
 
-  const handleRemovePartner = async () => {
+  const handleRemovePartner = async (options: BreakupContentOptions) => {
     try {
-      await onRemovePartner();
-      handleCloseConfirmDialog();
+      await onRemovePartner(options);
+      handleCloseBreakupDialog();
     } catch (error) {
       console.error('Ошибка при удалении партнера:', error);
     }
@@ -186,7 +192,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             variant="outlined" 
             color="error" 
             startIcon={<DeleteIcon />}
-            onClick={handleOpenConfirmDialog}
+            onClick={handleOpenBreakupDialog}
             disabled={isLoading}
           >
             {t('settings.partner.remove')}
@@ -394,25 +400,13 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
         </DialogActions>
       </ResponsiveDialog>
       
-      <ResponsiveDialog open={confirmDialogOpen} onClose={handleCloseConfirmDialog}>
-        <DialogTitle>{t('settings.partner.confirmTitle')}</DialogTitle>
-        <DialogContent>
-          <Typography variant="body1">
-            {t('settings.partner.confirmRemove')}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseConfirmDialog} disabled={isLoading}>{t('settings.partner.cancel')}</Button>
-          <Button 
-            onClick={handleRemovePartner} 
-            variant="contained" 
-            color="error"
-            disabled={isLoading}
-          >
-            {isLoading ? t('settings.partner.removing') : t('settings.partner.remove')}
-          </Button>
-        </DialogActions>
-      </ResponsiveDialog>
+      <BreakupContentDialog
+        open={breakupDialogOpen}
+        mode="initiator"
+        isLoading={isLoading}
+        onClose={handleCloseBreakupDialog}
+        onConfirm={handleRemovePartner}
+      />
 
       <ContentViewer
         open={avatarViewerOpen}

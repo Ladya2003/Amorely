@@ -65,6 +65,15 @@
       "adding": "Ajout...",
       "confirmTitle": "Confirmation",
       "confirmRemove": "Voulez-vous vraiment supprimer votre partenaire ? Cette action est irréversible.",
+      "breakupTitle": "Rupture",
+      "breakupMessage": "Nous sommes désolés. Choisissez le contenu publié pendant la relation que vous souhaitez conserver.",
+      "breakupHint": "Les événements et plans sont conservés par défaut. Décochez une case pour supprimer le contenu publié pendant la relation. Le contenu créé avant la relation restera inchangé.",
+      "keepEvents": "Événements",
+      "keepPlans": "Plans",
+      "breakupReceivedTitle": "Votre partenaire a mis fin à la relation",
+      "breakupReceivedMessage": "Nous sommes désolés, votre partenaire a mis fin à la relation. Choisissez le contenu publié pendant la relation que vous souhaitez conserver.",
+      "breakupContinue": "Continuer",
+      "breakupProcessing": "Traitement...",
       "removing": "Suppression...",
       "addSuccess": "Partenaire ajouté avec succès",
       "errors": {
@@ -491,6 +500,16 @@
     "contentOfDay": "Contenu du jour",
     "contentUpdateTooltip": "La sélection est mise à jour à 02:00 et 17:00 (Europe/Minsk)",
     "contentUpdateAriaLabel": "Informations sur la mise à jour du contenu",
+    "localeBanner": {
+      "title": "Votre langue est définie sur : {{language}}",
+      "description": "Pour la modifier, allez dans Paramètres → Thème ou appuyez sur cette bannière.",
+      "closeAriaLabel": "Fermer la bannière"
+    },
+    "installBanner": {
+      "title": "Nous vous conseillons d'ajouter l'application à l'écran d'accueil",
+      "learnMore": "Appuyez pour en savoir plus",
+      "closeAriaLabel": "Fermer la bannière"
+    },
     "emptyPlaceholder": "Pas encore de contenu disponible\n\n📅 Ajoutez vos événements dans le\nCalendrier avec photos et vidéos",
     "noContent": "Aucun contenu disponible",
     "birthday": "Anniversaire",

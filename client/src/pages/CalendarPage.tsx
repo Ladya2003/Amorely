@@ -19,7 +19,8 @@ import {
   encryptDualTextForContent
 } from '../crypto/contentCryptoService';
 import { encryptAndUploadCalendarContentFiles } from '../crypto/encryptedUploadService';
-import { migrateCalendarEventsPartnerCopies, LEGACY_CRYPTO_HEAL_KEY } from '../crypto/calendarEventPartnerMigration';
+import { runCalendarPartnerMigration } from '../crypto/calendarEventPartnerMigration';
+import { CALENDAR_EVENTS_CHANGED_EVENT } from '../hooks/useCalendarEvents';
 import { isVideoCompressionError } from '../utils/compressVideo';
 import type { PrepareMediaProgress } from '../utils/parallelMediaPrepare';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
@@ -107,9 +108,6 @@ const isViewableCalendarEvent = (
   );
 };
 
-const partnerMigrationSessionKey = (selfUserId: string, partnerUserId: string) =>
-  `calendar-partner-migration:v2:${selfUserId}:${partnerUserId}`;
-
 const CalendarPage: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -163,6 +161,17 @@ const CalendarPage: React.FC = () => {
 
   useEffect(() => {
     fetchContent();
+  }, [localDeviceKeys, user?._id, partnerId]);
+
+  useEffect(() => {
+    const handleCalendarEventsChanged = () => {
+      void fetchContent();
+    };
+
+    window.addEventListener(CALENDAR_EVENTS_CHANGED_EVENT, handleCalendarEventsChanged);
+    return () => {
+      window.removeEventListener(CALENDAR_EVENTS_CHANGED_EVENT, handleCalendarEventsChanged);
+    };
   }, [localDeviceKeys, user?._id, partnerId]);
 
   const getCalendarEncryptionTargets = async () => {
@@ -303,32 +312,19 @@ const CalendarPage: React.FC = () => {
       }
 
       if (localDeviceKeys && user?._id && activePartnerId) {
-        const migrationKey = partnerMigrationSessionKey(user._id, activePartnerId);
-        const migrationDone = sessionStorage.getItem(migrationKey) === '1';
+        const migrated = await runCalendarPartnerMigration(
+          localDeviceKeys,
+          user._id,
+          activePartnerId
+        );
 
-        if (!migrationDone) {
-          const healLegacyDualCopy = localStorage.getItem(LEGACY_CRYPTO_HEAL_KEY) !== '1';
-          const migrated = await migrateCalendarEventsPartnerCopies(
-            events,
-            localDeviceKeys,
-            user._id,
-            activePartnerId,
-            { healLegacyDualCopy }
-          );
-
-          sessionStorage.setItem(migrationKey, '1');
-          if (healLegacyDualCopy) {
-            localStorage.setItem(LEGACY_CRYPTO_HEAL_KEY, '1');
-          }
-
-          if (migrated) {
-            const refreshResponse = await axios.get(`${API_URL}/api/calendar/events`, {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            });
-            events = refreshResponse.data;
-          }
+        if (migrated) {
+          const refreshResponse = await axios.get(`${API_URL}/api/calendar/events`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          events = refreshResponse.data;
         }
       }
 

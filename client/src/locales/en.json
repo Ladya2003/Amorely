@@ -65,6 +65,15 @@
       "adding": "Adding...",
       "confirmTitle": "Confirmation",
       "confirmRemove": "Are you sure you want to remove your partner? This action cannot be undone.",
+      "breakupTitle": "Breakup",
+      "breakupMessage": "We're sorry. Choose which content published during your relationship you'd like to keep.",
+      "breakupHint": "Events and plans are kept by default. Uncheck a box to delete content published during the relationship. Content created before the relationship started will remain unchanged.",
+      "keepEvents": "Events",
+      "keepPlans": "Plans",
+      "breakupReceivedTitle": "Your partner broke up with you",
+      "breakupReceivedMessage": "We're sorry, your partner has ended the relationship. Choose which content published during your relationship you'd like to keep.",
+      "breakupContinue": "Continue",
+      "breakupProcessing": "Processing...",
       "removing": "Removing...",
       "addSuccess": "Partner added successfully",
       "errors": {
@@ -489,8 +498,18 @@
   "feed": {
     "title": "Feed",
     "contentOfDay": "Content of the day",
-    "contentUpdateTooltip": "The selection updates at 02:00 and 17:00 (Europe/Minsk)",
+    "contentUpdateTooltip": "The selection updates when you open the home screen after 02:00 and 17:00 (Europe/Minsk)",
     "contentUpdateAriaLabel": "Content update information",
+    "localeBanner": {
+      "title": "Your language is set to: {{language}}",
+      "description": "To change it, go to Settings → Theme or tap this banner.",
+      "closeAriaLabel": "Dismiss banner"
+    },
+    "installBanner": {
+      "title": "We recommend adding the app to your home screen",
+      "learnMore": "Tap to learn more",
+      "closeAriaLabel": "Dismiss banner"
+    },
     "emptyPlaceholder": "No content available yet\n\n📅 Add your events in the\nCalendar with photos and videos",
     "noContent": "No content available",
     "birthday": "Birthday",

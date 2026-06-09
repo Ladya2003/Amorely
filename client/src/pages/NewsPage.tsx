@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -18,9 +19,11 @@ import { getNewsCategoryLabel } from '../localization/newsHelpers';
 import NewsDetail from '../components/News/NewsDetail';
 import { NewsItem } from '../components/News/NewsCard';
 import { useUnreadNews } from '../contexts/UnreadNewsContext';
+import { HOME_SCREEN_NEWS_QUERY, isHomeScreenNewsItem } from '../constants/homeScreenNews';
 
 const NewsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -30,6 +33,22 @@ const NewsPage: React.FC = () => {
   useEffect(() => {
     fetchNews();
   }, [selectedCategory, i18n.language]);
+
+  useEffect(() => {
+    if (searchParams.get('article') !== HOME_SCREEN_NEWS_QUERY || isLoading) {
+      return;
+    }
+
+    const homeScreenNews = news.find((item) => isHomeScreenNewsItem(item.title));
+    if (homeScreenNews) {
+      setSelectedNews(homeScreenNews);
+      markNewsAsRead(homeScreenNews._id);
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('article');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, isLoading, news, markNewsAsRead, setSearchParams]);
 
   const fetchNews = async () => {
     try {

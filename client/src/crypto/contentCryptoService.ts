@@ -225,6 +225,10 @@ const pickTextDecryptionContext = (
     return { payload: partnerPayload, asOwn: false, peerId: authorId };
   }
 
+  if (partnerPayload && viewerId !== authorId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
   if (selfPayload && !partnerPayload && storedRecipientId === viewerId) {
     return { payload: selfPayload, asOwn: false, peerId: authorId };
   }
@@ -276,6 +280,10 @@ const pickMediaDecryptionContext = (
   }
 
   if (partnerPayload && storedRecipientId === viewerId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
+  if (partnerPayload && viewerId !== authorId) {
     return { payload: partnerPayload, asOwn: false, peerId: authorId };
   }
 
@@ -742,6 +750,10 @@ const pickPlanNoteFieldDecryptionContext = (
   }
 
   if (partnerPayload && storedRecipientId === viewerId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
+  if (partnerPayload && viewerId !== authorId) {
     return { payload: partnerPayload, asOwn: false, peerId: authorId };
   }
 

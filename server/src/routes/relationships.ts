@@ -5,10 +5,16 @@ import { authMiddleware } from '../middleware/auth';
 import { normalizeIdStr } from '../utils/normalizeId';
 import {
   findActiveRelationshipForUser,
+  findBrokenUpRelationshipPendingCleanup,
   getPartnerIdFromRelationship,
   linkUsersAsPartners,
+  recordBreakupContentChoice,
   unlinkUsersPartners
 } from '../utils/relationshipHelpers';
+import {
+  cleanupUserContentOnBreakup,
+  getRelationshipLinkedAt
+} from '../utils/breakupContentHelpers';
 import { notifySocketUser } from '../socket';
 
 const router = Router();
@@ -132,6 +138,8 @@ router.post('/', authMiddleware, async (req: any, res: Response) => {
 router.delete('/', authMiddleware, async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
+    const keepEvents = Boolean(req.body?.keepEvents);
+    const keepPlans = Boolean(req.body?.keepPlans);
     const relationship = await findActiveRelationshipForUser(userId);
 
     if (!relationship) {
@@ -144,9 +152,19 @@ router.delete('/', authMiddleware, async (req: any, res: Response) => {
       return res.status(500).json({ error: 'Некорректные данные отношений' });
     }
 
+    const relationshipLinkedAt = getRelationshipLinkedAt(relationship);
+
+    if (relationshipLinkedAt) {
+      await cleanupUserContentOnBreakup(userId, relationshipLinkedAt, {
+        keepEvents,
+        keepPlans
+      });
+    }
+
     await unlinkUsersPartners(user1Id, user2Id);
 
     relationship.status = 'broken_up';
+    recordBreakupContentChoice(relationship, userId, { keepEvents, keepPlans });
     await relationship.save();
 
     notifySocketUser(user1Id === userId ? user2Id : user1Id, 'partner_unlinked', {});
@@ -155,6 +173,59 @@ router.delete('/', authMiddleware, async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при удалении отношений:', error);
     res.status(500).json({ error: 'Ошибка при удалении отношений' });
+  }
+});
+
+// Проверка, нужно ли партнёру выбрать судьбу контента после расставания
+router.get('/pending-breakup-cleanup', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const relationship = await findBrokenUpRelationshipPendingCleanup(userId);
+
+    if (!relationship) {
+      res.set('Cache-Control', 'no-store');
+      return res.json({ pending: false });
+    }
+
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      pending: true,
+      relationshipStartDate: relationship.startDate
+    });
+  } catch (error) {
+    console.error('Ошибка при проверке расставания:', error);
+    res.status(500).json({ error: 'Ошибка при проверке расставания' });
+  }
+});
+
+// Обработка выбора контента партнёром после расставания
+router.post('/breakup-content', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const keepEvents = Boolean(req.body?.keepEvents);
+    const keepPlans = Boolean(req.body?.keepPlans);
+    const relationship = await findBrokenUpRelationshipPendingCleanup(userId);
+
+    if (!relationship) {
+      return res.status(404).json({ error: 'Нет ожидающего расставания' });
+    }
+
+    const relationshipLinkedAt = getRelationshipLinkedAt(relationship);
+
+    if (relationshipLinkedAt) {
+      await cleanupUserContentOnBreakup(userId, relationshipLinkedAt, {
+        keepEvents,
+        keepPlans
+      });
+    }
+
+    recordBreakupContentChoice(relationship, userId, { keepEvents, keepPlans });
+    await relationship.save();
+
+    res.json({ message: 'Контент после расставания обработан' });
+  } catch (error) {
+    console.error('Ошибка при обработке контента после расставания:', error);
+    res.status(500).json({ error: 'Ошибка при обработке контента после расставания' });
   }
 });
 

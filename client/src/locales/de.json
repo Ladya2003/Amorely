@@ -65,6 +65,15 @@
       "adding": "Hinzufügen...",
       "confirmTitle": "Bestätigung",
       "confirmRemove": "Möchtest du deinen Partner wirklich entfernen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "breakupTitle": "Trennung",
+      "breakupMessage": "Es tut uns leid. Wähle aus, welche Inhalte aus der Beziehungszeit du behalten möchtest.",
+      "breakupHint": "Ereignisse und Pläne werden standardmäßig behalten. Entferne das Häkchen, um Inhalte aus der Beziehungszeit zu löschen. Inhalte von vor der Beziehung bleiben unverändert.",
+      "keepEvents": "Ereignisse",
+      "keepPlans": "Pläne",
+      "breakupReceivedTitle": "Dein Partner hat sich getrennt",
+      "breakupReceivedMessage": "Es tut uns leid, dein Partner hat die Beziehung beendet. Wähle aus, welche Inhalte aus der Beziehungszeit du behalten möchtest.",
+      "breakupContinue": "Weiter",
+      "breakupProcessing": "Wird verarbeitet...",
       "removing": "Entfernen...",
       "addSuccess": "Partner erfolgreich hinzugefügt",
       "errors": {
@@ -491,6 +500,16 @@
     "contentOfDay": "Inhalt des Tages",
     "contentUpdateTooltip": "Die Auswahl wird um 02:00 und 17:00 Uhr aktualisiert (Europe/Minsk)",
     "contentUpdateAriaLabel": "Informationen zur Inhaltsaktualisierung",
+    "localeBanner": {
+      "title": "Deine Sprache ist auf {{language}} eingestellt",
+      "description": "Zum Ändern gehe zu Einstellungen → Design oder tippe auf dieses Banner.",
+      "closeAriaLabel": "Banner schließen"
+    },
+    "installBanner": {
+      "title": "Wir empfehlen, die App zum Startbildschirm hinzuzufügen",
+      "learnMore": "Tippe, um mehr zu erfahren",
+      "closeAriaLabel": "Banner schließen"
+    },
     "emptyPlaceholder": "Noch kein Inhalt verfügbar\n\n📅 Füge deine Ereignisse im\nKalender mit Fotos und Videos hinzu",
     "noContent": "Kein Inhalt verfügbar",
     "birthday": "Geburtstag",

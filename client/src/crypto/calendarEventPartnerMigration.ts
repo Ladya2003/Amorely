@@ -24,6 +24,53 @@ export type CalendarEventForMigration = RawContentFields & {
 
 export const LEGACY_CRYPTO_HEAL_KEY = 'calendar-crypto-heal-v1';
 
+export const getPartnerMigrationSessionKey = (selfUserId: string, partnerUserId: string) =>
+  `calendar-partner-migration:v2:${selfUserId}:${partnerUserId}`;
+
+export const runCalendarPartnerMigration = async (
+  keys: LocalDeviceKeys,
+  selfUserId: string,
+  partnerUserId: string,
+  options?: { force?: boolean }
+): Promise<boolean> => {
+  const token = localStorage.getItem('token');
+  if (!token || !partnerUserId || partnerUserId === selfUserId) {
+    return false;
+  }
+
+  const response = await axios.get(`${API_URL}/api/calendar/events`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  const healLegacyDualCopy = localStorage.getItem(LEGACY_CRYPTO_HEAL_KEY) !== '1';
+  const events: CalendarEventForMigration[] = response.data;
+  const hasPendingMigration = events.some((event) =>
+    needsPartnerCopyMigration(event, selfUserId, healLegacyDualCopy)
+  );
+  const migrationKey = getPartnerMigrationSessionKey(selfUserId, partnerUserId);
+
+  if (!options?.force && sessionStorage.getItem(migrationKey) === '1' && !hasPendingMigration) {
+    return false;
+  }
+
+  const migrated = await migrateCalendarEventsPartnerCopies(
+    events,
+    keys,
+    selfUserId,
+    partnerUserId,
+    { healLegacyDualCopy }
+  );
+
+  if (!hasPendingMigration || migrated) {
+    sessionStorage.setItem(migrationKey, '1');
+    if (healLegacyDualCopy && migrated) {
+      localStorage.setItem(LEGACY_CRYPTO_HEAL_KEY, '1');
+    }
+  }
+
+  return migrated;
+};
+
 export const needsPartnerCopyMigration = (
   event: CalendarEventForMigration,
   selfUserId: string,

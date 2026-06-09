@@ -14,7 +14,13 @@ import {
 } from '../utils/contentFormat';
 import { resolvePartnerUserId } from '../utils/resolvePartnerId';
 import { hasActivePartner } from '../utils/normalizeId';
-import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
+import {
+  findActiveRelationshipForUser,
+  findLatestBrokenUpRelationshipForUser,
+  getBreakupContentChoiceForUser,
+  getPartnerIdFromRelationship
+} from '../utils/relationshipHelpers';
+import { getRelationshipLinkedAt } from '../utils/breakupContentHelpers';
 import {
   buildSharedVisibilityQuery,
   canAccessSharedContent
@@ -31,7 +37,31 @@ const getSharedContentVisibilityContext = async (userId: string) => {
     ? new Date(relationship.startDate)
     : null;
 
-  return { partnerId, relationshipStartDate };
+  let breakupViewContext = null;
+
+  if (!hasActivePartner(userId, partnerId)) {
+    const brokenUpRelationship = await findLatestBrokenUpRelationshipForUser(userId);
+    const choice = brokenUpRelationship
+      ? getBreakupContentChoiceForUser(brokenUpRelationship, userId)
+      : null;
+    const exPartnerId = brokenUpRelationship
+      ? getPartnerIdFromRelationship(brokenUpRelationship, userId)
+      : null;
+    const relationshipLinkedAt = brokenUpRelationship
+      ? getRelationshipLinkedAt(brokenUpRelationship)
+      : null;
+
+    if (choice && exPartnerId && relationshipLinkedAt) {
+      breakupViewContext = {
+        exPartnerId,
+        relationshipLinkedAt,
+        keepEvents: choice.keepEvents,
+        keepPlans: choice.keepPlans
+      };
+    }
+  }
+
+  return { partnerId, relationshipStartDate, breakupViewContext };
 };
 
 const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
@@ -359,11 +389,12 @@ router.get('/events', async (req: any, res: Response) => {
     const userId = req.userId as string;
     const { startDate, endDate, month, year } = req.query;
 
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
     const andConditions: Record<string, unknown>[] = [
       { eventId: { $exists: true, $nin: [null, ''] } },
-      buildSharedVisibilityQuery(userId, partnerId, 'targetId', relationshipStartDate)
+      buildSharedVisibilityQuery(userId, partnerId, 'targetId', relationshipStartDate, breakupViewContext)
     ];
 
     // Фильтрация по датам
@@ -423,11 +454,12 @@ router.get('/events', async (req: any, res: Response) => {
 router.delete('/events/all', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
     const query = {
       eventId: { $exists: true, $nin: [null, ''] },
-      ...buildSharedVisibilityQuery(userId, partnerId, 'targetId', relationshipStartDate)
+      ...buildSharedVisibilityQuery(userId, partnerId, 'targetId', relationshipStartDate, breakupViewContext)
     };
 
     const allMedia = await Content.find(query);
@@ -468,7 +500,8 @@ router.get('/events/:id', async (req: any, res: Response) => {
     }
 
     const firstMedia = mediaFiles[0];
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
     if (
       canAccessSharedContent(
@@ -476,7 +509,8 @@ router.get('/events/:id', async (req: any, res: Response) => {
         userId,
         partnerId,
         'targetId',
-        relationshipStartDate
+        relationshipStartDate,
+        breakupViewContext
       )
     ) {
       const event = {
@@ -666,7 +700,8 @@ router.put('/events/:id', async (req: any, res: Response) => {
     }
 
     const baseMedia = mediaFiles[0];
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
     if (
       !canAccessSharedContent(
@@ -674,7 +709,8 @@ router.put('/events/:id', async (req: any, res: Response) => {
         userId,
         partnerId,
         'targetId',
-        relationshipStartDate
+        relationshipStartDate,
+        breakupViewContext
       )
     ) {
       return res.status(403).json({ error: 'Нет прав на редактирование этого события' });
@@ -888,7 +924,8 @@ router.delete('/events/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Событие не найдено' });
     }
 
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
     if (
       !canAccessSharedContent(
@@ -896,7 +933,8 @@ router.delete('/events/:id', async (req: any, res: Response) => {
         userId,
         partnerId,
         'targetId',
-        relationshipStartDate
+        relationshipStartDate,
+        breakupViewContext
       )
     ) {
       return res.status(403).json({ error: 'Нет прав на удаление этого события' });
@@ -917,21 +955,33 @@ router.delete('/events/:id', async (req: any, res: Response) => {
 const buildCoupleQuery = (
   userId: string,
   partnerId?: string | null,
-  relationshipStartDate?: Date | null
-) => buildSharedVisibilityQuery(userId, partnerId, 'partnerId', relationshipStartDate);
+  relationshipStartDate?: Date | null,
+  breakupViewContext?: Awaited<ReturnType<typeof getSharedContentVisibilityContext>>['breakupViewContext']
+) =>
+  buildSharedVisibilityQuery(
+    userId,
+    partnerId,
+    'partnerId',
+    relationshipStartDate,
+    breakupViewContext,
+    'plans'
+  );
 
 const canAccessPlanNote = (
   note: any,
   userId: string,
   partnerId?: string | null,
-  relationshipStartDate?: Date | null
+  relationshipStartDate?: Date | null,
+  breakupViewContext?: Awaited<ReturnType<typeof getSharedContentVisibilityContext>>['breakupViewContext']
 ) =>
   canAccessSharedContent(
     note,
     userId,
     partnerId,
     'partnerId',
-    relationshipStartDate
+    relationshipStartDate,
+    breakupViewContext,
+    'plans'
   );
 
 const formatPlanNoteMedia = (media: any) => ({
@@ -976,6 +1026,7 @@ const deletePlanNoteMediaFromCloudinary = async (mediaItems: any[]) => {
 
 const formatPlanNote = (note: any) => ({
   _id: note._id.toString(),
+  userId: note.userId?.toString(),
   encrypted: Boolean(note.encrypted || note.encryptedTitle?.ciphertext),
   title: note.title,
   content: note.content,
@@ -1015,9 +1066,10 @@ const formatPlanNote = (note: any) => ({
 router.get('/plans', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
-    const notes = await PlanNote.find(buildCoupleQuery(userId, partnerId, relationshipStartDate))
+    const notes = await PlanNote.find(buildCoupleQuery(userId, partnerId, relationshipStartDate, breakupViewContext))
       .populate('createdBy', 'username avatar firstName lastName')
       .populate('lastEditedBy', 'username avatar firstName lastName')
       .sort({ updatedAt: -1 });
@@ -1035,8 +1087,9 @@ router.get('/plans', async (req: any, res: Response) => {
 router.delete('/plans/all', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
-    const query = buildCoupleQuery(userId, partnerId, relationshipStartDate);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
+    const query = buildCoupleQuery(userId, partnerId, relationshipStartDate, breakupViewContext);
 
     const notes = await PlanNote.find(query);
 
@@ -1065,7 +1118,8 @@ router.get('/plans/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { id } = req.params;
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
     const note = await PlanNote.findById(id)
       .populate('createdBy', 'username avatar firstName lastName')
@@ -1075,7 +1129,7 @@ router.get('/plans/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Заметка не найдена' });
     }
 
-    if (canAccessPlanNote(note, userId, partnerId, relationshipStartDate)) {
+    if (canAccessPlanNote(note, userId, partnerId, relationshipStartDate, breakupViewContext)) {
       return res.json(formatPlanNote(note));
     }
 
@@ -1250,7 +1304,8 @@ router.put('/plans/:id', async (req: any, res: Response) => {
     const encryptionPartnerId = encryptionRecipientId
       ? String(encryptionRecipientId)
       : await resolvePartnerUserId(userId);
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
     const note = await PlanNote.findById(id);
 
@@ -1258,7 +1313,7 @@ router.put('/plans/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Заметка не найдена' });
     }
 
-    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate)) {
+    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate, breakupViewContext)) {
       return res.status(403).json({ error: 'Нет прав на редактирование этой заметки' });
     }
 
@@ -1313,12 +1368,84 @@ router.put('/plans/:id', async (req: any, res: Response) => {
   }
 });
 
+// Добавление partner-копий шифрования к существующим solo-заметкам автора
+router.patch('/plans/:id/partner-copies', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { id } = req.params;
+    const {
+      encryptedTitle,
+      encryptedTitlePartner,
+      encryptedContent,
+      encryptedContentPartner,
+      encryptedCategory,
+      encryptedCategoryPartner,
+      mediaPartnerCopies
+    } = req.body || {};
+
+    const note = await PlanNote.findById(id);
+    if (!note) {
+      return res.status(404).json({ error: 'Заметка не найдена' });
+    }
+
+    if (note.userId.toString() !== userId) {
+      return res.status(403).json({ error: 'Можно мигрировать только собственные заметки' });
+    }
+
+    const partnerId = await resolvePartnerUserId(userId);
+    const selfTitle = formatEncryptedPayload(encryptedTitle);
+    const partnerTitle = formatEncryptedPayload(encryptedTitlePartner);
+    const selfContent = formatEncryptedPayload(encryptedContent);
+    const partnerContent = formatEncryptedPayload(encryptedContentPartner);
+    const selfCategory = formatEncryptedPayload(encryptedCategory);
+    const partnerCategory = formatEncryptedPayload(encryptedCategoryPartner);
+
+    if (selfTitle) note.encryptedTitle = selfTitle;
+    if (partnerTitle) note.encryptedTitlePartner = partnerTitle;
+    if (selfContent) note.encryptedContent = selfContent;
+    if (partnerContent) note.encryptedContentPartner = partnerContent;
+    if (selfCategory) note.encryptedCategory = selfCategory;
+    if (partnerCategory) note.encryptedCategoryPartner = partnerCategory;
+
+    note.metadataSenderId = new mongoose.Types.ObjectId(userId);
+
+    if (hasActivePartner(userId, partnerId)) {
+      note.partnerId = new mongoose.Types.ObjectId(partnerId);
+      note.metadataRecipientId = new mongoose.Types.ObjectId(partnerId);
+    }
+
+    if (Array.isArray(mediaPartnerCopies)) {
+      for (const item of mediaPartnerCopies) {
+        const partnerEnvelope = formatEncryptedPayload(item?.encryptedMediaEnvelopePartner);
+        const selfEnvelope = formatEncryptedPayload(item?.encryptedMediaEnvelope);
+        if (!item?.mediaId || !partnerEnvelope) continue;
+
+        const media = note.media.id(item.mediaId);
+        if (!media) continue;
+
+        media.encryptedMediaEnvelopePartner = partnerEnvelope;
+        if (selfEnvelope) {
+          media.encryptedMediaEnvelope = selfEnvelope;
+        }
+      }
+    }
+
+    await note.save();
+
+    res.json({ message: 'Partner-копии шифрования сохранены', planId: id });
+  } catch (error) {
+    console.error('Ошибка при сохранении partner-копий заметки:', error);
+    res.status(500).json({ error: 'Ошибка при сохранении partner-копий заметки' });
+  }
+});
+
 // Удаление заметки
 router.delete('/plans/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { id } = req.params;
-    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
 
     const note = await PlanNote.findById(id);
 
@@ -1326,7 +1453,7 @@ router.delete('/plans/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Заметка не найдена' });
     }
 
-    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate)) {
+    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate, breakupViewContext)) {
       return res.status(403).json({ error: 'Нет прав на удаление этой заметки' });
     }
 

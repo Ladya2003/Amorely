@@ -90,10 +90,10 @@ const AdminHealth: React.FC = () => {
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <HealthCard title="Планировщик ленты">
+        <HealthCard title="Ротация ленты">
           <Typography variant="body2">{health.feedScheduler.description}</Typography>
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
-            Расписание: {health.feedScheduler.schedule}
+            Режим: {health.feedScheduler.schedule}
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block">
             Часовой пояс: {health.feedScheduler.timezone}

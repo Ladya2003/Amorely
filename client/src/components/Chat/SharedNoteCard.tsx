@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Chip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import ImageIcon from '@mui/icons-material/Image';
 import DecryptedMedia from '../common/DecryptedMedia';
@@ -219,17 +219,12 @@ const SharedNoteCard: React.FC<SharedNoteCardProps> = ({
                 color: isOwn ? 'rgba(255,255,255,0.7)' : 'text.secondary'
               }}
             />
-            <Chip
-              label={sharedNote.category}
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: 10,
-                '& .MuiChip-label': { px: 0.75 },
-                bgcolor: isOwn ? 'rgba(255,255,255,0.15)' : 'action.selected',
-                color: isOwn ? 'rgba(255,255,255,0.85)' : 'text.secondary'
-              }}
-            />
+            <Typography
+              variant="caption"
+              sx={{ color: isOwn ? 'rgba(255,255,255,0.7)' : 'text.secondary' }}
+            >
+              {sharedNote.category}
+            </Typography>
           </Box>
         )}
       </Box>

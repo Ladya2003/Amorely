@@ -5,6 +5,14 @@ const relationshipSchema = new mongoose.Schema({
   partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   startDate: { type: Date, required: true },
   status: { type: String, enum: ['active', 'broken_up'], default: 'active' },
+  breakupContentHandledBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  breakupContentChoices: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      keepEvents: { type: Boolean, default: false },
+      keepPlans: { type: Boolean, default: false }
+    }
+  ],
   photo: {
     url: { type: String },
     publicId: { type: String }
