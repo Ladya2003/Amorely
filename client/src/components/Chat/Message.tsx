@@ -11,6 +11,7 @@ import { MessageType, MessageForwardRef } from './ChatDialog';
 import EncryptedAttachment from './EncryptedAttachment';
 import ChatVideoPlayer from '../common/ChatVideoPlayer';
 import SharedEventCard from './SharedEventCard';
+import SharedNoteCard from './SharedNoteCard';
 
 const imagePreviewStyle: React.CSSProperties = {
   width: '100%',
@@ -40,6 +41,7 @@ interface MessageProps {
   onReplyReferenceClick?: (messageId: string) => void;
   onForwardSourceClick?: (userId: string, forwardFrom: MessageForwardRef) => void;
   onSharedEventClick?: (eventId: string) => void;
+  onSharedNoteClick?: (noteId: string) => void;
   onContactAvatarClick?: () => void;
 }
 
@@ -53,6 +55,7 @@ const Message: React.FC<MessageProps> = ({
   onReplyReferenceClick,
   onForwardSourceClick,
   onSharedEventClick,
+  onSharedNoteClick,
   onContactAvatarClick
 }) => {
   const { t } = useTranslation();
@@ -108,6 +111,7 @@ const Message: React.FC<MessageProps> = ({
   const replyTo = message.replyTo;
   const forwardFrom = message.forwardFrom;
   const sharedEvent = message.sharedEvent;
+  const sharedNote = message.sharedNote;
   const isPending = message.id.startsWith('temp-');
 
   const hasVideoAttachment = useMemo(
@@ -122,11 +126,11 @@ const Message: React.FC<MessageProps> = ({
   );
 
   const isVideoOnlyBubble =
-    hasVideoAttachment && !message.text?.trim() && !sharedEvent;
+    hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote;
 
   const hasImageAttachment = imageAttachmentIndices.length > 0;
   const isImageOnlyBubble =
-    hasImageAttachment && !hasVideoAttachment && !message.text?.trim() && !sharedEvent;
+    hasImageAttachment && !hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote;
 
   const footerReserveWidth = isOwn
     ? (message.editedAt ? 118 : 94)
@@ -381,7 +385,7 @@ const Message: React.FC<MessageProps> = ({
                 fontSize: '14px',
                 wordBreak: 'break-word',
                 lineHeight: 1.3,
-                mb: sharedEvent ? 0.8 : 0
+                mb: sharedEvent || sharedNote ? 0.8 : 0
               }}
             >
               {message.text}
@@ -403,6 +407,16 @@ const Message: React.FC<MessageProps> = ({
                 sharedEvent={sharedEvent}
                 isOwn={isOwn}
                 onClick={() => onSharedEventClick?.(sharedEvent.eventId)}
+              />
+            </Box>
+          )}
+
+          {sharedNote && (
+            <Box sx={{ mb: message.text ? 0 : 0.25, pb: message.text ? 0 : 2.5 }}>
+              <SharedNoteCard
+                sharedNote={sharedNote}
+                isOwn={isOwn}
+                onClick={() => onSharedNoteClick?.(sharedNote.noteId)}
               />
             </Box>
           )}

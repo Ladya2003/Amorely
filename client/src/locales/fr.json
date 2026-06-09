@@ -782,6 +782,7 @@
       "encrypted": "Message chiffré",
       "encryptedMedia": "Média chiffré",
       "event": "Événement : {{title}}",
+      "note": "Note : {{title}}",
       "noMessages": "Aucun message",
       "decryptFailed": "Impossible de déchiffrer le message",
       "deleted": "Message supprimé",
@@ -820,6 +821,8 @@
       "cancelForward": "Annuler le transfert",
       "shareEvent": "Partager l'événement",
       "cancelShareEvent": "Annuler le partage de l'événement",
+      "shareNote": "Partager la note",
+      "cancelShareNote": "Annuler le partage de la note",
       "editing": "Modification du message",
       "cancelEdit": "Annuler la modification",
       "scrollDown": "Défiler vers le bas",
@@ -864,6 +867,9 @@
     },
     "event": {
       "label": "Événement"
+    },
+    "note": {
+      "label": "Note"
     }
   },
   "calendar": {

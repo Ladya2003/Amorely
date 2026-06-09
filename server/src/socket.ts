@@ -38,6 +38,7 @@ const formatSocketMessage = (message: any, clientTempId?: string) => ({
   replyTo: message.replyTo || undefined,
   forwardFrom: message.forwardFrom || undefined,
   sharedEvent: message.sharedEvent || undefined,
+  sharedNote: message.sharedNote || undefined,
   clientTempId,
   encryptedPayload: message.encryptedPayload
     ? {
@@ -116,7 +117,18 @@ export default function setupSocketIO(server: HttpServer) {
         eventDate?: string;
       } | null,
       clientTempId?: string,
-      pushPreview?: string
+      pushPreview?: string,
+      sharedNote?: {
+        noteId: string;
+        title: string;
+        category?: string;
+        contentPreview?: string;
+        previewUrl?: string;
+        previewResourceType?: 'image' | 'video';
+        previewEncrypted?: boolean;
+        previewMediaEnvelope?: unknown;
+        updatedAt?: string;
+      } | null
     }) => {
       try {
         const {
@@ -127,6 +139,7 @@ export default function setupSocketIO(server: HttpServer) {
           replyTo,
           forwardFrom,
           sharedEvent,
+          sharedNote,
           clientTempId,
           pushPreview
         } = data;
@@ -164,6 +177,7 @@ export default function setupSocketIO(server: HttpServer) {
           replyTo: sanitizedReplyTo,
           forwardFrom: sanitizedForwardFrom,
           sharedEvent: sharedEvent || undefined,
+          sharedNote: sharedNote || undefined,
           isRead: false,
           createdAt: new Date()
         });
@@ -197,6 +211,7 @@ export default function setupSocketIO(server: HttpServer) {
             encryptedPayload,
             attachments,
             sharedEvent: sharedEvent || undefined,
+            sharedNote: sharedNote || undefined,
             forwardFrom: sanitizedForwardFrom,
             chatUrl
           });
@@ -244,7 +259,7 @@ export default function setupSocketIO(server: HttpServer) {
           return;
         }
 
-        if (message.forwardFrom || message.sharedEvent) {
+        if (message.forwardFrom || message.sharedEvent || message.sharedNote) {
           socket.emit('error', { message: 'Это сообщение нельзя редактировать' });
           return;
         }

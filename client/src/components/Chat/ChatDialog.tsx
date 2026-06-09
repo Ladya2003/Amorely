@@ -31,6 +31,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Contact } from './ChatList';
 import Message from './Message';
 import SharedEventCard from './SharedEventCard';
+import SharedNoteCard from './SharedNoteCard';
 import ContactProfileDialog from './ContactProfileDialog';
 import GameBadges from '../Games/GameBadges';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
@@ -94,6 +95,32 @@ export interface SharedEventRef {
   media?: SharedEventMediaRef[];
 }
 
+export interface SharedNoteMediaRef {
+  id?: string;
+  url: string;
+  resourceType: 'image' | 'video';
+  encrypted?: boolean;
+  previewMediaEnvelope?: ContentMediaEnvelope;
+  encryptedMediaEnvelope?: { ciphertext: string; iv: string };
+}
+
+export interface SharedNoteRef {
+  noteId: string;
+  title: string;
+  category?: string;
+  contentPreview?: string;
+  /** @deprecated используйте media; первое медиа для обратной совместимости */
+  previewUrl?: string;
+  previewResourceType?: 'image' | 'video';
+  previewEncrypted?: boolean;
+  previewMediaEnvelope?: ContentMediaEnvelope;
+  previewEncryptedMediaEnvelope?: { ciphertext: string; iv: string };
+  previewMetadataSenderId?: string;
+  previewMetadataRecipientId?: string;
+  updatedAt?: string;
+  media?: SharedNoteMediaRef[];
+}
+
 export interface MessageType {
   id: string;
   senderId: string;
@@ -104,6 +131,7 @@ export interface MessageType {
   replyTo?: MessageReplyRef;
   forwardFrom?: MessageForwardRef;
   sharedEvent?: SharedEventRef;
+  sharedNote?: SharedNoteRef;
   clientTempId?: string;
   encryptedPayload?: {
     version: number;
@@ -133,7 +161,8 @@ interface ChatDialogProps {
     replyTo?: MessageReplyRef | null,
     forwardFrom?: MessageForwardRef | null,
     sharedEvent?: SharedEventRef | null,
-    forwardSource?: ForwardSourceContext | null
+    forwardSource?: ForwardSourceContext | null,
+    sharedNote?: SharedNoteRef | null
   ) => void;
   onStartForwardMessage: (message: MessageType) => void;
   onOpenChatWithUser: (userId: string, forwardHint?: MessageForwardRef | null) => void;
@@ -147,9 +176,13 @@ interface ChatDialogProps {
   onCancelPendingForward?: () => void;
   pendingForwardSource?: ForwardSourceContext | null;
   pendingForwardSharedEvent?: SharedEventRef | null;
+  pendingForwardSharedNote?: SharedNoteRef | null;
   pendingSharedEvent?: SharedEventRef | null;
   onPendingSharedEventApplied?: () => void;
+  pendingSharedNote?: SharedNoteRef | null;
+  onPendingSharedNoteApplied?: () => void;
   onSharedEventClick?: (eventId: string) => void;
+  onSharedNoteClick?: (noteId: string) => void;
   hasMoreMessages?: boolean;
   isLoadingOlder?: boolean;
   isLoading?: boolean;
@@ -160,6 +193,7 @@ const isMessageEditable = (message: MessageType, currentUserId: string) => {
   if (message.senderId !== currentUserId) return false;
   if (message.forwardFrom) return false;
   if (message.sharedEvent && !message.text?.trim() && !message.encryptedPayload) return false;
+  if (message.sharedNote && !message.text?.trim() && !message.encryptedPayload) return false;
 
   const hasMediaAttachments = Boolean(
     message.attachments?.some(
@@ -195,9 +229,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onCancelPendingForward,
   pendingForwardSource = null,
   pendingForwardSharedEvent = null,
+  pendingForwardSharedNote = null,
   pendingSharedEvent = null,
   onPendingSharedEventApplied,
+  pendingSharedNote = null,
+  onPendingSharedNoteApplied,
   onSharedEventClick,
+  onSharedNoteClick,
   hasMoreMessages = false,
   isLoadingOlder = false,
   isLoading = false
@@ -236,8 +274,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [replyingTo, setReplyingTo] = useState<MessageReplyRef | null>(null);
   const [forwardingMessage, setForwardingMessage] = useState<MessageForwardRef | null>(null);
   const [forwardingSharedEvent, setForwardingSharedEvent] = useState<SharedEventRef | null>(null);
+  const [forwardingSharedNote, setForwardingSharedNote] = useState<SharedNoteRef | null>(null);
   const [forwardingSource, setForwardingSource] = useState<ForwardSourceContext | null>(null);
   const [sharingEvent, setSharingEvent] = useState<SharedEventRef | null>(null);
+  const [sharingNote, setSharingNote] = useState<SharedNoteRef | null>(null);
   const [editingMessage, setEditingMessage] = useState<MessageType | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
@@ -708,6 +748,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const cancelForwardDraft = () => {
     setForwardingMessage(null);
     setForwardingSharedEvent(null);
+    setForwardingSharedNote(null);
     setForwardingSource(null);
     onCancelPendingForward?.();
   };
@@ -725,11 +766,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setEditingMessage(null);
     setReplyingTo(null);
     setSharingEvent(null);
+    setSharingNote(null);
     setForwardingMessage(pendingForwardMessage);
     setForwardingSharedEvent(pendingForwardSharedEvent || null);
+    setForwardingSharedNote(pendingForwardSharedNote || null);
     setForwardingSource(pendingForwardSource || null);
     onPendingForwardApplied?.();
-  }, [pendingForwardMessage, pendingForwardSharedEvent, pendingForwardSource, onPendingForwardApplied]);
+  }, [pendingForwardMessage, pendingForwardSharedEvent, pendingForwardSharedNote, pendingForwardSource, onPendingForwardApplied]);
 
   useEffect(() => {
     if (!pendingSharedEvent) return;
@@ -737,9 +780,23 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setReplyingTo(null);
     setForwardingMessage(null);
     setForwardingSharedEvent(null);
+    setForwardingSharedNote(null);
+    setSharingNote(null);
     setSharingEvent(pendingSharedEvent);
     onPendingSharedEventApplied?.();
   }, [pendingSharedEvent, onPendingSharedEventApplied]);
+
+  useEffect(() => {
+    if (!pendingSharedNote) return;
+    setEditingMessage(null);
+    setReplyingTo(null);
+    setForwardingMessage(null);
+    setForwardingSharedEvent(null);
+    setForwardingSharedNote(null);
+    setSharingEvent(null);
+    setSharingNote(pendingSharedNote);
+    onPendingSharedNoteApplied?.();
+  }, [pendingSharedNote, onPendingSharedNoteApplied]);
 
   const scrollMessageIntoView = (messageId: string, behavior: ScrollBehavior = 'smooth') => {
     const container = messagesContainerRef.current;
@@ -779,12 +836,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         onSendMessage(trimmedText, [], null, null, null);
       }
       onSendMessage(
-        forwardingSharedEvent ? '' : (forwardingMessage.text || t('chat.message.forwarded')),
+        forwardingSharedEvent || forwardingSharedNote ? '' : (forwardingMessage.text || t('chat.message.forwarded')),
         [],
         null,
         forwardingMessage,
         forwardingSharedEvent,
-        forwardingSource
+        forwardingSource,
+        forwardingSharedNote
       );
       setMessageText('');
       setAttachments([]);
@@ -802,6 +860,18 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       setAttachments([]);
       setReplyingTo(null);
       setSharingEvent(null);
+      return;
+    }
+
+    if (sharingNote) {
+      if (trimmedText) {
+        onSendMessage(trimmedText, [], null, null, null);
+      }
+      onSendMessage('', [], null, null, null, null, sharingNote);
+      setMessageText('');
+      setAttachments([]);
+      setReplyingTo(null);
+      setSharingNote(null);
       return;
     }
 
@@ -1181,6 +1251,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             onReplyReferenceClick={handleReplyReferenceClick}
             onForwardSourceClick={handleForwardSourceClick}
             onSharedEventClick={onSharedEventClick}
+            onSharedNoteClick={onSharedNoteClick}
             onContactAvatarClick={() => setProfileDialogOpen(true)}
           />
         </Box>
@@ -1188,7 +1259,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick]);
+  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, { url: string; mediaType: 'image' | 'video' }> = {};
@@ -1625,6 +1696,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               </Typography>
               {forwardingSharedEvent ? (
                 <SharedEventCard sharedEvent={forwardingSharedEvent} compact />
+              ) : forwardingSharedNote ? (
+                <SharedNoteCard sharedNote={forwardingSharedNote} compact />
               ) : (
                 <Typography
                   variant="body2"
@@ -1671,6 +1744,33 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               <SharedEventCard sharedEvent={sharingEvent} compact />
             </Box>
             <IconButton size="small" onClick={() => setSharingEvent(null)} aria-label={t('chat.dialog.cancelShareEvent')}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
+
+        {sharingNote && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              borderLeft: '3px solid',
+              borderColor: 'primary.main',
+              bgcolor: 'action.hover',
+              px: 1.25,
+              py: 0.75,
+              borderRadius: 1,
+              mb: 1
+            }}
+          >
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
+                {t('chat.dialog.shareNote')}
+              </Typography>
+              <SharedNoteCard sharedNote={sharingNote} compact />
+            </Box>
+            <IconButton size="small" onClick={() => setSharingNote(null)} aria-label={t('chat.dialog.cancelShareNote')}>
               <CloseIcon fontSize="small" />
             </IconButton>
           </Box>
@@ -1735,7 +1835,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           sendDisabled={
             editingMessage
               ? !messageText.trim()
-              : !forwardingMessage && !sharingEvent && !messageText.trim() && attachments.length === 0
+              : !forwardingMessage && !sharingEvent && !sharingNote && !messageText.trim() && attachments.length === 0
           }
         />
       </Paper>

@@ -22,7 +22,9 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ImageIcon from '@mui/icons-material/Image';
+import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined';
 import axios from 'axios';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
@@ -45,6 +47,8 @@ import {
 } from '../../localization/calendarHelpers';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import ConfirmDeleteDialog from '../UI/ConfirmDeleteDialog';
+import ShareRecipientDialog, { ShareRecipientContact } from '../Chat/ShareRecipientDialog';
+import { buildSharedNoteRef, prepareNoteForShare } from '../../utils/buildSharedNoteRef';
 import DecryptedMedia from '../common/DecryptedMedia';
 import MediaViewerDialog from '../common/MediaViewerDialog';
 import { getUserDisplayName } from '../UI/UserProfileChip';
@@ -85,6 +89,7 @@ export interface PlanNote extends RawPlanNoteFields {
   updatedAt: string;
   createdBy?: PlanNoteUser;
   lastEditedBy?: PlanNoteUser;
+  readOnly?: boolean;
 }
 
 type NoteFormState = {
@@ -99,8 +104,13 @@ const emptyForm: NoteFormState = {
   category: ''
 };
 
-const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
+const PlansNotes: React.FC<{
+  refreshKey?: number;
+  noteIdFromUrl?: string | null;
+}> = ({ refreshKey = 0, noteIdFromUrl = null }) => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { localDeviceKeys, ensureLocalKeys } = useCrypto();
   const encryptionRecipientId = useEncryptionRecipientId();
@@ -154,6 +164,12 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
     media: PlanNoteMedia;
   } | null>(null);
 
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [noteToShare, setNoteToShare] = useState<PlanNote | null>(null);
+  const [shareContacts, setShareContacts] = useState<ShareRecipientContact[]>([]);
+  const [viewReadOnly, setViewReadOnly] = useState(false);
+  const openingNoteIdRef = useRef<string | null>(null);
+
   const resolveKeys = useCallback(async (): Promise<LocalDeviceKeys> => {
     if (localDeviceKeys) return localDeviceKeys;
     await ensureLocalKeys();
@@ -202,6 +218,24 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
     }
   }, [resolveKeys, user?._id, partnerId, t]);
 
+  const clearNoteFromUrl = useCallback(() => {
+    if (!searchParams.get('note')) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('note');
+    setSearchParams(nextParams, { replace: true });
+    openingNoteIdRef.current = null;
+  }, [searchParams, setSearchParams]);
+
+  const closeView = useCallback(() => {
+    setViewOpen(false);
+    setViewReadOnly(false);
+    setViewingNote(null);
+    clearNoteFromUrl();
+  }, [clearNoteFromUrl]);
+
   useEffect(() => {
     if (!user?._id) {
       setIsPrefsHydrated(false);
@@ -244,15 +278,35 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
 
   useEffect(() => {
     if (refreshKey > 0) {
-      setViewOpen(false);
+      closeView();
       setFormOpen(false);
       setDeleteOpen(false);
-      setViewingNote(null);
       setEditingNote(null);
       setNoteToDelete(null);
       void fetchNotes();
     }
-  }, [refreshKey, fetchNotes]);
+  }, [refreshKey, fetchNotes, closeView]);
+
+  useEffect(() => {
+    if (!noteIdFromUrl || isInitialLoading) return;
+    if (openingNoteIdRef.current === noteIdFromUrl) return;
+
+    const localNote = allNotes.find((note) => note._id === noteIdFromUrl);
+    if (localNote) {
+      openingNoteIdRef.current = noteIdFromUrl;
+      void openView(localNote, false);
+      return;
+    }
+
+    openingNoteIdRef.current = noteIdFromUrl;
+    void (async () => {
+      try {
+        await openSharedNoteById(noteIdFromUrl);
+      } catch (error) {
+        console.error('Ошибка при открытии заметки:', error);
+      }
+    })();
+  }, [noteIdFromUrl, allNotes, isInitialLoading]);
 
   const resetMediaState = () => {
     previews.forEach((url) => URL.revokeObjectURL(url));
@@ -281,10 +335,10 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
     resetMediaState();
     setExistingMedia(note.media || []);
     setFormOpen(true);
-    setViewOpen(false);
+    closeView();
   };
 
-  const openView = async (note: PlanNote) => {
+  const openView = async (note: PlanNote, readOnly = false) => {
     try {
       const keys = await resolveKeys();
       const decrypted = await decryptPlanNote(keys, note, user?._id, partnerId || undefined);
@@ -292,7 +346,83 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
     } catch {
       setViewingNote(note);
     }
+    setViewReadOnly(readOnly);
     setViewOpen(true);
+  };
+
+  const openSharedNoteById = async (noteId: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error(t('calendar.errors.notAuthorized'));
+    }
+
+    const response = await axios.get(`${API_URL}/api/calendar/plans/${encodeURIComponent(noteId)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    let note: PlanNote = response.data;
+    const isReadOnly = Boolean(note.readOnly);
+
+    try {
+      const keys = await resolveKeys();
+      note = await decryptPlanNote(keys, note, user?._id, partnerId || undefined);
+    } catch {
+      // keep raw note
+    }
+
+    await openView(note, isReadOnly);
+  };
+
+  const fetchShareContacts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(`${API_URL}/api/contacts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShareContacts(response.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке контактов для отправки:', error);
+      setShareContacts([]);
+    }
+  };
+
+  const handleShareNote = (note: PlanNote) => {
+    setNoteToShare(note);
+    setShareModalOpen(true);
+    void fetchShareContacts();
+  };
+
+  const handleSelectShareTarget = async (target: ShareRecipientContact) => {
+    if (!noteToShare) return;
+
+    let sharedNote;
+    if (localDeviceKeys) {
+      sharedNote = await prepareNoteForShare(
+        localDeviceKeys,
+        noteToShare,
+        user?._id,
+        partnerId || undefined
+      );
+    } else {
+      sharedNote = buildSharedNoteRef(noteToShare);
+    }
+
+    setShareModalOpen(false);
+    closeView();
+    setNoteToShare(null);
+
+    navigate('/chat', {
+      state: {
+        pendingSharedNote: sharedNote,
+        targetUserId: target.id,
+        targetUserName: target.name,
+        targetUsername: target.username,
+        targetUserEmail: target.email,
+        targetUserAvatar: target.avatar
+      }
+    });
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -436,9 +566,8 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
       await axios.delete(`${API_URL}/api/calendar/plans/${noteToDelete._id}`);
       setAllNotes((prev) => prev.filter((n) => n._id !== noteToDelete._id));
       setDeleteOpen(false);
-      setViewOpen(false);
+      closeView();
       setNoteToDelete(null);
-      setViewingNote(null);
       void fetchNotes();
     } catch (err) {
       console.error('Ошибка удаления заметки:', err);
@@ -830,17 +959,33 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
       </ResponsiveDialog>
 
       {/* Просмотр заметки */}
-      <ResponsiveDialog open={viewOpen} onClose={() => setViewOpen(false)} fullWidth maxWidth="sm">
+      <ResponsiveDialog open={viewOpen} onClose={closeView} fullWidth maxWidth="sm">
         {viewingNote && (
           <>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <Box sx={{ minWidth: 0, pr: 1 }}>
                 <Typography variant="h6">{viewingNote.title}</Typography>
-                <Chip label={viewingNote.category} size="small" sx={{ mt: 1 }} />
+                <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                  <Chip label={viewingNote.category} size="small" />
+                  {viewReadOnly && (
+                    <Chip label={t('calendar.detail.readOnly')} size="small" color="default" />
+                  )}
+                </Box>
               </Box>
-              <IconButton onClick={() => setViewOpen(false)} size="small">
-                <CloseIcon />
-              </IconButton>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                {!viewReadOnly && (
+                  <IconButton
+                    onClick={() => handleShareNote(viewingNote)}
+                    size="small"
+                    title={t('calendar.detail.share')}
+                  >
+                    <ReplyOutlinedIcon />
+                  </IconButton>
+                )}
+                <IconButton onClick={closeView} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
             </DialogTitle>
             <DialogContent>
               <Typography
@@ -886,20 +1031,24 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
                   )}
               </Box>
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'space-between' }}>
-              <Button
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => {
-                  setNoteToDelete(viewingNote);
-                  setDeleteOpen(true);
-                }}
-              >
-                {t('calendar.common.delete')}
-              </Button>
-              <Button variant="contained" startIcon={<EditIcon />} onClick={() => openEditForm(viewingNote)}>
-                {t('calendar.common.edit')}
-              </Button>
+            <DialogActions sx={{ px: 3, pb: 2, justifyContent: viewReadOnly ? 'flex-end' : 'space-between' }}>
+              {!viewReadOnly && (
+                <Button
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => {
+                    setNoteToDelete(viewingNote);
+                    setDeleteOpen(true);
+                  }}
+                >
+                  {t('calendar.common.delete')}
+                </Button>
+              )}
+              {!viewReadOnly && (
+                <Button variant="contained" startIcon={<EditIcon />} onClick={() => openEditForm(viewingNote)}>
+                  {t('calendar.common.edit')}
+                </Button>
+              )}
             </DialogActions>
           </>
         )}
@@ -932,6 +1081,17 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
             ? t('calendar.plans.deleteConfirm', { title: noteToDelete.title })
             : undefined
         }
+      />
+
+      <ShareRecipientDialog
+        open={shareModalOpen}
+        onClose={() => {
+          setShareModalOpen(false);
+          setNoteToShare(null);
+        }}
+        onSelect={handleSelectShareTarget}
+        title={t('chat.dialog.shareNote')}
+        contacts={shareContacts}
       />
     </Box>
   );

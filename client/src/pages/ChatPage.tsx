@@ -32,7 +32,8 @@ import ChatDialog, {
   MessageForwardRef,
   MessageReplyRef,
   MessageType,
-  SharedEventRef
+  SharedEventRef,
+  SharedNoteRef
 } from '../components/Chat/ChatDialog';
 import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import Games from '../components/Chat/Games';
@@ -211,7 +212,7 @@ const ChatPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const previewMessage = useCallback(
-    (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'encryptedPayload' | 'mediaEnvelopes'>) =>
+    (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'sharedNote' | 'encryptedPayload' | 'mediaEnvelopes'>) =>
       getChatMessagePreview(t, message),
     [t]
   );
@@ -244,11 +245,13 @@ const ChatPage: React.FC = () => {
   const forwardSourceRef = useRef<MessageType | null>(null);
   const [pendingForwardMessage, setPendingForwardMessage] = useState<MessageForwardRef | null>(null);
   const [pendingForwardSharedEvent, setPendingForwardSharedEvent] = useState<SharedEventRef | null>(null);
+  const [pendingForwardSharedNote, setPendingForwardSharedNote] = useState<SharedNoteRef | null>(null);
   const [pendingForwardSource, setPendingForwardSource] = useState<{
     message: MessageType;
     peerId: string;
   } | null>(null);
   const [pendingSharedEvent, setPendingSharedEvent] = useState<SharedEventRef | null>(null);
+  const [pendingSharedNote, setPendingSharedNote] = useState<SharedNoteRef | null>(null);
   const [deleteToast, setDeleteToast] = useState<{
     open: boolean;
     message: string;
@@ -388,7 +391,8 @@ const ChatPage: React.FC = () => {
       forwardFrom: MessageForwardRef | null,
       clientTempId?: string,
       sharedEvent: SharedEventRef | null = null,
-      pushPreview?: string
+      pushPreview?: string,
+      sharedNote: SharedNoteRef | null = null
     ) => {
       socketService.sendMessage(
         receiverId,
@@ -399,7 +403,8 @@ const ChatPage: React.FC = () => {
         forwardFrom,
         sharedEvent,
         clientTempId,
-        pushPreview
+        pushPreview,
+        sharedNote
       );
     },
     []
@@ -831,7 +836,8 @@ const ChatPage: React.FC = () => {
               text: tempMessage.text || messageForDialog.text,
               replyTo: message.replyTo || tempMessage.replyTo,
               forwardFrom: message.forwardFrom || tempMessage.forwardFrom,
-              sharedEvent: message.sharedEvent || tempMessage.sharedEvent
+              sharedEvent: message.sharedEvent || tempMessage.sharedEvent,
+              sharedNote: message.sharedNote || tempMessage.sharedNote
             };
             return newMessages;
           }
@@ -1337,6 +1343,7 @@ const ChatPage: React.FC = () => {
   const clearPendingForwardDraft = useCallback(() => {
     setPendingForwardMessage(null);
     setPendingForwardSharedEvent(null);
+    setPendingForwardSharedNote(null);
     setPendingForwardSource(null);
   }, []);
 
@@ -1409,6 +1416,7 @@ const ChatPage: React.FC = () => {
       };
 
       setPendingForwardSharedEvent(messageForForward.sharedEvent || null);
+      setPendingForwardSharedNote(messageForForward.sharedNote || null);
       setPendingForwardMessage(forwardFrom);
       setPendingForwardSource({ message: messageForForward, peerId: sourcePeerId });
       openTargetChat();
@@ -1458,6 +1466,7 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     const state = location.state as {
       pendingSharedEvent?: SharedEventRef;
+      pendingSharedNote?: SharedNoteRef;
       targetUserId?: string;
       targetUserName?: string;
       targetUsername?: string;
@@ -1465,7 +1474,8 @@ const ChatPage: React.FC = () => {
       targetUserAvatar?: string;
     } | null;
 
-    if (!state?.pendingSharedEvent || !state?.targetUserId) {
+    const pendingShare = state?.pendingSharedEvent || state?.pendingSharedNote;
+    if (!pendingShare || !state?.targetUserId) {
       return;
     }
 
@@ -1476,7 +1486,12 @@ const ChatPage: React.FC = () => {
       email: state.targetUserEmail || '',
       avatar: state.targetUserAvatar || ''
     });
-    setPendingSharedEvent(state.pendingSharedEvent);
+    if (state.pendingSharedEvent) {
+      setPendingSharedEvent(state.pendingSharedEvent);
+    }
+    if (state.pendingSharedNote) {
+      setPendingSharedNote(state.pendingSharedNote);
+    }
     openContact(state.targetUserId);
     setTabValue(0);
     navigate(location.pathname, { replace: true, state: null });
@@ -1592,7 +1607,8 @@ const ChatPage: React.FC = () => {
     replyTo?: MessageReplyRef | null,
     forwardFrom?: MessageForwardRef | null,
     sharedEvent?: SharedEventRef | null,
-    forwardSource?: ForwardSourceContext | null
+    forwardSource?: ForwardSourceContext | null,
+    sharedNote?: SharedNoteRef | null
   ) => {
     const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -1600,9 +1616,10 @@ const ChatPage: React.FC = () => {
     const trimmedText = text.trim();
     const isForwardOnly = Boolean(forwardFrom);
     const isSharedEventOnly = Boolean(sharedEvent);
+    const isSharedNoteOnly = Boolean(sharedNote);
     const hasFiles = Boolean(attachments && attachments.length > 0);
 
-    if (!isForwardOnly && !isSharedEventOnly && !trimmedText && !hasFiles) return;
+    if (!isForwardOnly && !isSharedEventOnly && !isSharedNoteOnly && !trimmedText && !hasFiles) return;
 
     if (
       isForwardOnly &&
@@ -1649,6 +1666,7 @@ const ChatPage: React.FC = () => {
       replyTo: replyTo || undefined,
       forwardFrom: forwardFrom || undefined,
       sharedEvent: sharedEvent || undefined,
+      sharedNote: sharedNote || undefined,
       attachments: attachments?.map((file) => ({
         type: isVideoFile(file) ? 'video' : 'image',
         url: URL.createObjectURL(file)
@@ -1661,9 +1679,11 @@ const ChatPage: React.FC = () => {
       selectedContactId,
       trimmedText || (sharedEvent
         ? t('chat.message.event', { title: sharedEvent.title })
-        : (forwardFrom
-          ? t('chat.message.forwarded')
-          : (hasFiles ? t('chat.message.media') : ''))),
+        : (sharedNote
+          ? t('chat.message.note', { title: sharedNote.title })
+          : (forwardFrom
+            ? t('chat.message.forwarded')
+            : (hasFiles ? t('chat.message.media') : '')))),
       newMessage.timestamp,
       false,
       hasFiles,
@@ -1705,6 +1725,7 @@ const ChatPage: React.FC = () => {
           attachments: storedAttachments.length > 0 ? storedAttachments : undefined,
           forwardFrom: forwardFrom || undefined,
           sharedEvent: sharedEvent || undefined,
+          sharedNote: sharedNote || undefined,
         });
 
         if (encryptedPayload) {
@@ -1716,7 +1737,8 @@ const ChatPage: React.FC = () => {
             forwardFrom || null,
             clientTempId,
             sharedEvent || null,
-            pushPreview
+            pushPreview,
+            sharedNote || null
           );
         } else {
           socketService.sendMessage(
@@ -1728,7 +1750,8 @@ const ChatPage: React.FC = () => {
             forwardFrom || null,
             sharedEvent || null,
             clientTempId,
-            pushPreview
+            pushPreview,
+            sharedNote || null
           );
         }
       } catch (error) {
@@ -1740,13 +1763,17 @@ const ChatPage: React.FC = () => {
       }
     };
 
-    if (hasFiles || trimmedText || isForwardOnly || isSharedEventOnly) {
+    if (hasFiles || trimmedText || isForwardOnly || isSharedEventOnly || isSharedNoteOnly) {
       void sendMessageWithAttachments();
     }
   };
 
   const handleSharedEventClick = (eventId: string) => {
     navigate(`/calendar?event=${encodeURIComponent(eventId)}`);
+  };
+
+  const handleSharedNoteClick = (noteId: string) => {
+    navigate(`/calendar?note=${encodeURIComponent(noteId)}`);
   };
 
   const handleEditMessage = (messageId: string, text: string) => {
@@ -2133,14 +2160,19 @@ const ChatPage: React.FC = () => {
                     onPendingForwardApplied={() => {
                       setPendingForwardMessage(null);
                       setPendingForwardSharedEvent(null);
+                      setPendingForwardSharedNote(null);
                       setPendingForwardSource(null);
                     }}
                     onCancelPendingForward={clearPendingForwardDraft}
                     pendingForwardSource={pendingForwardSource}
                     pendingForwardSharedEvent={pendingForwardSharedEvent}
+                    pendingForwardSharedNote={pendingForwardSharedNote}
                     pendingSharedEvent={pendingSharedEvent}
                     onPendingSharedEventApplied={() => setPendingSharedEvent(null)}
+                    pendingSharedNote={pendingSharedNote}
+                    onPendingSharedNoteApplied={() => setPendingSharedNote(null)}
                     onSharedEventClick={handleSharedEventClick}
+                    onSharedNoteClick={handleSharedNoteClick}
                     hasMoreMessages={hasMoreMessages}
                     isLoadingOlder={isLoadingOlderMessages}
                     isLoading={isLoadingMessages}

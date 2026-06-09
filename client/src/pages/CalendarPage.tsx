@@ -147,6 +147,7 @@ const CalendarPage: React.FC = () => {
   const [shareContacts, setShareContacts] = useState<ShareRecipientContact[]>([]);
   const [plansRefreshKey, setPlansRefreshKey] = useState(0);
   const eventIdFromUrl = searchParams.get('event');
+  const noteIdFromUrl = searchParams.get('note');
   const [eventFromUrlHandled, setEventFromUrlHandled] = useState(!eventIdFromUrl);
   const openingEventIdRef = useRef<string | null>(null);
 
@@ -772,6 +773,8 @@ const CalendarPage: React.FC = () => {
         onContentClick={handleContentClick}
         onDeleteAll={handleDeleteAll}
         plansRefreshKey={plansRefreshKey}
+        noteIdFromUrl={noteIdFromUrl}
+        forcePlansTab={Boolean(noteIdFromUrl)}
       />
       
       <EventListDialog

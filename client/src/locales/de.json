@@ -782,6 +782,7 @@
       "encrypted": "Verschlüsselte Nachricht",
       "encryptedMedia": "Verschlüsselte Medien",
       "event": "Ereignis: {{title}}",
+      "note": "Notiz: {{title}}",
       "noMessages": "Keine Nachrichten",
       "decryptFailed": "Nachricht konnte nicht entschlüsselt werden",
       "deleted": "Nachricht gelöscht",
@@ -820,6 +821,8 @@
       "cancelForward": "Weiterleitung abbrechen",
       "shareEvent": "Ereignis teilen",
       "cancelShareEvent": "Ereignis teilen abbrechen",
+      "shareNote": "Notiz teilen",
+      "cancelShareNote": "Notiz teilen abbrechen",
       "editing": "Nachricht bearbeiten",
       "cancelEdit": "Bearbeitung abbrechen",
       "scrollDown": "Nach unten scrollen",
@@ -864,6 +867,9 @@
     },
     "event": {
       "label": "Ereignis"
+    },
+    "note": {
+      "label": "Notiz"
     }
   },
   "calendar": {

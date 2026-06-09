@@ -1075,11 +1075,91 @@ router.get('/plans/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Заметка не найдена' });
     }
 
-    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate)) {
+    if (canAccessPlanNote(note, userId, partnerId, relationshipStartDate)) {
+      return res.json(formatPlanNote(note));
+    }
+
+    const shareMessage = await Message.findOne({
+      receiverId: new mongoose.Types.ObjectId(userId),
+      'sharedNote.noteId': id
+    })
+      .sort({ createdAt: -1 })
+      .select('sharedNote senderId');
+
+    if (!shareMessage?.sharedNote) {
       return res.status(403).json({ error: 'Нет доступа к этой заметке' });
     }
 
-    res.json(formatPlanNote(note));
+    const shared = shareMessage.sharedNote;
+    const createdBySource =
+      typeof note.createdBy === 'object' && note.createdBy !== null && 'username' in note.createdBy
+        ? (note.createdBy as { _id?: { toString(): string }; username?: string; avatar?: string; firstName?: string; lastName?: string })
+        : null;
+
+    const lastEditedBySource =
+      typeof note.lastEditedBy === 'object' &&
+      note.lastEditedBy !== null &&
+      'username' in note.lastEditedBy
+        ? (note.lastEditedBy as { _id?: { toString(): string }; username?: string; avatar?: string; firstName?: string; lastName?: string })
+        : null;
+
+    const sharedMediaItems =
+      Array.isArray(shared.media) && shared.media.length > 0
+        ? shared.media
+        : shared.previewUrl
+          ? [
+              {
+                id: `${id}-shared-preview`,
+                url: shared.previewUrl,
+                resourceType: shared.previewResourceType || 'image',
+                encrypted: Boolean(shared.previewEncrypted),
+                previewMediaEnvelope: shared.previewMediaEnvelope || undefined,
+                encryptedMediaEnvelope: shared.previewEncryptedMediaEnvelope || undefined
+              }
+            ]
+          : [];
+
+    res.json({
+      _id: id,
+      title: shared.title || 'Без названия',
+      content: shared.contentPreview || '',
+      category: shared.category || '',
+      encrypted: false,
+      metadataSenderId: shared.previewMetadataSenderId,
+      metadataRecipientId: shared.previewMetadataRecipientId,
+      media: sharedMediaItems.map((item: any, index: number) => ({
+        _id: item.id || `${id}-shared-media-${index}`,
+        url: item.url,
+        publicId: item.id || `${id}-shared-media-${index}`,
+        resourceType: item.resourceType || 'image',
+        encrypted: Boolean(item.encrypted),
+        mediaEnvelope: item.previewMediaEnvelope || undefined,
+        encryptedMediaEnvelope: item.encryptedMediaEnvelope || undefined,
+        metadataSenderId: shared.previewMetadataSenderId,
+        metadataRecipientId: shared.previewMetadataRecipientId
+      })),
+      createdAt: note.createdAt,
+      updatedAt: shared.updatedAt || note.updatedAt,
+      createdBy: createdBySource
+        ? {
+            _id: createdBySource._id?.toString(),
+            username: createdBySource.username,
+            avatar: createdBySource.avatar,
+            firstName: createdBySource.firstName,
+            lastName: createdBySource.lastName
+          }
+        : undefined,
+      lastEditedBy: lastEditedBySource
+        ? {
+            _id: lastEditedBySource._id?.toString(),
+            username: lastEditedBySource.username,
+            avatar: lastEditedBySource.avatar,
+            firstName: lastEditedBySource.firstName,
+            lastName: lastEditedBySource.lastName
+          }
+        : undefined,
+      readOnly: true
+    });
   } catch (error) {
     console.error('Ошибка при получении заметки:', error);
     res.status(500).json({ error: 'Ошибка при получении заметки' });

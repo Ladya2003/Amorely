@@ -782,6 +782,7 @@
       "encrypted": "Encrypted message",
       "encryptedMedia": "Encrypted media",
       "event": "Event: {{title}}",
+      "note": "Note: {{title}}",
       "noMessages": "No messages",
       "decryptFailed": "Failed to decrypt message",
       "deleted": "Message deleted",
@@ -820,6 +821,8 @@
       "cancelForward": "Cancel forward",
       "shareEvent": "Share event",
       "cancelShareEvent": "Cancel event share",
+      "shareNote": "Share note",
+      "cancelShareNote": "Cancel note share",
       "editing": "Editing message",
       "cancelEdit": "Cancel editing",
       "scrollDown": "Scroll down",
@@ -864,6 +867,9 @@
     },
     "event": {
       "label": "Event"
+    },
+    "note": {
+      "label": "Note"
     }
   },
   "calendar": {

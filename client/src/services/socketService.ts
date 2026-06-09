@@ -122,7 +122,18 @@ class SocketService {
       eventDate?: string;
     } | null,
     clientTempId?: string,
-    pushPreview?: string
+    pushPreview?: string,
+    sharedNote?: {
+      noteId: string;
+      title: string;
+      category?: string;
+      contentPreview?: string;
+      previewUrl?: string;
+      previewResourceType?: 'image' | 'video';
+      previewEncrypted?: boolean;
+      previewMediaEnvelope?: unknown;
+      updatedAt?: string;
+    } | null
   ) {
     if (!this.socket) {
       throw new Error('Socket not initialized');
@@ -143,7 +154,8 @@ class SocketService {
       forwardFrom,
       sharedEvent,
       clientTempId,
-      pushPreview
+      pushPreview,
+      sharedNote
     });
   }
 

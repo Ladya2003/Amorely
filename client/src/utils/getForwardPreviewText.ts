@@ -4,7 +4,7 @@ import { getChatMessagePreview } from '../localization/chatHelpers';
 
 export const getForwardPreviewText = (
   t: TFunction,
-  message: Pick<MessageType, 'text' | 'attachments' | 'sharedEvent' | 'forwardFrom'>
+  message: Pick<MessageType, 'text' | 'attachments' | 'sharedEvent' | 'sharedNote' | 'forwardFrom'>
 ): string => {
   const trimmedText = message.text?.trim();
   if (trimmedText) return trimmedText;

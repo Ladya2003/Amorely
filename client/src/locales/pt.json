@@ -782,6 +782,7 @@
       "encrypted": "Mensagem criptografada",
       "encryptedMedia": "Mídia criptografada",
       "event": "Evento: {{title}}",
+      "note": "Nota: {{title}}",
       "noMessages": "Sem mensagens",
       "decryptFailed": "Não foi possível descriptografar a mensagem",
       "deleted": "Mensagem excluída",
@@ -820,6 +821,8 @@
       "cancelForward": "Cancelar encaminhamento",
       "shareEvent": "Compartilhar evento",
       "cancelShareEvent": "Cancelar compartilhamento do evento",
+      "shareNote": "Compartilhar nota",
+      "cancelShareNote": "Cancelar compartilhamento da nota",
       "editing": "Editando mensagem",
       "cancelEdit": "Cancelar edição",
       "scrollDown": "Rolar para baixo",
@@ -864,6 +867,9 @@
     },
     "event": {
       "label": "Evento"
+    },
+    "note": {
+      "label": "Nota"
     }
   },
   "calendar": {

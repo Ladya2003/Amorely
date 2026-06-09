@@ -88,6 +88,7 @@ const getMessagePreview = (params: {
   hasEncryptedPayload: boolean;
   hasAttachments: boolean;
   sharedEvent?: { title?: string };
+  sharedNote?: { title?: string };
   forwardFrom?: { text?: string };
 }) => {
   const pushPreview = params.pushPreview?.trim();
@@ -102,6 +103,10 @@ const getMessagePreview = (params: {
 
   if (params.sharedEvent?.title?.trim()) {
     return truncatePreview(`Событие: ${params.sharedEvent.title.trim()}`);
+  }
+
+  if (params.sharedNote?.title?.trim()) {
+    return truncatePreview(`Заметка: ${params.sharedNote.title.trim()}`);
   }
 
   const forwardText = params.forwardFrom?.text?.trim();
@@ -128,6 +133,7 @@ export const notifyNewMessage = async (params: {
   encryptedPayload?: unknown;
   attachments?: unknown[];
   sharedEvent?: { title?: string };
+  sharedNote?: { title?: string };
   forwardFrom?: { text?: string };
   chatUrl?: string;
 }) => {
@@ -148,6 +154,7 @@ export const notifyNewMessage = async (params: {
     hasEncryptedPayload: Boolean(params.encryptedPayload),
     hasAttachments: Boolean(params.attachments?.length),
     sharedEvent: params.sharedEvent,
+    sharedNote: params.sharedNote,
     forwardFrom: params.forwardFrom,
   });
 

@@ -41,6 +41,7 @@ const formatMessageForClient = (message: any) => ({
   replyTo: message.replyTo || undefined,
   forwardFrom: message.forwardFrom || undefined,
   sharedEvent: message.sharedEvent || undefined,
+  sharedNote: message.sharedNote || undefined,
   encryptedPayload: message.encryptedPayload
     ? {
         version: message.encryptedPayload.version,
@@ -370,7 +371,7 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
 // Отправка нового сообщения
 router.post('/messages', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { senderId, receiverId, text, attachments, replyTo, forwardFrom, sharedEvent, encryptedPayload } = req.body;
+    const { senderId, receiverId, text, attachments, replyTo, forwardFrom, sharedEvent, sharedNote, encryptedPayload } = req.body;
     
     if (!senderId || !receiverId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
@@ -386,6 +387,7 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
       replyTo,
       forwardFrom,
       sharedEvent,
+      sharedNote,
       isRead: false,
       createdAt: new Date()
     });
@@ -419,7 +421,7 @@ router.put('/messages/:id', authMiddleware, async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Недостаточно прав для редактирования' });
     }
 
-    if (message.forwardFrom || message.sharedEvent) {
+    if (message.forwardFrom || message.sharedEvent || message.sharedNote) {
       return res.status(403).json({ error: 'Это сообщение нельзя редактировать' });
     }
 

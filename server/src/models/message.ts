@@ -58,6 +58,25 @@ const sharedEventSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const sharedNoteSchema = new mongoose.Schema(
+  {
+    noteId: { type: String, required: true },
+    title: { type: String, required: true },
+    category: { type: String, required: false },
+    contentPreview: { type: String, required: false },
+    previewUrl: { type: String, required: false },
+    previewResourceType: { type: String, enum: ['image', 'video'], required: false },
+    previewEncrypted: { type: Boolean, required: false },
+    previewMediaEnvelope: { type: mongoose.Schema.Types.Mixed, required: false },
+    previewEncryptedMediaEnvelope: { type: mongoose.Schema.Types.Mixed, required: false },
+    previewMetadataSenderId: { type: String, required: false },
+    previewMetadataRecipientId: { type: String, required: false },
+    updatedAt: { type: String, required: false },
+    media: { type: [sharedEventMediaSchema], required: false }
+  },
+  { _id: false }
+);
+
 const messageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -67,6 +86,7 @@ const messageSchema = new mongoose.Schema({
   replyTo: { type: replySchema, required: false },
   forwardFrom: { type: replySchema, required: false },
   sharedEvent: { type: sharedEventSchema, required: false },
+  sharedNote: { type: sharedNoteSchema, required: false },
   editedAt: { type: Date, required: false },
   isRead: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }

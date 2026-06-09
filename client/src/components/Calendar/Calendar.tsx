@@ -67,6 +67,8 @@ interface CalendarProps {
   onContentClick?: (eventId: string, directOpen?: boolean) => void;
   onDeleteAll?: (type: 'events' | 'plans') => Promise<void>;
   plansRefreshKey?: number;
+  noteIdFromUrl?: string | null;
+  forcePlansTab?: boolean;
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -75,7 +77,9 @@ const Calendar: React.FC<CalendarProps> = ({
   onAddContent,
   onContentClick,
   onDeleteAll,
-  plansRefreshKey
+  plansRefreshKey,
+  noteIdFromUrl = null,
+  forcePlansTab = false
 }) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -99,9 +103,15 @@ const Calendar: React.FC<CalendarProps> = ({
 
     skipNextSaveRef.current = true;
     const prefs = readCalendarUiPreferences(user._id);
-    setTabValue(prefs.mainTab === 'plans' ? 1 : 0);
+    setTabValue(forcePlansTab || prefs.mainTab === 'plans' ? 1 : 0);
     setView(prefs.calendarView);
-  }, [user?._id]);
+  }, [user?._id, forcePlansTab]);
+
+  useEffect(() => {
+    if (forcePlansTab) {
+      setTabValue(1);
+    }
+  }, [forcePlansTab, noteIdFromUrl]);
 
   useEffect(() => {
     if (!user?._id) {
@@ -357,7 +367,7 @@ const Calendar: React.FC<CalendarProps> = ({
             )}
           </Box>
         ) : (
-          <PlansNotes refreshKey={plansRefreshKey} />
+          <PlansNotes refreshKey={plansRefreshKey} noteIdFromUrl={noteIdFromUrl} />
         )}
       </Box>
 
