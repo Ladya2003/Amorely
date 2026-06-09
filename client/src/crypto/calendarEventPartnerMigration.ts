@@ -2,9 +2,9 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import {
   decryptContentMediaEnvelope,
+  decryptOwnContentText,
   encryptDualMediaEnvelopeForContent,
   encryptDualTextForContent,
-  decryptOwnContentText,
   normalizeUserId,
   type RawContentFields
 } from './contentCryptoService';
@@ -22,10 +22,12 @@ export type CalendarEventForMigration = RawContentFields & {
   media?: CalendarEventMediaForMigration[];
 };
 
+export const LEGACY_CRYPTO_HEAL_KEY = 'calendar-crypto-heal-v1';
+
 export const needsPartnerCopyMigration = (
   event: CalendarEventForMigration,
   selfUserId: string,
-  partnerUserId: string
+  healLegacyDualCopy: boolean
 ): boolean => {
   if (normalizeUserId(event.userId) !== selfUserId) {
     return false;
@@ -38,25 +40,32 @@ export const needsPartnerCopyMigration = (
     (item) =>
       item.encryptedMediaEnvelope?.ciphertext && !item.encryptedMediaEnvelopePartner?.ciphertext
   );
+  const needsLegacySelfCopyHeal = Boolean(
+    healLegacyDualCopy &&
+      event.encryptedTitle?.ciphertext &&
+      event.encryptedTitlePartner?.ciphertext
+  );
 
-  return missingTitlePartner || missingMediaPartner;
+  return missingTitlePartner || missingMediaPartner || needsLegacySelfCopyHeal;
 };
 
 export const migrateCalendarEventsPartnerCopies = async (
   events: CalendarEventForMigration[],
   keys: LocalDeviceKeys,
   selfUserId: string,
-  partnerUserId: string
+  partnerUserId: string,
+  options?: { healLegacyDualCopy?: boolean }
 ): Promise<boolean> => {
   const token = localStorage.getItem('token');
   if (!token || !partnerUserId || partnerUserId === selfUserId) {
     return false;
   }
 
+  const healLegacyDualCopy = options?.healLegacyDualCopy ?? false;
   let changed = false;
 
   for (const event of events) {
-    if (!needsPartnerCopyMigration(event, selfUserId, partnerUserId)) {
+    if (!needsPartnerCopyMigration(event, selfUserId, healLegacyDualCopy)) {
       continue;
     }
 
@@ -68,11 +77,17 @@ export const migrateCalendarEventsPartnerCopies = async (
     const missingTitlePartner = Boolean(
       event.encryptedTitle?.ciphertext && !event.encryptedTitlePartner?.ciphertext
     );
+    const needsTitleReencrypt = Boolean(
+      missingTitlePartner ||
+        (healLegacyDualCopy &&
+          event.encryptedTitle?.ciphertext &&
+          event.encryptedTitlePartner?.ciphertext)
+    );
 
     let titleDual: Awaited<ReturnType<typeof encryptDualTextForContent>> | undefined;
     let descriptionDual: Awaited<ReturnType<typeof encryptDualTextForContent>> | undefined;
 
-    if (missingTitlePartner) {
+    if (needsTitleReencrypt) {
       const title = await decryptOwnContentText(keys, event, 'Title', selfUserId);
       if (!title) {
         continue;
@@ -105,14 +120,22 @@ export const migrateCalendarEventsPartnerCopies = async (
     const mediaPartnerCopies: Array<{
       mediaId: string;
       encryptedMediaEnvelopePartner: { ciphertext: string; iv: string };
+      encryptedMediaEnvelope?: { ciphertext: string; iv: string };
     }> = [];
 
     for (const mediaItem of event.media || []) {
-      if (
-        !mediaItem.encryptedMediaEnvelope?.ciphertext ||
-        mediaItem.encryptedMediaEnvelopePartner?.ciphertext ||
-        !mediaItem._id
-      ) {
+      const missingPartnerMedia = Boolean(
+        mediaItem.encryptedMediaEnvelope?.ciphertext &&
+          !mediaItem.encryptedMediaEnvelopePartner?.ciphertext
+      );
+      const needsMediaReencrypt = Boolean(
+        missingPartnerMedia ||
+          (healLegacyDualCopy &&
+            mediaItem.encryptedMediaEnvelope?.ciphertext &&
+            mediaItem.encryptedMediaEnvelopePartner?.ciphertext)
+      );
+
+      if (!needsMediaReencrypt || !mediaItem._id) {
         continue;
       }
 
@@ -146,6 +169,7 @@ export const migrateCalendarEventsPartnerCopies = async (
 
       mediaPartnerCopies.push({
         mediaId: String(mediaItem._id),
+        encryptedMediaEnvelope: dualEnvelope.self,
         encryptedMediaEnvelopePartner: dualEnvelope.partner
       });
     }
@@ -153,6 +177,8 @@ export const migrateCalendarEventsPartnerCopies = async (
     await axios.patch(
       `${API_URL}/api/calendar/events/${eventId}/partner-copies`,
       {
+        encryptedTitle: titleDual?.self,
+        encryptedDescription: descriptionDual?.self,
         encryptedTitlePartner: titleDual?.partner,
         encryptedDescriptionPartner: descriptionDual?.partner,
         mediaPartnerCopies

@@ -19,7 +19,7 @@ import {
   encryptDualTextForContent
 } from '../crypto/contentCryptoService';
 import { encryptAndUploadCalendarContentFiles } from '../crypto/encryptedUploadService';
-import { migrateCalendarEventsPartnerCopies } from '../crypto/calendarEventPartnerMigration';
+import { migrateCalendarEventsPartnerCopies, LEGACY_CRYPTO_HEAL_KEY } from '../crypto/calendarEventPartnerMigration';
 import { isVideoCompressionError } from '../utils/compressVideo';
 import type { PrepareMediaProgress } from '../utils/parallelMediaPrepare';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
@@ -68,12 +68,30 @@ interface ContentItem {
   readOnly?: boolean;
 }
 
+const isDecryptFailedTitle = (title?: string): boolean => {
+  if (!title?.trim()) {
+    return false;
+  }
+
+  const failedTitles = new Set([
+    'Failed to decrypt',
+    'Не удалось расшифровать',
+    'No se pudo descifrar',
+    'Échec du déchiffrement',
+    'Entschlüsselung fehlgeschlagen',
+    'Falha ao descriptografar',
+    'Не вдалося розшифрувати'
+  ]);
+
+  return failedTitles.has(title.trim());
+};
+
 const isViewableCalendarEvent = (
   event: ContentItem,
   _selfUserId?: string,
   _activePartnerId?: string
 ): boolean => {
-  if (event.title?.trim()) {
+  if (event.title?.trim() && !isDecryptFailedTitle(event.title)) {
     return true;
   }
 
@@ -90,7 +108,7 @@ const isViewableCalendarEvent = (
 };
 
 const partnerMigrationSessionKey = (selfUserId: string, partnerUserId: string) =>
-  `calendar-partner-migration:${selfUserId}:${partnerUserId}`;
+  `calendar-partner-migration:v2:${selfUserId}:${partnerUserId}`;
 
 const CalendarPage: React.FC = () => {
   const { t } = useTranslation();
@@ -288,14 +306,19 @@ const CalendarPage: React.FC = () => {
         const migrationDone = sessionStorage.getItem(migrationKey) === '1';
 
         if (!migrationDone) {
+          const healLegacyDualCopy = localStorage.getItem(LEGACY_CRYPTO_HEAL_KEY) !== '1';
           const migrated = await migrateCalendarEventsPartnerCopies(
             events,
             localDeviceKeys,
             user._id,
-            activePartnerId
+            activePartnerId,
+            { healLegacyDualCopy }
           );
 
           sessionStorage.setItem(migrationKey, '1');
+          if (healLegacyDualCopy) {
+            localStorage.setItem(LEGACY_CRYPTO_HEAL_KEY, '1');
+          }
 
           if (migrated) {
             const refreshResponse = await axios.get(`${API_URL}/api/calendar/events`, {

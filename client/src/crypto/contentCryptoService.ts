@@ -7,6 +7,13 @@ import {
 
 const CONTENT_CRYPTO_OPTIONS = { allowCacheBust: false as const };
 
+type DecryptionContext = {
+  payload: EncryptedTextPayload;
+  asOwn: boolean;
+  peerId: string;
+  alternatePeerId?: string;
+};
+
 export type EncryptedTextPayload = {
   ciphertext: string;
   iv: string;
@@ -176,7 +183,7 @@ const pickTextDecryptionContext = (
   field: TextFieldName,
   currentUserId?: string,
   fallbackPartnerId?: string
-): { payload: EncryptedTextPayload; asOwn: boolean; peerId: string } | null => {
+): DecryptionContext | null => {
   const viewerId = normalizeUserId(currentUserId);
   const authorId = resolveSenderId(item);
   const { self: selfPayload, partner: partnerPayload } = getTextFieldPayloads(item, field);
@@ -189,17 +196,25 @@ const pickTextDecryptionContext = (
   }
 
   if (viewerId === authorId) {
-    if (selfPayload && partnerPayload) {
-      return { payload: selfPayload, asOwn: true, peerId: viewerId };
+    if (!selfPayload) {
+      return null;
     }
-    if (selfPayload) {
+
+    if (partnerPayload) {
       return {
         payload: selfPayload,
         asOwn: true,
-        peerId: storedRecipientId || viewerId
+        peerId: viewerId,
+        alternatePeerId:
+          storedRecipientId && storedRecipientId !== viewerId ? storedRecipientId : undefined
       };
     }
-    return null;
+
+    return {
+      payload: selfPayload,
+      asOwn: true,
+      peerId: storedRecipientId || viewerId
+    };
   }
 
   if (partnerPayload && activePartnerId && viewerId === activePartnerId) {
@@ -221,7 +236,7 @@ const pickMediaDecryptionContext = (
   item: RawContentFields,
   currentUserId?: string,
   fallbackPartnerId?: string
-): { payload: EncryptedTextPayload; asOwn: boolean; peerId: string } | null => {
+): DecryptionContext | null => {
   const viewerId = normalizeUserId(currentUserId);
   const authorId = resolveSenderId(item);
   const selfPayload = item.encryptedMediaEnvelope;
@@ -235,17 +250,25 @@ const pickMediaDecryptionContext = (
   }
 
   if (viewerId === authorId) {
-    if (selfPayload && partnerPayload) {
-      return { payload: selfPayload, asOwn: true, peerId: viewerId };
+    if (!selfPayload) {
+      return null;
     }
-    if (selfPayload) {
+
+    if (partnerPayload) {
       return {
         payload: selfPayload,
         asOwn: true,
-        peerId: storedRecipientId || viewerId
+        peerId: viewerId,
+        alternatePeerId:
+          storedRecipientId && storedRecipientId !== viewerId ? storedRecipientId : undefined
       };
     }
-    return null;
+
+    return {
+      payload: selfPayload,
+      asOwn: true,
+      peerId: storedRecipientId || viewerId
+    };
   }
 
   if (partnerPayload && activePartnerId && viewerId === activePartnerId) {
@@ -261,6 +284,42 @@ const pickMediaDecryptionContext = (
   }
 
   return null;
+};
+
+const decryptWithContext = async (
+  keys: LocalDeviceKeys,
+  item: RawContentFields,
+  context: DecryptionContext,
+  currentUserId?: string,
+  fallbackPartnerId?: string
+): Promise<string> => {
+  try {
+    return await decryptEncryptedText(
+      keys,
+      item,
+      context.payload,
+      currentUserId,
+      fallbackPartnerId,
+      { asOwn: context.asOwn, peerId: context.peerId }
+    );
+  } catch (firstError) {
+    if (
+      !context.asOwn ||
+      !context.alternatePeerId ||
+      context.alternatePeerId === context.peerId
+    ) {
+      throw firstError;
+    }
+
+    return decryptEncryptedText(
+      keys,
+      item,
+      context.payload,
+      currentUserId,
+      fallbackPartnerId,
+      { asOwn: true, peerId: context.alternatePeerId }
+    );
+  }
 };
 
 export const encryptDualTextForContent = async (
@@ -300,18 +359,16 @@ export const decryptOwnContentText = async (
   field: TextFieldName,
   selfUserId: string
 ): Promise<string | undefined> => {
-  const { self: selfPayload } = getTextFieldPayloads(item, field);
-  if (!selfPayload?.ciphertext) {
+  const context = pickTextDecryptionContext(item, field, selfUserId, undefined);
+  if (!context) {
     return undefined;
   }
 
-  const storedRecipientId =
-    normalizeUserId(item.metadataRecipientId) || normalizeUserId(item.targetId) || selfUserId;
-
-  return decryptChatTextWithFallback(keys, storedRecipientId, selfPayload, {
-    isOwnMessage: true,
-    ...CONTENT_CRYPTO_OPTIONS
-  });
+  try {
+    return await decryptWithContext(keys, item, context, selfUserId, undefined);
+  } catch {
+    return undefined;
+  }
 };
 export const encryptTextForPartner = async (
   keys: LocalDeviceKeys,
@@ -399,13 +456,12 @@ export const decryptContentMediaEnvelope = async (
     return undefined;
   }
 
-  const plaintext = await decryptEncryptedText(
+  const plaintext = await decryptWithContext(
     keys,
     item,
-    context.payload,
+    context,
     currentUserId,
-    fallbackPartnerId,
-    { asOwn: context.asOwn, peerId: context.peerId }
+    fallbackPartnerId
   );
   const secrets = parseMediaSecrets(plaintext);
 
@@ -490,13 +546,12 @@ export const decryptContentFields = async (
   const titleContext = pickTextDecryptionContext(item, 'Title', currentUserId, fallbackPartnerId);
   if (titleContext) {
     try {
-      result.title = await decryptEncryptedText(
+      result.title = await decryptWithContext(
         keys,
         item,
-        titleContext.payload,
+        titleContext,
         currentUserId,
-        fallbackPartnerId,
-        { asOwn: titleContext.asOwn, peerId: titleContext.peerId }
+        fallbackPartnerId
       );
     } catch {
       result.title = i18n.t('crypto.decryptFailed');
@@ -511,13 +566,12 @@ export const decryptContentFields = async (
   );
   if (descriptionContext) {
     try {
-      result.description = await decryptEncryptedText(
+      result.description = await decryptWithContext(
         keys,
         item,
-        descriptionContext.payload,
+        descriptionContext,
         currentUserId,
-        fallbackPartnerId,
-        { asOwn: descriptionContext.asOwn, peerId: descriptionContext.peerId }
+        fallbackPartnerId
       );
     } catch {
       result.description = '';
@@ -650,7 +704,7 @@ const pickPlanNoteFieldDecryptionContext = (
   field: PlanNoteTextFieldName,
   currentUserId?: string,
   fallbackPartnerId?: string
-): { payload: EncryptedTextPayload; asOwn: boolean; peerId: string } | null => {
+): DecryptionContext | null => {
   const viewerId = normalizeUserId(currentUserId);
   const authorId = resolveSenderId(item);
   const { self: selfPayload, partner: partnerPayload } = getPlanNoteFieldPayloads(item, field);
@@ -662,17 +716,25 @@ const pickPlanNoteFieldDecryptionContext = (
   }
 
   if (viewerId === authorId) {
-    if (selfPayload && partnerPayload) {
-      return { payload: selfPayload, asOwn: true, peerId: viewerId };
+    if (!selfPayload) {
+      return null;
     }
-    if (selfPayload) {
+
+    if (partnerPayload) {
       return {
         payload: selfPayload,
         asOwn: true,
-        peerId: storedRecipientId || viewerId
+        peerId: viewerId,
+        alternatePeerId:
+          storedRecipientId && storedRecipientId !== viewerId ? storedRecipientId : undefined
       };
     }
-    return null;
+
+    return {
+      payload: selfPayload,
+      asOwn: true,
+      peerId: storedRecipientId || viewerId
+    };
   }
 
   if (partnerPayload && activePartnerId && viewerId === activePartnerId) {
@@ -713,13 +775,12 @@ export const decryptPlanNoteFields = async (
   const titleContext = pickPlanNoteFieldDecryptionContext(item, 'Title', currentUserId, fallbackPartnerId);
   if (titleContext) {
     try {
-      result.title = await decryptEncryptedText(
+      result.title = await decryptWithContext(
         keys,
         item,
-        titleContext.payload,
+        titleContext,
         currentUserId,
-        fallbackPartnerId,
-        { asOwn: titleContext.asOwn, peerId: titleContext.peerId }
+        fallbackPartnerId
       );
     } catch {
       result.title = i18n.t('crypto.decryptFailed');
@@ -734,13 +795,12 @@ export const decryptPlanNoteFields = async (
   );
   if (contentContext) {
     try {
-      result.content = await decryptEncryptedText(
+      result.content = await decryptWithContext(
         keys,
         item,
-        contentContext.payload,
+        contentContext,
         currentUserId,
-        fallbackPartnerId,
-        { asOwn: contentContext.asOwn, peerId: contentContext.peerId }
+        fallbackPartnerId
       );
     } catch {
       result.content = '';
@@ -755,13 +815,12 @@ export const decryptPlanNoteFields = async (
   );
   if (categoryContext) {
     try {
-      result.category = await decryptEncryptedText(
+      result.category = await decryptWithContext(
         keys,
         item,
-        categoryContext.payload,
+        categoryContext,
         currentUserId,
-        fallbackPartnerId,
-        { asOwn: categoryContext.asOwn, peerId: categoryContext.peerId }
+        fallbackPartnerId
       );
     } catch {
       result.category = i18n.t('crypto.decryptFailed');

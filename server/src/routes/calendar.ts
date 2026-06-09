@@ -808,7 +808,13 @@ router.patch('/events/:id/partner-copies', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { id } = req.params;
-    const { encryptedTitlePartner, encryptedDescriptionPartner, mediaPartnerCopies } = req.body || {};
+    const {
+      encryptedTitle,
+      encryptedDescription,
+      encryptedTitlePartner,
+      encryptedDescriptionPartner,
+      mediaPartnerCopies
+    } = req.body || {};
 
     const mediaFiles = await Content.find({ eventId: id });
     if (!mediaFiles || mediaFiles.length === 0) {
@@ -821,6 +827,8 @@ router.patch('/events/:id/partner-copies', async (req: any, res: Response) => {
     }
 
     const updateData: Record<string, unknown> = {};
+    const selfTitle = formatEncryptedPayload(encryptedTitle);
+    const selfDescription = formatEncryptedPayload(encryptedDescription);
     const partnerTitle = formatEncryptedPayload(encryptedTitlePartner);
     const partnerDescription = formatEncryptedPayload(encryptedDescriptionPartner);
 
@@ -831,6 +839,8 @@ router.patch('/events/:id/partner-copies', async (req: any, res: Response) => {
       updateData.partnerSharedAt = new Date();
     }
 
+    if (selfTitle) updateData.encryptedTitle = selfTitle;
+    if (selfDescription) updateData.encryptedDescription = selfDescription;
     if (partnerTitle) updateData.encryptedTitlePartner = partnerTitle;
     if (partnerDescription) updateData.encryptedDescriptionPartner = partnerDescription;
 
@@ -841,11 +851,19 @@ router.patch('/events/:id/partner-copies', async (req: any, res: Response) => {
     if (Array.isArray(mediaPartnerCopies)) {
       for (const item of mediaPartnerCopies) {
         const partnerEnvelope = formatEncryptedPayload(item?.encryptedMediaEnvelopePartner);
+        const selfEnvelope = formatEncryptedPayload(item?.encryptedMediaEnvelope);
         if (!item?.mediaId || !partnerEnvelope) continue;
+
+        const mediaUpdate: Record<string, unknown> = {
+          encryptedMediaEnvelopePartner: partnerEnvelope
+        };
+        if (selfEnvelope) {
+          mediaUpdate.encryptedMediaEnvelope = selfEnvelope;
+        }
 
         await Content.updateOne(
           { _id: item.mediaId, eventId: id, userId },
-          { $set: { encryptedMediaEnvelopePartner: partnerEnvelope } }
+          { $set: mediaUpdate }
         );
       }
     }

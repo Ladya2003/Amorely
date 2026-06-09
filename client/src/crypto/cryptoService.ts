@@ -363,6 +363,8 @@ export const consumePairingRequest = async (
   return keys;
 };
 
+const peerPublicKeyInflight = new Map<string, Promise<string>>();
+
 const fetchPeerPublicKey = async (
   peerUserId: string,
   options?: { deviceId?: string; bypassCache?: boolean }
@@ -373,16 +375,32 @@ const fetchPeerPublicKey = async (
     if (cached) return cached;
   }
 
-  const response = await axios.get(`${API_URL}/api/crypto/prekey-bundle/${peerUserId}`, {
-    params: options?.deviceId ? { deviceId: options.deviceId } : undefined
-  });
-  const publicKey = String(response.data.identityPublicKey);
-
-  if (!options?.deviceId) {
-    await setStoredValue(cacheKey, publicKey);
+  const inflightKey = `${peerUserId}:${options?.deviceId || ''}:${options?.bypassCache ? 'bust' : 'cache'}`;
+  const pending = peerPublicKeyInflight.get(inflightKey);
+  if (pending) {
+    return pending;
   }
 
-  return publicKey;
+  const promise = (async () => {
+    const response = await axios.get(`${API_URL}/api/crypto/prekey-bundle/${peerUserId}`, {
+      params: options?.deviceId ? { deviceId: options.deviceId } : undefined
+    });
+    const publicKey = String(response.data.identityPublicKey);
+
+    if (!options?.deviceId) {
+      await setStoredValue(cacheKey, publicKey);
+    }
+
+    return publicKey;
+  })();
+
+  peerPublicKeyInflight.set(inflightKey, promise);
+
+  try {
+    return await promise;
+  } finally {
+    peerPublicKeyInflight.delete(inflightKey);
+  }
 };
 
 const decryptChatTextWithPeerPublicKey = async (
