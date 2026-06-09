@@ -39,13 +39,7 @@ export const needsPartnerCopyMigration = (
       item.encryptedMediaEnvelope?.ciphertext && !item.encryptedMediaEnvelopePartner?.ciphertext
   );
 
-  const missingPartnerSharedAt = Boolean(
-    event.encryptedTitlePartner?.ciphertext &&
-      !event.partnerSharedAt &&
-      normalizeUserId(event.metadataRecipientId) === partnerUserId
-  );
-
-  return missingTitlePartner || missingMediaPartner || missingPartnerSharedAt;
+  return missingTitlePartner || missingMediaPartner;
 };
 
 export const migrateCalendarEventsPartnerCopies = async (
@@ -89,10 +83,22 @@ export const migrateCalendarEventsPartnerCopies = async (
           ? await decryptOwnContentText(keys, event, 'Description', selfUserId)
           : undefined;
 
-      titleDual = await encryptDualTextForContent(keys, selfUserId, partnerUserId, title);
+      titleDual = await encryptDualTextForContent(
+        keys,
+        selfUserId,
+        partnerUserId,
+        title,
+        { bypassCache: false }
+      );
       descriptionDual =
         description !== undefined
-          ? await encryptDualTextForContent(keys, selfUserId, partnerUserId, description)
+          ? await encryptDualTextForContent(
+              keys,
+              selfUserId,
+              partnerUserId,
+              description,
+              { bypassCache: false }
+            )
           : undefined;
     }
 
@@ -130,7 +136,8 @@ export const migrateCalendarEventsPartnerCopies = async (
         keys,
         selfUserId,
         partnerUserId,
-        { mediaKey: envelope.mediaKey, iv: envelope.iv }
+        { mediaKey: envelope.mediaKey, iv: envelope.iv },
+        { bypassCache: false }
       );
 
       if (!dualEnvelope.partner) {

@@ -126,6 +126,26 @@ const buildStoredTextFields = (payload: {
   encryptedDescriptionPartner: formatEncryptedPayload(payload.encryptedDescriptionPartner)
 });
 
+const buildStoredPlanNoteTextFields = (payload: {
+  encryptedTitle?: any;
+  encryptedTitlePartner?: any;
+  encryptedContent?: any;
+  encryptedContentPartner?: any;
+  encryptedCategory?: any;
+  encryptedCategoryPartner?: any;
+}) => ({
+  encrypted: true,
+  encryptedTitle: formatEncryptedPayload(payload.encryptedTitle),
+  encryptedTitlePartner: formatEncryptedPayload(payload.encryptedTitlePartner),
+  encryptedContent: formatEncryptedPayload(payload.encryptedContent),
+  encryptedContentPartner: formatEncryptedPayload(payload.encryptedContentPartner),
+  encryptedCategory: formatEncryptedPayload(payload.encryptedCategory),
+  encryptedCategoryPartner: formatEncryptedPayload(payload.encryptedCategoryPartner),
+  title: undefined,
+  content: undefined,
+  category: undefined
+});
+
 // Создание зашифрованного события (E2EE)
 router.post('/events-encrypted', async (req: any, res: Response) => {
   try {
@@ -904,7 +924,8 @@ const formatPlanNoteMedia = (media: any) => ({
   fileSize: media.fileSize,
   encrypted: media.encrypted,
   mediaEnvelope: media.mediaEnvelope,
-  encryptedMediaEnvelope: media.encryptedMediaEnvelope,
+  encryptedMediaEnvelope: formatEncryptedPayload(media.encryptedMediaEnvelope),
+  encryptedMediaEnvelopePartner: formatEncryptedPayload(media.encryptedMediaEnvelopePartner),
   metadataSenderId: media.metadataSenderId?.toString(),
   metadataRecipientId: media.metadataRecipientId?.toString()
 });
@@ -937,9 +958,18 @@ const deletePlanNoteMediaFromCloudinary = async (mediaItems: any[]) => {
 
 const formatPlanNote = (note: any) => ({
   _id: note._id.toString(),
+  encrypted: Boolean(note.encrypted || note.encryptedTitle?.ciphertext),
   title: note.title,
   content: note.content,
   category: note.category,
+  encryptedTitle: formatEncryptedPayload(note.encryptedTitle),
+  encryptedTitlePartner: formatEncryptedPayload(note.encryptedTitlePartner),
+  encryptedContent: formatEncryptedPayload(note.encryptedContent),
+  encryptedContentPartner: formatEncryptedPayload(note.encryptedContentPartner),
+  encryptedCategory: formatEncryptedPayload(note.encryptedCategory),
+  encryptedCategoryPartner: formatEncryptedPayload(note.encryptedCategoryPartner),
+  metadataSenderId: note.metadataSenderId?.toString(),
+  metadataRecipientId: note.metadataRecipientId?.toString(),
   media: Array.isArray(note.media) ? note.media.map(formatPlanNoteMedia) : [],
   createdAt: note.createdAt,
   updatedAt: note.updatedAt,
@@ -968,26 +998,14 @@ router.get('/plans', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
-    const { category } = req.query;
 
-    const query: any = buildCoupleQuery(userId, partnerId, relationshipStartDate);
-    if (category && typeof category === 'string') {
-      query.category = category;
-    }
-
-    const notes = await PlanNote.find(query)
+    const notes = await PlanNote.find(buildCoupleQuery(userId, partnerId, relationshipStartDate))
       .populate('createdBy', 'username avatar firstName lastName')
       .populate('lastEditedBy', 'username avatar firstName lastName')
       .sort({ updatedAt: -1 });
 
-    const categories = await PlanNote.distinct(
-      'category',
-      buildCoupleQuery(userId, partnerId, relationshipStartDate)
-    );
-
     res.json({
-      notes: notes.map(formatPlanNote),
-      categories: categories.sort((a, b) => a.localeCompare(b, 'ru'))
+      notes: notes.map(formatPlanNote)
     });
   } catch (error) {
     console.error('Ошибка при получении заметок:', error);
@@ -1054,14 +1072,23 @@ router.get('/plans/:id', async (req: any, res: Response) => {
 router.post('/plans', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const { title, content, category, media, encryptionRecipientId } = req.body || {};
+    const {
+      encryptedTitle,
+      encryptedTitlePartner,
+      encryptedContent,
+      encryptedContentPartner,
+      encryptedCategory,
+      encryptedCategoryPartner,
+      media,
+      encryptionRecipientId
+    } = req.body || {};
 
-    if (!title?.trim()) {
-      return res.status(400).json({ error: 'Укажите заголовок заметки' });
+    if (!encryptedTitle?.ciphertext) {
+      return res.status(400).json({ error: 'Требуется зашифрованный заголовок заметки' });
     }
 
-    if (!category?.trim()) {
-      return res.status(400).json({ error: 'Укажите категорию заметки' });
+    if (!encryptedCategory?.ciphertext) {
+      return res.status(400).json({ error: 'Требуется зашифрованная категория заметки' });
     }
 
     const partnerId = encryptionRecipientId
@@ -1078,9 +1105,16 @@ router.post('/plans', async (req: any, res: Response) => {
     const note = new PlanNote({
       userId,
       partnerId: hasActivePartner(userId, partnerId) ? partnerId : undefined,
-      title: title.trim(),
-      content: (content || '').trim(),
-      category: category.trim(),
+      ...buildStoredPlanNoteTextFields({
+        encryptedTitle,
+        encryptedTitlePartner,
+        encryptedContent,
+        encryptedContentPartner,
+        encryptedCategory,
+        encryptedCategoryPartner
+      }),
+      metadataSenderId: userId,
+      metadataRecipientId: partnerId,
       media: mediaItems.map((item: any) => buildPlanNoteMediaItem(item, userId, partnerId)),
       createdBy: userId,
       lastEditedBy: userId
@@ -1104,7 +1138,17 @@ router.put('/plans/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { id } = req.params;
-    const { title, content, category, newMedia, removeMediaIds, encryptionRecipientId } = req.body || {};
+    const {
+      encryptedTitle,
+      encryptedTitlePartner,
+      encryptedContent,
+      encryptedContentPartner,
+      encryptedCategory,
+      encryptedCategoryPartner,
+      newMedia,
+      removeMediaIds,
+      encryptionRecipientId
+    } = req.body || {};
     const encryptionPartnerId = encryptionRecipientId
       ? String(encryptionRecipientId)
       : await resolvePartnerUserId(userId);
@@ -1120,22 +1164,22 @@ router.put('/plans/:id', async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Нет прав на редактирование этой заметки' });
     }
 
-    if (title !== undefined) {
-      if (!title.trim()) {
-        return res.status(400).json({ error: 'Заголовок не может быть пустым' });
-      }
-      note.title = title.trim();
-    }
-
-    if (content !== undefined) {
-      note.content = content.trim();
-    }
-
-    if (category !== undefined) {
-      if (!category.trim()) {
-        return res.status(400).json({ error: 'Категория не может быть пустой' });
-      }
-      note.category = category.trim();
+    if (encryptedTitle?.ciphertext) {
+      Object.assign(
+        note,
+        buildStoredPlanNoteTextFields({
+          encryptedTitle,
+          encryptedTitlePartner,
+          encryptedContent,
+          encryptedContentPartner,
+          encryptedCategory,
+          encryptedCategoryPartner
+        })
+      );
+      note.metadataSenderId = new mongoose.Types.ObjectId(userId);
+      note.metadataRecipientId = new mongoose.Types.ObjectId(encryptionPartnerId);
+    } else {
+      return res.status(400).json({ error: 'Требуется зашифрованный заголовок заметки' });
     }
 
     if (Array.isArray(removeMediaIds) && removeMediaIds.length > 0) {

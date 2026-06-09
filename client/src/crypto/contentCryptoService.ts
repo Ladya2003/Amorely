@@ -5,6 +5,8 @@ import {
   type LocalDeviceKeys
 } from './cryptoService';
 
+const CONTENT_CRYPTO_OPTIONS = { allowCacheBust: false as const };
+
 export type EncryptedTextPayload = {
   ciphertext: string;
   iv: string;
@@ -50,6 +52,30 @@ export type RawContentFields = {
 export type DecryptedContentFields = {
   title?: string;
   description?: string;
+};
+
+export type RawPlanNoteFields = {
+  encrypted?: boolean;
+  title?: string;
+  content?: string;
+  category?: string;
+  encryptedTitle?: EncryptedTextPayload;
+  encryptedTitlePartner?: EncryptedTextPayload;
+  encryptedContent?: EncryptedTextPayload;
+  encryptedContentPartner?: EncryptedTextPayload;
+  encryptedCategory?: EncryptedTextPayload;
+  encryptedCategoryPartner?: EncryptedTextPayload;
+  metadataSenderId?: string;
+  metadataRecipientId?: string;
+  createdBy?: string | { _id?: string };
+  userId?: string | { _id?: string };
+  media?: RawContentFields[];
+};
+
+export type DecryptedPlanNoteFields = {
+  title: string;
+  content: string;
+  category: string;
 };
 
 export type SharedEventMediaContext = {
@@ -241,13 +267,14 @@ export const encryptDualTextForContent = async (
   keys: LocalDeviceKeys,
   selfUserId: string,
   partnerUserId: string | undefined,
-  plaintext: string
+  plaintext: string,
+  options?: { bypassCache?: boolean }
 ): Promise<DualEncryptedTextPayload> => {
-  const self = await encryptTextForPartner(keys, selfUserId, plaintext);
+  const self = await encryptTextForPartner(keys, selfUserId, plaintext, options);
   if (!partnerUserId || partnerUserId === selfUserId) {
     return { self };
   }
-  const partner = await encryptTextForPartner(keys, partnerUserId, plaintext);
+  const partner = await encryptTextForPartner(keys, partnerUserId, plaintext, options);
   return { self, partner };
 };
 
@@ -255,14 +282,15 @@ export const encryptDualMediaEnvelopeForContent = async (
   keys: LocalDeviceKeys,
   selfUserId: string,
   partnerUserId: string | undefined,
-  secrets: Pick<ContentMediaEnvelope, 'mediaKey' | 'iv'>
+  secrets: Pick<ContentMediaEnvelope, 'mediaKey' | 'iv'>,
+  options?: { bypassCache?: boolean }
 ): Promise<DualEncryptedTextPayload> => {
   const serialized = serializeMediaSecrets(secrets.mediaKey, secrets.iv);
-  const self = await encryptTextForPartner(keys, selfUserId, serialized);
+  const self = await encryptTextForPartner(keys, selfUserId, serialized, options);
   if (!partnerUserId || partnerUserId === selfUserId) {
     return { self };
   }
-  const partner = await encryptTextForPartner(keys, partnerUserId, serialized);
+  const partner = await encryptTextForPartner(keys, partnerUserId, serialized, options);
   return { self, partner };
 };
 
@@ -280,14 +308,18 @@ export const decryptOwnContentText = async (
   const storedRecipientId =
     normalizeUserId(item.metadataRecipientId) || normalizeUserId(item.targetId) || selfUserId;
 
-  return decryptChatTextWithFallback(keys, storedRecipientId, selfPayload, { isOwnMessage: true });
+  return decryptChatTextWithFallback(keys, storedRecipientId, selfPayload, {
+    isOwnMessage: true,
+    ...CONTENT_CRYPTO_OPTIONS
+  });
 };
 export const encryptTextForPartner = async (
   keys: LocalDeviceKeys,
   partnerUserId: string,
-  plaintext: string
+  plaintext: string,
+  options?: { bypassCache?: boolean }
 ): Promise<EncryptedTextPayload> => {
-  const encrypted = await encryptChatText(keys, partnerUserId, plaintext);
+  const encrypted = await encryptChatText(keys, partnerUserId, plaintext, options);
   return { ciphertext: encrypted.ciphertext, iv: encrypted.iv };
 };
 
@@ -303,7 +335,10 @@ export const decryptTextFromSender = async (
   senderUserId: string,
   payload: EncryptedTextPayload
 ): Promise<string> =>
-  decryptChatTextWithFallback(keys, senderUserId, payload, { isOwnMessage: false });
+  decryptChatTextWithFallback(keys, senderUserId, payload, {
+    isOwnMessage: false,
+    ...CONTENT_CRYPTO_OPTIONS
+  });
 
 const decryptEncryptedText = async (
   keys: LocalDeviceKeys,
@@ -335,7 +370,10 @@ const decryptEncryptedText = async (
     })();
 
   if (context.asOwn) {
-    return decryptChatTextWithFallback(keys, context.peerId, payload, { isOwnMessage: true });
+    return decryptChatTextWithFallback(keys, context.peerId, payload, {
+      isOwnMessage: true,
+      ...CONTENT_CRYPTO_OPTIONS
+    });
   }
 
   return decryptTextFromSender(keys, context.peerId, payload);
@@ -587,3 +625,189 @@ export const decryptCalendarEventsWithMedia = async <
       };
     })
   );
+
+type PlanNoteTextFieldName = 'Title' | 'Content' | 'Category';
+
+const isEncryptedPlanNote = (item: RawPlanNoteFields): boolean =>
+  Boolean(
+    item.encrypted ||
+      item.encryptedTitle?.ciphertext ||
+      item.encryptedTitlePartner?.ciphertext
+  );
+
+const getPlanNoteFieldPayloads = (item: RawPlanNoteFields, field: PlanNoteTextFieldName) => {
+  if (field === 'Title') {
+    return { self: item.encryptedTitle, partner: item.encryptedTitlePartner };
+  }
+  if (field === 'Content') {
+    return { self: item.encryptedContent, partner: item.encryptedContentPartner };
+  }
+  return { self: item.encryptedCategory, partner: item.encryptedCategoryPartner };
+};
+
+const pickPlanNoteFieldDecryptionContext = (
+  item: RawPlanNoteFields,
+  field: PlanNoteTextFieldName,
+  currentUserId?: string,
+  fallbackPartnerId?: string
+): { payload: EncryptedTextPayload; asOwn: boolean; peerId: string } | null => {
+  const viewerId = normalizeUserId(currentUserId);
+  const authorId = resolveSenderId(item);
+  const { self: selfPayload, partner: partnerPayload } = getPlanNoteFieldPayloads(item, field);
+  const storedRecipientId = normalizeUserId(item.metadataRecipientId);
+  const activePartnerId = normalizeUserId(fallbackPartnerId);
+
+  if (!viewerId || !authorId) {
+    return null;
+  }
+
+  if (viewerId === authorId) {
+    if (selfPayload && partnerPayload) {
+      return { payload: selfPayload, asOwn: true, peerId: viewerId };
+    }
+    if (selfPayload) {
+      return {
+        payload: selfPayload,
+        asOwn: true,
+        peerId: storedRecipientId || viewerId
+      };
+    }
+    return null;
+  }
+
+  if (partnerPayload && activePartnerId && viewerId === activePartnerId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
+  if (partnerPayload && storedRecipientId === viewerId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
+  if (selfPayload && !partnerPayload && storedRecipientId === viewerId) {
+    return { payload: selfPayload, asOwn: false, peerId: authorId };
+  }
+
+  return null;
+};
+
+export const decryptPlanNoteFields = async (
+  keys: LocalDeviceKeys,
+  item: RawPlanNoteFields,
+  currentUserId?: string,
+  fallbackPartnerId?: string
+): Promise<DecryptedPlanNoteFields> => {
+  if (!isEncryptedPlanNote(item)) {
+    return {
+      title: item.title || '',
+      content: item.content || '',
+      category: item.category || ''
+    };
+  }
+
+  const result: DecryptedPlanNoteFields = {
+    title: '',
+    content: '',
+    category: ''
+  };
+
+  const titleContext = pickPlanNoteFieldDecryptionContext(item, 'Title', currentUserId, fallbackPartnerId);
+  if (titleContext) {
+    try {
+      result.title = await decryptEncryptedText(
+        keys,
+        item,
+        titleContext.payload,
+        currentUserId,
+        fallbackPartnerId,
+        { asOwn: titleContext.asOwn, peerId: titleContext.peerId }
+      );
+    } catch {
+      result.title = i18n.t('crypto.decryptFailed');
+    }
+  }
+
+  const contentContext = pickPlanNoteFieldDecryptionContext(
+    item,
+    'Content',
+    currentUserId,
+    fallbackPartnerId
+  );
+  if (contentContext) {
+    try {
+      result.content = await decryptEncryptedText(
+        keys,
+        item,
+        contentContext.payload,
+        currentUserId,
+        fallbackPartnerId,
+        { asOwn: contentContext.asOwn, peerId: contentContext.peerId }
+      );
+    } catch {
+      result.content = '';
+    }
+  }
+
+  const categoryContext = pickPlanNoteFieldDecryptionContext(
+    item,
+    'Category',
+    currentUserId,
+    fallbackPartnerId
+  );
+  if (categoryContext) {
+    try {
+      result.category = await decryptEncryptedText(
+        keys,
+        item,
+        categoryContext.payload,
+        currentUserId,
+        fallbackPartnerId,
+        { asOwn: categoryContext.asOwn, peerId: categoryContext.peerId }
+      );
+    } catch {
+      result.category = i18n.t('crypto.decryptFailed');
+    }
+  }
+
+  return result;
+};
+
+export const decryptPlanNote = async <T extends RawPlanNoteFields>(
+  keys: LocalDeviceKeys,
+  note: T,
+  currentUserId?: string,
+  fallbackPartnerId?: string
+): Promise<T & DecryptedPlanNoteFields> => {
+  const textFields = await decryptPlanNoteFields(keys, note, currentUserId, fallbackPartnerId);
+  const media = note.media
+    ? await Promise.all(
+        note.media.map(async (mediaItem) => {
+          const mediaContext: RawContentFields = {
+            ...mediaItem,
+            encrypted: mediaItem.encrypted ?? note.encrypted,
+            encryptedMediaEnvelopePartner: mediaItem.encryptedMediaEnvelopePartner,
+            metadataSenderId:
+              mediaItem.metadataSenderId ||
+              note.metadataSenderId ||
+              normalizeUserId(note.createdBy) ||
+              undefined,
+            metadataRecipientId: mediaItem.metadataRecipientId || note.metadataRecipientId || undefined
+          };
+          return enrichItemWithDecryptedMedia(keys, mediaContext, currentUserId, fallbackPartnerId);
+        })
+      )
+    : note.media;
+
+  return {
+    ...note,
+    ...textFields,
+    media
+  };
+};
+
+export const decryptPlanNotesList = async <T extends RawPlanNoteFields>(
+  keys: LocalDeviceKeys,
+  notes: T[],
+  currentUserId?: string,
+  fallbackPartnerId?: string
+): Promise<Array<T & DecryptedPlanNoteFields>> =>
+  Promise.all(notes.map((note) => decryptPlanNote(keys, note, currentUserId, fallbackPartnerId)));

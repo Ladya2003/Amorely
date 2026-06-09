@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -28,11 +28,14 @@ import { API_URL } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
 import {
-  enrichItemWithDecryptedMedia,
+  decryptPlanNote,
+  decryptPlanNotesList,
+  encryptDualTextForContent,
   type ContentMediaEnvelope,
-  type EncryptedTextPayload
+  type EncryptedTextPayload,
+  type RawPlanNoteFields
 } from '../../crypto/contentCryptoService';
-import { encryptAndUploadContentFiles } from '../../crypto/encryptedUploadService';
+import { encryptAndUploadCalendarContentFiles } from '../../crypto/encryptedUploadService';
 import { loadLocalKeys, type LocalDeviceKeys } from '../../crypto/cryptoService';
 import { useEncryptionRecipientId, usePartnerId } from '../../hooks/usePartnerId';
 import {
@@ -67,11 +70,12 @@ export interface PlanNoteMedia {
   encrypted?: boolean;
   mediaEnvelope?: ContentMediaEnvelope;
   encryptedMediaEnvelope?: EncryptedTextPayload;
+  encryptedMediaEnvelopePartner?: EncryptedTextPayload;
   metadataSenderId?: string;
   metadataRecipientId?: string;
 }
 
-export interface PlanNote {
+export interface PlanNote extends RawPlanNoteFields {
   _id: string;
   title: string;
   content: string;
@@ -102,10 +106,23 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
   const encryptionRecipientId = useEncryptionRecipientId();
   const partnerId = usePartnerId();
 
-  const [notes, setNotes] = useState<PlanNote[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [allNotes, setAllNotes] = useState<PlanNote[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(() =>
     user?._id ? readCalendarUiPreferences(user._id).plansCategory ?? null : null
+  );
+  const categories = useMemo(
+    () =>
+      Array.from(new Set(allNotes.map((note) => note.category).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b, getDateFnsLocale(i18n.language).code)
+      ),
+    [allNotes, i18n.language]
+  );
+  const notes = useMemo(
+    () =>
+      selectedCategory
+        ? allNotes.filter((note) => note.category === selectedCategory)
+        : allNotes,
+    [allNotes, selectedCategory]
   );
   const [isPrefsHydrated, setIsPrefsHydrated] = useState(() => Boolean(user?._id));
   const skipNextCategorySaveRef = useRef(false);
@@ -151,30 +168,6 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
     return loaded;
   }, [localDeviceKeys, ensureLocalKeys, user?._id, t]);
 
-  const decryptNoteMedia = useCallback(
-    async (note: PlanNote): Promise<PlanNote> => {
-      if (!note.media?.length) return note;
-
-      try {
-        const keys = await resolveKeys();
-        const media = await Promise.all(
-          note.media.map(async (item) =>
-            enrichItemWithDecryptedMedia(keys, item, user?._id, partnerId || undefined)
-          )
-        );
-        return { ...note, media };
-      } catch {
-        return note;
-      }
-    },
-    [resolveKeys, user?._id, partnerId]
-  );
-
-  const decryptNotesList = useCallback(
-    async (items: PlanNote[]): Promise<PlanNote[]> => Promise.all(items.map(decryptNoteMedia)),
-    [decryptNoteMedia]
-  );
-
   const fetchNotes = useCallback(async () => {
     const isFirstFetch = isFirstFetchRef.current;
 
@@ -186,12 +179,16 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
         setIsRefreshingNotes(true);
       }
 
-      const params = selectedCategory ? { category: selectedCategory } : undefined;
-      const response = await axios.get(`${API_URL}/api/calendar/plans`, { params });
+      const response = await axios.get(`${API_URL}/api/calendar/plans`);
       const rawNotes: PlanNote[] = response.data.notes || [];
-      const decryptedNotes = await decryptNotesList(rawNotes);
-      setNotes(decryptedNotes);
-      setCategories(response.data.categories || []);
+      const keys = await resolveKeys();
+      const decryptedNotes = await decryptPlanNotesList(
+        keys,
+        rawNotes,
+        user?._id,
+        partnerId || undefined
+      );
+      setAllNotes(decryptedNotes);
     } catch (err) {
       console.error('Ошибка загрузки заметок:', err);
       setError(t('calendar.errors.loadNotesFailed'));
@@ -203,7 +200,7 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
         setIsRefreshingNotes(false);
       }
     }
-  }, [selectedCategory, decryptNotesList, t]);
+  }, [resolveKeys, user?._id, partnerId, t]);
 
   useEffect(() => {
     if (!user?._id) {
@@ -217,6 +214,12 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
     setSelectedCategory(prefs.plansCategory ?? null);
     setIsPrefsHydrated(true);
   }, [user?._id]);
+
+  useEffect(() => {
+    if (selectedCategory && !categories.includes(selectedCategory)) {
+      setSelectedCategory(null);
+    }
+  }, [categories, selectedCategory]);
 
   useEffect(() => {
     if (!user?._id) {
@@ -282,8 +285,13 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
   };
 
   const openView = async (note: PlanNote) => {
-    const decrypted = await decryptNoteMedia(note);
-    setViewingNote(decrypted);
+    try {
+      const keys = await resolveKeys();
+      const decrypted = await decryptPlanNote(keys, note, user?._id, partnerId || undefined);
+      setViewingNote(decrypted);
+    } catch {
+      setViewingNote(note);
+    }
     setViewOpen(true);
   };
 
@@ -337,13 +345,35 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
       setFormError(null);
 
       const keys = await resolveKeys();
-      if (!encryptionRecipientId) {
+      if (!encryptionRecipientId || !user?._id) {
         throw new Error(t('calendar.errors.encryptionRecipient'));
       }
 
+      const selfId = user._id;
+      const activePartnerId = partnerId && partnerId !== selfId ? partnerId : undefined;
+
+      const titleDual = await encryptDualTextForContent(
+        keys,
+        selfId,
+        activePartnerId,
+        form.title.trim()
+      );
+      const contentDual = await encryptDualTextForContent(
+        keys,
+        selfId,
+        activePartnerId,
+        form.content.trim()
+      );
+      const categoryDual = await encryptDualTextForContent(
+        keys,
+        selfId,
+        activePartnerId,
+        form.category.trim()
+      );
+
       const uploaded =
         files.length > 0
-          ? await encryptAndUploadContentFiles(files, keys, encryptionRecipientId)
+          ? await encryptAndUploadCalendarContentFiles(files, keys, selfId, activePartnerId)
           : [];
 
       const mediaPayload = uploaded.map((item) => ({
@@ -351,13 +381,17 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
         publicId: item.publicId,
         fileSize: item.fileSize,
         mediaEnvelope: item.mediaEnvelope,
-        encryptedMediaEnvelope: item.encryptedMediaEnvelope
+        encryptedMediaEnvelope: item.encryptedMediaEnvelope,
+        encryptedMediaEnvelopePartner: item.encryptedMediaEnvelopePartner
       }));
 
       const payload = {
-        title: form.title.trim(),
-        content: form.content.trim(),
-        category: form.category.trim(),
+        encryptedTitle: titleDual.self,
+        encryptedTitlePartner: titleDual.partner,
+        encryptedContent: contentDual.self,
+        encryptedContentPartner: contentDual.partner,
+        encryptedCategory: categoryDual.self,
+        encryptedCategoryPartner: categoryDual.partner,
         encryptionRecipientId
       };
 
@@ -367,8 +401,8 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
           newMedia: mediaPayload,
           removeMediaIds: removedMediaIds
         });
-        const decrypted = await decryptNoteMedia(response.data);
-        setNotes((prev) => prev.map((n) => (n._id === editingNote._id ? decrypted : n)));
+        const decrypted = await decryptPlanNote(keys, response.data, selfId, partnerId || undefined);
+        setAllNotes((prev) => prev.map((n) => (n._id === editingNote._id ? decrypted : n)));
         if (viewingNote?._id === editingNote._id) {
           setViewingNote(decrypted);
         }
@@ -377,15 +411,8 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
           ...payload,
           media: mediaPayload
         });
-        const decrypted = await decryptNoteMedia(response.data);
-        setNotes((prev) => [decrypted, ...prev]);
-        if (!categories.includes(decrypted.category)) {
-          setCategories((prev) =>
-            [...prev, decrypted.category].sort((a, b) =>
-              a.localeCompare(b, getDateFnsLocale(i18n.language).code)
-            )
-          );
-        }
+        const decrypted = await decryptPlanNote(keys, response.data, selfId, partnerId || undefined);
+        setAllNotes((prev) => [decrypted, ...prev]);
       }
 
       resetMediaState();
@@ -407,7 +434,7 @@ const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
     try {
       setIsDeleting(true);
       await axios.delete(`${API_URL}/api/calendar/plans/${noteToDelete._id}`);
-      setNotes((prev) => prev.filter((n) => n._id !== noteToDelete._id));
+      setAllNotes((prev) => prev.filter((n) => n._id !== noteToDelete._id));
       setDeleteOpen(false);
       setViewOpen(false);
       setNoteToDelete(null);

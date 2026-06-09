@@ -415,6 +415,12 @@ const decryptChatTextWithPeerPublicKey = async (
 export type DecryptChatTextOptions = {
   isOwnMessage?: boolean;
   senderDeviceId?: string;
+  /** When false, skip cache invalidation retry (for bulk content decryption). */
+  allowCacheBust?: boolean;
+};
+
+export const prefetchPeerPublicKey = async (peerUserId: string): Promise<void> => {
+  await fetchPeerPublicKey(peerUserId);
 };
 
 export const decryptChatTextWithFallback = async (
@@ -432,10 +438,12 @@ export const decryptChatTextWithFallback = async (
     keyFetchers.push(() => fetchPeerPublicKey(peerUserId, { deviceId: senderDeviceId, bypassCache: true }));
   }
   keyFetchers.push(() => fetchPeerPublicKey(peerUserId));
-  keyFetchers.push(async () => {
-    await invalidatePeerPublicKeyCache(peerUserId);
-    return fetchPeerPublicKey(peerUserId, { bypassCache: true });
-  });
+  if (options?.allowCacheBust !== false) {
+    keyFetchers.push(async () => {
+      await invalidatePeerPublicKeyCache(peerUserId);
+      return fetchPeerPublicKey(peerUserId, { bypassCache: true });
+    });
+  }
 
   const triedKeys = new Set<string>();
   let lastError: unknown;
@@ -459,9 +467,12 @@ export const decryptChatTextWithFallback = async (
 export const encryptChatText = async (
   senderKeys: LocalDeviceKeys,
   receiverUserId: string,
-  plaintext: string
+  plaintext: string,
+  options?: { bypassCache?: boolean }
 ): Promise<{ ciphertext: string; iv: string; version: number; algorithm: string; senderDeviceId: string }> => {
-  const receiverPublicKeyBase64 = await fetchPeerPublicKey(receiverUserId, { bypassCache: true });
+  const receiverPublicKeyBase64 = await fetchPeerPublicKey(receiverUserId, {
+    bypassCache: options?.bypassCache ?? true
+  });
   const receiverPublicKey = await importSpkiFromBase64(receiverPublicKeyBase64);
   const senderPrivateKey = await crypto.subtle.importKey(
     'jwk',

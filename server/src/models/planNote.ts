@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
 
+const encryptedTextSchema = {
+  ciphertext: { type: String },
+  iv: { type: String }
+};
+
 const planNoteMediaSchema = new mongoose.Schema(
   {
     url: { type: String, required: true },
@@ -11,10 +16,8 @@ const planNoteMediaSchema = new mongoose.Schema(
       mimeType: { type: String },
       displayType: { type: String, enum: ['image', 'video'] }
     },
-    encryptedMediaEnvelope: {
-      ciphertext: { type: String },
-      iv: { type: String }
-    },
+    encryptedMediaEnvelope: encryptedTextSchema,
+    encryptedMediaEnvelopePartner: encryptedTextSchema,
     metadataSenderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     metadataRecipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   },
@@ -25,9 +28,18 @@ const planNoteSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    title: { type: String, required: true, trim: true, maxlength: 200 },
+    encrypted: { type: Boolean, default: false },
+    title: { type: String, trim: true, maxlength: 200 },
     content: { type: String, default: '', trim: true, maxlength: 10000 },
-    category: { type: String, required: true, trim: true, maxlength: 100 },
+    category: { type: String, trim: true, maxlength: 100 },
+    encryptedTitle: encryptedTextSchema,
+    encryptedTitlePartner: encryptedTextSchema,
+    encryptedContent: encryptedTextSchema,
+    encryptedContentPartner: encryptedTextSchema,
+    encryptedCategory: encryptedTextSchema,
+    encryptedCategoryPartner: encryptedTextSchema,
+    metadataSenderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    metadataRecipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     media: { type: [planNoteMediaSchema], default: [] },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }

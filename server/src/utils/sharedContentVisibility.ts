@@ -8,32 +8,51 @@ const encryptedForViewerConditions = (viewerId: string) => [
   fieldMatchesUserId('metadataRecipientId', viewerId)
 ];
 
-const partnerEventAccessConditions = (relationshipStartDate?: Date | null) => {
-  if (!relationshipStartDate) {
-    return [{ _id: { $exists: false } }];
+const partnerEventAccessConditions = (
+  viewerId: string,
+  relationshipStartDate?: Date | null
+) => {
+  const conditions: Record<string, unknown>[] = [
+    {
+      $and: [
+        fieldMatchesUserId('targetId', viewerId),
+        { 'encryptedTitlePartner.ciphertext': { $exists: true, $ne: '' } }
+      ]
+    },
+    {
+      $and: [
+        fieldMatchesUserId('metadataRecipientId', viewerId),
+        { 'encryptedTitlePartner.ciphertext': { $exists: true, $ne: '' } }
+      ]
+    }
+  ];
+
+  if (relationshipStartDate) {
+    conditions.push(
+      { createdAt: { $gte: relationshipStartDate } },
+      { partnerSharedAt: { $gte: relationshipStartDate } }
+    );
   }
 
-  return [
-    { createdAt: { $gte: relationshipStartDate } },
-    { partnerSharedAt: { $gte: relationshipStartDate } }
-  ];
+  return conditions;
 };
 
 const partnerAuthoredVisibility = (
   partnerId: string,
+  viewerId: string,
   relationshipStartDate?: Date | null
 ) => ({
   $or: [
     {
       $and: [
         fieldMatchesUserId('userId', partnerId),
-        { $or: partnerEventAccessConditions(relationshipStartDate) }
+        { $or: partnerEventAccessConditions(viewerId, relationshipStartDate) }
       ]
     },
     {
       $and: [
         fieldMatchesUserId('createdBy', partnerId),
-        { $or: partnerEventAccessConditions(relationshipStartDate) }
+        { $or: partnerEventAccessConditions(viewerId, relationshipStartDate) }
       ]
     }
   ]
@@ -73,7 +92,11 @@ export const buildSharedVisibilityQuery = (
         fieldMatchesUserId('userId', normalizedUserId),
         fieldMatchesUserId('createdBy', normalizedUserId),
         encryptedForViewerByOtherAuthor(normalizedUserId, normalizedPartnerId),
-        partnerAuthoredVisibility(normalizedPartnerId, relationshipStartDate)
+        partnerAuthoredVisibility(
+          normalizedPartnerId,
+          normalizedUserId,
+          relationshipStartDate
+        )
       ]
     };
   }
@@ -110,6 +133,7 @@ export const canAccessSharedContent = (
     eventDate?: Date | string | null;
     createdAt?: Date | string | null;
     partnerSharedAt?: Date | string | null;
+    encryptedTitlePartner?: { ciphertext?: string | null } | null;
   },
   userId: string,
   partnerId?: string | null,
@@ -145,6 +169,11 @@ export const canAccessSharedContent = (
 
     if (!isPartnerAuthor) {
       return false;
+    }
+
+    const hasPartnerCopy = Boolean(item.encryptedTitlePartner?.ciphertext);
+    if (encryptedForViewer && hasPartnerCopy) {
+      return true;
     }
 
     return (

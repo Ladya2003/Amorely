@@ -16,15 +16,14 @@ import { usePartnerId } from '../hooks/usePartnerId';
 import { useAuth } from '../contexts/AuthContext';
 import {
   decryptCalendarEventsWithMedia,
-  encryptDualTextForContent,
-  normalizeUserId
+  encryptDualTextForContent
 } from '../crypto/contentCryptoService';
 import { encryptAndUploadCalendarContentFiles } from '../crypto/encryptedUploadService';
 import { migrateCalendarEventsPartnerCopies } from '../crypto/calendarEventPartnerMigration';
 import { isVideoCompressionError } from '../utils/compressVideo';
 import type { PrepareMediaProgress } from '../utils/parallelMediaPrepare';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
-import { loadLocalKeys, type LocalDeviceKeys } from '../crypto/cryptoService';
+import { loadLocalKeys, prefetchPeerPublicKey, type LocalDeviceKeys } from '../crypto/cryptoService';
 import { buildSharedEventRef, prepareEventForShare, type EventLikeForShare } from '../utils/buildSharedEventRef';
 
 interface MediaFile {
@@ -71,23 +70,9 @@ interface ContentItem {
 
 const isViewableCalendarEvent = (
   event: ContentItem,
-  selfUserId?: string,
-  activePartnerId?: string
+  _selfUserId?: string,
+  _activePartnerId?: string
 ): boolean => {
-  const viewerId = normalizeUserId(selfUserId);
-  const authorId =
-    normalizeUserId(event.userId) ||
-    normalizeUserId(typeof event.createdBy === 'object' ? event.createdBy?._id : event.createdBy);
-  const partnerId = normalizeUserId(activePartnerId);
-
-  if (!viewerId || !authorId || authorId === viewerId) {
-    return true;
-  }
-
-  if (!partnerId || authorId !== partnerId) {
-    return true;
-  }
-
   if (event.title?.trim()) {
     return true;
   }
@@ -103,6 +88,9 @@ const isViewableCalendarEvent = (
       !item.encrypted || Boolean(item.mediaEnvelope?.mediaKey && item.mediaEnvelope?.iv)
   );
 };
+
+const partnerMigrationSessionKey = (selfUserId: string, partnerUserId: string) =>
+  `calendar-partner-migration:${selfUserId}:${partnerUserId}`;
 
 const CalendarPage: React.FC = () => {
   const { t } = useTranslation();
@@ -287,21 +275,36 @@ const CalendarPage: React.FC = () => {
       const encryptionTargets = await getCalendarEncryptionTargets();
       const activePartnerId = encryptionTargets?.activePartnerId;
 
-      if (localDeviceKeys && user?._id && activePartnerId) {
-        const migrated = await migrateCalendarEventsPartnerCopies(
-          events,
-          localDeviceKeys,
-          user._id,
-          activePartnerId
-        );
+      if (localDeviceKeys && user?._id) {
+        const peerIds = new Set<string>([user._id]);
+        if (activePartnerId) {
+          peerIds.add(activePartnerId);
+        }
+        await Promise.all(Array.from(peerIds).map((peerId) => prefetchPeerPublicKey(peerId)));
+      }
 
-        if (migrated) {
-          const refreshResponse = await axios.get(`${API_URL}/api/calendar/events`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          events = refreshResponse.data;
+      if (localDeviceKeys && user?._id && activePartnerId) {
+        const migrationKey = partnerMigrationSessionKey(user._id, activePartnerId);
+        const migrationDone = sessionStorage.getItem(migrationKey) === '1';
+
+        if (!migrationDone) {
+          const migrated = await migrateCalendarEventsPartnerCopies(
+            events,
+            localDeviceKeys,
+            user._id,
+            activePartnerId
+          );
+
+          sessionStorage.setItem(migrationKey, '1');
+
+          if (migrated) {
+            const refreshResponse = await axios.get(`${API_URL}/api/calendar/events`, {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            });
+            events = refreshResponse.data;
+          }
         }
       }
 
