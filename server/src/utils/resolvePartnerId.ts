@@ -1,26 +1,38 @@
 import mongoose from 'mongoose';
-import Relationship from '../models/relationship';
 import User from '../models/user';
+import { hasActivePartner, idsEqual, normalizeIdStr } from './normalizeId';
+import {
+  findActiveRelationshipForUser,
+  getPartnerIdFromRelationship
+} from './relationshipHelpers';
 
 export const resolvePartnerUserId = async (userId: string): Promise<string> => {
-  const user = await User.findById(userId).select('partnerId');
-  if (user?.partnerId) {
-    return user.partnerId.toString();
-  }
-
-  const relationship = await Relationship.findOne({
-    $or: [
-      { userId: new mongoose.Types.ObjectId(userId) },
-      { partnerId: new mongoose.Types.ObjectId(userId) }
-    ],
-    status: 'active'
-  });
-
-  if (!relationship) {
+  const normalizedUserId = normalizeIdStr(userId);
+  if (!normalizedUserId) {
     return userId;
   }
 
-  return relationship.userId.toString() === userId
-    ? relationship.partnerId.toString()
-    : relationship.userId.toString();
+  const relationship = await findActiveRelationshipForUser(normalizedUserId);
+  if (relationship) {
+    const partnerFromRelationship = getPartnerIdFromRelationship(relationship, normalizedUserId);
+    if (partnerFromRelationship && !idsEqual(partnerFromRelationship, normalizedUserId)) {
+      return partnerFromRelationship;
+    }
+  }
+
+  const user = await User.findById(normalizedUserId).select('partnerId');
+  const partnerFromUser = normalizeIdStr(user?.partnerId);
+  if (partnerFromUser && !idsEqual(partnerFromUser, normalizedUserId)) {
+    return partnerFromUser;
+  }
+
+  return normalizedUserId;
+};
+
+export const resolvePartnerContext = async (userId: string) => {
+  const partnerId = await resolvePartnerUserId(userId);
+  return {
+    partnerId,
+    hasPartner: hasActivePartner(userId, partnerId)
+  };
 };

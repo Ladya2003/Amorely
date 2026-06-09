@@ -1,3 +1,4 @@
+import i18n from '../localization';
 import {
   decryptChatTextWithFallback,
   encryptChatText,
@@ -23,13 +24,21 @@ export type MediaEnvelopeMeta = {
   iv?: string;
 };
 
+export type DualEncryptedTextPayload = {
+  self: EncryptedTextPayload;
+  partner?: EncryptedTextPayload;
+};
+
 export type RawContentFields = {
   encrypted?: boolean;
   title?: string;
   description?: string;
   encryptedTitle?: EncryptedTextPayload;
   encryptedDescription?: EncryptedTextPayload;
+  encryptedTitlePartner?: EncryptedTextPayload;
+  encryptedDescriptionPartner?: EncryptedTextPayload;
   encryptedMediaEnvelope?: EncryptedTextPayload;
+  encryptedMediaEnvelopePartner?: EncryptedTextPayload;
   mediaEnvelope?: MediaEnvelopeMeta;
   metadataSenderId?: string;
   metadataRecipientId?: string;
@@ -90,7 +99,11 @@ export const normalizeUserId = (value: unknown): string | null => {
 };
 
 const isEncryptedContent = (item: RawContentFields): boolean =>
-  Boolean(item.encrypted || item.encryptedTitle?.ciphertext);
+  Boolean(
+    item.encrypted ||
+      item.encryptedTitle?.ciphertext ||
+      item.encryptedTitlePartner?.ciphertext
+  );
 
 const resolveSenderId = (item: RawContentFields): string | null =>
   normalizeUserId(item.metadataSenderId) ||
@@ -107,6 +120,9 @@ const resolveRecipientId = (
   const target = normalizeUserId(item.targetId);
   const partner = normalizeUserId(fallbackPartnerId);
 
+  if (viewerId && meta === viewerId) return meta;
+  if (viewerId && target === viewerId) return target;
+
   if (meta && (!viewerId || meta !== viewerId)) return meta;
   if (target && (!viewerId || target !== viewerId)) return target;
   if (partner && (!viewerId || partner !== viewerId)) return partner;
@@ -114,6 +130,158 @@ const resolveRecipientId = (
   return meta || target || partner || null;
 };
 
+type TextFieldName = 'Title' | 'Description';
+
+const getTextFieldPayloads = (item: RawContentFields, field: TextFieldName) => {
+  if (field === 'Title') {
+    return {
+      self: item.encryptedTitle,
+      partner: item.encryptedTitlePartner
+    };
+  }
+  return {
+    self: item.encryptedDescription,
+    partner: item.encryptedDescriptionPartner
+  };
+};
+
+const pickTextDecryptionContext = (
+  item: RawContentFields,
+  field: TextFieldName,
+  currentUserId?: string,
+  fallbackPartnerId?: string
+): { payload: EncryptedTextPayload; asOwn: boolean; peerId: string } | null => {
+  const viewerId = normalizeUserId(currentUserId);
+  const authorId = resolveSenderId(item);
+  const { self: selfPayload, partner: partnerPayload } = getTextFieldPayloads(item, field);
+  const storedRecipientId =
+    normalizeUserId(item.metadataRecipientId) || normalizeUserId(item.targetId);
+  const activePartnerId = normalizeUserId(fallbackPartnerId);
+
+  if (!viewerId || !authorId) {
+    return null;
+  }
+
+  if (viewerId === authorId) {
+    if (selfPayload && partnerPayload) {
+      return { payload: selfPayload, asOwn: true, peerId: viewerId };
+    }
+    if (selfPayload) {
+      return {
+        payload: selfPayload,
+        asOwn: true,
+        peerId: storedRecipientId || viewerId
+      };
+    }
+    return null;
+  }
+
+  if (partnerPayload && activePartnerId && viewerId === activePartnerId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
+  if (partnerPayload && storedRecipientId === viewerId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
+  if (selfPayload && !partnerPayload && storedRecipientId === viewerId) {
+    return { payload: selfPayload, asOwn: false, peerId: authorId };
+  }
+
+  return null;
+};
+
+const pickMediaDecryptionContext = (
+  item: RawContentFields,
+  currentUserId?: string,
+  fallbackPartnerId?: string
+): { payload: EncryptedTextPayload; asOwn: boolean; peerId: string } | null => {
+  const viewerId = normalizeUserId(currentUserId);
+  const authorId = resolveSenderId(item);
+  const selfPayload = item.encryptedMediaEnvelope;
+  const partnerPayload = item.encryptedMediaEnvelopePartner;
+  const storedRecipientId =
+    normalizeUserId(item.metadataRecipientId) || normalizeUserId(item.targetId);
+  const activePartnerId = normalizeUserId(fallbackPartnerId);
+
+  if (!viewerId || !authorId) {
+    return null;
+  }
+
+  if (viewerId === authorId) {
+    if (selfPayload && partnerPayload) {
+      return { payload: selfPayload, asOwn: true, peerId: viewerId };
+    }
+    if (selfPayload) {
+      return {
+        payload: selfPayload,
+        asOwn: true,
+        peerId: storedRecipientId || viewerId
+      };
+    }
+    return null;
+  }
+
+  if (partnerPayload && activePartnerId && viewerId === activePartnerId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
+  if (partnerPayload && storedRecipientId === viewerId) {
+    return { payload: partnerPayload, asOwn: false, peerId: authorId };
+  }
+
+  if (selfPayload && !partnerPayload && storedRecipientId === viewerId) {
+    return { payload: selfPayload, asOwn: false, peerId: authorId };
+  }
+
+  return null;
+};
+
+export const encryptDualTextForContent = async (
+  keys: LocalDeviceKeys,
+  selfUserId: string,
+  partnerUserId: string | undefined,
+  plaintext: string
+): Promise<DualEncryptedTextPayload> => {
+  const self = await encryptTextForPartner(keys, selfUserId, plaintext);
+  if (!partnerUserId || partnerUserId === selfUserId) {
+    return { self };
+  }
+  const partner = await encryptTextForPartner(keys, partnerUserId, plaintext);
+  return { self, partner };
+};
+
+export const encryptDualMediaEnvelopeForContent = async (
+  keys: LocalDeviceKeys,
+  selfUserId: string,
+  partnerUserId: string | undefined,
+  secrets: Pick<ContentMediaEnvelope, 'mediaKey' | 'iv'>
+): Promise<DualEncryptedTextPayload> => {
+  const serialized = serializeMediaSecrets(secrets.mediaKey, secrets.iv);
+  const self = await encryptTextForPartner(keys, selfUserId, serialized);
+  if (!partnerUserId || partnerUserId === selfUserId) {
+    return { self };
+  }
+  const partner = await encryptTextForPartner(keys, partnerUserId, serialized);
+  return { self, partner };
+};
+
+export const decryptOwnContentText = async (
+  keys: LocalDeviceKeys,
+  item: RawContentFields,
+  field: TextFieldName,
+  selfUserId: string
+): Promise<string | undefined> => {
+  const { self: selfPayload } = getTextFieldPayloads(item, field);
+  if (!selfPayload?.ciphertext) {
+    return undefined;
+  }
+
+  const storedRecipientId =
+    normalizeUserId(item.metadataRecipientId) || normalizeUserId(item.targetId) || selfUserId;
+
+  return decryptChatTextWithFallback(keys, storedRecipientId, selfPayload, { isOwnMessage: true });
+};
 export const encryptTextForPartner = async (
   keys: LocalDeviceKeys,
   partnerUserId: string,
@@ -142,26 +310,36 @@ const decryptEncryptedText = async (
   item: RawContentFields,
   payload: EncryptedTextPayload,
   currentUserId?: string,
-  fallbackPartnerId?: string
+  fallbackPartnerId?: string,
+  forcedContext?: { asOwn: boolean; peerId: string }
 ): Promise<string> => {
-  const viewerId = normalizeUserId(currentUserId);
-  const senderId = resolveSenderId(item);
-  const recipientId = resolveRecipientId(item, fallbackPartnerId, viewerId || undefined);
+  const context =
+    forcedContext ||
+    (() => {
+      const viewerId = normalizeUserId(currentUserId);
+      const senderId = resolveSenderId(item);
+      const recipientId = resolveRecipientId(item, fallbackPartnerId, viewerId || undefined);
 
-  if (viewerId && senderId && viewerId === senderId) {
-    if (!recipientId) {
-      throw new Error('Не удалось определить получателя шифрования');
-    }
-    return decryptChatTextWithFallback(keys, recipientId, payload, { isOwnMessage: true });
+      if (viewerId && senderId && viewerId === senderId) {
+        if (!recipientId) {
+          throw new Error('Не удалось определить получателя шифрования');
+        }
+        return { asOwn: true, peerId: recipientId };
+      }
+
+      if (!senderId) {
+        throw new Error('Не удалось определить отправителя');
+      }
+
+      return { asOwn: false, peerId: senderId };
+    })();
+
+  if (context.asOwn) {
+    return decryptChatTextWithFallback(keys, context.peerId, payload, { isOwnMessage: true });
   }
 
-  if (!senderId) {
-    throw new Error('Не удалось определить отправителя');
-  }
-
-  return decryptTextFromSender(keys, senderId, payload);
+  return decryptTextFromSender(keys, context.peerId, payload);
 };
-
 export const decryptContentMediaEnvelope = async (
   keys: LocalDeviceKeys,
   item: RawContentFields,
@@ -178,16 +356,18 @@ export const decryptContentMediaEnvelope = async (
     };
   }
 
-  if (!item.encryptedMediaEnvelope?.ciphertext) {
+  const context = pickMediaDecryptionContext(item, currentUserId, fallbackPartnerId);
+  if (!context) {
     return undefined;
   }
 
   const plaintext = await decryptEncryptedText(
     keys,
     item,
-    item.encryptedMediaEnvelope,
+    context.payload,
     currentUserId,
-    fallbackPartnerId
+    fallbackPartnerId,
+    { asOwn: context.asOwn, peerId: context.peerId }
   );
   const secrets = parseMediaSecrets(plaintext);
 
@@ -269,28 +449,37 @@ export const decryptContentFields = async (
 
   const result: DecryptedContentFields = {};
 
-  if (item.encryptedTitle?.ciphertext) {
+  const titleContext = pickTextDecryptionContext(item, 'Title', currentUserId, fallbackPartnerId);
+  if (titleContext) {
     try {
       result.title = await decryptEncryptedText(
         keys,
         item,
-        item.encryptedTitle,
+        titleContext.payload,
         currentUserId,
-        fallbackPartnerId
+        fallbackPartnerId,
+        { asOwn: titleContext.asOwn, peerId: titleContext.peerId }
       );
     } catch {
-      result.title = 'Не удалось расшифровать';
+      result.title = i18n.t('crypto.decryptFailed');
     }
   }
 
-  if (item.encryptedDescription?.ciphertext) {
+  const descriptionContext = pickTextDecryptionContext(
+    item,
+    'Description',
+    currentUserId,
+    fallbackPartnerId
+  );
+  if (descriptionContext) {
     try {
       result.description = await decryptEncryptedText(
         keys,
         item,
-        item.encryptedDescription,
+        descriptionContext.payload,
         currentUserId,
-        fallbackPartnerId
+        fallbackPartnerId,
+        { asOwn: descriptionContext.asOwn, peerId: descriptionContext.peerId }
       );
     } catch {
       result.description = '';
@@ -378,6 +567,7 @@ export const decryptCalendarEventsWithMedia = async <
               const mediaContext: RawContentFields = {
                 ...mediaItem,
                 encrypted: mediaItem.encrypted ?? event.encrypted,
+                encryptedMediaEnvelopePartner: mediaItem.encryptedMediaEnvelopePartner,
                 metadataSenderId:
                   mediaItem.metadataSenderId || event.metadataSenderId || normalizeUserId(event.userId) || undefined,
                 metadataRecipientId:

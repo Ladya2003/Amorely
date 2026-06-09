@@ -48,7 +48,7 @@
     },
     "partner": {
       "title": "Partner",
-      "remove": "Entfernen",
+      "remove": "Trennen",
       "add": "Hinzufügen",
       "relationshipStartDate": "Beginn der Beziehung",
       "relationshipStartDateLockedHelper": "Das Startdatum der Beziehung kann nach dem Hinzufügen eines Partners nicht geändert werden",
@@ -931,6 +931,17 @@
       "deleting": "Wird gelöscht...",
       "failed": "Ereignis konnte nicht gelöscht werden"
     },
+    "deleteAll": {
+      "ariaLabel": "Alles löschen",
+      "eventsTitle": "Alle Ereignisse löschen?",
+      "eventsConfirm": "Möchtet ihr wirklich alle Ereignisse im Kalender löschen?",
+      "eventsWarning": "Ereignisse werden für euch und euren Partner gelöscht.",
+      "notesTitle": "Alle Notizen löschen?",
+      "notesConfirm": "Möchtet ihr wirklich alle Notizen in Plänen löschen?",
+      "notesWarning": "Notizen werden für euch und euren Partner gelöscht.",
+      "deleting": "Wird gelöscht...",
+      "failed": "Löschen fehlgeschlagen"
+    },
     "addContent": {
       "title": "Inhalt hinzufügen für {{date}}",
       "selectMedia": "Fotos oder Videos auswählen"
@@ -955,6 +966,7 @@
     },
     "media": {
       "photosAndVideos": "Fotos und Videos",
+      "photosAndVideosEncrypted": "Fotos und Videos (verschlüsselt)",
       "addPhotosOrVideos": "Fotos oder Videos hinzufügen",
       "supported": "Unterstützt: Bilder (JPG, PNG, GIF) und Videos (MP4, MOV)",
       "supportedWithHint": "Unterstützt: Bilder (JPG, PNG, GIF) und Videos (MP4, MOV). {{hint}}",
@@ -1013,6 +1025,66 @@
     },
     "errors": {
       "loadFailed": "Neuigkeiten konnten nicht geladen werden"
+    }
+  },
+  "auth": {
+    "tagline": "Amorely — eine App für Paare, um besondere Momente zu bewahren und zu teilen.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "togglePasswordVisibility": "Passwort anzeigen oder ausblenden",
+    "login": {
+      "title": "Anmelden",
+      "registrationSuccess": "Registrierung erfolgreich! Bitte melde dich an.",
+      "submit": "Anmelden",
+      "submitting": "Anmeldung...",
+      "noAccount": "Noch kein Konto?",
+      "registerLink": "Registrieren"
+    },
+    "register": {
+      "title": "Registrierung",
+      "username": "Benutzername",
+      "confirmPassword": "Passwort bestätigen",
+      "passwordMinHint": "Mindestens 8 Zeichen",
+      "submit": "Registrieren",
+      "submitting": "Registrierung...",
+      "hasAccount": "Bereits ein Konto?",
+      "loginLink": "Anmelden",
+      "errors": {
+        "fillAllFields": "Bitte fülle alle Felder aus",
+        "passwordMismatch": "Passwörter stimmen nicht überein",
+        "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen haben"
+      }
+    },
+    "errors": {
+      "loginFailed": "Anmeldung fehlgeschlagen",
+      "registerFailed": "Registrierung fehlgeschlagen"
+    }
+  },
+  "crypto": {
+    "decryptFailed": "Entschlüsselung fehlgeschlagen",
+    "decryptMediaFailed": "Medien konnten nicht entschlüsselt werden",
+    "unlock": {
+      "back": "Zurück",
+      "title": "Geheime Passphrase hinzufügen",
+      "description": "Als Betreiber von Amorely kann ich deine Nachrichten nicht lesen und deine Ereignisse nicht einsehen.\n\nDas ist beabsichtigt, damit du sicher sein kannst, dass deine Inhalte privat bleiben.\n\nDamit es funktioniert, musst du eine geheime Passphrase erstellen und sie in einem anderen Messenger oder Notizbuch speichern.\n\nWichtig: Wenn du sie verlierst, können wir deine Daten nicht wiederherstellen — Chatnachrichten, Text und Medien im Kalender.",
+      "tabCreate": "Neue erstellen",
+      "tabRestore": "Ich habe bereits eine",
+      "passphrasePlaceholder": "Geheime Passphrase",
+      "generateRandom": "Zufällige generieren",
+      "copy": "Kopieren",
+      "saveAndContinue": "Speichern und fortfahren",
+      "connectDevice": "Gerät verbinden",
+      "copySuccess": "Passphrase kopiert",
+      "copyFailed": "Kopieren fehlgeschlagen. Markiere die Passphrase und kopiere sie manuell.",
+      "actionFailed": "Aktion konnte nicht ausgeführt werden",
+      "enterPassphrase": "Gib die geheime Passphrase ein",
+      "passphraseMinWords": "Die geheime Passphrase muss mindestens {{min}} Wörter enthalten. Deine Passphrase hat {{count}} Wörter",
+      "deviceConnected": "Gerät verbunden. Speichere die Passphrase an einem sicheren Ort — du brauchst sie auf anderen Geräten.",
+      "accessRestored": "Zugriff wiederhergestellt. Du kannst die App jetzt nutzen.",
+      "confirmTitle": "Bist du sicher, dass du deine Passphrase gespeichert hast?",
+      "cancel": "Abbrechen",
+      "confirmSaved": "Ja, gespeichert",
+      "clearPassphrase": "Löschen"
     }
   }
 }

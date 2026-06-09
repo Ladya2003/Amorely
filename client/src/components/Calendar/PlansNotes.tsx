@@ -95,7 +95,7 @@ const emptyForm: NoteFormState = {
   category: ''
 };
 
-const PlansNotes: React.FC = () => {
+const PlansNotes: React.FC<{ refreshKey?: number }> = ({ refreshKey = 0 }) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { localDeviceKeys, ensureLocalKeys } = useCrypto();
@@ -238,6 +238,18 @@ const PlansNotes: React.FC = () => {
 
     void fetchNotes();
   }, [fetchNotes, isPrefsHydrated]);
+
+  useEffect(() => {
+    if (refreshKey > 0) {
+      setViewOpen(false);
+      setFormOpen(false);
+      setDeleteOpen(false);
+      setViewingNote(null);
+      setEditingNote(null);
+      setNoteToDelete(null);
+      void fetchNotes();
+    }
+  }, [refreshKey, fetchNotes]);
 
   const resetMediaState = () => {
     previews.forEach((url) => URL.revokeObjectURL(url));
@@ -632,13 +644,14 @@ const PlansNotes: React.FC = () => {
 
       {/* Форма создания / редактирования */}
       <ResponsiveDialog open={formOpen} onClose={() => !isSaving && setFormOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
           {editingNote ? t('calendar.plans.editNote') : t('calendar.plans.newNote')}
           <IconButton onClick={() => setFormOpen(false)} disabled={isSaving} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        <DialogContent sx={{ overflow: 'visible', p: 0 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, px: 3, pt: 2.5, pb: 2 }}>
           {formError && <Alert severity="error">{formError}</Alert>}
           <TextField
             label={t('calendar.plans.title')}
@@ -773,6 +786,7 @@ const PlansNotes: React.FC = () => {
               ))}
             </Box>
           )}
+          </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setFormOpen(false)} disabled={isSaving}>

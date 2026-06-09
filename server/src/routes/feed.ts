@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation, recalculateRotationOrder } from '../utils/contentRotation';
 import { buildOrGetDynamicFeed } from '../utils/dynamicFeedRotation';
 import { formatContentForApi } from '../utils/contentFormat';
+import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 
 const router = express.Router();
 
@@ -328,25 +329,12 @@ router.post('/content', upload.array('media'), async (req: any, res: Response) =
 router.get('/relationship', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    
+
     if (!userId) {
       return res.status(400).json({ error: 'Не указан ID пользователя' });
     }
 
-    let userObjectId;
-    try {
-      userObjectId = new mongoose.Types.ObjectId(userId);
-    } catch (error) {
-      return res.status(400).json({ error: 'Неверный формат ID пользователя' });
-    }
-    
-    const relationship = await Relationship.findOne({ 
-      $or: [
-        { userId },
-        { partnerId: userId }
-      ],
-      status: 'active'
-    });
+    const relationship = await findActiveRelationshipForUser(userId);
     
     if (!relationship) {
       return res.json(null);

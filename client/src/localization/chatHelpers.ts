@@ -1,6 +1,8 @@
+import { format } from 'date-fns';
 import type { TFunction } from 'i18next';
 import { resolveAppLocale } from './locale';
 import { LOCALE_BCP47 } from './localeFormat';
+import { formatNumericDate, getDateFnsLocale } from './calendarHelpers';
 
 type MessagePreviewSource = {
   text?: string;
@@ -96,22 +98,13 @@ export const formatChatContactPresence = (
     return t('chat.presence.lastSeenYesterday', { time });
   }
 
-  const date = lastSeenDate.toLocaleDateString(bcp47, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  const date = formatNumericDate(lastSeenDate, locale);
 
   return t('chat.presence.lastSeenDate', { date, time });
 };
 
-export const formatChatDayBadge = (date: Date, locale?: string | null): string => {
-  const appLocale = resolveAppLocale(locale ?? undefined);
-  return date.toLocaleDateString(LOCALE_BCP47[appLocale], {
-    day: 'numeric',
-    month: 'long',
-  });
-};
+export const formatChatDayBadge = (date: Date, locale?: string | null): string =>
+  format(date, 'd MMMM', { locale: getDateFnsLocale(locale) });
 
 export const formatChatListTimestamp = (timestamp: string, locale?: string | null): string => {
   const messageDate = new Date(timestamp);
@@ -127,11 +120,7 @@ export const formatChatListTimestamp = (timestamp: string, locale?: string | nul
     });
   }
 
-  return messageDate.toLocaleDateString(bcp47, {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  return formatNumericDate(messageDate, locale);
 };
 
 export const formatChatBirthday = (birthday: string | null | undefined, locale?: string | null): string | null => {
@@ -140,11 +129,7 @@ export const formatChatBirthday = (birthday: string | null | undefined, locale?:
   const date = new Date(birthday);
   if (Number.isNaN(date.getTime())) return null;
 
-  const appLocale = resolveAppLocale(locale ?? undefined);
-  return date.toLocaleDateString(LOCALE_BCP47[appLocale], {
-    day: 'numeric',
-    month: 'long',
-  });
+  return format(date, 'd MMMM', { locale: getDateFnsLocale(locale) });
 };
 
 export const getChatPlaceholderBio = (t: TFunction, name: string, seed: string): string => {

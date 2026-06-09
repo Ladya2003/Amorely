@@ -1,8 +1,10 @@
-import { AppLocale, resolveAppLocale } from './locale';
+import { format } from 'date-fns';
+import { AppLocale } from './locale';
+import { getDateFnsLocale } from './calendarHelpers';
 
 export const LOCALE_BCP47: Record<AppLocale, string> = {
   ru: 'ru-RU',
-  en: 'en-US',
+  en: 'en-GB',
   es: 'es-ES',
   de: 'de-DE',
   fr: 'fr-FR',
@@ -14,11 +16,6 @@ export const formatLocalizedDate = (
   dateString: string,
   locale?: string | null
 ): string => {
-  const appLocale = resolveAppLocale(locale ?? undefined);
   const date = new Date(dateString);
-  return date.toLocaleDateString(LOCALE_BCP47[appLocale], {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  return format(date, 'd MMMM yyyy', { locale: getDateFnsLocale(locale) });
 };

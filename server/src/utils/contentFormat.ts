@@ -35,17 +35,18 @@ export const formatContentForApi = (media: any) => ({
   encrypted: Boolean(media.encrypted),
   mediaEnvelope: formatMediaEnvelope(media),
   encryptedMediaEnvelope: formatEncryptedText(media.encryptedMediaEnvelope),
+  encryptedMediaEnvelopePartner: formatEncryptedText(media.encryptedMediaEnvelopePartner),
   encryptedTitle: formatEncryptedText(media.encryptedTitle),
   encryptedDescription: formatEncryptedText(media.encryptedDescription),
+  encryptedTitlePartner: formatEncryptedText(media.encryptedTitlePartner),
+  encryptedDescriptionPartner: formatEncryptedText(media.encryptedDescriptionPartner),
   metadataSenderId:
     normalizeId(media.metadataSenderId) ||
     normalizeId(media.createdBy) ||
     normalizeId(media.userId),
   metadataRecipientId:
     normalizeId(media.metadataRecipientId) ||
-    (normalizeId(media.targetId) !== normalizeId(media.userId)
-      ? normalizeId(media.targetId)
-      : undefined),
+    normalizeId(media.targetId),
   targetId: normalizeId(media.targetId),
   userId: normalizeId(media.userId),
   createdBy: normalizeId(media.createdBy),
@@ -67,15 +68,15 @@ export const formatCalendarEventGroup = (media: any) => ({
   encrypted: Boolean(media.encrypted),
   encryptedTitle: formatEncryptedText(media.encryptedTitle),
   encryptedDescription: formatEncryptedText(media.encryptedDescription),
+  encryptedTitlePartner: formatEncryptedText(media.encryptedTitlePartner),
+  encryptedDescriptionPartner: formatEncryptedText(media.encryptedDescriptionPartner),
   metadataSenderId:
     normalizeId(media.metadataSenderId) ||
     normalizeId(media.createdBy) ||
     normalizeId(media.userId),
   metadataRecipientId:
     normalizeId(media.metadataRecipientId) ||
-    (normalizeId(media.targetId) !== normalizeId(media.userId)
-      ? normalizeId(media.targetId)
-      : undefined),
+    normalizeId(media.targetId),
   targetId: normalizeId(media.targetId),
   userId: normalizeId(media.userId),
   createdBy:
@@ -84,6 +85,7 @@ export const formatCalendarEventGroup = (media: any) => ({
   description: media.encrypted ? undefined : media.description,
   eventDate: media.eventDate,
   createdAt: media.createdAt,
+  partnerSharedAt: media.partnerSharedAt,
   lastEditedBy: media.lastEditedBy,
   lastEditedAt: media.lastEditedAt,
   isBirthdayEvent: media.isBirthdayEvent,
@@ -100,7 +102,17 @@ export const formatCalendarEventMedia = (media: any) => ({
   createdAt: media.createdAt,
   encrypted: Boolean(media.encrypted),
   mediaEnvelope: formatMediaEnvelope(media),
-  encryptedMediaEnvelope: formatEncryptedText(media.encryptedMediaEnvelope)
+  encryptedMediaEnvelope: formatEncryptedText(media.encryptedMediaEnvelope),
+  encryptedMediaEnvelopePartner: formatEncryptedText(media.encryptedMediaEnvelopePartner),
+  metadataSenderId:
+    normalizeId(media.metadataSenderId) ||
+    normalizeId(media.createdBy) ||
+    normalizeId(media.userId),
+  metadataRecipientId:
+    normalizeId(media.metadataRecipientId) ||
+    normalizeId(media.targetId),
+  userId: normalizeId(media.userId),
+  createdBy: normalizeId(media.createdBy)
 });
 
 export const sortCalendarEventMedia = <T extends { createdAt?: Date | string }>(media: T[]) =>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ClearIcon from '@mui/icons-material/Clear';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -37,6 +38,7 @@ const countPassphraseWords = (value: string): number =>
   value.trim().split(/\s+/).filter(Boolean).length;
 
 const CryptoUnlockPage: React.FC = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -70,9 +72,9 @@ const CryptoUnlockPage: React.FC = () => {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      showCopyToast('Фраза скопирована', 'success');
+      showCopyToast(t('crypto.unlock.copySuccess'), 'success');
     } catch {
-      showCopyToast('Не удалось скопировать. Выделите фразу и скопируйте вручную.', 'error');
+      showCopyToast(t('crypto.unlock.copyFailed'), 'error');
     }
   };
 
@@ -113,7 +115,7 @@ const CryptoUnlockPage: React.FC = () => {
       setStatus(null);
       await fn();
     } catch (caught: any) {
-      setError(caught?.response?.data?.error || caught?.message || 'Не удалось выполнить действие');
+      setError(caught?.response?.data?.error || caught?.message || t('crypto.unlock.actionFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -122,13 +124,13 @@ const CryptoUnlockPage: React.FC = () => {
   const handleSaveClick = () => {
     const trimmedPassphrase = passphrase.trim();
     if (!trimmedPassphrase) {
-      setError('Введите секретную фразу');
+      setError(t('crypto.unlock.enterPassphrase'));
       return;
     }
     if (countPassphraseWords(trimmedPassphrase) < MIN_PASSPHRASE_WORDS) {
       const wordCount = countPassphraseWords(trimmedPassphrase);
       setError(
-        `Секретная фраза должна содержать не менее ${MIN_PASSPHRASE_WORDS} слов. Слов в вашей фразе - ${wordCount}`
+        t('crypto.unlock.passphraseMinWords', { min: MIN_PASSPHRASE_WORDS, count: wordCount })
       );
       return;
     }
@@ -140,19 +142,19 @@ const CryptoUnlockPage: React.FC = () => {
     setConfirmDialogOpen(false);
     await withAction(async () => {
       await createAndBackupKeys(passphrase.trim());
-      setStatus('Устройство подключено. Сохраните фразу в надёжном месте — она понадобится на других устройствах.');
+      setStatus(t('crypto.unlock.deviceConnected'));
     });
   };
 
   const handleRestore = async () => {
     if (!restorePhrase.trim()) {
-      setError('Введите секретную фразу');
+      setError(t('crypto.unlock.enterPassphrase'));
       return;
     }
 
     await withAction(async () => {
       await restoreKeysFromPassphrase(restorePhrase.trim());
-      setStatus('Доступ восстановлен. Можно пользоваться приложением.');
+      setStatus(t('crypto.unlock.accessRestored'));
     });
   };
 
@@ -261,24 +263,18 @@ const CryptoUnlockPage: React.FC = () => {
             }
           }}
         >
-          Назад
+          {t('crypto.unlock.back')}
         </Button>
         <Typography variant="h5" fontWeight={500} sx={{ mb: 2 }}>
-          Добавление секретной фразы
+          {t('crypto.unlock.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
-          {`Я, как владелец Amorely, не могу прочитать ваши сообщения и посмотреть события.
-
-Это сделано для того, чтобы вы были уверены в приватности вашего контента. 
-
-Чтобы это работало, вам необходимо придумать секретную фразу и записать её в другой мессенджер или в блокнот.
-
-Важно: если вы её потеряете, мы с вами никак не сможем восстановить ваши данные — сообщения в чатах, текст и медиа в календаре.`}
+          {t('crypto.unlock.description')}
         </Typography>
 
         <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" sx={{ mb: 2 }}>
-          <Tab label="Создать новую" />
-          <Tab label="Она у меня уже есть" />
+          <Tab label={t('crypto.unlock.tabCreate')} />
+          <Tab label={t('crypto.unlock.tabRestore')} />
           {/* <Tab label="Файл" /> */}
           {/* <Tab label="Другое устройство" /> */}
         </Tabs>
@@ -292,7 +288,7 @@ const CryptoUnlockPage: React.FC = () => {
               fullWidth
               multiline
               minRows={3}
-              placeholder="Секретная фраза"
+              placeholder={t('crypto.unlock.passphrasePlaceholder')}
               value={passphrase}
               onChange={(event) => setPassphrase(event.target.value)}
               sx={{ mb: 2 }}
@@ -301,7 +297,7 @@ const CryptoUnlockPage: React.FC = () => {
                   <InputAdornment position="end" sx={{ alignSelf: 'flex-start', mt: 1 }}>
                     <IconButton
                       size="small"
-                      aria-label="Очистить"
+                      aria-label={t('crypto.unlock.clearPassphrase')}
                       onClick={() => setPassphrase('')}
                       edge="end"
                     >
@@ -313,7 +309,7 @@ const CryptoUnlockPage: React.FC = () => {
             />
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
               <Button disabled={isLoading} variant="outlined" onClick={handleGeneratePassphrase}>
-                Сгенерировать случайную
+                {t('crypto.unlock.generateRandom')}
               </Button>
               <Button
                 disabled={isLoading || !passphrase.trim()}
@@ -321,11 +317,11 @@ const CryptoUnlockPage: React.FC = () => {
                 startIcon={<ContentCopyIcon />}
                 onClick={handleCopyPassphrase}
               >
-                Скопировать
+                {t('crypto.unlock.copy')}
               </Button>
             </Box>
             <Button disabled={isLoading} variant="contained" onClick={handleSaveClick}>
-              Сохранить и продолжить
+              {t('crypto.unlock.saveAndContinue')}
             </Button>
           </Box>
         )}
@@ -336,13 +332,13 @@ const CryptoUnlockPage: React.FC = () => {
               fullWidth
               multiline
               minRows={3}
-              placeholder="Секретная фраза"
+              placeholder={t('crypto.unlock.passphrasePlaceholder')}
               value={restorePhrase}
               onChange={(event) => setRestorePhrase(event.target.value)}
               sx={{ mb: 2 }}
             />
             <Button disabled={isLoading} variant="contained" onClick={handleRestore}>
-              Подключить устройство
+              {t('crypto.unlock.connectDevice')}
             </Button>
           </Box>
         )}
@@ -400,7 +396,7 @@ const CryptoUnlockPage: React.FC = () => {
           }
         }}
       >
-        <DialogTitle>Вы уверены, что сохранили вашу фразу?</DialogTitle>
+        <DialogTitle>{t('crypto.unlock.confirmTitle')}</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
@@ -416,15 +412,15 @@ const CryptoUnlockPage: React.FC = () => {
             onClick={handleCopyInModal}
             sx={{ mt: 2 }}
           >
-            Скопировать
+            {t('crypto.unlock.copy')}
           </Button>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmDialogOpen(false)} disabled={isLoading}>
-            Отмена
+            {t('crypto.unlock.cancel')}
           </Button>
           <Button variant="contained" onClick={handleConfirmCreateKeys} disabled={isLoading}>
-            Да, сохранил(а)
+            {t('crypto.unlock.confirmSaved')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>

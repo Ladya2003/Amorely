@@ -15,6 +15,7 @@ import ContentViewer from '../components/Feed/ContentViewer';
 import { useCrypto } from '../contexts/CryptoContext';
 import { decryptContentItemsWithMedia } from '../crypto/contentCryptoService';
 import { usePartnerId, useEncryptionRecipientId } from '../hooks/usePartnerId';
+import { PARTNER_CHANGED_EVENT } from '../hooks/useRelationship';
 
 // Интерфейс для контента из диалога управления
 interface UserContentItem {
@@ -65,6 +66,18 @@ const FeedPage: React.FC = () => {
     fetchUserData();
     fetchContent();
     fetchUserContent();
+  }, [localDeviceKeys, user?._id, partnerId]);
+
+  useEffect(() => {
+    const handlePartnerChanged = () => {
+      void fetchUserData();
+      void fetchContent();
+    };
+
+    window.addEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
+    return () => {
+      window.removeEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
+    };
   }, [localDeviceKeys, user?._id, partnerId]);
   
   // Функция для загрузки данных об отношениях

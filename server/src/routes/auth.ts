@@ -2,8 +2,11 @@ import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
 import Relationship from '../models/relationship';
+import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 import { body, validationResult } from 'express-validator';
 import { authMiddleware } from '../middleware/auth';
+import { resolvePartnerContext } from '../utils/resolvePartnerId';
+import { hasActivePartner } from '../utils/normalizeId';
 
 const router = express.Router();
 
@@ -132,25 +135,26 @@ router.get('/me', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
     
+    const { partnerId: resolvedPartnerId, hasPartner } = await resolvePartnerContext(
+      user._id.toString()
+    );
+
     // Получаем дату начала отношений из коллекции Relationship
     let relationshipStartDate = null;
-    if (user.partnerId) {
-      const relationship = await Relationship.findOne({
-        $or: [
-          { userId: user._id, partnerId: user.partnerId },
-          { userId: user.partnerId, partnerId: user._id }
-        ],
-        status: 'active'
-      });
-      
+    if (hasPartner) {
+      const relationship = await findActiveRelationshipForUser(user._id.toString());
+
       if (relationship) {
         relationshipStartDate = relationship.startDate;
       }
     }
-    
-    // Добавляем relationshipStartDate к объекту пользователя
+
+    const userObject = user.toObject();
     const userWithRelationship = {
-      ...user.toObject(),
+      ...userObject,
+      partnerId: hasActivePartner(user._id.toString(), resolvedPartnerId)
+        ? resolvedPartnerId
+        : undefined,
       relationshipStartDate
     };
     

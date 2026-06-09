@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
 import { 
   Box, 
   TextField, 
@@ -11,11 +12,15 @@ import {
   Alert,
   Grid,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import DisplayBadgePicker from './DisplayBadgePicker';
+import { DATE_INPUT_FORMAT, getDateFnsLocale } from '../../localization/calendarHelpers';
 
 export interface UserProfile {
   _id: string;
@@ -37,18 +42,25 @@ interface ProfileFormProps {
 
 const SAVE_DEBOUNCE_MS = 800;
 
-const formatBirthdayValue = (birthday?: string) => {
+const parseBirthdayDate = (birthday?: string): Date | null => {
+  if (!birthday) return null;
+  const date = new Date(birthday);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatBirthdayForApi = (birthday: Date | null): string => {
   if (!birthday) return '';
-  return new Date(birthday).toISOString().split('T')[0];
+  return format(birthday, 'yyyy-MM-dd');
 };
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferenceSaved }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = getDateFnsLocale(i18n.language);
   const [username, setUsername] = useState(user.username || '');
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
   const [bio, setBio] = useState(user.bio || '');
-  const [birthday, setBirthday] = useState(() => formatBirthdayValue(user.birthday));
+  const [birthday, setBirthday] = useState<Date | null>(() => parseBirthdayDate(user.birthday));
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(user.avatar);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +75,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setBirthday(formatBirthdayValue(user.birthday));
+    setBirthday(parseBirthdayDate(user.birthday));
   }, [user.birthday]);
 
   useEffect(() => {
@@ -78,7 +90,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
     formData.append('firstName', firstName);
     formData.append('lastName', lastName);
     formData.append('bio', bio);
-    formData.append('birthday', birthday);
+    formData.append('birthday', formatBirthdayForApi(birthday));
 
     const avatarToUpload = avatarOverride !== undefined ? avatarOverride : avatarFile;
     if (avatarToUpload) {
@@ -93,7 +105,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
     firstName !== (user.firstName || '') ||
     lastName !== (user.lastName || '') ||
     bio !== (user.bio || '') ||
-    birthday !== formatBirthdayValue(user.birthday)
+    formatBirthdayForApi(birthday) !== formatBirthdayForApi(parseBirthdayDate(user.birthday))
   ), [username, firstName, lastName, bio, birthday, user]);
 
   const saveProfile = useCallback(async (avatarOverride?: File | null) => {
@@ -277,18 +289,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label={t('settings.profile.birthday')}
-                  type="date"
-                  value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
-                  variant="outlined"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  helperText={t('settings.profile.birthdayHelper')}
-                />
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateFnsLocale}>
+                  <DatePicker
+                    label={t('settings.profile.birthday')}
+                    value={birthday}
+                    onChange={(newValue) => setBirthday(newValue)}
+                    format={DATE_INPUT_FORMAT}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined',
+                        helperText: t('settings.profile.birthdayHelper'),
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField

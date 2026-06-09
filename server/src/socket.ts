@@ -7,11 +7,26 @@ import { getAllowedOrigins } from './utils/corsOrigins';
 import { notifyNewMessage } from './services/pushService';
 import { markUserOnline, markUserOffline, getOnlineUserIds } from './presence';
 import { attachGameSocketHandlers } from './games/gameSocketHandlers';
+import { idsEqual } from './utils/normalizeId';
 
 interface ConnectedUser {
   userId: string;
   socketId: string;
 }
+
+let ioRef: SocketIOServer | null = null;
+let connectedUsersRef: ConnectedUser[] = [];
+
+export const notifySocketUser = (userId: string, event: string, payload: unknown) => {
+  if (!ioRef) {
+    return;
+  }
+
+  const target = connectedUsersRef.find((user) => idsEqual(user.userId, userId));
+  if (target) {
+    ioRef.to(target.socketId).emit(event, payload);
+  }
+};
 
 const formatSocketMessage = (message: any, clientTempId?: string) => ({
   id: message._id.toString(),
@@ -49,7 +64,9 @@ export default function setupSocketIO(server: HttpServer) {
     }
   });
 
-  const connectedUsers: ConnectedUser[] = [];
+  ioRef = io;
+  connectedUsersRef = [];
+  const connectedUsers = connectedUsersRef;
 
   io.on('connection', (socket: Socket) => {
     attachGameSocketHandlers(socket, io, connectedUsers);

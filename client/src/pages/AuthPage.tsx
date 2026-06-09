@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Container, Box, Paper, Typography, useTheme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { Container, Box, Paper, Typography } from '@mui/material';
 import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
 const AuthPage: React.FC = () => {
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [loginPrefill, setLoginPrefill] = useState<{ email: string; password: string } | null>(null);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const theme = useTheme();
   
   const handleSwitchToRegister = () => {
     setLoginPrefill(null);
@@ -65,11 +66,11 @@ const AuthPage: React.FC = () => {
         </Paper>
         
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
-          Amorely — приложение для пар, которое помогает сохранять и делиться особыми моментами.
+          {t('auth.tagline')}
         </Typography>
       </Box>
     </Container>
   );
 };
 
-export default AuthPage; 
+export default AuthPage;

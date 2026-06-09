@@ -12,13 +12,15 @@ import { API_URL } from '../config';
 import { format } from 'date-fns';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useCrypto } from '../contexts/CryptoContext';
-import { useEncryptionRecipientId, usePartnerId } from '../hooks/usePartnerId';
+import { usePartnerId } from '../hooks/usePartnerId';
 import { useAuth } from '../contexts/AuthContext';
 import {
   decryptCalendarEventsWithMedia,
-  encryptTextForPartner
+  encryptDualTextForContent,
+  normalizeUserId
 } from '../crypto/contentCryptoService';
-import { encryptAndUploadContentFiles } from '../crypto/encryptedUploadService';
+import { encryptAndUploadCalendarContentFiles } from '../crypto/encryptedUploadService';
+import { migrateCalendarEventsPartnerCopies } from '../crypto/calendarEventPartnerMigration';
 import { isVideoCompressionError } from '../utils/compressVideo';
 import type { PrepareMediaProgress } from '../utils/parallelMediaPrepare';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
@@ -34,6 +36,7 @@ interface MediaFile {
   encrypted?: boolean;
   mediaEnvelope?: ContentMediaEnvelope;
   encryptedMediaEnvelope?: { ciphertext: string; iv: string };
+  encryptedMediaEnvelopePartner?: { ciphertext: string; iv: string };
 }
 
 interface User {
@@ -50,6 +53,8 @@ interface ContentItem {
   encrypted?: boolean;
   encryptedTitle?: { ciphertext: string; iv: string };
   encryptedDescription?: { ciphertext: string; iv: string };
+  encryptedTitlePartner?: { ciphertext: string; iv: string };
+  encryptedDescriptionPartner?: { ciphertext: string; iv: string };
   metadataSenderId?: string;
   metadataRecipientId?: string;
   userId?: string;
@@ -64,13 +69,47 @@ interface ContentItem {
   readOnly?: boolean;
 }
 
+const isViewableCalendarEvent = (
+  event: ContentItem,
+  selfUserId?: string,
+  activePartnerId?: string
+): boolean => {
+  const viewerId = normalizeUserId(selfUserId);
+  const authorId =
+    normalizeUserId(event.userId) ||
+    normalizeUserId(typeof event.createdBy === 'object' ? event.createdBy?._id : event.createdBy);
+  const partnerId = normalizeUserId(activePartnerId);
+
+  if (!viewerId || !authorId || authorId === viewerId) {
+    return true;
+  }
+
+  if (!partnerId || authorId !== partnerId) {
+    return true;
+  }
+
+  if (event.title?.trim()) {
+    return true;
+  }
+
+  const mediaItems = event.media || [];
+  const hasMedia = mediaItems.some((item) => item.url?.trim());
+  if (!hasMedia) {
+    return false;
+  }
+
+  return mediaItems.some(
+    (item) =>
+      !item.encrypted || Boolean(item.mediaEnvelope?.mediaKey && item.mediaEnvelope?.iv)
+  );
+};
+
 const CalendarPage: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { localDeviceKeys, ensureLocalKeys } = useCrypto();
   const { user } = useAuth();
-  const encryptionRecipientId = useEncryptionRecipientId();
   const partnerId = usePartnerId();
   const [content, setContent] = useState<Array<{
     date: string;
@@ -100,6 +139,7 @@ const CalendarPage: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [eventToShare, setEventToShare] = useState<EventLikeForShare | null>(null);
   const [shareContacts, setShareContacts] = useState<ShareRecipientContact[]>([]);
+  const [plansRefreshKey, setPlansRefreshKey] = useState(0);
   const eventIdFromUrl = searchParams.get('event');
   const [eventFromUrlHandled, setEventFromUrlHandled] = useState(!eventIdFromUrl);
   const openingEventIdRef = useRef<string | null>(null);
@@ -116,7 +156,53 @@ const CalendarPage: React.FC = () => {
 
   useEffect(() => {
     fetchContent();
-  }, [localDeviceKeys, user?._id]);
+  }, [localDeviceKeys, user?._id, partnerId]);
+
+  const getCalendarEncryptionTargets = async () => {
+    if (!user?._id) {
+      return null;
+    }
+
+    const selfId = user._id;
+    let activePartnerId = partnerId && partnerId !== selfId ? partnerId : undefined;
+
+    if (!activePartnerId) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const meResponse = await axios.get(`${API_URL}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const fromMe = meResponse.data?.partnerId;
+          if (fromMe && String(fromMe) !== selfId) {
+            activePartnerId = String(fromMe);
+          }
+        } catch {
+          // continue
+        }
+
+        if (!activePartnerId) {
+          try {
+            const relationshipResponse = await axios.get(`${API_URL}/api/relationships`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const fromRelationship = relationshipResponse.data?.partner?._id;
+            if (fromRelationship && String(fromRelationship) !== selfId) {
+              activePartnerId = String(fromRelationship);
+            }
+          } catch {
+            // no partner
+          }
+        }
+      }
+    }
+
+    return {
+      selfId,
+      activePartnerId,
+      targetId: activePartnerId || selfId
+    };
+  };
 
   // Обработка URL параметра для открытия конкретного события
   useEffect(() => {
@@ -198,13 +284,37 @@ const CalendarPage: React.FC = () => {
       });
       
       let events: ContentItem[] = response.data;
+      const encryptionTargets = await getCalendarEncryptionTargets();
+      const activePartnerId = encryptionTargets?.activePartnerId;
+
+      if (localDeviceKeys && user?._id && activePartnerId) {
+        const migrated = await migrateCalendarEventsPartnerCopies(
+          events,
+          localDeviceKeys,
+          user._id,
+          activePartnerId
+        );
+
+        if (migrated) {
+          const refreshResponse = await axios.get(`${API_URL}/api/calendar/events`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          events = refreshResponse.data;
+        }
+      }
 
       if (localDeviceKeys) {
         events = await decryptCalendarEventsWithMedia(
           localDeviceKeys,
           events,
           user?._id,
-          partnerId || undefined
+          activePartnerId
+        );
+
+        events = events.filter((event) =>
+          isViewableCalendarEvent(event, user?._id, activePartnerId || undefined)
         );
       }
 
@@ -393,6 +503,25 @@ const CalendarPage: React.FC = () => {
     setEventToDelete(null);
   };
 
+  const handleDeleteAll = async (type: 'events' | 'plans') => {
+    try {
+      if (type === 'events') {
+        await axios.delete(`${API_URL}/api/calendar/events/all`);
+        await fetchContent();
+        setEventDetailOpen(false);
+        setEventListOpen(false);
+        setSelectedEvent(null);
+      } else {
+        await axios.delete(`${API_URL}/api/calendar/plans/all`);
+        setPlansRefreshKey((key) => key + 1);
+      }
+    } catch (error) {
+      console.error('Ошибка при массовом удалении:', error);
+      alert(t('calendar.deleteAll.failed'));
+      throw error;
+    }
+  };
+
   const resolveKeysForEncrypt = async (): Promise<LocalDeviceKeys> => {
     if (localDeviceKeys) return localDeviceKeys;
     await ensureLocalKeys();
@@ -429,25 +558,29 @@ const CalendarPage: React.FC = () => {
       }
 
       const keys = await resolveKeysForEncrypt();
-      if (!encryptionRecipientId) {
+      const encryptionTargets = await getCalendarEncryptionTargets();
+      if (!encryptionTargets) {
         throw new Error(t('calendar.errors.encryptionRecipient'));
       }
 
-      const encryptedTitle = await encryptTextForPartner(
+      const { selfId, activePartnerId, targetId } = encryptionTargets;
+      const titleDual = await encryptDualTextForContent(
         keys,
-        encryptionRecipientId,
+        selfId,
+        activePartnerId,
         eventData.title
       );
-      const encryptedDescription = eventData.description
-        ? await encryptTextForPartner(keys, encryptionRecipientId, eventData.description)
+      const descriptionDual = eventData.description
+        ? await encryptDualTextForContent(keys, selfId, activePartnerId, eventData.description)
         : undefined;
 
       const uploaded =
         eventData.files.length > 0
-          ? await encryptAndUploadContentFiles(
+          ? await encryptAndUploadCalendarContentFiles(
               eventData.files,
               keys,
-              encryptionRecipientId,
+              selfId,
+              activePartnerId,
               saveOptions
             )
           : [];
@@ -456,9 +589,11 @@ const CalendarPage: React.FC = () => {
         `${API_URL}/api/calendar/events-encrypted`,
         {
           eventDate: eventData.date.toISOString(),
-          encryptedTitle,
-          encryptedDescription,
-          encryptionRecipientId,
+          encryptedTitle: titleDual.self,
+          encryptedTitlePartner: titleDual.partner,
+          encryptedDescription: descriptionDual?.self,
+          encryptedDescriptionPartner: descriptionDual?.partner,
+          encryptionRecipientId: targetId,
           isBirthdayEvent: eventData.isBirthdayEvent,
           isAnniversaryEvent: eventData.isAnniversaryEvent,
           media: uploaded.map((item) => ({
@@ -466,7 +601,8 @@ const CalendarPage: React.FC = () => {
             publicId: item.publicId,
             fileSize: item.fileSize,
             mediaEnvelope: item.mediaEnvelope,
-            encryptedMediaEnvelope: item.encryptedMediaEnvelope
+            encryptedMediaEnvelope: item.encryptedMediaEnvelope,
+            encryptedMediaEnvelopePartner: item.encryptedMediaEnvelopePartner
           }))
         },
         {
@@ -512,25 +648,29 @@ const CalendarPage: React.FC = () => {
       }
 
       const keys = await resolveKeysForEncrypt();
-      if (!encryptionRecipientId) {
+      const encryptionTargets = await getCalendarEncryptionTargets();
+      if (!encryptionTargets) {
         throw new Error(t('calendar.errors.encryptionRecipient'));
       }
 
-      const encryptedTitle = await encryptTextForPartner(
+      const { selfId, activePartnerId, targetId } = encryptionTargets;
+      const titleDual = await encryptDualTextForContent(
         keys,
-        encryptionRecipientId,
+        selfId,
+        activePartnerId,
         eventData.title
       );
-      const encryptedDescription = eventData.description
-        ? await encryptTextForPartner(keys, encryptionRecipientId, eventData.description)
+      const descriptionDual = eventData.description
+        ? await encryptDualTextForContent(keys, selfId, activePartnerId, eventData.description)
         : undefined;
 
       const uploaded =
         eventData.files.length > 0
-          ? await encryptAndUploadContentFiles(
+          ? await encryptAndUploadCalendarContentFiles(
               eventData.files,
               keys,
-              encryptionRecipientId,
+              selfId,
+              activePartnerId,
               saveOptions
             )
           : [];
@@ -539,9 +679,11 @@ const CalendarPage: React.FC = () => {
         `${API_URL}/api/calendar/events/${eventId}`,
         {
           eventDate: eventData.date.toISOString(),
-          encryptedTitle,
-          encryptedDescription,
-          encryptionRecipientId,
+          encryptedTitle: titleDual.self,
+          encryptedTitlePartner: titleDual.partner,
+          encryptedDescription: descriptionDual?.self,
+          encryptedDescriptionPartner: descriptionDual?.partner,
+          encryptionRecipientId: targetId,
           isBirthdayEvent: eventData.isBirthdayEvent,
           isAnniversaryEvent: eventData.isAnniversaryEvent,
           newMedia: uploaded.map((item) => ({
@@ -549,7 +691,8 @@ const CalendarPage: React.FC = () => {
             publicId: item.publicId,
             fileSize: item.fileSize,
             mediaEnvelope: item.mediaEnvelope,
-            encryptedMediaEnvelope: item.encryptedMediaEnvelope
+            encryptedMediaEnvelope: item.encryptedMediaEnvelope,
+            encryptedMediaEnvelopePartner: item.encryptedMediaEnvelopePartner
           })),
           removeMediaIds: eventData.removeMediaIds
         },
@@ -596,11 +739,13 @@ const CalendarPage: React.FC = () => {
         </Box>
       )}
 
-      <Calendar 
+      <Calendar
         content={content}
         allEvents={allEvents}
         onAddContent={handleAddContent}
         onContentClick={handleContentClick}
+        onDeleteAll={handleDeleteAll}
+        plansRefreshKey={plansRefreshKey}
       />
       
       <EventListDialog

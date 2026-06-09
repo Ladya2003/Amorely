@@ -25,6 +25,18 @@ const contentSchema = new mongoose.Schema({
     ciphertext: { type: String },
     iv: { type: String }
   },
+  encryptedTitlePartner: {
+    ciphertext: { type: String },
+    iv: { type: String }
+  },
+  encryptedDescriptionPartner: {
+    ciphertext: { type: String },
+    iv: { type: String }
+  },
+  encryptedMediaEnvelopePartner: {
+    ciphertext: { type: String },
+    iv: { type: String }
+  },
   metadataSenderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   metadataRecipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   fileSize: { type: Number, default: 0 }, // Размер файла в байтах
@@ -49,6 +61,7 @@ const contentSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто создал событие
   lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто последним редактировал
   lastEditedAt: { type: Date }, // Когда последний раз редактировалось
+  partnerSharedAt: { type: Date }, // Когда событие было расшарено текущему партнёру
   
   // Новые поля для ротации контента
   rotationOrder: { type: Number, default: 0 }, // Порядок в ротации

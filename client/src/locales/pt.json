@@ -48,7 +48,7 @@
     },
     "partner": {
       "title": "Parceiro",
-      "remove": "Remover",
+      "remove": "Separar",
       "add": "Adicionar",
       "relationshipStartDate": "Data de início do relacionamento",
       "relationshipStartDateLockedHelper": "A data de início não pode ser alterada após adicionar um parceiro",
@@ -931,6 +931,17 @@
       "deleting": "Excluindo...",
       "failed": "Não foi possível excluir o evento"
     },
+    "deleteAll": {
+      "ariaLabel": "Excluir tudo",
+      "eventsTitle": "Excluir todos os eventos?",
+      "eventsConfirm": "Tem certeza de que deseja excluir todos os eventos do calendário?",
+      "eventsWarning": "Os eventos serão excluídos para você e seu parceiro.",
+      "notesTitle": "Excluir todas as notas?",
+      "notesConfirm": "Tem certeza de que deseja excluir todas as notas em Planos?",
+      "notesWarning": "As notas serão excluídas para você e seu parceiro.",
+      "deleting": "Excluindo...",
+      "failed": "Não foi possível excluir"
+    },
     "addContent": {
       "title": "Adicionar conteúdo em {{date}}",
       "selectMedia": "Selecionar fotos ou vídeos"
@@ -955,6 +966,7 @@
     },
     "media": {
       "photosAndVideos": "Fotos e vídeos",
+      "photosAndVideosEncrypted": "Fotos e vídeos (criptografados)",
       "addPhotosOrVideos": "Adicionar fotos ou vídeos",
       "supported": "Suportados: imagens (JPG, PNG, GIF) e vídeos (MP4, MOV)",
       "supportedWithHint": "Suportados: imagens (JPG, PNG, GIF) e vídeos (MP4, MOV). {{hint}}",
@@ -1013,6 +1025,66 @@
     },
     "errors": {
       "loadFailed": "Não foi possível carregar as notícias"
+    }
+  },
+  "auth": {
+    "tagline": "Amorely — um app para casais que ajuda a guardar e partilhar momentos especiais.",
+    "email": "Email",
+    "password": "Palavra-passe",
+    "togglePasswordVisibility": "Mostrar ou ocultar palavra-passe",
+    "login": {
+      "title": "Entrar",
+      "registrationSuccess": "Registo concluído! Entre na sua conta.",
+      "submit": "Entrar",
+      "submitting": "A entrar...",
+      "noAccount": "Não tem conta?",
+      "registerLink": "Registar-se"
+    },
+    "register": {
+      "title": "Registo",
+      "username": "Nome de utilizador",
+      "confirmPassword": "Confirmar palavra-passe",
+      "passwordMinHint": "Mínimo de 8 caracteres",
+      "submit": "Registar-se",
+      "submitting": "A registar...",
+      "hasAccount": "Já tem conta?",
+      "loginLink": "Entrar",
+      "errors": {
+        "fillAllFields": "Por favor, preencha todos os campos",
+        "passwordMismatch": "As palavras-passe não coincidem",
+        "passwordTooShort": "A palavra-passe deve ter pelo menos 8 caracteres"
+      }
+    },
+    "errors": {
+      "loginFailed": "Falha ao entrar",
+      "registerFailed": "Falha no registo"
+    }
+  },
+  "crypto": {
+    "decryptFailed": "Falha ao descriptografar",
+    "decryptMediaFailed": "Não foi possível descriptografar a mídia",
+    "unlock": {
+      "back": "Voltar",
+      "title": "Adicionar frase secreta",
+      "description": "Como proprietário do Amorely, não posso ler as suas mensagens nem ver os seus eventos.\n\nIsto é intencional para que possa ter a certeza de que o seu conteúdo é privado.\n\nPara que funcione, precisa de criar uma frase secreta e guardá-la noutro mensageiro ou num caderno.\n\nImportante: se a perder, não poderemos recuperar os seus dados — mensagens do chat, texto e media no calendário.",
+      "tabCreate": "Criar nova",
+      "tabRestore": "Já tenho uma",
+      "passphrasePlaceholder": "Frase secreta",
+      "generateRandom": "Gerar aleatória",
+      "copy": "Copiar",
+      "saveAndContinue": "Guardar e continuar",
+      "connectDevice": "Ligar dispositivo",
+      "copySuccess": "Frase copiada",
+      "copyFailed": "Não foi possível copiar. Selecione a frase e copie manualmente.",
+      "actionFailed": "Não foi possível concluir a ação",
+      "enterPassphrase": "Introduza a frase secreta",
+      "passphraseMinWords": "A frase secreta deve conter pelo menos {{min}} palavras. A sua frase tem {{count}} palavras",
+      "deviceConnected": "Dispositivo ligado. Guarde a frase num local seguro — vai precisar dela noutros dispositivos.",
+      "accessRestored": "Acesso restaurado. Já pode usar a aplicação.",
+      "confirmTitle": "Tem a certeza de que guardou a sua frase?",
+      "cancel": "Cancelar",
+      "confirmSaved": "Sim, guardei",
+      "clearPassphrase": "Limpar"
     }
   }
 }

@@ -7,7 +7,10 @@ import {
   registerServiceWorker,
   subscribeToPush
 } from '../services/pushNotifications';
+import i18next from '../localization';
 import { setAppLocale } from '../localization';
+import socketService from '../services/socketService';
+import { notifyPartnerChanged } from '../hooks/useRelationship';
 
 interface User {
   _id: string;
@@ -101,6 +104,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, [token]);
 
+  useEffect(() => {
+    if (!user?._id || !token) {
+      return;
+    }
+
+    const refreshUser = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/auth/me`);
+        setUser(response.data);
+        if (response.data?.locale) {
+          setAppLocale(response.data.locale);
+        }
+      } catch (error) {
+        console.error('Ошибка при обновлении профиля:', error);
+      }
+    };
+
+    const handleFocus = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshUser();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    const socket = socketService.initialize(user._id);
+    const handlePartnerLinked = () => {
+      void refreshUser().finally(() => {
+        notifyPartnerChanged();
+      });
+    };
+    const handlePartnerUnlinked = () => {
+      void refreshUser().finally(() => {
+        notifyPartnerChanged();
+      });
+    };
+
+    socket.on('partner_linked', handlePartnerLinked);
+    socket.on('partner_unlinked', handlePartnerUnlinked);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+      socket.off('partner_linked', handlePartnerLinked);
+      socket.off('partner_unlinked', handlePartnerUnlinked);
+    };
+  }, [user?._id, token]);
+
   // Функция для входа
   const login = async (email: string, password: string): Promise<AxiosResponse<any, any> | undefined> => {
     try {
@@ -129,7 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return response;
     } catch (error: any) {
       console.error('Ошибка входа:', error);
-      setError(error.response?.data?.error || 'Ошибка при входе');
+      setError(error.response?.data?.error || i18next.t('auth.errors.loginFailed'));
       return undefined;
     } finally {
       setIsLoading(false);
@@ -162,7 +214,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return response;
     } catch (error: any) {
       console.error('Ошибка регистрации:', error);
-      setError(error.response?.data?.error || 'Ошибка при регистрации');
+      setError(error.response?.data?.error || i18next.t('auth.errors.registerFailed'));
       return undefined;
     } finally {
       setIsLoading(false);

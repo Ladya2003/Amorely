@@ -13,8 +13,26 @@ import {
   sortCalendarEventMedia
 } from '../utils/contentFormat';
 import { resolvePartnerUserId } from '../utils/resolvePartnerId';
+import { hasActivePartner } from '../utils/normalizeId';
+import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
+import {
+  buildSharedVisibilityQuery,
+  canAccessSharedContent
+} from '../utils/sharedContentVisibility';
 
 const router = express.Router();
+
+const getSharedContentVisibilityContext = async (userId: string) => {
+  const partnerId = await resolvePartnerUserId(userId);
+  const relationship = hasActivePartner(userId, partnerId)
+    ? await findActiveRelationshipForUser(userId)
+    : null;
+  const relationshipStartDate = relationship?.startDate
+    ? new Date(relationship.startDate)
+    : null;
+
+  return { partnerId, relationshipStartDate };
+};
 
 const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
 
@@ -53,6 +71,14 @@ const isValidEncryptedMediaItem = (item: any): boolean =>
         item?.mediaEnvelope?.mediaKey)
   );
 
+const formatEncryptedPayload = (value: any) => {
+  if (!value?.ciphertext || !value?.iv) return undefined;
+  return {
+    ciphertext: String(value.ciphertext),
+    iv: String(value.iv)
+  };
+};
+
 const buildStoredMediaFields = (item: any) => {
   const displayType = item.mediaEnvelope?.displayType || item.resourceType || 'image';
   const mimeType = item.mediaEnvelope?.mimeType || 'application/octet-stream';
@@ -66,7 +92,15 @@ const buildStoredMediaFields = (item: any) => {
       encryptedMediaEnvelope: {
         ciphertext: String(item.encryptedMediaEnvelope.ciphertext),
         iv: String(item.encryptedMediaEnvelope.iv)
-      }
+      },
+      ...(item.encryptedMediaEnvelopePartner?.ciphertext
+        ? {
+            encryptedMediaEnvelopePartner: {
+              ciphertext: String(item.encryptedMediaEnvelopePartner.ciphertext),
+              iv: String(item.encryptedMediaEnvelopePartner.iv)
+            }
+          }
+        : {})
     };
   }
 
@@ -80,6 +114,18 @@ const buildStoredMediaFields = (item: any) => {
   };
 };
 
+const buildStoredTextFields = (payload: {
+  encryptedTitle?: any;
+  encryptedDescription?: any;
+  encryptedTitlePartner?: any;
+  encryptedDescriptionPartner?: any;
+}) => ({
+  encryptedTitle: formatEncryptedPayload(payload.encryptedTitle),
+  encryptedDescription: formatEncryptedPayload(payload.encryptedDescription),
+  encryptedTitlePartner: formatEncryptedPayload(payload.encryptedTitlePartner),
+  encryptedDescriptionPartner: formatEncryptedPayload(payload.encryptedDescriptionPartner)
+});
+
 // Создание зашифрованного события (E2EE)
 router.post('/events-encrypted', async (req: any, res: Response) => {
   try {
@@ -90,6 +136,8 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
       isAnniversaryEvent,
       encryptedTitle,
       encryptedDescription,
+      encryptedTitlePartner,
+      encryptedDescriptionPartner,
       encryptionRecipientId,
       media
     } = req.body || {};
@@ -103,9 +151,16 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    const partnerId = encryptionRecipientId
+    const resolvedPartnerId = await resolvePartnerUserId(userId);
+    const targetId = encryptionRecipientId
       ? String(encryptionRecipientId)
-      : await resolvePartnerUserId(userId);
+      : resolvedPartnerId;
+    const textFields = buildStoredTextFields({
+      encryptedTitle,
+      encryptedDescription,
+      encryptedTitlePartner,
+      encryptedDescriptionPartner
+    });
     const eventId = `event_${Date.now()}_${userId}`;
     const savedContent = [];
     const mediaItems = Array.isArray(media) ? media : [];
@@ -119,7 +174,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
         const displayType = item.mediaEnvelope?.displayType || item.resourceType || 'image';
         const content = new Content({
           userId,
-          targetId: partnerId,
+          targetId,
           url: item.url,
           publicId: item.publicId,
           resourceType: displayType === 'video' ? 'video' : 'image',
@@ -128,10 +183,9 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
           eventDate: new Date(eventDate),
           encrypted: true,
           ...buildStoredMediaFields(item),
-          encryptedTitle,
-          encryptedDescription: encryptedDescription || undefined,
+          ...textFields,
           metadataSenderId: userId,
-          metadataRecipientId: partnerId,
+          metadataRecipientId: targetId,
           showInFeed: true,
           isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
           isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
@@ -144,7 +198,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
     } else {
       const content = new Content({
         userId,
-        targetId: partnerId,
+        targetId,
         url: '',
         publicId: `text_${eventId}`,
         resourceType: 'image',
@@ -152,10 +206,9 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
         eventId,
         eventDate: new Date(eventDate),
         encrypted: true,
-        encryptedTitle,
-        encryptedDescription: encryptedDescription || undefined,
+        ...textFields,
         metadataSenderId: userId,
-        metadataRecipientId: partnerId,
+        metadataRecipientId: targetId,
         showInFeed: false,
         isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
         isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
@@ -280,48 +333,39 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
   }
 });
 
-// Получение всех событий календаря
+// Получение событий календаря (с партнёром — все события обоих, без — свои и из прошлых отношений)
 router.get('/events', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { startDate, endDate, month, year } = req.query;
 
-    // Получаем информацию о пользователе
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
-    }
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
 
-    const partnerId = user.partnerId;
-
-    let query: any = {
-      userId: userId // Сначала получаем события пользователя
-    };
-
-    // Если есть партнер, добавляем его события
-    if (partnerId) {
-      query = {
-        $or: [
-          { userId: userId },
-          { userId: partnerId }
-        ]
-      };
-    }
+    const andConditions: Record<string, unknown>[] = [
+      { eventId: { $exists: true, $nin: [null, ''] } },
+      buildSharedVisibilityQuery(userId, partnerId, 'targetId', relationshipStartDate)
+    ];
 
     // Фильтрация по датам
     if (startDate && endDate) {
-      query.eventDate = {
-        $gte: new Date(startDate as string),
-        $lte: new Date(endDate as string)
-      };
+      andConditions.push({
+        eventDate: {
+          $gte: new Date(startDate as string),
+          $lte: new Date(endDate as string)
+        }
+      });
     } else if (month && year) {
       const startOfMonth = new Date(parseInt(year as string), parseInt(month as string) - 1, 1);
       const endOfMonth = new Date(parseInt(year as string), parseInt(month as string), 0);
-      query.eventDate = {
-        $gte: startOfMonth,
-        $lte: endOfMonth
-      };
+      andConditions.push({
+        eventDate: {
+          $gte: startOfMonth,
+          $lte: endOfMonth
+        }
+      });
     }
+
+    const query = { $and: andConditions };
 
     const allMedia = await Content.find(query)
       .populate('userId', 'username avatar')
@@ -355,6 +399,36 @@ router.get('/events', async (req: any, res: Response) => {
   }
 });
 
+// Удаление всех событий календаря пары
+router.delete('/events/all', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+
+    const query = {
+      eventId: { $exists: true, $nin: [null, ''] },
+      ...buildSharedVisibilityQuery(userId, partnerId, 'targetId', relationshipStartDate)
+    };
+
+    const allMedia = await Content.find(query);
+
+    if (allMedia.length === 0) {
+      return res.json({ message: 'События не найдены', deletedCount: 0 });
+    }
+
+    await deleteEventMediaFromCloudinary(allMedia);
+    const result = await Content.deleteMany(query);
+
+    res.json({
+      message: 'Все события успешно удалены',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Ошибка при удалении всех событий:', error);
+    res.status(500).json({ error: 'Ошибка при удалении всех событий' });
+  }
+});
+
 // Получение конкретного события со всеми медиафайлами
 router.get('/events/:id', async (req: any, res: Response) => {
   try {
@@ -374,18 +448,17 @@ router.get('/events/:id', async (req: any, res: Response) => {
     }
 
     const firstMedia = mediaFiles[0];
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
 
-    // Проверяем, что пользователь имеет доступ к этому событию
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
-    }
-
-    const partnerId = user.partnerId;
-    const isOwner = firstMedia.userId.toString() === userId;
-    const isPartner = partnerId && firstMedia.userId.toString() === partnerId.toString();
-
-    if (isOwner || isPartner) {
+    if (
+      canAccessSharedContent(
+        firstMedia,
+        userId,
+        partnerId,
+        'targetId',
+        relationshipStartDate
+      )
+    ) {
       const event = {
         ...formatCalendarEventGroup(firstMedia),
         targetId: firstMedia.targetId,
@@ -502,6 +575,8 @@ const createTextOnlyEventContent = async (
     eventDate?: Date;
     encryptedTitle?: any;
     encryptedDescription?: any;
+    encryptedTitlePartner?: any;
+    encryptedDescriptionPartner?: any;
     title?: string;
     description?: string;
     metadataSenderId?: string;
@@ -523,6 +598,9 @@ const createTextOnlyEventContent = async (
     encrypted: Boolean(fields.encryptedTitle?.ciphertext || baseMedia.encrypted),
     encryptedTitle: fields.encryptedTitle || baseMedia.encryptedTitle,
     encryptedDescription: fields.encryptedDescription ?? baseMedia.encryptedDescription,
+    encryptedTitlePartner: fields.encryptedTitlePartner || baseMedia.encryptedTitlePartner,
+    encryptedDescriptionPartner:
+      fields.encryptedDescriptionPartner ?? baseMedia.encryptedDescriptionPartner,
     title: fields.title ?? baseMedia.title,
     description: fields.description ?? baseMedia.description,
     metadataSenderId: fields.metadataSenderId || baseMedia.metadataSenderId,
@@ -550,6 +628,8 @@ router.put('/events/:id', async (req: any, res: Response) => {
       description,
       encryptedTitle,
       encryptedDescription,
+      encryptedTitlePartner,
+      encryptedDescriptionPartner,
       encryptionRecipientId,
       showInFeed,
       isBirthdayEvent,
@@ -565,18 +645,18 @@ router.put('/events/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Событие не найдено' });
     }
 
-    // Проверяем права на редактирование события
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
-    }
-
-    const partnerId = user.partnerId;
     const baseMedia = mediaFiles[0];
-    const isOwner = baseMedia.userId.toString() === userId;
-    const isPartner = partnerId && baseMedia.userId.toString() === partnerId.toString();
-    
-    if (!isOwner && !isPartner) {
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+
+    if (
+      !canAccessSharedContent(
+        baseMedia,
+        userId,
+        partnerId,
+        'targetId',
+        relationshipStartDate
+      )
+    ) {
       return res.status(403).json({ error: 'Нет прав на редактирование этого события' });
     }
 
@@ -596,6 +676,9 @@ router.put('/events/:id', async (req: any, res: Response) => {
     } else if (title !== undefined) {
       updateData.title = title;
     }
+    if (encryptedTitlePartner?.ciphertext) {
+      updateData.encryptedTitlePartner = encryptedTitlePartner;
+    }
     if (encryptedDescription?.ciphertext) {
       updateData.encryptedDescription = encryptedDescription;
       updateData.description = undefined;
@@ -607,6 +690,9 @@ router.put('/events/:id', async (req: any, res: Response) => {
         return res.status(400).json({ error: validatedDescription.error });
       }
       updateData.description = validatedDescription;
+    }
+    if (encryptedDescriptionPartner?.ciphertext) {
+      updateData.encryptedDescriptionPartner = encryptedDescriptionPartner;
     }
     if (showInFeed !== undefined) updateData.showInFeed = showInFeed;
     if (isBirthdayEvent !== undefined) updateData.isBirthdayEvent = isBirthdayEvent;
@@ -647,6 +733,9 @@ router.put('/events/:id', async (req: any, res: Response) => {
           ...buildStoredMediaFields(item),
           encryptedTitle: updateData.encryptedTitle || baseMedia.encryptedTitle,
           encryptedDescription: updateData.encryptedDescription ?? baseMedia.encryptedDescription,
+          encryptedTitlePartner: updateData.encryptedTitlePartner || baseMedia.encryptedTitlePartner,
+          encryptedDescriptionPartner:
+            updateData.encryptedDescriptionPartner ?? baseMedia.encryptedDescriptionPartner,
           title: updateData.title ?? baseMedia.title,
           description: updateData.description ?? baseMedia.description,
           metadataSenderId: updateData.metadataSenderId || userId,
@@ -672,6 +761,8 @@ router.put('/events/:id', async (req: any, res: Response) => {
         eventDate: updateData.eventDate,
         encryptedTitle: updateData.encryptedTitle,
         encryptedDescription: updateData.encryptedDescription,
+        encryptedTitlePartner: updateData.encryptedTitlePartner,
+        encryptedDescriptionPartner: updateData.encryptedDescriptionPartner,
         title: updateData.title,
         description: updateData.description,
         metadataSenderId: updateData.metadataSenderId,
@@ -692,6 +783,60 @@ router.put('/events/:id', async (req: any, res: Response) => {
   }
 });
 
+// Добавление partner-копий шифрования к существующим solo-событиям автора
+router.patch('/events/:id/partner-copies', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { id } = req.params;
+    const { encryptedTitlePartner, encryptedDescriptionPartner, mediaPartnerCopies } = req.body || {};
+
+    const mediaFiles = await Content.find({ eventId: id });
+    if (!mediaFiles || mediaFiles.length === 0) {
+      return res.status(404).json({ error: 'Событие не найдено' });
+    }
+
+    const baseMedia = mediaFiles[0];
+    if (baseMedia.userId.toString() !== userId) {
+      return res.status(403).json({ error: 'Можно мигрировать только собственные события' });
+    }
+
+    const updateData: Record<string, unknown> = {};
+    const partnerTitle = formatEncryptedPayload(encryptedTitlePartner);
+    const partnerDescription = formatEncryptedPayload(encryptedDescriptionPartner);
+
+    const partnerId = await resolvePartnerUserId(userId);
+    if (hasActivePartner(userId, partnerId)) {
+      updateData.targetId = partnerId;
+      updateData.metadataRecipientId = partnerId;
+      updateData.partnerSharedAt = new Date();
+    }
+
+    if (partnerTitle) updateData.encryptedTitlePartner = partnerTitle;
+    if (partnerDescription) updateData.encryptedDescriptionPartner = partnerDescription;
+
+    if (Object.keys(updateData).length > 0) {
+      await Content.updateMany({ eventId: id, userId }, { $set: updateData });
+    }
+
+    if (Array.isArray(mediaPartnerCopies)) {
+      for (const item of mediaPartnerCopies) {
+        const partnerEnvelope = formatEncryptedPayload(item?.encryptedMediaEnvelopePartner);
+        if (!item?.mediaId || !partnerEnvelope) continue;
+
+        await Content.updateOne(
+          { _id: item.mediaId, eventId: id, userId },
+          { $set: { encryptedMediaEnvelopePartner: partnerEnvelope } }
+        );
+      }
+    }
+
+    res.json({ message: 'Partner-копии шифрования сохранены', eventId: id });
+  } catch (error) {
+    console.error('Ошибка при сохранении partner-копий события:', error);
+    res.status(500).json({ error: 'Ошибка при сохранении partner-копий события' });
+  }
+});
+
 // Удаление события (удаляет все медиафайлы с данным eventId)
 router.delete('/events/:id', async (req: any, res: Response) => {
   try {
@@ -705,17 +850,17 @@ router.delete('/events/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Событие не найдено' });
     }
 
-    // Проверяем права на удаление события
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
-    }
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
 
-    const partnerId = user.partnerId;
-    const isOwner = mediaFiles[0].userId.toString() === userId;
-    const isPartner = partnerId && mediaFiles[0].userId.toString() === partnerId.toString();
-    
-    if (!isOwner && !isPartner) {
+    if (
+      !canAccessSharedContent(
+        mediaFiles[0],
+        userId,
+        partnerId,
+        'targetId',
+        relationshipStartDate
+      )
+    ) {
       return res.status(403).json({ error: 'Нет прав на удаление этого события' });
     }
 
@@ -731,36 +876,25 @@ router.delete('/events/:id', async (req: any, res: Response) => {
   }
 });
 
-const buildCoupleQuery = (userId: string, partnerId?: string | null) => {
-  if (partnerId) {
-    return {
-      $or: [
-        { userId, partnerId },
-        { userId: partnerId, partnerId: userId }
-      ]
-    };
-  }
+const buildCoupleQuery = (
+  userId: string,
+  partnerId?: string | null,
+  relationshipStartDate?: Date | null
+) => buildSharedVisibilityQuery(userId, partnerId, 'partnerId', relationshipStartDate);
 
-  return {
+const canAccessPlanNote = (
+  note: any,
+  userId: string,
+  partnerId?: string | null,
+  relationshipStartDate?: Date | null
+) =>
+  canAccessSharedContent(
+    note,
     userId,
-    $or: [{ partnerId: { $exists: false } }, { partnerId: null }, { partnerId: userId }]
-  };
-};
-
-const canAccessPlanNote = (note: any, userId: string, partnerId?: string | null) => {
-  const noteUserId = note.userId?.toString();
-  const notePartnerId = note.partnerId?.toString();
-
-  if (noteUserId === userId || notePartnerId === userId) {
-    return true;
-  }
-
-  if (partnerId && (noteUserId === partnerId || notePartnerId === partnerId)) {
-    return true;
-  }
-
-  return false;
-};
+    partnerId,
+    'partnerId',
+    relationshipStartDate
+  );
 
 const formatPlanNoteMedia = (media: any) => ({
   _id: media._id?.toString(),
@@ -829,14 +963,14 @@ const formatPlanNote = (note: any) => ({
     : undefined
 });
 
-// Получение всех заметок пары
+// Получение заметок пользователя (с партнёром — все заметки обоих, без — свои и из прошлых отношений)
 router.get('/plans', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const partnerId = await resolvePartnerUserId(userId);
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
     const { category } = req.query;
 
-    const query: any = buildCoupleQuery(userId, partnerId);
+    const query: any = buildCoupleQuery(userId, partnerId, relationshipStartDate);
     if (category && typeof category === 'string') {
       query.category = category;
     }
@@ -846,7 +980,10 @@ router.get('/plans', async (req: any, res: Response) => {
       .populate('lastEditedBy', 'username avatar firstName lastName')
       .sort({ updatedAt: -1 });
 
-    const categories = await PlanNote.distinct('category', buildCoupleQuery(userId, partnerId));
+    const categories = await PlanNote.distinct(
+      'category',
+      buildCoupleQuery(userId, partnerId, relationshipStartDate)
+    );
 
     res.json({
       notes: notes.map(formatPlanNote),
@@ -858,12 +995,41 @@ router.get('/plans', async (req: any, res: Response) => {
   }
 });
 
+// Удаление всех заметок пары
+router.delete('/plans/all', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
+    const query = buildCoupleQuery(userId, partnerId, relationshipStartDate);
+
+    const notes = await PlanNote.find(query);
+
+    if (notes.length === 0) {
+      return res.json({ message: 'Заметки не найдены', deletedCount: 0 });
+    }
+
+    for (const note of notes) {
+      await deletePlanNoteMediaFromCloudinary(note.media);
+    }
+
+    const result = await PlanNote.deleteMany(query);
+
+    res.json({
+      message: 'Все заметки успешно удалены',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Ошибка при удалении всех заметок:', error);
+    res.status(500).json({ error: 'Ошибка при удалении всех заметок' });
+  }
+});
+
 // Получение одной заметки
 router.get('/plans/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { id } = req.params;
-    const partnerId = await resolvePartnerUserId(userId);
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
 
     const note = await PlanNote.findById(id)
       .populate('createdBy', 'username avatar firstName lastName')
@@ -873,7 +1039,7 @@ router.get('/plans/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Заметка не найдена' });
     }
 
-    if (!canAccessPlanNote(note, userId, partnerId)) {
+    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate)) {
       return res.status(403).json({ error: 'Нет доступа к этой заметке' });
     }
 
@@ -911,7 +1077,7 @@ router.post('/plans', async (req: any, res: Response) => {
 
     const note = new PlanNote({
       userId,
-      partnerId: partnerId !== userId ? partnerId : undefined,
+      partnerId: hasActivePartner(userId, partnerId) ? partnerId : undefined,
       title: title.trim(),
       content: (content || '').trim(),
       category: category.trim(),
@@ -939,9 +1105,10 @@ router.put('/plans/:id', async (req: any, res: Response) => {
     const userId = req.userId as string;
     const { id } = req.params;
     const { title, content, category, newMedia, removeMediaIds, encryptionRecipientId } = req.body || {};
-    const partnerId = encryptionRecipientId
+    const encryptionPartnerId = encryptionRecipientId
       ? String(encryptionRecipientId)
       : await resolvePartnerUserId(userId);
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
 
     const note = await PlanNote.findById(id);
 
@@ -949,7 +1116,7 @@ router.put('/plans/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Заметка не найдена' });
     }
 
-    if (!canAccessPlanNote(note, userId, partnerId)) {
+    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate)) {
       return res.status(403).json({ error: 'Нет прав на редактирование этой заметки' });
     }
 
@@ -986,7 +1153,7 @@ router.put('/plans/:id', async (req: any, res: Response) => {
         if (!isValidEncryptedMediaItem(item)) {
           return res.status(400).json({ error: 'Некорректные данные зашифрованного медиа' });
         }
-        note.media.push(buildPlanNoteMediaItem(item, userId, partnerId));
+        note.media.push(buildPlanNoteMediaItem(item, userId, encryptionPartnerId));
       }
     }
 
@@ -1009,7 +1176,7 @@ router.delete('/plans/:id', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
     const { id } = req.params;
-    const partnerId = await resolvePartnerUserId(userId);
+    const { partnerId, relationshipStartDate } = await getSharedContentVisibilityContext(userId);
 
     const note = await PlanNote.findById(id);
 
@@ -1017,7 +1184,7 @@ router.delete('/plans/:id', async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Заметка не найдена' });
     }
 
-    if (!canAccessPlanNote(note, userId, partnerId)) {
+    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate)) {
       return res.status(403).json({ error: 'Нет прав на удаление этой заметки' });
     }
 

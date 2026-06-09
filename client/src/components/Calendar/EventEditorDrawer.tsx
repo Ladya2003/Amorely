@@ -40,6 +40,7 @@ import { useEventDraft } from './hooks/useEventDraft';
 import { useAuth } from '../../contexts/AuthContext';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import {
+  DATE_INPUT_FORMAT,
   formatCalendarDate,
   getDateFnsLocale,
   getVideoLimitsHint
@@ -635,6 +636,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
               label={t('calendar.event.date')}
               value={selectedDate}
               onChange={(newDate) => setSelectedDate(newDate)}
+              format={DATE_INPUT_FORMAT}
               disabled={isSaving}
               slotProps={{
                 textField: {
@@ -733,7 +735,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           {/* Загрузка медиа */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              {t('calendar.media.photosAndVideos')}
+              {t('calendar.media.photosAndVideosEncrypted')}
             </Typography>
             <input
               accept="image/*,video/*"

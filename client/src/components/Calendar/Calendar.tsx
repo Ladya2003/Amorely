@@ -10,12 +10,19 @@ import {
   IconButton,
   Button,
   Grid,
-  Paper
+  Paper,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  CircularProgress
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { formatCalendarMonthYear, getCalendarWeekdays } from '../../localization/calendarHelpers';
 import CalendarDay from './CalendarDay';
@@ -58,15 +65,26 @@ interface CalendarProps {
   allEvents?: EventItem[]; // Полные данные событий для grid view
   onAddContent: (date: Date) => void;
   onContentClick?: (eventId: string, directOpen?: boolean) => void;
+  onDeleteAll?: (type: 'events' | 'plans') => Promise<void>;
+  plansRefreshKey?: number;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddContent, onContentClick }) => {
+const Calendar: React.FC<CalendarProps> = ({
+  content,
+  allEvents = [],
+  onAddContent,
+  onContentClick,
+  onDeleteAll,
+  plansRefreshKey
+}) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const weekdays = getCalendarWeekdays(t);
   const skipNextSaveRef = useRef(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [view, setView] = useState<CalendarViewMode>(() =>
     user?._id ? readCalendarUiPreferences(user._id).calendarView : 'circles'
   );
@@ -109,6 +127,32 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const isPlansTab = tabValue === 1;
+
+  const handleOpenDeleteAllDialog = () => {
+    setDeleteAllDialogOpen(true);
+  };
+
+  const handleCloseDeleteAllDialog = () => {
+    if (!isDeletingAll) {
+      setDeleteAllDialogOpen(false);
+    }
+  };
+
+  const handleConfirmDeleteAll = async () => {
+    if (!onDeleteAll) return;
+
+    try {
+      setIsDeletingAll(true);
+      await onDeleteAll(isPlansTab ? 'plans' : 'events');
+      setDeleteAllDialogOpen(false);
+    } catch (error) {
+      console.error('Ошибка при массовом удалении:', error);
+    } finally {
+      setIsDeletingAll(false);
+    }
   };
 
   const handlePrevMonth = () => {
@@ -183,12 +227,31 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
         <Box sx={{ 
           borderBottom: 1, 
           borderColor: 'divider', 
-          p: 1
+          p: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
         }}>
-          <Tabs value={tabValue} onChange={handleTabChange} aria-label="calendar tabs">
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            aria-label="calendar tabs"
+            sx={{ flexGrow: 1, minWidth: 0 }}
+          >
             <Tab icon={<CalendarMonthIcon />} label={t('calendar.tab')} />
             <Tab icon={<ListAltIcon />} label={t('calendar.plansTab')} />
           </Tabs>
+          {onDeleteAll && (
+            <IconButton
+              onClick={handleOpenDeleteAllDialog}
+              aria-label={t('calendar.deleteAll.ariaLabel')}
+              color="error"
+              size="small"
+              sx={{ flexShrink: 0, mr: 0.5 }}
+            >
+              <DeleteSweepIcon />
+            </IconButton>
+          )}
         </Box>
 
         {tabValue === 0 && (
@@ -294,9 +357,42 @@ const Calendar: React.FC<CalendarProps> = ({ content, allEvents = [], onAddConte
             )}
           </Box>
         ) : (
-          <PlansNotes />
+          <PlansNotes refreshKey={plansRefreshKey} />
         )}
       </Box>
+
+      <ResponsiveDialog
+        open={deleteAllDialogOpen}
+        onClose={handleCloseDeleteAllDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {isPlansTab ? t('calendar.deleteAll.notesTitle') : t('calendar.deleteAll.eventsTitle')}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {isPlansTab ? t('calendar.deleteAll.notesConfirm') : t('calendar.deleteAll.eventsConfirm')}
+          </DialogContentText>
+          <DialogContentText sx={{ mt: 2 }}>
+            {isPlansTab ? t('calendar.deleteAll.notesWarning') : t('calendar.deleteAll.eventsWarning')}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteAllDialog} disabled={isDeletingAll}>
+            {t('calendar.common.cancel')}
+          </Button>
+          <Button
+            onClick={handleConfirmDeleteAll}
+            color="error"
+            variant="contained"
+            disabled={isDeletingAll}
+            startIcon={isDeletingAll ? <CircularProgress size={20} /> : null}
+          >
+            {isDeletingAll ? t('calendar.deleteAll.deleting') : t('calendar.common.delete')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
     </Box>
   );
 };

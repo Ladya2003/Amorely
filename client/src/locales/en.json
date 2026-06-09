@@ -48,7 +48,7 @@
     },
     "partner": {
       "title": "Partner",
-      "remove": "Remove",
+      "remove": "Break up",
       "add": "Add",
       "relationshipStartDate": "Relationship start date",
       "relationshipStartDateLockedHelper": "The relationship start date cannot be changed after adding a partner",
@@ -897,6 +897,17 @@
       "body": "Are you sure you want to delete this event? All related photos and videos will be permanently removed.",
       "failed": "Failed to delete event"
     },
+    "deleteAll": {
+      "ariaLabel": "Delete all",
+      "eventsTitle": "Delete all events?",
+      "eventsConfirm": "Are you sure you want to delete all events in the calendar?",
+      "eventsWarning": "Events will be deleted for you and your partner.",
+      "notesTitle": "Delete all notes?",
+      "notesConfirm": "Are you sure you want to delete all notes in Plans?",
+      "notesWarning": "Notes will be deleted for you and your partner.",
+      "deleting": "Deleting...",
+      "failed": "Failed to delete"
+    },
     "event": {
       "newTitle": "New event",
       "editTitle": "Edit event",
@@ -945,6 +956,7 @@
       "formatsHint": "Supported formats: images (JPG, PNG, GIF) and videos (MP4, MOV).",
       "videoHint": "Video: up to {{sourceMb}} MB and {{durationSec}} sec. Automatically compressed to {{uploadMb}} MB before upload.",
       "photosAndVideos": "Photos and videos",
+      "photosAndVideosEncrypted": "Photos and videos (encrypted)",
       "addPhotosOrVideos": "Add photos or videos",
       "supported": "Supported: images (JPG, PNG, GIF) and videos (MP4, MOV)",
       "supportedWithHint": "Supported: images (JPG, PNG, GIF) and videos (MP4, MOV). {{hint}}",
@@ -1061,6 +1073,66 @@
     },
     "errors": {
       "loadFailed": "Could not load news"
+    }
+  },
+  "auth": {
+    "tagline": "Amorely — an app for couples to save and share special moments.",
+    "email": "Email",
+    "password": "Password",
+    "togglePasswordVisibility": "Toggle password visibility",
+    "login": {
+      "title": "Sign in",
+      "registrationSuccess": "Registration successful! Please sign in.",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Create account"
+    },
+    "register": {
+      "title": "Create account",
+      "username": "Username",
+      "confirmPassword": "Confirm password",
+      "passwordMinHint": "At least 8 characters",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "errors": {
+        "fillAllFields": "Please fill in all fields",
+        "passwordMismatch": "Passwords do not match",
+        "passwordTooShort": "Password must be at least 8 characters"
+      }
+    },
+    "errors": {
+      "loginFailed": "Sign-in failed",
+      "registerFailed": "Registration failed"
+    }
+  },
+  "crypto": {
+    "decryptFailed": "Failed to decrypt",
+    "decryptMediaFailed": "Failed to decrypt media",
+    "unlock": {
+      "back": "Back",
+      "title": "Set up your secret phrase",
+      "description": "As the owner of Amorely, I cannot read your messages or view your events.\n\nThis is by design so you can be sure your content stays private.\n\nTo make this work, you need to create a secret phrase and save it in another messenger or a notebook.\n\nImportant: if you lose it, we cannot recover your data — chat messages, or text and media in the calendar.",
+      "tabCreate": "Create new",
+      "tabRestore": "I already have one",
+      "passphrasePlaceholder": "Secret phrase",
+      "generateRandom": "Generate random",
+      "copy": "Copy",
+      "saveAndContinue": "Save and continue",
+      "connectDevice": "Connect device",
+      "copySuccess": "Phrase copied",
+      "copyFailed": "Could not copy. Select the phrase and copy it manually.",
+      "actionFailed": "Could not complete the action",
+      "enterPassphrase": "Enter your secret phrase",
+      "passphraseMinWords": "The secret phrase must contain at least {{min}} words. Your phrase has {{count}} words",
+      "deviceConnected": "Device connected. Save the phrase in a safe place — you will need it on other devices.",
+      "accessRestored": "Access restored. You can use the app now.",
+      "confirmTitle": "Are you sure you saved your phrase?",
+      "cancel": "Cancel",
+      "confirmSaved": "Yes, I saved it",
+      "clearPassphrase": "Clear"
     }
   }
 }

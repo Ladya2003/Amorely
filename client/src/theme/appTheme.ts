@@ -111,13 +111,8 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
       MuiInputLabel: {
         styleOverrides: {
           outlined: ({ theme }) => ({
-            '@supports (-webkit-touch-callout: none)': {
-              '&.MuiInputLabel-shrink': {
-                px: '4px',
-                mx: '-4px',
-                backgroundColor: theme.palette.background.paper,
-                zIndex: 1,
-              },
+            '&.Mui-focused': {
+              color: theme.palette.primary.main,
             },
             '&:not(.MuiInputLabel-shrink) + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend': {
               maxWidth: '0.01px !important',

@@ -23,7 +23,7 @@ import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { getDateFnsLocale } from '../../localization/calendarHelpers';
+import { getDateFnsLocale, DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -243,6 +243,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
               label={t('settings.partner.relationshipStartDate')}
               value={startDate}
               onChange={(newValue) => setStartDate(newValue)}
+              format={DATE_INPUT_FORMAT}
               disabled
               slotProps={{
                 textField: {
@@ -364,6 +365,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                   label={t('settings.partner.relationshipStartDate')}
                   value={startDate}
                   onChange={(newValue) => setStartDate(newValue)}
+                  format={DATE_INPUT_FORMAT}
                   slotProps={{
                     textField: {
                       fullWidth: true,

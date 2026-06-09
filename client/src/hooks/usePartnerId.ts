@@ -7,9 +7,11 @@ import { normalizeUserId } from '../crypto/contentCryptoService';
 
 export const usePartnerId = (): string | null => {
   const { user } = useAuth();
-  const [partnerId, setPartnerId] = useState<string | null>(() =>
-    normalizeUserId(user?.partnerId)
-  );
+  const [partnerId, setPartnerId] = useState<string | null>(() => {
+    const selfId = normalizeUserId(user?._id);
+    const fromUser = normalizeUserId(user?.partnerId);
+    return fromUser && fromUser !== selfId ? fromUser : null;
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -21,8 +23,9 @@ export const usePartnerId = (): string | null => {
     let cancelled = false;
 
     const resolve = async () => {
+      const selfId = normalizeUserId(user._id);
       const fromUser = normalizeUserId(user.partnerId);
-      if (fromUser) {
+      if (fromUser && fromUser !== selfId) {
         if (!cancelled) setPartnerId(fromUser);
         return;
       }
@@ -32,7 +35,7 @@ export const usePartnerId = (): string | null => {
           headers: { Authorization: `Bearer ${token}` }
         });
         const fromMe = normalizeUserId(meResponse.data?.partnerId);
-        if (fromMe) {
+        if (fromMe && fromMe !== selfId) {
           if (!cancelled) setPartnerId(fromMe);
           return;
         }
@@ -46,7 +49,7 @@ export const usePartnerId = (): string | null => {
         });
         const fromRelationship = normalizeUserId(relationshipResponse.data?.partner?._id);
         if (!cancelled) {
-          setPartnerId(fromRelationship);
+          setPartnerId(fromRelationship && fromRelationship !== selfId ? fromRelationship : null);
         }
       } catch {
         if (!cancelled) {

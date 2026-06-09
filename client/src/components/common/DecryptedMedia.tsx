@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { fetchDecryptedBlobUrl, getCachedBlobUrl } from '../../crypto/decryptedMediaCache';
@@ -31,6 +32,7 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   videoStyle,
   loadingMinHeight = 80
 }) => {
+  const { t } = useTranslation();
   const needsDecrypt = Boolean(mediaEnvelope?.mediaKey && mediaEnvelope?.iv);
   const awaitingDecryption = Boolean(encrypted && !needsDecrypt);
 
@@ -39,16 +41,16 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
     if (awaitingDecryption) return null;
     return url;
   });
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState((needsDecrypt || awaitingDecryption) && !blobUrl);
+  const [error, setError] = useState(awaitingDecryption);
+  const [loading, setLoading] = useState(needsDecrypt && !blobUrl);
   const [videoPosterUrl, setVideoPosterUrl] = useState<string | null>(null);
   const [posterLoading, setPosterLoading] = useState(false);
 
   useEffect(() => {
     if (awaitingDecryption) {
       setBlobUrl(null);
-      setLoading(true);
-      setError(false);
+      setLoading(false);
+      setError(true);
       return;
     }
 
@@ -131,7 +133,7 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   if (error || !blobUrl) {
     return (
       <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-        Не удалось расшифровать медиа
+        {t('crypto.decryptMediaFailed')}
       </Typography>
     );
   }

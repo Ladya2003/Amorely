@@ -48,7 +48,7 @@
     },
     "partner": {
       "title": "Partenaire",
-      "remove": "Supprimer",
+      "remove": "Se séparer",
       "add": "Ajouter",
       "relationshipStartDate": "Date de début de la relation",
       "relationshipStartDateLockedHelper": "La date de début ne peut pas être modifiée après l'ajout d'un partenaire",
@@ -931,6 +931,17 @@
       "deleting": "Suppression...",
       "failed": "Impossible de supprimer l'événement"
     },
+    "deleteAll": {
+      "ariaLabel": "Tout supprimer",
+      "eventsTitle": "Supprimer tous les événements ?",
+      "eventsConfirm": "Voulez-vous vraiment supprimer tous les événements du calendrier ?",
+      "eventsWarning": "Les événements seront supprimés pour vous et votre partenaire.",
+      "notesTitle": "Supprimer toutes les notes ?",
+      "notesConfirm": "Voulez-vous vraiment supprimer toutes les notes dans Plans ?",
+      "notesWarning": "Les notes seront supprimées pour vous et votre partenaire.",
+      "deleting": "Suppression...",
+      "failed": "Échec de la suppression"
+    },
     "addContent": {
       "title": "Ajouter du contenu pour le {{date}}",
       "selectMedia": "Choisir des photos ou vidéos"
@@ -955,6 +966,7 @@
     },
     "media": {
       "photosAndVideos": "Photos et vidéos",
+      "photosAndVideosEncrypted": "Photos et vidéos (chiffrées)",
       "addPhotosOrVideos": "Ajouter des photos ou vidéos",
       "supported": "Pris en charge : images (JPG, PNG, GIF) et vidéos (MP4, MOV)",
       "supportedWithHint": "Pris en charge : images (JPG, PNG, GIF) et vidéos (MP4, MOV). {{hint}}",
@@ -1013,6 +1025,66 @@
     },
     "errors": {
       "loadFailed": "Impossible de charger les actualités"
+    }
+  },
+  "auth": {
+    "tagline": "Amorely — une application pour les couples qui aide à préserver et partager des moments précieux.",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "togglePasswordVisibility": "Afficher ou masquer le mot de passe",
+    "login": {
+      "title": "Connexion",
+      "registrationSuccess": "Inscription réussie ! Connectez-vous à votre compte.",
+      "submit": "Se connecter",
+      "submitting": "Connexion...",
+      "noAccount": "Pas encore de compte ?",
+      "registerLink": "S'inscrire"
+    },
+    "register": {
+      "title": "Inscription",
+      "username": "Nom d'utilisateur",
+      "confirmPassword": "Confirmer le mot de passe",
+      "passwordMinHint": "Au moins 8 caractères",
+      "submit": "S'inscrire",
+      "submitting": "Inscription...",
+      "hasAccount": "Déjà un compte ?",
+      "loginLink": "Se connecter",
+      "errors": {
+        "fillAllFields": "Veuillez remplir tous les champs",
+        "passwordMismatch": "Les mots de passe ne correspondent pas",
+        "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères"
+      }
+    },
+    "errors": {
+      "loginFailed": "Échec de la connexion",
+      "registerFailed": "Échec de l'inscription"
+    }
+  },
+  "crypto": {
+    "decryptFailed": "Échec du déchiffrement",
+    "decryptMediaFailed": "Impossible de déchiffrer le média",
+    "unlock": {
+      "back": "Retour",
+      "title": "Ajouter une phrase secrète",
+      "description": "En tant que propriétaire d'Amorely, je ne peux pas lire vos messages ni consulter vos événements.\n\nC'est voulu pour que vous soyez sûr de la confidentialité de votre contenu.\n\nPour que cela fonctionne, vous devez créer une phrase secrète et la enregistrer dans un autre messager ou un carnet.\n\nImportant : si vous la perdez, nous ne pourrons pas récupérer vos données — messages du chat, texte et médias du calendrier.",
+      "tabCreate": "En créer une nouvelle",
+      "tabRestore": "Je l'ai déjà",
+      "passphrasePlaceholder": "Phrase secrète",
+      "generateRandom": "Générer aléatoirement",
+      "copy": "Copier",
+      "saveAndContinue": "Enregistrer et continuer",
+      "connectDevice": "Connecter l'appareil",
+      "copySuccess": "Phrase copiée",
+      "copyFailed": "Impossible de copier. Sélectionnez la phrase et copiez-la manuellement.",
+      "actionFailed": "Impossible d'effectuer l'action",
+      "enterPassphrase": "Saisissez la phrase secrète",
+      "passphraseMinWords": "La phrase secrète doit contenir au moins {{min}} mots. Votre phrase en contient {{count}}",
+      "deviceConnected": "Appareil connecté. Conservez la phrase en lieu sûr — vous en aurez besoin sur d'autres appareils.",
+      "accessRestored": "Accès restauré. Vous pouvez utiliser l'application.",
+      "confirmTitle": "Êtes-vous sûr d'avoir enregistré votre phrase ?",
+      "cancel": "Annuler",
+      "confirmSaved": "Oui, je l'ai enregistrée",
+      "clearPassphrase": "Effacer"
     }
   }
 }

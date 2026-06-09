@@ -21,7 +21,8 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import axios from 'axios';
 import { API_URL } from '../config';
 import ProfileForm, { UserProfile } from '../components/Settings/ProfileForm';
-import PartnerForm, { Partner } from '../components/Settings/PartnerForm';
+import PartnerForm from '../components/Settings/PartnerForm';
+import { notifyPartnerChanged, useRelationship } from '../hooks/useRelationship';
 import ThemeSettings from '../components/Settings/ThemeSettings';
 import { PrimaryColorPreference } from '../theme/appTheme';
 import { AppLocale, resolveAppLocale } from '../localization/locale';
@@ -56,8 +57,12 @@ const SettingsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [tabValue, setTabValue] = useState(() => getSettingsTabIndex(searchParams.get('tab')));
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [partner, setPartner] = useState<Partner | null>(null);
-  const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
+  const {
+    partner,
+    relationshipStartDate,
+    refresh: refreshRelationship,
+    isLoading: isRelationshipLoading
+  } = useRelationship();
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [primaryColor, setPrimaryColor] = useState<PrimaryColorPreference>('pink');
   const [locale, setLocale] = useState<AppLocale>('ru');
@@ -133,29 +138,8 @@ const SettingsPage: React.FC = () => {
         setPushSubscribed(pushStatus.subscribed);
         setPushPermission(pushStatus.permission);
       }
-      
-      // Если у пользователя есть партнер, пробуем получить активные отношения.
-      // 404 означает, что активных отношений нет (например, запись удалена вручную).
-      if (user.partnerId) {
-        try {
-          const relationshipResponse = await axios.get(`${API_URL}/api/relationships`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          
-          setPartner(relationshipResponse.data.partner);
-          setRelationshipStartDate(relationshipResponse.data.relationship.startDate);
-        } catch (relationshipError: any) {
-          if (relationshipError?.response?.status === 404) {
-            setPartner(null);
-            setRelationshipStartDate(null);
-            setUser({ ...user, partnerId: undefined });
-          } else {
-            throw relationshipError;
-          }
-        }
-      }
+
+      await refreshRelationship();
       
       setIsLoading(false);
     } catch (error) {
@@ -218,8 +202,18 @@ const SettingsPage: React.FC = () => {
       }
       
       // Обновляем данные о партнере и отношениях
-      setRelationshipStartDate(response.data.relationship.startDate);
-      setPartner(response.data.partner);
+      if (authUser && response.data.partner?._id) {
+        const partnerId = String(response.data.partner._id);
+        updateUser({
+          ...authUser,
+          partnerId,
+          relationshipStartDate: response.data.relationship.startDate
+        });
+        setUser((prev) => (prev ? { ...prev, partnerId } : prev));
+      }
+
+      await refreshRelationship();
+      notifyPartnerChanged();
       
       setIsLoading(false);
     } catch (error: any) {
@@ -250,8 +244,12 @@ const SettingsPage: React.FC = () => {
       });
       
       // Обновляем локальное состояние
-      setPartner(null);
-      setRelationshipStartDate(null);
+      if (authUser) {
+        updateUser({ ...authUser, partnerId: undefined, relationshipStartDate: undefined });
+      }
+
+      await refreshRelationship();
+      notifyPartnerChanged();
       
       setIsLoading(false);
     } catch (error: any) {

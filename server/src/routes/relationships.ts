@@ -1,35 +1,34 @@
-import { Router, Request, Response } from 'express';
-import User, { UserDocument } from '../models/user';
+import { Router, Response } from 'express';
+import User from '../models/user';
 import Relationship from '../models/relationship';
 import { authMiddleware } from '../middleware/auth';
+import { normalizeIdStr } from '../utils/normalizeId';
+import {
+  findActiveRelationshipForUser,
+  getPartnerIdFromRelationship,
+  linkUsersAsPartners,
+  unlinkUsersPartners
+} from '../utils/relationshipHelpers';
+import { notifySocketUser } from '../socket';
 
 const router = Router();
 
 // Получение информации об отношениях пользователя
 router.get('/', authMiddleware, async (req: any, res: Response) => {
   try {
-    const userId = req.userId;
-
-    const relationship = await Relationship.findOne({
-      $or: [
-        { userId: userId },
-        { partnerId: userId }
-      ],
-      status: 'active'
-    });
+    const userId = req.userId as string;
+    const relationship = await findActiveRelationshipForUser(userId);
 
     if (!relationship) {
       return res.status(404).json({ error: 'Отношения не найдены' });
     }
 
-    // Определяем ID партнера
-    const partnerId = relationship.userId.toString() === userId 
-      ? relationship.partnerId 
-      : relationship.userId;
+    const partnerId = getPartnerIdFromRelationship(relationship, userId);
+    if (!partnerId) {
+      return res.status(404).json({ error: 'Партнер не найден' });
+    }
 
-    // Получаем данные партнера
     const partner = await User.findById(partnerId).select('-password');
-
     if (!partner) {
       return res.status(404).json({ error: 'Партнер не найден' });
     }
@@ -38,7 +37,6 @@ router.get('/', authMiddleware, async (req: any, res: Response) => {
       relationship,
       partner
     });
-
   } catch (error) {
     console.error('Ошибка при получении информации об отношениях:', error);
     res.status(500).json({ error: 'Ошибка при получении информации об отношениях' });
@@ -48,67 +46,77 @@ router.get('/', authMiddleware, async (req: any, res: Response) => {
 // Добавление партнера
 router.post('/', authMiddleware, async (req: any, res: Response) => {
   try {
-    const userId = req.userId;
+    const userId = req.userId as string;
     const { partnerEmail, relationshipStartDate } = req.body;
-    
+
     if (!userId || !partnerEmail || !relationshipStartDate) {
       return res.status(400).json({ error: 'Не указаны обязательные поля' });
     }
-    
-    // Проверяем, существует ли пользователь
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
-    
-    // Проверяем, существует ли партнер
-    const partner = await User.findOne({ email: partnerEmail }) as UserDocument;
+
+    const partner = await User.findOne({ email: partnerEmail }).select('-password');
     if (!partner) {
       return res.status(404).json({ error: 'Партнер с указанным email не найден' });
     }
-    
-    // Проверяем, не является ли партнер самим пользователем
-    if (partner._id.toString() === userId) {
+
+    const partnerId = normalizeIdStr(partner._id);
+    const normalizedUserId = normalizeIdStr(userId);
+    if (!partnerId || !normalizedUserId) {
+      return res.status(400).json({ error: 'Некорректные данные пользователя' });
+    }
+
+    if (partnerId === normalizedUserId) {
       return res.status(400).json({ error: 'Нельзя добавить себя в качестве партнера' });
     }
-    
-    // Проверяем, есть ли уже отношения у пользователя или партнера
-    const existingRelationship = await Relationship.findOne({
-      $or: [
-        { userId: userId },
-        { partnerId: userId },
-        { userId: partner._id },
-        { partnerId: partner._id }
-      ],
-      status: 'active'
-    });
-    
-    if (existingRelationship) {
-      return res.status(400).json({ 
-        error: existingRelationship.userId.toString() === userId || existingRelationship.partnerId.toString() === userId
+
+    const userRelationship = await findActiveRelationshipForUser(normalizedUserId);
+    const partnerRelationship = await findActiveRelationshipForUser(partnerId);
+
+    if (userRelationship || partnerRelationship) {
+      const blockingRelationship = userRelationship || partnerRelationship;
+      const isCurrentUserInRelationship =
+        blockingRelationship &&
+        (normalizeIdStr(blockingRelationship.userId) === normalizedUserId ||
+          normalizeIdStr(blockingRelationship.partnerId) === normalizedUserId);
+
+      return res.status(400).json({
+        error: isCurrentUserInRelationship
           ? 'У вас уже есть партнер'
           : 'У партнера уже есть отношения'
       });
     }
-    
-    // Создаем новые отношения
+
     const newRelationship = new Relationship({
-      userId: userId,
-      partnerId: partner._id,
+      userId: normalizedUserId,
+      partnerId,
       startDate: new Date(relationshipStartDate)
     });
-    
+
     await newRelationship.save();
-    
-    // Обновляем данные пользователей
-    user.partnerId = partner._id;
-    partner.partnerId = user._id;
-    
-    await Promise.all([user.save(), partner.save()]);
-    
-    // Получаем данные партнера без пароля
-    const partnerData = await User.findById(partner._id).select('-password');
-    
+    await linkUsersAsPartners(normalizedUserId, partnerId);
+
+    const partnerData = await User.findById(partnerId).select('-password');
+    const initiatorData = await User.findById(normalizedUserId).select('-password');
+
+    notifySocketUser(partnerId, 'partner_linked', {
+      partnerId: normalizedUserId,
+      partner: initiatorData
+        ? {
+            _id: initiatorData._id.toString(),
+            username: initiatorData.username,
+            email: initiatorData.email,
+            firstName: initiatorData.firstName,
+            lastName: initiatorData.lastName,
+            avatar: initiatorData.avatar
+          }
+        : undefined,
+      relationshipStartDate: newRelationship.startDate
+    });
+
     return res.status(201).json({
       message: 'Партнер успешно добавлен',
       relationship: newRelationship,
@@ -123,35 +131,26 @@ router.post('/', authMiddleware, async (req: any, res: Response) => {
 // Удаление отношений
 router.delete('/', authMiddleware, async (req: any, res: Response) => {
   try {
-    const userId = req.userId;
-    
-    // Находим отношения
-    const relationship = await Relationship.findOne({
-      $or: [
-        { userId: userId },
-        { partnerId: userId }
-      ],
-      status: 'active'
-    });
-    
+    const userId = req.userId as string;
+    const relationship = await findActiveRelationshipForUser(userId);
+
     if (!relationship) {
       return res.status(404).json({ error: 'Отношения не найдены' });
     }
-    
-    // Получаем ID обоих пользователей
-    const user1Id = relationship.userId;
-    const user2Id = relationship.partnerId;
-    
-    // Обновляем данные обоих пользователей
-    await User.updateMany(
-      { _id: { $in: [user1Id, user2Id] } },
-      { $unset: { partnerId: 1 } }
-    );
-    
-    // Не удаляем отношения: переводим в статус расставания
+
+    const user1Id = normalizeIdStr(relationship.userId);
+    const user2Id = normalizeIdStr(relationship.partnerId);
+    if (!user1Id || !user2Id) {
+      return res.status(500).json({ error: 'Некорректные данные отношений' });
+    }
+
+    await unlinkUsersPartners(user1Id, user2Id);
+
     relationship.status = 'broken_up';
     await relationship.save();
-    
+
+    notifySocketUser(user1Id === userId ? user2Id : user1Id, 'partner_unlinked', {});
+
     res.json({ message: 'Отношения успешно удалены' });
   } catch (error) {
     console.error('Ошибка при удалении отношений:', error);
@@ -159,4 +158,4 @@ router.delete('/', authMiddleware, async (req: any, res: Response) => {
   }
 });
 
-export default router; 
+export default router;

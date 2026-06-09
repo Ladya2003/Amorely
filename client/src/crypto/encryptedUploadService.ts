@@ -39,6 +39,7 @@ export type UploadedEncryptedContentFile = {
     displayType: 'image' | 'video';
   };
   encryptedMediaEnvelope: EncryptedTextPayload;
+  encryptedMediaEnvelopePartner?: EncryptedTextPayload;
 };
 
 export { getDisplayTypeFromFile } from '../utils/videoMime';
@@ -134,7 +135,7 @@ export const deleteUploadedEncryptedFiles = async (publicIds: string[]): Promise
   }
 };
 
-/** Загрузка медиа для ленты/календаря: ключ файла шифруется ECDH для партнёра. */
+/** Загрузка медиа для ленты/заметок: ключ файла шифруется ECDH для указанного получателя. */
 export const encryptAndUploadContentFiles = async (
   files: File[],
   localKeys: LocalDeviceKeys,
@@ -159,6 +160,47 @@ export const encryptAndUploadContentFiles = async (
           displayType: item.mediaEnvelope.displayType
         },
         encryptedMediaEnvelope
+      };
+    })
+  );
+};
+
+/** Загрузка медиа для календаря: ключ файла шифруется для автора и партнёра. */
+export const encryptAndUploadCalendarContentFiles = async (
+  files: File[],
+  localKeys: LocalDeviceKeys,
+  selfUserId: string,
+  partnerUserId?: string,
+  options?: EncryptedUploadOptions
+): Promise<UploadedEncryptedContentFile[]> => {
+  const uploads = await encryptAndUploadFiles(files, options);
+
+  return Promise.all(
+    uploads.map(async (item) => {
+      const secrets = {
+        mediaKey: item.mediaEnvelope.mediaKey,
+        iv: item.mediaEnvelope.iv
+      };
+      const encryptedMediaEnvelope = await encryptMediaEnvelopeForPartner(
+        localKeys,
+        selfUserId,
+        secrets
+      );
+      const encryptedMediaEnvelopePartner =
+        partnerUserId && partnerUserId !== selfUserId
+          ? await encryptMediaEnvelopeForPartner(localKeys, partnerUserId, secrets)
+          : undefined;
+
+      return {
+        url: item.url,
+        publicId: item.publicId,
+        fileSize: item.fileSize,
+        mediaEnvelope: {
+          mimeType: item.mediaEnvelope.mimeType,
+          displayType: item.mediaEnvelope.displayType
+        },
+        encryptedMediaEnvelope,
+        encryptedMediaEnvelopePartner
       };
     })
   );

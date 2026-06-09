@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   TextField, 
@@ -25,6 +26,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   initialPassword = '',
   showRegistrationSuccess = false,
 }) => {
+  const { t } = useTranslation();
   const { login, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
   
@@ -54,12 +56,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
       <Typography variant="h5" component="h1" gutterBottom align="center">
-        Вход в аккаунт
+        {t('auth.login.title')}
       </Typography>
       
       {showRegistrationSuccess && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          Регистрация прошла успешно! Войдите в аккаунт.
+          {t('auth.login.registrationSuccess')}
         </Alert>
       )}
 
@@ -74,7 +76,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         required
         fullWidth
         id="email"
-        label="Email"
+        label={t('auth.email')}
         name="email"
         autoComplete="email"
         autoFocus
@@ -88,7 +90,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         required
         fullWidth
         name="password"
-        label="Пароль"
+        label={t('auth.password')}
         type={showPassword ? 'text' : 'password'}
         id="password"
         autoComplete="current-password"
@@ -99,7 +101,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
-                aria-label="toggle password visibility"
+                aria-label={t('auth.togglePasswordVisibility')}
                 onClick={handleClickShowPassword}
                 edge="end"
               >
@@ -117,18 +119,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
         sx={{ mt: 3, mb: 2 }}
         disabled={isLoading}
       >
-        {isLoading ? 'Вход...' : 'Войти'}
+        {isLoading ? t('auth.login.submitting') : t('auth.login.submit')}
       </Button>
       
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="body2">
-          Нет аккаунта?{' '}
+          {t('auth.login.noAccount')}{' '}
           <Button 
             onClick={onSwitchToRegister} 
             sx={{ p: 0, minWidth: 'auto' }}
             disabled={isLoading}
           >
-            Зарегистрироваться
+            {t('auth.login.registerLink')}
           </Button>
         </Typography>
       </Box>
@@ -136,4 +138,4 @@ const LoginForm: React.FC<LoginFormProps> = ({
   );
 };
 
-export default LoginForm; 
+export default LoginForm;

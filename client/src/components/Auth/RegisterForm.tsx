@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   TextField, 
@@ -15,6 +16,7 @@ interface RegisterFormProps {
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
+  const { t } = useTranslation();
   const { register, logout, isLoading, error, clearError } = useAuth();
   
   const [email, setEmail] = useState('');
@@ -27,23 +29,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Очищаем ошибки
     setValidationError(null);
     clearError();
     
-    // Валидация
     if (!email || !username || !password || !confirmPassword) {
-      setValidationError('Пожалуйста, заполните все поля');
+      setValidationError(t('auth.register.errors.fillAllFields'));
       return;
     }
     
     if (password !== confirmPassword) {
-      setValidationError('Пароли не совпадают');
+      setValidationError(t('auth.register.errors.passwordMismatch'));
       return;
     }
     
     if (password.length < 8) {
-      setValidationError('Пароль должен содержать минимум 8 символов');
+      setValidationError(t('auth.register.errors.passwordTooShort'));
       return;
     }
     
@@ -65,7 +65,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
       <Typography variant="h5" component="h1" gutterBottom align="center">
-        Регистрация
+        {t('auth.register.title')}
       </Typography>
       
       {(error || validationError) && (
@@ -86,7 +86,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         required
         fullWidth
         id="email"
-        label="Email"
+        label={t('auth.email')}
         name="email"
         autoComplete="email"
         autoFocus
@@ -100,7 +100,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         required
         fullWidth
         id="username"
-        label="Логин"
+        label={t('auth.register.username')}
         name="username"
         autoComplete="username"
         value={username}
@@ -113,7 +113,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         required
         fullWidth
         name="password"
-        label="Пароль"
+        label={t('auth.password')}
         type={showPassword ? 'text' : 'password'}
         id="password"
         autoComplete="new-password"
@@ -124,7 +124,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
-                aria-label="toggle password visibility"
+                aria-label={t('auth.togglePasswordVisibility')}
                 onClick={handleClickShowPassword}
                 edge="end"
               >
@@ -133,7 +133,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             </InputAdornment>
           )
         }}
-        helperText="Минимум 8 символов"
+        helperText={t('auth.register.passwordMinHint')}
       />
       
       <TextField
@@ -141,7 +141,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         required
         fullWidth
         name="confirmPassword"
-        label="Подтверждение пароля"
+        label={t('auth.register.confirmPassword')}
         type={showPassword ? 'text' : 'password'}
         id="confirmPassword"
         autoComplete="new-password"
@@ -152,7 +152,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
-                aria-label="toggle password visibility"
+                aria-label={t('auth.togglePasswordVisibility')}
                 onClick={handleClickShowPassword}
                 edge="end"
               >
@@ -170,18 +170,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         sx={{ mt: 3, mb: 2 }}
         disabled={isLoading}
       >
-        {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+        {isLoading ? t('auth.register.submitting') : t('auth.register.submit')}
       </Button>
       
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="body2">
-          Уже есть аккаунт?{' '}
+          {t('auth.register.hasAccount')}{' '}
           <Button 
             onClick={() => onSwitchToLogin()} 
             sx={{ p: 0, minWidth: 'auto' }}
             disabled={isLoading}
           >
-            Войти
+            {t('auth.register.loginLink')}
           </Button>
         </Typography>
       </Box>
@@ -189,4 +189,4 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   );
 };
 
-export default RegisterForm; 
+export default RegisterForm;
