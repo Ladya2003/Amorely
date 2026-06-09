@@ -62,6 +62,7 @@ const contentSchema = new mongoose.Schema({
   lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто последним редактировал
   lastEditedAt: { type: Date }, // Когда последний раз редактировалось
   partnerSharedAt: { type: Date }, // Когда событие было расшарено текущему партнёру
+  hiddenFromUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   
   // Новые поля для ротации контента
   rotationOrder: { type: Number, default: 0 }, // Порядок в ротации

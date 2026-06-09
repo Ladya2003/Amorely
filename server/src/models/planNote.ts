@@ -42,7 +42,8 @@ const planNoteSchema = new mongoose.Schema(
     metadataRecipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     media: { type: [planNoteMediaSchema], default: [] },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    hiddenFromUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
   },
   { timestamps: true }
 );

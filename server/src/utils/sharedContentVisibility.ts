@@ -1,4 +1,5 @@
-import { fieldMatchesUserId, hasActivePartner, normalizeIdStr } from './normalizeId';
+import mongoose from 'mongoose';
+import { fieldMatchesUserId, hasActivePartner, idsEqual, normalizeIdStr } from './normalizeId';
 
 export type BreakupViewContext = {
   exPartnerId: string;
@@ -9,6 +10,29 @@ export type BreakupViewContext = {
 
 type PartnerLinkField = 'partnerId' | 'targetId';
 type MaybeObjectId = { toString(): string } | string | null | undefined;
+
+export const buildNotHiddenFromViewerCondition = (userId: string): Record<string, unknown> => {
+  const normalizedUserId = normalizeIdStr(userId);
+  if (!normalizedUserId) {
+    return {};
+  }
+
+  return {
+    hiddenFromUserIds: { $nin: [new mongoose.Types.ObjectId(normalizedUserId)] }
+  };
+};
+
+export const isHiddenFromUser = (
+  item: { hiddenFromUserIds?: MaybeObjectId[] | null },
+  userId: string
+): boolean => {
+  const normalizedUserId = normalizeIdStr(userId);
+  if (!normalizedUserId || !Array.isArray(item.hiddenFromUserIds)) {
+    return false;
+  }
+
+  return item.hiddenFromUserIds.some((id) => idsEqual(id, normalizedUserId));
+};
 
 const encryptedForViewerConditions = (viewerId: string) => [
   fieldMatchesUserId('targetId', viewerId),
@@ -187,6 +211,7 @@ export const canAccessSharedContent = (
     createdAt?: Date | string | null;
     partnerSharedAt?: Date | string | null;
     encryptedTitlePartner?: { ciphertext?: string | null } | null;
+    hiddenFromUserIds?: MaybeObjectId[] | null;
   },
   userId: string,
   partnerId?: string | null,
@@ -197,6 +222,10 @@ export const canAccessSharedContent = (
 ): boolean => {
   const normalizedUserId = normalizeIdStr(userId);
   if (!normalizedUserId) {
+    return false;
+  }
+
+  if (isHiddenFromUser(item, normalizedUserId)) {
     return false;
   }
 

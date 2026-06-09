@@ -20,8 +20,13 @@ import {
   getBreakupContentChoiceForUser,
   getPartnerIdFromRelationship
 } from '../utils/relationshipHelpers';
-import { getRelationshipLinkedAt } from '../utils/breakupContentHelpers';
 import {
+  deleteOrHideCalendarEventForUser,
+  deleteOrHidePlanNoteForUser,
+  getRelationshipLinkedAt
+} from '../utils/breakupContentHelpers';
+import {
+  buildNotHiddenFromViewerCondition,
   buildSharedVisibilityQuery,
   canAccessSharedContent
 } from '../utils/sharedContentVisibility';
@@ -394,7 +399,8 @@ router.get('/events', async (req: any, res: Response) => {
 
     const andConditions: Record<string, unknown>[] = [
       { eventId: { $exists: true, $nin: [null, ''] } },
-      buildSharedVisibilityQuery(userId, partnerId, 'targetId', relationshipStartDate, breakupViewContext)
+      buildSharedVisibilityQuery(userId, partnerId, 'targetId', relationshipStartDate, breakupViewContext),
+      buildNotHiddenFromViewerCondition(userId)
     ];
 
     // Фильтрация по датам
@@ -468,12 +474,21 @@ router.delete('/events/all', async (req: any, res: Response) => {
       return res.json({ message: 'События не найдены', deletedCount: 0 });
     }
 
-    await deleteEventMediaFromCloudinary(allMedia);
-    const result = await Content.deleteMany(query);
+    const eventIds = [
+      ...new Set(
+        allMedia
+          .map((item) => item.eventId)
+          .filter((eventId): eventId is string => Boolean(eventId))
+      )
+    ];
+
+    for (const eventId of eventIds) {
+      await deleteOrHideCalendarEventForUser(eventId, userId);
+    }
 
     res.json({
       message: 'Все события успешно удалены',
-      deletedCount: result.deletedCount
+      deletedCount: eventIds.length
     });
   } catch (error) {
     console.error('Ошибка при удалении всех событий:', error);
@@ -940,10 +955,7 @@ router.delete('/events/:id', async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Нет прав на удаление этого события' });
     }
 
-    await deleteEventMediaFromCloudinary(mediaFiles);
-
-    // Удаляем все медиафайлы события из базы данных
-    await Content.deleteMany({ eventId: id });
+    await deleteOrHideCalendarEventForUser(id, userId);
 
     res.json({ message: 'Событие успешно удалено' });
   } catch (error) {
@@ -957,15 +969,19 @@ const buildCoupleQuery = (
   partnerId?: string | null,
   relationshipStartDate?: Date | null,
   breakupViewContext?: Awaited<ReturnType<typeof getSharedContentVisibilityContext>>['breakupViewContext']
-) =>
-  buildSharedVisibilityQuery(
-    userId,
-    partnerId,
-    'partnerId',
-    relationshipStartDate,
-    breakupViewContext,
-    'plans'
-  );
+) => ({
+  $and: [
+    buildSharedVisibilityQuery(
+      userId,
+      partnerId,
+      'partnerId',
+      relationshipStartDate,
+      breakupViewContext,
+      'plans'
+    ),
+    buildNotHiddenFromViewerCondition(userId)
+  ]
+});
 
 const canAccessPlanNote = (
   note: any,
@@ -1098,14 +1114,12 @@ router.delete('/plans/all', async (req: any, res: Response) => {
     }
 
     for (const note of notes) {
-      await deletePlanNoteMediaFromCloudinary(note.media);
+      await deleteOrHidePlanNoteForUser(note._id.toString(), userId);
     }
-
-    const result = await PlanNote.deleteMany(query);
 
     res.json({
       message: 'Все заметки успешно удалены',
-      deletedCount: result.deletedCount
+      deletedCount: notes.length
     });
   } catch (error) {
     console.error('Ошибка при удалении всех заметок:', error);
@@ -1457,8 +1471,7 @@ router.delete('/plans/:id', async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Нет прав на удаление этой заметки' });
     }
 
-    await deletePlanNoteMediaFromCloudinary(note.media);
-    await PlanNote.findByIdAndDelete(id);
+    await deleteOrHidePlanNoteForUser(id, userId);
 
     res.json({ message: 'Заметка удалена' });
   } catch (error) {
