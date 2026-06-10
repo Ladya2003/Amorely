@@ -1069,6 +1069,21 @@
       "saving": "Saving...",
       "noText": "No text",
       "unknown": "Unknown"
+    },
+    "filter": {
+      "ariaLabel": "Filter events",
+      "title": "Filter events",
+      "dateFrom": "Date from",
+      "dateTo": "Date to",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Search by title...",
+      "apply": "Apply",
+      "clear": "Clear",
+      "clearField": "Clear field"
+    },
+    "monthPicker": {
+      "title": "Select month",
+      "ariaLabel": "Select month and year"
     }
   },
   "news": {

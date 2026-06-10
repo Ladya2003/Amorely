@@ -1021,6 +1021,21 @@
       "encryptionRecipient": "Impossible de déterminer le destinataire du chiffrement",
       "notAuthorizedShort": "Utilisateur non autorisé",
       "unreadableMedia": "Impossible de lire un fichier. Supprimez le média endommagé et ajoutez-le à nouveau."
+    },
+    "filter": {
+      "ariaLabel": "Filtrer les événements",
+      "title": "Filtrer les événements",
+      "dateFrom": "Date de début",
+      "dateTo": "Date de fin",
+      "titleLabel": "Titre",
+      "titlePlaceholder": "Rechercher par titre...",
+      "apply": "Appliquer",
+      "clear": "Effacer",
+      "clearField": "Effacer le champ"
+    },
+    "monthPicker": {
+      "title": "Choisir le mois",
+      "ariaLabel": "Choisir le mois et l'année"
     }
   },
   "news": {

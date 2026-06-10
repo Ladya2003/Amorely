@@ -1021,6 +1021,21 @@
       "encryptionRecipient": "Não foi possível determinar o destinatário da criptografia",
       "notAuthorizedShort": "Usuário não autorizado",
       "unreadableMedia": "Não foi possível ler um arquivo. Remova a mídia danificada e adicione-a novamente."
+    },
+    "filter": {
+      "ariaLabel": "Filtrar eventos",
+      "title": "Filtrar eventos",
+      "dateFrom": "Data de",
+      "dateTo": "Data até",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Buscar por título...",
+      "apply": "Aplicar",
+      "clear": "Limpar",
+      "clearField": "Limpar campo"
+    },
+    "monthPicker": {
+      "title": "Selecionar mês",
+      "ariaLabel": "Selecionar mês e ano"
     }
   },
   "news": {

@@ -1073,6 +1073,21 @@
       "saving": "Сохранение...",
       "noText": "Без текста",
       "unknown": "Неизвестно"
+    },
+    "filter": {
+      "ariaLabel": "Фильтр событий",
+      "title": "Фильтр событий",
+      "dateFrom": "Дата от",
+      "dateTo": "Дата до",
+      "titleLabel": "Название",
+      "titlePlaceholder": "Поиск по названию...",
+      "apply": "Применить",
+      "clear": "Сбросить",
+      "clearField": "Очистить"
+    },
+    "monthPicker": {
+      "title": "Выбор месяца",
+      "ariaLabel": "Выбрать месяц и год"
     }
   },
   "news": {

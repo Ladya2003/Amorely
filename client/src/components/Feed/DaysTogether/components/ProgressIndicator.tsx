@@ -133,7 +133,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
             color: hasPhoto || isDarkMode ? 'text.secondary' : `${theme.preview}AA`
           }}
         >
-          {Math.round(progress)}% пройдено
+          {t('feed.progress.percentDone', { percent: Math.round(progress) })}
         </Typography>
         <Typography 
           variant="caption" 

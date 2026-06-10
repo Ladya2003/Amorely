@@ -191,9 +191,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     const userBirthday = new Date(user.birthday);
     const eventDate = new Date(date);
     
-    // Создаем даты для текущего года
-    const currentYear = new Date().getFullYear();
-    const birthdayThisYear = new Date(currentYear, userBirthday.getMonth(), userBirthday.getDate());
+    // Создаем даты для года события (не текущего года!)
+    const eventYear = eventDate.getFullYear();
+    const birthdayThisYear = new Date(eventYear, userBirthday.getMonth(), userBirthday.getDate());
     
     // Проверяем диапазон ±2 недели
     const twoWeeksAgo = new Date(birthdayThisYear);
@@ -908,31 +908,35 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           }}
         >
           {(hasFormContent || isSaving) ? (
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              {hasFormContent && (
-                <Button
-                  sx={{ flex: 1 }}
-                  variant="text"
-                  size="small"
-                  onClick={handleClearFormClick}
-                  disabled={isSaving}
-                  startIcon={<DeleteIcon />}
-                >
-                  {t('calendar.event.clearDraft')}
-                </Button>
-              )}
-              {isSaving && (
-                <Button
-                  sx={{ flex: hasFormContent ? undefined : 1 }}
-                  variant="outlined"
-                  size="small"
-                  color="warning"
-                  onClick={handleCancelSave}
-                  startIcon={<StopCircleIcon />}
-                >
-                  {t('calendar.event.cancelSave')}
-                </Button>
-              )}
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                {hasFormContent && (
+                  <Button
+                    fullWidth
+                    variant="text"
+                    size="small"
+                    onClick={handleClearFormClick}
+                    disabled={isSaving}
+                    startIcon={<DeleteIcon />}
+                  >
+                    {t('calendar.event.clearDraft')}
+                  </Button>
+                )}
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                {isSaving && (
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    color="warning"
+                    onClick={handleCancelSave}
+                    startIcon={<StopCircleIcon />}
+                  >
+                    {t('calendar.event.cancelSave')}
+                  </Button>
+                )}
+              </Box>
             </Box>
           ) : null}
           

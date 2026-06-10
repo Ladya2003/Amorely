@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Box, 
@@ -9,20 +9,28 @@ import {
   ToggleButton, 
   IconButton,
   Button,
+  ButtonBase,
   Grid,
   Paper,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
-  CircularProgress
+  CircularProgress,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
+import EventFilterDialog from './EventFilterDialog';
+import MonthYearPickerDialog from './MonthYearPickerDialog';
+import { eventMatchesFilter, isEventFilterActive, type EventFilter } from './eventFilterUtils';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { formatCalendarMonthYear, getCalendarWeekdays } from '../../localization/calendarHelpers';
 import CalendarDay from './CalendarDay';
@@ -83,6 +91,23 @@ const Calendar: React.FC<CalendarProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const outlinedControlSx = {
+    borderRadius: 2,
+    border: isMobile ? 1 : 0,
+    borderColor: 'divider'
+  };
+  const filterButtonSx = {
+    ...outlinedControlSx,
+    alignSelf: 'stretch',
+    width: 'auto',
+    minWidth: 'unset',
+    minHeight: 'unset',
+    px: 0.75,
+    py: 0,
+    boxSizing: 'border-box'
+  };
   const weekdays = getCalendarWeekdays(t);
   const skipNextSaveRef = useRef(false);
 
@@ -95,6 +120,13 @@ const Calendar: React.FC<CalendarProps> = ({
   const [tabValue, setTabValue] = useState(() =>
     user?._id && readCalendarUiPreferences(user._id).mainTab === 'plans' ? 1 : 0
   );
+  const [eventFilter, setEventFilter] = useState<EventFilter>({
+    dateFrom: null,
+    dateTo: null,
+    title: ''
+  });
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
 
   useEffect(() => {
     if (!user?._id) {
@@ -173,6 +205,18 @@ const Calendar: React.FC<CalendarProps> = ({
     setCurrentDate(addMonths(currentDate, 1));
   };
 
+  const isFilterActive = isEventFilterActive(eventFilter);
+
+  const filteredAllEvents = useMemo(
+    () => allEvents.filter((event) => eventMatchesFilter(event, eventFilter)),
+    [allEvents, eventFilter]
+  );
+
+  const filteredContent = useMemo(
+    () => content.filter((item) => eventMatchesFilter(item, eventFilter)),
+    [content, eventFilter]
+  );
+
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const days = eachDayOfInterval({
@@ -180,8 +224,8 @@ const Calendar: React.FC<CalendarProps> = ({
     end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
   });
 
-  // Для grid view группируем все события по месяцам и дням (без фильтрации)
-  const allEventsGroupedByMonth = allEvents.reduce((acc, event) => {
+  // Для grid view группируем отфильтрованные события по месяцам и дням
+  const allEventsGroupedByMonth = filteredAllEvents.reduce((acc, event) => {
     const eventDate = new Date(event.eventDate || event.createdAt);
     const monthKey = format(eventDate, 'yyyy-MM');
     const dayKey = format(eventDate, 'yyyy-MM-dd');
@@ -217,7 +261,7 @@ const Calendar: React.FC<CalendarProps> = ({
   const contentByDay = days.map(day => {
     const inCurrentMonth = isSameMonth(day, currentDate);
     const dayContent = inCurrentMonth
-      ? content.filter(item => {
+      ? filteredContent.filter(item => {
           const itemDate = new Date(item.date);
           return format(itemDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
         })
@@ -277,9 +321,28 @@ const Calendar: React.FC<CalendarProps> = ({
                 <IconButton onClick={handlePrevMonth}>
                   &lt;
                 </IconButton>
-                <Typography variant="h6" sx={{ fontWeight: 400 }}>
-                  {formatCalendarMonthYear(currentDate, i18n.language)}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <ButtonBase
+                    onClick={() => setMonthPickerOpen(true)}
+                    aria-label={t('calendar.monthPicker.ariaLabel')}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.25,
+                      px: isMobile ? 1.25 : 0.5,
+                      py: isMobile ? 0.5 : 0.25,
+                      ...outlinedControlSx
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 400, textTransform: 'capitalize' }}>
+                      {formatCalendarMonthYear(currentDate, i18n.language)}
+                    </Typography>
+                    <ExpandMoreIcon
+                      fontSize="small"
+                      sx={{ color: isMobile ? 'primary.main' : 'text.secondary', flexShrink: 0 }}
+                    />
+                  </ButtonBase>
+                </Box>
                 <IconButton onClick={handleNextMonth}>
                   &gt;
                 </IconButton>
@@ -295,22 +358,33 @@ const Calendar: React.FC<CalendarProps> = ({
               pb: 1,
               pt: view === 'grid' ? 2 : 0 // Отступ сверху для плитки
             }}>
-              <ToggleButtonGroup
-                value={view}
-                exclusive
-                onChange={handleViewChange}
-                aria-label="calendar view"
-                size="small"
-              >
-                <ToggleButton value="circles" aria-label="circles view">
-                  <CalendarMonthIcon />
-                </ToggleButton>
-                <ToggleButton value="grid" aria-label="grid view">
-                  <GridViewIcon />
-                </ToggleButton>
-              </ToggleButtonGroup>
+              <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 0.5 }}>
+                <ToggleButtonGroup
+                  value={view}
+                  exclusive
+                  onChange={handleViewChange}
+                  aria-label="calendar view"
+                  size="small"
+                >
+                  <ToggleButton value="circles" aria-label="circles view">
+                    <CalendarMonthIcon />
+                  </ToggleButton>
+                  <ToggleButton value="grid" aria-label="grid view">
+                    <GridViewIcon />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                <IconButton
+                  onClick={() => setFilterDialogOpen(true)}
+                  aria-label={t('calendar.filter.ariaLabel')}
+                  size="small"
+                  color={isFilterActive ? 'primary' : 'default'}
+                  sx={filterButtonSx}
+                >
+                  <FilterListIcon />
+                </IconButton>
+              </Box>
               <Button
-                variant="contained"
+                variant="outlined"
                 color="primary"
                 size="small"
                 startIcon={<AddIcon />}
@@ -370,6 +444,20 @@ const Calendar: React.FC<CalendarProps> = ({
           <PlansNotes refreshKey={plansRefreshKey} noteIdFromUrl={noteIdFromUrl} />
         )}
       </Box>
+
+      <EventFilterDialog
+        open={filterDialogOpen}
+        onClose={() => setFilterDialogOpen(false)}
+        filter={eventFilter}
+        onApply={setEventFilter}
+      />
+
+      <MonthYearPickerDialog
+        open={monthPickerOpen}
+        onClose={() => setMonthPickerOpen(false)}
+        value={currentDate}
+        onChange={setCurrentDate}
+      />
 
       <ResponsiveDialog
         open={deleteAllDialogOpen}

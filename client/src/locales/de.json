@@ -1021,6 +1021,21 @@
       "encryptionRecipient": "Verschlüsselungsempfänger konnte nicht ermittelt werden",
       "notAuthorizedShort": "Benutzer nicht autorisiert",
       "unreadableMedia": "Datei konnte nicht gelesen werden. Entfernt das beschädigte Medium und fügt es erneut hinzu."
+    },
+    "filter": {
+      "ariaLabel": "Ereignisse filtern",
+      "title": "Ereignisse filtern",
+      "dateFrom": "Datum von",
+      "dateTo": "Datum bis",
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Nach Titel suchen...",
+      "apply": "Anwenden",
+      "clear": "Zurücksetzen",
+      "clearField": "Feld leeren"
+    },
+    "monthPicker": {
+      "title": "Monat wählen",
+      "ariaLabel": "Monat und Jahr wählen"
     }
   },
   "news": {
