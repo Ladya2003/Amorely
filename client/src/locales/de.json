@@ -377,7 +377,15 @@
         "didNotAnswer": "keine Antwort",
         "pointsForQuestion": "+{{points}} Pkt.",
         "pointsForQuestionTotal": "Für die Frage: +{{points}} Pkt.",
-        "backToBoard": "Zurück zum Feld"
+        "backToBoard": "Zurück zum Feld",
+        "loveLanguagesHint": {
+          "title": "Die fünf Liebessprachen",
+          "affirmation": "1. Worte der Anerkennung — Komplimente, Lob, Bestätigung",
+          "qualityTime": "2. Quality Time — gemeinsame Zeit ohne Ablenkung",
+          "gifts": "3. Geschenke — Überraschungen und Zeichen der Zuneigung",
+          "service": "4. Hilfsbereitschaft — Hilfe und Taten für den Partner",
+          "touch": "5. Körperliche Berührung — Umarmungen, Nähe, Berührungen"
+        }
       }
     },
     "tab": "Spiele",

@@ -34,6 +34,13 @@ import { formatDailyResetCountdown } from '../utils/dailyReset';
 
 const QUIZ_GAME_INFO_PATH = '/chat/games/quiz';
 const POINT_TIERS = [100, 200, 300];
+const LOVE_LANGUAGE_HINT_KEYS = [
+  'affirmation',
+  'qualityTime',
+  'gifts',
+  'service',
+  'touch',
+] as const;
 
 const QuizGamePlayPage: React.FC = () => {
   const { t } = useTranslation();
@@ -637,6 +644,30 @@ const QuizGamePlayPage: React.FC = () => {
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, flex: 1 }}>
               {question.questionText}
             </Typography>
+
+            {question.showLoveLanguagesHint && (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 1.5,
+                  borderRadius: 1,
+                  bgcolor: 'action.hover',
+                  border: 1,
+                  borderColor: 'divider',
+                }}
+              >
+                <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 0.75 }}>
+                  {t('games.quiz.play.loveLanguagesHint.title')}
+                </Typography>
+                <Stack spacing={0.25}>
+                  {LOVE_LANGUAGE_HINT_KEYS.map((key) => (
+                    <Typography key={key} variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+                      {t(`games.quiz.play.loveLanguagesHint.${key}`)}
+                    </Typography>
+                  ))}
+                </Stack>
+              </Box>
+            )}
 
             {isAnswering && (
               <Stack spacing={1.5}>

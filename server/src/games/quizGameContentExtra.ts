@@ -138,12 +138,12 @@ export const QUIZ_QUESTIONS_EXTRA = [
 
   // Языки любви
   { id: 'loveLanguages-6', categoryId: 'loveLanguages', text: 'Кто автор книги «Пять языков любви»?', answers: ['чепмен', 'гэри чепмен', 'gary chapman'] },
-  { id: 'loveLanguages-7', categoryId: 'loveLanguages', text: 'Язык «служение» на английском?', answers: ['acts of service', 'служение', 'дела'] },
+  { id: 'loveLanguages-7', categoryId: 'loveLanguages', text: 'Язык «помощь» на английском?', answers: ['acts of service', 'помощь', 'служение', 'дела'] },
   { id: 'loveLanguages-8', categoryId: 'loveLanguages', text: 'Что НЕ является языком любви в модели Чепмена: деньги, подарки, время?', answers: ['деньги', 'money'] },
   { id: 'loveLanguages-9', categoryId: 'loveLanguages', text: 'Объятия относятся к какому языку?', answers: ['physical touch', 'прикосновения', 'физическое прикосновение'] },
   { id: 'loveLanguages-10', categoryId: 'loveLanguages', text: 'Совместный ужин без телефона — пример какого языка?', answers: ['quality time', 'качественное время', 'время вместе'] },
   { id: 'loveLanguages-11', categoryId: 'loveLanguages', text: 'Комплимент — пример какого языка?', answers: ['words of affirmation', 'слова поддержки', 'слова похвалы'] },
-  { id: 'loveLanguages-12', categoryId: 'loveLanguages', text: 'Помочь с уборкой — пример какого языка?', answers: ['acts of service', 'дела', 'служение'] },
+  { id: 'loveLanguages-12', categoryId: 'loveLanguages', text: 'Помочь с уборкой — пример какого языка?', answers: ['acts of service', 'помощь', 'дела', 'служение'] },
   { id: 'loveLanguages-13', categoryId: 'loveLanguages', text: 'Сюрприз-подарок — пример какого языка?', answers: ['receiving gifts', 'подарки'] },
   { id: 'loveLanguages-14', categoryId: 'loveLanguages', text: 'Как переводится quality time буквально?', answers: ['качественное время', 'время качества'] },
   { id: 'loveLanguages-15', categoryId: 'loveLanguages', text: 'Модель языков любви помогает парам улучшить что?', answers: ['общение', 'отношения', 'понимание'] },

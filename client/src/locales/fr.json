@@ -377,7 +377,15 @@
         "didNotAnswer": "pas de réponse",
         "pointsForQuestion": "+{{points}} pts",
         "pointsForQuestionTotal": "Pour la question : +{{points}} pts",
-        "backToBoard": "Retour au plateau"
+        "backToBoard": "Retour au plateau",
+        "loveLanguagesHint": {
+          "title": "Les cinq langages de l'amour",
+          "affirmation": "1. Les paroles valorisantes — compliments, éloges, encouragements",
+          "qualityTime": "2. Les moments de qualité — ensemble, sans distraction",
+          "gifts": "3. Les cadeaux — surprises et attentions",
+          "service": "4. Les services rendus — aide et gestes pour le partenaire",
+          "touch": "5. Le contact physique — câlins, caresses, proximité"
+        }
       }
     },
     "tab": "Jeux",

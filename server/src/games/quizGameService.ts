@@ -12,7 +12,12 @@ import {
   getQuizQuestionById,
   isQuizAnswerCorrect,
 } from './quizGameConfig';
-import { getQuizCategoryName, getQuizCorrectAnswer, getQuizQuestionText } from '../i18n/quizI18n';
+import {
+  getQuizCategoryName,
+  getQuizCorrectAnswer,
+  getQuizQuestionText,
+  shouldShowLoveLanguagesHint,
+} from '../i18n/quizI18n';
 import { AppLocale } from '../i18n/locales';
 import { getUserLocale } from '../utils/userLocale';
 
@@ -77,6 +82,7 @@ export interface QuizGamePublicState {
     categoryName: string;
     points: number;
     questionText: string;
+    showLoveLanguagesHint: boolean;
     status: 'answering' | 'revealed';
     secondsRemaining: number;
     myAnswerSubmitted: boolean;
@@ -419,6 +425,7 @@ export const formatQuizGameState = (
       categoryName,
       points: state.currentQuestion.points,
       questionText: localizedQuestionText,
+      showLoveLanguagesHint: configQuestion ? shouldShowLoveLanguagesHint(configQuestion) : false,
       status: state.currentQuestion.status,
       secondsRemaining:
         state.currentQuestion.status === 'answering'

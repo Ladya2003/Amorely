@@ -377,7 +377,15 @@
         "didNotAnswer": "no respondieron",
         "pointsForQuestion": "+{{points}} pts",
         "pointsForQuestionTotal": "Por la pregunta: +{{points}} pts",
-        "backToBoard": "Volver al tablero"
+        "backToBoard": "Volver al tablero",
+        "loveLanguagesHint": {
+          "title": "Los cinco lenguajes del amor",
+          "affirmation": "1. Palabras de afirmación — cumplidos, elogios, reconocimiento",
+          "qualityTime": "2. Tiempo de calidad — juntos, sin distracciones",
+          "gifts": "3. Regalos — sorpresas y gestos de cariño",
+          "service": "4. Actos de servicio — ayuda y hacer cosas por tu pareja",
+          "touch": "5. Contacto físico — abrazos, caricias, cercanía"
+        }
       }
     },
     "tab": "Juegos",

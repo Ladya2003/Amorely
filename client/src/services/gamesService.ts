@@ -415,6 +415,7 @@ export interface QuizGameState {
     categoryName: string;
     points: number;
     questionText: string;
+    showLoveLanguagesHint?: boolean;
     status: 'answering' | 'revealed';
     secondsRemaining: number;
     myAnswerSubmitted: boolean;

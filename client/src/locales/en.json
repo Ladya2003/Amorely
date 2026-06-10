@@ -377,7 +377,15 @@
         "didNotAnswer": "didn't answer",
         "pointsForQuestion": "+{{points}} pts",
         "pointsForQuestionTotal": "For this question: +{{points}} pts",
-        "backToBoard": "Back to board"
+        "backToBoard": "Back to board",
+        "loveLanguagesHint": {
+          "title": "The five love languages",
+          "affirmation": "1. Words of affirmation — compliments, praise, encouragement",
+          "qualityTime": "2. Quality time — together, without distractions",
+          "gifts": "3. Receiving gifts — surprises and tokens of affection",
+          "service": "4. Acts of service — help and doing things for your partner",
+          "touch": "5. Physical touch — hugs, touch, closeness"
+        }
       }
     },
     "tab": "Games",
