@@ -11,6 +11,8 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { translateAuthServerError } from '../../localization/authHelpers';
+
 interface RegisterFormProps {
   onSwitchToLogin: (credentials?: { email: string; password: string }) => void;
 }
@@ -61,6 +63,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
+
+  const translatedError = error ? translateAuthServerError(error, t) : null;
+  const displayError = validationError || translatedError;
   
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
@@ -68,7 +73,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         {t('auth.register.title')}
       </Typography>
       
-      {(error || validationError) && (
+      {displayError && (
         <Alert 
           severity="error" 
           sx={{ mb: 2 }} 
@@ -77,7 +82,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             setValidationError(null);
           }}
         >
-          {validationError || error}
+          {displayError}
         </Alert>
       )}
       

@@ -1105,7 +1105,11 @@
     },
     "errors": {
       "loginFailed": "Anmeldung fehlgeschlagen",
-      "registerFailed": "Registrierung fehlgeschlagen"
+      "registerFailed": "Registrierung fehlgeschlagen",
+      "invalidCredentials": "Ungültige E-Mail oder Passwort",
+      "emailExists": "Ein Benutzer mit dieser E-Mail existiert bereits",
+      "serverLoginFailed": "Anmeldefehler",
+      "serverRegisterFailed": "Registrierungsfehler"
     }
   },
   "crypto": {

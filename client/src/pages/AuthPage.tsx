@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Container, Box, Paper, Typography } from '@mui/material';
 import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
+import LanguageSelector from '../components/UI/LanguageSelector';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
 const AuthPage: React.FC = () => {
@@ -37,6 +38,10 @@ const AuthPage: React.FC = () => {
           alignItems: 'center',
         }}
       >
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <LanguageSelector />
+        </Box>
+
         <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
           <FavoriteIcon sx={{ color: 'primary.main', fontSize: 40, mr: 1 }} />
           <Typography variant="h4" component="div" fontWeight={500}>

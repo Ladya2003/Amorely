@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { translateAuthServerError } from '../../localization/authHelpers';
 import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
@@ -52,6 +53,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
+
+  const translatedError = error ? translateAuthServerError(error, t) : null;
   
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
@@ -65,9 +68,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </Alert>
       )}
 
-      {error && (
+      {translatedError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={clearError}>
-          {error}
+          {translatedError}
         </Alert>
       )}
       

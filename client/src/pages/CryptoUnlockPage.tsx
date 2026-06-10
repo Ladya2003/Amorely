@@ -21,16 +21,10 @@ import {
 } from '@mui/material';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
+import LanguageSelector from '../components/UI/LanguageSelector';
 import ResponsiveDialog from '../components/UI/ResponsiveDialog';
 import { useAuth } from '../contexts/AuthContext';
 import { useCrypto } from '../contexts/CryptoContext';
-// import {
-//   PairingRequestPayload,
-//   approvePairingRequest,
-//   consumePairingRequest,
-//   createPairingRequest,
-//   importLocalKeysFileContent
-// } from '../crypto/cryptoService';
 
 const MIN_PASSPHRASE_WORDS = 12;
 
@@ -47,17 +41,13 @@ const CryptoUnlockPage: React.FC = () => {
     createAndBackupKeys,
     restoreKeysFromPassphrase,
     generateSuggestedPassphrase
-    // localDeviceKeys,
-    // ensureLocalKeys
   } = useCrypto();
   const [tab, setTab] = useState(0);
   const [passphrase, setPassphrase] = useState('');
   const [restorePhrase, setRestorePhrase] = useState('');
-  // const [pairingPayload, setPairingPayload] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  // const [pairingPrivateJwk, setPairingPrivateJwk] = useState<JsonWebKey | null>(null);
   const [copyToastOpen, setCopyToastOpen] = useState(false);
   const [copyToastMessage, setCopyToastMessage] = useState('');
   const [copyToastSeverity, setCopyToastSeverity] = useState<AlertColor>('success');
@@ -105,8 +95,6 @@ const CryptoUnlockPage: React.FC = () => {
         : '/';
     return <Navigate to={to} replace />;
   }
-
-  // const userId = user?._id;
 
   const withAction = async (fn: () => Promise<void>) => {
     try {
@@ -158,71 +146,6 @@ const CryptoUnlockPage: React.FC = () => {
     });
   };
 
-  // const handleFileRestore = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files?.[0];
-  //   if (!file || !userId) return;
-  //
-  //   await withAction(async () => {
-  //     const content = await file.text();
-  //     await importLocalKeysFileContent(userId, content);
-  //     await ensureLocalKeys();
-  //     setStatus('Доступ восстановлен из файла');
-  //   });
-  // };
-
-  // const handleCreatePairing = async () => {
-  //   if (!userId) {
-  //     setError('Пользователь не авторизован');
-  //     return;
-  //   }
-  //
-  //   await withAction(async () => {
-  //     const request = await createPairingRequest(localDeviceKeys?.deviceId || `pending-${Date.now()}`);
-  //     setPairingPayload(JSON.stringify(request.payload));
-  //     setPairingPrivateJwk(request.privateJwk);
-  //     setStatus('Код для подключения создан. Передайте его на устройство, где вы уже заходили в приложение.');
-  //   });
-  // };
-
-  // const handleApprovePairing = async () => {
-  //   if (!localDeviceKeys) {
-  //     setError('На этом устройстве ещё нет доступа к сообщениям');
-  //     return;
-  //   }
-  //   if (!pairingPayload.trim()) {
-  //     setError('Вставьте код подключения');
-  //     return;
-  //   }
-  //
-  //   await withAction(async () => {
-  //     const parsed = JSON.parse(pairingPayload) as PairingRequestPayload;
-  //     await approvePairingRequest(parsed, localDeviceKeys);
-  //     setStatus('Подключение подтверждено. На новом устройстве нажмите «Завершить подключение».');
-  //   });
-  // };
-
-  // const handleCompletePairing = async () => {
-  //   if (!userId) {
-  //     setError('Пользователь не авторизован');
-  //     return;
-  //   }
-  //   if (!pairingPrivateJwk) {
-  //     setError('Сначала создайте код подключения на этом устройстве');
-  //     return;
-  //   }
-  //   if (!pairingPayload.trim()) {
-  //     setError('Вставьте код подключения');
-  //     return;
-  //   }
-  //
-  //   await withAction(async () => {
-  //     const parsed = JSON.parse(pairingPayload) as PairingRequestPayload;
-  //     await consumePairingRequest(userId, parsed, pairingPrivateJwk);
-  //     await ensureLocalKeys();
-  //     setStatus('Новое устройство подключено');
-  //   });
-  // };
-
   return (
     <Box
       sx={{
@@ -243,28 +166,30 @@ const CryptoUnlockPage: React.FC = () => {
           boxShadow: 'none'
         }}
       >
-        <Button
-          onClick={handleBack}
-          startIcon={<ArrowBackIcon />}
-          color="inherit"
-          sx={{
-            alignSelf: 'flex-start',
-            mb: 1,
-            ml: -1,
-            textTransform: 'uppercase',
-            lineHeight: 1,
-            display: 'inline-flex',
-            alignItems: 'center',
-            '& .MuiButton-startIcon': {
-              margin: 0,
-              marginRight: 1,
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, mb: 1 }}>
+          <Button
+            onClick={handleBack}
+            startIcon={<ArrowBackIcon />}
+            color="inherit"
+            sx={{
+              alignSelf: 'flex-start',
+              ml: -1,
+              textTransform: 'uppercase',
+              lineHeight: 1,
               display: 'inline-flex',
-              alignItems: 'center'
-            }
-          }}
-        >
-          {t('crypto.unlock.back')}
-        </Button>
+              alignItems: 'center',
+              '& .MuiButton-startIcon': {
+                margin: 0,
+                marginRight: 1,
+                display: 'inline-flex',
+                alignItems: 'center'
+              }
+            }}
+          >
+            {t('crypto.unlock.back')}
+          </Button>
+          <LanguageSelector />
+        </Box>
         <Typography variant="h5" fontWeight={500} sx={{ mb: 2 }}>
           {t('crypto.unlock.title')}
         </Typography>
@@ -275,8 +200,6 @@ const CryptoUnlockPage: React.FC = () => {
         <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" sx={{ mb: 2 }}>
           <Tab label={t('crypto.unlock.tabCreate')} />
           <Tab label={t('crypto.unlock.tabRestore')} />
-          {/* <Tab label="Файл" /> */}
-          {/* <Tab label="Другое устройство" /> */}
         </Tabs>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -342,44 +265,6 @@ const CryptoUnlockPage: React.FC = () => {
             </Button>
           </Box>
         )}
-
-        {/* {tab === 2 && (
-          <Box>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Если вы раньше сохраняли файл с настройками доступа на другом устройстве, выберите его здесь.
-            </Typography>
-            <Button disabled={isLoading} component="label" variant="outlined">
-              Выбрать файл
-              <input hidden type="file" accept=".json,.txt,.backup" onChange={handleFileRestore} />
-            </Button>
-          </Box>
-        )} */}
-
-        {/* {tab === 3 && (
-          <Box>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              На устройстве, где вы уже пользуетесь приложением, создайте код и передайте его сюда — через
-              мессенджер или вставкой в поле ниже.
-            </Typography>
-            <Button sx={{ mb: 2, mr: 1 }} variant="outlined" onClick={handleCreatePairing} disabled={isLoading}>
-              Создать код (новое устройство)
-            </Button>
-            <Button sx={{ mb: 2, mr: 1 }} variant="contained" onClick={handleApprovePairing} disabled={isLoading}>
-              Подтвердить (старое устройство)
-            </Button>
-            <Button sx={{ mb: 2 }} variant="outlined" onClick={handleCompletePairing} disabled={isLoading}>
-              Завершить подключение
-            </Button>
-            <TextField
-              fullWidth
-              multiline
-              minRows={5}
-              label="Код подключения"
-              value={pairingPayload}
-              onChange={(event) => setPairingPayload(event.target.value)}
-            />
-          </Box>
-        )} */}
       </Paper>
 
       <ResponsiveDialog

@@ -8,7 +8,7 @@ import {
   subscribeToPush
 } from '../services/pushNotifications';
 import i18next from '../localization';
-import { setAppLocale } from '../localization';
+import { applyPreferredLocale } from '../localization/localeSync';
 import socketService from '../services/socketService';
 import { notifyPartnerChanged, notifyPartnerUnlinked } from '../hooks/useRelationship';
 import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
@@ -76,11 +76,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // Получаем данные пользователя
           const response = await axios.get(`${API_URL}/api/auth/me`);
-          setUser(response.data);
+          const preferredLocale = await applyPreferredLocale(response.data?.locale, {
+            userId: response.data?._id,
+            token,
+          });
+          setUser({ ...response.data, locale: preferredLocale });
           setIsAuthenticated(true);
-          if (response.data?.locale) {
-            setAppLocale(response.data.locale);
-          }
 
           if (
             isPushSupported() &&
@@ -114,9 +115,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const response = await axios.get(`${API_URL}/api/auth/me`);
         setUser(response.data);
-        if (response.data?.locale) {
-          setAppLocale(response.data.locale);
-        }
       } catch (error) {
         console.error('Ошибка при обновлении профиля:', error);
       }
@@ -176,11 +174,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       
       setToken(newToken);
-      setUser(userData);
+      const preferredLocale = await applyPreferredLocale(userData?.locale, {
+        userId: userData?._id,
+        token: newToken,
+      });
+      setUser({ ...userData, locale: preferredLocale });
       setIsAuthenticated(true);
-      if (userData?.locale) {
-        setAppLocale(userData.locale);
-      }
       return response;
     } catch (error: any) {
       console.error('Ошибка входа:', error);

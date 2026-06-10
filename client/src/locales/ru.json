@@ -1157,7 +1157,11 @@
     },
     "errors": {
       "loginFailed": "Ошибка при входе",
-      "registerFailed": "Ошибка при регистрации"
+      "registerFailed": "Ошибка при регистрации",
+      "invalidCredentials": "Неверный email или пароль",
+      "emailExists": "Пользователь с таким email уже существует",
+      "serverLoginFailed": "Ошибка при входе пользователя",
+      "serverRegisterFailed": "Ошибка при регистрации пользователя"
     }
   },
   "crypto": {

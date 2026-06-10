@@ -1105,7 +1105,11 @@
     },
     "errors": {
       "loginFailed": "Error al iniciar sesión",
-      "registerFailed": "Error al registrarse"
+      "registerFailed": "Error al registrarse",
+      "invalidCredentials": "Correo o contraseña incorrectos",
+      "emailExists": "Ya existe un usuario con este correo",
+      "serverLoginFailed": "Error al iniciar sesión",
+      "serverRegisterFailed": "Error al registrarse"
     }
   },
   "crypto": {

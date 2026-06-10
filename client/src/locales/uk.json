@@ -1049,7 +1049,11 @@
     },
     "errors": {
       "loginFailed": "Помилка входу",
-      "registerFailed": "Помилка реєстрації"
+      "registerFailed": "Помилка реєстрації",
+      "invalidCredentials": "Невірний email або пароль",
+      "emailExists": "Користувач з таким email уже існує",
+      "serverLoginFailed": "Помилка входу користувача",
+      "serverRegisterFailed": "Помилка реєстрації користувача"
     }
   },
   "crypto": {

@@ -1153,7 +1153,11 @@
     },
     "errors": {
       "loginFailed": "Sign-in failed",
-      "registerFailed": "Registration failed"
+      "registerFailed": "Registration failed",
+      "invalidCredentials": "Invalid email or password",
+      "emailExists": "A user with this email already exists",
+      "serverLoginFailed": "Sign-in error",
+      "serverRegisterFailed": "Registration error"
     }
   },
   "crypto": {
