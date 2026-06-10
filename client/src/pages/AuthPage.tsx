@@ -5,6 +5,7 @@ import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
 import LanguageSelector from '../components/UI/LanguageSelector';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import { shouldUseBilingualLanguageLabelOnLogin } from '../localization/locale';
 
 const AuthPage: React.FC = () => {
   const { t } = useTranslation();
@@ -39,7 +40,7 @@ const AuthPage: React.FC = () => {
         }}
       >
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          <LanguageSelector />
+          <LanguageSelector bilingualLabel={shouldUseBilingualLanguageLabelOnLogin()} />
         </Box>
 
         <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>

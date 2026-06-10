@@ -36,3 +36,24 @@ export const resolveAppLocale = (value: string | null | undefined): AppLocale =>
 
 export const isSupportedLocale = (value: string): value is AppLocale =>
   (SUPPORTED_LOCALES as readonly string[]).includes(value);
+
+export const BILINGUAL_LANGUAGE_LABEL = 'Язык • Language';
+
+/** Login page: bilingual label for Russian or undetectable browser language. */
+export const shouldUseBilingualLanguageLabelOnLogin = (): boolean => {
+  if (typeof navigator === 'undefined') {
+    return true;
+  }
+
+  const raw = navigator.language?.trim();
+  if (!raw) {
+    return true;
+  }
+
+  const normalized = raw.toLowerCase().replace(/_/g, '-');
+  if (normalized.startsWith('ru')) {
+    return true;
+  }
+
+  return resolveAppLocale(raw) === 'ru';
+};
