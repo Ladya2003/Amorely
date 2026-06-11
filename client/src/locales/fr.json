@@ -107,6 +107,8 @@
       "pushEventsHint": "Recevoir une notification pour les dates et événements importants",
       "pushNews": "Actualités",
       "pushNewsHint": "Recevoir une notification pour les actualités et mises à jour de l'app",
+      "pushReports": "Nouveaux signalements",
+      "pushReportsHint": "Recevoir une notification lors de nouveaux signalements (admins uniquement)",
       "newContent": "Nouveau contenu du partenaire",
       "newContentHint": "Être notifié quand votre partenaire ajoute du contenu",
       "messages": "Messages",
@@ -836,7 +838,8 @@
       "forwardNoAttachments": "Aucune pièce jointe à transférer",
       "encryptMediaKeys": "Des clés de chiffrement sont requises sur cet appareil pour envoyer des médias",
       "encryptKeys": "Aucune clé pour chiffrer les médias",
-      "encryptAttachments": "Échec du chiffrement des pièces jointes"
+      "encryptAttachments": "Échec du chiffrement des pièces jointes",
+      "clearChatFailed": "Impossible d'effacer la conversation"
     },
     "input": {
       "placeholder": "Saisissez un message..."
@@ -866,7 +869,25 @@
       "openPreviewFullscreen": "Ouvrir l'aperçu en plein écran",
       "attachmentAlt": "Pièce jointe {{index}}",
       "removeAttachment": "Supprimer la pièce jointe",
-      "messageActions": "Actions sur le message"
+      "messageActions": "Actions sur le message",
+      "optionsAria": "Options du chat",
+      "optionsTitle": "Options",
+      "clearChat": "Effacer la conversation",
+      "clearChatTitle": "Effacer la conversation ?",
+      "clearChatConfirm": "Voulez-vous vraiment effacer la conversation pour vous et votre interlocuteur ?",
+      "clearChatSuccess": "Conversation effacée",
+      "report": "Signaler l'utilisateur"
+    },
+    "report": {
+      "title": "Signalement",
+      "subtitle": "Dites-nous ce qui s'est passé dans le chat avec {{name}}",
+      "textPlaceholder": "Décrivez le problème...",
+      "textRequired": "Veuillez saisir une description",
+      "mediaLabel": "Photos et vidéos (facultatif)",
+      "submit": "Envoyer",
+      "submitting": "Envoi...",
+      "submitFailed": "Échec de l'envoi du signalement",
+      "success": "Signalement envoyé"
     },
     "messageBubble": {
       "reply": "Réponse",
@@ -1050,7 +1071,10 @@
     },
     "monthPicker": {
       "title": "Choisir le mois",
-      "ariaLabel": "Choisir le mois et l'année"
+      "ariaLabel": "Choisir le mois et l'année",
+      "apply": "Appliquer",
+      "reset": "Réinitialiser",
+      "close": "Fermer"
     }
   },
   "news": {
@@ -1120,6 +1144,13 @@
     }
   },
   "crypto": {
+    "encryptedShort": "chiffr.",
+    "encryptedAria": "Chiffré — appuyez pour en savoir plus",
+    "encryptedModal": {
+      "title": "Chiffré",
+      "description": "Les messages, événements et médias sont envoyés et stockés de manière chiffrée.\n\nSeuls vous et votre partenaire pouvez les lire — Amorely n'a pas accès au contenu.",
+      "close": "Compris"
+    },
     "decryptFailed": "Échec du déchiffrement",
     "decryptMediaFailed": "Impossible de déchiffrer le média",
     "unlock": {

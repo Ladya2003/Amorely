@@ -23,6 +23,54 @@ const syncAppBadge = async (count) => {
   }
 };
 
+const createCircularIcon = async (imageUrl) => {
+  const response = await fetch(imageUrl);
+  if (!response.ok) {
+    throw new Error('Failed to fetch avatar');
+  }
+
+  const blob = await response.blob();
+  const bitmap = await createImageBitmap(blob);
+  const size = 192;
+  const canvas = new OffscreenCanvas(size, size);
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    bitmap.close();
+    throw new Error('Canvas is unavailable');
+  }
+
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+
+  const minSide = Math.min(bitmap.width, bitmap.height);
+  const sx = (bitmap.width - minSide) / 2;
+  const sy = (bitmap.height - minSide) / 2;
+  ctx.drawImage(bitmap, sx, sy, minSide, minSide, 0, 0, size, size);
+  bitmap.close();
+
+  const resultBlob = await canvas.convertToBlob({ type: 'image/png' });
+  return URL.createObjectURL(resultBlob);
+};
+
+const resolveNotificationIcon = async (payload, scopeBase) => {
+  const defaultIcon = `${scopeBase}logo192.png`;
+  const avatarUrl = payload.icon?.trim();
+
+  if (!avatarUrl) {
+    return defaultIcon;
+  }
+
+  try {
+    return await createCircularIcon(avatarUrl);
+  } catch (error) {
+    console.error('Failed to create circular avatar icon:', error);
+    return avatarUrl;
+  }
+};
+
 self.addEventListener('push', (event) => {
   let payload = {};
   try {
@@ -32,26 +80,31 @@ self.addEventListener('push', (event) => {
   }
 
   const scopeBase = getScopeBase();
-  const icon = payload.icon || `${scopeBase}logo192.png`;
   const badge = payload.badge || `${scopeBase}favicon-32.png`;
   const url = payload.url || `${scopeBase}chat`;
-
-  const options = {
-    body: payload.body || 'Новое уведомление',
-    icon,
-    badge,
-    tag: payload.tag,
-    data: { url },
-    renotify: true
-  };
-
   const badgeCount = typeof payload.badgeCount === 'number' ? payload.badgeCount : null;
 
   event.waitUntil(
-    Promise.all([
-      self.registration.showNotification(payload.title || 'Amorely', options),
-      badgeCount !== null ? syncAppBadge(badgeCount) : Promise.resolve()
-    ])
+    (async () => {
+      const icon = await resolveNotificationIcon(payload, scopeBase);
+      const options = {
+        body: payload.body || 'Новое уведомление',
+        icon,
+        badge,
+        tag: payload.tag,
+        data: { url },
+        renotify: true
+      };
+
+      await Promise.all([
+        self.registration.showNotification(payload.title || 'Amorely', options),
+        badgeCount !== null ? syncAppBadge(badgeCount) : Promise.resolve()
+      ]);
+
+      if (icon.startsWith('blob:')) {
+        URL.revokeObjectURL(icon);
+      }
+    })()
   );
 });
 

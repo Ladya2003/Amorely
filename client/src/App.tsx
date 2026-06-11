@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { AdminAlertsProvider } from './contexts/AdminAlertsContext';
 import AppThemeProvider from './contexts/AppThemeProvider';
 import { NavigationProvider } from './contexts/NavigationContext';
 import { UnreadMessagesProvider } from './contexts/UnreadMessagesContext';
@@ -21,6 +22,7 @@ import CryptoUnlockPage from './pages/CryptoUnlockPage';
 import AdminPage from './pages/AdminPage';
 import AdminRoute from './components/Auth/AdminRoute';
 import PartnerBreakupNotifier from './components/Settings/PartnerBreakupNotifier';
+import BlockNoticeSnackbar from './components/Auth/BlockNoticeSnackbar';
 import CalendarPartnerMigrationRunner from './components/Calendar/CalendarPartnerMigrationRunner';
 
 const PushNavigationListener: React.FC = () => {
@@ -78,6 +80,8 @@ function App() {
 
   return (
     <AuthProvider>
+      <AdminAlertsProvider>
+      <BlockNoticeSnackbar />
       <AppThemeProvider>
         <PartnerBreakupNotifier />
         <CryptoProvider>
@@ -137,6 +141,7 @@ function App() {
           </NavigationProvider>
         </CryptoProvider>
       </AppThemeProvider>
+      </AdminAlertsProvider>
     </AuthProvider>
   );
 }

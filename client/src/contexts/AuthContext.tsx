@@ -1,5 +1,10 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import axios, { AxiosResponse } from 'axios';
+import {
+  getAccountBlockedPayload,
+  resolveBlockReasonForLocale,
+  type BlockReasonsMap,
+} from '../utils/handleAccountBlocked';
 import { API_URL } from '../config';
 import {
   hasAnyPushSettingEnabled,
@@ -8,6 +13,7 @@ import {
   subscribeToPush
 } from '../services/pushNotifications';
 import i18next from '../localization';
+import { resolveAppLocale } from '../localization/locale';
 import { applyPreferredLocale } from '../localization/localeSync';
 import socketService from '../services/socketService';
 import { notifyPartnerChanged, notifyPartnerUnlinked } from '../hooks/useRelationship';
@@ -29,6 +35,7 @@ interface User {
   displayBadgeGameId?: string | null;
   role?: 'user' | 'admin';
   locale?: string;
+  hasCryptoBackup?: boolean;
 }
 
 interface AuthContextType {
@@ -42,6 +49,9 @@ interface AuthContextType {
   logout: () => void;
   clearError: () => void;
   updateUser: (userData: User) => void;
+  blockReasons: BlockReasonsMap | null;
+  blockReasonFallback: string | null;
+  clearBlockNotice: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -54,7 +64,10 @@ const AuthContext = createContext<AuthContextType>({
   register: async () => undefined,
   logout: () => {},
   clearError: () => {},
-  updateUser: () => {}
+  updateUser: () => {},
+  blockReasons: null,
+  blockReasonFallback: null,
+  clearBlockNotice: () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -65,16 +78,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!token);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [blockReasons, setBlockReasons] = useState<BlockReasonsMap | null>(null);
+  const [blockReasonFallback, setBlockReasonFallback] = useState<string | null>(null);
+  const performLogout = useCallback(() => {
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+    socketService.disconnect();
+  }, []);
+
+  const handleBlockedResponse = useCallback((payload: ReturnType<typeof getAccountBlockedPayload>) => {
+    if (payload) {
+      setBlockReasons(payload.blockedReasons ?? null);
+      setBlockReasonFallback(payload.blockReason ?? null);
+      setError(
+        resolveBlockReasonForLocale(
+          payload.blockedReasons,
+          resolveAppLocale(i18next.language),
+          payload.blockReason
+        ) || payload.blockReason || null
+      );
+    }
+    performLogout();
+  }, [performLogout]);
+
+  const clearBlockNotice = useCallback(() => {
+    setBlockReasons(null);
+    setBlockReasonFallback(null);
+  }, []);
+
+  useEffect(() => {
+    const interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (requestError) => {
+        const blockedPayload = getAccountBlockedPayload(requestError);
+        if (blockedPayload) {
+          handleBlockedResponse(blockedPayload);
+        }
+        return Promise.reject(requestError);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptorId);
+    };
+  }, [handleBlockedResponse]);
 
   // Проверяем токен при загрузке
   useEffect(() => {
     const checkAuth = async () => {
       if (token) {
         try {
-          // Настраиваем axios с токеном
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          // Получаем данные пользователя
           const response = await axios.get(`${API_URL}/api/auth/me`);
           const preferredLocale = await applyPreferredLocale(response.data?.locale, {
             userId: response.data?._id,
@@ -90,21 +147,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ) {
             void registerServiceWorker().then(() => subscribeToPush(token));
           }
-        } catch (error) {
-          console.error('Ошибка аутентификации:', error);
-          // Если токен недействителен, удаляем его
-          localStorage.removeItem('token');
-          setToken(null);
-          setUser(null);
-          setIsAuthenticated(false);
-          delete axios.defaults.headers.common['Authorization'];
+        } catch (authError) {
+          console.error('Ошибка аутентификации:', authError);
+          const blockedPayload = getAccountBlockedPayload(authError);
+          if (blockedPayload) {
+            handleBlockedResponse(blockedPayload);
+          } else {
+            performLogout();
+          }
         }
       }
       setIsLoading(false);
     };
 
     checkAuth();
-  }, [token]);
+  }, [token, handleBlockedResponse, performLogout]);
 
   useEffect(() => {
     if (!user?._id || !token) {
@@ -115,8 +172,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const response = await axios.get(`${API_URL}/api/auth/me`);
         setUser(response.data);
-      } catch (error) {
-        console.error('Ошибка при обновлении профиля:', error);
+      } catch (refreshError) {
+        console.error('Ошибка при обновлении профиля:', refreshError);
+        const blockedPayload = getAccountBlockedPayload(refreshError);
+        if (blockedPayload) {
+          handleBlockedResponse(blockedPayload);
+        }
       }
     };
 
@@ -152,7 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       socket.off('partner_linked', handlePartnerLinked);
       socket.off('partner_unlinked', handlePartnerUnlinked);
     };
-  }, [user?._id, token]);
+  }, [user?._id, token, handleBlockedResponse]);
 
   // Функция для входа
   const login = async (email: string, password: string): Promise<AxiosResponse<any, any> | undefined> => {
@@ -183,7 +244,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return response;
     } catch (error: any) {
       console.error('Ошибка входа:', error);
-      setError(error.response?.data?.error || i18next.t('auth.errors.loginFailed'));
+      const blockedPayload = getAccountBlockedPayload(error);
+      if (blockedPayload) {
+        setBlockReasons(blockedPayload.blockedReasons ?? null);
+        setBlockReasonFallback(blockedPayload.blockReason ?? null);
+        setError(
+          resolveBlockReasonForLocale(
+            blockedPayload.blockedReasons,
+            resolveAppLocale(i18next.language),
+            blockedPayload.blockReason
+          ) || blockedPayload.blockReason || null
+        );
+      } else {
+        setError(error.response?.data?.error || i18next.t('auth.errors.loginFailed'));
+      }
       return undefined;
     } finally {
       setIsLoading(false);
@@ -225,15 +299,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Функция для выхода
   const logout = () => {
-    // Удаляем токен из localStorage
-    localStorage.removeItem('token');
-    
-    // Удаляем токен из заголовков axios
-    delete axios.defaults.headers.common['Authorization'];
-    
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
+    performLogout();
   };
 
   // Функция для очистки ошибок
@@ -258,7 +324,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         clearError,
-        updateUser
+        updateUser,
+        blockReasons,
+        blockReasonFallback,
+        clearBlockNotice
       }}
     >
       {children}

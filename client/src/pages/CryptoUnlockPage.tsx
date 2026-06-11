@@ -35,14 +35,14 @@ const CryptoUnlockPage: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const {
     isCryptoReady,
     createAndBackupKeys,
     restoreKeysFromPassphrase,
     generateSuggestedPassphrase
   } = useCrypto();
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(() => (user?.hasCryptoBackup ? 1 : 0));
   const [passphrase, setPassphrase] = useState('');
   const [restorePhrase, setRestorePhrase] = useState('');
   const [status, setStatus] = useState<string | null>(null);

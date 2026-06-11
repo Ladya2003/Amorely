@@ -15,6 +15,7 @@ import newsRoutes from './routes/news';
 import settingsRoutes from './routes/settings';
 import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
+import reportsRoutes from './routes/reports';
 import cryptoRoutes from './routes/crypto';
 import calendarRoutes from './routes/calendar';
 import { authMiddleware } from './middleware/auth';
@@ -347,6 +348,7 @@ app.use('/api/auth', authRoutes);
 
 // Маршруты для чата
 app.use('/api', authMiddleware, chatRoutes);
+app.use('/api/reports', reportsRoutes);
 app.use('/api/crypto', cryptoRoutes);
 
 // Маршруты для отношений

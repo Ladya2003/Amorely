@@ -107,6 +107,8 @@
       "pushEventsHint": "Receber notificação sobre datas e eventos importantes",
       "pushNews": "Notícias",
       "pushNewsHint": "Receber notificação sobre notícias e atualizações do app",
+      "pushReports": "Novas denúncias",
+      "pushReportsHint": "Receber notificação quando usuários enviarem novas denúncias (apenas admins)",
       "newContent": "Novo conteúdo do parceiro",
       "newContentHint": "Receber avisos quando o parceiro adicionar conteúdo novo",
       "messages": "Mensagens",
@@ -836,7 +838,8 @@
       "forwardNoAttachments": "Não há anexos para encaminhar",
       "encryptMediaKeys": "Chaves de criptografia são necessárias neste dispositivo para enviar mídia",
       "encryptKeys": "Sem chaves para criptografar mídia",
-      "encryptAttachments": "Não foi possível criptografar os anexos"
+      "encryptAttachments": "Não foi possível criptografar os anexos",
+      "clearChatFailed": "Não foi possível limpar o chat"
     },
     "input": {
       "placeholder": "Digite uma mensagem..."
@@ -866,7 +869,25 @@
       "openPreviewFullscreen": "Abrir pré-visualização em tela cheia",
       "attachmentAlt": "Anexo {{index}}",
       "removeAttachment": "Remover anexo",
-      "messageActions": "Ações da mensagem"
+      "messageActions": "Ações da mensagem",
+      "optionsAria": "Opções do chat",
+      "optionsTitle": "Opções",
+      "clearChat": "Limpar chat",
+      "clearChatTitle": "Limpar chat?",
+      "clearChatConfirm": "Tem certeza de que deseja limpar o chat para você e seu interlocutor?",
+      "clearChatSuccess": "Chat limpo",
+      "report": "Denunciar usuário"
+    },
+    "report": {
+      "title": "Denúncia",
+      "subtitle": "Conte o que aconteceu no chat com {{name}}",
+      "textPlaceholder": "Descreva o problema...",
+      "textRequired": "Informe o texto da denúncia",
+      "mediaLabel": "Fotos e vídeos (opcional)",
+      "submit": "Enviar",
+      "submitting": "Enviando...",
+      "submitFailed": "Não foi possível enviar a denúncia",
+      "success": "Denúncia enviada"
     },
     "messageBubble": {
       "reply": "Resposta",
@@ -1050,7 +1071,10 @@
     },
     "monthPicker": {
       "title": "Selecionar mês",
-      "ariaLabel": "Selecionar mês e ano"
+      "ariaLabel": "Selecionar mês e ano",
+      "apply": "Aplicar",
+      "reset": "Redefinir",
+      "close": "Fechar"
     }
   },
   "news": {
@@ -1120,6 +1144,13 @@
     }
   },
   "crypto": {
+    "encryptedShort": "cript.",
+    "encryptedAria": "Criptografado — toque para saber mais",
+    "encryptedModal": {
+      "title": "Criptografado",
+      "description": "Mensagens, eventos e mídias são enviados e armazenados de forma criptografada.\n\nSomente você e seu parceiro podem lê-los — o Amorely não tem acesso ao conteúdo.",
+      "close": "Entendi"
+    },
     "decryptFailed": "Falha ao descriptografar",
     "decryptMediaFailed": "Não foi possível descriptografar a mídia",
     "unlock": {

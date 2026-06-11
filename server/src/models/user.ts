@@ -29,10 +29,19 @@ export interface UserDocument extends mongoose.Document {
       messages: boolean;
       events: boolean;
       news: boolean;
+      reports?: boolean;
     };
   };
   lastSeen?: Date;
   role: 'user' | 'admin';
+  isBlocked?: boolean;
+  blockedAt?: Date;
+  blockedReasons?: Partial<Record<'ru' | 'en' | 'es' | 'de' | 'fr' | 'pt' | 'uk', string>>;
+  blockedBy?: mongoose.Types.ObjectId;
+  isNewForAdmin?: boolean | null;
+  adminAlertsClearedAt?: Date;
+  adminUsersTabClearedAt?: Date;
+  adminModerationTabClearedAt?: Date;
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -67,11 +76,28 @@ const userSchema = new mongoose.Schema({
       newContent: { type: Boolean, default: true },
       messages: { type: Boolean, default: true },
       events: { type: Boolean, default: false },
-      news: { type: Boolean, default: false }
+      news: { type: Boolean, default: false },
+      reports: { type: Boolean, default: true }
     }
   },
   lastSeen: { type: Date },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  isBlocked: { type: Boolean, default: false },
+  blockedAt: { type: Date },
+  blockedReasons: {
+    ru: { type: String },
+    en: { type: String },
+    es: { type: String },
+    de: { type: String },
+    fr: { type: String },
+    pt: { type: String },
+    uk: { type: String },
+  },
+  blockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  isNewForAdmin: { type: Boolean, default: null },
+  adminAlertsClearedAt: { type: Date },
+  adminUsersTabClearedAt: { type: Date },
+  adminModerationTabClearedAt: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 

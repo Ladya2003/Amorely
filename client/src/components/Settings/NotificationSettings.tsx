@@ -17,6 +17,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatIcon from '@mui/icons-material/Chat';
 import EventIcon from '@mui/icons-material/Event';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
+import ReportOutlinedIcon from '@mui/icons-material/ReportOutlined';
 
 interface NotificationSettingsProps {
   settings: {
@@ -31,8 +32,10 @@ interface NotificationSettingsProps {
       messages: boolean;
       events: boolean;
       news: boolean;
+      reports?: boolean;
     };
   };
+  isAdmin?: boolean;
   onSettingChange: (type: 'email' | 'push', setting: string, value: boolean) => void;
   pushSupported: boolean;
   pushPermission: NotificationPermission | 'unsupported';
@@ -43,6 +46,7 @@ interface NotificationSettingsProps {
 
 const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   settings,
+  isAdmin = false,
   onSettingChange,
   pushSupported,
   pushPermission,
@@ -153,6 +157,22 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
                 onChange={handlePushChange('news')}
               />
             </ListItem>
+            {isAdmin && (
+              <ListItem>
+                <ListItemIcon>
+                  <ReportOutlinedIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={t('settings.notifications.pushReports')}
+                  secondary={t('settings.notifications.pushReportsHint')}
+                />
+                <Switch
+                  edge="end"
+                  checked={Boolean(settings.push.reports)}
+                  onChange={handlePushChange('reports')}
+                />
+              </ListItem>
+            )}
           </>
         )}
       </List>

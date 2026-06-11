@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Badge,
   Box,
   Container,
   IconButton,
@@ -11,11 +12,15 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useAdminAlerts } from '../contexts/AdminAlertsContext';
 import AdminDashboard from '../components/Admin/AdminDashboard';
 import AdminUsers from '../components/Admin/AdminUsers';
 import AdminNews from '../components/Admin/AdminNews';
 import AdminHealth from '../components/Admin/AdminHealth';
 import AdminModeration from '../components/Admin/AdminModeration';
+
+const USERS_TAB_INDEX = 1;
+const MODERATION_TAB_INDEX = 4;
 
 const ADMIN_TABS = [
   { key: 'dashboard', label: 'Дашборд' },
@@ -25,15 +30,57 @@ const ADMIN_TABS = [
   { key: 'moderation', label: 'Модерация' },
 ] as const;
 
+const renderTabBadge = (label: string, count: number) => (
+  <Badge
+    badgeContent={count}
+    color="error"
+    invisible={count <= 0}
+    max={99}
+    sx={{
+      '& .MuiBadge-badge': {
+        right: -10,
+        top: 2,
+      },
+    }}
+  >
+    <Box component="span" sx={{ pr: count > 0 ? 1.5 : 0 }}>
+      {label}
+    </Box>
+  </Badge>
+);
+
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const { setShowBottomNav } = useNavigation();
+  const {
+    newUsersCount,
+    newReportsCount,
+    clearFeedDot,
+    clearUsersTabBadge,
+    clearModerationTabBadge,
+  } = useAdminAlerts();
   const [tabIndex, setTabIndex] = useState(0);
 
   useEffect(() => {
     setShowBottomNav(false);
     return () => setShowBottomNav(true);
   }, [setShowBottomNav]);
+
+  useEffect(() => {
+    void clearFeedDot();
+  }, [clearFeedDot]);
+
+  useEffect(() => {
+    if (tabIndex === USERS_TAB_INDEX) {
+      void clearUsersTabBadge();
+    }
+  }, [tabIndex, clearUsersTabBadge]);
+
+  useEffect(() => {
+    if (tabIndex === MODERATION_TAB_INDEX) {
+      void clearModerationTabBadge();
+    }
+  }, [tabIndex, clearModerationTabBadge]);
 
   const renderTab = () => {
     switch (ADMIN_TABS[tabIndex].key) {
@@ -70,8 +117,17 @@ const AdminPage: React.FC = () => {
           variant="scrollable"
           scrollButtons="auto"
         >
-          {ADMIN_TABS.map((tab) => (
-            <Tab key={tab.key} label={tab.label} />
+          {ADMIN_TABS.map((tab, index) => (
+            <Tab
+              key={tab.key}
+              label={
+                index === USERS_TAB_INDEX
+                  ? renderTabBadge(tab.label, newUsersCount)
+                  : index === MODERATION_TAB_INDEX
+                    ? renderTabBadge(tab.label, newReportsCount)
+                    : tab.label
+              }
+            />
           ))}
         </Tabs>
       </Paper>

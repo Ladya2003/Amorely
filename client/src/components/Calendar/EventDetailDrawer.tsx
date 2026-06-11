@@ -28,6 +28,7 @@ import {
   formatCalendarDateTime
 } from '../../localization/calendarHelpers';
 import DecryptedMedia from '../common/DecryptedMedia';
+import EncryptedIndicator from '../common/EncryptedIndicator';
 import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
@@ -439,10 +440,11 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                   {formatCalendarDateTime(new Date(event.createdAt), i18n.language)}
                 </Typography>
                 {event.createdBy && (
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="text.secondary" display="block">
                     {t('calendar.detail.author', { name: event.createdBy.username })}
                   </Typography>
                 )}
+                <EncryptedIndicator sx={{ mt: 1 }} />
               </Box>
 
               {/* Информация о редактировании */}

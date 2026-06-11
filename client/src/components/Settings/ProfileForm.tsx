@@ -32,6 +32,7 @@ export interface UserProfile {
   avatar?: string;
   birthday?: string;
   displayBadgeGameId?: string | null;
+  role?: 'user' | 'admin';
 }
 
 interface ProfileFormProps {

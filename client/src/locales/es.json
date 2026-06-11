@@ -107,6 +107,8 @@
       "pushEventsHint": "Recibir avisos de fechas y eventos importantes",
       "pushNews": "Noticias",
       "pushNewsHint": "Recibir avisos de noticias y actualizaciones de la app",
+      "pushReports": "Nuevas denuncias",
+      "pushReportsHint": "Recibir avisos cuando los usuarios envíen nuevas denuncias (solo administradores)",
       "newContent": "Nuevo contenido de la pareja",
       "newContentHint": "Recibir avisos cuando tu pareja añada contenido nuevo",
       "messages": "Mensajes",
@@ -836,7 +838,8 @@
       "forwardNoAttachments": "No hay archivos adjuntos para reenviar",
       "encryptMediaKeys": "Se necesitan claves de cifrado en este dispositivo para enviar multimedia",
       "encryptKeys": "No hay claves para cifrar multimedia",
-      "encryptAttachments": "No se pudieron cifrar los archivos adjuntos"
+      "encryptAttachments": "No se pudieron cifrar los archivos adjuntos",
+      "clearChatFailed": "No se pudo borrar el chat"
     },
     "input": {
       "placeholder": "Escribe un mensaje..."
@@ -866,7 +869,25 @@
       "openPreviewFullscreen": "Abrir vista previa a pantalla completa",
       "attachmentAlt": "Adjunto {{index}}",
       "removeAttachment": "Eliminar adjunto",
-      "messageActions": "Acciones del mensaje"
+      "messageActions": "Acciones del mensaje",
+      "optionsAria": "Opciones del chat",
+      "optionsTitle": "Opciones",
+      "clearChat": "Borrar chat",
+      "clearChatTitle": "¿Borrar chat?",
+      "clearChatConfirm": "¿Seguro que quieres borrar el chat para ti y tu interlocutor?",
+      "clearChatSuccess": "Chat borrado",
+      "report": "Reportar usuario"
+    },
+    "report": {
+      "title": "Reporte",
+      "subtitle": "Cuéntanos qué pasó en el chat con {{name}}",
+      "textPlaceholder": "Describe el problema...",
+      "textRequired": "Indica el texto del reporte",
+      "mediaLabel": "Fotos y videos (opcional)",
+      "submit": "Enviar",
+      "submitting": "Enviando...",
+      "submitFailed": "No se pudo enviar el reporte",
+      "success": "Reporte enviado"
     },
     "messageBubble": {
       "reply": "Respuesta",
@@ -1050,7 +1071,10 @@
     },
     "monthPicker": {
       "title": "Seleccionar mes",
-      "ariaLabel": "Seleccionar mes y año"
+      "ariaLabel": "Seleccionar mes y año",
+      "apply": "Aplicar",
+      "reset": "Restablecer",
+      "close": "Cerrar"
     }
   },
   "news": {
@@ -1120,6 +1144,13 @@
     }
   },
   "crypto": {
+    "encryptedShort": "cifr.",
+    "encryptedAria": "Cifrado — toca para saber más",
+    "encryptedModal": {
+      "title": "Cifrado",
+      "description": "Los mensajes, eventos y medios se envían y almacenan cifrados.\n\nSolo tú y tu pareja pueden leerlos — Amorely no tiene acceso al contenido.",
+      "close": "Entendido"
+    },
     "decryptFailed": "No se pudo descifrar",
     "decryptMediaFailed": "No se pudo descifrar el medio",
     "unlock": {

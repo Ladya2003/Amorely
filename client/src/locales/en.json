@@ -107,6 +107,8 @@
       "pushEventsHint": "Get notified about important dates and events",
       "pushNews": "News",
       "pushNewsHint": "Get notified about news and app updates",
+      "pushReports": "New reports",
+      "pushReportsHint": "Get notified when users submit new reports (admins only)",
       "newContent": "New content from partner",
       "newContentHint": "Get notified when your partner adds new content",
       "messages": "Messages",
@@ -836,7 +838,8 @@
       "forwardNoAttachments": "No attachments to forward",
       "encryptMediaKeys": "Encryption keys are required on this device to send media",
       "encryptKeys": "No keys available to encrypt media",
-      "encryptAttachments": "Failed to encrypt attachments"
+      "encryptAttachments": "Failed to encrypt attachments",
+      "clearChatFailed": "Failed to clear chat"
     },
     "input": {
       "placeholder": "Type a message..."
@@ -866,7 +869,25 @@
       "openPreviewFullscreen": "Open preview fullscreen",
       "attachmentAlt": "Attachment {{index}}",
       "removeAttachment": "Remove attachment",
-      "messageActions": "Message actions"
+      "messageActions": "Message actions",
+      "optionsAria": "Chat options",
+      "optionsTitle": "Options",
+      "clearChat": "Clear chat",
+      "clearChatTitle": "Clear chat?",
+      "clearChatConfirm": "Are you sure you want to clear the chat for you and your chat partner?",
+      "clearChatSuccess": "Chat cleared",
+      "report": "Report user"
+    },
+    "report": {
+      "title": "Report",
+      "subtitle": "Tell us what happened in your chat with {{name}}",
+      "textPlaceholder": "Describe the issue...",
+      "textRequired": "Please enter a report description",
+      "mediaLabel": "Photos and videos (optional)",
+      "submit": "Submit",
+      "submitting": "Submitting...",
+      "submitFailed": "Failed to submit report",
+      "success": "Report submitted"
     },
     "messageBubble": {
       "reply": "Reply",
@@ -1098,7 +1119,10 @@
     },
     "monthPicker": {
       "title": "Select month",
-      "ariaLabel": "Select month and year"
+      "ariaLabel": "Select month and year",
+      "apply": "Apply",
+      "reset": "Reset",
+      "close": "Close"
     }
   },
   "news": {
@@ -1168,6 +1192,13 @@
     }
   },
   "crypto": {
+    "encryptedShort": "encr.",
+    "encryptedAria": "Encrypted — tap to learn more",
+    "encryptedModal": {
+      "title": "Encrypted",
+      "description": "Messages, events, and media are sent and stored in encrypted form.\n\nOnly you and your partner can read them — Amorely has no access to the content.",
+      "close": "Got it"
+    },
     "decryptFailed": "Failed to decrypt",
     "decryptMediaFailed": "Failed to decrypt media",
     "unlock": {

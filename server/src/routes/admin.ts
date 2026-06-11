@@ -17,6 +17,11 @@ import { getTapLeaderboard } from '../games/tapGameService';
 import { getGeoLeaderboard } from '../games/geoGameService';
 import { getDrawLeaderboard } from '../games/drawGameService';
 import { getQuizLeaderboard } from '../games/quizGameService';
+import ChatReport from '../models/chatReport';
+import { sendPushToUser } from '../services/pushService';
+import { buildBlockReasons } from '../utils/userBlock';
+import { getEffectiveIsNewForAdmin } from '../utils/adminUserFlags';
+import { AppLocale, SUPPORTED_LOCALES } from '../i18n/locales';
 
 const router = express.Router();
 
@@ -636,6 +641,9 @@ router.get('/users', async (req: ExtendedRequest, res: Response) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role ?? 'user',
+        isBlocked: Boolean(user.isBlocked),
+        isNewForAdmin: user.isNewForAdmin ?? null,
+        isNewForAdminEffective: getEffectiveIsNewForAdmin(user),
         createdAt: user.createdAt,
         lastSeen: user.lastSeen,
         partner: partner
@@ -764,6 +772,340 @@ router.get('/news', async (req: ExtendedRequest, res: Response) => {
   } catch (error) {
     console.error('Ошибка получения новостей для админки:', error);
     res.status(500).json({ error: 'Ошибка получения новостей' });
+  }
+});
+
+const formatReportUser = (user: any) => {
+  if (!user) {
+    return null;
+  }
+
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+  return {
+    _id: user._id?.toString?.() ?? String(user._id),
+    username: user.username,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    displayName: fullName || user.username,
+    isBlocked: Boolean(user.isBlocked),
+  };
+};
+
+router.get('/reports', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 25));
+    const skip = (page - 1) * limit;
+    const status = String(req.query.status ?? '').trim();
+
+    const filter: Record<string, unknown> = {};
+    if (status === 'open' || status === 'resolved') {
+      filter.status = status;
+    }
+
+    const [reports, total] = await Promise.all([
+      ChatReport.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('reporterId', 'username email firstName lastName isBlocked')
+        .populate('reportedUserId', 'username email firstName lastName isBlocked')
+        .lean(),
+      ChatReport.countDocuments(filter),
+    ]);
+
+    res.json({
+      reports: reports.map((report) => ({
+        _id: report._id.toString(),
+        reporter: formatReportUser(report.reporterId),
+        reportedUser: formatReportUser(report.reportedUserId),
+        text: report.text,
+        media: report.media ?? [],
+        adminMessages: report.adminMessages ?? [],
+        status: report.status,
+        createdAt: report.createdAt,
+      })),
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('Ошибка получения жалоб:', error);
+    res.status(500).json({ error: 'Ошибка получения жалоб' });
+  }
+});
+
+router.post('/reports/:id/message', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const target = String(req.body.target ?? '').trim();
+    const text = String(req.body.text ?? '').trim();
+
+    if (!['reporter', 'reported'].includes(target)) {
+      return res.status(400).json({ error: 'Некорректный получатель' });
+    }
+
+    if (!text) {
+      return res.status(400).json({ error: 'Укажите текст сообщения' });
+    }
+
+    const report = await ChatReport.findById(id);
+    if (!report) {
+      return res.status(404).json({ error: 'Жалоба не найдена' });
+    }
+
+    const recipientId =
+      target === 'reporter'
+        ? report.reporterId.toString()
+        : report.reportedUserId.toString();
+
+    report.adminMessages = report.adminMessages ?? [];
+    report.adminMessages.push({
+      target: target as 'reporter' | 'reported',
+      text,
+      sentBy: new mongoose.Types.ObjectId(req.userId),
+      sentAt: new Date(),
+    });
+    await report.save();
+
+    await sendPushToUser(recipientId, {
+      title: 'Amorely',
+      body: text,
+      tag: `moderation-${report._id.toString()}`,
+    });
+
+    res.json({ message: 'Сообщение отправлено' });
+  } catch (error) {
+    console.error('Ошибка отправки сообщения по жалобе:', error);
+    res.status(500).json({ error: 'Ошибка отправки сообщения' });
+  }
+});
+
+router.patch('/reports/:id/status', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const status = String(req.body.status ?? '').trim();
+
+    if (!['open', 'resolved'].includes(status)) {
+      return res.status(400).json({ error: 'Некорректный статус' });
+    }
+
+    const report = await ChatReport.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!report) {
+      return res.status(404).json({ error: 'Жалоба не найдена' });
+    }
+
+    res.json({ message: 'Статус обновлён' });
+  } catch (error) {
+    console.error('Ошибка обновления статуса жалобы:', error);
+    res.status(500).json({ error: 'Ошибка обновления статуса' });
+  }
+});
+
+router.post('/users/:id/block', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const reasonsInput = (req.body.reasons ?? {}) as Partial<Record<AppLocale, string>>;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Некорректный ID пользователя' });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(400).json({ error: 'Нельзя заблокировать администратора' });
+    }
+
+    const sanitizedReasons: Partial<Record<AppLocale, string>> = {};
+    for (const locale of SUPPORTED_LOCALES) {
+      const value = reasonsInput[locale];
+      if (typeof value === 'string' && value.trim()) {
+        sanitizedReasons[locale] = value.trim();
+      }
+    }
+
+    user.isBlocked = true;
+    user.blockedAt = new Date();
+    user.blockedReasons = buildBlockReasons(sanitizedReasons);
+    user.blockedBy = new mongoose.Types.ObjectId(req.userId);
+    await user.save();
+
+    res.json({ message: 'Пользователь заблокирован' });
+  } catch (error) {
+    console.error('Ошибка блокировки пользователя:', error);
+    res.status(500).json({ error: 'Ошибка блокировки пользователя' });
+  }
+});
+
+router.post('/users/:id/unblock', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Некорректный ID пользователя' });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    if (!user.isBlocked) {
+      return res.status(400).json({ error: 'Пользователь не заблокирован' });
+    }
+
+    user.isBlocked = false;
+    user.set('blockedAt', undefined);
+    user.set('blockedReasons', undefined);
+    user.set('blockedBy', undefined);
+    await user.save();
+
+    res.json({ message: 'Пользователь разблокирован' });
+  } catch (error) {
+    console.error('Ошибка разблокировки пользователя:', error);
+    res.status(500).json({ error: 'Ошибка разблокировки пользователя' });
+  }
+});
+
+router.get('/alerts', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const admin = await User.findById(req.userId).select(
+      'adminAlertsClearedAt adminUsersTabClearedAt adminModerationTabClearedAt'
+    );
+    if (!admin) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    const alertsClearedAt = admin.adminAlertsClearedAt ?? new Date(0);
+    const usersTabClearedAt = admin.adminUsersTabClearedAt ?? new Date(0);
+    const moderationTabClearedAt = admin.adminModerationTabClearedAt ?? new Date(0);
+
+    const [hasNewUser, hasNewReport, recentUsers, newReportsCount] = await Promise.all([
+      User.exists({
+        role: { $ne: 'admin' },
+        createdAt: { $gt: alertsClearedAt },
+      }),
+      ChatReport.exists({
+        createdAt: { $gt: alertsClearedAt },
+      }),
+      User.find({
+        role: { $ne: 'admin' },
+        createdAt: { $gt: usersTabClearedAt },
+      })
+        .select('createdAt isNewForAdmin')
+        .lean(),
+      ChatReport.countDocuments({
+        createdAt: { $gt: moderationTabClearedAt },
+      }),
+    ]);
+
+    const newUsersCount = recentUsers.filter((user) =>
+      getEffectiveIsNewForAdmin(user)
+    ).length;
+
+    res.json({
+      feedDot: Boolean(hasNewUser || hasNewReport),
+      newUsersCount,
+      newReportsCount,
+    });
+  } catch (error) {
+    console.error('Ошибка получения админ-уведомлений:', error);
+    res.status(500).json({ error: 'Ошибка получения админ-уведомлений' });
+  }
+});
+
+router.post('/alerts/clear-feed', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const admin = await User.findById(req.userId);
+    if (!admin) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    admin.adminAlertsClearedAt = new Date();
+    await admin.save();
+
+    res.json({ message: 'OK' });
+  } catch (error) {
+    console.error('Ошибка сброса индикатора ленты:', error);
+    res.status(500).json({ error: 'Ошибка сброса индикатора' });
+  }
+});
+
+router.post('/alerts/clear-users-tab', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const admin = await User.findById(req.userId);
+    if (!admin) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    admin.adminUsersTabClearedAt = new Date();
+    await admin.save();
+
+    res.json({ message: 'OK' });
+  } catch (error) {
+    console.error('Ошибка сброса индикатора пользователей:', error);
+    res.status(500).json({ error: 'Ошибка сброса индикатора' });
+  }
+});
+
+router.post('/alerts/clear-moderation-tab', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const admin = await User.findById(req.userId);
+    if (!admin) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    admin.adminModerationTabClearedAt = new Date();
+    await admin.save();
+
+    res.json({ message: 'OK' });
+  } catch (error) {
+    console.error('Ошибка сброса индикатора модерации:', error);
+    res.status(500).json({ error: 'Ошибка сброса индикатора' });
+  }
+});
+
+router.patch('/users/:id/new-user-flag', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Некорректный ID пользователя' });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(400).json({ error: 'Нельзя изменить флаг для администратора' });
+    }
+
+    const effective = getEffectiveIsNewForAdmin(user);
+    user.isNewForAdmin = !effective;
+    await user.save();
+
+    res.json({
+      isNewForAdmin: user.isNewForAdmin,
+      isNewForAdminEffective: getEffectiveIsNewForAdmin(user),
+    });
+  } catch (error) {
+    console.error('Ошибка изменения флага нового пользователя:', error);
+    res.status(500).json({ error: 'Ошибка изменения флага' });
   }
 });
 

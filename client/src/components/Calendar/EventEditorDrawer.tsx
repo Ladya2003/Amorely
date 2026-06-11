@@ -48,6 +48,7 @@ import {
 import { isVideoFile } from '../../utils/videoMetadata';
 import ContentViewer from './ContentViewer';
 import DecryptedMedia from '../common/DecryptedMedia';
+import EncryptedIndicator from '../common/EncryptedIndicator';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 
 interface EventMediaItem {
@@ -611,6 +612,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
               {isEditMode ? t('calendar.event.edit') : t('calendar.event.new')}
             </Typography>
+            <EncryptedIndicator />
           </Toolbar>
         </AppBar>
 

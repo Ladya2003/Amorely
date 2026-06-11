@@ -7,6 +7,8 @@ import { body, validationResult } from 'express-validator';
 import { authMiddleware } from '../middleware/auth';
 import { resolvePartnerContext } from '../utils/resolvePartnerId';
 import { hasActivePartner } from '../utils/normalizeId';
+import { hasCryptoBackup } from '../utils/hasCryptoBackup';
+import { ACCOUNT_BLOCKED_ERROR, buildBlockReasons, getLocalizedBlockReason } from '../utils/userBlock';
 
 const router = express.Router();
 
@@ -64,7 +66,7 @@ router.post(
       res.status(201).json({
         message: 'Пользователь успешно зарегистрирован',
         token,
-        user: userWithoutPassword
+        user: { ...userWithoutPassword, hasCryptoBackup: false }
       });
     } catch (error) {
       console.error('Ошибка при регистрации пользователя:', error);
@@ -92,6 +94,14 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Неверный email или пароль' });
     }
 
+    if (user.isBlocked) {
+      return res.status(403).json({
+        error: ACCOUNT_BLOCKED_ERROR,
+        blockReason: getLocalizedBlockReason(user),
+        blockedReasons: buildBlockReasons(user.blockedReasons),
+      });
+    }
+
     // Генерируем JWT токен
     const token = jwt.sign(
       { userId: user._id },
@@ -101,11 +111,12 @@ router.post('/login', async (req: Request, res: Response) => {
 
     // Отправляем ответ с токеном и данными пользователя (без пароля)
     const { password: _, ...userWithoutPassword } = user.toObject();
+    const userHasCryptoBackup = await hasCryptoBackup(user._id);
 
     res.json({
       message: 'Вход выполнен успешно',
       token,
-      user: userWithoutPassword
+      user: { ...userWithoutPassword, hasCryptoBackup: userHasCryptoBackup }
     });
   } catch (error) {
     console.error('Ошибка при входе пользователя:', error);
@@ -134,6 +145,14 @@ router.get('/me', async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
+
+    if (user.isBlocked) {
+      return res.status(403).json({
+        error: ACCOUNT_BLOCKED_ERROR,
+        blockReason: getLocalizedBlockReason(user),
+        blockedReasons: buildBlockReasons(user.blockedReasons),
+      });
+    }
     
     const { partnerId: resolvedPartnerId, hasPartner } = await resolvePartnerContext(
       user._id.toString()
@@ -150,12 +169,14 @@ router.get('/me', async (req: Request, res: Response) => {
     }
 
     const userObject = user.toObject();
+    const userHasCryptoBackup = await hasCryptoBackup(user._id);
     const userWithRelationship = {
       ...userObject,
       partnerId: hasActivePartner(user._id.toString(), resolvedPartnerId)
         ? resolvedPartnerId
         : undefined,
-      relationshipStartDate
+      relationshipStartDate,
+      hasCryptoBackup: userHasCryptoBackup
     };
     
     res.json(userWithRelationship);

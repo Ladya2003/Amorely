@@ -139,11 +139,12 @@ export const hasAnyPushSettingEnabled = (settings?: {
     messages?: boolean;
     events?: boolean;
     news?: boolean;
+    reports?: boolean;
   };
 }) => {
   const push = settings?.push;
   if (!push) {
     return false;
   }
-  return Boolean(push.newContent || push.messages || push.events || push.news);
+  return Boolean(push.newContent || push.messages || push.events || push.news || push.reports);
 };

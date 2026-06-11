@@ -349,7 +349,11 @@ const Calendar: React.FC<CalendarProps> = ({
                     </Typography>
                     <ExpandMoreIcon
                       fontSize="small"
-                      sx={{ color: isMobile ? 'primary.main' : 'text.secondary', flexShrink: 0 }}
+                      sx={{
+                        color: isMobile ? 'primary.main' : 'text.secondary',
+                        flexShrink: 0,
+                        mr: -0.65
+                      }}
                     />
                   </ButtonBase>
                 </Box>

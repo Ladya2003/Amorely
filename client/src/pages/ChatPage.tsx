@@ -59,6 +59,13 @@ import { getForwardPreviewText } from '../utils/getForwardPreviewText';
 import { getChatMessagePreview } from '../localization/chatHelpers';
 import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
+import { submitChatReport } from '../services/reportService';
+import {
+  clearOpenChatTarget,
+  readOpenChatTarget,
+  saveOpenChatTarget,
+  type StoredOpenChatTarget,
+} from '../utils/openChatTargetStorage';
 import { useVisualViewportLayout } from '../hooks/useVisualViewportLayout';
 import { useDisableForeignFormFields } from '../hooks/useDisableForeignFormFields';
 import { isIOSDevice } from '../utils/isIOSDevice';
@@ -265,6 +272,13 @@ const ChatPage: React.FC = () => {
   const [typingByContactId, setTypingByContactId] = useState<Record<string, boolean>>({});
   const [chatRulesAccepted, setChatRulesAccepted] = useState(false);
   const [isChatRulesChecked, setIsChatRulesChecked] = useState(false);
+  const [pendingOpenContact, setPendingOpenContact] = useState<{
+    id: string;
+    name: string;
+    username: string;
+    email: string;
+    avatar: string;
+  } | null>(null);
 
   const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
@@ -466,21 +480,105 @@ const ChatPage: React.FC = () => {
     hasRestoredSelectedChatRef.current = false;
   }, [CURRENT_USER_ID]);
 
+  const sortContactsByLastMessageDesc = useCallback((contactsToSort: ChatContact[]) => {
+    return [...contactsToSort].sort((a, b) => {
+      if (a.isPartner && !b.isPartner) return -1;
+      if (!a.isPartner && b.isPartner) return 1;
+
+      const aTime = new Date(a.lastMessage.timestamp).getTime();
+      const bTime = new Date(b.lastMessage.timestamp).getTime();
+      return bTime - aTime;
+    });
+  }, []);
+
+  const applyOpenChatTarget = useCallback((target: StoredOpenChatTarget) => {
+    const username = target.username?.trim() || target.id.slice(0, 8);
+    const openTarget = {
+      id: target.id,
+      name: target.name?.trim() || t('chat.user'),
+      username,
+      email: target.email || '',
+      avatar:
+        target.avatar ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}`,
+    };
+
+    setPendingOpenContact(openTarget);
+    setContacts((prevContacts) => {
+      const existing = prevContacts.find((contact) => contact.id === openTarget.id);
+      if (existing) {
+        return prevContacts;
+      }
+
+      const newContact: ChatContact = {
+        id: openTarget.id,
+        name: openTarget.name,
+        username: openTarget.username,
+        email: openTarget.email,
+        avatar: openTarget.avatar,
+        isPartner: false,
+        unreadCount: 0,
+        lastMessage: {
+          id: '',
+          senderId: '',
+          text: t('chat.message.noMessages'),
+          timestamp: new Date().toISOString(),
+          isRead: true,
+          hasMedia: false,
+          isPending: false,
+        },
+      };
+
+      return sortContactsByLastMessageDesc([newContact, ...prevContacts]);
+    });
+    if (CURRENT_USER_ID) {
+      saveOpenChatTarget(CURRENT_USER_ID, {
+        id: openTarget.id,
+        name: openTarget.name,
+        username: openTarget.username,
+        email: openTarget.email,
+        avatar: openTarget.avatar,
+      });
+    }
+    openContact(target.id);
+    setTabValue(0);
+    skipChatRestoreRef.current = true;
+    hasRestoredSelectedChatRef.current = true;
+  }, [CURRENT_USER_ID, openContact, sortContactsByLastMessageDesc, t]);
+
+  useEffect(() => {
+    if (!selectedContactId) {
+      return;
+    }
+
+    const root = document.getElementById('root');
+    if (root?.getAttribute('aria-hidden') === 'true') {
+      root.removeAttribute('aria-hidden');
+    }
+  }, [selectedContactId]);
+
   useEffect(() => {
     const contactFromUrl = searchParams.get('contact');
     if (!contactFromUrl) {
       return;
     }
 
-    skipChatRestoreRef.current = true;
-    hasRestoredSelectedChatRef.current = true;
-    setTabValue(0);
-    openContact(contactFromUrl);
+    const stored = CURRENT_USER_ID ? readOpenChatTarget(CURRENT_USER_ID) : null;
+    if (stored?.id === contactFromUrl) {
+      applyOpenChatTarget(stored);
+    } else {
+      applyOpenChatTarget({
+        id: contactFromUrl,
+        name: t('chat.user'),
+        username: contactFromUrl.slice(0, 8),
+        email: '',
+      });
+    }
 
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('contact');
     setSearchParams(nextParams, { replace: true });
-  }, [searchParams, openContact, setSearchParams]);
+  }, [searchParams, applyOpenChatTarget, setSearchParams, t, CURRENT_USER_ID]);
 
   useEffect(() => {
     if (skipChatRestoreRef.current) {
@@ -499,20 +597,21 @@ const ChatPage: React.FC = () => {
     const savedContactId = localStorage.getItem(key);
     if (!savedContactId) return;
 
+    const stored = readOpenChatTarget(CURRENT_USER_ID);
+    if (stored?.id === savedContactId) {
+      applyOpenChatTarget(stored);
+      return;
+    }
+
     setTabValue(0);
     openContact(savedContactId);
-  }, [CURRENT_USER_ID, selectedContactId, selectedChatStorageKey, openContact]);
-
-  const sortContactsByLastMessageDesc = useCallback((contactsToSort: ChatContact[]) => {
-    return [...contactsToSort].sort((a, b) => {
-      if (a.isPartner && !b.isPartner) return -1;
-      if (!a.isPartner && b.isPartner) return 1;
-
-      const aTime = new Date(a.lastMessage.timestamp).getTime();
-      const bTime = new Date(b.lastMessage.timestamp).getTime();
-      return bTime - aTime;
-    });
-  }, []);
+  }, [
+    CURRENT_USER_ID,
+    selectedContactId,
+    selectedChatStorageKey,
+    openContact,
+    applyOpenChatTarget,
+  ]);
 
   // Функция обновления последнего сообщения в контакте
   const updateContactLastMessage = useCallback((
@@ -545,6 +644,35 @@ const ChatPage: React.FC = () => {
       ))
     );
   }, [sortContactsByLastMessageDesc]);
+
+  const applyChatCleared = useCallback((contactId: string) => {
+    if (selectedContactIdRef.current === contactId) {
+      setMessages([]);
+      setHasMoreMessages(false);
+      setMessagesPage(1);
+    }
+
+    setContacts((prevContacts) =>
+      sortContactsByLastMessageDesc(prevContacts.map((contact) => {
+        if (contact.id !== contactId) return contact;
+
+        return {
+          ...contact,
+          unreadCount: 0,
+          lastMessage: {
+            ...contact.lastMessage,
+            id: '',
+            senderId: '',
+            text: t('chat.message.noMessages'),
+            timestamp: new Date().toISOString(),
+            isRead: true,
+            hasMedia: false,
+            isPending: false
+          }
+        };
+      }))
+    );
+  }, [sortContactsByLastMessageDesc, t]);
 
   const updateContactLastMessageAfterDelete = useCallback((contactId: string, nextMessages: MessageType[]) => {
     setContacts((prevContacts) =>
@@ -939,6 +1067,13 @@ const ChatPage: React.FC = () => {
       void processEdited();
     };
 
+    const onChatCleared = (payload: { clearedBy: string; contactId: string }) => {
+      const affectedContactId = payload.clearedBy === CURRENT_USER_ID
+        ? payload.contactId
+        : payload.clearedBy;
+      applyChatCleared(affectedContactId);
+    };
+
     const onMessageDeleted = (payload: { messageId: string; senderId: string; receiverId: string }) => {
       const contactId = payload.senderId === CURRENT_USER_ID ? payload.receiverId : payload.senderId;
       setMessages((prevMessages) => {
@@ -1041,6 +1176,7 @@ const ChatPage: React.FC = () => {
     newSocket.on('message_read', onMessageRead);
     newSocket.on('message_edited', onMessageEdited);
     newSocket.on('message_deleted', onMessageDeleted);
+    newSocket.on('chat_cleared', onChatCleared);
     newSocket.on('error', onError);
     newSocket.on('user_online', onUserOnline);
     newSocket.on('user_offline', onUserOffline);
@@ -1054,6 +1190,7 @@ const ChatPage: React.FC = () => {
       newSocket.off('message_read', onMessageRead);
       newSocket.off('message_edited', onMessageEdited);
       newSocket.off('message_deleted', onMessageDeleted);
+      newSocket.off('chat_cleared', onChatCleared);
       newSocket.off('error', onError);
       newSocket.off('user_online', onUserOnline);
       newSocket.off('user_offline', onUserOffline);
@@ -1065,6 +1202,7 @@ const ChatPage: React.FC = () => {
     CURRENT_USER_ID,
     updateContactLastMessage,
     updateContactLastMessageAfterDelete,
+    applyChatCleared,
     decryptMessageForDialog,
     sortContactsByLastMessageDesc,
     resolvePendingSend,
@@ -1226,7 +1364,7 @@ const ChatPage: React.FC = () => {
         name: user.name,
         username: user.username,
         email: user.email,
-        avatar: user.avatar,
+        avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
         isPartner: false,
         unreadCount: 0,
         lastMessage: {
@@ -1336,11 +1474,30 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSelectContact = (contactId: string) => {
+    const contact = contacts.find((item) => item.id === contactId);
+    if (contact && CURRENT_USER_ID) {
+      saveOpenChatTarget(CURRENT_USER_ID, {
+        id: contact.id,
+        name: contact.name,
+        username: contact.username || contact.id.slice(0, 8),
+        email: contact.email || '',
+        avatar: contact.avatar,
+      });
+    }
     openContact(contactId);
   };
 
   const handleSelectGlobalUser = (user: SearchUser) => {
     ensureContactInList(user);
+    if (CURRENT_USER_ID) {
+      saveOpenChatTarget(CURRENT_USER_ID, {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+      });
+    }
     openContact(user.id);
     setSearchQuery('');
     setDebouncedSearchQuery('');
@@ -1482,6 +1639,13 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     const state = location.state as {
+      openChatTarget?: {
+        id: string;
+        name: string;
+        username: string;
+        email: string;
+        avatar?: string;
+      };
       pendingSharedEvent?: SharedEventRef;
       pendingSharedNote?: SharedNoteRef;
       targetUserId?: string;
@@ -1490,6 +1654,12 @@ const ChatPage: React.FC = () => {
       targetUserEmail?: string;
       targetUserAvatar?: string;
     } | null;
+
+    if (state?.openChatTarget?.id) {
+      applyOpenChatTarget(state.openChatTarget);
+      navigate(location.pathname, { replace: true, state: null });
+      return;
+    }
 
     const pendingShare = state?.pendingSharedEvent || state?.pendingSharedNote;
     if (!pendingShare || !state?.targetUserId) {
@@ -1512,7 +1682,7 @@ const ChatPage: React.FC = () => {
     openContact(state.targetUserId);
     setTabValue(0);
     navigate(location.pathname, { replace: true, state: null });
-  }, [location.state, location.pathname, navigate, openContact]);
+  }, [location.state, location.pathname, navigate, applyOpenChatTarget]);
 
   const loadMoreGlobalSearch = useCallback(() => {
     if (!debouncedSearchQuery || isSearching || isLoadingMoreGlobalSearch || !hasMoreGlobalSearch) {
@@ -1862,6 +2032,51 @@ const ChatPage: React.FC = () => {
     void sendEdit();
   };
 
+  const handleSubmitReport = async (text: string, files: File[]) => {
+    if (!selectedContactId) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error(t('chat.report.submitFailed'));
+    }
+
+    await submitChatReport(selectedContactId, text, files, token);
+    setDeleteToast({
+      open: true,
+      message: t('chat.report.success'),
+      severity: 'success',
+    });
+  };
+
+  const handleClearChat = async () => {
+    if (!selectedContactId) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error(t('chat.errors.clearChatFailed'));
+    }
+
+    try {
+      await axios.delete(`${API_URL}/api/conversations/${selectedContactId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      applyChatCleared(selectedContactId);
+      setDeleteToast({
+        open: true,
+        message: t('chat.dialog.clearChatSuccess'),
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Ошибка при очистке переписки:', error);
+      setDeleteToast({
+        open: true,
+        message: t('chat.errors.clearChatFailed'),
+        severity: 'error'
+      });
+      throw error;
+    }
+  };
+
   const handleDeleteMessage = (messageId: string) => {
     if (!selectedContactId || !CURRENT_USER_ID) return;
 
@@ -1891,7 +2106,73 @@ const ChatPage: React.FC = () => {
     socketService.deleteMessage(messageId);
   };
 
-  const selectedContact = contacts.find(contact => contact.id === selectedContactId);
+  useEffect(() => {
+    if (!pendingOpenContact) {
+      return;
+    }
+
+    if (contacts.some((contact) => contact.id === pendingOpenContact.id)) {
+      setPendingOpenContact(null);
+    }
+  }, [contacts, pendingOpenContact]);
+
+  const buildContactFromPending = useCallback((pending: {
+    id: string;
+    name: string;
+    username: string;
+    email: string;
+    avatar?: string;
+  }): ChatContact => ({
+    id: pending.id,
+    name: pending.name,
+    username: pending.username,
+    email: pending.email,
+    avatar:
+      pending.avatar ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(pending.username || pending.id.slice(0, 8))}`,
+    isPartner: false,
+    unreadCount: 0,
+    lastMessage: {
+      id: '',
+      senderId: '',
+      text: t('chat.message.noMessages'),
+      timestamp: new Date().toISOString(),
+      isRead: true,
+      hasMedia: false,
+      isPending: false,
+    },
+  }), [t]);
+
+  const selectedContact = (() => {
+    if (!selectedContactId) {
+      return undefined;
+    }
+
+    const fromList = contacts.find((contact) => contact.id === selectedContactId);
+    if (fromList) {
+      return fromList;
+    }
+
+    if (pendingOpenContact?.id === selectedContactId) {
+      return buildContactFromPending(pendingOpenContact);
+    }
+
+    const stored = CURRENT_USER_ID ? readOpenChatTarget(CURRENT_USER_ID) : null;
+    if (stored?.id === selectedContactId) {
+      return buildContactFromPending(stored);
+    }
+
+    if (isLoadingContacts) {
+      return undefined;
+    }
+
+    return buildContactFromPending({
+      id: selectedContactId,
+      name: t('chat.user'),
+      username: selectedContactId.slice(0, 8),
+      email: '',
+    });
+  })();
   const immediateQuery = searchQuery.trim().toLowerCase();
   const hasSearch = Boolean(immediateQuery);
   const filteredExistingContacts = hasSearch
@@ -1910,7 +2191,7 @@ const ChatPage: React.FC = () => {
   useDisableForeignFormFields(isMobileChatOpen && isIOSDevice());
   const pageHeight = isMobile && selectedContactId ? '100dvh' : '100%';
   const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
-  const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady;
+  const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady && !selectedContactId;
 
   return (
     <Box sx={{ 
@@ -1926,6 +2207,7 @@ const ChatPage: React.FC = () => {
         width: '100%',
         height: visualViewportLayout.height,
         maxHeight: visualViewportLayout.height,
+        bgcolor: 'background.default',
         zIndex: (theme) => theme.zIndex.appBar,
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: visualViewportLayout.keyboardOpen
@@ -2157,51 +2439,67 @@ const ChatPage: React.FC = () => {
                 height: '100%'
               }}>
                 {selectedContactId && CURRENT_USER_ID ? (
-                  <ChatDialog 
-                    contact={selectedContact || null}
-                    contactIsTyping={Boolean(
-                      selectedContactId && typingByContactId[selectedContactId]
-                    )}
-                    messages={messages}
-                    currentUserId={CURRENT_USER_ID}
-                    onBack={handleBackToList}
-                    onSendMessage={handleSendMessage}
-                    onStartForwardMessage={handleStartForwardMessage}
-                    onOpenChatWithUser={handleOpenChatWithUser}
-                    onEditMessage={handleEditMessage}
-                    onDeleteMessage={handleDeleteMessage}
-                    onReachMessagesStart={loadOlderMessages}
-                    onReachMessagesEnd={handleReachMessagesEnd}
-                    onAtBottomChange={handleChatAtBottomChange}
-                    pendingForwardMessage={pendingForwardMessage}
-                    onPendingForwardApplied={() => {
-                      setPendingForwardMessage(null);
-                      setPendingForwardSharedEvent(null);
-                      setPendingForwardSharedNote(null);
-                      setPendingForwardSource(null);
-                    }}
-                    onCancelPendingForward={clearPendingForwardDraft}
-                    pendingForwardSource={pendingForwardSource}
-                    pendingForwardSharedEvent={pendingForwardSharedEvent}
-                    pendingForwardSharedNote={pendingForwardSharedNote}
-                    pendingSharedEvent={pendingSharedEvent}
-                    onPendingSharedEventApplied={() => setPendingSharedEvent(null)}
-                    pendingSharedNote={pendingSharedNote}
-                    onPendingSharedNoteApplied={() => setPendingSharedNote(null)}
-                    onSharedEventClick={handleSharedEventClick}
-                    onSharedNoteClick={handleSharedNoteClick}
-                    hasMoreMessages={hasMoreMessages}
-                    isLoadingOlder={isLoadingOlderMessages}
-                    isLoading={isLoadingMessages}
-                  />
+                  selectedContact ? (
+                    <ChatDialog
+                      contact={selectedContact}
+                      contactIsTyping={Boolean(
+                        selectedContactId && typingByContactId[selectedContactId]
+                      )}
+                      messages={messages}
+                      currentUserId={CURRENT_USER_ID}
+                      onBack={handleBackToList}
+                      onSendMessage={handleSendMessage}
+                      onStartForwardMessage={handleStartForwardMessage}
+                      onOpenChatWithUser={handleOpenChatWithUser}
+                      onEditMessage={handleEditMessage}
+                      onDeleteMessage={handleDeleteMessage}
+                      onClearChat={handleClearChat}
+                      onSubmitReport={handleSubmitReport}
+                      onReachMessagesStart={loadOlderMessages}
+                      onReachMessagesEnd={handleReachMessagesEnd}
+                      onAtBottomChange={handleChatAtBottomChange}
+                      pendingForwardMessage={pendingForwardMessage}
+                      onPendingForwardApplied={() => {
+                        setPendingForwardMessage(null);
+                        setPendingForwardSharedEvent(null);
+                        setPendingForwardSharedNote(null);
+                        setPendingForwardSource(null);
+                      }}
+                      onCancelPendingForward={clearPendingForwardDraft}
+                      pendingForwardSource={pendingForwardSource}
+                      pendingForwardSharedEvent={pendingForwardSharedEvent}
+                      pendingForwardSharedNote={pendingForwardSharedNote}
+                      pendingSharedEvent={pendingSharedEvent}
+                      onPendingSharedEventApplied={() => setPendingSharedEvent(null)}
+                      pendingSharedNote={pendingSharedNote}
+                      onPendingSharedNoteApplied={() => setPendingSharedNote(null)}
+                      onSharedEventClick={handleSharedEventClick}
+                      onSharedNoteClick={handleSharedNoteClick}
+                      hasMoreMessages={hasMoreMessages}
+                      isLoadingOlder={isLoadingOlderMessages}
+                      isLoading={isLoadingMessages}
+                    />
+                  ) : isLoadingContacts ? (
+                    <Box
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        bgcolor: 'background.default',
+                      }}
+                    >
+                      <CircularProgress color="primary" />
+                    </Box>
+                  ) : null
                 ) : (
-                  <Box 
-                    sx={{ 
-                      height: '100%', 
-                      display: 'flex', 
-                      justifyContent: 'center', 
+                  <Box
+                    sx={{
+                      height: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
                       alignItems: 'center',
-                      bgcolor: 'background.default'
+                      bgcolor: 'background.default',
                     }}
                   >
                     <Box sx={{ textAlign: 'center', p: 3 }}>

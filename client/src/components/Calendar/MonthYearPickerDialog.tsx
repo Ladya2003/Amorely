@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DialogContent, DialogTitle } from '@mui/material';
+import { Box, Button, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -30,33 +30,48 @@ const MonthYearPickerDialog: React.FC<MonthYearPickerDialogProps> = ({
     }
   }, [open, value]);
 
-  const handleChange = (date: Date | null) => {
+  const handleDraftChange = (date: Date | null) => {
     if (!date) {
       return;
     }
 
-    const monthStart = startOfMonth(date);
-    setDraft(monthStart);
-    onChange(monthStart);
+    setDraft(startOfMonth(date));
+  };
+
+  const handleReset = () => {
+    setDraft(startOfMonth(new Date()));
+  };
+
+  const handleApply = () => {
+    onChange(draft);
     onClose();
   };
 
   return (
     <ResponsiveDialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>{t('calendar.monthPicker.title')}</DialogTitle>
-      <DialogContent sx={{ display: 'flex', justifyContent: 'center', pt: 0, pb: 2 }}>
+      <DialogContent sx={{ display: 'flex', justifyContent: 'center', pt: 0, pb: 1 }}>
         <LocalizationProvider
           dateAdapter={AdapterDateFns}
           adapterLocale={getDateFnsLocale(i18n.language)}
         >
           <DateCalendar
             value={draft}
-            onChange={handleChange}
+            onChange={handleDraftChange}
             views={['year', 'month']}
             openTo="month"
           />
         </LocalizationProvider>
       </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'space-between' }}>
+        <Button onClick={onClose}>{t('calendar.monthPicker.close')}</Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button onClick={handleReset}>{t('calendar.monthPicker.reset')}</Button>
+          <Button onClick={handleApply} variant="contained">
+            {t('calendar.monthPicker.apply')}
+          </Button>
+        </Box>
+      </DialogActions>
     </ResponsiveDialog>
   );
 };

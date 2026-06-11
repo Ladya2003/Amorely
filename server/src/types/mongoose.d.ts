@@ -25,6 +25,7 @@ declare module 'mongoose' {
         messages: boolean;
         events: boolean;
         news: boolean;
+        reports?: boolean;
       };
     };
     role?: 'user' | 'admin';

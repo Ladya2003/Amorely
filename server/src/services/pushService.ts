@@ -32,6 +32,7 @@ export interface PushPayload {
   url?: string;
   tag?: string;
   badgeCount?: number;
+  icon?: string;
 }
 
 export const getTotalUnreadCount = async (userId: string) =>
@@ -168,12 +169,13 @@ export const notifyNewMessage = async (params: {
     return;
   }
 
-  const sender = await User.findById(params.senderId);
+  const sender = await User.findById(params.senderId).select('username firstName lastName avatar');
   if (!sender) {
     return;
   }
 
   const senderName = getUserDisplayName(sender);
+  const senderAvatar = sender.avatar?.trim();
   const body = getMessagePreview({
     text: params.text,
     pushPreview: params.pushPreview,
@@ -191,7 +193,8 @@ export const notifyNewMessage = async (params: {
     body,
     url: params.chatUrl || buildChatUrl(params.senderId),
     tag: `chat-${params.senderId}`,
-    badgeCount
+    badgeCount,
+    ...(senderAvatar ? { icon: senderAvatar } : {})
   });
 };
 
@@ -220,6 +223,45 @@ export const notifyNewPartnerContent = async (params: {
     url: buildFeedContentUrl(params.contentId),
     tag: 'partner-content'
   });
+};
+
+const buildAdminUrl = () => buildAppUrl('/admin');
+
+export const notifyNewReport = async (params: {
+  reportId: string;
+  reporterId: string;
+  reportedUserId: string;
+  text: string;
+}) => {
+  const admins = await User.find({
+    role: 'admin',
+    'notificationSettings.push.reports': { $ne: false },
+  }).select('_id');
+
+  if (!admins.length) {
+    return;
+  }
+
+  const [reporter, reportedUser] = await Promise.all([
+    User.findById(params.reporterId).select('username firstName lastName'),
+    User.findById(params.reportedUserId).select('username firstName lastName'),
+  ]);
+
+  const reporterName = reporter ? getUserDisplayName(reporter) : 'Пользователь';
+  const reportedName = reportedUser ? getUserDisplayName(reportedUser) : 'Пользователь';
+  const preview = params.text.trim() || 'Новая жалоба';
+  const body = truncatePreview(`${reporterName} → ${reportedName}: ${preview}`);
+
+  await Promise.all(
+    admins.map((admin) =>
+      sendPushToUser(admin._id.toString(), {
+        title: 'Новая жалоба',
+        body,
+        url: buildAdminUrl(),
+        tag: `report-${params.reportId}`,
+      })
+    )
+  );
 };
 
 export const notifyNewsPublished = async (params: {

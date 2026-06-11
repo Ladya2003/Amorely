@@ -118,19 +118,22 @@ const SettingsPage: React.FC = () => {
       setTheme(user.theme || 'system');
       setPrimaryColor(user.primaryColor || 'pink');
       setLocale(resolveAppLocale(user.locale));
-      const loadedNotificationSettings = user.notificationSettings || {
+      const loadedNotificationSettings = {
         email: {
           newContent: true,
           messages: true,
           events: true,
-          news: false
+          news: false,
+          ...(user.notificationSettings?.email ?? {}),
         },
         push: {
           newContent: true,
           messages: true,
           events: false,
-          news: false
-        }
+          news: false,
+          reports: user.role === 'admin',
+          ...(user.notificationSettings?.push ?? {}),
+        },
       };
       setNotificationSettings(loadedNotificationSettings);
       setPushPermission(getNotificationPermission());
@@ -435,7 +438,8 @@ const SettingsPage: React.FC = () => {
           newContent: false,
           messages: false,
           events: false,
-          news: false
+          news: false,
+          reports: false,
         }
       };
 
@@ -656,6 +660,7 @@ const SettingsPage: React.FC = () => {
           {tabValue === 3 && notificationSettings && (
             <NotificationSettings 
               settings={notificationSettings}
+              isAdmin={user?.role === 'admin'}
               onSettingChange={handleNotificationSettingChange}
               pushSupported={isPushSupported()}
               pushPermission={pushPermission}

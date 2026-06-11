@@ -146,7 +146,13 @@ const ImageCropDialog: React.FC<ImageCropDialogProps> = ({
   };
 
   return (
-    <ResponsiveDialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <ResponsiveDialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      disableMobileDrawer
+    >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         {imageSrc && (

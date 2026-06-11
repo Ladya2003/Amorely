@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import { NewsItem } from '../components/News/NewsCard';
 import type { NewsTranslations } from '../localization/newsContent';
+import type { AppLocale } from '../localization/locale';
 
 export type DashboardMetricKey =
   | 'totalUsers'
@@ -59,6 +60,9 @@ export interface AdminUserItem {
   firstName?: string;
   lastName?: string;
   role: 'user' | 'admin';
+  isBlocked: boolean;
+  isNewForAdmin: boolean | null;
+  isNewForAdminEffective: boolean;
   createdAt: string;
   lastSeen?: string;
   partner: {
@@ -121,6 +125,114 @@ export interface AdminNewsItem extends NewsItem {
     caption?: string;
   }>;
 }
+
+export interface AdminReportUser {
+  _id: string;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  displayName: string;
+  isBlocked?: boolean;
+}
+
+export interface AdminReportMedia {
+  url: string;
+  publicId: string;
+  resourceType: 'image' | 'video';
+}
+
+export interface AdminReportMessage {
+  target: 'reporter' | 'reported';
+  text: string;
+  sentAt: string;
+}
+
+export interface AdminReportItem {
+  _id: string;
+  reporter: AdminReportUser | null;
+  reportedUser: AdminReportUser | null;
+  text: string;
+  media: AdminReportMedia[];
+  adminMessages: AdminReportMessage[];
+  status: 'open' | 'resolved';
+  createdAt: string;
+}
+
+export const fetchAdminReports = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: 'open' | 'resolved' | '';
+}) => {
+  const response = await axios.get<{
+    reports: AdminReportItem[];
+    pagination: { total: number; page: number; limit: number; pages: number };
+  }>(`${API_URL}/api/admin/reports`, { params });
+  return response.data;
+};
+
+export const sendAdminReportMessage = async (
+  reportId: string,
+  payload: { target: 'reporter' | 'reported'; text: string }
+) => {
+  const response = await axios.post(`${API_URL}/api/admin/reports/${reportId}/message`, payload);
+  return response.data;
+};
+
+export const updateAdminReportStatus = async (
+  reportId: string,
+  status: 'open' | 'resolved'
+) => {
+  const response = await axios.patch(`${API_URL}/api/admin/reports/${reportId}/status`, { status });
+  return response.data;
+};
+
+export const blockAdminUser = async (
+  userId: string,
+  reasons?: Partial<Record<AppLocale, string>>
+) => {
+  const response = await axios.post(`${API_URL}/api/admin/users/${userId}/block`, { reasons });
+  return response.data;
+};
+
+export const unblockAdminUser = async (userId: string) => {
+  const response = await axios.post(`${API_URL}/api/admin/users/${userId}/unblock`);
+  return response.data;
+};
+
+export interface AdminAlertsState {
+  feedDot: boolean;
+  newUsersCount: number;
+  newReportsCount: number;
+}
+
+export const fetchAdminAlerts = async (): Promise<AdminAlertsState> => {
+  const response = await axios.get<AdminAlertsState>(`${API_URL}/api/admin/alerts`);
+  return response.data;
+};
+
+export const clearAdminFeedAlerts = async () => {
+  const response = await axios.post(`${API_URL}/api/admin/alerts/clear-feed`);
+  return response.data;
+};
+
+export const clearAdminUsersTabAlerts = async () => {
+  const response = await axios.post(`${API_URL}/api/admin/alerts/clear-users-tab`);
+  return response.data;
+};
+
+export const clearAdminModerationTabAlerts = async () => {
+  const response = await axios.post(`${API_URL}/api/admin/alerts/clear-moderation-tab`);
+  return response.data;
+};
+
+export const toggleAdminUserNewFlag = async (userId: string) => {
+  const response = await axios.patch<{
+    isNewForAdmin: boolean | null;
+    isNewForAdminEffective: boolean;
+  }>(`${API_URL}/api/admin/users/${userId}/new-user-flag`);
+  return response.data;
+};
 
 export const fetchAdminDashboard = async () => {
   const response = await axios.get<AdminDashboardStats>(`${API_URL}/api/admin/dashboard`);

@@ -21,6 +21,9 @@ import {
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ReportOutlinedIcon from '@mui/icons-material/ReportOutlined';
+import ChatReportModal from './ChatReportModal';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
@@ -42,6 +45,7 @@ import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import { isVideoFile } from '../../utils/videoMetadata';
 import { captureVideoPosterFromFile } from '../../utils/videoPoster';
 import MediaViewerDialog from '../common/MediaViewerDialog';
+import EncryptedIndicator from '../common/EncryptedIndicator';
 import { formatContactPresence } from '../../utils/formatContactPresence';
 import { formatChatDayBadge } from '../../localization/chatHelpers';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
@@ -168,6 +172,8 @@ interface ChatDialogProps {
   onOpenChatWithUser: (userId: string, forwardHint?: MessageForwardRef | null) => void;
   onEditMessage: (messageId: string, text: string) => void;
   onDeleteMessage: (messageId: string) => void;
+  onClearChat?: () => Promise<void>;
+  onSubmitReport?: (text: string, files: File[]) => Promise<void>;
   onReachMessagesStart?: () => void;
   onReachMessagesEnd?: () => void;
   onAtBottomChange?: (atBottom: boolean) => void;
@@ -221,6 +227,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onOpenChatWithUser,
   onEditMessage,
   onDeleteMessage,
+  onClearChat,
+  onSubmitReport,
   onReachMessagesStart,
   onReachMessagesEnd,
   onAtBottomChange,
@@ -288,6 +296,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [messageToDelete, setMessageToDelete] = useState<MessageType | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [optionsModalOpen, setOptionsModalOpen] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [isClearingChat, setIsClearingChat] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContentRef = useRef<HTMLDivElement>(null);
   const previousMessagesLengthRef = useRef<number>(0);
@@ -1406,6 +1418,28 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             {presenceText}
           </Typography>
         </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            alignSelf: 'flex-end',
+            ml: 1,
+            mr: 0.5,
+            gap: 0.25,
+            pb: 0.25,
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={() => setOptionsModalOpen(true)}
+            aria-label={t('chat.dialog.optionsAria')}
+            sx={{ p: 0.25, color: 'text.secondary' }}
+          >
+            <MoreVertIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+          <EncryptedIndicator />
+        </Box>
       </Paper>
       </Box>
 
@@ -1972,6 +2006,102 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         onClose={() => setProfileDialogOpen(false)}
         contact={contact}
       />
+
+      <ResponsiveDialog
+        open={optionsModalOpen}
+        onClose={() => setOptionsModalOpen(false)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.optionsTitle')}</DialogTitle>
+        <DialogContent sx={{ pt: '8px !important', px: 2, pb: 2 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="warning"
+            startIcon={<ReportOutlinedIcon />}
+            onClick={() => {
+              setOptionsModalOpen(false);
+              setReportModalOpen(true);
+            }}
+            disabled={!onSubmitReport}
+            sx={{ justifyContent: 'flex-start', py: 1.25, mb: 1 }}
+          >
+            {t('chat.dialog.report')}
+          </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteOutlineIcon />}
+            onClick={() => {
+              setOptionsModalOpen(false);
+              setClearConfirmOpen(true);
+            }}
+            sx={{ justifyContent: 'flex-start', py: 1.25 }}
+          >
+            {t('chat.dialog.clearChat')}
+          </Button>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setOptionsModalOpen(false)} variant="text">
+            {t('chat.dialog.cancel')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
+
+      {onSubmitReport && contact && (
+        <ChatReportModal
+          open={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          contactName={contact.name}
+          onSubmit={onSubmitReport}
+        />
+      )}
+
+      <ResponsiveDialog
+        open={clearConfirmOpen}
+        onClose={() => {
+          if (!isClearingChat) {
+            setClearConfirmOpen(false);
+          }
+        }}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.clearChatTitle')}</DialogTitle>
+        <DialogContent sx={{ pt: '8px !important' }}>
+          <Typography variant="body2">
+            {t('chat.dialog.clearChatConfirm')}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setClearConfirmOpen(false)}
+            variant="text"
+            disabled={isClearingChat}
+          >
+            {t('chat.dialog.cancel')}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={isClearingChat || !onClearChat}
+            onClick={async () => {
+              if (!onClearChat) return;
+              try {
+                setIsClearingChat(true);
+                await onClearChat();
+                setClearConfirmOpen(false);
+              } finally {
+                setIsClearingChat(false);
+              }
+            }}
+          >
+            {t('chat.dialog.clearChat')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
     </Box>
   );
 };

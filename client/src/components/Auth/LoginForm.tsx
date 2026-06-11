@@ -12,6 +12,8 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { translateAuthServerError } from '../../localization/authHelpers';
+import { resolveAppLocale } from '../../localization/locale';
+import { resolveBlockReasonForLocale } from '../../utils/handleAccountBlocked';
 import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
@@ -27,8 +29,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
   initialPassword = '',
   showRegistrationSuccess = false,
 }) => {
-  const { t } = useTranslation();
-  const { login, isLoading, error, clearError } = useAuth();
+  const { t, i18n } = useTranslation();
+  const { login, isLoading, error, clearError, blockReasons, blockReasonFallback, clearBlockNotice } = useAuth();
   const navigate = useNavigate();
   
   const [email, setEmail] = useState(initialEmail);
@@ -42,11 +44,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
       return;
     }
     
-    try {
-      await login(email, password);
+    const response = await login(email, password);
+    if (response) {
       navigate('/');
-    } catch (error) {
-      // Ошибка уже обрабатывается в контексте
     }
   };
   
@@ -54,7 +54,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setShowPassword(!showPassword);
   };
 
-  const translatedError = error ? translateAuthServerError(error, t) : null;
+  const blockMessage = resolveBlockReasonForLocale(
+    blockReasons,
+    resolveAppLocale(i18n.language),
+    blockReasonFallback
+  );
+  const translatedError = !blockMessage && error ? translateAuthServerError(error, t) : null;
   
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
@@ -65,6 +70,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
       {showRegistrationSuccess && (
         <Alert severity="success" sx={{ mb: 2 }}>
           {t('auth.login.registrationSuccess')}
+        </Alert>
+      )}
+
+      {blockMessage && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={clearBlockNotice}>
+          {blockMessage}
         </Alert>
       )}
 

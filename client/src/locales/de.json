@@ -107,6 +107,8 @@
       "pushEventsHint": "Benachrichtigung über wichtige Daten und Ereignisse erhalten",
       "pushNews": "Neuigkeiten",
       "pushNewsHint": "Benachrichtigung über Neuigkeiten und App-Updates erhalten",
+      "pushReports": "Neue Meldungen",
+      "pushReportsHint": "Benachrichtigung bei neuen Nutzermeldungen erhalten (nur für Admins)",
       "newContent": "Neuer Inhalt vom Partner",
       "newContentHint": "Benachrichtigung, wenn dein Partner neuen Inhalt hinzufügt",
       "messages": "Nachrichten",
@@ -836,7 +838,8 @@
       "forwardNoAttachments": "Keine Anhänge zum Weiterleiten",
       "encryptMediaKeys": "Verschlüsselungsschlüssel auf diesem Gerät erforderlich zum Senden von Medien",
       "encryptKeys": "Keine Schlüssel zum Verschlüsseln von Medien",
-      "encryptAttachments": "Anhänge konnten nicht verschlüsselt werden"
+      "encryptAttachments": "Anhänge konnten nicht verschlüsselt werden",
+      "clearChatFailed": "Chat konnte nicht geleert werden"
     },
     "input": {
       "placeholder": "Nachricht eingeben..."
@@ -866,7 +869,25 @@
       "openPreviewFullscreen": "Vorschau im Vollbild öffnen",
       "attachmentAlt": "Anhang {{index}}",
       "removeAttachment": "Anhang entfernen",
-      "messageActions": "Nachrichtenaktionen"
+      "messageActions": "Nachrichtenaktionen",
+      "optionsAria": "Chat-Optionen",
+      "optionsTitle": "Optionen",
+      "clearChat": "Chat leeren",
+      "clearChatTitle": "Chat leeren?",
+      "clearChatConfirm": "Möchten Sie den Chat wirklich für Sie und Ihren Gesprächspartner leeren?",
+      "clearChatSuccess": "Chat geleert",
+      "report": "Benutzer melden"
+    },
+    "report": {
+      "title": "Meldung",
+      "subtitle": "Beschreiben Sie, was im Chat mit {{name}} passiert ist",
+      "textPlaceholder": "Problem beschreiben...",
+      "textRequired": "Bitte geben Sie eine Beschreibung ein",
+      "mediaLabel": "Fotos und Videos (optional)",
+      "submit": "Senden",
+      "submitting": "Wird gesendet...",
+      "submitFailed": "Meldung konnte nicht gesendet werden",
+      "success": "Meldung gesendet"
     },
     "messageBubble": {
       "reply": "Antwort",
@@ -1050,7 +1071,10 @@
     },
     "monthPicker": {
       "title": "Monat wählen",
-      "ariaLabel": "Monat und Jahr wählen"
+      "ariaLabel": "Monat und Jahr wählen",
+      "apply": "Anwenden",
+      "reset": "Zurücksetzen",
+      "close": "Schließen"
     }
   },
   "news": {
@@ -1120,6 +1144,13 @@
     }
   },
   "crypto": {
+    "encryptedShort": "verschl.",
+    "encryptedAria": "Verschlüsselt — tippen für mehr Infos",
+    "encryptedModal": {
+      "title": "Verschlüsselt",
+      "description": "Nachrichten, Ereignisse und Medien werden verschlüsselt übertragen und gespeichert.\n\nNur Sie und Ihr Partner können sie lesen — Amorely hat keinen Zugriff auf den Inhalt.",
+      "close": "Verstanden"
+    },
     "decryptFailed": "Entschlüsselung fehlgeschlagen",
     "decryptMediaFailed": "Medien konnten nicht entschlüsselt werden",
     "unlock": {

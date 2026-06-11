@@ -5,6 +5,7 @@ import Relationship from '../models/relationship';
 import User from '../models/user';
 import { authMiddleware } from '../middleware/auth';
 import { isUserOnline } from '../presence';
+import { notifySocketUser } from '../socket';
 
 const router = express.Router();
 
@@ -476,6 +477,45 @@ router.put('/messages/:id/read', authMiddleware, async (req: Request, res: Respo
   } catch (error) {
     console.error('Ошибка при обновлении статуса сообщения:', error);
     res.status(500).json({ error: 'Ошибка при обновлении статуса сообщения' });
+  }
+});
+
+// Очистка переписки для обоих участников диалога
+router.delete('/conversations/:contactId', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const { contactId } = req.params;
+    const userId = req.userId as string;
+
+    if (!userId || !contactId) {
+      return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(contactId)) {
+      return res.status(400).json({ error: 'Некорректный ID контакта' });
+    }
+
+    const contactExists = await User.exists({ _id: contactId });
+    if (!contactExists) {
+      return res.status(404).json({ error: 'Контакт не найден' });
+    }
+
+    const dialogFilter = {
+      $or: [
+        { senderId: userId, receiverId: contactId },
+        { senderId: contactId, receiverId: userId }
+      ]
+    };
+
+    await Message.deleteMany(dialogFilter);
+
+    const payload = { clearedBy: userId, contactId };
+    notifySocketUser(contactId, 'chat_cleared', payload);
+    notifySocketUser(userId, 'chat_cleared', payload);
+
+    return res.json({ message: 'Переписка очищена' });
+  } catch (error) {
+    console.error('Ошибка при очистке переписки:', error);
+    return res.status(500).json({ error: 'Ошибка при очистке переписки' });
   }
 });
 
