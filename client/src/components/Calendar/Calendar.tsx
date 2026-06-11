@@ -27,6 +27,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import EventFilterDialog from './EventFilterDialog';
 import MonthYearPickerDialog from './MonthYearPickerDialog';
@@ -107,6 +109,14 @@ const Calendar: React.FC<CalendarProps> = ({
     px: 0.75,
     py: 0,
     boxSizing: 'border-box'
+  };
+  const monthNavButtonSx = {
+    ...outlinedControlSx,
+    bgcolor: 'transparent',
+    boxSizing: 'border-box',
+    '&:hover': {
+      bgcolor: 'transparent'
+    }
   };
   const weekdays = getCalendarWeekdays(t);
   const skipNextSaveRef = useRef(false);
@@ -318,8 +328,8 @@ const Calendar: React.FC<CalendarProps> = ({
                 alignItems: 'center', 
                 p: 2
               }}>
-                <IconButton onClick={handlePrevMonth}>
-                  &lt;
+                <IconButton onClick={handlePrevMonth} size="small" sx={monthNavButtonSx}>
+                  <ArrowBackIosNewIcon fontSize="small" />
                 </IconButton>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <ButtonBase
@@ -343,8 +353,8 @@ const Calendar: React.FC<CalendarProps> = ({
                     />
                   </ButtonBase>
                 </Box>
-                <IconButton onClick={handleNextMonth}>
-                  &gt;
+                <IconButton onClick={handleNextMonth} size="small" sx={monthNavButtonSx}>
+                  <ArrowForwardIosIcon fontSize="small" />
                 </IconButton>
               </Box>
             )}
