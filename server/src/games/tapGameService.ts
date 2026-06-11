@@ -202,14 +202,41 @@ export const getOrCreateTapGameState = async (userId: string, context: TapGameCo
   return normalizeTapGameStateDocument(state, relationship);
 };
 
-export const processTap = async (userId: string, context: TapGameContext) => {
-  const state = await getOrCreateTapGameState(userId, context);
+const TAP_BATCH_MAX = 100;
 
+const tapGameLocks = new Map<string, Promise<unknown>>();
+
+const withTapGameLock = async <T>(relationshipId: string, fn: () => Promise<T>): Promise<T> => {
+  const previous = tapGameLocks.get(relationshipId) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = () => resolve();
+  });
+  const chained = previous.then(() => gate);
+  tapGameLocks.set(relationshipId, chained);
+
+  await previous;
+  try {
+    return await fn();
+  } finally {
+    release();
+    if (tapGameLocks.get(relationshipId) === chained) {
+      tapGameLocks.delete(relationshipId);
+    }
+  }
+};
+
+type ApplyTapResult = {
+  applied: boolean;
+  roundCompletionBonus: number;
+};
+
+const applySingleTap = (state: any, userId: string, context: TapGameContext): ApplyTapResult => {
   const primary = isRelationshipPrimaryUser(context.relationship, userId);
   const currentTaps = primary ? state.userTapsThisRound : state.partnerTapsThisRound;
 
   if (currentTaps >= state.targetTaps) {
-    throw new TapGameError('ROUND_PART_COMPLETE', 'Вы уже завершили свою часть раунда');
+    return { applied: false, roundCompletionBonus: 0 };
   }
 
   if (!state.roundStarterUserId && state.totalTaps === 0) {
@@ -246,8 +273,51 @@ export const processTap = async (userId: string, context: TapGameContext) => {
     state.points += roundCompletionBonus;
   }
 
-  await state.save();
-  return { state, roundCompletionBonus };
+  return { applied: true, roundCompletionBonus };
+};
+
+export const normalizeTapBatchCount = (rawCount: unknown): number => {
+  const parsed = typeof rawCount === 'number' ? rawCount : 1;
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return 1;
+  }
+  return Math.min(Math.floor(parsed), TAP_BATCH_MAX);
+};
+
+export const processTap = async (userId: string, context: TapGameContext) => {
+  return processTapBatch(userId, context, 1);
+};
+
+export const processTapBatch = async (
+  userId: string,
+  context: TapGameContext,
+  tapCount: number
+) => {
+  const count = normalizeTapBatchCount(tapCount);
+  const relationshipId = context.relationship._id.toString();
+
+  return withTapGameLock(relationshipId, async () => {
+    const state = await getOrCreateTapGameState(userId, context);
+
+    let roundCompletionBonus = 0;
+    let appliedCount = 0;
+
+    for (let index = 0; index < count; index += 1) {
+      const result = applySingleTap(state, userId, context);
+      if (!result.applied) {
+        break;
+      }
+      appliedCount += 1;
+      roundCompletionBonus += result.roundCompletionBonus;
+    }
+
+    if (appliedCount === 0) {
+      throw new TapGameError('ROUND_PART_COMPLETE', 'Вы уже завершили свою часть раунда');
+    }
+
+    await state.save();
+    return { state, roundCompletionBonus, appliedCount };
+  });
 };
 
 export const buyTapShopItem = async (userId: string, context: TapGameContext, itemId: string) => {

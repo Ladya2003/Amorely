@@ -28,7 +28,8 @@
     "generate-vapid-keys": "ts-node scripts/generate-vapid-keys.ts",
     "fetch:geo-locations": "ts-node scripts/fetch-wikidata-geo-locations.ts",
     "migrate:news-translations": "ts-node scripts/migrate-news-translations.ts",
-    "seed:news-i18n": "ts-node scripts/seed-news-i18n.ts"
+    "seed:news-i18n": "ts-node scripts/seed-news-i18n.ts",
+    "generate:quiz-i18n": "ts-node scripts/generate-quiz-i18n.ts"
   },
   "keywords": [],
   "author": "",

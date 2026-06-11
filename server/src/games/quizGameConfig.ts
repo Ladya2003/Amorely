@@ -1,3 +1,4 @@
+import { QUIZ_ANSWER_I18N } from '../i18n/generated/quizAnswersI18n';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizGameContent';
 
 export { QUIZ_CATEGORIES, QUIZ_QUESTIONS };
@@ -50,10 +51,28 @@ export const normalizeQuizAnswer = (value: string) =>
   value
     .trim()
     .toLowerCase()
+    .replace(/ß/g, 'ss')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/ё/g, 'е')
-    .replace(/[^a-zа-я0-9\s]/gi, '')
+    .replace(/[^a-zа-яґєії0-9\s]/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+export const getQuizAcceptedAnswers = (question: QuizQuestion): string[] => {
+  const accepted = new Set(question.answers);
+  const localized = QUIZ_ANSWER_I18N[question.id];
+
+  if (localized) {
+    for (const answer of Object.values(localized)) {
+      if (answer) {
+        accepted.add(answer);
+      }
+    }
+  }
+
+  return [...accepted];
+};
 
 export const isQuizAnswerCorrect = (guess: string, acceptedAnswers: string[]) => {
   const normalizedGuess = normalizeQuizAnswer(guess);
@@ -62,6 +81,9 @@ export const isQuizAnswerCorrect = (guess: string, acceptedAnswers: string[]) =>
   }
   return acceptedAnswers.some((answer) => normalizeQuizAnswer(answer) === normalizedGuess);
 };
+
+export const isQuizQuestionAnswerCorrect = (guess: string, question: QuizQuestion) =>
+  isQuizAnswerCorrect(guess, getQuizAcceptedAnswers(question));
 
 export const getCategoryById = (categoryId: string) =>
   QUIZ_CATEGORIES.find((category) => category.id === categoryId) ?? null;

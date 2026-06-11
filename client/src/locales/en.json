@@ -457,6 +457,8 @@
         "loadFailed": "Failed to load",
         "guessFailed": "Failed to submit guess",
         "clearCanvasFailed": "Failed to clear canvas",
+        "undoFailed": "Failed to undo",
+        "redoFailed": "Failed to redo",
         "strokeFailed": "Failed to send stroke",
         "advanceFailed": "Failed to advance",
         "tapFailed": "Failed to register tap",
@@ -491,8 +493,8 @@
     },
     "waitDuration": {
       "soon": "soon",
-      "hoursMinutes": "{{hours}} h {{minutes}} min",
-      "minutes": "{{minutes}} min",
+      "hoursMinutes": "{{hours}}h {{minutes}}m",
+      "minutes": "{{minutes}}m",
       "lessThanMinute": "less than a minute"
     }
   },
@@ -781,11 +783,16 @@
     "tool": "Tool",
     "brush": "Brush",
     "eraser": "Eraser",
+    "fill": "Fill",
     "color": "Color",
     "size": "Size: {{size}}px",
     "colorAria": "Color {{color}}",
     "customColor": "Custom color",
-    "clearAll": "Clear all"
+    "undo": "Undo",
+    "redo": "Redo",
+    "clearAll": "Clear all",
+    "clearAllConfirmTitle": "Clear the entire drawing?",
+    "clearAllConfirmBody": "All strokes on the canvas will be removed. This action cannot be undone."
   },
   "chat": {
     "tab": "Chat",

@@ -10,7 +10,7 @@ import {
   buildDailyBoard,
   getQuizCellKey,
   getQuizQuestionById,
-  isQuizAnswerCorrect,
+  isQuizQuestionAnswerCorrect,
 } from './quizGameConfig';
 import {
   getQuizCategoryName,
@@ -260,7 +260,7 @@ const resolveQuestionOnDocument = (state: any, participantIds: string[]) => {
   let pointsAwardedTotal = 0;
   round.answers = round.answers.map(
     (entry: { userId: mongoose.Types.ObjectId; text: string; isCorrect?: boolean; pointsEarned?: number }) => {
-      const isCorrect = entry.text ? isQuizAnswerCorrect(entry.text, configQuestion.answers) : false;
+      const isCorrect = entry.text ? isQuizQuestionAnswerCorrect(entry.text, configQuestion) : false;
       const pointsEarned = isCorrect ? round.points : 0;
       pointsAwardedTotal += pointsEarned;
       return {
@@ -670,7 +670,7 @@ export const submitQuizAnswer = async (userId: string, context: QuizGameContext,
     throw new QuizGameError('QUESTION_NOT_FOUND', 'Вопрос не найден');
   }
 
-  const isCorrect = isQuizAnswerCorrect(trimmed, configQuestion.answers);
+  const isCorrect = isQuizQuestionAnswerCorrect(trimmed, configQuestion);
   const pointsEarned = isCorrect ? state.currentQuestion.points : 0;
 
   state.currentQuestion.answers.push({

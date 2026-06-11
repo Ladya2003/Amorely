@@ -35,14 +35,21 @@ const NewsPage: React.FC = () => {
   }, [selectedCategory, i18n.language]);
 
   useEffect(() => {
-    if (searchParams.get('article') !== HOME_SCREEN_NEWS_QUERY || isLoading) {
+    const articleParam = searchParams.get('article');
+    if (!articleParam || isLoading) {
       return;
     }
 
-    const homeScreenNews = news.find((item) => isHomeScreenNewsItem(item.title));
-    if (homeScreenNews) {
-      setSelectedNews(homeScreenNews);
-      markNewsAsRead(homeScreenNews._id);
+    let matchedNews: NewsItem | undefined;
+    if (articleParam === HOME_SCREEN_NEWS_QUERY) {
+      matchedNews = news.find((item) => isHomeScreenNewsItem(item.title));
+    } else {
+      matchedNews = news.find((item) => item._id === articleParam);
+    }
+
+    if (matchedNews) {
+      setSelectedNews(matchedNews);
+      markNewsAsRead(matchedNews._id);
     }
 
     const nextParams = new URLSearchParams(searchParams);

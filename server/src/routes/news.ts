@@ -13,6 +13,7 @@ import {
 } from '../i18n/newsContent';
 import { resolveLocale } from '../i18n/locales';
 import { getUserLocale } from '../utils/userLocale';
+import { notifyNewsPublished } from '../services/pushService';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -209,6 +210,13 @@ router.post('/', adminMiddleware, upload.array('media'), async (req: Request, re
 
     const savedNews = await newNews.save();
 
+    if (savedNews.isPublished) {
+      void notifyNewsPublished({
+        newsId: savedNews._id.toString(),
+        title: savedNews.translations?.ru?.title || savedNews.title || 'Новая новость'
+      });
+    }
+
     res.status(201).json({
       message: 'Новость успешно создана',
       news: formatNewsForAdmin(savedNews),
@@ -231,6 +239,8 @@ router.put('/:id', adminMiddleware, upload.array('media'), async (req: Request, 
     if (!news) {
       return res.status(404).json({ error: 'Новость не найдена' });
     }
+
+    const wasPublished = news.isPublished;
 
     const parsedTranslations = parseNewsTranslationsInput(translations);
     if (parsedTranslations) {
@@ -285,6 +295,13 @@ router.put('/:id', adminMiddleware, upload.array('media'), async (req: Request, 
     news.updatedAt = new Date();
 
     const updatedNews = await news.save();
+
+    if (updatedNews.isPublished && !wasPublished) {
+      void notifyNewsPublished({
+        newsId: updatedNews._id.toString(),
+        title: updatedNews.translations?.ru?.title || updatedNews.title || 'Новая новость'
+      });
+    }
 
     res.json({
       message: 'Новость успешно обновлена',

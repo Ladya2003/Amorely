@@ -5,6 +5,7 @@ export interface DrawStroke {
   color: string;
   width: number;
   isEraser?: boolean;
+  isFill?: boolean;
 }
 
 export interface DrawGuessAttempt {
@@ -22,6 +23,7 @@ export interface DrawCurrentRound {
   guessingStartedAt: Date | null;
   guessingDeadlineAt: Date | null;
   strokes: DrawStroke[];
+  redoStrokes: DrawStroke[];
   guessAttempts: DrawGuessAttempt[];
   guessText: string | null;
   guessedByUserId: mongoose.Types.ObjectId | null;
@@ -56,6 +58,7 @@ const drawStrokeSchema = new mongoose.Schema(
     color: { type: String, default: '#111111' },
     width: { type: Number, default: 4 },
     isEraser: { type: Boolean, default: false },
+    isFill: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -74,6 +77,7 @@ const drawCurrentRoundSchema = new mongoose.Schema(
     guessingStartedAt: { type: Date, default: null },
     guessingDeadlineAt: { type: Date, default: null },
     strokes: { type: [drawStrokeSchema], default: [] },
+    redoStrokes: { type: [drawStrokeSchema], default: [] },
     guessAttempts: {
       type: [
         {

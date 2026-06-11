@@ -32,7 +32,9 @@ import {
   postDrawClearStrokes,
   postDrawGuess,
   postDrawReady,
+  postDrawRedo,
   postDrawStroke,
+  postDrawUndo,
   type DrawGameState,
   type DrawStroke,
 } from '../services/gamesService';
@@ -74,6 +76,7 @@ const DrawGamePlayPage: React.FC = () => {
   const [drawTool, setDrawTool] = useState<DrawingTool>('pen');
   const [penColor, setPenColor] = useState('#111111');
   const [dailyLimitDialogOpen, setDailyLimitDialogOpen] = useState(false);
+  const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const [toast, setToast] = useState({
     open: false,
@@ -245,6 +248,9 @@ const DrawGamePlayPage: React.FC = () => {
         setBlockedReason(payload.message || t('games.common.partnerRequired'));
         return;
       }
+      if (payload.code === 'NOT_DRAWING') {
+        return;
+      }
       if (payload.message) {
         setToast({ open: true, message: payload.message, severity: 'error' });
       }
@@ -333,6 +339,9 @@ const DrawGamePlayPage: React.FC = () => {
         applyState(result.state);
       }
     } catch (error: any) {
+      if (error?.response?.data?.code === 'NOT_DRAWING') {
+        return;
+      }
       setToast({
         open: true,
         message: error?.response?.data?.error || t('games.common.errors.strokeFailed'),
@@ -355,6 +364,48 @@ const DrawGamePlayPage: React.FC = () => {
       setToast({
         open: true,
         message: error?.response?.data?.error || t('games.common.errors.clearCanvasFailed'),
+        severity: 'error',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUndo = async () => {
+    setSubmitting(true);
+    try {
+      const socket = socketService.getSocket();
+      if (socket?.connected) {
+        socket.emit('draw_game_undo');
+      } else {
+        const result = await postDrawUndo();
+        applyState(result.state);
+      }
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.common.errors.undoFailed'),
+        severity: 'error',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRedo = async () => {
+    setSubmitting(true);
+    try {
+      const socket = socketService.getSocket();
+      if (socket?.connected) {
+        socket.emit('draw_game_redo');
+      } else {
+        const result = await postDrawRedo();
+        applyState(result.state);
+      }
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.common.errors.redoFailed'),
         severity: 'error',
       });
     } finally {
@@ -411,6 +462,38 @@ const DrawGamePlayPage: React.FC = () => {
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button variant="contained" onClick={handleDismissDailyLimitDialog}>
           {t('games.common.understood')}
+        </Button>
+      </DialogActions>
+    </ResponsiveDialog>
+  );
+
+  const renderClearAllDialog = () => (
+    <ResponsiveDialog
+      open={clearAllDialogOpen}
+      onClose={() => setClearAllDialogOpen(false)}
+      maxWidth="xs"
+      fullWidth
+    >
+      <DialogTitle>{t('drawingTools.clearAllConfirmTitle')}</DialogTitle>
+      <DialogContent>
+        <Typography variant="body2" color="text.secondary">
+          {t('drawingTools.clearAllConfirmBody')}
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={() => setClearAllDialogOpen(false)} disabled={submitting}>
+          {t('calendar.common.cancel')}
+        </Button>
+        <Button
+          variant="contained"
+          color="error"
+          disabled={submitting}
+          onClick={async () => {
+            setClearAllDialogOpen(false);
+            await handleClearStrokes();
+          }}
+        >
+          {t('drawingTools.clearAll')}
         </Button>
       </DialogActions>
     </ResponsiveDialog>
@@ -613,6 +696,7 @@ const DrawGamePlayPage: React.FC = () => {
           </Box>
 
           {renderDailyLimitDialog()}
+          {renderClearAllDialog()}
 
           <CustomSnackbar
             open={toast.open}
@@ -782,14 +866,19 @@ const DrawGamePlayPage: React.FC = () => {
             onBrushSizeChange={setBrushSize}
             penColor={penColor}
             onPenColorChange={setPenColor}
-            onClearAll={handleClearStrokes}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            undoDisabled={submitting || !(round.canUndo ?? round.strokes.length > 0)}
+            redoDisabled={submitting || !round.canRedo}
+            onClearAll={() => setClearAllDialogOpen(true)}
             clearAllDisabled={submitting || round.strokes.length === 0}
+            showFillTool
             sideContent={
               showGuessChat ? (
                 <DrawGuessChat
                   attempts={round.guessAttempts}
                   title={t('games.common.partnerGuesses')}
-                  maxHeight={176}
+                  maxHeight={96}
                   titleColor="primary.main"
                 />
               ) : undefined
@@ -923,6 +1012,7 @@ const DrawGamePlayPage: React.FC = () => {
       </Box>
 
       {renderDailyLimitDialog()}
+      {renderClearAllDialog()}
 
       <CustomSnackbar
         open={toast.open}

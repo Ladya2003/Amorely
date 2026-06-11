@@ -37,6 +37,7 @@ export interface DrawStrokePublic {
   color: string;
   width: number;
   isEraser?: boolean;
+  isFill?: boolean;
 }
 
 export interface DrawGuessAttemptPublic {
@@ -73,6 +74,8 @@ export interface DrawGamePublicState {
     yourWord: string | null;
     isDrawer: boolean;
     isGuesser: boolean;
+    canUndo: boolean;
+    canRedo: boolean;
     reveal: {
       word: string;
       guessText: string | null;
@@ -250,6 +253,7 @@ const buildNewRoundPayload = (context: DrawGameContext, state: any) => {
       guessingStartedAt: drawingStartedAt,
       guessingDeadlineAt: drawingDeadlineAt,
       strokes: [],
+      redoStrokes: [],
       guessAttempts: [],
       guessText: null,
       guessedByUserId: null,
@@ -453,6 +457,7 @@ export const formatDrawGameState = (
         color: stroke.color,
         width: stroke.width,
         isEraser: Boolean(stroke.isEraser),
+        isFill: Boolean(stroke.isFill),
       })),
       guessAttempts: (round.guessAttempts || []).map(
         (attempt: { userId: { toString(): string }; text: string }) => ({
@@ -467,6 +472,16 @@ export const formatDrawGameState = (
           : null,
       isDrawer,
       isGuesser,
+      canUndo:
+        isDrawer &&
+        round.status === 'drawing' &&
+        Array.isArray(round.strokes) &&
+        round.strokes.length > 0,
+      canRedo:
+        isDrawer &&
+        round.status === 'drawing' &&
+        Array.isArray(round.redoStrokes) &&
+        round.redoStrokes.length > 0,
       reveal,
     };
   }
@@ -643,7 +658,63 @@ export const appendDrawStroke = async (
     color: stroke.color,
     width: stroke.width,
     isEraser: Boolean(stroke.isEraser),
+    isFill: Boolean(stroke.isFill),
   });
+  state.currentRound.redoStrokes = [];
+
+  await state.save();
+  return state;
+};
+
+const getDrawableRoundForDrawer = async (userId: string, context: DrawGameContext) => {
+  const state = await DrawGameState.findOne({ relationshipId: context.relationship._id });
+  if (!state?.currentRound || state.currentRound.status !== 'drawing') {
+    throw new DrawGameError('NOT_DRAWING', 'Сейчас нельзя изменять рисунок');
+  }
+
+  if (state.currentRound.drawerUserId.toString() !== userId) {
+    throw new DrawGameError('NOT_DRAWER', 'Изменять рисунок может только художник');
+  }
+
+  if (!Array.isArray(state.currentRound.strokes)) {
+    state.currentRound.strokes = [];
+  }
+  if (!Array.isArray(state.currentRound.redoStrokes)) {
+    state.currentRound.redoStrokes = [];
+  }
+
+  return state;
+};
+
+export const undoDrawStroke = async (userId: string, context: DrawGameContext) => {
+  const state = await getDrawableRoundForDrawer(userId, context);
+  const round = state.currentRound!;
+
+  if (round.strokes.length === 0) {
+    throw new DrawGameError('NOTHING_TO_UNDO', 'Нечего отменять');
+  }
+
+  const lastStroke = round.strokes.pop();
+  if (lastStroke) {
+    round.redoStrokes.push(lastStroke);
+  }
+
+  await state.save();
+  return state;
+};
+
+export const redoDrawStroke = async (userId: string, context: DrawGameContext) => {
+  const state = await getDrawableRoundForDrawer(userId, context);
+  const round = state.currentRound!;
+
+  if (round.redoStrokes.length === 0) {
+    throw new DrawGameError('NOTHING_TO_REDO', 'Нечего вернуть');
+  }
+
+  const stroke = round.redoStrokes.pop();
+  if (stroke) {
+    round.strokes.push(stroke);
+  }
 
   await state.save();
   return state;
@@ -660,6 +731,7 @@ export const clearDrawStrokes = async (userId: string, context: DrawGameContext)
   }
 
   state.currentRound.strokes = [];
+  state.currentRound.redoStrokes = [];
   await state.save();
   return state;
 };

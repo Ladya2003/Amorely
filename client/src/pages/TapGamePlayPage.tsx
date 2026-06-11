@@ -18,6 +18,7 @@ import socketService from '../services/socketService';
 import {
   fetchTapGameState,
   postTapGameTap,
+  postTapGameTapKeepalive,
   type TapGameState,
   type TapShopItem,
 } from '../services/gamesService';
@@ -32,6 +33,67 @@ interface TapFloatText {
 }
 
 const FLOAT_ANIMATION_MS = 750;
+const TAP_FLUSH_DEBOUNCE_MS = 400;
+const TAP_BATCH_MAX = 100;
+
+const applyOptimisticTap = (state: TapGameState, viewerUserId: string): TapGameState | null => {
+  if (!state.isMyTurn) {
+    return null;
+  }
+
+  const isPrimary = state.userId === viewerUserId;
+  const progressGain =
+    state.activeBoost && state.activeBoost.remainingUses > 0
+      ? state.activeBoost.multiplier
+      : 1;
+  const remaining = Math.max(0, state.targetTaps - state.myTapsThisRound);
+  const appliedProgress = Math.min(progressGain, remaining);
+
+  if (appliedProgress <= 0) {
+    return null;
+  }
+
+  let activeBoost = state.activeBoost;
+  if (activeBoost && activeBoost.remainingUses > 0) {
+    const remainingUses = activeBoost.remainingUses - 1;
+    activeBoost = remainingUses > 0 ? { ...activeBoost, remainingUses } : null;
+  }
+
+  const myTapsThisRound = state.myTapsThisRound + appliedProgress;
+  const myPartComplete = myTapsThisRound >= state.targetTaps;
+
+  return {
+    ...state,
+    myTapsThisRound,
+    userTapsThisRound: isPrimary
+      ? state.userTapsThisRound + appliedProgress
+      : state.userTapsThisRound,
+    partnerTapsThisRound: isPrimary
+      ? state.partnerTapsThisRound
+      : state.partnerTapsThisRound + appliedProgress,
+    points: state.points + 1,
+    totalTaps: state.totalTaps + 1,
+    activeBoost,
+    isMyTurn: !myPartComplete,
+    waitingForPartner: myPartComplete && state.partnerProgressThisRound < state.targetTaps,
+  };
+};
+
+const projectTapState = (
+  baseState: TapGameState,
+  pendingTapCount: number,
+  viewerUserId: string
+): TapGameState => {
+  let projected = baseState;
+  for (let index = 0; index < pendingTapCount; index += 1) {
+    const next = applyOptimisticTap(projected, viewerUserId);
+    if (!next) {
+      break;
+    }
+    projected = next;
+  }
+  return projected;
+};
 
 const tapBlockInteractionSx = {
   userSelect: 'none',
@@ -76,8 +138,24 @@ const TapGamePlayPage: React.FC = () => {
   const [toast, setToast] = useState({ open: false, message: '', severity: 'info' as 'info' | 'error' | 'success' });
   const [floatTexts, setFloatTexts] = useState<TapFloatText[]>([]);
   const floatIdRef = useRef(0);
+  const serverStateRef = useRef<TapGameState | null>(null);
+  const pendingTapCountRef = useRef(0);
+  const isFlushingRef = useRef(false);
+  const flushDebounceRef = useRef<number | null>(null);
 
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
+
+  const syncDisplayState = useCallback(
+    (baseState: TapGameState) => {
+      serverStateRef.current = baseState;
+      if (!user?._id) {
+        setState(baseState);
+        return;
+      }
+      setState(projectTapState(baseState, pendingTapCountRef.current, user._id));
+    },
+    [user?._id]
+  );
 
   const spawnFloatText = useCallback((value: number) => {
     const id = floatIdRef.current + 1;
@@ -94,7 +172,8 @@ const TapGamePlayPage: React.FC = () => {
   const loadState = useCallback(async () => {
     try {
       const data = await fetchTapGameState();
-      setState(data.state);
+      pendingTapCountRef.current = 0;
+      syncDisplayState(data.state);
       setShopItems(data.shopItems);
     } catch (error: any) {
       if (error?.response?.data?.code === 'NO_PARTNER') {
@@ -109,7 +188,7 @@ const TapGamePlayPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [syncDisplayState, t]);
 
   useEffect(() => {
     loadState();
@@ -124,8 +203,10 @@ const TapGamePlayPage: React.FC = () => {
     socket.emit('tap_game_subscribe');
 
     const handleState = (payload: { state: TapGameState; roundCompletionBonus?: number }) => {
-      setState(payload.state);
-      showRoundCompletionToast(setToast, t, payload.roundCompletionBonus);
+      syncDisplayState(payload.state);
+      if (pendingTapCountRef.current === 0) {
+        showRoundCompletionToast(setToast, t, payload.roundCompletionBonus);
+      }
     };
 
     const handleError = (payload: { message?: string; code?: string }) => {
@@ -145,27 +226,36 @@ const TapGamePlayPage: React.FC = () => {
       socket.off('tap_game_state', handleState);
       socket.off('tap_game_error', handleError);
     };
-  }, [user?._id, t]);
+  }, [syncDisplayState, user?._id, t]);
 
-  const handleTap = async () => {
-    if (!state?.isMyTurn) {
+  const sendTapBatch = useCallback(
+    async (count: number) => {
+      const tapCount = Math.min(Math.max(1, count), TAP_BATCH_MAX);
+      const socket = socketService.getSocket();
+      if (socket?.connected) {
+        socket.emit('tap_game_tap', { count: tapCount });
+        return null;
+      }
+
+      return postTapGameTap(tapCount);
+    },
+    []
+  );
+
+  const flushPendingTaps = useCallback(async () => {
+    if (isFlushingRef.current || pendingTapCountRef.current <= 0) {
       return;
     }
 
-    const progressGain =
-      state.activeBoost && state.activeBoost.remainingUses > 0
-        ? state.activeBoost.multiplier
-        : 1;
-
-    spawnFloatText(progressGain);
+    const countToSend = Math.min(pendingTapCountRef.current, TAP_BATCH_MAX);
+    isFlushingRef.current = true;
 
     try {
-      const socket = socketService.getSocket();
-      if (socket?.connected) {
-        socket.emit('tap_game_tap');
-      } else {
-        const result = await postTapGameTap();
-        setState(result.state);
+      const result = await sendTapBatch(countToSend);
+      pendingTapCountRef.current = Math.max(0, pendingTapCountRef.current - countToSend);
+
+      if (result) {
+        syncDisplayState(result.state);
         showRoundCompletionToast(setToast, t, result.roundCompletionBonus);
       }
     } catch (error: any) {
@@ -174,7 +264,63 @@ const TapGamePlayPage: React.FC = () => {
         message: error?.response?.data?.error || t('games.common.errors.tapFailed'),
         severity: 'error',
       });
+      if (serverStateRef.current && user?._id) {
+        setState(projectTapState(serverStateRef.current, pendingTapCountRef.current, user._id));
+      }
+    } finally {
+      isFlushingRef.current = false;
+      if (pendingTapCountRef.current > 0) {
+        void flushPendingTaps();
+      }
     }
+  }, [sendTapBatch, syncDisplayState, t, user?._id]);
+
+  const scheduleFlush = useCallback(() => {
+    if (flushDebounceRef.current !== null) {
+      window.clearTimeout(flushDebounceRef.current);
+    }
+    flushDebounceRef.current = window.setTimeout(() => {
+      flushDebounceRef.current = null;
+      void flushPendingTaps();
+    }, TAP_FLUSH_DEBOUNCE_MS);
+  }, [flushPendingTaps]);
+
+  useEffect(() => {
+    return () => {
+      if (flushDebounceRef.current !== null) {
+        window.clearTimeout(flushDebounceRef.current);
+      }
+
+      const pendingCount = pendingTapCountRef.current;
+      if (pendingCount > 0) {
+        const countToSend = Math.min(pendingCount, TAP_BATCH_MAX);
+        const socket = socketService.getSocket();
+        if (socket?.connected) {
+          socket.emit('tap_game_tap', { count: countToSend });
+        } else {
+          void postTapGameTapKeepalive(countToSend);
+        }
+        pendingTapCountRef.current = 0;
+      }
+    };
+  }, []);
+
+  const handleTap = () => {
+    if (!state?.isMyTurn || !user?._id || !serverStateRef.current) {
+      return;
+    }
+
+    const optimisticNext = applyOptimisticTap(state, user._id);
+    if (!optimisticNext) {
+      return;
+    }
+
+    const progressGain = optimisticNext.myTapsThisRound - state.myTapsThisRound;
+    spawnFloatText(progressGain);
+
+    pendingTapCountRef.current += 1;
+    setState(projectTapState(serverStateRef.current, pendingTapCountRef.current, user._id));
+    scheduleFlush();
   };
 
   if (loading) {
@@ -233,7 +379,16 @@ const TapGamePlayPage: React.FC = () => {
           flexShrink: 0,
         }}
       >
-        <IconButton onClick={() => navigate('/chat/games/tap')} aria-label={t('games.common.back')}>
+        <IconButton
+          onClick={() => {
+            if (flushDebounceRef.current !== null) {
+              window.clearTimeout(flushDebounceRef.current);
+              flushDebounceRef.current = null;
+            }
+            void flushPendingTaps().finally(() => navigate('/chat/games/tap'));
+          }}
+          aria-label={t('games.common.back')}
+        >
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>

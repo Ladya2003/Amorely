@@ -182,7 +182,7 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
   }
 });
 
-// Глобальный поиск пользователей для чата (по логину или почте)
+// Глобальный поиск пользователей для чата (по логину, почте, имени или фамилии)
 router.get('/contacts/search', authMiddleware, async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
@@ -199,17 +199,20 @@ router.get('/contacts/search', authMiddleware, async (req: any, res: Response) =
       return res.json({ items: [], hasMore: false, page, limit, total: 0 });
     }
 
+    const searchRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     const searchFilter = {
       _id: { $ne: userId },
       $or: [
-        { username: { $regex: query, $options: 'i' } },
-        { email: { $regex: query, $options: 'i' } }
+        { username: searchRegex },
+        { email: searchRegex },
+        { firstName: searchRegex },
+        { lastName: searchRegex },
       ]
     };
 
     const total = await User.countDocuments(searchFilter);
 
-    // Ищем пользователей по частичному совпадению username/email, кроме текущего пользователя
+    // Ищем пользователей по частичному совпадению username/email/имени, кроме текущего пользователя
     const matchedUsers = await User.find(searchFilter)
       .select('_id username email firstName lastName avatar')
       .sort({ username: 1 })

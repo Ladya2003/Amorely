@@ -125,6 +125,32 @@ const getMessagePreview = (params: {
   return 'Новое сообщение';
 };
 
+const buildAppUrl = (path: string) => {
+  const appBasePath = (process.env.APP_BASE_PATH || '').replace(/\/$/, '');
+  const clientUrl = (process.env.CLIENT_URL || '').replace(/\/$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const fullPath = `${appBasePath}${normalizedPath}`;
+  return clientUrl ? `${clientUrl}${fullPath}` : fullPath;
+};
+
+const buildChatUrl = (senderId: string) =>
+  buildAppUrl(`/chat?contact=${encodeURIComponent(senderId)}`);
+
+const buildFeedContentUrl = (contentId?: string) => {
+  const query = contentId ? `?content=${encodeURIComponent(contentId)}` : '';
+  return buildAppUrl(`/${query}`);
+};
+
+const buildNewsUrl = (newsId: string) =>
+  buildAppUrl(`/news?article=${encodeURIComponent(newsId)}`);
+
+const getPartnerContentBody = (itemsCount: number) => {
+  if (itemsCount > 1) {
+    return `Добавлено ${itemsCount} новых фото или видео`;
+  }
+  return 'Добавлено новое фото или видео';
+};
+
 export const notifyNewMessage = async (params: {
   receiverId: string;
   senderId: string;
@@ -163,8 +189,61 @@ export const notifyNewMessage = async (params: {
   await sendPushToUser(params.receiverId, {
     title: senderName,
     body,
-    url: params.chatUrl || '/chat',
+    url: params.chatUrl || buildChatUrl(params.senderId),
     tag: `chat-${params.senderId}`,
     badgeCount
   });
+};
+
+export const notifyNewPartnerContent = async (params: {
+  receiverId: string;
+  senderId: string;
+  itemsCount?: number;
+  contentId?: string;
+}) => {
+  const receiver = await User.findById(params.receiverId);
+  if (!receiver?.notificationSettings?.push?.newContent) {
+    return;
+  }
+
+  const sender = await User.findById(params.senderId);
+  if (!sender) {
+    return;
+  }
+
+  const senderName = getUserDisplayName(sender);
+  const itemsCount = params.itemsCount ?? 1;
+
+  await sendPushToUser(params.receiverId, {
+    title: senderName,
+    body: getPartnerContentBody(itemsCount),
+    url: buildFeedContentUrl(params.contentId),
+    tag: 'partner-content'
+  });
+};
+
+export const notifyNewsPublished = async (params: {
+  newsId: string;
+  title: string;
+}) => {
+  const users = await User.find({
+    'notificationSettings.push.news': true
+  }).select('_id');
+
+  if (!users.length) {
+    return;
+  }
+
+  const body = truncatePreview(params.title.trim() || 'Новая новость');
+
+  await Promise.all(
+    users.map((user) =>
+      sendPushToUser(user._id.toString(), {
+        title: 'Amorely',
+        body,
+        url: buildNewsUrl(params.newsId),
+        tag: `news-${params.newsId}`
+      })
+    )
+  );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Box, Container, Fab, Badge, CircularProgress, Typography, Tooltip, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -36,6 +36,7 @@ const FeedPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { localDeviceKeys } = useCrypto();
   const partnerId = usePartnerId();
@@ -73,6 +74,27 @@ const FeedPage: React.FC = () => {
       void fetchContent();
     }
   }, [localDeviceKeys, user?._id, partnerId, location.pathname]);
+
+  useEffect(() => {
+    const contentId = searchParams.get('content');
+    if (!contentId || isContentLoading) {
+      return;
+    }
+
+    const partnerItem = partnerContent.find((item) => item.id === contentId);
+    const selfItem = selfContent.find((item) => item.id === contentId);
+    const matchedItem = partnerItem || selfItem;
+
+    if (matchedItem) {
+      setTabValue(partnerItem ? 0 : 1);
+      setSelectedContent(matchedItem);
+      setViewerOpen(true);
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('content');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, isContentLoading, partnerContent, selfContent, setSearchParams]);
 
   useEffect(() => {
     const handlePartnerChanged = () => {

@@ -125,13 +125,26 @@ export const fetchTapGameState = async () => {
   return response.data as { state: TapGameState; shopItems: TapShopItem[] };
 };
 
-export const postTapGameTap = async () => {
+export const postTapGameTap = async (count = 1) => {
   const response = await axios.post(
     `${API_URL}/api/games/tap/tap`,
-    {},
+    { count },
     { headers: authHeaders() }
   );
   return response.data as { state: TapGameState; roundCompletionBonus?: number };
+};
+
+export const postTapGameTapKeepalive = (count: number) => {
+  const token = localStorage.getItem('token');
+  return fetch(`${API_URL}/api/games/tap/tap`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ count }),
+    keepalive: true,
+  });
 };
 
 export const buyTapShopItem = async (itemId: string) => {
@@ -249,6 +262,7 @@ export interface DrawStroke {
   color: string;
   width: number;
   isEraser?: boolean;
+  isFill?: boolean;
 }
 
 export interface DrawGuessAttempt {
@@ -292,6 +306,8 @@ export interface DrawGameState {
     yourWord: string | null;
     isDrawer: boolean;
     isGuesser: boolean;
+    canUndo: boolean;
+    canRedo: boolean;
     reveal: DrawRoundReveal | null;
   } | null;
 }
@@ -342,6 +358,24 @@ export const postDrawGuess = async (guess: string) => {
 export const postDrawClearStrokes = async () => {
   const response = await axios.post(
     `${API_URL}/api/games/draw/clear-strokes`,
+    {},
+    { headers: authHeaders() }
+  );
+  return response.data as { state: DrawGameState };
+};
+
+export const postDrawUndo = async () => {
+  const response = await axios.post(
+    `${API_URL}/api/games/draw/undo`,
+    {},
+    { headers: authHeaders() }
+  );
+  return response.data as { state: DrawGameState };
+};
+
+export const postDrawRedo = async () => {
+  const response = await axios.post(
+    `${API_URL}/api/games/draw/redo`,
     {},
     { headers: authHeaders() }
   );

@@ -197,12 +197,6 @@ export default function setupSocketIO(server: HttpServer) {
         if (receiverSocketData) {
           io.to(receiverSocketData.socketId).emit('new_message', formattedMessage);
         } else {
-          const clientUrl = (process.env.CLIENT_URL || '').replace(/\/$/, '');
-          const appBasePath = (process.env.APP_BASE_PATH || '').replace(/\/$/, '');
-          const chatUrl = clientUrl
-            ? `${clientUrl}${appBasePath}/chat`
-            : `${appBasePath || ''}/chat`;
-
           void notifyNewMessage({
             receiverId,
             senderId,
@@ -212,8 +206,7 @@ export default function setupSocketIO(server: HttpServer) {
             attachments,
             sharedEvent: sharedEvent || undefined,
             sharedNote: sharedNote || undefined,
-            forwardFrom: sanitizedForwardFrom,
-            chatUrl
+            forwardFrom: sanitizedForwardFrom
           });
         }
       } catch (error) {

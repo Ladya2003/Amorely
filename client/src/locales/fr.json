@@ -457,6 +457,8 @@
         "loadFailed": "Échec du chargement",
         "guessFailed": "Échec de l'envoi de la tentative",
         "clearCanvasFailed": "Échec de l'effacement du canvas",
+        "undoFailed": "Impossible d'annuler",
+        "redoFailed": "Impossible de rétablir",
         "strokeFailed": "Échec de l'envoi du trait",
         "advanceFailed": "Échec de l'avancement",
         "tapFailed": "Échec de l'enregistrement du tap",
@@ -491,8 +493,8 @@
     },
     "waitDuration": {
       "soon": "bientôt",
-      "hoursMinutes": "{{hours}} h {{minutes}} min",
-      "minutes": "{{minutes}} min",
+      "hoursMinutes": "{{hours}}h {{minutes}}min",
+      "minutes": "{{minutes}}min",
       "lessThanMinute": "moins d'une minute"
     }
   },
@@ -781,11 +783,16 @@
     "tool": "Outil",
     "brush": "Pinceau",
     "eraser": "Gomme",
+    "fill": "Remplissage",
     "color": "Couleur",
     "size": "Taille : {{size}}px",
     "colorAria": "Couleur {{color}}",
     "customColor": "Couleur personnalisée",
-    "clearAll": "Tout effacer"
+    "undo": "Annuler",
+    "redo": "Rétablir",
+    "clearAll": "Tout effacer",
+    "clearAllConfirmTitle": "Effacer tout le dessin ?",
+    "clearAllConfirmBody": "Tous les traits sur le canvas seront supprimés. Cette action est irréversible."
   },
   "chat": {
     "tab": "Chat",

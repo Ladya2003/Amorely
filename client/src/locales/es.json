@@ -457,6 +457,8 @@
         "loadFailed": "No se pudo cargar",
         "guessFailed": "No se pudo enviar intento",
         "clearCanvasFailed": "No se pudo borrar el lienzo",
+        "undoFailed": "No se pudo deshacer",
+        "redoFailed": "No se pudo rehacer",
         "strokeFailed": "No se pudo enviar trazo",
         "advanceFailed": "No se pudo avanzar",
         "tapFailed": "No se pudo registrar toque",
@@ -491,8 +493,8 @@
     },
     "waitDuration": {
       "soon": "pronto",
-      "hoursMinutes": "{{hours}} h {{minutes}} min",
-      "minutes": "{{minutes}} min",
+      "hoursMinutes": "{{hours}}h {{minutes}}m",
+      "minutes": "{{minutes}}m",
       "lessThanMinute": "menos de un minuto"
     }
   },
@@ -781,11 +783,16 @@
     "tool": "Herramienta",
     "brush": "Pincel",
     "eraser": "Borrador",
+    "fill": "Relleno",
     "color": "Color",
     "size": "Tamaño: {{size}}px",
     "colorAria": "Color {{color}}",
     "customColor": "Color personalizado",
-    "clearAll": "Borrar todo"
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "clearAll": "Borrar todo",
+    "clearAllConfirmTitle": "¿Borrar todo el dibujo?",
+    "clearAllConfirmBody": "Se eliminarán todos los trazos del lienzo. Esta acción no se puede deshacer."
   },
   "chat": {
     "tab": "Chat",

@@ -19,6 +19,8 @@ import {
   appendDrawStroke,
   clearDrawGuessAttempts,
   clearDrawStrokes,
+  redoDrawStroke,
+  undoDrawStroke,
   formatDrawGameState,
   getDrawGameParticipantIds,
   getOrCreateDrawGameState,
@@ -32,7 +34,8 @@ import {
   formatTapGameState,
   getOrCreateTapGameState,
   getTapGameParticipantIds,
-  processTap,
+  normalizeTapBatchCount,
+  processTapBatch,
   resolveTapGameContext,
   updateTapGameBadges,
 } from './tapGameService';
@@ -83,7 +86,28 @@ export const attachGameSocketHandlers = (
     }
   });
 
-  socket.on('tap_game_tap', async () => {
+  const emitTapGameStateToParticipants = async (
+    state: any,
+    context: Awaited<ReturnType<typeof resolveTapGameContext>>,
+    roundCompletionBonus: number
+  ) => {
+    const participantUserIds = getTapGameParticipantIds(context);
+    await Promise.all(
+      participantUserIds.map(async (uid) => {
+        const socketData = connectedUsers.find((user) => user.userId === uid);
+        if (!socketData) {
+          return;
+        }
+        const userContext = await resolveTapGameContext(uid);
+        io.to(socketData.socketId).emit('tap_game_state', {
+          state: formatTapGameState(state, uid, userContext),
+          ...(roundCompletionBonus > 0 ? { roundCompletionBonus } : {}),
+        });
+      })
+    );
+  };
+
+  socket.on('tap_game_tap', async (payload?: { count?: number }) => {
     try {
       const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
       if (!senderSocketData) {
@@ -91,25 +115,19 @@ export const attachGameSocketHandlers = (
         return;
       }
 
+      const tapCount = normalizeTapBatchCount(payload?.count);
       const context = await resolveTapGameContext(senderSocketData.userId);
-      const { state, roundCompletionBonus } = await processTap(senderSocketData.userId, context);
-
-      await updateTapGameBadges();
-
-      const participantUserIds = getTapGameParticipantIds(context);
-      await Promise.all(
-        participantUserIds.map(async (uid) => {
-          const socketData = connectedUsers.find((user) => user.userId === uid);
-          if (!socketData) {
-            return;
-          }
-          const userContext = await resolveTapGameContext(uid);
-          io.to(socketData.socketId).emit('tap_game_state', {
-            state: formatTapGameState(state, uid, userContext),
-            ...(roundCompletionBonus > 0 ? { roundCompletionBonus } : {}),
-          });
-        })
+      const { state, roundCompletionBonus } = await processTapBatch(
+        senderSocketData.userId,
+        context,
+        tapCount
       );
+
+      if (roundCompletionBonus > 0) {
+        await updateTapGameBadges();
+      }
+
+      await emitTapGameStateToParticipants(state, context, roundCompletionBonus);
     } catch (error) {
       if (error instanceof TapGameError) {
         socket.emit('tap_game_error', { message: error.message, code: error.code });
@@ -395,6 +413,7 @@ export const attachGameSocketHandlers = (
       color?: string;
       width?: number;
       isEraser?: boolean;
+      isFill?: boolean;
     }) => {
     try {
       const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
@@ -404,7 +423,12 @@ export const attachGameSocketHandlers = (
 
       const context = await resolveDrawGameContext(senderSocketData.userId);
       const points = payload?.points || [];
-      if (points.length < 2) {
+      const isFill = Boolean(payload?.isFill);
+      if (isFill) {
+        if (points.length < 1) {
+          return;
+        }
+      } else if (points.length < 2) {
         return;
       }
 
@@ -413,6 +437,7 @@ export const attachGameSocketHandlers = (
         color: payload?.color || '#111111',
         width: payload?.width || 4,
         isEraser: Boolean(payload?.isEraser),
+        isFill,
       };
 
       const state = await appendDrawStroke(senderSocketData.userId, context, stroke);
@@ -433,6 +458,40 @@ export const attachGameSocketHandlers = (
 
       const context = await resolveDrawGameContext(senderSocketData.userId);
       const state = await clearDrawStrokes(senderSocketData.userId, context);
+      await emitDrawStateToPartners(state, context);
+    } catch (error) {
+      if (error instanceof DrawGameError) {
+        socket.emit('draw_game_error', { message: error.message, code: error.code });
+      }
+    }
+  });
+
+  socket.on('draw_game_undo', async () => {
+    try {
+      const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
+      if (!senderSocketData) {
+        return;
+      }
+
+      const context = await resolveDrawGameContext(senderSocketData.userId);
+      const state = await undoDrawStroke(senderSocketData.userId, context);
+      await emitDrawStateToPartners(state, context);
+    } catch (error) {
+      if (error instanceof DrawGameError) {
+        socket.emit('draw_game_error', { message: error.message, code: error.code });
+      }
+    }
+  });
+
+  socket.on('draw_game_redo', async () => {
+    try {
+      const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
+      if (!senderSocketData) {
+        return;
+      }
+
+      const context = await resolveDrawGameContext(senderSocketData.userId);
+      const state = await redoDrawStroke(senderSocketData.userId, context);
       await emitDrawStateToPartners(state, context);
     } catch (error) {
       if (error instanceof DrawGameError) {

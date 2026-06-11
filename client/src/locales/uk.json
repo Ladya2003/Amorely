@@ -399,6 +399,8 @@
         "loadFailed": "Не вдалося завантажити",
         "guessFailed": "Не вдалося надіслати здогадку",
         "clearCanvasFailed": "Не вдалося очистити полотно",
+        "undoFailed": "Не вдалося скасувати дію",
+        "redoFailed": "Не вдалося повернути дію",
         "strokeFailed": "Не вдалося надіслати штрих",
         "advanceFailed": "Не вдалося перейти далі",
         "tapFailed": "Не вдалося зарахувати натискання",
@@ -433,8 +435,8 @@
     },
     "waitDuration": {
       "soon": "незабаром",
-      "hoursMinutes": "{{hours}} год {{minutes}} хв",
-      "minutes": "{{minutes}} хв",
+      "hoursMinutes": "{{hours}}г {{minutes}}хв",
+      "minutes": "{{minutes}}хв",
       "lessThanMinute": "менше хвилини"
     }
   },
@@ -724,11 +726,16 @@
     "tool": "Інструмент",
     "brush": "Пензель",
     "eraser": "Гумка",
+    "fill": "Заливка",
     "color": "Колір",
     "size": "Розмір: {{size}}px",
     "colorAria": "Колір {{color}}",
     "customColor": "Свій колір",
-    "clearAll": "Стерти все"
+    "undo": "Назад",
+    "redo": "Вперед",
+    "clearAll": "Стерти все",
+    "clearAllConfirmTitle": "Стерти весь малюнок?",
+    "clearAllConfirmBody": "Усі штрихи на полотні буде видалено. Цю дію не можна скасувати."
   },
   "chat": {
     "tab": "Чат",

@@ -23,3 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 
 db exports
+
+# quiz i18n generation cache
+server/scripts/.quiz-i18n-cache.json

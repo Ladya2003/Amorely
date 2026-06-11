@@ -12,11 +12,14 @@ import {
 } from '@mui/material';
 import BrushIcon from '@mui/icons-material/Brush';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
 import PaletteIcon from '@mui/icons-material/Palette';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
 import { HexColorPicker } from 'react-colorful';
 
-export type DrawingTool = 'pen' | 'eraser';
+export type DrawingTool = 'pen' | 'eraser' | 'fill';
 
 export const DEFAULT_PEN_COLORS = [
   '#111111',
@@ -39,11 +42,17 @@ export interface DrawingToolsToolbarProps {
   accentColor?: string;
   minBrush?: number;
   maxBrush?: number;
-  /** Чат догадок справа (50%), на одной линии с колонкой «Инструмент» + «Цвет» */
+  /** Чат догадок справа (50%), на одной строке с блоком «Цвет» */
   sideContent?: ReactNode;
   /** Очистить весь холст (только для игры «Отгадай рисунок») */
   onClearAll?: () => void;
   clearAllDisabled?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  undoDisabled?: boolean;
+  redoDisabled?: boolean;
+  /** Заливка замкнутых областей (только для игры «Отгадай рисунок») */
+  showFillTool?: boolean;
 }
 
 const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
@@ -59,9 +68,22 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
   sideContent,
   onClearAll,
   clearAllDisabled = false,
+  onUndo,
+  onRedo,
+  undoDisabled = false,
+  redoDisabled = false,
+  showFillTool = false,
 }) => {
   const { t } = useTranslation();
   const [colorAnchor, setColorAnchor] = useState<HTMLElement | null>(null);
+
+  const handleColorPick = (color: string) => {
+    onPenColorChange(color);
+    if (tool === 'eraser') {
+      return;
+    }
+    onToolChange(tool === 'fill' ? 'fill' : 'pen');
+  };
 
   const colorBlock = (
     <Box sx={{ minWidth: 0 }}>
@@ -75,10 +97,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
             component="button"
             type="button"
             aria-label={t('drawingTools.colorAria', { color })}
-            onClick={() => {
-              onPenColorChange(color);
-              onToolChange('pen');
-            }}
+            onClick={() => handleColorPick(color)}
             sx={{
               width: 28,
               height: 28,
@@ -112,10 +131,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
         <Box sx={{ p: 1.5 }}>
           <HexColorPicker
             color={penColor}
-            onChange={(hex) => {
-              onPenColorChange(hex);
-              onToolChange('pen');
-            }}
+            onChange={handleColorPick}
           />
         </Box>
       </Popover>
@@ -141,24 +157,58 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
           <AutoFixHighIcon sx={{ mr: 0.5, fontSize: 18 }} />
           {t('drawingTools.eraser')}
         </ToggleButton>
+        {showFillTool && (
+          <ToggleButton value="fill">
+            <FormatColorFillIcon sx={{ mr: 0.5, fontSize: 18 }} />
+            {t('drawingTools.fill')}
+          </ToggleButton>
+        )}
       </ToggleButtonGroup>
-      {onClearAll && (
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<DeleteSweepIcon sx={{ fontSize: 18 }} />}
-          onClick={onClearAll}
-          disabled={clearAllDisabled}
-          sx={{ mt: 1 }}
-        >
-          {t('drawingTools.clearAll')}
-        </Button>
+      {(onUndo || onRedo || onClearAll) && (
+        <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+          {onUndo && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={onUndo}
+              disabled={undoDisabled}
+              aria-label={t('drawingTools.undo')}
+              sx={{ minWidth: 0, py: 0.875, px: 1.25 }}
+            >
+              <UndoIcon sx={{ fontSize: 18 }} />
+            </Button>
+          )}
+          {onRedo && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={onRedo}
+              disabled={redoDisabled}
+              aria-label={t('drawingTools.redo')}
+              sx={{ minWidth: 0, py: 0.875, px: 1.25 }}
+            >
+              <RedoIcon sx={{ fontSize: 18 }} />
+            </Button>
+          )}
+          {onClearAll && (
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={onClearAll}
+              disabled={clearAllDisabled}
+              sx={{ py: 0.875, px: 1.5 }}
+            >
+              <DeleteSweepIcon sx={{ mr: 0.5, fontSize: 18 }} />
+              {t('drawingTools.clearAll')}
+            </Button>
+          )}
+        </Box>
       )}
     </Box>
   );
 
   const sizeBlock = (
-    <Box>
+    <Box sx={{ opacity: tool === 'fill' ? 0.5 : 1 }}>
       <Typography variant="subtitle2" gutterBottom sx={{ color: accentColor }}>
         {t('drawingTools.size', { size: brushSize })}
       </Typography>
@@ -169,6 +219,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
         max={maxBrush}
         step={0.5}
         valueLabelDisplay="auto"
+        disabled={tool === 'fill'}
         sx={{ color: accentColor }}
       />
     </Box>
@@ -176,23 +227,13 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
 
   if (sideContent) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'stretch', mb: 2 }}>
-        <Box
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          }}
-        >
-          {toolBlock}
-          {colorBlock}
-          {sizeBlock}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+        {toolBlock}
+        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'flex-start' }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>{colorBlock}</Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>{sideContent}</Box>
         </Box>
-        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignSelf: 'flex-start' }}>
-          {sideContent}
-        </Box>
+        {sizeBlock}
       </Box>
     );
   }

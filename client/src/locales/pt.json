@@ -457,6 +457,8 @@
         "loadFailed": "Falha ao carregar",
         "guessFailed": "Falha ao enviar palpite",
         "clearCanvasFailed": "Falha ao limpar tela",
+        "undoFailed": "Falha ao desfazer",
+        "redoFailed": "Falha ao refazer",
         "strokeFailed": "Falha ao enviar traço",
         "advanceFailed": "Falha ao avançar",
         "tapFailed": "Falha ao registrar toque",
@@ -491,8 +493,8 @@
     },
     "waitDuration": {
       "soon": "em breve",
-      "hoursMinutes": "{{hours}} h {{minutes}} min",
-      "minutes": "{{minutes}} min",
+      "hoursMinutes": "{{hours}}h {{minutes}}m",
+      "minutes": "{{minutes}}m",
       "lessThanMinute": "menos de um minuto"
     }
   },
@@ -781,11 +783,16 @@
     "tool": "Ferramenta",
     "brush": "Pincel",
     "eraser": "Borracha",
+    "fill": "Preencher",
     "color": "Cor",
     "size": "Tamanho: {{size}}px",
     "colorAria": "Cor {{color}}",
     "customColor": "Cor personalizada",
-    "clearAll": "Apagar tudo"
+    "undo": "Desfazer",
+    "redo": "Refazer",
+    "clearAll": "Apagar tudo",
+    "clearAllConfirmTitle": "Apagar todo o desenho?",
+    "clearAllConfirmBody": "Todos os traços no canvas serão removidos. Esta ação não pode ser desfeita."
   },
   "chat": {
     "tab": "Chat",

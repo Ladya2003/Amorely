@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-import {
-  formatDailyResetCountdown,
-  getMinutesUntilUtcMidnight,
-} from '../../utils/dailyReset';
+import { formatGameWaitDuration } from '../../localization/gameHelpers';
+import { getMinutesUntilUtcMidnight } from '../../utils/dailyReset';
 
 interface DailyResetInfoDialogProps {
   open: boolean;
@@ -19,9 +17,7 @@ const DailyResetInfoDialog: React.FC<DailyResetInfoDialogProps> = ({
   gameName,
 }) => {
   const { t } = useTranslation();
-  const [countdown, setCountdown] = useState(() =>
-    formatDailyResetCountdown(getMinutesUntilUtcMidnight())
-  );
+  const [minutesLeft, setMinutesLeft] = useState(() => getMinutesUntilUtcMidnight());
 
   useEffect(() => {
     if (!open) {
@@ -29,13 +25,15 @@ const DailyResetInfoDialog: React.FC<DailyResetInfoDialogProps> = ({
     }
 
     const updateCountdown = () => {
-      setCountdown(formatDailyResetCountdown(getMinutesUntilUtcMidnight()));
+      setMinutesLeft(getMinutesUntilUtcMidnight());
     };
 
     updateCountdown();
     const timerId = window.setInterval(updateCountdown, 60_000);
     return () => window.clearInterval(timerId);
   }, [open]);
+
+  const countdown = formatGameWaitDuration(t, minutesLeft * 60);
 
   return (
     <ResponsiveDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>

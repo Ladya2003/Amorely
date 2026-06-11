@@ -457,6 +457,8 @@
         "loadFailed": "Laden fehlgeschlagen",
         "guessFailed": "Tipp konnte nicht gesendet werden",
         "clearCanvasFailed": "Leinwand konnte nicht geleert werden",
+        "undoFailed": "Rückgängig machen fehlgeschlagen",
+        "redoFailed": "Wiederholen fehlgeschlagen",
         "strokeFailed": "Strich konnte nicht gesendet werden",
         "advanceFailed": "Fortschritt fehlgeschlagen",
         "tapFailed": "Tippen konnte nicht gezählt werden",
@@ -491,8 +493,8 @@
     },
     "waitDuration": {
       "soon": "bald",
-      "hoursMinutes": "{{hours}} Std. {{minutes}} Min.",
-      "minutes": "{{minutes}} Min.",
+      "hoursMinutes": "{{hours}} Std {{minutes}} Min",
+      "minutes": "{{minutes}} Min",
       "lessThanMinute": "weniger als eine Minute"
     }
   },
@@ -781,11 +783,16 @@
     "tool": "Werkzeug",
     "brush": "Pinsel",
     "eraser": "Radierer",
+    "fill": "Füllen",
     "color": "Farbe",
     "size": "Größe: {{size}}px",
     "colorAria": "Farbe {{color}}",
     "customColor": "Eigene Farbe",
-    "clearAll": "Alles löschen"
+    "undo": "Rückgängig",
+    "redo": "Wiederholen",
+    "clearAll": "Alles löschen",
+    "clearAllConfirmTitle": "Gesamte Zeichnung löschen?",
+    "clearAllConfirmBody": "Alle Striche auf der Leinwand werden entfernt. Diese Aktion kann nicht rückgängig gemacht werden."
   },
   "chat": {
     "tab": "Chat",

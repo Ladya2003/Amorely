@@ -1,11 +1,12 @@
 import type { QuizQuestion } from '../games/quizGameConfig';
-import { QUIZ_ANSWER_EN } from './generated/quizAnswersEn';
+import { QUIZ_ANSWER_I18N } from './generated/quizAnswersI18n';
 import { QUIZ_CATEGORY_I18N } from './generated/quizI18nData';
-import { QUIZ_QUESTION_EN } from './generated/quizQuestionsEn';
+import { QUIZ_QUESTION_I18N } from './generated/quizQuestionsI18n';
+import { getLocalizedQuizField } from './quizI18nHelpers';
 import { AppLocale, DEFAULT_LOCALE, getGameContentLocale } from './locales';
 
 const isPrimarilyLatin = (value: string) => {
-  const cyrillic = (value.match(/[а-яё]/gi) || []).length;
+  const cyrillic = (value.match(/[а-яёіїєґ]/gi) || []).length;
   const latin = (value.match(/[a-z]/gi) || []).length;
   return latin > cyrillic;
 };
@@ -76,33 +77,22 @@ const getRussianDisplayAnswer = (question: QuizQuestion) => {
   return capitalizeDisplay(cyrillicAnswer ?? question.answers[0]);
 };
 
-export const getQuizCategoryName = (categoryId: string, fallbackName: string, locale: AppLocale): string => {
-  const contentLocale = getGameContentLocale(locale);
-  const localized = QUIZ_CATEGORY_I18N[categoryId]?.[contentLocale];
-  if (localized) {
-    return localized;
-  }
+export const getQuizCategoryName = (categoryId: string, fallbackName: string, locale: AppLocale): string =>
+  getLocalizedQuizField(QUIZ_CATEGORY_I18N, categoryId, getGameContentLocale(locale), fallbackName);
 
-  if (contentLocale === 'ru') {
-    return fallbackName;
-  }
-
-  return QUIZ_CATEGORY_I18N[categoryId]?.en ?? fallbackName;
-};
-
-export const getQuizQuestionText = (question: QuizQuestion, locale: AppLocale): string => {
-  const contentLocale = getGameContentLocale(locale);
-  if (contentLocale === 'ru') {
-    return question.text;
-  }
-
-  return QUIZ_QUESTION_EN[question.id] ?? question.text;
-};
+export const getQuizQuestionText = (question: QuizQuestion, locale: AppLocale): string =>
+  getLocalizedQuizField(QUIZ_QUESTION_I18N, question.id, getGameContentLocale(locale), question.text);
 
 export const getQuizCorrectAnswer = (question: QuizQuestion, locale: AppLocale): string => {
   const contentLocale = getGameContentLocale(locale);
+
   if (contentLocale === 'ru') {
     return getRussianDisplayAnswer(question);
+  }
+
+  const localized = QUIZ_ANSWER_I18N[question.id]?.[contentLocale];
+  if (localized) {
+    return formatAnswerDisplay(localized);
   }
 
   const latinAnswer = question.answers.find(isPrimarilyLatin);
@@ -110,7 +100,8 @@ export const getQuizCorrectAnswer = (question: QuizQuestion, locale: AppLocale):
     return formatAnswerDisplay(latinAnswer);
   }
 
-  return QUIZ_ANSWER_EN[question.id] ?? question.answers[0];
+  const englishAnswer = QUIZ_ANSWER_I18N[question.id]?.en;
+  return englishAnswer ? formatAnswerDisplay(englishAnswer) : question.answers[0];
 };
 
 export const shouldShowLoveLanguagesHint = (question: QuizQuestion): boolean => {

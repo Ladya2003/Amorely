@@ -457,6 +457,8 @@
         "loadFailed": "Не удалось загрузить",
         "guessFailed": "Не удалось отправить догадку",
         "clearCanvasFailed": "Не удалось очистить холст",
+        "undoFailed": "Не удалось отменить действие",
+        "redoFailed": "Не удалось вернуть действие",
         "strokeFailed": "Не удалось отправить штрих",
         "advanceFailed": "Не удалось перейти к следующему этапу",
         "tapFailed": "Не удалось засчитать нажатие",
@@ -491,8 +493,8 @@
     },
     "waitDuration": {
       "soon": "скоро",
-      "hoursMinutes": "{{hours}} ч {{minutes}} мин",
-      "minutes": "{{minutes}} мин",
+      "hoursMinutes": "{{hours}}ч {{minutes}}м",
+      "minutes": "{{minutes}}м",
       "lessThanMinute": "меньше минуты"
     }
   },
@@ -782,11 +784,16 @@
     "tool": "Инструмент",
     "brush": "Кисть",
     "eraser": "Ластик",
+    "fill": "Заливка",
     "color": "Цвет",
     "size": "Размер: {{size}}px",
     "colorAria": "Цвет {{color}}",
     "customColor": "Свой цвет",
-    "clearAll": "Стереть всё"
+    "undo": "Назад",
+    "redo": "Вперёд",
+    "clearAll": "Стереть всё",
+    "clearAllConfirmTitle": "Стереть весь рисунок?",
+    "clearAllConfirmBody": "Все штрихи на холсте будут удалены. Это действие нельзя отменить."
   },
   "chat": {
     "tab": "Чат",

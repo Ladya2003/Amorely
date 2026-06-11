@@ -12,7 +12,8 @@ import {
   getOrCreateTapGameState,
   getTapGameParticipantIds,
   getTapLeaderboard,
-  processTap,
+  normalizeTapBatchCount,
+  processTapBatch,
   resolveTapGameContext,
   updateTapGameBadges,
 } from '../games/tapGameService';
@@ -23,6 +24,8 @@ import {
   clearDrawGuessAttempts,
   clearDrawStrokes,
   formatDrawGameState,
+  redoDrawStroke,
+  undoDrawStroke,
   getDrawGameParticipantIds,
   getDrawLeaderboard,
   getOrCreateDrawGameState,
@@ -196,10 +199,13 @@ router.get('/tap/state', async (req: any, res: Response) => {
 router.post('/tap/tap', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
+    const tapCount = normalizeTapBatchCount(req.body?.count);
     const context = await resolveTapGameContext(userId);
-    const { state, roundCompletionBonus } = await processTap(userId, context);
+    const { state, roundCompletionBonus } = await processTapBatch(userId, context, tapCount);
 
-    await updateTapGameBadges();
+    if (roundCompletionBonus > 0) {
+      await updateTapGameBadges();
+    }
 
     res.json({
       state: formatTapGameState(state, userId, context),
@@ -377,12 +383,14 @@ router.post('/draw/ready', async (req: any, res: Response) => {
 router.post('/draw/stroke', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const { points, color, width } = req.body;
+    const { points, color, width, isEraser, isFill } = req.body;
     const context = await resolveDrawGameContext(userId);
     const state = await appendDrawStroke(userId, context, {
       points: points || [],
       color: color || '#111111',
       width: width || 4,
+      isEraser: Boolean(isEraser),
+      isFill: Boolean(isFill),
     });
 
     const locale = await getUserLocale(userId);
@@ -456,6 +464,44 @@ router.post('/draw/clear-strokes', async (req: any, res: Response) => {
     }
     console.error('Ошибка draw/clear-strokes:', error);
     res.status(500).json({ error: 'Не удалось очистить холст' });
+  }
+});
+
+router.post('/draw/undo', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveDrawGameContext(userId);
+    const state = await undoDrawStroke(userId, context);
+
+    res.json({
+      state: formatDrawGameState(state, userId, await getUserLocale(userId)),
+      participantUserIds: getDrawGameParticipantIds(context),
+    });
+  } catch (error) {
+    if (handleDrawGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка draw/undo:', error);
+    res.status(500).json({ error: 'Не удалось отменить действие' });
+  }
+});
+
+router.post('/draw/redo', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveDrawGameContext(userId);
+    const state = await redoDrawStroke(userId, context);
+
+    res.json({
+      state: formatDrawGameState(state, userId, await getUserLocale(userId)),
+      participantUserIds: getDrawGameParticipantIds(context),
+    });
+  } catch (error) {
+    if (handleDrawGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка draw/redo:', error);
+    res.status(500).json({ error: 'Не удалось вернуть действие' });
   }
 });
 

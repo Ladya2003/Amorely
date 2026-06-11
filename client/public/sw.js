@@ -55,23 +55,33 @@ self.addEventListener('push', (event) => {
   );
 });
 
+const toAppPath = (url) => {
+  try {
+    const parsed = new URL(url, self.location.origin);
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return url.startsWith('/') ? url : '/';
+  }
+};
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const targetUrl = event.notification.data?.url || '/';
+  const appPath = toAppPath(targetUrl);
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
+        client.postMessage({ type: 'PUSH_NAVIGATE', url: appPath });
         if ('focus' in client) {
           if ('navigate' in client) {
-            return client.navigate(targetUrl).then(() => client.focus());
+            return client.navigate(appPath).then(() => client.focus());
           }
-          client.focus();
-          return undefined;
+          return client.focus();
         }
       }
-      return clients.openWindow(targetUrl);
+      return clients.openWindow(appPath);
     })
   );
 });

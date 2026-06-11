@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
 import type { DrawStroke } from '../../services/gamesService';
 import type { DrawingTool } from './DrawingToolsToolbar';
+import { floodFillCanvas } from '../../utils/drawCanvasFill';
 
 export interface DrawCanvasProps {
   strokes: DrawStroke[];
@@ -41,9 +42,12 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
   const lastServerStrokeCountRef = useRef(0);
   const canvasSizeRef = useRef({ width: 0, height: 0, dpr: 0 });
   const rafIdRef = useRef<number | null>(null);
+  const canDrawRef = useRef(canDraw);
+  canDrawRef.current = canDraw;
 
   const effectiveWidth = tool === 'eraser' ? strokeWidth * 2.5 : strokeWidth;
   const isEraser = tool === 'eraser';
+  const isFill = tool === 'fill';
 
   const getNormalizedPoint = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
@@ -86,6 +90,21 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
       }
       ctx.stroke();
       ctx.restore();
+    },
+    []
+  );
+
+  const paintFill = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      canvas: HTMLCanvasElement,
+      stroke: DrawStroke
+    ) => {
+      const point = stroke.points[0];
+      if (!point) {
+        return;
+      }
+      floodFillCanvas(ctx, canvas, point, stroke.color);
     },
     []
   );
@@ -142,10 +161,18 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    strokes.forEach((stroke) => paintStroke(ctx, stroke, width, height));
-    optimisticStrokesRef.current.forEach((stroke) =>
-      paintStroke(ctx, stroke, width, height)
-    );
+    const renderedStrokes = [
+      ...strokes,
+      ...optimisticStrokesRef.current,
+    ];
+
+    renderedStrokes.forEach((stroke) => {
+      if (stroke.isFill) {
+        paintFill(ctx, canvas, stroke);
+        return;
+      }
+      paintStroke(ctx, stroke, width, height);
+    });
 
     const livePoints = currentPointsRef.current;
     if (livePoints.length >= 2) {
@@ -164,6 +191,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
   }, [
     effectiveWidth,
     isEraser,
+    paintFill,
     paintStroke,
     reconcileOptimisticStrokes,
     strokeColor,
@@ -183,6 +211,14 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
   useEffect(() => {
     redraw();
   }, [redraw]);
+
+  useEffect(() => {
+    if (!canDraw && drawingRef.current) {
+      drawingRef.current = false;
+      currentPointsRef.current = [];
+      scheduleRedraw();
+    }
+  }, [canDraw, scheduleRedraw]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -226,7 +262,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     const points = currentPointsRef.current;
     currentPointsRef.current = [];
 
-    if (points.length >= 2) {
+    if (points.length >= 2 && canDrawRef.current) {
       const stroke: DrawStroke = {
         points,
         color: isEraser ? '#000000' : strokeColor,
@@ -243,6 +279,26 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     redraw();
   }, [effectiveWidth, isEraser, onStroke, redraw, strokeColor]);
 
+  const applyFill = useCallback(
+    (point: { x: number; y: number }) => {
+      if (!canDrawRef.current) {
+        return;
+      }
+
+      const stroke: DrawStroke = {
+        points: [point],
+        color: strokeColor,
+        width: 0,
+        isFill: true,
+      };
+      optimisticStrokesRef.current = [...optimisticStrokesRef.current, stroke];
+      pendingStrokeCountRef.current += 1;
+      redraw();
+      onStroke?.(stroke);
+    },
+    [onStroke, redraw, strokeColor]
+  );
+
   const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!canDraw) {
       return;
@@ -253,6 +309,11 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
       return;
     }
 
+    if (isFill) {
+      applyFill(point);
+      return;
+    }
+
     event.currentTarget.setPointerCapture(event.pointerId);
     drawingRef.current = true;
     currentPointsRef.current = [point];
@@ -260,7 +321,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawingRef.current || !canDraw) {
+    if (!drawingRef.current || !canDraw || isFill) {
       return;
     }
     const point = getNormalizedPoint(event.clientX, event.clientY);
@@ -281,6 +342,8 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
   const handlePointerUp = () => {
     finishStroke();
   };
+
+  const cursor = !canDraw ? 'default' : isFill ? 'pointer' : isEraser ? 'cell' : 'crosshair';
 
   return (
     <Box
@@ -305,7 +368,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
         style={{
           display: 'block',
           width: '100%',
-          cursor: canDraw ? (isEraser ? 'cell' : 'crosshair') : 'default',
+          cursor,
           ...drawCanvasInteractionSx,
         }}
       />

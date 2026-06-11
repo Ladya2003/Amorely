@@ -30,7 +30,7 @@ import {
   type QuizGameState,
 } from '../services/gamesService';
 import { fireRoundConfetti } from '../utils/roundConfetti';
-import { formatDailyResetCountdown } from '../utils/dailyReset';
+import { formatGameWaitDuration } from '../localization/gameHelpers';
 
 const QUIZ_GAME_INFO_PATH = '/chat/games/quiz';
 const POINT_TIERS = [100, 200, 300];
@@ -384,7 +384,7 @@ const QuizGamePlayPage: React.FC = () => {
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {t('games.quiz.play.newQuestionsIn', {
-              duration: formatDailyResetCountdown(Math.ceil(state.cooldownSecondsRemaining / 60)),
+              duration: formatGameWaitDuration(t, state.cooldownSecondsRemaining),
             })}
           </Typography>
         </Box>

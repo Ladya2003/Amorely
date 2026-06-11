@@ -9,6 +9,7 @@ import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation
 import { buildOrGetDynamicFeed } from '../utils/dynamicFeedRotation';
 import { formatContentForApi } from '../utils/contentFormat';
 import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
+import { notifyNewPartnerContent } from '../services/pushService';
 
 const router = express.Router();
 
@@ -213,6 +214,12 @@ router.post('/content-encrypted', async (req: any, res: Response) => {
 
     if (targetId) {
       await initializeContentRotation(userId, targetId.toString());
+      void notifyNewPartnerContent({
+        receiverId: targetId.toString(),
+        senderId: userId,
+        itemsCount: savedContent.length,
+        contentId: savedContent[0]?._id?.toString()
+      });
     }
 
     res.json({
@@ -313,6 +320,12 @@ router.post('/content', upload.array('media'), async (req: any, res: Response) =
     // После сохранения всех файлов инициализируем ротацию (только если есть партнер)
     if (targetId) {
       await initializeContentRotation(userId, targetId.toString());
+      void notifyNewPartnerContent({
+        receiverId: targetId.toString(),
+        senderId: userId,
+        itemsCount: savedContent.length,
+        contentId: savedContent[0]?._id?.toString()
+      });
     }
     
     res.json({

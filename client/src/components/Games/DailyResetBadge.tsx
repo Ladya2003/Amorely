@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import {
-  formatDailyResetCountdown,
-  getMinutesUntilUtcMidnight,
-} from '../../utils/dailyReset';
+import { formatGameWaitDuration } from '../../localization/gameHelpers';
+import { getMinutesUntilUtcMidnight } from '../../utils/dailyReset';
 
 interface DailyResetBadgeProps {
   sx?: object;
@@ -14,18 +12,18 @@ interface DailyResetBadgeProps {
 
 const DailyResetBadge: React.FC<DailyResetBadgeProps> = ({ sx, onClick }) => {
   const { t } = useTranslation();
-  const [countdown, setCountdown] = useState(() =>
-    formatDailyResetCountdown(getMinutesUntilUtcMidnight())
-  );
+  const [minutesLeft, setMinutesLeft] = useState(() => getMinutesUntilUtcMidnight());
 
   useEffect(() => {
     const updateCountdown = () => {
-      setCountdown(formatDailyResetCountdown(getMinutesUntilUtcMidnight()));
+      setMinutesLeft(getMinutesUntilUtcMidnight());
     };
 
     const timerId = window.setInterval(updateCountdown, 60_000);
     return () => window.clearInterval(timerId);
   }, []);
+
+  const countdown = formatGameWaitDuration(t, minutesLeft * 60);
 
   return (
     <Box

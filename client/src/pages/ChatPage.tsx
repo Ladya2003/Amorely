@@ -220,7 +220,8 @@ const ChatPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = getChatTabIndex(searchParams.get('tab'));
   const openGamesTabOnMount = initialTab === 1;
-  const skipChatRestoreRef = useRef(openGamesTabOnMount);
+  const contactFromUrlOnMount = searchParams.get('contact');
+  const skipChatRestoreRef = useRef(openGamesTabOnMount || Boolean(contactFromUrlOnMount));
 
   const [tabValue, setTabValue] = useState(() => initialTab);
   const [contacts, setContacts] = useState<ChatContact[]>([]);
@@ -464,6 +465,22 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     hasRestoredSelectedChatRef.current = false;
   }, [CURRENT_USER_ID]);
+
+  useEffect(() => {
+    const contactFromUrl = searchParams.get('contact');
+    if (!contactFromUrl) {
+      return;
+    }
+
+    skipChatRestoreRef.current = true;
+    hasRestoredSelectedChatRef.current = true;
+    setTabValue(0);
+    openContact(contactFromUrl);
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('contact');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, openContact, setSearchParams]);
 
   useEffect(() => {
     if (skipChatRestoreRef.current) {

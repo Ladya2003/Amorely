@@ -33,8 +33,7 @@ export const resolveLocale = (value: string | null | undefined): AppLocale => {
 export const isSupportedLocale = (value: string): value is AppLocale =>
   (SUPPORTED_LOCALES as readonly string[]).includes(value);
 
-/** Game content is available in Russian and English; other UI locales use English content. */
-export type GameContentLocale = 'ru' | 'en';
+/** All supported UI locales have dedicated game content (with en/ru fallbacks where missing). */
+export type GameContentLocale = AppLocale;
 
-export const getGameContentLocale = (locale: AppLocale): GameContentLocale =>
-  locale === 'ru' ? 'ru' : 'en';
+export const getGameContentLocale = (locale: AppLocale): GameContentLocale => locale;
