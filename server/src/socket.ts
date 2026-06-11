@@ -5,6 +5,7 @@ import User from './models/user';
 import mongoose from 'mongoose';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { notifyNewMessage } from './services/pushService';
+import { isChatBlockedBetween } from './services/chatBlockService';
 import { markUserOnline, markUserOffline, getOnlineUserIds } from './presence';
 import { attachGameSocketHandlers } from './games/gameSocketHandlers';
 import { idsEqual } from './utils/normalizeId';
@@ -152,6 +153,11 @@ export default function setupSocketIO(server: HttpServer) {
         }
 
         const senderId = senderSocketData.userId;
+
+        if (await isChatBlockedBetween(senderId, receiverId)) {
+          socket.emit('error', { message: 'Чат заблокирован', clientTempId });
+          return;
+        }
 
         const sanitizedForwardFrom = forwardFrom
           ? {

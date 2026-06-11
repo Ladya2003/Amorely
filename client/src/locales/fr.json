@@ -803,6 +803,10 @@
     "yourChats": "Vos discussions",
     "nothingFound": "Rien trouvé",
     "selectContact": "Sélectionnez un contact pour commencer à discuter",
+    "list": {
+      "blockedByYou": "Vous avez bloqué ce chat",
+      "blockedByPeer": "Chat bloqué"
+    },
     "self": "Vous",
     "user": "Utilisateur",
     "rules": {
@@ -839,7 +843,9 @@
       "encryptMediaKeys": "Des clés de chiffrement sont requises sur cet appareil pour envoyer des médias",
       "encryptKeys": "Aucune clé pour chiffrer les médias",
       "encryptAttachments": "Échec du chiffrement des pièces jointes",
-      "clearChatFailed": "Impossible d'effacer la conversation"
+      "clearChatFailed": "Impossible d'effacer la conversation",
+      "blockFailed": "Impossible de bloquer l'utilisateur",
+      "unblockFailed": "Impossible de débloquer l'utilisateur"
     },
     "input": {
       "placeholder": "Saisissez un message..."
@@ -876,7 +882,17 @@
       "clearChatTitle": "Effacer la conversation ?",
       "clearChatConfirm": "Voulez-vous vraiment effacer la conversation pour vous et votre interlocuteur ?",
       "clearChatSuccess": "Conversation effacée",
-      "report": "Signaler l'utilisateur"
+      "report": "Signaler l'utilisateur",
+      "blockUser": "Bloquer l'utilisateur",
+      "unblockUser": "Débloquer l'utilisateur",
+      "blockUserTitle": "Bloquer l'utilisateur ?",
+      "blockUserConfirm": "Voulez-vous vraiment bloquer {{name}} ? Vous ne pourrez plus vous envoyer de messages tant que vous ne le débloquerez pas dans les options du chat.",
+      "unblockUserTitle": "Débloquer l'utilisateur ?",
+      "unblockUserConfirm": "Voulez-vous vraiment débloquer {{name}} ? Vous pourrez à nouveau vous envoyer des messages.",
+      "blockUserSuccess": "Utilisateur bloqué",
+      "unblockUserSuccess": "Utilisateur débloqué",
+      "blockedByMeBanner": "Vous avez bloqué cet utilisateur. Vous pouvez le débloquer dans les options du chat.",
+      "blockedByPeerBanner": "Votre interlocuteur a bloqué le chat avec vous."
     },
     "report": {
       "title": "Signalement",

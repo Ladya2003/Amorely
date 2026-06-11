@@ -803,6 +803,10 @@
     "yourChats": "Deine Chats",
     "nothingFound": "Nichts gefunden",
     "selectContact": "Wähle einen Kontakt, um zu chatten",
+    "list": {
+      "blockedByYou": "Du hast diesen Chat blockiert",
+      "blockedByPeer": "Chat blockiert"
+    },
     "self": "Du",
     "user": "Nutzer",
     "rules": {
@@ -839,7 +843,9 @@
       "encryptMediaKeys": "Verschlüsselungsschlüssel auf diesem Gerät erforderlich zum Senden von Medien",
       "encryptKeys": "Keine Schlüssel zum Verschlüsseln von Medien",
       "encryptAttachments": "Anhänge konnten nicht verschlüsselt werden",
-      "clearChatFailed": "Chat konnte nicht geleert werden"
+      "clearChatFailed": "Chat konnte nicht geleert werden",
+      "blockFailed": "Benutzer konnte nicht blockiert werden",
+      "unblockFailed": "Benutzer konnte nicht entsperrt werden"
     },
     "input": {
       "placeholder": "Nachricht eingeben..."
@@ -876,7 +882,17 @@
       "clearChatTitle": "Chat leeren?",
       "clearChatConfirm": "Möchten Sie den Chat wirklich für Sie und Ihren Gesprächspartner leeren?",
       "clearChatSuccess": "Chat geleert",
-      "report": "Benutzer melden"
+      "report": "Benutzer melden",
+      "blockUser": "Benutzer blockieren",
+      "unblockUser": "Benutzer entsperren",
+      "blockUserTitle": "Benutzer blockieren?",
+      "blockUserConfirm": "Möchten Sie {{name}} wirklich blockieren? Ihr könnt euch keine Nachrichten mehr senden, bis Sie den Benutzer in den Chat-Optionen entsperren.",
+      "unblockUserTitle": "Benutzer entsperren?",
+      "unblockUserConfirm": "Möchten Sie {{name}} wirklich entsperren? Ihr könnt euch wieder Nachrichten senden.",
+      "blockUserSuccess": "Benutzer blockiert",
+      "unblockUserSuccess": "Benutzer entsperrt",
+      "blockedByMeBanner": "Sie haben diesen Benutzer blockiert. Sie können ihn in den Chat-Optionen entsperren.",
+      "blockedByPeerBanner": "Ihr Gesprächspartner hat den Chat mit Ihnen blockiert."
     },
     "report": {
       "title": "Meldung",

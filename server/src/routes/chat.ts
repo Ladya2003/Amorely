@@ -1,11 +1,17 @@
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Message from '../models/message';
+import ChatBlock from '../models/chatBlock';
 import Relationship from '../models/relationship';
 import User from '../models/user';
 import { authMiddleware } from '../middleware/auth';
 import { isUserOnline } from '../presence';
 import { notifySocketUser } from '../socket';
+import {
+  getChatBlockStatus,
+  getChatBlockStatusesForContacts,
+  isChatBlockedBetween,
+} from '../services/chatBlockService';
 
 const router = express.Router();
 
@@ -107,9 +113,18 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
     const users = await User.find({
       _id: { $in: Array.from(contactIdSet).map((id) => new mongoose.Types.ObjectId(id)) }
     });
+
+    const contactIds = users.map((user) => user._id.toString());
+    const blockStatuses = await getChatBlockStatusesForContacts(userId, contactIds);
     
     // Для каждого пользователя находим последнее сообщение
     const contacts = await Promise.all(users.map(async (user) => {
+      const contactId = user._id.toString();
+      const blockStatus = blockStatuses.get(contactId) || {
+        isBlocked: false,
+        blockedByMe: false,
+        blockedByPeer: false,
+      };
       const lastMessage = await Message.findOne({
         $or: [
           { senderId: userId, receiverId: user._id },
@@ -132,6 +147,9 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
       return {
         id: user._id,
         isPartner: Boolean(currentUser?.partnerId && user._id.toString() === currentUser.partnerId.toString()),
+        isBlocked: blockStatus.isBlocked,
+        blockedByMe: blockStatus.blockedByMe,
+        blockedByPeer: blockStatus.blockedByPeer,
         name: getDisplayName(user),
         firstName: user.firstName || '',
         lastName: user.lastName || '',
@@ -358,13 +376,15 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
 
     // Преобразуем сообщения в формат, ожидаемый клиентом
     const formattedMessages = messages.reverse().map(formatMessageForClient);
+    const blockStatus = await getChatBlockStatus(userId, String(contactId));
 
     res.json({
       items: formattedMessages,
       hasMore: skip + messages.length < total,
       page,
       limit,
-      total
+      total,
+      blockStatus,
     });
   } catch (error) {
     console.error('Ошибка при получении сообщений:', error);
@@ -379,6 +399,10 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
     
     if (!senderId || !receiverId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    if (await isChatBlockedBetween(String(senderId), String(receiverId))) {
+      return res.status(403).json({ error: 'Чат заблокирован' });
     }
 
     // Создаем новое сообщение
@@ -477,6 +501,149 @@ router.put('/messages/:id/read', authMiddleware, async (req: Request, res: Respo
   } catch (error) {
     console.error('Ошибка при обновлении статуса сообщения:', error);
     res.status(500).json({ error: 'Ошибка при обновлении статуса сообщения' });
+  }
+});
+
+// Блокировка пользователя в чате
+router.post('/conversations/:contactId/block', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const { contactId } = req.params;
+    const userId = req.userId as string;
+
+    if (!userId || !contactId) {
+      return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(contactId)) {
+      return res.status(400).json({ error: 'Некорректный ID контакта' });
+    }
+
+    if (contactId === userId) {
+      return res.status(400).json({ error: 'Нельзя заблокировать самого себя' });
+    }
+
+    const contactExists = await User.exists({ _id: contactId });
+    if (!contactExists) {
+      return res.status(404).json({ error: 'Контакт не найден' });
+    }
+
+    const existingBlock = await ChatBlock.findOne({
+      $or: [
+        { blockerId: userId, blockedUserId: contactId },
+        { blockerId: contactId, blockedUserId: userId },
+      ],
+    });
+
+    if (existingBlock) {
+      const blockedByMe = existingBlock.blockerId.toString() === userId;
+      return res.json({
+        blockStatus: {
+          isBlocked: true,
+          blockedByMe,
+          blockedByPeer: !blockedByMe,
+        },
+      });
+    }
+
+    await ChatBlock.create({
+      blockerId: userId,
+      blockedUserId: contactId,
+    });
+
+    const payloadForBlocker = {
+      contactId,
+      blockedBy: userId,
+      blockStatus: {
+        isBlocked: true,
+        blockedByMe: true,
+        blockedByPeer: false,
+      },
+    };
+
+    const payloadForBlocked = {
+      contactId: userId,
+      blockedBy: userId,
+      blockStatus: {
+        isBlocked: true,
+        blockedByMe: false,
+        blockedByPeer: true,
+      },
+    };
+
+    notifySocketUser(contactId, 'chat_blocked', payloadForBlocked);
+    notifySocketUser(userId, 'chat_blocked', payloadForBlocker);
+
+    return res.json({
+      blockStatus: {
+        isBlocked: true,
+        blockedByMe: true,
+        blockedByPeer: false,
+      },
+    });
+  } catch (error) {
+    console.error('Ошибка при блокировке пользователя:', error);
+    return res.status(500).json({ error: 'Ошибка при блокировке пользователя' });
+  }
+});
+
+// Разблокировка пользователя в чате
+router.delete('/conversations/:contactId/block', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const { contactId } = req.params;
+    const userId = req.userId as string;
+
+    if (!userId || !contactId) {
+      return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(contactId)) {
+      return res.status(400).json({ error: 'Некорректный ID контакта' });
+    }
+
+    const existingBlock = await ChatBlock.findOne({
+      blockerId: userId,
+      blockedUserId: contactId,
+    });
+
+    if (!existingBlock) {
+      return res.status(404).json({ error: 'Блокировка не найдена' });
+    }
+
+    await ChatBlock.deleteOne({ _id: existingBlock._id });
+
+    const payloadForBlocker = {
+      contactId,
+      unblockedBy: userId,
+      blockStatus: {
+        isBlocked: false,
+        blockedByMe: false,
+        blockedByPeer: false,
+      },
+    };
+
+    const payloadForBlocked = {
+      contactId: userId,
+      unblockedBy: userId,
+      blockStatus: {
+        isBlocked: false,
+        blockedByMe: false,
+        blockedByPeer: false,
+      },
+    };
+
+    notifySocketUser(contactId, 'chat_unblocked', payloadForBlocked);
+    notifySocketUser(userId, 'chat_unblocked', payloadForBlocker);
+
+    return res.json({
+      blockStatus: {
+        isBlocked: false,
+        blockedByMe: false,
+        blockedByPeer: false,
+      },
+    });
+  } catch (error) {
+    console.error('Ошибка при разблокировке пользователя:', error);
+    return res.status(500).json({ error: 'Ошибка при разблокировке пользователя' });
   }
 });
 

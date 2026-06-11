@@ -458,11 +458,13 @@ const Message: React.FC<MessageProps> = ({
                 borderRadius: 1,
                 bgcolor: 'transparent',
                 border: '1px solid',
-                borderColor: isOwn ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.18)',
+                opacity: isOwn ? 1 : 0.7,
+                borderColor: isOwn ? 'rgba(255,255,255,0.55)' : 'text.secondary',
                 color: isOwn ? 'rgba(255,255,255,0.95)' : 'text.secondary',
                 '&:hover': {
                   bgcolor: 'transparent',
-                  borderColor: isOwn ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.32)',
+                  opacity: isOwn ? 1 : 0.85,
+                  borderColor: isOwn ? 'rgba(255,255,255,0.82)' : 'text.secondary',
                 },
               }}
             >

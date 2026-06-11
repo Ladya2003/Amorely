@@ -19,6 +19,7 @@ import {
   Badge,
   Alert
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -31,6 +32,8 @@ import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import BlockIcon from '@mui/icons-material/Block';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { Contact } from './ChatList';
 import Message from './Message';
 import SharedEventCard from './SharedEventCard';
@@ -174,6 +177,8 @@ interface ChatDialogProps {
   onDeleteMessage: (messageId: string) => void;
   onClearChat?: () => Promise<void>;
   onSubmitReport?: (text: string, files: File[]) => Promise<void>;
+  onBlockUser?: () => Promise<void>;
+  onUnblockUser?: () => Promise<void>;
   onReachMessagesStart?: () => void;
   onReachMessagesEnd?: () => void;
   onAtBottomChange?: (atBottom: boolean) => void;
@@ -229,6 +234,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onDeleteMessage,
   onClearChat,
   onSubmitReport,
+  onBlockUser,
+  onUnblockUser,
   onReachMessagesStart,
   onReachMessagesEnd,
   onAtBottomChange,
@@ -299,6 +306,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [optionsModalOpen, setOptionsModalOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [isClearingChat, setIsClearingChat] = useState(false);
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+  const [unblockConfirmOpen, setUnblockConfirmOpen] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [isUnblocking, setIsUnblocking] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContentRef = useRef<HTMLDivElement>(null);
@@ -1423,21 +1434,54 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
-            alignSelf: 'flex-end',
-            ml: 1,
-            mr: 0.5,
-            gap: 0.25,
+            alignSelf: 'stretch',
+            justifyContent: 'space-between',
+            ml: 0.5,
+            mr: 0,
+            pt: 0.25,
             pb: 0.25,
           }}
         >
-          <IconButton
-            size="small"
+          <Box
+            component="button"
+            type="button"
             onClick={() => setOptionsModalOpen(true)}
             aria-label={t('chat.dialog.optionsAria')}
-            sx={{ p: 0.25, color: 'text.secondary' }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.25,
+              flexShrink: 0,
+              px: 0.75,
+              py: 0.25,
+              mb: 0.75,
+              color: 'text.secondary',
+              border: '1px solid',
+              borderColor: (theme) => alpha(theme.palette.text.primary, 0.72),
+              borderRadius: 1,
+              bgcolor: 'transparent',
+              cursor: 'pointer',
+              font: 'inherit',
+              '&:hover': {
+                bgcolor: 'transparent',
+                borderColor: (theme) => alpha(theme.palette.text.primary, 0.9),
+                color: 'text.primary',
+              },
+            }}
           >
-            <MoreVertIcon sx={{ fontSize: 18 }} />
-          </IconButton>
+            <Typography
+              variant="caption"
+              component="span"
+              sx={{
+                fontSize: '0.8125rem',
+                lineHeight: 1.1,
+                fontWeight: 500,
+              }}
+            >
+              {t('chat.dialog.optionsTitle')}
+            </Typography>
+            <MoreVertIcon sx={{ fontSize: 16 }} />
+          </Box>
           <EncryptedIndicator />
         </Box>
       </Paper>
@@ -1533,6 +1577,23 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           borderRadius: 0
         }}
       >
+        {contact?.isBlocked ? (
+          <Alert
+            severity="info"
+            icon={<BlockIcon fontSize="inherit" />}
+            sx={{
+              alignItems: 'center',
+              '& .MuiAlert-message': { width: '100%' },
+            }}
+          >
+            <Typography variant="body2">
+              {contact.blockedByMe
+                ? t('chat.dialog.blockedByMeBanner')
+                : t('chat.dialog.blockedByPeerBanner')}
+            </Typography>
+          </Alert>
+        ) : (
+          <>
         {attachmentValidationError && (
           <Alert severity="error" sx={{ mb: 1 }}>
             {attachmentValidationError}
@@ -1872,6 +1933,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               : !forwardingMessage && !sharingEvent && !sharingNote && !messageText.trim() && attachments.length === 0
           }
         />
+          </>
+        )}
       </Paper>
       <Menu
         open={contextMenu !== null}
@@ -2029,6 +2092,35 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           >
             {t('chat.dialog.report')}
           </Button>
+          {contact?.isBlocked && contact.blockedByMe && onUnblockUser ? (
+            <Button
+              fullWidth
+              variant="outlined"
+              color="primary"
+              startIcon={<LockOpenIcon />}
+              onClick={() => {
+                setOptionsModalOpen(false);
+                setUnblockConfirmOpen(true);
+              }}
+              sx={{ justifyContent: 'flex-start', py: 1.25, mb: 1 }}
+            >
+              {t('chat.dialog.unblockUser')}
+            </Button>
+          ) : !contact?.isBlocked && onBlockUser ? (
+            <Button
+              fullWidth
+              variant="outlined"
+              color="error"
+              startIcon={<BlockIcon />}
+              onClick={() => {
+                setOptionsModalOpen(false);
+                setBlockConfirmOpen(true);
+              }}
+              sx={{ justifyContent: 'flex-start', py: 1.25, mb: 1 }}
+            >
+              {t('chat.dialog.blockUser')}
+            </Button>
+          ) : null}
           <Button
             fullWidth
             variant="outlined"
@@ -2099,6 +2191,94 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             }}
           >
             {t('chat.dialog.clearChat')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
+
+      <ResponsiveDialog
+        open={blockConfirmOpen}
+        onClose={() => {
+          if (!isBlocking) {
+            setBlockConfirmOpen(false);
+          }
+        }}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.blockUserTitle')}</DialogTitle>
+        <DialogContent sx={{ pt: '8px !important' }}>
+          <Typography variant="body2">
+            {t('chat.dialog.blockUserConfirm', { name: contact?.name || '' })}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setBlockConfirmOpen(false)}
+            variant="text"
+            disabled={isBlocking}
+          >
+            {t('chat.dialog.cancel')}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={isBlocking || !onBlockUser}
+            onClick={async () => {
+              if (!onBlockUser) return;
+              try {
+                setIsBlocking(true);
+                await onBlockUser();
+                setBlockConfirmOpen(false);
+              } finally {
+                setIsBlocking(false);
+              }
+            }}
+          >
+            {t('chat.dialog.blockUser')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
+
+      <ResponsiveDialog
+        open={unblockConfirmOpen}
+        onClose={() => {
+          if (!isUnblocking) {
+            setUnblockConfirmOpen(false);
+          }
+        }}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.unblockUserTitle')}</DialogTitle>
+        <DialogContent sx={{ pt: '8px !important' }}>
+          <Typography variant="body2">
+            {t('chat.dialog.unblockUserConfirm', { name: contact?.name || '' })}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setUnblockConfirmOpen(false)}
+            variant="text"
+            disabled={isUnblocking}
+          >
+            {t('chat.dialog.cancel')}
+          </Button>
+          <Button
+            color="primary"
+            variant="contained"
+            disabled={isUnblocking || !onUnblockUser}
+            onClick={async () => {
+              if (!onUnblockUser) return;
+              try {
+                setIsUnblocking(true);
+                await onUnblockUser();
+                setUnblockConfirmOpen(false);
+              } finally {
+                setIsUnblocking(false);
+              }
+            }}
+          >
+            {t('chat.dialog.unblockUser')}
           </Button>
         </DialogActions>
       </ResponsiveDialog>

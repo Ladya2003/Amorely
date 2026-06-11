@@ -803,6 +803,10 @@
     "yourChats": "Tus chats",
     "nothingFound": "No se encontró nada",
     "selectContact": "Selecciona un contacto para empezar a chatear",
+    "list": {
+      "blockedByYou": "Has bloqueado este chat",
+      "blockedByPeer": "Chat bloqueado"
+    },
     "self": "Tú",
     "user": "Usuario",
     "rules": {
@@ -839,7 +843,9 @@
       "encryptMediaKeys": "Se necesitan claves de cifrado en este dispositivo para enviar multimedia",
       "encryptKeys": "No hay claves para cifrar multimedia",
       "encryptAttachments": "No se pudieron cifrar los archivos adjuntos",
-      "clearChatFailed": "No se pudo borrar el chat"
+      "clearChatFailed": "No se pudo borrar el chat",
+      "blockFailed": "No se pudo bloquear al usuario",
+      "unblockFailed": "No se pudo desbloquear al usuario"
     },
     "input": {
       "placeholder": "Escribe un mensaje..."
@@ -876,7 +882,17 @@
       "clearChatTitle": "¿Borrar chat?",
       "clearChatConfirm": "¿Seguro que quieres borrar el chat para ti y tu interlocutor?",
       "clearChatSuccess": "Chat borrado",
-      "report": "Reportar usuario"
+      "report": "Reportar usuario",
+      "blockUser": "Bloquear usuario",
+      "unblockUser": "Desbloquear usuario",
+      "blockUserTitle": "¿Bloquear usuario?",
+      "blockUserConfirm": "¿Seguro que quieres bloquear a {{name}}? No podréis enviaros mensajes hasta que lo desbloquees en las opciones del chat.",
+      "unblockUserTitle": "¿Desbloquear usuario?",
+      "unblockUserConfirm": "¿Seguro que quieres desbloquear a {{name}}? Podréis volver a enviaros mensajes.",
+      "blockUserSuccess": "Usuario bloqueado",
+      "unblockUserSuccess": "Usuario desbloqueado",
+      "blockedByMeBanner": "Has bloqueado a este usuario. Puedes desbloquearlo en las opciones del chat.",
+      "blockedByPeerBanner": "Tu interlocutor ha bloqueado el chat contigo."
     },
     "report": {
       "title": "Reporte",

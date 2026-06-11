@@ -205,6 +205,12 @@ type ChatContact = Contact & {
   isPartner?: boolean;
 };
 
+type ChatBlockStatus = {
+  isBlocked: boolean;
+  blockedByMe: boolean;
+  blockedByPeer: boolean;
+};
+
 const getChatTabIndex = (tab?: string | null) => (tab === 'games' ? 1 : 0);
 
 const hasEncryptedMediaMessage = (message: MessageType) =>
@@ -645,6 +651,21 @@ const ChatPage: React.FC = () => {
     );
   }, [sortContactsByLastMessageDesc]);
 
+  const applyChatBlockStatus = useCallback((contactId: string, blockStatus: ChatBlockStatus) => {
+    setContacts((prevContacts) =>
+      prevContacts.map((contact) =>
+        contact.id === contactId
+          ? {
+              ...contact,
+              isBlocked: blockStatus.isBlocked,
+              blockedByMe: blockStatus.blockedByMe,
+              blockedByPeer: blockStatus.blockedByPeer,
+            }
+          : contact
+      )
+    );
+  }, []);
+
   const applyChatCleared = useCallback((contactId: string) => {
     if (selectedContactIdRef.current === contactId) {
       setMessages([]);
@@ -1074,6 +1095,14 @@ const ChatPage: React.FC = () => {
       applyChatCleared(affectedContactId);
     };
 
+    const onChatBlocked = (payload: { contactId: string; blockStatus: ChatBlockStatus }) => {
+      applyChatBlockStatus(payload.contactId, payload.blockStatus);
+    };
+
+    const onChatUnblocked = (payload: { contactId: string; blockStatus: ChatBlockStatus }) => {
+      applyChatBlockStatus(payload.contactId, payload.blockStatus);
+    };
+
     const onMessageDeleted = (payload: { messageId: string; senderId: string; receiverId: string }) => {
       const contactId = payload.senderId === CURRENT_USER_ID ? payload.receiverId : payload.senderId;
       setMessages((prevMessages) => {
@@ -1177,6 +1206,8 @@ const ChatPage: React.FC = () => {
     newSocket.on('message_edited', onMessageEdited);
     newSocket.on('message_deleted', onMessageDeleted);
     newSocket.on('chat_cleared', onChatCleared);
+    newSocket.on('chat_blocked', onChatBlocked);
+    newSocket.on('chat_unblocked', onChatUnblocked);
     newSocket.on('error', onError);
     newSocket.on('user_online', onUserOnline);
     newSocket.on('user_offline', onUserOffline);
@@ -1191,6 +1222,8 @@ const ChatPage: React.FC = () => {
       newSocket.off('message_edited', onMessageEdited);
       newSocket.off('message_deleted', onMessageDeleted);
       newSocket.off('chat_cleared', onChatCleared);
+      newSocket.off('chat_blocked', onChatBlocked);
+      newSocket.off('chat_unblocked', onChatUnblocked);
       newSocket.off('error', onError);
       newSocket.off('user_online', onUserOnline);
       newSocket.off('user_offline', onUserOffline);
@@ -1203,6 +1236,7 @@ const ChatPage: React.FC = () => {
     updateContactLastMessage,
     updateContactLastMessageAfterDelete,
     applyChatCleared,
+    applyChatBlockStatus,
     decryptMessageForDialog,
     sortContactsByLastMessageDesc,
     resolvePendingSend,
@@ -1411,6 +1445,13 @@ const ChatPage: React.FC = () => {
       const hasMore = Array.isArray(responseData)
         ? false
         : Boolean(responseData.hasMore);
+      const blockStatus: ChatBlockStatus | undefined = Array.isArray(responseData)
+        ? undefined
+        : responseData.blockStatus;
+
+      if (blockStatus) {
+        applyChatBlockStatus(contactId, blockStatus);
+      }
 
       const decryptedItems = await Promise.all(
         items.map((item) => decryptMessageForDialog(item, contactId))
@@ -1800,6 +1841,7 @@ const ChatPage: React.FC = () => {
     const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
     if (!selectedContactId || !CURRENT_USER_ID) return;
+    if (contacts.find((contact) => contact.id === selectedContactId)?.isBlocked) return;
     const trimmedText = text.trim();
     const isForwardOnly = Boolean(forwardFrom);
     const isSharedEventOnly = Boolean(sharedEvent);
@@ -2072,6 +2114,67 @@ const ChatPage: React.FC = () => {
         open: true,
         message: t('chat.errors.clearChatFailed'),
         severity: 'error'
+      });
+      throw error;
+    }
+  };
+
+  const handleBlockUser = async () => {
+    if (!selectedContactId) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error(t('chat.errors.blockFailed'));
+    }
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/conversations/${selectedContactId}/block`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      applyChatBlockStatus(selectedContactId, response.data.blockStatus);
+      setDeleteToast({
+        open: true,
+        message: t('chat.dialog.blockUserSuccess'),
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error('Ошибка при блокировке пользователя:', error);
+      setDeleteToast({
+        open: true,
+        message: t('chat.errors.blockFailed'),
+        severity: 'error',
+      });
+      throw error;
+    }
+  };
+
+  const handleUnblockUser = async () => {
+    if (!selectedContactId) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error(t('chat.errors.unblockFailed'));
+    }
+
+    try {
+      const response = await axios.delete(
+        `${API_URL}/api/conversations/${selectedContactId}/block`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      applyChatBlockStatus(selectedContactId, response.data.blockStatus);
+      setDeleteToast({
+        open: true,
+        message: t('chat.dialog.unblockUserSuccess'),
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error('Ошибка при разблокировке пользователя:', error);
+      setDeleteToast({
+        open: true,
+        message: t('chat.errors.unblockFailed'),
+        severity: 'error',
       });
       throw error;
     }
@@ -2455,6 +2558,8 @@ const ChatPage: React.FC = () => {
                       onDeleteMessage={handleDeleteMessage}
                       onClearChat={handleClearChat}
                       onSubmitReport={handleSubmitReport}
+                      onBlockUser={handleBlockUser}
+                      onUnblockUser={handleUnblockUser}
                       onReachMessagesStart={loadOlderMessages}
                       onReachMessagesEnd={handleReachMessagesEnd}
                       onAtBottomChange={handleChatAtBottomChange}

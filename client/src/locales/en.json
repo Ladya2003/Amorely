@@ -803,6 +803,10 @@
     "yourChats": "Your chats",
     "nothingFound": "Nothing found",
     "selectContact": "Select a contact to start chatting",
+    "list": {
+      "blockedByYou": "You blocked this chat",
+      "blockedByPeer": "Chat blocked"
+    },
     "self": "You",
     "user": "User",
     "rules": {
@@ -839,7 +843,9 @@
       "encryptMediaKeys": "Encryption keys are required on this device to send media",
       "encryptKeys": "No keys available to encrypt media",
       "encryptAttachments": "Failed to encrypt attachments",
-      "clearChatFailed": "Failed to clear chat"
+      "clearChatFailed": "Failed to clear chat",
+      "blockFailed": "Failed to block user",
+      "unblockFailed": "Failed to unblock user"
     },
     "input": {
       "placeholder": "Type a message..."
@@ -876,7 +882,17 @@
       "clearChatTitle": "Clear chat?",
       "clearChatConfirm": "Are you sure you want to clear the chat for you and your chat partner?",
       "clearChatSuccess": "Chat cleared",
-      "report": "Report user"
+      "report": "Report user",
+      "blockUser": "Block user",
+      "unblockUser": "Unblock user",
+      "blockUserTitle": "Block user?",
+      "blockUserConfirm": "Are you sure you want to block {{name}}? Neither of you will be able to message each other until you unblock them in chat options.",
+      "unblockUserTitle": "Unblock user?",
+      "unblockUserConfirm": "Are you sure you want to unblock {{name}}? You will be able to message each other again.",
+      "blockUserSuccess": "User blocked",
+      "unblockUserSuccess": "User unblocked",
+      "blockedByMeBanner": "You blocked this user. You can unblock them in chat options.",
+      "blockedByPeerBanner": "Your chat partner blocked the chat with you."
     },
     "report": {
       "title": "Report",

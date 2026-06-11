@@ -11,6 +11,7 @@ import {
   Divider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import BlockIcon from '@mui/icons-material/Block';
 import ImageIcon from '@mui/icons-material/Image';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import DoneIcon from '@mui/icons-material/Done';
@@ -35,6 +36,9 @@ export interface Contact {
   isOnline?: boolean;
   lastSeen?: string | null;
   unreadCount?: number;
+  isBlocked?: boolean;
+  blockedByMe?: boolean;
+  blockedByPeer?: boolean;
   lastMessage: {
     id?: string;
     senderId?: string;
@@ -136,7 +140,10 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
             alignItems="flex-start" 
             selected={selectedContactId === contact.id}
             onClick={() => onSelectContact(contact.id)}
-            sx={{ py: 0.5 }}
+            sx={{
+              py: 0.5,
+              opacity: contact.isBlocked ? 0.72 : 1,
+            }}
           >
             <ListItemAvatar>
               <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -213,7 +220,25 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                 </Box>
               }
               secondary={
-                contact.lastMessage.hasMedia ? (
+                contact.isBlocked ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+                      <BlockIcon sx={{ fontSize: 16, color: 'error.main' }} />
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        color="error.main"
+                        noWrap
+                        sx={{ fontStyle: 'italic' }}
+                      >
+                        {contact.blockedByMe
+                          ? t('chat.list.blockedByYou')
+                          : t('chat.list.blockedByPeer')}
+                      </Typography>
+                    </Box>
+                    {renderContactIndicators(contact)}
+                  </Box>
+                ) : contact.lastMessage.hasMedia ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
                       <ImageIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
