@@ -1154,7 +1154,12 @@
       "deadlineNotifyEnabled": "Напоминать о приближении дедлайна",
       "deadlineNotifyUsers": "Кого уведомлять",
       "deadlineNotifySelf": "Я",
-      "deadlineUntil": "Дедлайн: {{date}}"
+      "deadlineUntil": "Дедлайн: {{date}}",
+      "completed": "Выполнено",
+      "completedAt": "Выполнено {{date}}",
+      "completedBy": "Выполнил(а) {{name}} · {{date}}",
+      "markCompleted": "Выполнено",
+      "markIncomplete": "Вернуть в работу"
     },
     "common": {
       "cancel": "Отмена",

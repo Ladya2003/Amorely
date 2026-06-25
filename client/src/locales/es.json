@@ -1076,7 +1076,12 @@
       "deadlineNotifyEnabled": "Recordar la fecha límite próxima",
       "deadlineNotifyUsers": "A quién notificar",
       "deadlineNotifySelf": "Yo",
-      "deadlineUntil": "Fecha límite: {{date}}"
+      "deadlineUntil": "Fecha límite: {{date}}",
+      "completed": "Completada",
+      "completedAt": "Completada {{date}}",
+      "completedBy": "Completada por {{name}} · {{date}}",
+      "markCompleted": "Hecho",
+      "markIncomplete": "Marcar como pendiente"
     },
     "media": {
       "photosAndVideos": "Fotos y vídeos",

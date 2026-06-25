@@ -106,9 +106,14 @@ export const sendDeadlineRemindersForNote = async (
     deadlineNotifyUserIds?: mongoose.Types.ObjectId[];
     deadlineSharedNoteSnapshot?: Record<string, unknown> | null;
     deadlineLastNotifiedAt?: Date | null;
+    completedAt?: Date | null;
   },
   options: { forceInitial?: boolean } = {}
 ): Promise<number> => {
+  if (note.completedAt) {
+    return 0;
+  }
+
   if (!note.deadlineAt || !note.deadlineSharedNoteSnapshot) {
     return 0;
   }
@@ -181,10 +186,11 @@ export const processPlanNoteDeadlineReminders = async (): Promise<DeadlineRemind
   const now = new Date();
   const notes = await PlanNote.find({
     deadlineAt: { $gt: now },
+    completedAt: null,
     deadlineNotifyUserIds: { $exists: true, $not: { $size: 0 } },
     deadlineSharedNoteSnapshot: { $exists: true, $ne: null }
   }).select(
-    '_id deadlineAt deadlineNotifyUserIds deadlineSharedNoteSnapshot deadlineLastNotifiedAt'
+    '_id deadlineAt deadlineNotifyUserIds deadlineSharedNoteSnapshot deadlineLastNotifiedAt completedAt'
   );
 
   let sentMessages = 0;

@@ -1076,7 +1076,12 @@
       "deadlineNotifyEnabled": "An bevorstehende Frist erinnern",
       "deadlineNotifyUsers": "Wen benachrichtigen",
       "deadlineNotifySelf": "Ich",
-      "deadlineUntil": "Frist: {{date}}"
+      "deadlineUntil": "Frist: {{date}}",
+      "completed": "Erledigt",
+      "completedAt": "Erledigt {{date}}",
+      "completedBy": "Erledigt von {{name}} · {{date}}",
+      "markCompleted": "Erledigt",
+      "markIncomplete": "Als offen markieren"
     },
     "media": {
       "photosAndVideos": "Fotos und Videos",

@@ -1076,7 +1076,12 @@
       "deadlineNotifyEnabled": "Lembrar sobre o prazo se aproximando",
       "deadlineNotifyUsers": "Quem notificar",
       "deadlineNotifySelf": "Eu",
-      "deadlineUntil": "Prazo: {{date}}"
+      "deadlineUntil": "Prazo: {{date}}",
+      "completed": "Concluída",
+      "completedAt": "Concluída {{date}}",
+      "completedBy": "Concluída por {{name}} · {{date}}",
+      "markCompleted": "Concluída",
+      "markIncomplete": "Marcar como pendente"
     },
     "media": {
       "photosAndVideos": "Fotos e vídeos",

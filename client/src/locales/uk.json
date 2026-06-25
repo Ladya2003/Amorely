@@ -1020,7 +1020,12 @@
       "deadlineNotifyEnabled": "Нагадувати про наближення дедлайну",
       "deadlineNotifyUsers": "Кого сповіщати",
       "deadlineNotifySelf": "Я",
-      "deadlineUntil": "Дедлайн: {{date}}"
+      "deadlineUntil": "Дедлайн: {{date}}",
+      "completed": "Виконано",
+      "completedAt": "Виконано {{date}}",
+      "completedBy": "Виконав(ла) {{name}} · {{date}}",
+      "markCompleted": "Виконано",
+      "markIncomplete": "Повернути в роботу"
     },
     "media": {
       "photosAndVideos": "Фото та відео",

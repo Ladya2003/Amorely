@@ -1150,7 +1150,12 @@
       "deadlineNotifyEnabled": "Remind about approaching deadline",
       "deadlineNotifyUsers": "Who to notify",
       "deadlineNotifySelf": "Me",
-      "deadlineUntil": "Deadline: {{date}}"
+      "deadlineUntil": "Deadline: {{date}}",
+      "completed": "Completed",
+      "completedAt": "Completed {{date}}",
+      "completedBy": "Completed by {{name}} · {{date}}",
+      "markCompleted": "Done",
+      "markIncomplete": "Mark as incomplete"
     },
     "common": {
       "cancel": "Cancel",

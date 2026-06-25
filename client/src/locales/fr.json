@@ -1076,7 +1076,12 @@
       "deadlineNotifyEnabled": "Rappeler l'échéance approchante",
       "deadlineNotifyUsers": "Qui notifier",
       "deadlineNotifySelf": "Moi",
-      "deadlineUntil": "Échéance : {{date}}"
+      "deadlineUntil": "Échéance : {{date}}",
+      "completed": "Terminée",
+      "completedAt": "Terminée {{date}}",
+      "completedBy": "Terminée par {{name}} · {{date}}",
+      "markCompleted": "Terminée",
+      "markIncomplete": "Marquer comme en cours"
     },
     "media": {
       "photosAndVideos": "Photos et vidéos",

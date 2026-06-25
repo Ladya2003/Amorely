@@ -47,7 +47,6 @@ import { loadLocalKeys, type LocalDeviceKeys } from '../../crypto/cryptoService'
 import { useEncryptionRecipientId, usePartnerId } from '../../hooks/usePartnerId';
 import { useRelationship } from '../../hooks/useRelationship';
 import {
-  formatCalendarDateTime,
   formatCalendarDeadlineDateTime,
   getDateFnsLocale,
   getVideoLimitsHint
@@ -94,6 +93,8 @@ export interface PlanNote extends RawPlanNoteFields {
   media?: PlanNoteMedia[];
   deadlineAt?: string | null;
   deadlineNotifyUserIds?: string[];
+  completedAt?: string | null;
+  completedBy?: PlanNoteUser;
   createdAt: string;
   updatedAt: string;
   createdBy?: PlanNoteUser;
@@ -143,10 +144,20 @@ const PlansNotes: React.FC<{
     [allNotes, i18n.language]
   );
   const notes = useMemo(
-    () =>
-      selectedCategory
+    () => {
+      const filtered = selectedCategory
         ? allNotes.filter((note) => note.category === selectedCategory)
-        : allNotes,
+        : allNotes;
+
+      return [...filtered].sort((a, b) => {
+        const aCompleted = Boolean(a.completedAt);
+        const bCompleted = Boolean(b.completedAt);
+        if (aCompleted !== bCompleted) {
+          return aCompleted ? 1 : -1;
+        }
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+    },
     [allNotes, selectedCategory]
   );
   const [isPrefsHydrated, setIsPrefsHydrated] = useState(() => Boolean(user?._id));
@@ -194,6 +205,7 @@ const PlansNotes: React.FC<{
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<PlanNote | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [viewerMedia, setViewerMedia] = useState<{
@@ -660,6 +672,32 @@ const PlansNotes: React.FC<{
     }
   };
 
+  const handleToggleCompletion = async (note: PlanNote) => {
+    const nextCompleted = !note.completedAt;
+
+    try {
+      setIsCompleting(true);
+      const response = await axios.patch(`${API_URL}/api/calendar/plans/${note._id}/completion`, {
+        completed: nextCompleted
+      });
+      const keys = await resolveKeys();
+      const decrypted = await decryptPlanNote(
+        keys,
+        response.data,
+        user?._id,
+        partnerId || undefined
+      );
+      setAllNotes((prev) => prev.map((n) => (n._id === note._id ? decrypted : n)));
+      if (viewingNote?._id === note._id) {
+        setViewingNote(decrypted);
+      }
+    } catch (err) {
+      console.error('Ошибка изменения статуса заметки:', err);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!noteToDelete) return;
 
@@ -679,7 +717,7 @@ const PlansNotes: React.FC<{
   };
 
   const formatDate = (dateStr: string) =>
-    formatCalendarDateTime(new Date(dateStr), i18n.language);
+    formatCalendarDeadlineDateTime(new Date(dateStr), i18n.language);
 
   const dateFnsLocale = getDateFnsLocale(i18n.language);
 
@@ -840,7 +878,9 @@ const PlansNotes: React.FC<{
         )}
         {!isInitialLoading && !isRefreshingNotes && notes.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {notes.map((note) => (
+            {notes.map((note) => {
+              const isCompleted = Boolean(note.completedAt);
+              return (
               <Paper
                 key={note._id}
                 elevation={0}
@@ -849,16 +889,25 @@ const PlansNotes: React.FC<{
                   p: 2,
                   cursor: 'pointer',
                   border: '1px solid',
-                  borderColor: 'divider',
+                  borderColor: isCompleted ? 'success.light' : 'divider',
+                  bgcolor: isCompleted ? 'action.hover' : 'background.paper',
+                  opacity: isCompleted ? 0.82 : 1,
                   '&:hover': {
-                    borderColor: 'primary.light',
+                    borderColor: isCompleted ? 'success.main' : 'primary.light',
                     bgcolor: 'action.hover'
                   }
                 }}
               >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography variant="subtitle1" noWrap>
+                    <Typography
+                      variant="subtitle1"
+                      noWrap
+                      sx={{
+                        textDecoration: isCompleted ? 'line-through' : 'none',
+                        color: isCompleted ? 'text.secondary' : 'text.primary'
+                      }}
+                    >
                       {note.title}
                     </Typography>
                     {note.content && (
@@ -894,17 +943,30 @@ const PlansNotes: React.FC<{
                       )}
                     </Typography>
                   </Box>
-                  <Chip label={note.category} size="small" sx={{ flexShrink: 0 }} />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.75, flexShrink: 0 }}>
+                    {isCompleted && (
+                      <Chip label={t('calendar.plans.completed')} size="small" color="success" />
+                    )}
+                    <Chip label={note.category} size="small" />
+                  </Box>
                 </Box>
-                {note.deadlineAt && (
+                {note.deadlineAt && !isCompleted && (
                   <Typography variant="caption" color="warning.main" sx={{ mt: 0.75, display: 'block' }}>
                     {t('calendar.plans.deadlineUntil', {
                       date: formatCalendarDeadlineDateTime(new Date(note.deadlineAt), i18n.language)
                     })}
                   </Typography>
                 )}
+                {isCompleted && note.completedAt && (
+                  <Typography variant="caption" color="success.main" sx={{ mt: 0.75, display: 'block' }}>
+                    {t('calendar.plans.completedAt', {
+                      date: formatCalendarDeadlineDateTime(new Date(note.completedAt), i18n.language)
+                    })}
+                  </Typography>
+                )}
               </Paper>
-            ))}
+            );
+            })}
           </Box>
         )}
       </Box>
@@ -1153,10 +1215,15 @@ const PlansNotes: React.FC<{
           <>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <Box sx={{ minWidth: 0, pr: 1 }}>
-                <Typography variant="h6">{viewingNote.title}</Typography>
+                <Typography variant="h6" sx={{ textDecoration: viewingNote.completedAt ? 'line-through' : 'none' }}>
+                  {viewingNote.title}
+                </Typography>
                 <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
                   <Chip label={viewingNote.category} size="small" />
-                  {viewingNote.deadlineAt && (
+                  {viewingNote.completedAt && (
+                    <Chip label={t('calendar.plans.completed')} size="small" color="success" />
+                  )}
+                  {viewingNote.deadlineAt && !viewingNote.completedAt && (
                     <Chip
                       label={t('calendar.plans.deadlineUntil', {
                         date: formatCalendarDeadlineDateTime(new Date(viewingNote.deadlineAt), i18n.language)
@@ -1171,17 +1238,41 @@ const PlansNotes: React.FC<{
                   )}
                 </Box>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, flexShrink: 0 }}>
                 {!viewReadOnly && (
                   <IconButton
                     onClick={() => handleShareNote(viewingNote)}
                     size="small"
+                    aria-label={t('calendar.detail.share')}
                     title={t('calendar.detail.share')}
                   >
                     <ReplyOutlinedIcon />
                   </IconButton>
                 )}
-                <IconButton onClick={closeView} size="small">
+                {!viewReadOnly && (
+                  <IconButton
+                    onClick={() => openEditForm(viewingNote)}
+                    size="small"
+                    aria-label={t('calendar.detail.edit')}
+                    title={t('calendar.detail.edit')}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                )}
+                {!viewReadOnly && (
+                  <IconButton
+                    onClick={() => {
+                      setNoteToDelete(viewingNote);
+                      setDeleteOpen(true);
+                    }}
+                    size="small"
+                    aria-label={t('calendar.detail.delete')}
+                    title={t('calendar.detail.delete')}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
+                <IconButton onClick={closeView} size="small" aria-label={t('calendar.common.cancel')}>
                   <CloseIcon />
                 </IconButton>
               </Box>
@@ -1228,24 +1319,36 @@ const PlansNotes: React.FC<{
                       </Typography>
                     </Box>
                   )}
+                {viewingNote.completedAt && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar src={viewingNote.completedBy?.avatar} sx={{ width: 28, height: 28 }}>
+                      {viewingNote.completedBy?.username?.[0]?.toUpperCase()}
+                    </Avatar>
+                    <Typography variant="caption" color="success.main">
+                      {t('calendar.plans.completedBy', {
+                        name: renderAuthor(viewingNote.completedBy),
+                        date: formatCalendarDeadlineDateTime(
+                          new Date(viewingNote.completedAt),
+                          i18n.language
+                        )
+                      })}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2, justifyContent: viewReadOnly ? 'flex-end' : 'space-between' }}>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
               {!viewReadOnly && (
                 <Button
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                  onClick={() => {
-                    setNoteToDelete(viewingNote);
-                    setDeleteOpen(true);
-                  }}
+                  fullWidth
+                  variant={viewingNote.completedAt ? 'outlined' : 'contained'}
+                  color="primary"
+                  onClick={() => void handleToggleCompletion(viewingNote)}
+                  disabled={isCompleting}
                 >
-                  {t('calendar.common.delete')}
-                </Button>
-              )}
-              {!viewReadOnly && (
-                <Button variant="contained" startIcon={<EditIcon />} onClick={() => openEditForm(viewingNote)}>
-                  {t('calendar.common.edit')}
+                  {viewingNote.completedAt
+                    ? t('calendar.plans.markIncomplete')
+                    : t('calendar.plans.markCompleted')}
                 </Button>
               )}
             </DialogActions>

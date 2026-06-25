@@ -1063,6 +1063,7 @@ const formatPlanNote = (note: any) => ({
   deadlineNotifyUserIds: Array.isArray(note.deadlineNotifyUserIds)
     ? note.deadlineNotifyUserIds.map((id: any) => id.toString())
     : [],
+  completedAt: note.completedAt ? new Date(note.completedAt).toISOString() : null,
   createdAt: note.createdAt,
   updatedAt: note.updatedAt,
   createdBy: note.createdBy
@@ -1081,6 +1082,15 @@ const formatPlanNote = (note: any) => ({
         avatar: note.lastEditedBy.avatar,
         firstName: note.lastEditedBy.firstName,
         lastName: note.lastEditedBy.lastName
+      }
+    : undefined,
+  completedBy: note.completedBy
+    ? {
+        _id: note.completedBy._id?.toString(),
+        username: note.completedBy.username,
+        avatar: note.completedBy.avatar,
+        firstName: note.completedBy.firstName,
+        lastName: note.completedBy.lastName
       }
     : undefined
 });
@@ -1182,6 +1192,7 @@ router.get('/plans', async (req: any, res: Response) => {
     const notes = await PlanNote.find(buildCoupleQuery(userId, partnerId, relationshipStartDate, breakupViewContext))
       .populate('createdBy', 'username avatar firstName lastName')
       .populate('lastEditedBy', 'username avatar firstName lastName')
+      .populate('completedBy', 'username avatar firstName lastName')
       .sort({ updatedAt: -1 });
 
     res.json({
@@ -1547,7 +1558,7 @@ router.put('/plans/:id', async (req: any, res: Response) => {
 
     await note.save();
 
-    if (deadlineChanged && nextDeadlineAt && nextDeadlineNotifyUserIds.length > 0) {
+    if (deadlineChanged && nextDeadlineAt && nextDeadlineNotifyUserIds.length > 0 && !note.completedAt) {
       void sendDeadlineRemindersForNote(note, { forceInitial: true });
     }
 
@@ -1559,6 +1570,47 @@ router.put('/plans/:id', async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при обновлении заметки:', error);
     res.status(500).json({ error: 'Ошибка при обновлении заметки' });
+  }
+});
+
+// Переключение статуса выполнения заметки
+router.patch('/plans/:id/completion', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { id } = req.params;
+    const completed = Boolean(req.body?.completed);
+    const { partnerId, relationshipStartDate, breakupViewContext } =
+      await getSharedContentVisibilityContext(userId);
+
+    const note = await PlanNote.findById(id);
+
+    if (!note) {
+      return res.status(404).json({ error: 'Заметка не найдена' });
+    }
+
+    if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate, breakupViewContext)) {
+      return res.status(403).json({ error: 'Нет прав на изменение этой заметки' });
+    }
+
+    if (completed) {
+      note.completedAt = new Date();
+      note.completedBy = new mongoose.Types.ObjectId(userId);
+    } else {
+      note.set({ completedAt: null, completedBy: null });
+    }
+
+    note.lastEditedBy = new mongoose.Types.ObjectId(userId);
+    await note.save();
+
+    const populated = await PlanNote.findById(note._id)
+      .populate('createdBy', 'username avatar firstName lastName')
+      .populate('lastEditedBy', 'username avatar firstName lastName')
+      .populate('completedBy', 'username avatar firstName lastName');
+
+    res.json(formatPlanNote(populated));
+  } catch (error) {
+    console.error('Ошибка при изменении статуса выполнения заметки:', error);
+    res.status(500).json({ error: 'Ошибка при изменении статуса выполнения заметки' });
   }
 });
 
