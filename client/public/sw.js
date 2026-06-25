@@ -8,20 +8,28 @@ const getScopeBase = () => {
 };
 
 const syncAppBadge = async (count) => {
-  if (!('setAppBadge' in navigator)) {
+  const nav = self.navigator;
+  if (!('setAppBadge' in nav)) {
     return;
   }
 
   try {
     if (count > 0) {
-      await navigator.setAppBadge(count);
+      await nav.setAppBadge(count);
     } else {
-      await navigator.clearAppBadge();
+      await nav.clearAppBadge();
     }
   } catch (error) {
     console.error('Failed to set app badge:', error);
   }
 };
+
+self.addEventListener('message', (event) => {
+  const data = event.data;
+  if (data?.type === 'SYNC_BADGE' && typeof data.count === 'number') {
+    event.waitUntil(syncAppBadge(data.count));
+  }
+});
 
 const createCircularIcon = async (imageUrl) => {
   const response = await fetch(imageUrl);
@@ -83,6 +91,8 @@ self.addEventListener('push', (event) => {
   const badge = payload.badge || `${scopeBase}favicon-32.png`;
   const url = payload.url || `${scopeBase}chat`;
   const badgeCount = typeof payload.badgeCount === 'number' ? payload.badgeCount : null;
+  // На iOS бейдж нужно обновлять сразу при push, не дожидаясь async-обработки иконки.
+  const badgePromise = badgeCount !== null ? syncAppBadge(badgeCount) : Promise.resolve();
 
   event.waitUntil(
     (async () => {
@@ -98,7 +108,7 @@ self.addEventListener('push', (event) => {
 
       await Promise.all([
         self.registration.showNotification(payload.title || 'Amorely', options),
-        badgeCount !== null ? syncAppBadge(badgeCount) : Promise.resolve()
+        badgePromise
       ]);
 
       if (icon.startsWith('blob:')) {
