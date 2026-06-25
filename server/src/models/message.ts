@@ -45,6 +45,7 @@ const sharedEventSchema = new mongoose.Schema(
   {
     eventId: { type: String, required: true },
     title: { type: String, required: true },
+    descriptionPreview: { type: String, required: false },
     previewUrl: { type: String, required: false },
     previewResourceType: { type: String, enum: ['image', 'video'], required: false },
     previewEncrypted: { type: Boolean, required: false },

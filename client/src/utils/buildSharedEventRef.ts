@@ -55,6 +55,9 @@ export const buildSharedEventRef = (event: EventLikeForShare): SharedEventRef =>
   return {
     eventId: event.eventId || event._id,
     title: event.title || 'Без названия',
+    descriptionPreview: event.description?.trim()
+      ? event.description.trim()
+      : undefined,
     previewUrl: firstMedia?.url,
     previewResourceType: firstMedia?.resourceType,
     previewEncrypted: firstPlainEnvelope ? true : firstMedia?.encrypted,

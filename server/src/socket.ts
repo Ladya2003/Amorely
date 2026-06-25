@@ -111,6 +111,7 @@ export default function setupSocketIO(server: HttpServer) {
       sharedEvent?: {
         eventId: string;
         title: string;
+        descriptionPreview?: string;
         previewUrl?: string;
         previewResourceType?: 'image' | 'video';
         previewEncrypted?: boolean;

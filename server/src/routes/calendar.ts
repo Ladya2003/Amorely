@@ -584,6 +584,8 @@ router.get('/events/:id', async (req: any, res: Response) => {
       _id: id,
       eventId: id,
       title: shared.title || 'Без названия',
+      description: shared.descriptionPreview || '',
+      encrypted: false,
       eventDate: shared.eventDate || firstMedia.eventDate,
       createdAt: firstMedia.createdAt,
       createdBy: createdBySource

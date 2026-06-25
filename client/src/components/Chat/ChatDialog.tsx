@@ -90,6 +90,7 @@ export interface SharedEventMediaRef {
 export interface SharedEventRef {
   eventId: string;
   title: string;
+  descriptionPreview?: string;
   /** @deprecated используйте media; первое медиа для обратной совместимости */
   previewUrl?: string;
   previewResourceType?: 'image' | 'video';

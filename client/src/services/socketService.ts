@@ -115,6 +115,7 @@ class SocketService {
     sharedEvent?: {
       eventId: string;
       title: string;
+      descriptionPreview?: string;
       previewUrl?: string;
       previewResourceType?: 'image' | 'video';
       previewEncrypted?: boolean;
