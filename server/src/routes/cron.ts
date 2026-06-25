@@ -4,14 +4,15 @@ import { processPlanNoteDeadlineReminders } from '../services/planNoteDeadlineSe
 const router = express.Router();
 
 const verifyCronSecret = (req: Request, res: Response): boolean => {
-  const secret = process.env.CRON_SECRET;
+  const secret = process.env.CRON_SECRET?.trim();
   if (!secret) {
     res.status(503).json({ error: 'CRON_SECRET не настроен на сервере' });
     return false;
   }
 
-  const headerSecret = req.header('x-cron-secret');
-  const querySecret = typeof req.query.secret === 'string' ? req.query.secret : '';
+  const headerSecret = req.header('x-cron-secret')?.trim();
+  const querySecret =
+    typeof req.query.secret === 'string' ? req.query.secret.trim() : '';
   const provided = headerSecret || querySecret;
 
   if (provided !== secret) {

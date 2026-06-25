@@ -349,6 +349,9 @@ app.use('/api/push', authMiddleware, pushRoutes);
 // Маршруты для аутентификации
 app.use('/api/auth', authRoutes);
 
+// Cron-задачи (до app.use('/api', authMiddleware) — иначе JWT перехватит запрос)
+app.use('/api/cron', cronRoutes);
+
 // Маршруты для чата
 app.use('/api', authMiddleware, chatRoutes);
 app.use('/api/reports', reportsRoutes);
@@ -365,9 +368,6 @@ app.use('/api/games', authMiddleware, gamesRoutes);
 
 // Маршруты админ-панели
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);
-
-// Cron-задачи (без authMiddleware — проверка через CRON_SECRET)
-app.use('/api/cron', cronRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {
