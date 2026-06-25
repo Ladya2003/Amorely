@@ -30,6 +30,7 @@ import {
   buildSharedVisibilityQuery,
   canAccessSharedContent
 } from '../utils/sharedContentVisibility';
+import { sendDeadlineRemindersForNote } from '../services/planNoteDeadlineService';
 
 const router = express.Router();
 
@@ -1058,6 +1059,10 @@ const formatPlanNote = (note: any) => ({
   metadataSenderId: note.metadataSenderId?.toString(),
   metadataRecipientId: note.metadataRecipientId?.toString(),
   media: Array.isArray(note.media) ? note.media.map(formatPlanNoteMedia) : [],
+  deadlineAt: note.deadlineAt ? new Date(note.deadlineAt).toISOString() : null,
+  deadlineNotifyUserIds: Array.isArray(note.deadlineNotifyUserIds)
+    ? note.deadlineNotifyUserIds.map((id: any) => id.toString())
+    : [],
   createdAt: note.createdAt,
   updatedAt: note.updatedAt,
   createdBy: note.createdBy
@@ -1079,6 +1084,93 @@ const formatPlanNote = (note: any) => ({
       }
     : undefined
 });
+
+const parseDeadlineAt = (value: unknown): Date | null => {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const parseDeadlineNotifyUserIds = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map(String).filter(Boolean);
+};
+
+const validateDeadlineFields = async (
+  userId: string,
+  deadlineAt: Date | null,
+  deadlineNotifyUserIds: string[],
+  deadlineSharedNoteSnapshot: unknown
+): Promise<string | null> => {
+  if (!deadlineAt && deadlineNotifyUserIds.length === 0) {
+    return null;
+  }
+
+  if (!deadlineAt) {
+    return 'Укажите дату дедлайна';
+  }
+
+  if (deadlineAt.getTime() <= Date.now()) {
+    return 'Дедлайн должен быть в будущем';
+  }
+
+  if (deadlineNotifyUserIds.length === 0) {
+    return null;
+  }
+
+  const partnerId = await resolvePartnerUserId(userId);
+  const allowedIds = new Set([userId]);
+  if (hasActivePartner(userId, partnerId)) {
+    allowedIds.add(partnerId);
+  }
+
+  for (const notifyUserId of deadlineNotifyUserIds) {
+    if (!allowedIds.has(notifyUserId)) {
+      return 'Можно уведомлять только себя и партнёра';
+    }
+  }
+
+  if (!deadlineSharedNoteSnapshot || typeof deadlineSharedNoteSnapshot !== 'object') {
+    return 'Требуется снимок заметки для уведомлений';
+  }
+
+  const snapshot = deadlineSharedNoteSnapshot as { noteId?: string; title?: string };
+  if (!snapshot.title?.trim()) {
+    return 'Некорректный снимок заметки для уведомлений';
+  }
+
+  return null;
+};
+
+const applyDeadlineFieldsToNote = (
+  note: any,
+  params: {
+    deadlineAt: Date | null;
+    deadlineNotifyUserIds: string[];
+    deadlineSharedNoteSnapshot: Record<string, unknown> | null;
+    resetLastNotified?: boolean;
+  }
+) => {
+  note.deadlineAt = params.deadlineAt;
+
+  if (params.deadlineNotifyUserIds.length > 0 && params.deadlineAt) {
+    note.deadlineNotifyUserIds = params.deadlineNotifyUserIds.map(
+      (id) => new mongoose.Types.ObjectId(id)
+    );
+    note.deadlineSharedNoteSnapshot = params.deadlineSharedNoteSnapshot;
+    if (params.resetLastNotified) {
+      note.deadlineLastNotifiedAt = null;
+    }
+  } else {
+    note.deadlineNotifyUserIds = [];
+    note.deadlineSharedNoteSnapshot = null;
+    note.deadlineLastNotifiedAt = null;
+  }
+};
 
 // Получение заметок пользователя (с партнёром — все заметки обоих, без — свои и из прошлых отношений)
 router.get('/plans', async (req: any, res: Response) => {
@@ -1248,7 +1340,10 @@ router.post('/plans', async (req: any, res: Response) => {
       encryptedCategory,
       encryptedCategoryPartner,
       media,
-      encryptionRecipientId
+      encryptionRecipientId,
+      deadlineAt: deadlineAtRaw,
+      deadlineNotifyUserIds: deadlineNotifyUserIdsRaw,
+      deadlineSharedNoteSnapshot
     } = req.body || {};
 
     if (!encryptedTitle?.ciphertext) {
@@ -1257,6 +1352,18 @@ router.post('/plans', async (req: any, res: Response) => {
 
     if (!encryptedCategory?.ciphertext) {
       return res.status(400).json({ error: 'Требуется зашифрованная категория заметки' });
+    }
+
+    const deadlineAt = parseDeadlineAt(deadlineAtRaw);
+    const deadlineNotifyUserIds = parseDeadlineNotifyUserIds(deadlineNotifyUserIdsRaw);
+    const deadlineError = await validateDeadlineFields(
+      userId,
+      deadlineAt,
+      deadlineNotifyUserIds,
+      deadlineSharedNoteSnapshot
+    );
+    if (deadlineError) {
+      return res.status(400).json({ error: deadlineError });
     }
 
     const partnerId = encryptionRecipientId
@@ -1288,7 +1395,21 @@ router.post('/plans', async (req: any, res: Response) => {
       lastEditedBy: userId
     });
 
+    applyDeadlineFieldsToNote(note, {
+      deadlineAt,
+      deadlineNotifyUserIds,
+      deadlineSharedNoteSnapshot:
+        deadlineSharedNoteSnapshot && typeof deadlineSharedNoteSnapshot === 'object'
+          ? deadlineSharedNoteSnapshot
+          : null,
+      resetLastNotified: true
+    });
+
     await note.save();
+
+    if (deadlineAt && deadlineNotifyUserIds.length > 0) {
+      void sendDeadlineRemindersForNote(note, { forceInitial: true });
+    }
 
     const populated = await PlanNote.findById(note._id)
       .populate('createdBy', 'username avatar firstName lastName')
@@ -1315,7 +1436,10 @@ router.put('/plans/:id', async (req: any, res: Response) => {
       encryptedCategoryPartner,
       newMedia,
       removeMediaIds,
-      encryptionRecipientId
+      encryptionRecipientId,
+      deadlineAt: deadlineAtRaw,
+      deadlineNotifyUserIds: deadlineNotifyUserIdsRaw,
+      deadlineSharedNoteSnapshot
     } = req.body || {};
     const encryptionPartnerId = encryptionRecipientId
       ? String(encryptionRecipientId)
@@ -1332,6 +1456,46 @@ router.put('/plans/:id', async (req: any, res: Response) => {
     if (!canAccessPlanNote(note, userId, partnerId, relationshipStartDate, breakupViewContext)) {
       return res.status(403).json({ error: 'Нет прав на редактирование этой заметки' });
     }
+
+    const hasDeadlinePayload =
+      deadlineAtRaw !== undefined ||
+      deadlineNotifyUserIdsRaw !== undefined ||
+      deadlineSharedNoteSnapshot !== undefined;
+
+    let nextDeadlineAt = note.deadlineAt ? new Date(note.deadlineAt) : null;
+    let nextDeadlineNotifyUserIds = (note.deadlineNotifyUserIds || []).map((id: any) => id.toString());
+    let nextDeadlineSnapshot = note.deadlineSharedNoteSnapshot || null;
+
+    if (hasDeadlinePayload) {
+      nextDeadlineAt = deadlineAtRaw === null || deadlineAtRaw === false
+        ? null
+        : parseDeadlineAt(deadlineAtRaw);
+      nextDeadlineNotifyUserIds = parseDeadlineNotifyUserIds(deadlineNotifyUserIdsRaw);
+      nextDeadlineSnapshot =
+        deadlineSharedNoteSnapshot && typeof deadlineSharedNoteSnapshot === 'object'
+          ? deadlineSharedNoteSnapshot
+          : null;
+
+      const deadlineError = await validateDeadlineFields(
+        userId,
+        nextDeadlineAt,
+        nextDeadlineNotifyUserIds,
+        nextDeadlineSnapshot
+      );
+      if (deadlineError) {
+        return res.status(400).json({ error: deadlineError });
+      }
+    }
+
+    const previousNotifyIds = (note.deadlineNotifyUserIds || []).map((id: any) => id.toString()).sort().join(',');
+    const nextNotifyIds = nextDeadlineNotifyUserIds.slice().sort().join(',');
+    const deadlineChanged =
+      hasDeadlinePayload &&
+      (
+        (note.deadlineAt?.getTime() || null) !== (nextDeadlineAt?.getTime() || null) ||
+        previousNotifyIds !== nextNotifyIds ||
+        JSON.stringify(note.deadlineSharedNoteSnapshot || null) !== JSON.stringify(nextDeadlineSnapshot || null)
+      );
 
     if (encryptedTitle?.ciphertext) {
       Object.assign(
@@ -1371,7 +1535,21 @@ router.put('/plans/:id', async (req: any, res: Response) => {
     }
 
     note.lastEditedBy = new mongoose.Types.ObjectId(userId);
+
+    if (hasDeadlinePayload) {
+      applyDeadlineFieldsToNote(note, {
+        deadlineAt: nextDeadlineAt,
+        deadlineNotifyUserIds: nextDeadlineNotifyUserIds,
+        deadlineSharedNoteSnapshot: nextDeadlineSnapshot,
+        resetLastNotified: deadlineChanged
+      });
+    }
+
     await note.save();
+
+    if (deadlineChanged && nextDeadlineAt && nextDeadlineNotifyUserIds.length > 0) {
+      void sendDeadlineRemindersForNote(note, { forceInitial: true });
+    }
 
     const populated = await PlanNote.findById(note._id)
       .populate('createdBy', 'username avatar firstName lastName')

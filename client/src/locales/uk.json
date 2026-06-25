@@ -63,6 +63,36 @@
       "breakupProcessing": "Обробка...",
       "removing": "Видалення...",
       "addSuccess": "Партнера успішно додано",
+      "requestSentSuccess": "Заявку надіслано",
+      "requests": {
+        "title": "Заявки стати партнером",
+        "incoming": "Вхідні",
+        "outgoing": "Вихідні",
+        "filterAria": "Фільтр заявок",
+        "emptyIncoming": "Немає вхідних заявок",
+        "emptyOutgoing": "Немає вихідних заявок",
+        "accept": "Прийняти",
+        "decline": "Відхилити",
+        "cancel": "Скасувати",
+        "startDate": "Дата початку стосунків: {{date}}",
+        "switchConfirmTitle": "Змінити партнера?",
+        "switchConfirmBody": "Ви розстанетесь із поточним партнером і станете партнерами з {{name}}. Ви впевнені?",
+        "switchConfirmYes": "Так, продовжити",
+        "acceptSuccess": "Заявку прийнято",
+        "cancelSuccess": "Заявку скасовано",
+        "status": {
+          "pending": "Очікує відповіді",
+          "declinedIncoming": "Ви відхилили",
+          "declinedOutgoing": "Одержувач відхилив",
+          "cancelled": "Скасовано"
+        },
+        "errors": {
+          "loadFailed": "Не вдалося завантажити заявки",
+          "acceptFailed": "Не вдалося прийняти заявку",
+          "declineFailed": "Не вдалося відхилити заявку",
+          "cancelFailed": "Не вдалося скасувати заявку"
+        }
+      },
       "errors": {
         "selectPartnerAndDate": "Виберіть партнера та вкажіть дату початку стосунків",
         "addFailed": "Не вдалося додати партнера. Спробуйте ще раз."
@@ -741,6 +771,7 @@
   },
   "chat": {
     "tab": "Чат",
+    "systemMessages": "Системні повідомлення",
     "globalSearch": "Глобальний пошук",
     "clearSearch": "Очистити пошук",
     "yourChats": "Ваші чати",
@@ -983,7 +1014,13 @@
       "createdBy": "Створив(ла) {{name}}",
       "editedBy": "Змінив(ла) {{name}}",
       "deleteConfirm": "Видалити нотатку «{{title}}»? Вона зникне й у вашого партнера.",
-      "create": "Створити"
+      "create": "Створити",
+      "deadlineEnabled": "Додати дедлайн",
+      "deadlineAt": "Дедлайн виконання",
+      "deadlineNotifyEnabled": "Нагадувати про наближення дедлайну",
+      "deadlineNotifyUsers": "Кого сповіщати",
+      "deadlineNotifySelf": "Я",
+      "deadlineUntil": "Дедлайн: {{date}}"
     },
     "media": {
       "photosAndVideos": "Фото та відео",
@@ -1011,6 +1048,9 @@
       "loadNotesFailed": "Не вдалося завантажити нотатки",
       "titleRequired": "Вкажіть заголовок",
       "categoryRequired": "Вкажіть категорію",
+      "deadlineRequired": "Вкажіть дату та час дедлайну",
+      "deadlineFuture": "Дедлайн має бути в майбутньому",
+      "deadlineNotifyUsersRequired": "Виберіть хоча б одного одержувача сповіщень",
       "saveNoteFailed": "Не вдалося зберегти нотатку",
       "notAuthorized": "Не авторизовано",
       "unlockCrypto": "Розблокуйте ключі шифрування на сторінці /crypto/unlock",

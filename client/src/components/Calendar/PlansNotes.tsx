@@ -5,16 +5,21 @@ import {
   Avatar,
   Box,
   Button,
+  Checkbox,
   Chip,
   CircularProgress,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   IconButton,
   Paper,
   TextField,
   Typography
 } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
@@ -40,8 +45,10 @@ import {
 import { encryptAndUploadCalendarContentFiles } from '../../crypto/encryptedUploadService';
 import { loadLocalKeys, type LocalDeviceKeys } from '../../crypto/cryptoService';
 import { useEncryptionRecipientId, usePartnerId } from '../../hooks/usePartnerId';
+import { useRelationship } from '../../hooks/useRelationship';
 import {
   formatCalendarDateTime,
+  formatCalendarDeadlineDateTime,
   getDateFnsLocale,
   getVideoLimitsHint
 } from '../../localization/calendarHelpers';
@@ -85,12 +92,19 @@ export interface PlanNote extends RawPlanNoteFields {
   content: string;
   category: string;
   media?: PlanNoteMedia[];
+  deadlineAt?: string | null;
+  deadlineNotifyUserIds?: string[];
   createdAt: string;
   updatedAt: string;
   createdBy?: PlanNoteUser;
   lastEditedBy?: PlanNoteUser;
   readOnly?: boolean;
 }
+
+type DeadlineNotifyOption = {
+  id: string;
+  label: string;
+};
 
 type NoteFormState = {
   title: string;
@@ -115,6 +129,7 @@ const PlansNotes: React.FC<{
   const { localDeviceKeys, ensureLocalKeys } = useCrypto();
   const encryptionRecipientId = useEncryptionRecipientId();
   const partnerId = usePartnerId();
+  const { partner } = useRelationship();
 
   const [allNotes, setAllNotes] = useState<PlanNote[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(() =>
@@ -148,6 +163,28 @@ const PlansNotes: React.FC<{
   const [form, setForm] = useState<NoteFormState>(emptyForm);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const [hasDeadline, setHasDeadline] = useState(false);
+  const [deadlineAt, setDeadlineAt] = useState<Date | null>(null);
+  const [notifyOnDeadline, setNotifyOnDeadline] = useState(false);
+  const [notifyUserIds, setNotifyUserIds] = useState<string[]>([]);
+
+  const deadlineNotifyOptions = useMemo<DeadlineNotifyOption[]>(() => {
+    const options: DeadlineNotifyOption[] = [];
+    if (user?._id) {
+      options.push({
+        id: user._id,
+        label: t('calendar.plans.deadlineNotifySelf')
+      });
+    }
+    if (partner?._id && partner._id !== user?._id) {
+      options.push({
+        id: partner._id,
+        label: getUserDisplayName(partner)
+      });
+    }
+    return options;
+  }, [user?._id, partner, t]);
 
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -316,11 +353,19 @@ const PlansNotes: React.FC<{
     setRemovedMediaIds([]);
   };
 
+  const resetDeadlineState = () => {
+    setHasDeadline(false);
+    setDeadlineAt(null);
+    setNotifyOnDeadline(false);
+    setNotifyUserIds(user?._id ? [user._id] : []);
+  };
+
   const openCreateForm = () => {
     setEditingNote(null);
     setForm(emptyForm);
     setFormError(null);
     resetMediaState();
+    resetDeadlineState();
     setFormOpen(true);
   };
 
@@ -334,6 +379,11 @@ const PlansNotes: React.FC<{
     setFormError(null);
     resetMediaState();
     setExistingMedia(note.media || []);
+    setHasDeadline(Boolean(note.deadlineAt));
+    setDeadlineAt(note.deadlineAt ? new Date(note.deadlineAt) : null);
+    const existingNotifyIds = note.deadlineNotifyUserIds || [];
+    setNotifyOnDeadline(existingNotifyIds.length > 0);
+    setNotifyUserIds(existingNotifyIds);
     setFormOpen(true);
     closeView();
   };
@@ -469,6 +519,18 @@ const PlansNotes: React.FC<{
       setFormError(t('calendar.errors.categoryRequired'));
       return;
     }
+    if (hasDeadline && !deadlineAt) {
+      setFormError(t('calendar.errors.deadlineRequired'));
+      return;
+    }
+    if (hasDeadline && deadlineAt && deadlineAt.getTime() <= Date.now()) {
+      setFormError(t('calendar.errors.deadlineFuture'));
+      return;
+    }
+    if (hasDeadline && notifyOnDeadline && notifyUserIds.length === 0) {
+      setFormError(t('calendar.errors.deadlineNotifyUsersRequired'));
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -522,12 +584,43 @@ const PlansNotes: React.FC<{
         encryptedContentPartner: contentDual.partner,
         encryptedCategory: categoryDual.self,
         encryptedCategoryPartner: categoryDual.partner,
-        encryptionRecipientId
+        encryptionRecipientId,
+        deadlineAt: hasDeadline && deadlineAt ? deadlineAt.toISOString() : null,
+        deadlineNotifyUserIds:
+          hasDeadline && notifyOnDeadline ? notifyUserIds : []
+      };
+
+      const buildDeadlineSnapshot = async (noteId: string) => {
+        const noteLike = {
+          _id: noteId,
+          title: form.title.trim(),
+          content: form.content.trim(),
+          category: form.category.trim(),
+          updatedAt: new Date().toISOString(),
+          metadataSenderId: selfId,
+          metadataRecipientId: activePartnerId || selfId,
+          media: editingNote
+            ? existingMedia
+            : []
+        };
+
+        if (localDeviceKeys) {
+          return prepareNoteForShare(localDeviceKeys, noteLike, selfId, activePartnerId);
+        }
+        return buildSharedNoteRef(noteLike);
       };
 
       if (editingNote) {
+        const deadlinePayload =
+          hasDeadline && notifyOnDeadline
+            ? {
+                deadlineSharedNoteSnapshot: await buildDeadlineSnapshot(editingNote._id)
+              }
+            : { deadlineSharedNoteSnapshot: null };
+
         const response = await axios.put(`${API_URL}/api/calendar/plans/${editingNote._id}`, {
           ...payload,
+          ...deadlinePayload,
           newMedia: mediaPayload,
           removeMediaIds: removedMediaIds
         });
@@ -537,8 +630,16 @@ const PlansNotes: React.FC<{
           setViewingNote(decrypted);
         }
       } else {
+        const deadlinePayload =
+          hasDeadline && notifyOnDeadline
+            ? {
+                deadlineSharedNoteSnapshot: await buildDeadlineSnapshot('pending')
+              }
+            : { deadlineSharedNoteSnapshot: null };
+
         const response = await axios.post(`${API_URL}/api/calendar/plans`, {
           ...payload,
+          ...deadlinePayload,
           media: mediaPayload
         });
         const decrypted = await decryptPlanNote(keys, response.data, selfId, partnerId || undefined);
@@ -546,6 +647,7 @@ const PlansNotes: React.FC<{
       }
 
       resetMediaState();
+      resetDeadlineState();
       setFormOpen(false);
       setEditingNote(null);
       setForm(emptyForm);
@@ -578,6 +680,8 @@ const PlansNotes: React.FC<{
 
   const formatDate = (dateStr: string) =>
     formatCalendarDateTime(new Date(dateStr), i18n.language);
+
+  const dateFnsLocale = getDateFnsLocale(i18n.language);
 
   const renderAuthor = (author?: PlanNoteUser) => {
     if (!author) return t('calendar.common.unknown');
@@ -792,6 +896,13 @@ const PlansNotes: React.FC<{
                   </Box>
                   <Chip label={note.category} size="small" sx={{ flexShrink: 0 }} />
                 </Box>
+                {note.deadlineAt && (
+                  <Typography variant="caption" color="warning.main" sx={{ mt: 0.75, display: 'block' }}>
+                    {t('calendar.plans.deadlineUntil', {
+                      date: formatCalendarDeadlineDateTime(new Date(note.deadlineAt), i18n.language)
+                    })}
+                  </Typography>
+                )}
               </Paper>
             ))}
           </Box>
@@ -842,6 +953,84 @@ const PlansNotes: React.FC<{
             placeholder={t('calendar.plans.contentPlaceholder')}
             inputProps={{ maxLength: 10000 }}
           />
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={hasDeadline}
+                onChange={(event) => {
+                  const checked = event.target.checked;
+                  setHasDeadline(checked);
+                  if (!checked) {
+                    setDeadlineAt(null);
+                    setNotifyOnDeadline(false);
+                    setNotifyUserIds([]);
+                  }
+                }}
+                disabled={isSaving}
+              />
+            }
+            label={t('calendar.plans.deadlineEnabled')}
+          />
+
+          {hasDeadline && (
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateFnsLocale}>
+              <DateTimePicker
+                label={t('calendar.plans.deadlineAt')}
+                value={deadlineAt}
+                onChange={(value) => setDeadlineAt(value)}
+                minDateTime={new Date()}
+                disabled={isSaving}
+                slotProps={{
+                  textField: {
+                    fullWidth: true
+                  }
+                }}
+              />
+            </LocalizationProvider>
+          )}
+
+          {hasDeadline && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={notifyOnDeadline}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setNotifyOnDeadline(checked);
+                    if (checked && notifyUserIds.length === 0 && user?._id) {
+                      setNotifyUserIds([user._id]);
+                    }
+                    if (!checked) {
+                      setNotifyUserIds([]);
+                    }
+                  }}
+                  disabled={isSaving || deadlineNotifyOptions.length === 0}
+                />
+              }
+              label={t('calendar.plans.deadlineNotifyEnabled')}
+            />
+          )}
+
+          {hasDeadline && notifyOnDeadline && deadlineNotifyOptions.length > 0 && (
+            <Autocomplete
+              multiple
+              options={deadlineNotifyOptions}
+              value={deadlineNotifyOptions.filter((option) => notifyUserIds.includes(option.id))}
+              onChange={(_, value) => setNotifyUserIds(value.map((item) => item.id))}
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              disableCloseOnSelect
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={t('calendar.plans.deadlineNotifyUsers')}
+                  placeholder={t('calendar.plans.deadlineNotifyUsers')}
+                />
+              )}
+              disabled={isSaving}
+            />
+          )}
 
           <Box>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
@@ -967,6 +1156,16 @@ const PlansNotes: React.FC<{
                 <Typography variant="h6">{viewingNote.title}</Typography>
                 <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
                   <Chip label={viewingNote.category} size="small" />
+                  {viewingNote.deadlineAt && (
+                    <Chip
+                      label={t('calendar.plans.deadlineUntil', {
+                        date: formatCalendarDeadlineDateTime(new Date(viewingNote.deadlineAt), i18n.language)
+                      })}
+                      size="small"
+                      color="warning"
+                      variant="outlined"
+                    />
+                  )}
                   {viewReadOnly && (
                     <Chip label={t('calendar.detail.readOnly')} size="small" color="default" />
                   )}

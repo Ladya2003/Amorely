@@ -76,6 +76,36 @@
       "breakupProcessing": "Processing...",
       "removing": "Removing...",
       "addSuccess": "Partner added successfully",
+      "requestSentSuccess": "Partner request sent",
+      "requests": {
+        "title": "Partner requests",
+        "incoming": "Incoming",
+        "outgoing": "Outgoing",
+        "filterAria": "Request filter",
+        "emptyIncoming": "No incoming requests",
+        "emptyOutgoing": "No outgoing requests",
+        "accept": "Accept",
+        "decline": "Decline",
+        "cancel": "Cancel",
+        "startDate": "Relationship start date: {{date}}",
+        "switchConfirmTitle": "Switch partner?",
+        "switchConfirmBody": "You will break up with your current partner and become partners with {{name}}. Are you sure?",
+        "switchConfirmYes": "Yes, continue",
+        "acceptSuccess": "Request accepted",
+        "cancelSuccess": "Request cancelled",
+        "status": {
+          "pending": "Awaiting response",
+          "declinedIncoming": "You declined",
+          "declinedOutgoing": "Recipient declined",
+          "cancelled": "Cancelled"
+        },
+        "errors": {
+          "loadFailed": "Failed to load requests",
+          "acceptFailed": "Failed to accept request",
+          "declineFailed": "Failed to decline request",
+          "cancelFailed": "Failed to cancel request"
+        }
+      },
       "errors": {
         "selectPartnerAndDate": "Select a partner and enter the relationship start date",
         "addFailed": "Failed to add partner. Please try again."
@@ -798,6 +828,7 @@
   },
   "chat": {
     "tab": "Chat",
+    "systemMessages": "System messages",
     "globalSearch": "Global search",
     "clearSearch": "Clear search",
     "yourChats": "Your chats",
@@ -1063,6 +1094,9 @@
       "saveEventFailed": "Failed to save event. Please try again.",
       "loadNotesFailed": "Failed to load notes",
       "categoryRequired": "Enter a category",
+      "deadlineRequired": "Specify the deadline date and time",
+      "deadlineFuture": "The deadline must be in the future",
+      "deadlineNotifyUsersRequired": "Select at least one notification recipient",
       "saveNoteFailed": "Failed to save note",
       "notAuthorized": "Not authorized",
       "unlockCrypto": "Unlock encryption keys on /crypto/unlock",
@@ -1110,7 +1144,13 @@
       "createdBy": "Created by {{name}}",
       "editedBy": "Edited by {{name}}",
       "deleteConfirm": "Delete note «{{title}}»? It will disappear for your partner too.",
-      "create": "Create"
+      "create": "Create",
+      "deadlineEnabled": "Add deadline",
+      "deadlineAt": "Completion deadline",
+      "deadlineNotifyEnabled": "Remind about approaching deadline",
+      "deadlineNotifyUsers": "Who to notify",
+      "deadlineNotifySelf": "Me",
+      "deadlineUntil": "Deadline: {{date}}"
     },
     "common": {
       "cancel": "Cancel",

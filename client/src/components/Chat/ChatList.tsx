@@ -21,10 +21,12 @@ import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import GameBadges from '../Games/GameBadges';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { formatChatListTimestamp } from '../../localization/chatHelpers';
+import { getContactDisplayName } from '../../utils/contactDisplayName';
 
 export interface Contact {
   id: string;
   isPartner?: boolean;
+  role?: string;
   name: string;
   firstName?: string;
   lastName?: string;
@@ -135,6 +137,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
         <React.Fragment key={contact.id}>
           {(() => {
             const hasUnreadIncoming = (contact.unreadCount || 0) > 0;
+            const displayName = getContactDisplayName(contact, t('chat.systemMessages'));
             return (
           <StyledListItemButton 
             alignItems="flex-start" 
@@ -148,7 +151,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
             <ListItemAvatar>
               <Box sx={{ position: 'relative', display: 'inline-flex' }}>
                 <Avatar 
-                  alt={contact.name} 
+                  alt={displayName} 
                   src={contact.avatar} 
                   sx={{ 
                     width: 50, 
@@ -199,7 +202,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                         textOverflow: 'ellipsis',
                       }}
                     >
-                      {contact.name}
+                      {displayName}
                     </Typography>
                     {contact.isPartner && (
                       <Box component="span" sx={{ flexShrink: 0, display: 'inline-flex' }}>

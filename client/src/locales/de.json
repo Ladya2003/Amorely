@@ -76,6 +76,36 @@
       "breakupProcessing": "Wird verarbeitet...",
       "removing": "Entfernen...",
       "addSuccess": "Partner erfolgreich hinzugefügt",
+      "requestSentSuccess": "Partneranfrage gesendet",
+      "requests": {
+        "title": "Partneranfragen",
+        "incoming": "Eingehend",
+        "outgoing": "Ausgehend",
+        "filterAria": "Anfragenfilter",
+        "emptyIncoming": "Keine eingehenden Anfragen",
+        "emptyOutgoing": "Keine ausgehenden Anfragen",
+        "accept": "Annehmen",
+        "decline": "Ablehnen",
+        "cancel": "Abbrechen",
+        "startDate": "Beginn der Beziehung: {{date}}",
+        "switchConfirmTitle": "Partner wechseln?",
+        "switchConfirmBody": "Du wirst dich von deinem aktuellen Partner trennen und Partner mit {{name}} werden. Bist du sicher?",
+        "switchConfirmYes": "Ja, fortfahren",
+        "acceptSuccess": "Anfrage angenommen",
+        "cancelSuccess": "Anfrage abgebrochen",
+        "status": {
+          "pending": "Wartet auf Antwort",
+          "declinedIncoming": "Du hast abgelehnt",
+          "declinedOutgoing": "Empfänger hat abgelehnt",
+          "cancelled": "Abgebrochen"
+        },
+        "errors": {
+          "loadFailed": "Anfragen konnten nicht geladen werden",
+          "acceptFailed": "Anfrage konnte nicht angenommen werden",
+          "declineFailed": "Anfrage konnte nicht abgelehnt werden",
+          "cancelFailed": "Anfrage konnte nicht abgebrochen werden"
+        }
+      },
       "errors": {
         "selectPartnerAndDate": "Wähle einen Partner und gib das Startdatum der Beziehung ein",
         "addFailed": "Partner konnte nicht hinzugefügt werden. Bitte versuche es erneut."
@@ -798,6 +828,7 @@
   },
   "chat": {
     "tab": "Chat",
+    "systemMessages": "Systemnachrichten",
     "globalSearch": "Globale Suche",
     "clearSearch": "Suche löschen",
     "yourChats": "Deine Chats",
@@ -1039,7 +1070,13 @@
       "createdBy": "Erstellt von {{name}}",
       "editedBy": "Bearbeitet von {{name}}",
       "deleteConfirm": "Notiz «{{title}}» löschen? Sie verschwindet auch beim Partner.",
-      "create": "Erstellen"
+      "create": "Erstellen",
+      "deadlineEnabled": "Frist hinzufügen",
+      "deadlineAt": "Frist für Erledigung",
+      "deadlineNotifyEnabled": "An bevorstehende Frist erinnern",
+      "deadlineNotifyUsers": "Wen benachrichtigen",
+      "deadlineNotifySelf": "Ich",
+      "deadlineUntil": "Frist: {{date}}"
     },
     "media": {
       "photosAndVideos": "Fotos und Videos",
@@ -1067,6 +1104,9 @@
       "loadNotesFailed": "Notizen konnten nicht geladen werden",
       "titleRequired": "Titel angeben",
       "categoryRequired": "Kategorie angeben",
+      "deadlineRequired": "Geben Sie Datum und Uhrzeit der Frist an",
+      "deadlineFuture": "Die Frist muss in der Zukunft liegen",
+      "deadlineNotifyUsersRequired": "Wählen Sie mindestens einen Empfänger aus",
       "saveNoteFailed": "Notiz konnte nicht gespeichert werden",
       "notAuthorized": "Nicht autorisiert",
       "unlockCrypto": "Entsperrt die Verschlüsselungsschlüssel unter /crypto/unlock",

@@ -33,7 +33,7 @@ export interface UserDocument extends mongoose.Document {
     };
   };
   lastSeen?: Date;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'system';
   isBlocked?: boolean;
   blockedAt?: Date;
   blockedReasons?: Partial<Record<'ru' | 'en' | 'es' | 'de' | 'fr' | 'pt' | 'uk', string>>;
@@ -81,7 +81,7 @@ const userSchema = new mongoose.Schema({
     }
   },
   lastSeen: { type: Date },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, enum: ['user', 'admin', 'system'], default: 'user' },
   isBlocked: { type: Boolean, default: false },
   blockedAt: { type: Date },
   blockedReasons: {

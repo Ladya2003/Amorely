@@ -17,6 +17,7 @@ import { resolveAppLocale } from '../localization/locale';
 import { applyPreferredLocale } from '../localization/localeSync';
 import socketService from '../services/socketService';
 import { notifyPartnerChanged, notifyPartnerUnlinked } from '../hooks/useRelationship';
+import { notifyPartnerRequestsChanged } from '../hooks/usePartnerRequests';
 import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 
 interface User {
@@ -204,14 +205,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     };
 
+    const handlePartnerRequestReceived = () => {
+      notifyPartnerRequestsChanged();
+    };
+
     socket.on('partner_linked', handlePartnerLinked);
     socket.on('partner_unlinked', handlePartnerUnlinked);
+    socket.on('partner_request_received', handlePartnerRequestReceived);
+    socket.on('partner_request_cancelled', handlePartnerRequestReceived);
+    socket.on('partner_request_declined', handlePartnerRequestReceived);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleFocus);
       socket.off('partner_linked', handlePartnerLinked);
       socket.off('partner_unlinked', handlePartnerUnlinked);
+      socket.off('partner_request_received', handlePartnerRequestReceived);
+      socket.off('partner_request_cancelled', handlePartnerRequestReceived);
+      socket.off('partner_request_declined', handlePartnerRequestReceived);
     };
   }, [user?._id, token, handleBlockedResponse]);
 

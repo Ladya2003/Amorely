@@ -145,11 +145,11 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
       setSuccessToastOpen(true);
     } catch (error: any) {
       console.error('Ошибка при добавлении партнера:', error);
-      if (error.response && error.response.data && error.response.data.error) {
-        setError(error.response.data.error);
-      } else {
-        setError(t('settings.partner.errors.addFailed'));
-      }
+      const message =
+        error.response?.data?.error ??
+        (typeof error.error === 'string' ? error.error : null) ??
+        (error instanceof Error ? error.message : null);
+      setError(message || t('settings.partner.errors.addFailed'));
       setIsSubmitting(false);
     }
   };
@@ -424,7 +424,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
 
       <CustomSnackbar
         open={successToastOpen}
-        message={t('settings.partner.addSuccess')}
+        message={t('settings.partner.requestSentSuccess')}
         severity="success"
         onClose={() => setSuccessToastOpen(false)}
       />

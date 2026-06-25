@@ -76,6 +76,36 @@
       "breakupProcessing": "Processando...",
       "removing": "Removendo...",
       "addSuccess": "Parceiro adicionado com sucesso",
+      "requestSentSuccess": "Pedido de parceiro enviado",
+      "requests": {
+        "title": "Pedidos de parceiro",
+        "incoming": "Recebidos",
+        "outgoing": "Enviados",
+        "filterAria": "Filtro de pedidos",
+        "emptyIncoming": "Nenhum pedido recebido",
+        "emptyOutgoing": "Nenhum pedido enviado",
+        "accept": "Aceitar",
+        "decline": "Recusar",
+        "cancel": "Cancelar",
+        "startDate": "Data de início da relação: {{date}}",
+        "switchConfirmTitle": "Trocar de parceiro?",
+        "switchConfirmBody": "Você vai se separar do parceiro atual e se tornar parceiro de {{name}}. Tem certeza?",
+        "switchConfirmYes": "Sim, continuar",
+        "acceptSuccess": "Pedido aceito",
+        "cancelSuccess": "Pedido cancelado",
+        "status": {
+          "pending": "Aguardando resposta",
+          "declinedIncoming": "Você recusou",
+          "declinedOutgoing": "Destinatário recusou",
+          "cancelled": "Cancelado"
+        },
+        "errors": {
+          "loadFailed": "Não foi possível carregar os pedidos",
+          "acceptFailed": "Não foi possível aceitar o pedido",
+          "declineFailed": "Não foi possível recusar o pedido",
+          "cancelFailed": "Não foi possível cancelar o pedido"
+        }
+      },
       "errors": {
         "selectPartnerAndDate": "Selecione um parceiro e informe a data de início do relacionamento",
         "addFailed": "Não foi possível adicionar o parceiro. Tente novamente."
@@ -798,6 +828,7 @@
   },
   "chat": {
     "tab": "Chat",
+    "systemMessages": "Mensagens do sistema",
     "globalSearch": "Busca global",
     "clearSearch": "Limpar busca",
     "yourChats": "Seus chats",
@@ -1039,7 +1070,13 @@
       "createdBy": "Criado por {{name}}",
       "editedBy": "Editado por {{name}}",
       "deleteConfirm": "Excluir a nota «{{title}}»? Ela também desaparecerá para o parceiro.",
-      "create": "Criar"
+      "create": "Criar",
+      "deadlineEnabled": "Adicionar prazo",
+      "deadlineAt": "Prazo de conclusão",
+      "deadlineNotifyEnabled": "Lembrar sobre o prazo se aproximando",
+      "deadlineNotifyUsers": "Quem notificar",
+      "deadlineNotifySelf": "Eu",
+      "deadlineUntil": "Prazo: {{date}}"
     },
     "media": {
       "photosAndVideos": "Fotos e vídeos",
@@ -1067,6 +1104,9 @@
       "loadNotesFailed": "Não foi possível carregar as notas",
       "titleRequired": "Informe um título",
       "categoryRequired": "Informe uma categoria",
+      "deadlineRequired": "Informe a data e hora do prazo",
+      "deadlineFuture": "O prazo deve estar no futuro",
+      "deadlineNotifyUsersRequired": "Selecione pelo menos um destinatário",
       "saveNoteFailed": "Não foi possível salvar a nota",
       "notAuthorized": "Não autorizado",
       "unlockCrypto": "Desbloqueie as chaves de criptografia em /crypto/unlock",

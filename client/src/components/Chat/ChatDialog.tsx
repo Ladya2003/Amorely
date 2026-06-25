@@ -50,6 +50,7 @@ import { captureVideoPosterFromFile } from '../../utils/videoPoster';
 import MediaViewerDialog from '../common/MediaViewerDialog';
 import EncryptedIndicator from '../common/EncryptedIndicator';
 import { formatContactPresence } from '../../utils/formatContactPresence';
+import { getContactDisplayName } from '../../utils/contactDisplayName';
 import { formatChatDayBadge } from '../../localization/chatHelpers';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import { isIOSDevice } from '../../utils/isIOSDevice';
@@ -1323,6 +1324,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   if (!contact) return null;
 
+  const contactDisplayName = getContactDisplayName(contact, t('chat.systemMessages'));
+
   return (
     <Box sx={{
       display: 'flex',
@@ -1361,7 +1364,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </Badge>
         </IconButton>
         <Avatar 
-          alt={contact.name} 
+          alt={contactDisplayName} 
           src={contact.avatar}
           onClick={() => setProfileDialogOpen(true)}
           sx={{
@@ -1383,7 +1386,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           }}
           role="button"
           tabIndex={0}
-          aria-label={t('chat.dialog.profileAria', { name: contact.name })}
+          aria-label={t('chat.dialog.profileAria', { name: contactDisplayName })}
         >
           <Box
             sx={{
@@ -1407,7 +1410,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
                 textOverflow: 'ellipsis',
               }}
             >
-              {contact.name}
+              {contactDisplayName}
             </Typography>
             {contact.isPartner && (
               <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
@@ -2147,7 +2150,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         <ChatReportModal
           open={reportModalOpen}
           onClose={() => setReportModalOpen(false)}
-          contactName={contact.name}
+          contactName={contactDisplayName}
           onSubmit={onSubmitReport}
         />
       )}

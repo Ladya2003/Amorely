@@ -43,6 +43,9 @@ export const formatCalendarMonthYear = (date: Date, locale?: string | null): str
 export const formatCalendarDateTime = (date: Date, locale?: string | null): string =>
   format(date, `${DATE_INPUT_FORMAT} HH:mm`, { locale: getDateFnsLocale(locale) });
 
+export const formatCalendarDeadlineDateTime = (date: Date, locale?: string | null): string =>
+  format(date, 'd MMMM yyyy HH:mm', { locale: getDateFnsLocale(locale) });
+
 export const getVideoLimitsHint = (t: TFunction): string =>
   t('calendar.media.videoHint', {
     sourceMb: formatMegabytes(MAX_VIDEO_SOURCE_BYTES),

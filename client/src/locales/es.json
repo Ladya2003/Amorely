@@ -76,6 +76,36 @@
       "breakupProcessing": "Procesando...",
       "removing": "Eliminando...",
       "addSuccess": "Pareja añadida correctamente",
+      "requestSentSuccess": "Solicitud de pareja enviada",
+      "requests": {
+        "title": "Solicitudes de pareja",
+        "incoming": "Entrantes",
+        "outgoing": "Salientes",
+        "filterAria": "Filtro de solicitudes",
+        "emptyIncoming": "No hay solicitudes entrantes",
+        "emptyOutgoing": "No hay solicitudes salientes",
+        "accept": "Aceptar",
+        "decline": "Rechazar",
+        "cancel": "Cancelar",
+        "startDate": "Fecha de inicio de la relación: {{date}}",
+        "switchConfirmTitle": "¿Cambiar de pareja?",
+        "switchConfirmBody": "Te separarás de tu pareja actual y serás pareja de {{name}}. ¿Estás seguro?",
+        "switchConfirmYes": "Sí, continuar",
+        "acceptSuccess": "Solicitud aceptada",
+        "cancelSuccess": "Solicitud cancelada",
+        "status": {
+          "pending": "Esperando respuesta",
+          "declinedIncoming": "Rechazaste",
+          "declinedOutgoing": "El destinatario rechazó",
+          "cancelled": "Cancelada"
+        },
+        "errors": {
+          "loadFailed": "No se pudieron cargar las solicitudes",
+          "acceptFailed": "No se pudo aceptar la solicitud",
+          "declineFailed": "No se pudo rechazar la solicitud",
+          "cancelFailed": "No se pudo cancelar la solicitud"
+        }
+      },
       "errors": {
         "selectPartnerAndDate": "Selecciona una pareja e indica la fecha de inicio de la relación",
         "addFailed": "No se pudo añadir la pareja. Inténtalo de nuevo."
@@ -798,6 +828,7 @@
   },
   "chat": {
     "tab": "Chat",
+    "systemMessages": "Mensajes del sistema",
     "globalSearch": "Búsqueda global",
     "clearSearch": "Borrar búsqueda",
     "yourChats": "Tus chats",
@@ -1039,7 +1070,13 @@
       "createdBy": "Creado por {{name}}",
       "editedBy": "Editado por {{name}}",
       "deleteConfirm": "¿Eliminar la nota «{{title}}»? También desaparecerá para tu pareja.",
-      "create": "Crear"
+      "create": "Crear",
+      "deadlineEnabled": "Añadir fecha límite",
+      "deadlineAt": "Fecha límite de cumplimiento",
+      "deadlineNotifyEnabled": "Recordar la fecha límite próxima",
+      "deadlineNotifyUsers": "A quién notificar",
+      "deadlineNotifySelf": "Yo",
+      "deadlineUntil": "Fecha límite: {{date}}"
     },
     "media": {
       "photosAndVideos": "Fotos y vídeos",
@@ -1067,6 +1104,9 @@
       "loadNotesFailed": "No se pudieron cargar las notas",
       "titleRequired": "Indica un título",
       "categoryRequired": "Indica una categoría",
+      "deadlineRequired": "Indica la fecha y hora límite",
+      "deadlineFuture": "La fecha límite debe ser futura",
+      "deadlineNotifyUsersRequired": "Selecciona al menos un destinatario",
       "saveNoteFailed": "No se pudo guardar la nota",
       "notAuthorized": "No autorizado",
       "unlockCrypto": "Desbloquea las claves de cifrado en /crypto/unlock",

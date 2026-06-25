@@ -76,6 +76,36 @@
       "breakupProcessing": "Traitement...",
       "removing": "Suppression...",
       "addSuccess": "Partenaire ajouté avec succès",
+      "requestSentSuccess": "Demande de partenaire envoyée",
+      "requests": {
+        "title": "Demandes de partenaire",
+        "incoming": "Entrantes",
+        "outgoing": "Sortantes",
+        "filterAria": "Filtre des demandes",
+        "emptyIncoming": "Aucune demande entrante",
+        "emptyOutgoing": "Aucune demande sortante",
+        "accept": "Accepter",
+        "decline": "Refuser",
+        "cancel": "Annuler",
+        "startDate": "Date de début de la relation : {{date}}",
+        "switchConfirmTitle": "Changer de partenaire ?",
+        "switchConfirmBody": "Vous romprez avec votre partenaire actuel et deviendrez partenaire avec {{name}}. Êtes-vous sûr ?",
+        "switchConfirmYes": "Oui, continuer",
+        "acceptSuccess": "Demande acceptée",
+        "cancelSuccess": "Demande annulée",
+        "status": {
+          "pending": "En attente de réponse",
+          "declinedIncoming": "Vous avez refusé",
+          "declinedOutgoing": "Le destinataire a refusé",
+          "cancelled": "Annulée"
+        },
+        "errors": {
+          "loadFailed": "Impossible de charger les demandes",
+          "acceptFailed": "Impossible d'accepter la demande",
+          "declineFailed": "Impossible de refuser la demande",
+          "cancelFailed": "Impossible d'annuler la demande"
+        }
+      },
       "errors": {
         "selectPartnerAndDate": "Sélectionnez un partenaire et indiquez la date de début de la relation",
         "addFailed": "Impossible d'ajouter le partenaire. Veuillez réessayer."
@@ -798,6 +828,7 @@
   },
   "chat": {
     "tab": "Chat",
+    "systemMessages": "Messages système",
     "globalSearch": "Recherche globale",
     "clearSearch": "Effacer la recherche",
     "yourChats": "Vos discussions",
@@ -1039,7 +1070,13 @@
       "createdBy": "Créé par {{name}}",
       "editedBy": "Modifié par {{name}}",
       "deleteConfirm": "Supprimer la note « {{title}} » ? Elle disparaîtra aussi pour votre partenaire.",
-      "create": "Créer"
+      "create": "Créer",
+      "deadlineEnabled": "Ajouter une échéance",
+      "deadlineAt": "Date limite d'exécution",
+      "deadlineNotifyEnabled": "Rappeler l'échéance approchante",
+      "deadlineNotifyUsers": "Qui notifier",
+      "deadlineNotifySelf": "Moi",
+      "deadlineUntil": "Échéance : {{date}}"
     },
     "media": {
       "photosAndVideos": "Photos et vidéos",
@@ -1067,6 +1104,9 @@
       "loadNotesFailed": "Impossible de charger les notes",
       "titleRequired": "Indiquez un titre",
       "categoryRequired": "Indiquez une catégorie",
+      "deadlineRequired": "Indiquez la date et l'heure de l'échéance",
+      "deadlineFuture": "L'échéance doit être dans le futur",
+      "deadlineNotifyUsersRequired": "Sélectionnez au moins un destinataire",
       "saveNoteFailed": "Impossible d'enregistrer la note",
       "notAuthorized": "Non autorisé",
       "unlockCrypto": "Déverrouillez les clés de chiffrement sur /crypto/unlock",

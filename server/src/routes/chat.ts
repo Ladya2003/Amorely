@@ -150,6 +150,7 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
         isBlocked: blockStatus.isBlocked,
         blockedByMe: blockStatus.blockedByMe,
         blockedByPeer: blockStatus.blockedByPeer,
+        role: user.role || 'user',
         name: getDisplayName(user),
         firstName: user.firstName || '',
         lastName: user.lastName || '',
@@ -221,6 +222,7 @@ router.get('/contacts/search', authMiddleware, async (req: any, res: Response) =
     const searchRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     const searchFilter = {
       _id: { $ne: userId },
+      role: { $ne: 'system' },
       $or: [
         { username: searchRegex },
         { email: searchRegex },

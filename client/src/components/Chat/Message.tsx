@@ -402,7 +402,7 @@ const Message: React.FC<MessageProps> = ({
           )}
 
           {sharedEvent && (
-            <Box sx={{ mb: message.text ? 0 : 0.25, pb: message.text ? 0 : 2.5 }}>
+            <Box sx={{ mb: message.text ? 0 : 0.25, pb: 2.5 }}>
               <SharedEventCard
                 sharedEvent={sharedEvent}
                 isOwn={isOwn}
@@ -412,7 +412,7 @@ const Message: React.FC<MessageProps> = ({
           )}
 
           {sharedNote && (
-            <Box sx={{ mb: message.text ? 0 : 0.25, pb: message.text ? 0 : 2.5 }}>
+            <Box sx={{ mb: message.text ? 0 : 0.25, pb: 2.5 }}>
               <SharedNoteCard
                 sharedNote={sharedNote}
                 isOwn={isOwn}

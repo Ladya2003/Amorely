@@ -23,9 +23,11 @@ import relationshipsRoutes from './routes/relationships';
 import pushRoutes from './routes/push';
 import gamesRoutes from './routes/games';
 import adminRoutes from './routes/admin';
+import cronRoutes from './routes/cron';
 import { adminMiddleware } from './middleware/admin';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { migrateLegacyTapGameStates } from './games/tapGameService';
+import { ensureSystemUser } from './services/systemUserService';
 
 dotenv.config();
 
@@ -43,6 +45,7 @@ mongoose.connect(mongoUri)
     console.log(`MongoDB подключена: ${isLocalDev ? 'локальная' : 'облачная'}`);
     console.log(`URI: ${mongoUri.replace(/\/\/.*@/, '//***@')}`); // Скрываем пароль в логах
     await migrateLegacyTapGameStates();
+    await ensureSystemUser();
   })
   .catch((err: any) => {
     console.error('Ошибка подключения к MongoDB:', err);
@@ -362,6 +365,9 @@ app.use('/api/games', authMiddleware, gamesRoutes);
 
 // Маршруты админ-панели
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);
+
+// Cron-задачи (без authMiddleware — проверка через CRON_SECRET)
+app.use('/api/cron', cronRoutes);
 
 // Запуск сервера
 server.listen(PORT, () => {

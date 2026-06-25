@@ -21,8 +21,9 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import axios from 'axios';
 import { API_URL } from '../config';
 import ProfileForm, { UserProfile } from '../components/Settings/ProfileForm';
-import PartnerForm from '../components/Settings/PartnerForm';
-import { notifyBreakupInitiated, notifyPartnerChanged, useRelationship } from '../hooks/useRelationship';
+import PartnerSettingsTab from '../components/Settings/PartnerSettingsTab';
+import { notifyBreakupInitiated, notifyPartnerChanged } from '../hooks/useRelationship';
+import { notifyPartnerRequestsChanged } from '../hooks/usePartnerRequests';
 import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 import ThemeSettings from '../components/Settings/ThemeSettings';
 import { PrimaryColorPreference } from '../theme/appTheme';
@@ -58,12 +59,6 @@ const SettingsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [tabValue, setTabValue] = useState(() => getSettingsTabIndex(searchParams.get('tab')));
   const [user, setUser] = useState<UserProfile | null>(null);
-  const {
-    partner,
-    relationshipStartDate,
-    refresh: refreshRelationship,
-    isLoading: isRelationshipLoading
-  } = useRelationship();
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [primaryColor, setPrimaryColor] = useState<PrimaryColorPreference>('pink');
   const [locale, setLocale] = useState<AppLocale>('ru');
@@ -143,8 +138,6 @@ const SettingsPage: React.FC = () => {
         setPushPermission(pushStatus.permission);
       }
 
-      await refreshRelationship();
-      
       setIsLoading(false);
     } catch (error) {
       console.error('Ошибка при загрузке данных пользователя:', error);
@@ -204,29 +197,14 @@ const SettingsPage: React.FC = () => {
       if (response.data.error) {
         throw new Error(response.data.error);
       }
-      
-      // Обновляем данные о партнере и отношениях
-      if (authUser && response.data.partner?._id) {
-        const partnerId = String(response.data.partner._id);
-        updateUser({
-          ...authUser,
-          partnerId,
-          relationshipStartDate: response.data.relationship.startDate
-        });
-        setUser((prev) => (prev ? { ...prev, partnerId } : prev));
-      }
 
-      await refreshRelationship();
-      notifyPartnerChanged();
+      notifyPartnerRequestsChanged();
       
       setIsLoading(false);
     } catch (error: any) {
       console.error('Ошибка при добавлении партнера:', error);
       setIsLoading(false);
-      if (error.response && error.response.data) {
-        throw error.response.data;
-      }
-      throw { error: t('settings.errors.addPartnerFailed') };
+      throw error;
     }
   };
 
@@ -256,9 +234,9 @@ const SettingsPage: React.FC = () => {
         updateUser({ ...authUser, partnerId: undefined, relationshipStartDate: undefined });
       }
 
-      await refreshRelationship();
       notifyBreakupInitiated();
       notifyPartnerChanged();
+      notifyPartnerRequestsChanged();
       notifyCalendarEventsChanged();
       
       setIsLoading(false);
@@ -636,13 +614,11 @@ const SettingsPage: React.FC = () => {
           )}
           
           {tabValue === 1 && user && (
-            <PartnerForm 
+            <PartnerSettingsTab
               userId={user._id}
-              partner={partner}
-              relationshipStartDate={relationshipStartDate}
               onAddPartner={handleAddPartner}
               onRemovePartner={handleRemovePartner}
-              isLoading={isLoading}
+              isActionLoading={isLoading}
             />
           )}
           

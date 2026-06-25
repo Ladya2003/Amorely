@@ -43,12 +43,17 @@ const planNoteSchema = new mongoose.Schema(
     media: { type: [planNoteMediaSchema], default: [] },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    hiddenFromUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+    hiddenFromUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    deadlineAt: { type: Date, default: null },
+    deadlineNotifyUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    deadlineSharedNoteSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
+    deadlineLastNotifiedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
 
 planNoteSchema.index({ userId: 1, partnerId: 1, updatedAt: -1 });
 planNoteSchema.index({ category: 1 });
+planNoteSchema.index({ deadlineAt: 1, deadlineNotifyUserIds: 1 });
 
 export default mongoose.model('PlanNote', planNoteSchema);

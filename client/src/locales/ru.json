@@ -76,6 +76,36 @@
       "breakupProcessing": "Обработка...",
       "removing": "Удаление...",
       "addSuccess": "Партнер успешно добавлен",
+      "requestSentSuccess": "Заявка отправлена",
+      "requests": {
+        "title": "Заявки стать партнёром",
+        "incoming": "Входящие",
+        "outgoing": "Исходящие",
+        "filterAria": "Фильтр заявок",
+        "emptyIncoming": "Нет входящих заявок",
+        "emptyOutgoing": "Нет исходящих заявок",
+        "accept": "Принять",
+        "decline": "Отклонить",
+        "cancel": "Отменить",
+        "startDate": "Дата начала отношений: {{date}}",
+        "switchConfirmTitle": "Сменить партнёра?",
+        "switchConfirmBody": "Вы расстанетесь с текущим партнёром и станете партнёрами с {{name}}. Вы уверены?",
+        "switchConfirmYes": "Да, продолжить",
+        "acceptSuccess": "Заявка принята",
+        "cancelSuccess": "Заявка отменена",
+        "status": {
+          "pending": "Ожидает ответа",
+          "declinedIncoming": "Вы отклонили",
+          "declinedOutgoing": "Получатель отклонил",
+          "cancelled": "Отменена"
+        },
+        "errors": {
+          "loadFailed": "Не удалось загрузить заявки",
+          "acceptFailed": "Не удалось принять заявку",
+          "declineFailed": "Не удалось отклонить заявку",
+          "cancelFailed": "Не удалось отменить заявку"
+        }
+      },
       "errors": {
         "selectPartnerAndDate": "Выберите партнера и укажите дату начала отношений",
         "addFailed": "Не удалось добавить партнера. Пожалуйста, попробуйте еще раз."
@@ -799,6 +829,7 @@
   },
   "chat": {
     "tab": "Чат",
+    "systemMessages": "Системные сообщения",
     "globalSearch": "Глобальный поиск",
     "clearSearch": "Очистить поиск",
     "yourChats": "Ваши чаты",
@@ -1067,6 +1098,9 @@
       "saveEventFailed": "Не удалось сохранить событие. Попробуйте еще раз.",
       "loadNotesFailed": "Не удалось загрузить заметки",
       "categoryRequired": "Укажите категорию",
+      "deadlineRequired": "Укажите дату и время дедлайна",
+      "deadlineFuture": "Дедлайн должен быть в будущем",
+      "deadlineNotifyUsersRequired": "Выберите хотя бы одного получателя уведомлений",
       "saveNoteFailed": "Не удалось сохранить заметку",
       "notAuthorized": "Не авторизован",
       "unlockCrypto": "Разблокируйте ключи шифрования на странице /crypto/unlock",
@@ -1114,7 +1148,13 @@
       "createdBy": "Создал(а) {{name}}",
       "editedBy": "Изменил(а) {{name}}",
       "deleteConfirm": "Удалить заметку «{{title}}»? Она исчезнет и у вашего партнёра.",
-      "create": "Создать"
+      "create": "Создать",
+      "deadlineEnabled": "Добавить дедлайн",
+      "deadlineAt": "Дедлайн выполнения",
+      "deadlineNotifyEnabled": "Напоминать о приближении дедлайна",
+      "deadlineNotifyUsers": "Кого уведомлять",
+      "deadlineNotifySelf": "Я",
+      "deadlineUntil": "Дедлайн: {{date}}"
     },
     "common": {
       "cancel": "Отмена",
