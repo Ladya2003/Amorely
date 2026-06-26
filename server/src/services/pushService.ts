@@ -34,11 +34,39 @@ export interface PushPayload {
   badgeCount?: number;
 }
 
-export const getTotalUnreadCount = async (userId: string) =>
-  Message.countDocuments({
-    receiverId: userId,
-    isRead: false
-  });
+const buildWirePayload = (payload: PushPayload): { body: string; contentType: string } => {
+  const hasBadge = typeof payload.badgeCount === 'number';
+  const hasNavigate = Boolean(payload.url?.trim());
+
+  // Declarative Web Push (iOS 18.4+): бейдж на иконке выставляется системой через app_badge.
+  if (hasBadge && hasNavigate) {
+    const notification: Record<string, string | number> = {
+      title: payload.title,
+      body: payload.body,
+      navigate: payload.url!.trim(),
+      app_badge: payload.badgeCount!
+    };
+    if (payload.tag) {
+      notification.tag = payload.tag;
+    }
+
+    return {
+      body: JSON.stringify({ web_push: 8030, notification }),
+      contentType: 'application/notification+json'
+    };
+  }
+
+  return {
+    body: JSON.stringify({
+      title: payload.title,
+      body: payload.body,
+      url: payload.url,
+      tag: payload.tag,
+      badgeCount: payload.badgeCount
+    }),
+    contentType: 'application/json'
+  };
+};
 
 export const sendPushToUser = async (userId: string, payload: PushPayload) => {
   if (!configureVapid()) {
@@ -50,7 +78,7 @@ export const sendPushToUser = async (userId: string, payload: PushPayload) => {
     return;
   }
 
-  const notificationPayload = JSON.stringify(payload);
+  const { body, contentType } = buildWirePayload(payload);
 
   await Promise.all(
     subscriptions.map(async (subscription) => {
@@ -60,7 +88,8 @@ export const sendPushToUser = async (userId: string, payload: PushPayload) => {
             endpoint: subscription.endpoint,
             keys: subscription.keys
           },
-          notificationPayload
+          body,
+          { headers: { 'Content-Type': contentType } }
         );
       } catch (error: any) {
         const statusCode = error?.statusCode;
@@ -73,6 +102,12 @@ export const sendPushToUser = async (userId: string, payload: PushPayload) => {
     })
   );
 };
+
+export const getTotalUnreadCount = async (userId: string) =>
+  Message.countDocuments({
+    receiverId: userId,
+    isRead: false
+  });
 
 const getUserDisplayName = (user: UserDocument) => {
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();

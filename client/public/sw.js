@@ -7,22 +7,63 @@ const getScopeBase = () => {
   }
 };
 
+const parseBadgeCount = (value) => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return null;
+};
+
+const parsePushPayload = (payload, scopeBase) => {
+  if (payload?.web_push != null && payload?.notification) {
+    const notification = payload.notification;
+    return {
+      title: notification.title || 'Amorely',
+      body: notification.body || 'Новое уведомление',
+      url: notification.navigate || `${scopeBase}chat`,
+      tag: notification.tag,
+      badgeCount: parseBadgeCount(notification.app_badge)
+    };
+  }
+
+  return {
+    title: payload.title || 'Amorely',
+    body: payload.body || 'Новое уведомление',
+    url: payload.url || `${scopeBase}chat`,
+    tag: payload.tag,
+    badgeCount: parseBadgeCount(payload.badgeCount)
+  };
+};
+
 const syncAppBadge = async (count) => {
-  const nav = self.navigator;
-  if (!('setAppBadge' in nav)) {
+  if (!('setAppBadge' in self.navigator)) {
     return;
   }
 
   try {
     if (count > 0) {
-      await nav.setAppBadge(count);
+      await self.navigator.setAppBadge(count);
     } else {
-      await nav.clearAppBadge();
+      await self.navigator.clearAppBadge();
     }
   } catch (error) {
     console.error('Failed to set app badge:', error);
   }
 };
+
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
 
 self.addEventListener('message', (event) => {
   const data = event.data;
@@ -32,31 +73,30 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  let payload = {};
+  let rawPayload = {};
   try {
-    payload = event.data ? event.data.json() : {};
+    rawPayload = event.data ? event.data.json() : {};
   } catch {
-    payload = { body: event.data?.text() };
+    rawPayload = { body: event.data?.text() };
   }
 
   const scopeBase = getScopeBase();
-  const badge = payload.badge || `${scopeBase}favicon-32.png`;
-  const url = payload.url || `${scopeBase}chat`;
-  const badgeCount = typeof payload.badgeCount === 'number' ? payload.badgeCount : null;
+  const payload = parsePushPayload(rawPayload, scopeBase);
+  const badge = rawPayload.badge || `${scopeBase}favicon-32.png`;
 
   const promises = [
-    self.registration.showNotification(payload.title || 'Amorely', {
-      body: payload.body || 'Новое уведомление',
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
       icon: `${scopeBase}logo192.png`,
       badge,
       tag: payload.tag,
-      data: { url },
+      data: { url: payload.url },
       renotify: true
     })
   ];
 
-  if (badgeCount !== null && 'setAppBadge' in self.navigator) {
-    promises.push(syncAppBadge(badgeCount));
+  if (payload.badgeCount !== null) {
+    promises.push(syncAppBadge(payload.badgeCount));
   }
 
   event.waitUntil(Promise.all(promises));
