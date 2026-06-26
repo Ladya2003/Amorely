@@ -9,6 +9,8 @@ import { resolvePartnerContext } from '../utils/resolvePartnerId';
 import { hasActivePartner } from '../utils/normalizeId';
 import { hasCryptoBackup } from '../utils/hasCryptoBackup';
 import { ACCOUNT_BLOCKED_ERROR, buildBlockReasons, getLocalizedBlockReason } from '../utils/userBlock';
+import { awardRegistrationBonus } from '../utils/currencyRewards';
+import { getBalance } from '../services/currencyService';
 
 const router = express.Router();
 
@@ -53,6 +55,9 @@ router.post(
 
       await newUser.save();
 
+      const currencyAward = await awardRegistrationBonus(newUser._id.toString());
+      const wallet = await getBalance(newUser._id.toString());
+
       // Генерируем JWT токен
       const token = jwt.sign(
         { userId: newUser._id },
@@ -66,7 +71,10 @@ router.post(
       res.status(201).json({
         message: 'Пользователь успешно зарегистрирован',
         token,
-        user: { ...userWithoutPassword, hasCryptoBackup: false }
+        user: { ...userWithoutPassword, hasCryptoBackup: false },
+        balance: wallet.balance,
+        canAffordFirstPet: wallet.canAffordFirstPet,
+        awardedAmount: currencyAward.awarded ? currencyAward.amount : 0,
       });
     } catch (error) {
       console.error('Ошибка при регистрации пользователя:', error);

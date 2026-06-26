@@ -8,7 +8,7 @@ import mongoose from 'mongoose';
 import { ExtendedRequest } from '../types/mongoose';
 import { isSupportedLocale, resolveLocale } from '../i18n/locales';
 
-const router = express.Router();
+import { awardProfileField, awardSettingsField } from '../utils/currencyRewards';
 
 // Настройка хранилища Cloudinary для multer
 const storage = new CloudinaryStorage({
@@ -21,6 +21,8 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage });
+
+const router = express.Router();
 
 // Получение данных пользователя
 router.get('/user/:id', async (req: ExtendedRequest, res: Response) => {
@@ -56,6 +58,12 @@ router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Respo
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
+
+    const prevAvatar = user.avatar;
+    const prevFirstName = user.firstName;
+    const prevLastName = user.lastName;
+    const prevBio = user.bio;
+    const prevBirthday = user.birthday;
     
     // Обновляем поля
     if (username && username !== user.username) {
@@ -110,10 +118,35 @@ router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Respo
     }
     
     const updatedUser = await user.save();
+
+    let totalAwarded = 0;
+    let lastBalance = 0;
+    if (file && !prevAvatar) {
+      const a = await awardProfileField(id, 'avatar');
+      if (a.awarded) { totalAwarded += a.amount; lastBalance = a.balance; }
+    }
+    if (firstName && !prevFirstName) {
+      const a = await awardProfileField(id, 'firstName');
+      if (a.awarded) { totalAwarded += a.amount; lastBalance = a.balance; }
+    }
+    if (lastName && !prevLastName) {
+      const a = await awardProfileField(id, 'lastName');
+      if (a.awarded) { totalAwarded += a.amount; lastBalance = a.balance; }
+    }
+    if (bio && !prevBio) {
+      const a = await awardProfileField(id, 'bio');
+      if (a.awarded) { totalAwarded += a.amount; lastBalance = a.balance; }
+    }
+    if (birthday && !prevBirthday) {
+      const a = await awardProfileField(id, 'birthday');
+      if (a.awarded) { totalAwarded += a.amount; lastBalance = a.balance; }
+    }
     
     res.json({
       message: 'Данные пользователя успешно обновлены',
-      user: updatedUser
+      user: updatedUser,
+      awardedAmount: totalAwarded,
+      balance: lastBalance || undefined,
     });
   } catch (error) {
     console.error('Ошибка при обновлении данных пользователя:', error);
@@ -357,9 +390,12 @@ router.put('/notifications', async (req: ExtendedRequest, res: Response) => {
     user.notificationSettings = settings;
     await user.save();
 
+    const notifAward = await awardSettingsField(userId, 'notifications');
+
     res.json({
       message: 'Настройки уведомлений обновлены',
-      notificationSettings: user.notificationSettings
+      notificationSettings: user.notificationSettings,
+      awardedAmount: notifAward.awarded ? notifAward.amount : 0,
     });
   } catch (error) {
     console.error('Ошибка при обновлении настроек уведомлений:', error);
@@ -381,6 +417,9 @@ router.put('/theme', async (req: ExtendedRequest, res: Response) => {
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
+
+    const hadTheme = user.theme;
+    const hadColor = user.primaryColor;
 
     if (theme !== undefined) {
       if (!['light', 'dark', 'system'].includes(theme)) {
@@ -406,11 +445,22 @@ router.put('/theme', async (req: ExtendedRequest, res: Response) => {
 
     await user.save();
 
+    let totalAwarded = 0;
+    if (theme !== undefined && theme !== hadTheme) {
+      const a = await awardSettingsField(userId, 'theme');
+      if (a.awarded) totalAwarded += a.amount;
+    }
+    if (primaryColor !== undefined && primaryColor !== hadColor) {
+      const a = await awardSettingsField(userId, 'primaryColor');
+      if (a.awarded) totalAwarded += a.amount;
+    }
+
     res.json({
       message: 'Настройки темы обновлены',
       theme: user.theme,
       primaryColor: user.primaryColor,
       locale: user.locale,
+      awardedAmount: totalAwarded,
     });
   } catch (error) {
     console.error('Ошибка при обновлении темы:', error);

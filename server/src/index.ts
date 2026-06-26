@@ -22,6 +22,8 @@ import { authMiddleware } from './middleware/auth';
 import relationshipsRoutes from './routes/relationships';
 import pushRoutes from './routes/push';
 import gamesRoutes from './routes/games';
+import petsRoutes from './routes/pets';
+import currencyRoutes from './routes/currency';
 import adminRoutes from './routes/admin';
 import cronRoutes from './routes/cron';
 import { adminMiddleware } from './middleware/admin';
@@ -365,6 +367,10 @@ app.use('/api/calendar', authMiddleware, calendarRoutes);
 
 // Маршруты для игр
 app.use('/api/games', authMiddleware, gamesRoutes);
+
+// Pets & currency
+app.use('/api/pets', authMiddleware, petsRoutes);
+app.use('/api/currency', authMiddleware, currencyRoutes);
 
 // Маршруты админ-панели
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);

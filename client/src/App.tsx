@@ -19,11 +19,13 @@ import SettingsPage from './pages/SettingsPage';
 import ChatRulesPage from './pages/ChatRulesPage';
 import AuthPage from './pages/AuthPage';
 import CryptoUnlockPage from './pages/CryptoUnlockPage';
+import PetDetailPage from './pages/PetDetailPage';
 import AdminPage from './pages/AdminPage';
 import AdminRoute from './components/Auth/AdminRoute';
 import PartnerBreakupNotifier from './components/Settings/PartnerBreakupNotifier';
 import BlockNoticeSnackbar from './components/Auth/BlockNoticeSnackbar';
 import CalendarPartnerMigrationRunner from './components/Calendar/CalendarPartnerMigrationRunner';
+import CurrencyAwardOverlay from './components/Pets/CurrencyAwardOverlay';
 
 const PushNavigationListener: React.FC = () => {
   const navigate = useNavigate();
@@ -82,6 +84,7 @@ function App() {
     <AuthProvider>
       <AdminAlertsProvider>
       <BlockNoticeSnackbar />
+      <CurrencyAwardOverlay />
       <AppThemeProvider>
         <PartnerBreakupNotifier />
         <CryptoProvider>
@@ -115,6 +118,7 @@ function App() {
                   }
                 >
                   <Route index element={<FeedPage />} />
+                  <Route path="pets/:petId" element={<PetDetailPage />} />
                   <Route path="chat" element={<ChatPage />} />
                   <Route path="chat/games/:gameId" element={<GamePage />} />
                   <Route path="chat/games/:gameId/play" element={<GamePlayPage />} />

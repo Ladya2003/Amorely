@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import PushSubscription from '../models/pushSubscription';
 import { ExtendedRequest } from '../types/mongoose';
 import { getVapidPublicKey, isPushConfigured } from '../services/pushService';
+import { attachCurrencyToResponse, awardPushEnabled } from '../utils/currencyRewards';
 
 const router = express.Router();
 
@@ -43,7 +44,8 @@ router.post('/subscribe', async (req: ExtendedRequest, res: Response) => {
       { upsert: true, new: true }
     );
 
-    res.json({ message: 'Подписка сохранена' });
+    const pushAward = await awardPushEnabled(userId);
+    attachCurrencyToResponse(res, { message: 'Подписка сохранена' }, pushAward);
   } catch (error) {
     console.error('Ошибка подписки на push:', error);
     res.status(500).json({ error: 'Ошибка подписки на push-уведомления' });

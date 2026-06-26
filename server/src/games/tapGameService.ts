@@ -3,6 +3,7 @@ import Relationship from '../models/relationship';
 import User from '../models/user';
 import TapGameState from '../models/tapGameState';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
+import { awardGameRoundToParticipants } from './gameCurrencyAwards';
 import {
   TAP_BLOCKS,
   TAP_INITIAL_TARGET,
@@ -316,6 +317,15 @@ export const processTapBatch = async (
     }
 
     await state.save();
+
+    if (roundCompletionBonus > 0) {
+      await awardGameRoundToParticipants(
+        getTapGameParticipantIds(context),
+        'tap',
+        `${relationshipId}:r${state.round - 1}`
+      );
+    }
+
     return { state, roundCompletionBonus, appliedCount };
   });
 };

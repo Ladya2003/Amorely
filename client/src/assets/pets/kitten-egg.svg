@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280" width="200" height="280">
+  <defs>
+    <linearGradient id="eggGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF8E7"/>
+      <stop offset="100%" stop-color="#FFE4B5"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="280" fill="#FFF5F8" rx="16"/>
+  <ellipse cx="100" cy="155" rx="55" ry="70" fill="url(#eggGrad)" stroke="#E8D5B7" stroke-width="2"/>
+  <ellipse cx="85" cy="120" rx="20" ry="30" fill="#fff" opacity="0.3"/>
+  <ellipse cx="100" cy="155" rx="18" ry="14" fill="#FFB6C1" opacity="0.4"/>
+</svg>

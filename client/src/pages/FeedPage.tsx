@@ -12,6 +12,7 @@ import LocaleBanner from '../components/Feed/LocaleBanner';
 import InstallAppBanner from '../components/Feed/InstallAppBanner';
 import ContentSlider, { ContentItem } from '../components/Feed/ContentSlider';
 import DaysTogether from '../components/Feed/DaysTogether';
+import PetSection from '../components/Pets/PetSection';
 import ContentManagementDialog from '../components/Feed/ContentManagement';
 import ContentViewer from '../components/Feed/ContentViewer';
 import { useCrypto } from '../contexts/CryptoContext';
@@ -74,6 +75,33 @@ const FeedPage: React.FC = () => {
       void fetchContent();
     }
   }, [localDeviceKeys, user?._id, partnerId, location.pathname]);
+
+  useEffect(() => {
+    if (!user?._id || location.pathname !== '/') {
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return;
+    }
+
+    const claimMedalStipends = () => {
+      void axios
+        .post(`${API_URL}/api/currency/medal-stipends`, {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .catch(() => {});
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      const idleId = window.requestIdleCallback(claimMedalStipends, { timeout: 3000 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(claimMedalStipends, 500);
+    return () => window.clearTimeout(timeoutId);
+  }, [user?._id, location.pathname]);
 
   useEffect(() => {
     const contentId = searchParams.get('content');
@@ -442,6 +470,8 @@ const FeedPage: React.FC = () => {
         </Tooltip>
       </Box>
       
+      <PetSection />
+
       <DaysTogether
         daysCount={daysCount}
         relationshipStartDate={relationshipStartDate}

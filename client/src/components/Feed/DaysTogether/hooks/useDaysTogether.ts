@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Milestone, Achievement } from '../types';
+import { claimCurrency } from '../../../../services/petsService';
 import {
   calculateMilestones,
   getNextMilestone,
@@ -55,6 +56,7 @@ export const useDaysTogether = ({ daysCount, relationshipStartDate }: UseDaysTog
   const handleThemeChange = (themeId: string) => {
     setSelectedTheme(themeId);
     localStorage.setItem('daysTogetherTheme', themeId);
+    void claimCurrency('days_theme').catch(() => undefined);
   };
 
   return {

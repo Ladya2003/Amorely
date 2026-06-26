@@ -563,9 +563,9 @@
     "since": "С {{date}}",
     "addPartnerTitle": "Добавьте партнера в настройках",
     "addPartnerDescription": "Чтобы видеть количество дней вместе, добавьте вашего партнера и дату начала отношений",
-    "signatureUser": "Подпись пользователя",
-    "signaturePartner": "Подпись партнера",
-    "signature": "Подпись",
+    "signatureUser": "Рисунок пользователя",
+    "signaturePartner": "Рисунок партнёра",
+    "signature": "Рисунок",
     "achievementsTitle": "Достижения",
     "untilAnniversary": "⏳ До следующей годовщины:",
     "progress": {
@@ -614,7 +614,8 @@
       }
     },
     "signatureDialog": {
-      "title": "Добавить подпись",
+      "title": "Добавить рисунок",
+      "openHint": "Добавить рисунок",
       "clear": "Очистить",
       "cancel": "Отмена",
       "save": "Сохранить"
@@ -1288,6 +1289,226 @@
       "cancel": "Отмена",
       "confirmSaved": "Да, сохранил(а)",
       "clearPassphrase": "Очистить"
+    }
+  },
+  "common": {
+    "back": "Назад",
+    "cancel": "Отмена"
+  },
+  "pets": {
+    "title": "Мои питомцы",
+    "sectionTitle": "Питомцы",
+    "tabMine": "Мои",
+    "tabPartner": "Партнёра",
+    "viewToggleAria": "Чьих питомцев показать",
+    "partnerEmpty": "У партнёра пока нет питомцев",
+    "contactEmpty": "У пользователя пока нет питомцев",
+    "partnerHint": "Нажми на питомца — прокачка списывает твои Аморки",
+    "level": "Уровень {{level}}",
+    "levelWithProgress": "Уровень {{level}} · {{current}}/{{total}}",
+    "levelMax": "Уровень {{level}} — макс.",
+    "ownerLabel": "Владелец",
+    "ownerYou": "Ты",
+    "ownerUnknown": "Неизвестно",
+    "giftedByLabel": "Подарил",
+    "onboarding": "Нажми +, чтобы выбрать первого питомца",
+    "createFirst": "Выбрать питомца",
+    "addPet": "Добавить питомца",
+    "needMore": "Нужно {{cost}} Аморок для покупки (у тебя {{balance}})",
+    "created": "{{name}} теперь с тобой!",
+    "createTitle": "Новый питомец",
+    "stepSpecies": "Вид",
+    "stepVariant": "Цвет",
+    "stepName": "Имя",
+    "nameHint": "Придумай имя питомцу",
+    "nameLabel": "Имя питомца",
+    "purchaseCost": "Стоимость: {{cost}} Аморок",
+    "hatch": "Вылупить!",
+    "hatchCongrats": "Поздравляем с новым питомцем — {{name}}!",
+    "levelUpRevealCongrats": "Поздравляем! {{name}} вырос до уровня {{level}}!",
+    "hatchContinue": "К новому другу!",
+    "insufficientBalance": "Недостаточно Аморок (нужно {{cost}})",
+    "createFailed": "Не удалось создать питомца",
+    "loadFailed": "Не удалось загрузить питомцев. Проверьте подключение.",
+    "notFound": "Питомец не найден",
+    "stats": "Характеристики",
+    "statAffection": "Привязанность",
+    "statPlayfulness": "Игривость",
+    "statCharm": "Обаяние",
+    "maxLevel": "Макс. уровень",
+    "levelUp": "Улучшить ({{cost}} Аморок)",
+    "upgradeMain": "Повысить до ур. {{level}} ({{cost}} Аморок)",
+    "levelUpSuccess": "Уровень {{level}}!",
+    "subLevelUpSuccess": "Ступень прокачана! Характеристики улучшились",
+    "levelUpFailed": "Не удалось повысить уровень",
+    "upgradingPartnerPet": "Ты прокачиваешь питомца партнёра",
+    "gift": "Подарить",
+    "giftTitle": "Подарить другу",
+    "giftSearch": "Поиск по логину",
+    "giftNoResults": "Пользователи не найдены",
+    "giftConfirm": "Подарить",
+    "giftSuccess": "Питомец успешно подарен!",
+    "giftFrom": "Подарок от {{name}}",
+    "petAction": "Погладить питомца",
+    "petSuccess": "Питомец доволен! +{{amount}} Аморок",
+    "petLimitReached": "Сегодня питомца уже гладили 2 раза",
+    "petFailed": "Не удалось погладить питомца",
+    "currencyAwarded": "+{{amount}} Аморок",
+    "currencyGuide": {
+      "title": "Как заработать Аморки",
+      "subtitle": "За какие действия и как часто начисляются Аморки",
+      "close": "Закрыть",
+      "openHint": "Открыть список способов заработать Аморки",
+      "amount": "+{{amount}}",
+      "columns": {
+        "action": "Действие",
+        "amount": "Аморки"
+      },
+      "sections": {
+        "welcome": "Старт",
+        "relationship": "Пара",
+        "daysTogether": "Дней вместе",
+        "chat": "Чат",
+        "games": "Игры",
+        "calendar": "Календарь",
+        "profile": "Профиль",
+        "settings": "Настройки",
+        "news": "Новости"
+      },
+      "rules": {
+        "registration_bonus": {
+          "action": "Регистрация в Amorely",
+          "period": "Один раз на аккаунт"
+        },
+        "partner_linked": {
+          "action": "Привязка партнёра",
+          "period": "Один раз на аккаунт"
+        },
+        "signature": {
+          "action": "Добавить рисунок в блоке «Дней вместе» (утро или вечер)",
+          "period": "Не чаще одного раза за половину дня"
+        },
+        "both_signatures": {
+          "action": "Оба партнёра добавили рисунок в блоке «Дней вместе» в одной половине дня",
+          "period": "Один раз за половину дня"
+        },
+        "days_theme": {
+          "action": "Смена темы в блоке «Дней вместе»",
+          "period": "Один раз на аккаунт"
+        },
+        "days_export": {
+          "action": "Экспорт открытки «Дней вместе»",
+          "period": "Один раз в неделю"
+        },
+        "chat_daily": {
+          "action": "Отправить 5 сообщений в чатах (в сумме, в любых диалогах)",
+          "period": "Один раз в день"
+        },
+        "chat_new_contact": {
+          "action": "Первое сообщение новому контакту",
+          "period": "Один раз на каждый контакт"
+        },
+        "game_round_tap": {
+          "action": "Завершить раунд в игре «Тыкалка»",
+          "period": "За каждый завершённый раунд"
+        },
+        "game_daily_geo": {
+          "action": "Пройти все 5 раундов в «Угадай локацию»",
+          "period": "Один раз в день, после последнего раунда"
+        },
+        "game_daily_draw": {
+          "action": "Пройти все 10 раундов в «Угадай рисунок»",
+          "period": "Один раз в день, после последнего раунда"
+        },
+        "game_daily_quiz": {
+          "action": "Ответить на все вопросы доски в «Своей игре»",
+          "period": "Один раз в день, после последнего вопроса"
+        },
+        "game_medal_stipend_1": {
+          "action": "Держать 🥇 место в топе игры",
+          "period": "Раз в 3 дня за каждую игру"
+        },
+        "game_medal_stipend_2": {
+          "action": "Держать 🥈 место в топе игры",
+          "period": "Раз в 3 дня за каждую игру"
+        },
+        "game_medal_stipend_3": {
+          "action": "Держать 🥉 место в топе игры",
+          "period": "Раз в 3 дня за каждую игру"
+        },
+        "calendar_event": {
+          "action": "Создать событие в календаре",
+          "period": "За первые 3 новых события в день"
+        },
+        "plan_note": {
+          "action": "Создать заметку в планах",
+          "period": "За первые 3 новые заметки в день"
+        },
+        "plan_note_complete": {
+          "action": "Отметить заметку в планах выполненной",
+          "period": "За первые 3 выполненные заметки в день"
+        },
+        "profile_avatar": {
+          "action": "Загрузить аватар профиля",
+          "period": "Один раз на аккаунт"
+        },
+        "profile_firstName": {
+          "action": "Указать имя в профиле",
+          "period": "Один раз на аккаунт"
+        },
+        "profile_lastName": {
+          "action": "Указать фамилию в профиле",
+          "period": "Один раз на аккаунт"
+        },
+        "profile_birthday": {
+          "action": "Указать день рождения в профиле",
+          "period": "Один раз на аккаунт"
+        },
+        "profile_bio": {
+          "action": "Заполнить «О себе» в профиле",
+          "period": "Один раз на аккаунт"
+        },
+        "settings_theme": {
+          "action": "Сменить тему оформления",
+          "period": "Один раз на аккаунт"
+        },
+        "settings_primaryColor": {
+          "action": "Сменить основной цвет",
+          "period": "Один раз на аккаунт"
+        },
+        "settings_notifications": {
+          "action": "Настроить уведомления",
+          "period": "Один раз на аккаунт"
+        },
+        "settings_push": {
+          "action": "Включить push-уведомления",
+          "period": "Один раз на аккаунт"
+        },
+        "news_read": {
+          "action": "Прочитать новость",
+          "period": "Один раз за каждую новость"
+        }
+      }
+    },
+    "species": {
+      "kitten": "Котёнок",
+      "puppy": "Щенок",
+      "gecko": "Гекон",
+      "bunny": "Кролик",
+      "owlet": "Совёнок"
+    },
+    "variants": {
+      "orange": "Рыжий",
+      "gray": "Серый",
+      "black": "Чёрный",
+      "golden": "Золотистый",
+      "brown": "Коричневый",
+      "spotted": "Пятнистый",
+      "green": "Зелёный",
+      "blue": "Голубой",
+      "yellow": "Жёлтый",
+      "white": "Белый",
+      "cream": "Кремовый"
     }
   }
 }

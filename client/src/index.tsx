@@ -4,6 +4,9 @@ import './localization';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { setupCurrencyAxiosInterceptor } from './utils/currencyEvents';
+
+setupCurrencyAxiosInterceptor();
 
 // MUI Drawer + <video controls> могут вызывать benign ResizeObserver loop в dev.
 if (typeof window !== 'undefined' && 'ResizeObserver' in window) {

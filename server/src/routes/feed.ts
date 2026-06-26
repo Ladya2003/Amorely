@@ -4,6 +4,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import Content from '../models/content';
 import Relationship from '../models/relationship';
+import { awardSignature, awardBothSignatures } from '../utils/currencyRewards';
 import mongoose from 'mongoose';
 import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation, recalculateRotationOrder } from '../utils/contentRotation';
 import { buildOrGetDynamicFeed } from '../utils/dynamicFeedRotation';
@@ -457,14 +458,27 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
     }
     
     await relationship.save();
+
+    const sigAward = await awardSignature(userId);
+    let bothAward = { awarded: false, amount: 0, balance: sigAward.balance };
+    if (relationship.signatures.user && relationship.signatures.partner) {
+      bothAward = await awardBothSignatures(relationship._id.toString(), userId);
+      const partnerId =
+        relationship.userId.toString() === userId
+          ? relationship.partnerId.toString()
+          : relationship.userId.toString();
+      void awardBothSignatures(relationship._id.toString(), partnerId);
+    }
     
     res.json({
-      message: 'Подпись успешно обновлена',
-      signatures: relationship.signatures
+      message: 'Рисунок успешно сохранён',
+      signatures: relationship.signatures,
+      awardedAmount: (sigAward.awarded ? sigAward.amount : 0) + (bothAward.awarded ? bothAward.amount : 0),
+      balance: bothAward.balance || sigAward.balance,
     });
   } catch (error) {
-    console.error('Ошибка при обновлении подписи:', error);
-    res.status(500).json({ error: 'Ошибка при обновлении подписи' });
+    console.error('Ошибка при сохранении рисунка:', error);
+    res.status(500).json({ error: 'Ошибка при сохранении рисунка' });
   }
 });
 

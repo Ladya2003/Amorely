@@ -14,6 +14,7 @@ import {
 import { resolveLocale } from '../i18n/locales';
 import { getUserLocale } from '../utils/userLocale';
 import { notifyNewsPublished } from '../services/pushService';
+import { awardNewsRead } from '../utils/currencyRewards';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -157,6 +158,30 @@ router.get('/', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Ошибка при получении новостей:', error);
     res.status(500).json({ error: 'Ошибка при получении новостей' });
+  }
+});
+
+// Отметить новость прочитанной и начислить Аморки (один раз за новость)
+router.post('/:id/read', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { id } = req.params;
+
+    const news = await News.findById(id);
+    if (!news || !news.isPublished) {
+      return res.status(404).json({ error: 'Новость не найдена' });
+    }
+
+    const result = await awardNewsRead(userId, id);
+
+    res.json({
+      awarded: result.awarded,
+      awardedAmount: result.awarded ? result.amount : 0,
+      balance: result.balance,
+    });
+  } catch (error) {
+    console.error('Ошибка при отметке прочтения новости:', error);
+    res.status(500).json({ error: 'Ошибка при отметке прочтения новости' });
   }
 });
 

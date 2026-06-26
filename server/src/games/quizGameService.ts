@@ -12,6 +12,7 @@ import {
   getQuizQuestionById,
   isQuizQuestionAnswerCorrect,
 } from './quizGameConfig';
+import { awardGameDailyCompleteToParticipants, GAME_DAILY_COMPLETE_AMOUNTS } from './gameCurrencyAwards';
 import {
   getQuizCategoryName,
   getQuizCorrectAnswer,
@@ -278,6 +279,31 @@ const resolveQuestionOnDocument = (state: any, participantIds: string[]) => {
   markCellUsed(state, round.cellKey);
 };
 
+const maybeAwardQuizDailyComplete = async (state: any, context: QuizGameContext) => {
+  if (!allCellsUsed(state) || !state.boardDayKey) {
+    return;
+  }
+
+  const relationshipId = context.relationship._id.toString();
+  const dayKey = `${relationshipId}:${state.boardDayKey}`;
+  await awardGameDailyCompleteToParticipants(
+    getUniqueParticipantIds(context),
+    'quiz',
+    dayKey,
+    GAME_DAILY_COMPLETE_AMOUNTS.quiz
+  );
+};
+
+const resolveQuestionAndMaybeAwardDaily = async (state: any, context: QuizGameContext) => {
+  const round = state.currentQuestion;
+  if (!round || round.status !== 'answering') {
+    return;
+  }
+
+  resolveQuestionOnDocument(state, getUniqueParticipantIds(context));
+  await maybeAwardQuizDailyComplete(state, context);
+};
+
 export const expireQuizQuestionIfNeeded = async (state: any, context: QuizGameContext): Promise<boolean> => {
   if (!state.currentQuestion || state.currentQuestion.status !== 'answering') {
     return false;
@@ -291,7 +317,7 @@ export const expireQuizQuestionIfNeeded = async (state: any, context: QuizGameCo
     }
   }
 
-  resolveQuestionOnDocument(state, getUniqueParticipantIds(context));
+  await resolveQuestionAndMaybeAwardDaily(state, context);
   await state.save();
   return true;
 };
@@ -688,7 +714,7 @@ export const submitQuizAnswer = async (userId: string, context: QuizGameContext,
   );
 
   if (allAnswered) {
-    resolveQuestionOnDocument(state, participantIds);
+    await resolveQuestionAndMaybeAwardDaily(state, context);
   }
 
   await state.save();

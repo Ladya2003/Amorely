@@ -12,6 +12,8 @@ import {
   formatCalendarEventMedia,
   sortCalendarEventMedia
 } from '../utils/contentFormat';
+import { awardCalendarEvent, awardPlanNote, awardPlanNoteComplete } from '../utils/currencyRewards';
+import { getBalance } from '../services/currencyService';
 import { resolvePartnerUserId } from '../utils/resolvePartnerId';
 import { hasActivePartner } from '../utils/normalizeId';
 import {
@@ -275,10 +277,14 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
       savedContent.push(await content.save());
     }
 
+    const eventAward = await awardCalendarEvent(userId, eventId);
+
     res.json({
       message: 'Зашифрованное событие успешно создано',
       content: savedContent,
-      eventId
+      eventId,
+      awardedAmount: eventAward.awarded ? eventAward.amount : 0,
+      balance: eventAward.balance,
     });
   } catch (error) {
     console.error('Ошибка при создании зашифрованного события:', error);
@@ -376,9 +382,13 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
       savedContent.push(content);
     }
 
+    const eventAward = await awardCalendarEvent(userId, eventId);
+
     res.json({
       message: 'Событие успешно создано',
-      content: savedContent
+      content: savedContent,
+      awardedAmount: eventAward.awarded ? eventAward.amount : 0,
+      balance: eventAward.balance,
     });
   } catch (error) {
     console.error('Ошибка при создании события:', error);
@@ -1426,7 +1436,13 @@ router.post('/plans', async (req: any, res: Response) => {
       .populate('createdBy', 'username avatar firstName lastName')
       .populate('lastEditedBy', 'username avatar firstName lastName');
 
-    res.status(201).json(formatPlanNote(populated));
+    const noteAward = await awardPlanNote(userId, note._id.toString());
+
+    res.status(201).json({
+      ...formatPlanNote(populated),
+      awardedAmount: noteAward.awarded ? noteAward.amount : 0,
+      balance: noteAward.balance,
+    });
   } catch (error) {
     console.error('Ошибка при создании заметки:', error);
     res.status(500).json({ error: 'Ошибка при создании заметки' });
@@ -1592,6 +1608,8 @@ router.patch('/plans/:id/completion', async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Нет прав на изменение этой заметки' });
     }
 
+    const wasCompleted = Boolean(note.completedAt);
+
     if (completed) {
       note.completedAt = new Date();
       note.completedBy = new mongoose.Types.ObjectId(userId);
@@ -1607,7 +1625,19 @@ router.patch('/plans/:id/completion', async (req: any, res: Response) => {
       .populate('lastEditedBy', 'username avatar firstName lastName')
       .populate('completedBy', 'username avatar firstName lastName');
 
-    res.json(formatPlanNote(populated));
+    let completeAward = { awarded: false, amount: 0, balance: 0 };
+    if (completed && !wasCompleted) {
+      completeAward = await awardPlanNoteComplete(userId, note._id.toString());
+    } else {
+      const wallet = await getBalance(userId);
+      completeAward.balance = wallet.balance;
+    }
+
+    res.json({
+      ...formatPlanNote(populated),
+      awardedAmount: completeAward.awarded ? completeAward.amount : 0,
+      balance: completeAward.balance,
+    });
   } catch (error) {
     console.error('Ошибка при изменении статуса выполнения заметки:', error);
     res.status(500).json({ error: 'Ошибка при изменении статуса выполнения заметки' });

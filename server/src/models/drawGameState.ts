@@ -36,6 +36,8 @@ export interface DrawGameStateDocument extends Document {
   relationshipId: mongoose.Types.ObjectId;
   totalScore: number;
   roundsCompleted: number;
+  roundsDayKey: string | null;
+  roundsPlayedToday: number;
   scoredRoundsCompleted: number;
   scoredRoundsDayKey: string | null;
   scoredRoundsToday: number;
@@ -111,6 +113,8 @@ const drawGameStateSchema = new mongoose.Schema({
   },
   totalScore: { type: Number, default: 0, index: true },
   roundsCompleted: { type: Number, default: 0 },
+  roundsDayKey: { type: String, default: null },
+  roundsPlayedToday: { type: Number, default: 0 },
   scoredRoundsCompleted: { type: Number, default: 0 },
   scoredRoundsDayKey: { type: String, default: null },
   scoredRoundsToday: { type: Number, default: 0 },

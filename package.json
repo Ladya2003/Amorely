@@ -8,7 +8,10 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "install-client": "cd client && npm install",
     "install-server": "cd server && npm install",
-    "install-all": "npm install && npm run install-client && npm run install-server"
+    "install-all": "npm install && npm run install-client && npm run install-server",
+    "pets:copy-images": "node scripts/copy-pet-images.mjs",
+    "pets:generate-images": "node scripts/generate-pet-images.mjs",
+    "pets:generate-images:dry": "node scripts/generate-pet-images.mjs --dry-run"
   },
   "keywords": [],
   "author": "",

@@ -505,9 +505,9 @@
     "since": "З {{date}}",
     "addPartnerTitle": "Додайте партнера в налаштуваннях",
     "addPartnerDescription": "Щоб бачити кількість днів разом, додайте партнера та дату початку стосунків",
-    "signatureUser": "Підпис користувача",
-    "signaturePartner": "Підпис партнера",
-    "signature": "Підпис",
+    "signatureUser": "Малюнок користувача",
+    "signaturePartner": "Малюнок партнера",
+    "signature": "Малюнок",
     "achievementsTitle": "Досягнення",
     "untilAnniversary": "⏳ До наступної річниці:",
     "progress": {
@@ -556,7 +556,8 @@
       }
     },
     "signatureDialog": {
-      "title": "Додати підпис",
+      "title": "Додати малюнок",
+      "openHint": "Додати малюнок",
       "clear": "Очистити",
       "cancel": "Скасувати",
       "save": "Зберегти"
@@ -1181,5 +1182,199 @@
       "confirmSaved": "Так, зберег(ла)",
       "clearPassphrase": "Очистити"
     }
+  },
+  "common": { "back": "Назад", "cancel": "Скасувати" },
+  "pets": {
+    "title": "Мої улюбленці",
+    "sectionTitle": "Улюбленці",
+    "tabMine": "Мої",
+    "tabPartner": "Партнера",
+    "viewToggleAria": "Чиїх улюбленців показати",
+    "partnerEmpty": "У партнера поки немає улюбленців",
+    "contactEmpty": "У користувача поки немає улюбленців",
+    "partnerHint": "Натисни на улюбленця — прокачка списує твої Аморки",
+    "level": "Рівень {{level}}",
+    "levelWithProgress": "Рівень {{level}} · {{current}}/{{total}}",
+    "levelMax": "Рівень {{level}} — макс.",
+    "ownerLabel": "Власник",
+    "ownerYou": "Ти",
+    "ownerUnknown": "Невідомо",
+    "giftedByLabel": "Подарував",
+    "onboarding": "Натисни +, щоб обрати першого улюбленця",
+    "createFirst": "Обрати улюбленця",
+    "addPet": "Додати улюбленця",
+    "needMore": "Потрібно {{cost}} Аморок (у тебе {{balance}})",
+    "created": "{{name}} тепер з тобою!",
+    "createTitle": "Новий улюбленець",
+    "stepSpecies": "Вид",
+    "stepVariant": "Колір",
+    "stepName": "Ім'я",
+    "nameHint": "Придумай ім'я",
+    "nameLabel": "Ім'я улюбленця",
+    "purchaseCost": "Вартість: {{cost}} Аморок",
+    "hatch": "Вилупити!",
+    "hatchCongrats": "Вітаємо з новим улюбленцем — {{name}}!",
+    "levelUpRevealCongrats": "Вітаємо! {{name}} досяг рівня {{level}}!",
+    "hatchContinue": "До нового друга!",
+    "insufficientBalance": "Недостатньо Аморок (потрібно {{cost}})",
+    "createFailed": "Не вдалося створити",
+    "notFound": "Улюбленця не знайдено",
+    "stats": "Характеристики",
+    "statAffection": "Ласка",
+    "statPlayfulness": "Грайливість",
+    "statCharm": "Чарівність",
+    "maxLevel": "Макс. рівень",
+    "levelUp": "Покращити ({{cost}} Аморок)",
+    "upgradeMain": "Підвищити до рів. {{level}} ({{cost}} Аморок)",
+    "levelUpSuccess": "Рівень {{level}}!",
+    "subLevelUpSuccess": "Ступінь прокачано! Характеристики покращились",
+    "levelUpFailed": "Не вдалося підвищити",
+    "upgradingPartnerPet": "Ти прокачуєш улюбленця партнера",
+    "gift": "Подарувати",
+    "giftTitle": "Подарувати другу",
+    "giftSearch": "Пошук за логіном",
+    "giftNoResults": "Користувачів не знайдено",
+    "giftConfirm": "Подарувати",
+    "giftSuccess": "Улюбленця подаровано!",
+    "giftFrom": "Подарунок від {{name}}",
+    "currencyAwarded": "+{{amount}} Аморок",
+    "currencyGuide": {
+      "title": "Як заробити Аморки",
+      "subtitle": "За які дії та як часто нараховуються Аморки",
+      "close": "Закрити",
+      "openHint": "Відкрити список способів заробити Аморки",
+      "amount": "+{{amount}}",
+      "columns": {
+        "action": "Дія",
+        "amount": "Аморки"
+      },
+      "sections": {
+        "welcome": "Старт",
+        "relationship": "Пара",
+        "daysTogether": "Днів разом",
+        "chat": "Чат",
+        "games": "Ігри",
+        "calendar": "Календар",
+        "profile": "Профіль",
+        "settings": "Налаштування",
+        "news": "Новини"
+      },
+      "rules": {
+        "registration_bonus": {
+          "action": "Реєстрація в Amorely",
+          "period": "Один раз на акаунт"
+        },
+        "partner_linked": {
+          "action": "Прив'язка партнера",
+          "period": "Один раз на акаунт"
+        },
+        "signature": {
+          "action": "Додати малюнок у блоці «Днів разом» (ранок або вечір)",
+          "period": "Не частіше одного разу за половину дня"
+        },
+        "both_signatures": {
+          "action": "Обидва партнери додали малюнок у блоці «Днів разом» в одній половині дня",
+          "period": "Один раз за половину дня"
+        },
+        "days_theme": {
+          "action": "Зміна теми в блоці «Днів разом»",
+          "period": "Один раз на акаунт"
+        },
+        "days_export": {
+          "action": "Експорт листівки «Днів разом»",
+          "period": "Один раз на тиждень"
+        },
+        "chat_daily": {
+          "action": "Надіслати 5 повідомлень у чатах (разом, у будь-яких діалогах)",
+          "period": "Один раз на день"
+        },
+        "chat_new_contact": {
+          "action": "Перше повідомлення новому контакту",
+          "period": "Один раз на кожен контакт"
+        },
+        "game_round_tap": {
+          "action": "Завершити раунд у грі «Тикалка»",
+          "period": "За кожен завершений раунд"
+        },
+        "game_daily_geo": {
+          "action": "Пройти всі 5 раундів у «Вгадай локацію»",
+          "period": "Один раз на день, після останнього раунду"
+        },
+        "game_daily_draw": {
+          "action": "Пройти всі 10 раундів у «Вгадай малюнок»",
+          "period": "Один раз на день, після останнього раунду"
+        },
+        "game_daily_quiz": {
+          "action": "Відповісти на всі питання дошки в «Своїй грі»",
+          "period": "Один раз на день, після останнього питання"
+        },
+        "game_medal_stipend_1": {
+          "action": "Тримати 🥇 місце в топі гри",
+          "period": "Раз на 3 дні за кожну гру"
+        },
+        "game_medal_stipend_2": {
+          "action": "Тримати 🥈 місце в топі гри",
+          "period": "Раз на 3 дні за кожну гру"
+        },
+        "game_medal_stipend_3": {
+          "action": "Тримати 🥉 місце в топі гри",
+          "period": "Раз на 3 дні за кожну гру"
+        },
+        "calendar_event": {
+          "action": "Створити подію в календарі",
+          "period": "За перші 3 нові події на день"
+        },
+        "plan_note": {
+          "action": "Створити нотатку в планах",
+          "period": "За перші 3 нові нотатки на день"
+        },
+        "plan_note_complete": {
+          "action": "Позначити нотатку в планах виконаною",
+          "period": "За перші 3 виконані нотатки на день"
+        },
+        "profile_avatar": {
+          "action": "Завантажити аватар профілю",
+          "period": "Один раз на акаунт"
+        },
+        "profile_firstName": {
+          "action": "Вказати ім'я в профілі",
+          "period": "Один раз на акаунт"
+        },
+        "profile_lastName": {
+          "action": "Вказати прізвище в профілі",
+          "period": "Один раз на акаунт"
+        },
+        "profile_birthday": {
+          "action": "Вказати день народження в профілі",
+          "period": "Один раз на акаунт"
+        },
+        "profile_bio": {
+          "action": "Заповнити «Про себе» в профілі",
+          "period": "Один раз на акаунт"
+        },
+        "settings_theme": {
+          "action": "Змінити тему оформлення",
+          "period": "Один раз на акаунт"
+        },
+        "settings_primaryColor": {
+          "action": "Змінити основний колір",
+          "period": "Один раз на акаунт"
+        },
+        "settings_notifications": {
+          "action": "Налаштувати сповіщення",
+          "period": "Один раз на акаунт"
+        },
+        "settings_push": {
+          "action": "Увімкнути push-сповіщення",
+          "period": "Один раз на акаунт"
+        },
+        "news_read": {
+          "action": "Прочитати новину",
+          "period": "Один раз за кожну новину"
+        }
+      }
+    },
+    "species": { "kitten": "Кошеня", "puppy": "Цуценя", "gecko": "Гекон", "bunny": "Кролик", "owlet": "Совеня" },
+    "variants": { "orange": "Рудий", "gray": "Сірий", "black": "Чорний", "golden": "Золотистий", "brown": "Коричневий", "spotted": "Пятнистий", "green": "Зелений", "blue": "Блакитний", "yellow": "Жовтий", "white": "Білий", "cream": "Кремовий" }
   }
 }

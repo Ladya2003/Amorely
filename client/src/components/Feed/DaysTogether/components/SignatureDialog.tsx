@@ -362,6 +362,7 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
         <IconButton
           color="primary"
           onClick={handleOpen}
+          aria-label={t('feed.signatureDialog.openHint')}
           sx={{
             bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.1')}`,
             color: colorTheme.preview,

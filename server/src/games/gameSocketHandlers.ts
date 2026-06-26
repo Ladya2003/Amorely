@@ -52,6 +52,7 @@ import {
   syncQuizGameState,
   updateQuizGameBadges,
 } from './quizGameService';
+import { bindGameCurrencyNotify } from './gameCurrencyAwards';
 import { getUserLocale } from '../utils/userLocale';
 
 interface ConnectedUser {
@@ -59,11 +60,18 @@ interface ConnectedUser {
   socketId: string;
 }
 
+let gameCurrencyNotifyBound = false;
+
 export const attachGameSocketHandlers = (
   socket: Socket,
   io: SocketIOServer,
   connectedUsers: ConnectedUser[]
 ) => {
+  if (!gameCurrencyNotifyBound) {
+    bindGameCurrencyNotify(io, connectedUsers);
+    gameCurrencyNotifyBound = true;
+  }
+
   socket.on('tap_game_subscribe', async () => {
     try {
       const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);

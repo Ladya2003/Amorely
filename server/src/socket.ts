@@ -1,6 +1,8 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import Message from './models/message';
+import { awardChatDaily, awardChatNewContact } from './utils/currencyRewards';
+import type { CurrencyAwardResult } from './services/currencyService';
 import User from './models/user';
 import mongoose from 'mongoose';
 import { getAllowedOrigins } from './utils/corsOrigins';
@@ -17,6 +19,17 @@ interface ConnectedUser {
 
 let ioRef: SocketIOServer | null = null;
 let connectedUsersRef: ConnectedUser[] = [];
+
+const emitCurrencyAwardToClient = (socket: Socket, award: CurrencyAwardResult | null | undefined) => {
+  if (!award?.awarded || award.amount <= 0) {
+    return;
+  }
+
+  socket.emit('currency_awarded', {
+    awardedAmount: award.amount,
+    balance: award.balance,
+  });
+};
 
 export const notifySocketUser = (userId: string, event: string, payload: unknown) => {
   if (!ioRef) {
@@ -190,6 +203,18 @@ export default function setupSocketIO(server: HttpServer) {
         });
 
         const savedMessage = await newMessage.save();
+
+        const dailyAward = await awardChatDaily(senderId);
+        emitCurrencyAwardToClient(socket, dailyAward);
+
+        const priorMessages = await Message.countDocuments({
+          senderId: new mongoose.Types.ObjectId(senderId),
+          receiverId: new mongoose.Types.ObjectId(receiverId),
+        });
+        if (priorMessages <= 1) {
+          const contactAward = await awardChatNewContact(senderId, receiverId);
+          emitCurrencyAwardToClient(socket, contactAward);
+        }
 
         // Форматируем сообщение для отправки клиенту
         const formattedMessage = formatSocketMessage(savedMessage, clientTempId);

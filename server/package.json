@@ -29,7 +29,9 @@
     "fetch:geo-locations": "ts-node scripts/fetch-wikidata-geo-locations.ts",
     "migrate:news-translations": "ts-node scripts/migrate-news-translations.ts",
     "seed:news-i18n": "ts-node scripts/seed-news-i18n.ts",
-    "generate:quiz-i18n": "ts-node scripts/generate-quiz-i18n.ts"
+    "generate:quiz-i18n": "ts-node scripts/generate-quiz-i18n.ts",
+    "reset:pet-test": "cross-env NODE_ENV=development ts-node src/scripts/reset-user-currency.ts",
+    "set:currency": "cross-env NODE_ENV=development ts-node src/scripts/set-user-currency.ts"
   },
   "keywords": [],
   "author": "",

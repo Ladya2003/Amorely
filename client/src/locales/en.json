@@ -562,9 +562,9 @@
     "since": "Since {{date}}",
     "addPartnerTitle": "Add your partner in settings",
     "addPartnerDescription": "To see how many days you have been together, add your partner and the relationship start date",
-    "signatureUser": "User signature",
-    "signaturePartner": "Partner signature",
-    "signature": "Signature",
+    "signatureUser": "User drawing",
+    "signaturePartner": "Partner drawing",
+    "signature": "Drawing",
     "achievementsTitle": "Achievements",
     "untilAnniversary": "⏳ Until the next anniversary:",
     "progress": {
@@ -613,7 +613,8 @@
       }
     },
     "signatureDialog": {
-      "title": "Add signature",
+      "title": "Add drawing",
+      "openHint": "Add drawing",
       "clear": "Clear",
       "cancel": "Cancel",
       "save": "Save"
@@ -1284,6 +1285,226 @@
       "cancel": "Cancel",
       "confirmSaved": "Yes, I saved it",
       "clearPassphrase": "Clear"
+    }
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel"
+  },
+  "pets": {
+    "title": "My pets",
+    "sectionTitle": "Pets",
+    "tabMine": "Mine",
+    "tabPartner": "Partner's",
+    "viewToggleAria": "Whose pets to show",
+    "partnerEmpty": "Your partner has no pets yet",
+    "contactEmpty": "This user has no pets yet",
+    "partnerHint": "Tap a pet to upgrade it using your AmoreCoins",
+    "level": "Level {{level}}",
+    "levelWithProgress": "Level {{level}} · {{current}}/{{total}}",
+    "levelMax": "Level {{level}} — max",
+    "ownerLabel": "Owner",
+    "ownerYou": "You",
+    "ownerUnknown": "Unknown",
+    "giftedByLabel": "Gifted by",
+    "onboarding": "Tap + to choose your first pet",
+    "createFirst": "Choose your pet",
+    "addPet": "Add pet",
+    "needMore": "Need {{cost}} AmoreCoins to buy a pet (you have {{balance}})",
+    "created": "{{name}} joined your family!",
+    "createTitle": "New pet",
+    "stepSpecies": "Species",
+    "stepVariant": "Color",
+    "stepName": "Name",
+    "nameHint": "Give your pet a name",
+    "nameLabel": "Pet name",
+    "purchaseCost": "Cost: {{cost}} AmoreCoins",
+    "hatch": "Hatch!",
+    "hatchCongrats": "Congratulations on your new pet — {{name}}!",
+    "levelUpRevealCongrats": "Congratulations! {{name}} reached level {{level}}!",
+    "hatchContinue": "Meet your pet!",
+    "insufficientBalance": "Not enough AmoreCoins (need {{cost}})",
+    "createFailed": "Could not create pet",
+    "loadFailed": "Could not load pets. Check your connection.",
+    "notFound": "Pet not found",
+    "stats": "Characteristics",
+    "statAffection": "Affection",
+    "statPlayfulness": "Playfulness",
+    "statCharm": "Charm",
+    "maxLevel": "Max level",
+    "levelUp": "Upgrade ({{cost}} AmoreCoins)",
+    "upgradeMain": "Reach level {{level}} ({{cost}} AmoreCoins)",
+    "levelUpSuccess": "Level {{level}} reached!",
+    "subLevelUpSuccess": "Step complete! Stats improved",
+    "levelUpFailed": "Could not level up",
+    "upgradingPartnerPet": "You are upgrading your partner's pet",
+    "gift": "Gift pet",
+    "giftTitle": "Gift to a friend",
+    "giftSearch": "Search by username",
+    "giftNoResults": "No users found",
+    "giftConfirm": "Gift",
+    "giftSuccess": "Pet gifted successfully!",
+    "giftFrom": "Gift from {{name}}",
+    "petAction": "Pet this pet",
+    "petSuccess": "Your pet loved it! +{{amount}} AmoreCoins",
+    "petLimitReached": "This pet has already been petted twice today",
+    "petFailed": "Could not pet this pet",
+    "currencyAwarded": "+{{amount}} AmoreCoins",
+    "currencyGuide": {
+      "title": "How to earn AmoreCoins",
+      "subtitle": "What you do, how often, and how many coins you get",
+      "close": "Close",
+      "openHint": "Open guide to earning AmoreCoins",
+      "amount": "+{{amount}}",
+      "columns": {
+        "action": "Action",
+        "amount": "Coins"
+      },
+      "sections": {
+        "welcome": "Getting started",
+        "relationship": "Couple",
+        "daysTogether": "Days together",
+        "chat": "Chat",
+        "games": "Games",
+        "calendar": "Calendar",
+        "profile": "Profile",
+        "settings": "Settings",
+        "news": "News"
+      },
+      "rules": {
+        "registration_bonus": {
+          "action": "Sign up for Amorely",
+          "period": "Once per account"
+        },
+        "partner_linked": {
+          "action": "Link your partner",
+          "period": "Once per account"
+        },
+        "signature": {
+          "action": "Add a drawing in Days together (morning or afternoon)",
+          "period": "At most once per half-day"
+        },
+        "both_signatures": {
+          "action": "Both partners added a drawing in Days together in the same half-day",
+          "period": "Once per half-day"
+        },
+        "days_theme": {
+          "action": "Change the theme in Days together",
+          "period": "Once per account"
+        },
+        "days_export": {
+          "action": "Export a Days together card",
+          "period": "Once per week"
+        },
+        "chat_daily": {
+          "action": "Send 5 chat messages in total (any conversations combined)",
+          "period": "Once per day"
+        },
+        "chat_new_contact": {
+          "action": "First message to a new contact",
+          "period": "Once per contact"
+        },
+        "game_round_tap": {
+          "action": "Complete a round in Tap Together",
+          "period": "For each completed round"
+        },
+        "game_daily_geo": {
+          "action": "Complete all 5 rounds in Guess the Location",
+          "period": "Once per day, after the last round"
+        },
+        "game_daily_draw": {
+          "action": "Complete all 10 rounds in Guess the Drawing",
+          "period": "Once per day, after the last round"
+        },
+        "game_daily_quiz": {
+          "action": "Answer all board questions in Amorely Quiz",
+          "period": "Once per day, after the last question"
+        },
+        "game_medal_stipend_1": {
+          "action": "Hold 🥇 place on a game leaderboard",
+          "period": "Every 3 days per game"
+        },
+        "game_medal_stipend_2": {
+          "action": "Hold 🥈 place on a game leaderboard",
+          "period": "Every 3 days per game"
+        },
+        "game_medal_stipend_3": {
+          "action": "Hold 🥉 place on a game leaderboard",
+          "period": "Every 3 days per game"
+        },
+        "calendar_event": {
+          "action": "Create a calendar event",
+          "period": "For the first 3 new events each day"
+        },
+        "plan_note": {
+          "action": "Create a plan note",
+          "period": "For the first 3 new notes each day"
+        },
+        "plan_note_complete": {
+          "action": "Mark a plan note as completed",
+          "period": "For the first 3 completed notes each day"
+        },
+        "profile_avatar": {
+          "action": "Upload a profile avatar",
+          "period": "Once per account"
+        },
+        "profile_firstName": {
+          "action": "Add your first name",
+          "period": "Once per account"
+        },
+        "profile_lastName": {
+          "action": "Add your last name",
+          "period": "Once per account"
+        },
+        "profile_birthday": {
+          "action": "Add your birthday",
+          "period": "Once per account"
+        },
+        "profile_bio": {
+          "action": "Fill in your bio",
+          "period": "Once per account"
+        },
+        "settings_theme": {
+          "action": "Change the app theme",
+          "period": "Once per account"
+        },
+        "settings_primaryColor": {
+          "action": "Change the primary color",
+          "period": "Once per account"
+        },
+        "settings_notifications": {
+          "action": "Configure notifications",
+          "period": "Once per account"
+        },
+        "settings_push": {
+          "action": "Enable push notifications",
+          "period": "Once per account"
+        },
+        "news_read": {
+          "action": "Read a news article",
+          "period": "Once per article"
+        }
+      }
+    },
+    "species": {
+      "kitten": "Kitten",
+      "puppy": "Puppy",
+      "gecko": "Gecko",
+      "bunny": "Bunny",
+      "owlet": "Owlet"
+    },
+    "variants": {
+      "orange": "Orange",
+      "gray": "Gray",
+      "black": "Black",
+      "golden": "Golden",
+      "brown": "Brown",
+      "spotted": "Spotted",
+      "green": "Green",
+      "blue": "Blue",
+      "yellow": "Yellow",
+      "white": "White",
+      "cream": "Cream"
     }
   }
 }

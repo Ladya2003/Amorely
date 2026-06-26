@@ -1,5 +1,6 @@
 import io from 'socket.io-client';
 import { API_URL } from '../config';
+import { emitCurrencyUpdated } from '../utils/currencyEvents';
 
 class SocketService {
   private socket: ReturnType<typeof io> | null = null;
@@ -7,11 +8,32 @@ class SocketService {
   private onConnectHandler: (() => void) | null = null;
   private onVisibilityHandler: (() => void) | null = null;
   private onOnlineHandler: (() => void) | null = null;
+  private currencyAwardHandler:
+    | ((payload: { awardedAmount?: number; balance?: number }) => void)
+    | null = null;
 
   private registerUserOnServer() {
     if (this.socket?.connected && this.connectedUserId) {
       this.socket.emit('user_connected', this.connectedUserId);
     }
+  }
+
+  private setupCurrencyAwardListener() {
+    if (!this.socket) {
+      return;
+    }
+
+    if (this.currencyAwardHandler) {
+      this.socket.off('currency_awarded', this.currencyAwardHandler);
+    }
+
+    this.currencyAwardHandler = (payload) => {
+      if (payload?.awardedAmount && payload.awardedAmount > 0) {
+        emitCurrencyUpdated(payload.balance, payload.awardedAmount);
+      }
+    };
+
+    this.socket.on('currency_awarded', this.currencyAwardHandler);
   }
 
   private setupSocketLifecycle() {
@@ -27,6 +49,7 @@ class SocketService {
       this.registerUserOnServer();
     };
     this.socket.on('connect', this.onConnectHandler);
+    this.setupCurrencyAwardListener();
 
     if (typeof document !== 'undefined' && !this.onVisibilityHandler) {
       this.onVisibilityHandler = () => {
@@ -77,6 +100,10 @@ class SocketService {
       if (this.onConnectHandler) {
         this.socket.off('connect', this.onConnectHandler);
         this.onConnectHandler = null;
+      }
+      if (this.currencyAwardHandler) {
+        this.socket.off('currency_awarded', this.currencyAwardHandler);
+        this.currencyAwardHandler = null;
       }
       this.socket.disconnect();
     }
@@ -229,6 +256,10 @@ class SocketService {
       if (this.onConnectHandler) {
         this.socket.off('connect', this.onConnectHandler);
         this.onConnectHandler = null;
+      }
+      if (this.currencyAwardHandler) {
+        this.socket.off('currency_awarded', this.currencyAwardHandler);
+        this.currencyAwardHandler = null;
       }
       this.socket.disconnect();
       this.socket = null;

@@ -562,9 +562,9 @@
     "since": "Desde {{date}}",
     "addPartnerTitle": "Adicione seu parceiro nas configurações",
     "addPartnerDescription": "Para ver quantos dias vocês estão juntos, adicione seu parceiro e a data de início do relacionamento",
-    "signatureUser": "Assinatura do usuário",
-    "signaturePartner": "Assinatura do parceiro",
-    "signature": "Assinatura",
+    "signatureUser": "Desenho do usuário",
+    "signaturePartner": "Desenho do parceiro",
+    "signature": "Desenho",
     "achievementsTitle": "Conquistas",
     "untilAnniversary": "⏳ Até o próximo aniversário:",
     "progress": {
@@ -613,7 +613,8 @@
       }
     },
     "signatureDialog": {
-      "title": "Adicionar assinatura",
+      "title": "Adicionar desenho",
+      "openHint": "Adicionar desenho",
       "clear": "Limpar",
       "cancel": "Cancelar",
       "save": "Salvar"
@@ -1237,5 +1238,199 @@
       "confirmSaved": "Sim, guardei",
       "clearPassphrase": "Limpar"
     }
+  },
+  "common": { "back": "Voltar", "cancel": "Cancelar" },
+  "pets": {
+    "title": "Meus pets",
+    "sectionTitle": "Pets",
+    "tabMine": "Meus",
+    "tabPartner": "Parceiro",
+    "viewToggleAria": "De quem mostrar os pets",
+    "partnerEmpty": "Seu parceiro ainda não tem pets",
+    "contactEmpty": "Este usuário ainda não tem pets",
+    "partnerHint": "Toque em um pet — a melhoria usa suas AmoreCoins",
+    "level": "Nível {{level}}",
+    "levelWithProgress": "Nível {{level}} · {{current}}/{{total}}",
+    "levelMax": "Nível {{level}} — máx.",
+    "ownerLabel": "Dono",
+    "ownerYou": "Você",
+    "ownerUnknown": "Desconhecido",
+    "giftedByLabel": "Presenteado por",
+    "onboarding": "Toque em + para escolher seu primeiro pet",
+    "createFirst": "Escolher pet",
+    "addPet": "Adicionar pet",
+    "needMore": "Precisa de {{cost}} AmoreCoins (você tem {{balance}})",
+    "created": "{{name}} chegou!",
+    "createTitle": "Novo pet",
+    "stepSpecies": "Espécie",
+    "stepVariant": "Cor",
+    "stepName": "Nome",
+    "nameHint": "Dê um nome ao pet",
+    "nameLabel": "Nome",
+    "purchaseCost": "Custo: {{cost}} AmoreCoins",
+    "hatch": "Chocar!",
+    "hatchCongrats": "Parabéns pelo seu novo pet — {{name}}!",
+    "levelUpRevealCongrats": "Parabéns! {{name}} chegou ao nível {{level}}!",
+    "hatchContinue": "Conhecer meu pet!",
+    "insufficientBalance": "AmoreCoins insuficientes (precisa de {{cost}})",
+    "createFailed": "Falha ao criar",
+    "notFound": "Pet não encontrado",
+    "stats": "Características",
+    "statAffection": "Carinho",
+    "statPlayfulness": "Brincalhão",
+    "statCharm": "Charme",
+    "maxLevel": "Nível máximo",
+    "levelUp": "Melhorar ({{cost}} AmoreCoins)",
+    "upgradeMain": "Subir ao niv. {{level}} ({{cost}} AmoreCoins)",
+    "levelUpSuccess": "Nível {{level}}!",
+    "subLevelUpSuccess": "Etapa concluída! Stats melhoradas",
+    "levelUpFailed": "Falha ao subir nível",
+    "upgradingPartnerPet": "Você está melhorando o pet do parceiro",
+    "gift": "Presentear",
+    "giftTitle": "Presentear amigo",
+    "giftSearch": "Buscar por usuário",
+    "giftNoResults": "Nenhum usuário encontrado",
+    "giftConfirm": "Presentear",
+    "giftSuccess": "Pet presenteado!",
+    "giftFrom": "Presente de {{name}}",
+    "currencyAwarded": "+{{amount}} AmoreCoins",
+    "currencyGuide": {
+      "title": "Como ganhar AmoreCoins",
+      "subtitle": "Ação, período e quantidade de moedas",
+      "close": "Fechar",
+      "openHint": "Abrir guia para ganhar AmoreCoins",
+      "amount": "+{{amount}}",
+      "columns": {
+        "action": "Ação",
+        "amount": "Moedas"
+      },
+      "sections": {
+        "welcome": "Início",
+        "relationship": "Casal",
+        "daysTogether": "Dias juntos",
+        "chat": "Chat",
+        "games": "Jogos",
+        "calendar": "Calendário",
+        "profile": "Perfil",
+        "settings": "Configurações",
+        "news": "Notícias"
+      },
+      "rules": {
+        "registration_bonus": {
+          "action": "Registrar-se no Amorely",
+          "period": "Uma vez por conta"
+        },
+        "partner_linked": {
+          "action": "Vincular o parceiro",
+          "period": "Uma vez por conta"
+        },
+        "signature": {
+          "action": "Adicionar um desenho no bloco Dias juntos (manhã ou tarde)",
+          "period": "No máximo uma vez por metade do dia"
+        },
+        "both_signatures": {
+          "action": "Ambos os parceiros adicionaram um desenho em Dias juntos na mesma metade do dia",
+          "period": "Uma vez por metade do dia"
+        },
+        "days_theme": {
+          "action": "Mudar o tema em Dias juntos",
+          "period": "Uma vez por conta"
+        },
+        "days_export": {
+          "action": "Exportar um cartão de Dias juntos",
+          "period": "Uma vez por semana"
+        },
+        "chat_daily": {
+          "action": "Enviar 5 mensagens no total (em quaisquer chats)",
+          "period": "Uma vez por dia"
+        },
+        "chat_new_contact": {
+          "action": "Primeira mensagem a um novo contato",
+          "period": "Uma vez por contato"
+        },
+        "game_round_tap": {
+          "action": "Concluir uma rodada em Tap Together",
+          "period": "Para cada rodada concluída"
+        },
+        "game_daily_geo": {
+          "action": "Concluir todas as 5 rodadas de Adivinhe o local",
+          "period": "Uma vez por dia, após a última rodada"
+        },
+        "game_daily_draw": {
+          "action": "Concluir todas as 10 rodadas de Adivinhe o desenho",
+          "period": "Uma vez por dia, após a última rodada"
+        },
+        "game_daily_quiz": {
+          "action": "Responder a todas as perguntas do tabuleiro em Amorely Quiz",
+          "period": "Uma vez por dia, após a última pergunta"
+        },
+        "game_medal_stipend_1": {
+          "action": "Manter o 🥇 lugar no ranking de um jogo",
+          "period": "A cada 3 dias por jogo"
+        },
+        "game_medal_stipend_2": {
+          "action": "Manter o 🥈 lugar no ranking de um jogo",
+          "period": "A cada 3 dias por jogo"
+        },
+        "game_medal_stipend_3": {
+          "action": "Manter o 🥉 lugar no ranking de um jogo",
+          "period": "A cada 3 dias por jogo"
+        },
+        "calendar_event": {
+          "action": "Criar um evento no calendário",
+          "period": "Pelos primeiros 3 eventos novos por dia"
+        },
+        "plan_note": {
+          "action": "Criar uma nota de plano",
+          "period": "Pelas primeiras 3 notas novas por dia"
+        },
+        "plan_note_complete": {
+          "action": "Marcar uma nota de plano como concluída",
+          "period": "Pelas primeiras 3 notas concluídas por dia"
+        },
+        "profile_avatar": {
+          "action": "Enviar avatar do perfil",
+          "period": "Uma vez por conta"
+        },
+        "profile_firstName": {
+          "action": "Informar o nome",
+          "period": "Uma vez por conta"
+        },
+        "profile_lastName": {
+          "action": "Informar o sobrenome",
+          "period": "Uma vez por conta"
+        },
+        "profile_birthday": {
+          "action": "Informar a data de nascimento",
+          "period": "Uma vez por conta"
+        },
+        "profile_bio": {
+          "action": "Preencher a bio",
+          "period": "Uma vez por conta"
+        },
+        "settings_theme": {
+          "action": "Mudar o tema do app",
+          "period": "Uma vez por conta"
+        },
+        "settings_primaryColor": {
+          "action": "Mudar a cor principal",
+          "period": "Uma vez por conta"
+        },
+        "settings_notifications": {
+          "action": "Configurar notificações",
+          "period": "Uma vez por conta"
+        },
+        "settings_push": {
+          "action": "Ativar notificações push",
+          "period": "Uma vez por conta"
+        },
+        "news_read": {
+          "action": "Ler uma notícia",
+          "period": "Uma vez por notícia"
+        }
+      }
+    },
+    "species": { "kitten": "Gatinho", "puppy": "Filhote", "gecko": "Gecko", "bunny": "Coelhinho", "owlet": "Filhote de coruja" },
+    "variants": { "orange": "Laranja", "gray": "Cinza", "black": "Preto", "golden": "Dourado", "brown": "Marrom", "spotted": "Malhado", "green": "Verde", "blue": "Azul", "yellow": "Amarelo", "white": "Branco", "cream": "Creme" }
   }
 }

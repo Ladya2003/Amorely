@@ -15,6 +15,7 @@ import UpdateIcon from '@mui/icons-material/Update';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { formatCalendarDate } from '../../localization/calendarHelpers';
 import { getNewsCategoryLabel } from '../../localization/newsHelpers';
+import { claimNewsReadReward } from '../../services/newsService';
 import { NewsItem } from './NewsCard';
 
 interface NewsDetailProps {
@@ -37,6 +38,16 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
       setShowBottomNav(true);
     };
   }, [open, setShowBottomNav]);
+
+  useEffect(() => {
+    if (!open || !news?._id) {
+      return;
+    }
+
+    void claimNewsReadReward(news._id).catch(() => {
+      // Reward is best-effort; ignore network errors.
+    });
+  }, [open, news?._id]);
 
   if (!open || !news) {
     return null;

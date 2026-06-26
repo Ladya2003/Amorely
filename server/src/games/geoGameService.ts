@@ -17,6 +17,7 @@ import {
   haversineDistanceKm,
   pickNextGeoLocation,
 } from './geoGameConfig';
+import { awardGameDailyCompleteToParticipants, GAME_DAILY_COMPLETE_AMOUNTS } from './gameCurrencyAwards';
 
 export interface GeoGameRelationship {
   _id: mongoose.Types.ObjectId;
@@ -293,6 +294,21 @@ const finalizeRoundWithoutGuess = (state: any) => {
   finalizeRound(state, true);
 };
 
+const maybeAwardGeoDailyComplete = async (state: any, context: GeoGameContext) => {
+  if (getRoundsPlayedToday(state) < GEO_MAX_ROUNDS_PER_DAY) {
+    return;
+  }
+
+  const relationshipId = context.relationship._id.toString();
+  const dayKey = `${relationshipId}:${getUtcDayKey()}`;
+  await awardGameDailyCompleteToParticipants(
+    getUniqueParticipantIds(context),
+    'geo',
+    dayKey,
+    GAME_DAILY_COMPLETE_AMOUNTS.geo
+  );
+};
+
 const awardRoundPoints = (state: any, pointsEarned: number) => {
   if (hasReachedDailyRoundLimit(state)) {
     return;
@@ -508,7 +524,10 @@ export const formatGeoGameState = (
   };
 };
 
-export const expireGeoRoundIfNeeded = async (state: any): Promise<boolean> => {
+export const expireGeoRoundIfNeeded = async (
+  state: any,
+  context?: GeoGameContext
+): Promise<boolean> => {
   if (!state.currentRound || state.currentRound.status !== 'guessing') {
     return false;
   }
@@ -519,11 +538,14 @@ export const expireGeoRoundIfNeeded = async (state: any): Promise<boolean> => {
 
   finalizeRoundWithoutGuess(state);
   await state.save();
+  if (context) {
+    await maybeAwardGeoDailyComplete(state, context);
+  }
   return true;
 };
 
-const syncGeoGameState = async (state: any) => {
-  await expireGeoRoundIfNeeded(state);
+const syncGeoGameState = async (state: any, context?: GeoGameContext) => {
+  await expireGeoRoundIfNeeded(state, context);
 };
 
 const syncGeoLobby = async (state: any) => {
@@ -575,7 +597,7 @@ export const getOrCreateGeoGameState = async (context: GeoGameContext) => {
     throw new GeoGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
 
-  await syncGeoGameState(state);
+  await syncGeoGameState(state, context);
   const refreshedState = await GeoGameState.findById(state._id);
   if (!refreshedState) {
     throw new GeoGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
@@ -657,7 +679,7 @@ export const getGeoGameState = async (context: GeoGameContext) => {
     throw new GeoGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
 
-  await syncGeoGameState(state);
+  await syncGeoGameState(state, context);
   return GeoGameState.findById(state._id);
 };
 
@@ -685,7 +707,7 @@ export const submitGeoGuess = async (
   }
 
   if (getSecondsRemaining(new Date(state.currentRound.deadlineAt)) <= 0) {
-    await expireGeoRoundIfNeeded(state);
+    await expireGeoRoundIfNeeded(state, context);
     throw new GeoGameError('ROUND_EXPIRED', 'Время раунда истекло');
   }
 
@@ -708,6 +730,7 @@ export const submitGeoGuess = async (
 
   if (state.currentRound.guesses.length >= participantIds.length) {
     finalizeRound(state, false);
+    await maybeAwardGeoDailyComplete(state, context);
   }
 
   await state.save();
@@ -739,7 +762,7 @@ export const expireGeoRound = async (context: GeoGameContext) => {
     throw new GeoGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
   }
 
-  const expired = await expireGeoRoundIfNeeded(state);
+  const expired = await expireGeoRoundIfNeeded(state, context);
   if (!expired) {
     throw new GeoGameError('ROUND_NOT_EXPIRED', 'Раунд ещё не завершён');
   }

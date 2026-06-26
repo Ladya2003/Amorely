@@ -4,6 +4,7 @@ import Relationship from '../models/relationship';
 import PartnerRequest from '../models/partnerRequest';
 import { authMiddleware } from '../middleware/auth';
 import { normalizeIdStr } from '../utils/normalizeId';
+import { awardPartnerLinked } from '../utils/currencyRewards';
 import {
   findActiveRelationshipForUser,
   findBrokenUpRelationshipPendingCleanup,
@@ -317,6 +318,9 @@ router.post('/requests/:requestId/accept', authMiddleware, async (req: any, res:
     notifySocketUser(initiatorId, 'partner_request_accepted', {
       requestId: request._id.toString()
     });
+
+    void awardPartnerLinked(initiatorId);
+    void awardPartnerLinked(normalizedUserId);
 
     return res.status(200).json({
       message: 'Заявка принята',

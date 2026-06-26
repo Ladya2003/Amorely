@@ -16,6 +16,7 @@ import {
   buildUsedWordIdsAfterPick,
   pickRandomDrawWord,
 } from './drawGameConfig';
+import { awardGameDailyCompleteToParticipants, GAME_DAILY_COMPLETE_AMOUNTS } from './gameCurrencyAwards';
 import { getDrawWordLabel } from '../i18n/drawI18n';
 import { AppLocale } from '../i18n/locales';
 import { getUserLocale } from '../utils/userLocale';
@@ -189,6 +190,24 @@ const getDrawerUserIdForRound = (context: DrawGameContext, roundsCompleted: numb
   return ids[roundsCompleted % 2];
 };
 
+const syncDailyRoundCounters = (state: any) => {
+  const today = getUtcDayKey();
+  if (state.roundsDayKey !== today) {
+    state.roundsDayKey = today;
+    state.roundsPlayedToday = 0;
+  }
+};
+
+const getRoundsPlayedToday = (state: any) => {
+  syncDailyRoundCounters(state);
+  return state.roundsPlayedToday ?? 0;
+};
+
+const recordCompletedDrawRound = (state: any) => {
+  state.roundsPlayedToday = getRoundsPlayedToday(state) + 1;
+  state.roundsDayKey = getUtcDayKey();
+};
+
 const syncDailyScoredCounters = (state: any) => {
   const today = getUtcDayKey();
   if (state.scoredRoundsDayKey !== today) {
@@ -317,7 +336,7 @@ const syncDrawRoundTimers = async (state: any, context: DrawGameContext) => {
   const round = state.currentRound;
 
   if (round.status === 'awaiting_guesser') {
-    await finalizeGuessTimeout(state);
+    await finalizeGuessTimeout(state, context);
     return DrawGameState.findById(state._id);
   }
 
@@ -325,7 +344,7 @@ const syncDrawRoundTimers = async (state: any, context: DrawGameContext) => {
     (round.status === 'drawing' || round.status === 'guessing') &&
     getSecondsRemaining(new Date(round.drawingDeadlineAt)) <= 0
   ) {
-    await finalizeGuessTimeout(state);
+    await finalizeGuessTimeout(state, context);
     return DrawGameState.findById(state._id);
   }
 
@@ -359,7 +378,22 @@ export const finishDrawingPhase = async (
   await state.save();
 };
 
-const finalizeGuessTimeout = async (state: any) => {
+const maybeAwardDrawDailyComplete = async (state: any, context: DrawGameContext) => {
+  if (getRoundsPlayedToday(state) < DRAW_MAX_SCORED_ROUNDS_PER_DAY) {
+    return;
+  }
+
+  const relationshipId = context.relationship._id.toString();
+  const dayKey = `${relationshipId}:${getUtcDayKey()}`;
+  await awardGameDailyCompleteToParticipants(
+    getDrawGameParticipantIds(context),
+    'draw',
+    dayKey,
+    GAME_DAILY_COMPLETE_AMOUNTS.draw
+  );
+};
+
+const finalizeGuessTimeout = async (state: any, context: DrawGameContext) => {
   if (
     !state.currentRound ||
     (state.currentRound.status !== 'guessing' &&
@@ -374,11 +408,14 @@ const finalizeGuessTimeout = async (state: any) => {
   state.currentRound.pointsEarned = 0;
   state.currentRound.guessText = state.currentRound.guessText || null;
   state.roundsCompleted += 1;
+  recordCompletedDrawRound(state);
   await state.save();
+  await maybeAwardDrawDailyComplete(state, context);
 };
 
 const finalizeCorrectGuess = async (
   state: any,
+  context: DrawGameContext,
   userId: string,
   guessText: string,
   secondsTaken: number
@@ -397,10 +434,12 @@ const finalizeCorrectGuess = async (
   state.currentRound.wasCorrect = true;
   state.currentRound.pointsEarned = pointsEarned;
   state.roundsCompleted += 1;
+  recordCompletedDrawRound(state);
   if (pointsEarned > 0) {
     awardRoundPoints(state, pointsEarned);
   }
   await state.save();
+  await maybeAwardDrawDailyComplete(state, context);
 };
 
 export const formatDrawGameState = (
@@ -833,7 +872,7 @@ export const submitDrawGuess = async (userId: string, context: DrawGameContext, 
 
   const drawingDeadlineAt = state.currentRound.drawingDeadlineAt;
   if (getSecondsRemaining(new Date(drawingDeadlineAt)) <= 0) {
-    await finalizeGuessTimeout(state);
+    await finalizeGuessTimeout(state, context);
     throw new DrawGameError('GUESS_EXPIRED', 'Время на ответ истекло');
   }
 
@@ -853,7 +892,7 @@ export const submitDrawGuess = async (userId: string, context: DrawGameContext, 
     DRAW_ROUND_DRAWING_SEC - getSecondsRemaining(new Date(drawingDeadlineAt))
   );
 
-  await finalizeCorrectGuess(state, userId, trimmed, secondsTaken);
+  await finalizeCorrectGuess(state, context, userId, trimmed, secondsTaken);
 
   return DrawGameState.findById(state._id);
 };

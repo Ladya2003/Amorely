@@ -19,6 +19,9 @@ import { Contact } from './ChatList';
 import GameBadges from '../Games/GameBadges';
 import type { RelationshipBadge } from '../../utils/gameBadges';
 import { formatChatBirthday, getChatPlaceholderBio } from '../../localization/chatHelpers';
+import PetSection from '../Pets/PetSection';
+import PetDetailView from '../Pets/PetDetailView';
+import type { Pet } from '../../services/petsService';
 
 export interface ContactProfile extends Contact {
   bio?: string;
@@ -38,11 +41,13 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
   const [profile, setProfile] = useState<ContactProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
+  const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !contact?.id) {
       setProfile(null);
       setAvatarViewerOpen(false);
+      setSelectedPetId(null);
       return;
     }
 
@@ -105,10 +110,17 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
 
   const birthdayLabel = formatChatBirthday(displayProfile?.birthday, i18n.language);
   const avatarUrl = displayProfile?.avatar || '';
+  const contactId = displayProfile?.id ?? contact?.id ?? null;
+  const showingPet = Boolean(selectedPetId);
 
   const handleClose = () => {
     setAvatarViewerOpen(false);
+    setSelectedPetId(null);
     onClose();
+  };
+
+  const handlePetSelect = (pet: Pet) => {
+    setSelectedPetId(pet.id);
   };
 
   return (
@@ -133,14 +145,21 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
             pb: 1
           }}
         >
-          {t('chat.profile.title')}
+          {showingPet ? t('pets.sectionTitle') : t('chat.profile.title')}
           <IconButton onClick={handleClose} aria-label={t('chat.profile.closeAria')} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
         <DialogContent sx={{ pt: 0, pb: 3 }}>
-          {isLoading && !displayProfile ? (
+          {showingPet && selectedPetId ? (
+            <PetDetailView
+              petId={selectedPetId}
+              visitOnly
+              embedded
+              onBack={() => setSelectedPetId(null)}
+            />
+          ) : isLoading && !displayProfile ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress size={28} />
             </Box>
@@ -211,12 +230,22 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
                 color="text.secondary"
                 sx={{
                   mt: 0.5,
+                  mb: 1,
                   lineHeight: 1.6,
                   fontStyle: displayProfile.bio?.trim() ? 'normal' : 'italic'
                 }}
               >
                 {bioText}
               </Typography>
+
+              {contactId && (
+                <PetSection
+                  variant="readonly"
+                  userId={contactId}
+                  embedded
+                  onPetSelect={handlePetSelect}
+                />
+              )}
             </Box>
           ) : null}
         </DialogContent>
