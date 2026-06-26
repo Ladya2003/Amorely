@@ -1332,6 +1332,10 @@
           "action": "Ambos os parceiros adicionaram um desenho em Dias juntos na mesma metade do dia",
           "period": "Uma vez por metade do dia"
         },
+        "days_achievement": {
+          "action": "Nova conquista em Dias juntos",
+          "period": "Uma vez por conquista, para ambos os parceiros"
+        },
         "days_theme": {
           "action": "Mudar o tema em Dias juntos",
           "period": "Uma vez por conta"

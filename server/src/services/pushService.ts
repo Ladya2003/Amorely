@@ -32,7 +32,6 @@ export interface PushPayload {
   url?: string;
   tag?: string;
   badgeCount?: number;
-  icon?: string;
 }
 
 export const getTotalUnreadCount = async (userId: string) =>
@@ -169,13 +168,12 @@ export const notifyNewMessage = async (params: {
     return;
   }
 
-  const sender = await User.findById(params.senderId).select('username firstName lastName avatar');
+  const sender = await User.findById(params.senderId).select('username firstName lastName');
   if (!sender) {
     return;
   }
 
   const senderName = getUserDisplayName(sender);
-  const senderAvatar = sender.avatar?.trim();
   const body = getMessagePreview({
     text: params.text,
     pushPreview: params.pushPreview,
@@ -193,8 +191,7 @@ export const notifyNewMessage = async (params: {
     body,
     url: params.chatUrl || buildChatUrl(params.senderId),
     tag: `chat-${params.senderId}`,
-    badgeCount,
-    ...(senderAvatar ? { icon: senderAvatar } : {})
+    badgeCount
   });
 };
 

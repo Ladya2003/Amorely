@@ -29,6 +29,8 @@ const relationshipSchema = new mongoose.Schema({
       updatedAt: { type: Date, default: Date.now },
     },
   ],
+  daysAchievementsAwarded: [{ type: String }],
+  daysAchievementsInitialized: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -1332,6 +1332,10 @@
           "action": "Les deux partenaires ont ajouté un dessin dans Jours ensemble la même demi-journée",
           "period": "Une fois par demi-journée"
         },
+        "days_achievement": {
+          "action": "Nouveau succès dans Jours ensemble",
+          "period": "Une fois par succès, pour les deux partenaires"
+        },
         "days_theme": {
           "action": "Changer le thème dans Jours ensemble",
           "period": "Une fois par compte"

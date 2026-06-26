@@ -1332,6 +1332,10 @@
           "action": "Beide Partner haben im Block „Tage zusammen“ in derselben Tageshälfte eine Zeichnung hinzugefügt",
           "period": "Einmal pro Tageshälfte"
         },
+        "days_achievement": {
+          "action": "Neues Achievement im Block „Tage zusammen“",
+          "period": "Einmal pro Achievement, für beide Partner"
+        },
         "days_theme": {
           "action": "Theme im Block „Tage zusammen“ wechseln",
           "period": "Einmal pro Konto"

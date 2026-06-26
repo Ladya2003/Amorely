@@ -1388,6 +1388,10 @@
           "action": "Both partners added a drawing in Days together in the same half-day",
           "period": "Once per half-day"
         },
+        "days_achievement": {
+          "action": "New achievement in Days together",
+          "period": "Once per achievement, for both partners"
+        },
         "days_theme": {
           "action": "Change the theme in Days together",
           "period": "Once per account"

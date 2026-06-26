@@ -5,6 +5,7 @@ import PartnerRequest from '../models/partnerRequest';
 import { authMiddleware } from '../middleware/auth';
 import { normalizeIdStr } from '../utils/normalizeId';
 import { awardPartnerLinked } from '../utils/currencyRewards';
+import { bootstrapDaysAchievementsForRelationship } from '../services/daysAchievementService';
 import {
   findActiveRelationshipForUser,
   findBrokenUpRelationshipPendingCleanup,
@@ -300,6 +301,7 @@ router.post('/requests/:requestId/accept', authMiddleware, async (req: any, res:
     });
 
     await newRelationship.save();
+    await bootstrapDaysAchievementsForRelationship(newRelationship);
     await linkUsersAsPartners(initiatorId, normalizedUserId);
 
     request.status = 'accepted';

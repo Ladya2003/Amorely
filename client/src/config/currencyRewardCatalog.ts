@@ -33,6 +33,7 @@ export const CURRENCY_EARN_RULES: CurrencyEarnRule[] = [
   { id: 'partner_linked', section: 'relationship', amount: 50 },
   { id: 'signature', section: 'daysTogether', amount: 15 },
   { id: 'both_signatures', section: 'daysTogether', amount: 25 },
+  { id: 'days_achievement', section: 'daysTogether', amount: 50 },
   { id: 'days_theme', section: 'daysTogether', amount: 5 },
   { id: 'days_export', section: 'daysTogether', amount: 5 },
   { id: 'chat_daily', section: 'chat', amount: 5 },

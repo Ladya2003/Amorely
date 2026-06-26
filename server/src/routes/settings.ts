@@ -9,6 +9,7 @@ import { ExtendedRequest } from '../types/mongoose';
 import { isSupportedLocale, resolveLocale } from '../i18n/locales';
 
 import { awardProfileField, awardSettingsField } from '../utils/currencyRewards';
+import { bootstrapDaysAchievementsForRelationship } from '../services/daysAchievementService';
 
 // Настройка хранилища Cloudinary для multer
 const storage = new CloudinaryStorage({
@@ -215,6 +216,7 @@ router.post('/partner', async (req: any, res: Response) => {
     });
     
     await newRelationship.save();
+    await bootstrapDaysAchievementsForRelationship(newRelationship);
     
     // Обновляем данные пользователя
     user.partnerId = partner._id;

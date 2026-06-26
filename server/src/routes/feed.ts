@@ -10,6 +10,8 @@ import { getActiveContent, initializeContentRotation, updateFrequencyAndRotation
 import { buildOrGetDynamicFeed } from '../utils/dynamicFeedRotation';
 import { formatContentForApi } from '../utils/contentFormat';
 import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
+import { calculateDaysTogether } from '../config/daysAchievementCatalog';
+import { processNewDaysAchievements } from '../services/daysAchievementService';
 import { notifyNewPartnerContent } from '../services/pushService';
 
 const router = express.Router();
@@ -355,10 +357,8 @@ router.get('/relationship', async (req: any, res: Response) => {
     }
     
     // Рассчитываем количество дней вместе
-    const startDate = new Date(relationship.startDate);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - startDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = calculateDaysTogether(new Date(relationship.startDate));
+    const achievementAward = await processNewDaysAchievements(userId, relationship);
     
     res.json({
       startDate: relationship.startDate,
@@ -366,7 +366,10 @@ router.get('/relationship', async (req: any, res: Response) => {
       photo: relationship.photo?.url,
       signature: relationship.signature, // Для обратной совместимости
       signatures: relationship.signatures || { user: '', partner: '' },
-      ownerId: relationship.userId.toString() // ID владельца отношений для определения текущей роли
+      ownerId: relationship.userId.toString(), // ID владельца отношений для определения текущей роли
+      awardedAmount: achievementAward.amount,
+      balance: achievementAward.balance,
+      newAchievementIds: achievementAward.newAchievementIds,
     });
   } catch (error) {
     console.error('Ошибка при получении информации об отношениях:', error);
