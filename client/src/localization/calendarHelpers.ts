@@ -23,6 +23,9 @@ const DATE_FNS_LOCALES: Record<AppLocale, Locale> = {
 /** Day-first numeric format for date inputs and short date display. */
 export const DATE_INPUT_FORMAT = 'dd/MM/yyyy';
 
+/** Day-first format for datetime inputs (plans deadline, etc.). */
+export const DATE_TIME_INPUT_FORMAT = `${DATE_INPUT_FORMAT} HH:mm`;
+
 export const getDateFnsLocale = (locale?: string | null): Locale => {
   const appLocale = resolveAppLocale(locale ?? undefined);
   return DATE_FNS_LOCALES[appLocale];

@@ -45,6 +45,7 @@ import { loadLocalKeys, type LocalDeviceKeys } from '../../crypto/cryptoService'
 import { useEncryptionRecipientId, usePartnerId } from '../../hooks/usePartnerId';
 import { useRelationship } from '../../hooks/useRelationship';
 import {
+  DATE_TIME_INPUT_FORMAT,
   formatCalendarDeadlineDateTime,
   getDateFnsLocale,
   getVideoLimitsHint
@@ -68,6 +69,14 @@ import {
   getCalendarPlansSubtitleSx,
   getCalendarPlansToolbarSx,
 } from './calendarPageStyles';
+import { getEventMediaPreviewSx } from './calendarDrawerStyles';
+
+const planNoteMediaPreviewStyle: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  display: 'block',
+};
 
 interface PlanNoteUser {
   _id?: string;
@@ -743,14 +752,10 @@ const PlansNotes: React.FC<{
     <Box
       key={media._id}
       sx={{
+        ...getEventMediaPreviewSx(theme),
         width: size,
         height: size,
-        borderRadius: 1,
-        overflow: 'hidden',
-        border: '1px solid',
-        borderColor: 'divider',
         flexShrink: 0,
-        bgcolor: 'grey.100'
       }}
     >
       <DecryptedMedia
@@ -760,7 +765,8 @@ const PlansNotes: React.FC<{
         encrypted={media.encrypted}
         mediaEnvelope={media.mediaEnvelope}
         videoPreview
-        imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        imageStyle={planNoteMediaPreviewStyle}
+        videoStyle={planNoteMediaPreviewStyle}
         loadingMinHeight={size}
       />
     </Box>
@@ -778,15 +784,11 @@ const PlansNotes: React.FC<{
             }
           }}
           sx={{
+            ...getEventMediaPreviewSx(theme),
             width: 96,
             height: 96,
-            borderRadius: 1,
-            overflow: 'hidden',
-            border: '1px solid',
-            borderColor: 'divider',
             cursor: onClick ? 'pointer' : 'default',
             position: 'relative',
-            bgcolor: 'grey.100'
           }}
         >
           <DecryptedMedia
@@ -796,7 +798,8 @@ const PlansNotes: React.FC<{
             encrypted={media.encrypted}
             mediaEnvelope={media.mediaEnvelope}
             videoPreview={media.resourceType === 'video'}
-            imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            imageStyle={planNoteMediaPreviewStyle}
+            videoStyle={planNoteMediaPreviewStyle}
             loadingMinHeight={96}
           />
         </Box>
@@ -1028,6 +1031,7 @@ const PlansNotes: React.FC<{
                 label={t('calendar.plans.deadlineAt')}
                 value={deadlineAt}
                 onChange={(value) => setDeadlineAt(value)}
+                format={DATE_TIME_INPUT_FORMAT}
                 minDateTime={new Date()}
                 disabled={isSaving}
                 slotProps={{
@@ -1140,13 +1144,10 @@ const PlansNotes: React.FC<{
                 <Box
                   key={preview}
                   sx={{
+                    ...getEventMediaPreviewSx(theme),
                     position: 'relative',
                     width: 96,
                     height: 96,
-                    borderRadius: 1,
-                    overflow: 'hidden',
-                    border: '1px solid',
-                    borderColor: 'divider'
                   }}
                 >
                   {files[index].type.startsWith('image/') ? (
