@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Typography,
   Box,
   Chip,
   IconButton,
-  AppBar,
-  Toolbar,
+  Modal,
+  Slide,
+  useTheme,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AnnouncementIcon from '@mui/icons-material/Announcement';
@@ -17,6 +18,22 @@ import { formatCalendarDate } from '../../localization/calendarHelpers';
 import { getNewsCategoryLabel } from '../../localization/newsHelpers';
 import { claimNewsReadReward } from '../../services/newsService';
 import { NewsItem } from './NewsCard';
+import {
+  getNewsDetailBodySx,
+  getNewsDetailContentStackSx,
+  getNewsDetailHeaderIconButtonSx,
+  getNewsDetailHeaderSx,
+  getNewsDetailHeaderTitleSx,
+  getNewsDetailHeaderWrapSx,
+  getNewsDetailImageSx,
+  getNewsDetailMediaCaptionSx,
+  getNewsDetailMetaSx,
+  getNewsDetailRootSx,
+  getNewsDetailScrollSx,
+  getNewsDetailTitleSx,
+  getNewsDetailVideoSx,
+  NEWS_DETAIL_TRANSITION_MS,
+} from './newsPageStyles';
 
 interface NewsDetailProps {
   open: boolean;
@@ -26,10 +43,29 @@ interface NewsDetailProps {
 
 const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const { setShowBottomNav } = useNavigation();
+  const [activeNews, setActiveNews] = useState<NewsItem | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    if (open && news) {
+      setActiveNews(news);
+      const frameId = window.requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+      return () => window.cancelAnimationFrame(frameId);
+    }
+
     if (!open) {
+      setIsVisible(false);
+    }
+
+    return undefined;
+  }, [open, news]);
+
+  useEffect(() => {
+    if (!activeNews) {
       return;
     }
 
@@ -37,19 +73,28 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
     return () => {
       setShowBottomNav(true);
     };
-  }, [open, setShowBottomNav]);
+  }, [activeNews, setShowBottomNav]);
 
   useEffect(() => {
-    if (!open || !news?._id) {
+    if (!isVisible || !activeNews?._id) {
       return;
     }
 
-    void claimNewsReadReward(news._id).catch(() => {
+    void claimNewsReadReward(activeNews._id).catch(() => {
       // Reward is best-effort; ignore network errors.
     });
-  }, [open, news?._id]);
+  }, [isVisible, activeNews?._id]);
 
-  if (!open || !news) {
+  const handleRequestClose = () => {
+    setIsVisible(false);
+  };
+
+  const handleExited = () => {
+    setActiveNews(null);
+    onClose();
+  };
+
+  if (!activeNews) {
     return null;
   }
 
@@ -77,102 +122,109 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
     }
   };
 
-  const galleryMedia = news.images?.length
-    ? news.images
-    : news.image
-      ? [{ url: news.image.url, resourceType: 'image' as const }]
+  const galleryMedia = activeNews.images?.length
+    ? activeNews.images
+    : activeNews.image
+      ? [{ url: activeNews.image.url, resourceType: 'image' as const }]
       : [];
 
   return (
-    <Box
+    <Modal
+      open={Boolean(activeNews)}
+      onClose={handleRequestClose}
+      closeAfterTransition
+      hideBackdrop
       sx={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: (theme) => theme.zIndex.modal + 1,
-        bgcolor: 'background.default',
-        display: 'flex',
-        flexDirection: 'column',
+        zIndex: theme.zIndex.modal + 2,
       }}
     >
-      <AppBar position="static" color="default" elevation={1}>
-        <Toolbar sx={{ gap: 1, minHeight: { xs: 56, sm: 64 } }}>
-          <IconButton edge="start" onClick={onClose} aria-label="Назад">
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="subtitle1" noWrap sx={{ flex: 1, fontWeight: 500 }}>
-            {news.title}
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      <Box
-        sx={{
-          flex: 1,
-          overflow: 'auto',
-          px: 2,
-          py: 2,
-          pb: 3,
-        }}
+      <Slide
+        direction="left"
+        in={isVisible}
+        onExited={handleExited}
+        mountOnEnter
+        unmountOnExit
+        timeout={NEWS_DETAIL_TRANSITION_MS}
       >
-        <Typography variant="h5" component="h1" fontWeight={400} sx={{ mb: 1.5 }}>
-          {news.title}
-        </Typography>
+        <Box sx={getNewsDetailRootSx(theme)} tabIndex={-1}>
+          <Box
+            sx={{
+              position: 'relative',
+              zIndex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              minHeight: 0,
+            }}
+          >
+            <Box sx={getNewsDetailHeaderWrapSx()}>
+              <Box sx={getNewsDetailHeaderSx(theme)}>
+                <IconButton
+                  edge="start"
+                  onClick={handleRequestClose}
+                  aria-label={t('common.back', { defaultValue: 'Назад' })}
+                  size="small"
+                  sx={getNewsDetailHeaderIconButtonSx(theme)}
+                >
+                  <ArrowBackIcon fontSize="small" />
+                </IconButton>
+                <Typography component="h1" noWrap sx={getNewsDetailHeaderTitleSx()}>
+                  {activeNews.title}
+                </Typography>
+              </Box>
+            </Box>
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            {formatCalendarDate(new Date(news.publishDate), i18n.language)}
-          </Typography>
-          <Chip
-            icon={getCategoryIcon(news.category)}
-            label={getNewsCategoryLabel(t, news.category)}
-            size="small"
-            color={getCategoryColor(news.category) as 'primary' | 'secondary' | 'success'}
-          />
-        </Box>
+            <Box sx={getNewsDetailScrollSx()}>
+              <Box sx={getNewsDetailContentStackSx()}>
+                <Typography component="h2" sx={getNewsDetailTitleSx()}>
+                  {activeNews.title}
+                </Typography>
 
-        <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
-          {news.content}
-        </Typography>
+                <Box sx={getNewsDetailMetaSx()}>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatCalendarDate(new Date(activeNews.publishDate), i18n.language)}
+                  </Typography>
+                  <Chip
+                    icon={getCategoryIcon(activeNews.category)}
+                    label={getNewsCategoryLabel(t, activeNews.category)}
+                    size="small"
+                    color={getCategoryColor(activeNews.category) as 'primary' | 'secondary' | 'success'}
+                  />
+                </Box>
 
-        {galleryMedia.map((media, mediaIndex) => (
-          <Box key={mediaIndex} sx={{ mb: 2 }}>
-            {media.caption && (
-              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                {media.caption}
-              </Typography>
-            )}
-            {(media.resourceType ?? 'image') === 'video' ? (
-              <Box
-                component="video"
-                src={media.url}
-                controls
-                playsInline
-                sx={{
-                  width: '100%',
-                  maxHeight: 480,
-                  borderRadius: 1,
-                  display: 'block',
-                  bgcolor: 'black',
-                }}
-              />
-            ) : (
-              <Box
-                component="img"
-                src={media.url}
-                alt={media.caption || news.title}
-                sx={{
-                  width: '100%',
-                  maxHeight: 480,
-                  objectFit: 'contain',
-                  borderRadius: 1,
-                  display: 'block',
-                }}
-              />
-            )}
+                <Typography component="div" sx={getNewsDetailBodySx()}>
+                  {activeNews.content}
+                </Typography>
+
+                {galleryMedia.map((media, mediaIndex) => (
+                  <Box key={mediaIndex}>
+                    {media.caption && (
+                      <Typography sx={getNewsDetailMediaCaptionSx()}>{media.caption}</Typography>
+                    )}
+                    {(media.resourceType ?? 'image') === 'video' ? (
+                      <Box
+                        component="video"
+                        src={media.url}
+                        controls
+                        playsInline
+                        sx={getNewsDetailVideoSx(theme)}
+                      />
+                    ) : (
+                      <Box
+                        component="img"
+                        src={media.url}
+                        alt={media.caption || activeNews.title}
+                        sx={getNewsDetailImageSx(theme)}
+                      />
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
           </Box>
-        ))}
-      </Box>
-    </Box>
+        </Box>
+      </Slide>
+    </Modal>
   );
 };
 

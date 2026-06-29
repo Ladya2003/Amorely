@@ -3,21 +3,23 @@ import { useTranslation } from 'react-i18next';
 import ClearIcon from '@mui/icons-material/Clear';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import {
   AlertColor,
   Alert,
   Box,
   Button,
+  Container,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
   InputAdornment,
-  Paper,
-  Tab,
-  Tabs,
   TextField,
-  Typography
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+  useTheme,
 } from '@mui/material';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
@@ -25,6 +27,21 @@ import LanguageSelector from '../components/UI/LanguageSelector';
 import ResponsiveDialog from '../components/UI/ResponsiveDialog';
 import { useAuth } from '../contexts/AuthContext';
 import { useCrypto } from '../contexts/CryptoContext';
+import {
+  getAuthAlertSx,
+  getAuthBackButtonSx,
+  getAuthCryptoActionRowSx,
+  getAuthCryptoDescriptionSx,
+  getAuthCryptoPanelEnterSx,
+  getAuthCryptoTitleSx,
+  getAuthOutlinedButtonSx,
+  getAuthPageCardSx,
+  getAuthPageContainerSx,
+  getAuthPageRootSx,
+  getAuthPageTopBarSx,
+  getAuthPrimaryButtonSx,
+  getAuthToggleGroupSx,
+} from '../components/Auth/authPageStyles';
 
 const MIN_PASSPHRASE_WORDS = 12;
 
@@ -33,6 +50,7 @@ const countPassphraseWords = (value: string): number =>
 
 const CryptoUnlockPage: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -40,7 +58,7 @@ const CryptoUnlockPage: React.FC = () => {
     isCryptoReady,
     createAndBackupKeys,
     restoreKeysFromPassphrase,
-    generateSuggestedPassphrase
+    generateSuggestedPassphrase,
   } = useCrypto();
   const [tab, setTab] = useState(() => (user?.hasCryptoBackup ? 1 : 0));
   const [passphrase, setPassphrase] = useState('');
@@ -147,139 +165,145 @@ const CryptoUnlockPage: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        bgcolor: 'background.default'
-      }}
-    >
-      <Paper
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          p: 3,
-          borderRadius: 0,
-          boxShadow: 'none'
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, mb: 1 }}>
+    <Box sx={getAuthPageRootSx(theme)}>
+      <Container maxWidth="sm" sx={getAuthPageContainerSx()}>
+        <Box
+          sx={{
+            ...getAuthPageTopBarSx(),
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <Button
             onClick={handleBack}
             startIcon={<ArrowBackIcon />}
-            color="inherit"
-            sx={{
-              alignSelf: 'flex-start',
-              ml: -1,
-              textTransform: 'uppercase',
-              lineHeight: 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              '& .MuiButton-startIcon': {
-                margin: 0,
-                marginRight: 1,
-                display: 'inline-flex',
-                alignItems: 'center'
-              }
-            }}
+            sx={getAuthBackButtonSx(theme)}
           >
             {t('crypto.unlock.back')}
           </Button>
           <LanguageSelector />
         </Box>
-        <Typography variant="h5" fontWeight={500} sx={{ mb: 2 }}>
-          {t('crypto.unlock.title')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
-          {t('crypto.unlock.description')}
-        </Typography>
 
-        <Tabs value={tab} onChange={(_, value) => setTab(value)} variant="scrollable" sx={{ mb: 2 }}>
-          <Tab label={t('crypto.unlock.tabCreate')} />
-          <Tab label={t('crypto.unlock.tabRestore')} />
-        </Tabs>
+        <Box sx={getAuthPageCardSx(theme)}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25 }}>
+            <LockOutlinedIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+            <Typography component="h1" sx={getAuthCryptoTitleSx()}>
+              {t('crypto.unlock.title')}
+            </Typography>
+          </Box>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {status && <Alert severity="success" sx={{ mb: 2 }}>{status}</Alert>}
+          <Typography sx={getAuthCryptoDescriptionSx()}>
+            {t('crypto.unlock.description')}
+          </Typography>
 
-        {tab === 0 && (
-          <Box>
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              placeholder={t('crypto.unlock.passphrasePlaceholder')}
-              value={passphrase}
-              onChange={(event) => setPassphrase(event.target.value)}
-              sx={{ mb: 2 }}
-              InputProps={{
-                endAdornment: passphrase ? (
-                  <InputAdornment position="end" sx={{ alignSelf: 'flex-start', mt: 1 }}>
-                    <IconButton
-                      size="small"
-                      aria-label={t('crypto.unlock.clearPassphrase')}
-                      onClick={() => setPassphrase('')}
-                      edge="end"
-                    >
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  </InputAdornment>
-                ) : undefined
-              }}
-            />
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-              <Button disabled={isLoading} variant="outlined" onClick={handleGeneratePassphrase}>
-                {t('crypto.unlock.generateRandom')}
-              </Button>
+          <ToggleButtonGroup
+            value={tab}
+            exclusive
+            onChange={(_, value) => value !== null && setTab(value)}
+            fullWidth
+            sx={{ ...getAuthToggleGroupSx, mb: 2.5 }}
+          >
+            <ToggleButton value={0}>{t('crypto.unlock.tabCreate')}</ToggleButton>
+            <ToggleButton value={1}>{t('crypto.unlock.tabRestore')}</ToggleButton>
+          </ToggleButtonGroup>
+
+          {error && (
+            <Alert severity="error" sx={getAuthAlertSx(theme)}>
+              {error}
+            </Alert>
+          )}
+          {status && (
+            <Alert severity="success" sx={getAuthAlertSx(theme)}>
+              {status}
+            </Alert>
+          )}
+
+          {tab === 0 && (
+            <Box key="create" sx={getAuthCryptoPanelEnterSx(0)}>
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                placeholder={t('crypto.unlock.passphrasePlaceholder')}
+                value={passphrase}
+                onChange={(event) => setPassphrase(event.target.value)}
+                sx={{ mb: 2 }}
+                InputProps={{
+                  endAdornment: passphrase ? (
+                    <InputAdornment position="end" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                      <IconButton
+                        size="small"
+                        aria-label={t('crypto.unlock.clearPassphrase')}
+                        onClick={() => setPassphrase('')}
+                        edge="end"
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : undefined,
+                }}
+              />
+              <Box sx={getAuthCryptoActionRowSx()}>
+                <Button
+                  disabled={isLoading}
+                  variant="outlined"
+                  onClick={handleGeneratePassphrase}
+                  sx={getAuthOutlinedButtonSx(theme)}
+                >
+                  {t('crypto.unlock.generateRandom')}
+                </Button>
+                <Button
+                  disabled={isLoading || !passphrase.trim()}
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={handleCopyPassphrase}
+                  sx={getAuthOutlinedButtonSx(theme)}
+                >
+                  {t('crypto.unlock.copy')}
+                </Button>
+              </Box>
               <Button
-                disabled={isLoading || !passphrase.trim()}
-                variant="outlined"
-                startIcon={<ContentCopyIcon />}
-                onClick={handleCopyPassphrase}
+                disabled={isLoading}
+                variant="contained"
+                fullWidth
+                onClick={handleSaveClick}
+                sx={getAuthPrimaryButtonSx()}
               >
-                {t('crypto.unlock.copy')}
+                {t('crypto.unlock.saveAndContinue')}
               </Button>
             </Box>
-            <Button disabled={isLoading} variant="contained" onClick={handleSaveClick}>
-              {t('crypto.unlock.saveAndContinue')}
-            </Button>
-          </Box>
-        )}
+          )}
 
-        {tab === 1 && (
-          <Box>
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              placeholder={t('crypto.unlock.passphrasePlaceholder')}
-              value={restorePhrase}
-              onChange={(event) => setRestorePhrase(event.target.value)}
-              sx={{ mb: 2 }}
-            />
-            <Button disabled={isLoading} variant="contained" onClick={handleRestore}>
-              {t('crypto.unlock.connectDevice')}
-            </Button>
-          </Box>
-        )}
-      </Paper>
+          {tab === 1 && (
+            <Box key="restore" sx={getAuthCryptoPanelEnterSx(1)}>
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                placeholder={t('crypto.unlock.passphrasePlaceholder')}
+                value={restorePhrase}
+                onChange={(event) => setRestorePhrase(event.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <Button
+                disabled={isLoading}
+                variant="contained"
+                fullWidth
+                onClick={handleRestore}
+                sx={getAuthPrimaryButtonSx()}
+              >
+                {t('crypto.unlock.connectDevice')}
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Container>
 
       <ResponsiveDialog
         open={confirmDialogOpen}
         onClose={() => setConfirmDialogOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{
-          paper: {
-            sx: (theme) => ({
-              bgcolor: theme.palette.mode === 'dark' ? '#2a2a2a' : theme.palette.grey[100],
-              backgroundImage: 'none'
-            })
-          }
-        }}
       >
         <DialogTitle>{t('crypto.unlock.confirmTitle')}</DialogTitle>
         <DialogContent>
@@ -295,7 +319,7 @@ const CryptoUnlockPage: React.FC = () => {
             variant="outlined"
             startIcon={<ContentCopyIcon />}
             onClick={handleCopyInModal}
-            sx={{ mt: 2 }}
+            sx={{ ...getAuthOutlinedButtonSx(theme), mt: 2 }}
           >
             {t('crypto.unlock.copy')}
           </Button>

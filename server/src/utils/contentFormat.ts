@@ -115,7 +115,12 @@ export const formatCalendarEventMedia = (media: any) => ({
   createdBy: normalizeId(media.createdBy)
 });
 
-export const sortCalendarEventMedia = <T extends { createdAt?: Date | string }>(media: T[]) =>
-  [...media].sort(
-    (a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
-  );
+export const sortCalendarEventMedia = <T extends { sortOrder?: number; createdAt?: Date | string }>(media: T[]) =>
+  [...media].sort((a, b) => {
+    const orderA = a.sortOrder ?? 0;
+    const orderB = b.sortOrder ?? 0;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+  });

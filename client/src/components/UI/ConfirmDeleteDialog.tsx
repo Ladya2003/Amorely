@@ -48,14 +48,8 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)'
-        }
-      }}
     >
-      <DialogTitle sx={{ pb: 1 }}>
+      <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <WarningAmberIcon color="warning" sx={{ fontSize: 28 }} />
@@ -79,7 +73,7 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 1, pb: 3 }}>
+      <DialogContent>
         <Typography variant="body1" color="text.secondary">
           {finalMessage}
         </Typography>
@@ -88,7 +82,7 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
         </Typography>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+      <DialogActions sx={{ gap: 1 }}>
         <Button
           onClick={onClose}
           variant="outlined"

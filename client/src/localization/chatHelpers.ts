@@ -67,6 +67,13 @@ const isYesterday = (date: Date, now: Date) => {
   return isSameDay(date, yesterday);
 };
 
+const capitalizePresenceLabel = (value: string): string => {
+  if (!value) {
+    return value;
+  }
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
 export const formatChatContactPresence = (
   t: TFunction,
   isOnline: boolean | undefined,
@@ -74,16 +81,16 @@ export const formatChatContactPresence = (
   locale?: string | null
 ): string => {
   if (isOnline) {
-    return t('chat.presence.online');
+    return capitalizePresenceLabel(t('chat.presence.online'));
   }
 
   if (!lastSeen) {
-    return t('chat.presence.offline');
+    return capitalizePresenceLabel(t('chat.presence.offline'));
   }
 
   const lastSeenDate = new Date(lastSeen);
   if (Number.isNaN(lastSeenDate.getTime())) {
-    return t('chat.presence.offline');
+    return capitalizePresenceLabel(t('chat.presence.offline'));
   }
 
   const appLocale = resolveAppLocale(locale ?? undefined);
@@ -96,16 +103,16 @@ export const formatChatContactPresence = (
   });
 
   if (isSameDay(lastSeenDate, now)) {
-    return t('chat.presence.lastSeenToday', { time });
+    return capitalizePresenceLabel(t('chat.presence.lastSeenToday', { time }));
   }
 
   if (isYesterday(lastSeenDate, now)) {
-    return t('chat.presence.lastSeenYesterday', { time });
+    return capitalizePresenceLabel(t('chat.presence.lastSeenYesterday', { time }));
   }
 
   const date = formatNumericDate(lastSeenDate, locale);
 
-  return t('chat.presence.lastSeenDate', { date, time });
+  return capitalizePresenceLabel(t('chat.presence.lastSeenDate', { date, time }));
 };
 
 export const formatChatDayBadge = (date: Date, locale?: string | null): string =>

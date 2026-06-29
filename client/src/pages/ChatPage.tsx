@@ -3,15 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Box,
-  Tabs,
-  Tab,
   useMediaQuery,
   useTheme,
   TextField,
   InputAdornment,
   IconButton,
   Typography,
-  List,
   ListItemButton,
   ListItemAvatar,
   ListItemText,
@@ -20,7 +17,9 @@ import {
   Button,
   Link,
   Paper,
-  Stack
+  Stack,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
@@ -37,6 +36,26 @@ import ChatDialog, {
 } from '../components/Chat/ChatDialog';
 import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import Games from '../components/Chat/Games';
+import {
+  getChatListEmptyStateSx,
+  getChatListHeaderGlowWrapSx,
+  getChatListHeaderShellSx,
+  getChatListItemButtonSx,
+  getChatListPageBackdropSx,
+  getChatListPanelSx,
+  getChatListScrollSx,
+  getChatListSearchFieldSx,
+  getChatListSearchWrapSx,
+  getChatListSectionLabelSx,
+  getChatListStackSx,
+  getChatTabToggleGroupSx,
+  getChatRulesConsentPaperSx,
+  getChatTabPanelEnterSx,
+  getChatDialogPanelEnterSx,
+  getChatListPanelEnterSx,
+} from '../components/Chat/chatListStyles';
+import { getChatDialogBackdropSx } from '../components/Feed/feedBannerStyles';
+import { useTabSlideDirection } from '../hooks/useTabSlideDirection';
 import UserProfileChip from '../components/UI/UserProfileChip';
 import axios from 'axios';
 import { API_URL } from '../config';
@@ -2290,6 +2309,7 @@ const ChatPage: React.FC = () => {
   );
 
   const isMobileChatOpen = isMobile && Boolean(selectedContactId);
+  const chatTabSlideDirection = useTabSlideDirection(tabValue);
   const visualViewportLayout = useVisualViewportLayout(isMobileChatOpen);
   useDisableForeignFormFields(isMobileChatOpen && isIOSDevice());
   const pageHeight = isMobile && selectedContactId ? '100dvh' : '100%';
@@ -2297,9 +2317,9 @@ const ChatPage: React.FC = () => {
   const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady && !selectedContactId;
 
   return (
-    <Box sx={{ 
-      ...(!isMobileChatOpen ? { height: pageHeight } : {}),
-      display: 'flex', 
+    <Box sx={(muiTheme) => ({
+      ...(!isMobileChatOpen ? { height: pageHeight, ...getChatListPageBackdropSx(muiTheme) } : {}),
+      display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
       ...(isMobileChatOpen ? {
@@ -2310,102 +2330,93 @@ const ChatPage: React.FC = () => {
         width: '100%',
         height: visualViewportLayout.height,
         maxHeight: visualViewportLayout.height,
-        bgcolor: 'background.default',
-        zIndex: (theme) => theme.zIndex.appBar,
+        ...getChatDialogBackdropSx(muiTheme),
+        zIndex: muiTheme.zIndex.appBar,
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: visualViewportLayout.keyboardOpen
           ? 0
           : 'env(safe-area-inset-bottom, 0px)',
         boxSizing: 'border-box',
         overscrollBehavior: 'none',
-      } : {})
-    }}>
-      {/* Скрываем табы когда открыт чат с контактом на мобильных */}
+      } : {}),
+    })}>
       {(!isMobile || !selectedContactId) && (
-        <Box sx={{ 
-          borderBottom: 0,
-          flexShrink: 0,
-          zIndex: (theme) => theme.zIndex.appBar,
-          bgcolor: 'background.paper',
-          boxShadow: 'none'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', pt: 1 }}>
-            <Box
-              sx={{
-                width: '50%',
-                display: 'flex',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-                minWidth: 0,
-                pl: 2,
-              }}
-            >
-              <UserProfileChip maxNameWidth={80} />
-            </Box>
-            <Tabs 
-              value={tabValue} 
-              onChange={handleTabChange} 
-              aria-label="chat tabs"
-              variant="fullWidth"
-              sx={{
-                width: '50%',
-                '& .MuiTabs-flexContainer': {
-                  width: '100%',
-                },
-                '& .MuiTab-iconWrapper': {
-                  fontSize: '1rem',
-                },
-                '& .MuiTab-root': {
-                  minHeight: 'auto',
-                  padding: 0,
-                  paddingTop: 2,
-                  fontSize: '12px',
-                  flex: '1 1 50%',
-                  maxWidth: '50%',
-                  justifyContent: 'center',
-                },
-              }}
-            >
-              <Tab icon={<ChatIcon fontSize="small" />} iconPosition="start" label={t('chat.tab')} />
-              <Tab icon={<SportsEsportsIcon fontSize="small" />} iconPosition="start" label={t('games.tab')} />
-            </Tabs>
-          </Box>
-          {tabValue === 0 && (!isMobile || !selectedContactId) && (
-            <Box sx={{ px: 2, pb: 1, pt: 1 }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder={t('chat.globalSearch')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+        <Box sx={getChatListHeaderShellSx()}>
+          <Box sx={(muiTheme) => getChatListHeaderGlowWrapSx(muiTheme)}>
+            <Box sx={{ position: 'relative', zIndex: 1 }}>
+              <Box
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
-                  },
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  width: '100%',
+                  pb: 0.5,
+                  px: 2,
                 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      {isSearching ? (
-                        <CircularProgress size={18} />
-                      ) : (
-                        searchQuery && (
-                          <IconButton size="small" onClick={handleClearSearch} aria-label={t('chat.clearSearch')}>
-                            <CloseIcon fontSize="small" />
-                          </IconButton>
-                        )
-                      )}
-                    </InputAdornment>
-                  )
-                }}
-              />
+              >
+                <Box sx={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-start' }}>
+                  <UserProfileChip maxNameWidth={120} />
+                </Box>
+                <ToggleButtonGroup
+                  value={tabValue}
+                  exclusive
+                  onChange={(_event, value: number | null) => {
+                    if (value !== null) {
+                      handleTabChange(_event, value);
+                    }
+                  }}
+                  aria-label="chat tabs"
+                  size="small"
+                  sx={{ ...getChatTabToggleGroupSx, flex: '0 0 auto', minWidth: 168 }}
+                >
+                  <ToggleButton value={0} aria-label={t('chat.tab')}>
+                    <ChatIcon sx={{ fontSize: 18 }} />
+                    {t('chat.tab')}
+                  </ToggleButton>
+                  <ToggleButton value={1} aria-label={t('games.tab')}>
+                    <SportsEsportsIcon sx={{ fontSize: 18 }} />
+                    {t('games.tab')}
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+              {tabValue === 0 && (!isMobile || !selectedContactId) && (
+                <Box sx={getChatListSearchWrapSx()}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder={t('chat.globalSearch')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    sx={(muiTheme) => getChatListSearchFieldSx(muiTheme)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon fontSize="small" color="action" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          {isSearching ? (
+                            <CircularProgress size={18} />
+                          ) : (
+                            searchQuery && (
+                              <IconButton
+                                size="small"
+                                onClick={handleClearSearch}
+                                aria-label={t('chat.clearSearch')}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            )
+                          )}
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Box>
+              )}
             </Box>
-          )}
+          </Box>
         </Box>
       )}
 
@@ -2426,19 +2437,31 @@ const ChatPage: React.FC = () => {
           </Box>
         )}
         {tabValue === 0 && isChatRulesChecked && !chatRulesAccepted && CURRENT_USER_ID && (
-          <Paper
-            elevation={8}
+          <Box
             sx={{
               position: 'absolute',
               inset: 0,
               zIndex: 20,
               display: 'flex',
-              flexDirection: 'column',
+              alignItems: 'center',
               justifyContent: 'center',
-              p: { xs: 2, sm: 3 },
-              borderRadius: 0,
-              bgcolor: 'background.paper'
+              p: 2,
+              bgcolor: (muiTheme) =>
+                muiTheme.palette.mode === 'light'
+                  ? 'rgba(0,0,0,0.28)'
+                  : 'rgba(0,0,0,0.48)',
+              backdropFilter: 'blur(6px)',
             }}
+          >
+          <Paper
+            elevation={0}
+            sx={(muiTheme) => ({
+              ...getChatRulesConsentPaperSx(muiTheme),
+              position: 'relative',
+              inset: 'auto',
+              width: '100%',
+              maxWidth: 480,
+            })}
             role="dialog"
             aria-modal="true"
             aria-labelledby="chat-rules-consent-title"
@@ -2461,25 +2484,37 @@ const ChatPage: React.FC = () => {
               </Button>
             </Stack>
           </Paper>
+          </Box>
         )}
         {tabValue === 0 ? (
-          <Box sx={{ flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
+          <Box
+            key="chat-tab-panel"
+            sx={{
+              ...getChatTabPanelEnterSx(chatTabSlideDirection),
+              flexGrow: 1,
+              display: 'flex',
+              overflow: 'hidden',
+            }}
+          >
             {/* На мобильных устройствах показываем либо список, либо диалог */}
             {(!isMobile || !selectedContactId) && (
-              <Box sx={{ 
-                width: isMobile || selectedContactId ? '100%' : '30%', 
-                borderRight: selectedContactId && !isMobile ? 1 : 0, 
-                borderColor: 'divider',
-                display: isMobile && selectedContactId ? 'none' : 'block',
-                overflow: 'auto'
-              }}
-              onScroll={handleSearchListScroll}
+              <Box
+                key={isMobile ? `chat-list-${selectedContactId ?? 'none'}` : 'chat-list-desktop'}
+                sx={(muiTheme) => ({
+                  ...getChatListPanelSx(muiTheme, {
+                    withSideBorder: Boolean(selectedContactId && !isMobile),
+                  }),
+                  ...(isMobile && !selectedContactId ? getChatListPanelEnterSx() : {}),
+                  width: isMobile || selectedContactId ? '100%' : '30%',
+                  display: isMobile && selectedContactId ? 'none' : 'flex',
+                })}
               >
+                <Box sx={getChatListScrollSx()} onScroll={handleSearchListScroll}>
                 {hasSearch ? (
                   <Box>
                     {filteredExistingContacts.length > 0 && (
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="caption" sx={getChatListSectionLabelSx()}>
                           {t('chat.yourChats')}
                         </Typography>
                         <ChatList
@@ -2491,59 +2526,88 @@ const ChatPage: React.FC = () => {
                       </Box>
                     )}
 
-                    <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 1, display: 'block' }}>
+                    <Typography variant="caption" sx={getChatListSectionLabelSx()}>
                       {t('chat.globalSearch')}
                     </Typography>
-                    <List sx={{ width: '100%', bgcolor: 'background.paper', p: 0 }}>
+                    <Box sx={getChatListStackSx()}>
                       {filteredGlobalResults.map((user) => (
-                        <ListItemButton key={user.id} onClick={() => handleSelectGlobalUser(user)}>
+                        <ListItemButton
+                          key={user.id}
+                          onClick={() => handleSelectGlobalUser(user)}
+                          sx={(muiTheme) => getChatListItemButtonSx(muiTheme)}
+                        >
                           <ListItemAvatar>
-                            <Avatar alt={user.name} src={user.avatar} />
+                            <Avatar alt={user.name} src={user.avatar} sx={{ width: 52, height: 52 }} />
                           </ListItemAvatar>
                           <ListItemText
-                            primary={user.name}
-                            secondary={`${user.username} • ${user.email}`}
+                            primary={
+                              <Typography variant="subtitle1" fontWeight={600} noWrap>
+                                {user.name}
+                              </Typography>
+                            }
+                            secondary={
+                              <Typography variant="body2" color="text.secondary" noWrap>
+                                {`${user.username} • ${user.email}`}
+                              </Typography>
+                            }
                           />
                         </ListItemButton>
                       ))}
-                      {!isSearching && filteredGlobalResults.length === 0 && (
-                        <Box sx={{ px: 2, py: 1.5 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            {t('chat.nothingFound')}
-                          </Typography>
-                        </Box>
-                      )}
-                      {isLoadingMoreGlobalSearch && (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
-                          <CircularProgress size={18} />
-                        </Box>
-                      )}
-                    </List>
+                    </Box>
+                    {!isSearching && filteredGlobalResults.length === 0 && (
+                      <Box sx={(muiTheme) => ({ ...getChatListEmptyStateSx(muiTheme), minHeight: 160, mt: 1.25 })}>
+                        <Typography variant="body2" color="text.secondary">
+                          {t('chat.nothingFound')}
+                        </Typography>
+                      </Box>
+                    )}
+                    {isLoadingMoreGlobalSearch && (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
+                        <CircularProgress size={18} />
+                      </Box>
+                    )}
+                  </Box>
+                ) : contacts.length === 0 && !isLoadingContacts ? (
+                  <Box sx={(muiTheme) => getChatListEmptyStateSx(muiTheme)}>
+                    <ChatIcon sx={{ fontSize: 56, color: 'primary.main', mb: 2, opacity: 0.75 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                      {t('chat.yourChats')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('chat.selectContact')}
+                    </Typography>
                   </Box>
                 ) : (
-                  <ChatList 
-                    contacts={contacts} 
+                  <ChatList
+                    contacts={contacts}
                     onSelectContact={handleSelectContact}
                     selectedContactId={selectedContactId}
                     currentUserId={CURRENT_USER_ID || ''}
                   />
                 )}
+                </Box>
               </Box>
             )}
             
             {/* Диалог с выбранным контактом */}
             {(!isMobile || selectedContactId) && (
-              <Box sx={{ 
-                width: isMobile || !selectedContactId ? '100%' : '70%',
-                display: isMobile && !selectedContactId ? 'none' : 'flex',
-                flexDirection: 'column',
-                flexGrow: 1,
-                overflow: 'hidden',
-                height: '100%'
-              }}>
+              <Box
+                sx={{
+                  width: isMobile || !selectedContactId ? '100%' : '70%',
+                  display: isMobile && !selectedContactId ? 'none' : 'flex',
+                  flexDirection: 'column',
+                  flexGrow: 1,
+                  overflow: 'hidden',
+                  height: '100%',
+                }}
+              >
                 {selectedContactId && CURRENT_USER_ID ? (
                   selectedContact ? (
-                    <ChatDialog
+                    <Box
+                      key={selectedContactId}
+                      sx={getChatDialogPanelEnterSx({ mobile: isMobile })}
+                    >
+                      <ChatDialog
                       contact={selectedContact}
                       contactIsTyping={Boolean(
                         selectedContactId && typingByContactId[selectedContactId]
@@ -2584,6 +2648,7 @@ const ChatPage: React.FC = () => {
                       isLoadingOlder={isLoadingOlderMessages}
                       isLoading={isLoadingMessages}
                     />
+                    </Box>
                   ) : isLoadingContacts ? (
                     <Box
                       sx={{
@@ -2599,19 +2664,19 @@ const ChatPage: React.FC = () => {
                   ) : null
                 ) : (
                   <Box
-                    sx={{
+                    sx={(muiTheme) => ({
                       height: '100%',
                       display: 'flex',
                       justifyContent: 'center',
                       alignItems: 'center',
-                      bgcolor: 'background.default',
-                    }}
+                      p: 3,
+                    })}
                   >
-                    <Box sx={{ textAlign: 'center', p: 3 }}>
-                      <ChatIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                      <Box sx={{ typography: 'h6', color: 'text.secondary' }}>
+                    <Box sx={(muiTheme) => ({ ...getChatListEmptyStateSx(muiTheme), width: '100%', maxWidth: 420 })}>
+                      <ChatIcon sx={{ fontSize: 56, color: 'primary.main', mb: 2, opacity: 0.75 }} />
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.secondary' }}>
                         {t('chat.selectContact')}
-                      </Box>
+                      </Typography>
                     </Box>
                   </Box>
                 )}
@@ -2619,7 +2684,19 @@ const ChatPage: React.FC = () => {
             )}
           </Box>
         ) : (
-          <Games />
+          <Box
+            key="games-tab-panel"
+            sx={{
+              ...getChatTabPanelEnterSx(chatTabSlideDirection),
+              flex: 1,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+            }}
+          >
+            <Games />
+          </Box>
         )}
       </Box>
       {forwardModalOpen && (

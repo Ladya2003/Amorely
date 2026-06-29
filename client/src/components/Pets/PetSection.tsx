@@ -13,6 +13,7 @@ import { alpha } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import CurrencyBadge from './CurrencyBadge';
+import CurrencyCoinIcon from './CurrencyCoinIcon';
 import PetCard from './PetCard';
 import PetCreateDialog from './PetCreateDialog';
 import { fetchMyPets, fetchPartnerPets, fetchUserPets, type Pet } from '../../services/petsService';
@@ -20,6 +21,15 @@ import { PET_PURCHASE_COST } from '../../config/petCatalogShared';
 import { CURRENCY_UPDATED_EVENT } from '../../utils/currencyEvents';
 import { usePartnerId } from '../../hooks/usePartnerId';
 import { PARTNER_CHANGED_EVENT } from '../../hooks/useRelationship';
+import {
+  getPetHintSurfaceSx,
+  getPetSectionPaperSx,
+  petCardEnterAnimation,
+  petHorizontalScrollSx,
+  petScrollItemSx,
+  petViewEnterSx,
+  SURFACE_BORDER_RADIUS,
+} from '../Feed/feedBannerStyles';
 
 interface PetSectionProps {
   onBalanceChange?: (balance: number) => void;
@@ -31,39 +41,21 @@ interface PetSectionProps {
 
 type PetView = 'mine' | 'partner';
 
-const petGridSx = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: 1.5,
-  width: '100%',
-} as const;
-
-const petCardItemSx = {
-  flex: '1 1 140px',
-  minWidth: 140,
-  maxWidth: 'min(calc(50% - 6px), 200px)',
-} as const;
-
-const addPetItemSx = {
-  flex: '1 1 140px',
-  minWidth: 140,
-  minHeight: 180,
-} as const;
-
 const petViewToggleGroupSx = {
   mb: 2,
   p: 0.5,
-  borderRadius: 3,
+  borderRadius: '20px',
   bgcolor: (theme: { palette: { primary: { main: string } } }) =>
     alpha(theme.palette.primary.main, 0.14),
   '& .MuiToggleButton-root': {
     border: 'none',
-    borderRadius: '12px !important',
+    borderRadius: '16px !important',
     flex: 1,
     textTransform: 'none',
     fontWeight: 600,
+    fontSize: '0.9rem',
     color: 'text.primary',
-    transition: 'background-color 0.25s ease, color 0.25s ease',
+    transition: 'background-color 0.25s ease, color 0.25s ease, transform 0.2s ease',
     '&.Mui-selected': {
       bgcolor: 'primary.main',
       color: 'primary.contrastText',
@@ -82,15 +74,137 @@ const petViewToggleGroupSx = {
   },
 } as const;
 
-const PetGrid: React.FC<{ pets: Pet[] }> = ({ pets }) => (
-  <Box sx={petGridSx}>
-    {pets.map((pet) => (
-      <Box key={pet.id} sx={petCardItemSx}>
-        <PetCard pet={pet} />
-      </Box>
-    ))}
-  </Box>
+interface PetScrollRowProps {
+  children: React.ReactNode;
+}
+
+const PetScrollRow: React.FC<PetScrollRowProps> = ({ children }) => (
+  <Box sx={petHorizontalScrollSx}>{children}</Box>
 );
+
+interface PetHintCardProps {
+  children: React.ReactNode;
+  sx?: object;
+}
+
+const PetHintCard: React.FC<PetHintCardProps> = ({ children, sx }) => (
+  <Box sx={(theme) => ({ ...getPetHintSurfaceSx(theme), ...sx })}>{children}</Box>
+);
+
+interface AddPetCardProps {
+  canAfford: boolean;
+  cost: number;
+  onClick: () => void;
+  animationIndex: number;
+}
+
+const AddPetCard: React.FC<AddPetCardProps> = ({ canAfford, cost, onClick, animationIndex }) => {
+  const { t } = useTranslation();
+
+  const handleActivate = () => {
+    if (canAfford) {
+      onClick();
+    }
+  };
+
+  return (
+    <Box sx={{ ...petScrollItemSx, ...petCardEnterAnimation(animationIndex) }}>
+      <Box
+        onClick={handleActivate}
+        role="button"
+        tabIndex={canAfford ? 0 : -1}
+        aria-label={t('pets.addPet')}
+        aria-disabled={!canAfford}
+        onKeyDown={(event) => {
+          if (!canAfford) {
+            return;
+          }
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onClick();
+          }
+        }}
+        sx={(theme) => ({
+          width: '100%',
+          height: '100%',
+          minHeight: 220,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1.25,
+          px: 1.5,
+          borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+          bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.1 : 0.16),
+          cursor: canAfford ? 'pointer' : 'default',
+          opacity: canAfford ? 1 : 0.55,
+          transition: 'transform 0.22s ease, box-shadow 0.22s ease, opacity 0.2s',
+          ...(canAfford && {
+            '&:hover': {
+              transform: 'scale(1.02)',
+              boxShadow: `0 8px 22px ${alpha(theme.palette.primary.main, 0.24)}`,
+            },
+          }),
+        })}
+      >
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            bgcolor: canAfford ? 'primary.main' : 'action.disabledBackground',
+            color: canAfford ? 'primary.contrastText' : 'text.disabled',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <AddIcon />
+        </Box>
+        <Typography
+          variant="body2"
+          fontWeight={600}
+          align="center"
+          color={canAfford ? 'text.primary' : 'text.disabled'}
+        >
+          {t('pets.addPet')}
+        </Typography>
+        <Box
+          sx={(theme) => ({
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.5,
+            px: 1.25,
+            py: 0.4,
+            borderRadius: 999,
+            bgcolor: alpha(
+              theme.palette.primary.main,
+              canAfford
+                ? theme.palette.mode === 'light'
+                  ? 0.14
+                  : 0.22
+                : theme.palette.mode === 'light'
+                  ? 0.08
+                  : 0.12
+            ),
+          })}
+        >
+          <CurrencyCoinIcon size={18} />
+          <Typography
+            variant="body2"
+            fontWeight={700}
+            sx={{
+              fontSize: '0.95rem',
+              color: canAfford ? 'primary.main' : 'text.disabled',
+            }}
+          >
+            {cost}
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
 const PetSection: React.FC<PetSectionProps> = ({
   onBalanceChange,
@@ -106,14 +220,16 @@ const PetSection: React.FC<PetSectionProps> = ({
   const [pets, setPets] = useState<Pet[]>([]);
   const [partnerPets, setPartnerPets] = useState<Pet[]>([]);
   const [balance, setBalance] = useState(0);
-  const [canAffordFirstPet, setCanAffordFirstPet] = useState(false);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
 
-  const loadPets = useCallback(async () => {
+  const loadPets = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       if (isReadonly && userId) {
         const userData = await fetchUserPets(userId);
         setPets(userData.pets);
@@ -130,13 +246,14 @@ const PetSection: React.FC<PetSectionProps> = ({
       setPets(myData.pets);
       setPartnerPets(partnerData.pets);
       setBalance(myData.balance);
-      setCanAffordFirstPet(myData.canAffordFirstPet);
       onBalanceChange?.(myData.balance);
     } catch (error) {
       console.error('Failed to load pets:', error);
       setToast({ message: t('pets.loadFailed'), severity: 'error' });
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [isReadonly, onBalanceChange, partnerId, t, userId]);
 
@@ -158,11 +275,10 @@ const PetSection: React.FC<PetSectionProps> = ({
       const detail = (event as CustomEvent<{ balance?: number; awardedAmount?: number }>).detail;
       if (detail?.balance !== undefined) {
         setBalance(detail.balance);
-        setCanAffordFirstPet(detail.balance >= PET_PURCHASE_COST);
-        void loadPets();
-      } else {
-        void loadPets();
+        onBalanceChange?.(detail.balance);
+        return;
       }
+      void loadPets({ silent: true });
     };
     const handlePartnerChanged = () => {
       void loadPets();
@@ -173,46 +289,45 @@ const PetSection: React.FC<PetSectionProps> = ({
       window.removeEventListener(CURRENCY_UPDATED_EVENT, handler);
       window.removeEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
     };
-  }, [loadPets]);
+  }, [loadPets, isReadonly, onBalanceChange]);
 
   const handleCreated = (newPet: Pet, newBalance: number) => {
     setPets((prev) => [...prev, newPet]);
     setBalance(newBalance);
-    setCanAffordFirstPet(newBalance >= PET_PURCHASE_COST);
     onBalanceChange?.(newBalance);
   };
 
   const handleAddPet = () => {
     if (balance < PET_PURCHASE_COST) {
-      setToast({
-        message: t('pets.insufficientBalance', { cost: PET_PURCHASE_COST }),
-        severity: 'error',
-      });
       return;
     }
     setCreateOpen(true);
   };
 
-  const showOnboarding = !isReadonly && pets.length === 0 && canAffordFirstPet;
+  const canAffordPet = balance >= PET_PURCHASE_COST;
   const showPartnerTab = !isReadonly && Boolean(partnerId);
+
+  const renderPetCards = (items: Pet[], onSelect?: (pet: Pet) => void) => (
+    <PetScrollRow>
+      {items.map((pet, index) => (
+        <Box key={pet.id} sx={{ ...petScrollItemSx, ...petCardEnterAnimation(index) }}>
+          <PetCard pet={pet} onSelect={onSelect} />
+        </Box>
+      ))}
+    </PetScrollRow>
+  );
 
   const renderReadonlyContent = () => {
     if (pets.length > 0) {
-      return (
-        <Box sx={petGridSx}>
-          {pets.map((pet) => (
-            <Box key={pet.id} sx={petCardItemSx}>
-              <PetCard pet={pet} onSelect={onPetSelect} />
-            </Box>
-          ))}
-        </Box>
-      );
+      return renderPetCards(pets, onPetSelect);
     }
 
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-        {t('pets.contactEmpty')}
-      </Typography>
+      <PetHintCard sx={{ py: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          {t('pets.contactEmpty')}
+        </Typography>
+      </PetHintCard>
     );
   };
 
@@ -224,71 +339,19 @@ const PetSection: React.FC<PetSectionProps> = ({
     if (view === 'mine') {
       return (
         <>
-          <Box sx={petGridSx}>
-            {pets.map((pet) => (
-              <Box key={pet.id} sx={petCardItemSx}>
+          <PetScrollRow>
+            {pets.map((pet, index) => (
+              <Box key={pet.id} sx={{ ...petScrollItemSx, ...petCardEnterAnimation(index) }}>
                 <PetCard pet={pet} />
               </Box>
             ))}
-
-            <Box sx={addPetItemSx}>
-              <Box
-                onClick={handleAddPet}
-                role="button"
-                tabIndex={0}
-                aria-label={t('pets.addPet')}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    handleAddPet();
-                  }
-                }}
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  minHeight: 180,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '2px dashed',
-                  borderColor: balance >= PET_PURCHASE_COST ? 'primary.main' : 'divider',
-                  borderRadius: 3,
-                  opacity: balance >= PET_PURCHASE_COST ? 1 : 0.6,
-                  cursor: 'pointer',
-                  bgcolor: 'transparent',
-                  transition: 'border-color 0.2s, opacity 0.2s',
-                  '&:hover': {
-                    opacity: balance >= PET_PURCHASE_COST ? 0.9 : 0.6,
-                  },
-                }}
-              >
-                <AddIcon color={balance >= PET_PURCHASE_COST ? 'primary' : 'disabled'} />
-              </Box>
-            </Box>
-          </Box>
-
-          {showOnboarding && (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                mt: 1,
-                px: 1.5,
-                py: 1,
-                borderRadius: 2,
-                bgcolor: 'rgba(255, 182, 193, 0.15)',
-                textAlign: 'center',
-              }}
-            >
-              {t('pets.onboarding')}
-            </Typography>
-          )}
-
-          {pets.length > 0 && balance < PET_PURCHASE_COST && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              {t('pets.needMore', { cost: PET_PURCHASE_COST, balance })}
-            </Typography>
-          )}
+            <AddPetCard
+              canAfford={canAffordPet}
+              cost={PET_PURCHASE_COST}
+              onClick={handleAddPet}
+              animationIndex={pets.length}
+            />
+          </PetScrollRow>
         </>
       );
     }
@@ -296,18 +359,20 @@ const PetSection: React.FC<PetSectionProps> = ({
     if (partnerPets.length > 0) {
       return (
         <>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, px: 0.5 }}>
             {t('pets.partnerHint')}
           </Typography>
-          <PetGrid pets={partnerPets} />
+          {renderPetCards(partnerPets)}
         </>
       );
     }
 
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-        {t('pets.partnerEmpty')}
-      </Typography>
+      <PetHintCard sx={{ py: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          {t('pets.partnerEmpty')}
+        </Typography>
+      </PetHintCard>
     );
   };
 
@@ -315,29 +380,25 @@ const PetSection: React.FC<PetSectionProps> = ({
     <>
       <Paper
         elevation={0}
-        sx={{
-          p: 2,
+        sx={(theme) => ({
+          ...getPetSectionPaperSx(theme),
           mb: embedded ? 0 : 3,
           mt: embedded ? 2 : 0,
-          borderRadius: 3,
-          bgcolor: 'background.paper',
-          border: '1px solid',
-          borderColor: 'divider',
-          width: '100%',
-        }}
+        })}
       >
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            gap: 1.5,
             mb: showPartnerTab ? 1.5 : isReadonly ? 1.5 : 2,
           }}
         >
-          <Typography variant="h6" fontWeight={600}>
+          <Typography variant="h2" component="h2" sx={{ fontSize: '1.35rem' }}>
             {t('pets.sectionTitle')}
           </Typography>
-          {!isReadonly && <CurrencyBadge balance={balance} />}
+          {!isReadonly && <CurrencyBadge balance={balance} variant="tinted" size="small" />}
         </Box>
 
         {showPartnerTab && (
@@ -358,22 +419,12 @@ const PetSection: React.FC<PetSectionProps> = ({
         )}
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 220, py: 3 }}>
             <CircularProgress size={32} />
           </Box>
         ) : (
-          <Fade in key={view} timeout={280} appear>
-            <Box
-              sx={{
-                '@keyframes petViewEnter': {
-                  from: { transform: 'translateY(8px)' },
-                  to: { transform: 'translateY(0)' },
-                },
-                animation: 'petViewEnter 0.28s ease-out',
-              }}
-            >
-              {renderViewContent()}
-            </Box>
+          <Fade in key={view} timeout={320} appear>
+            <Box sx={{ ...petViewEnterSx, minHeight: 220 }}>{renderViewContent()}</Box>
           </Fade>
         )}
       </Paper>

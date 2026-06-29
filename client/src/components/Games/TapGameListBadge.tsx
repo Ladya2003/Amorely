@@ -1,28 +1,17 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import type { TapGameState } from '../../services/gamesService';
+import { getTapGameListBadgeSx } from './gamePlayPageStyles';
 
 interface TapGameListBadgeProps {
   state: TapGameState;
 }
 
 const TapGameListBadge: React.FC<TapGameListBadgeProps> = ({ state }) => {
+  const theme = useTheme();
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: 0.25,
-        px: 1,
-        py: 0.5,
-        borderRadius: 1,
-        bgcolor: 'background.paper',
-        border: '1px solid',
-        borderColor: 'divider',
-        pointerEvents: 'none',
-      }}
-    >
+    <Box sx={getTapGameListBadgeSx(theme)}>
       <Typography
         variant="caption"
         sx={{
@@ -30,6 +19,7 @@ const TapGameListBadge: React.FC<TapGameListBadgeProps> = ({ state }) => {
           color: 'primary.main',
           fontVariantNumeric: 'tabular-nums',
           lineHeight: 1.2,
+          textTransform: 'none',
         }}
       >
         {state.myTapsThisRound}/{state.targetTaps}
@@ -41,6 +31,7 @@ const TapGameListBadge: React.FC<TapGameListBadgeProps> = ({ state }) => {
           color: 'secondary.main',
           fontVariantNumeric: 'tabular-nums',
           lineHeight: 1.2,
+          textTransform: 'none',
         }}
       >
         {state.partnerProgressThisRound}/{state.targetTaps}

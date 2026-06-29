@@ -130,19 +130,12 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
         onClose={handleClose}
         fullWidth
         maxWidth="xs"
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            mx: 2
-          }
-        }}
       >
         <DialogTitle
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            pb: 1
           }}
         >
           {showingPet ? t('pets.sectionTitle') : t('chat.profile.title')}

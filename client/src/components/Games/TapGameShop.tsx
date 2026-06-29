@@ -8,10 +8,12 @@ import {
   DialogTitle,
   Grid,
   Typography,
+  useTheme,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import type { TapGameState, TapShopItem } from '../../services/gamesService';
 import { buyTapShopItem } from '../../services/gamesService';
+import { getTapShopItemImageSx, getTapShopItemSx } from './gamePlayPageStyles';
 
 interface TapGameShopProps {
   open: boolean;
@@ -31,6 +33,7 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
   onError,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [buyingId, setBuyingId] = useState<string | null>(null);
 
   const handleBuy = async (itemId: string) => {
@@ -75,21 +78,12 @@ const TapGameShop: React.FC<TapGameShopProps> = ({
 
             return (
               <Grid key={item.id} size={{ xs: 12 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 1.5,
-                    p: 1.5,
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                  }}
-                >
+                <Box sx={getTapShopItemSx(theme)}>
                   <Box
                     component="img"
                     src={item.imageUrl}
                     alt={itemName}
-                    sx={{ width: 72, height: 72, borderRadius: 1.5, objectFit: 'cover', flexShrink: 0 }}
+                    sx={getTapShopItemImageSx(theme)}
                   />
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>

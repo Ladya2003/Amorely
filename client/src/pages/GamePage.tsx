@@ -8,18 +8,48 @@ import {
   IconButton,
   Link,
   Stack,
-  Tab,
-  Tabs,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
+  useTheme,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LockIcon from '@mui/icons-material/Lock';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { getGameById } from '../components/Chat/gamesData';
 import { getGameRules, getGeoAttributionRules } from '../localization/gameHelpers';
 import GameLeaderboard from '../components/Games/GameLeaderboard';
 import GeoDailyLimitDialog from '../components/Games/GeoDailyLimitDialog';
 import DailyResetBadge from '../components/Games/DailyResetBadge';
 import DailyResetInfoDialog from '../components/Games/DailyResetInfoDialog';
+import { getChatTabToggleGroupSx } from '../components/Chat/chatListStyles';
+import {
+  gamePageEnterSx,
+  gamePageSectionEnterSx,
+  gamePageTabContentEnterSx,
+  getGamePageBlockedBannerSx,
+  getGamePageContentStackSx,
+  getGamePageDescriptionSx,
+  getGamePageFooterSx,
+  getGamePageHeaderGlowWrapSx,
+  getGamePageHeaderIconButtonSx,
+  getGamePageHeaderSx,
+  getGamePageHeaderTitleSx,
+  getGamePageHeroImageSx,
+  getGamePageLoadingSx,
+  getGamePageRootSx,
+  getGamePageRulesCardSx,
+  getGamePageRulesTitleSx,
+  getGamePageScrollSx,
+  getGamePageTabsWrapSx,
+  getGameLeaderboardSubtitleSx,
+} from '../components/Games/gamePageStyles';
+import {
+  getGamePlayBlockedCardSx,
+  getGamePlayBlockedPanelSx,
+  getGamePlayPrimaryButtonSx,
+} from '../components/Games/gamePlayPageStyles';
 import {
   fetchGameDetails,
   fetchGameLeaderboard,
@@ -28,6 +58,7 @@ import {
   type GeoGameState,
   type LeaderboardEntry,
 } from '../services/gamesService';
+import { playGamePlayButtonSound, unlockGameAudio } from '../utils/gameSounds';
 
 const getGamePageTabIndex = (tab: string | null | undefined, gameAvailable: boolean) =>
   tab === 'leaderboard' && gameAvailable ? 1 : 0;
@@ -38,6 +69,7 @@ type GeoGameInfoLocationState = {
 
 const GamePage: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { gameId = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,6 +110,7 @@ const GamePage: React.FC = () => {
       }
     };
 
+    setLoading(true);
     load();
   }, [gameId, staticGame]);
 
@@ -145,9 +178,17 @@ const GamePage: React.FC = () => {
 
   if (!staticGame) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography sx={{ mb: 2 }}>{t('games.page.notFound')}</Typography>
-        <Button onClick={() => navigate('/chat?tab=games')}>{t('games.page.backToList')}</Button>
+      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+        <Box sx={getGamePlayBlockedCardSx(theme)}>
+          <Typography sx={{ mb: 2, fontWeight: 700 }}>{t('games.page.notFound')}</Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/chat?tab=games')}
+            sx={getGamePlayPrimaryButtonSx()}
+          >
+            {t('games.page.backToList')}
+          </Button>
+        </Box>
       </Box>
     );
   }
@@ -183,10 +224,16 @@ const GamePage: React.FC = () => {
       return;
     }
 
+    unlockGameAudio();
+    void playGamePlayButtonSound();
     navigate(`/chat/games/${gameId}/play`);
   };
 
-  const handleTabChange = (_event: React.SyntheticEvent, value: number) => {
+  const handleTabChange = (_event: React.MouseEvent<HTMLElement>, value: number | null) => {
+    if (value === null) {
+      return;
+    }
+
     setTab(value);
 
     const nextParams = new URLSearchParams(searchParams);
@@ -199,117 +246,121 @@ const GamePage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <Box
-        sx={{
-          px: 1,
-          py: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
-        <IconButton onClick={() => navigate('/chat?tab=games')} aria-label={t('games.common.back')}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, flex: 1, color: 'text.primary' }} noWrap>
-          {gameName}
-        </Typography>
-        {showDailyReset && (
-          <DailyResetBadge onClick={() => setDailyResetInfoOpen(true)} />
-        )}
+    <Box key={gameId} sx={getGamePageRootSx(theme)}>
+      <Box sx={(muiTheme) => getGamePageHeaderGlowWrapSx(muiTheme)}>
+        <Box sx={{ position: 'relative', zIndex: 1, ...gamePageEnterSx }}>
+          <Box sx={getGamePageHeaderSx(theme)}>
+            <IconButton
+              onClick={() => navigate('/chat?tab=games')}
+              aria-label={t('games.common.back')}
+              size="small"
+              sx={getGamePageHeaderIconButtonSx(theme)}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
+            <Typography component="h1" sx={getGamePageHeaderTitleSx()} noWrap>
+              {gameName}
+            </Typography>
+            {showDailyReset && (
+              <DailyResetBadge onClick={() => setDailyResetInfoOpen(true)} />
+            )}
+          </Box>
+        </Box>
       </Box>
 
-      <Tabs
-        value={tab}
-        onChange={handleTabChange}
-        variant="fullWidth"
-        sx={{ flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
-      >
-        <Tab label={t('games.page.tabGame')} />
-        <Tab label={t('games.page.tabLeaderboard')} disabled={!game.available} />
-      </Tabs>
+      <Box sx={getGamePageTabsWrapSx()}>
+        <ToggleButtonGroup
+          value={tab}
+          exclusive
+          fullWidth
+          onChange={handleTabChange}
+          aria-label={t('games.page.tabGame')}
+          size="small"
+          sx={getChatTabToggleGroupSx}
+        >
+          <ToggleButton value={0}>
+            <SportsEsportsIcon sx={{ fontSize: 18 }} />
+            {t('games.page.tabGame')}
+          </ToggleButton>
+          <ToggleButton value={1} disabled={!game.available}>
+            <EmojiEventsIcon sx={{ fontSize: 18 }} />
+            {t('games.page.tabLeaderboard')}
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+      <Box sx={getGamePageScrollSx()}>
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-            <CircularProgress />
-          </Box>
-        ) : tab === 0 ? (
-          <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto' }}>
-            <Box
-              component="img"
-              src={game.imageUrl}
-              alt={gameName}
-              sx={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 2 }}
-            />
-
-            <Typography variant="body1" color="text.secondary">
-              {gameDescription}
-            </Typography>
-
-            {game.rulesImages.length > 0 && (
-              <Stack spacing={1.5}>
-                {game.rulesImages.map((imageUrl) => (
-                  <Box
-                    key={imageUrl}
-                    component="img"
-                    src={imageUrl}
-                    alt=""
-                    sx={{ width: '100%', borderRadius: 2, objectFit: 'cover' }}
-                  />
-                ))}
-              </Stack>
-            )}
-
-            <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
-              {displayRules.map((rule) => (
-                <Typography key={rule} component="li" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  {rule}
-                </Typography>
-              ))}
-            </Box>
-          </Stack>
-        ) : leaderboardLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-            <CircularProgress />
+          <Box sx={getGamePageLoadingSx(theme)}>
+            <CircularProgress size={32} />
           </Box>
         ) : (
-          <Box sx={{ maxWidth: 640, mx: 'auto' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t('games.page.leaderboardSubtitle')}
-            </Typography>
-            <GameLeaderboard entries={leaderboard} emptyMessage={t('games.leaderboard.empty')} />
+          <Box key={tab} sx={{ ...gamePageTabContentEnterSx, ...getGamePageContentStackSx() }}>
+            {tab === 0 ? (
+              <>
+                <Box
+                  component="img"
+                  src={game.imageUrl}
+                  alt={gameName}
+                  sx={{
+                    ...getGamePageHeroImageSx(theme),
+                    ...gamePageSectionEnterSx(40),
+                  }}
+                />
+
+                <Typography sx={{ ...getGamePageDescriptionSx(), ...gamePageSectionEnterSx(90) }}>
+                  {gameDescription}
+                </Typography>
+
+                {game.rulesImages.length > 0 && (
+                  <Stack spacing={1.5} sx={gamePageSectionEnterSx(130)}>
+                    {game.rulesImages.map((imageUrl) => (
+                      <Box
+                        key={imageUrl}
+                        component="img"
+                        src={imageUrl}
+                        alt=""
+                        sx={getGamePageHeroImageSx(theme)}
+                      />
+                    ))}
+                  </Stack>
+                )}
+
+                <Box sx={{ ...getGamePageRulesCardSx(theme), ...gamePageSectionEnterSx(170) }}>
+                  <Typography sx={getGamePageRulesTitleSx()}>
+                    {t('games.page.rulesTitle', { defaultValue: 'Правила' })}
+                  </Typography>
+                  <Box component="ul">
+                    {displayRules.map((rule) => (
+                      <Typography key={rule} component="li" variant="body2" color="text.secondary">
+                        {rule}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
+              </>
+            ) : leaderboardLoading ? (
+              <Box sx={getGamePageLoadingSx(theme)}>
+                <CircularProgress size={32} />
+              </Box>
+            ) : (
+              <>
+                <Typography color="text.secondary" sx={getGameLeaderboardSubtitleSx()}>
+                  {t('games.page.leaderboardSubtitle')}
+                </Typography>
+                <GameLeaderboard entries={leaderboard} emptyMessage={t('games.leaderboard.empty')} />
+              </>
+            )}
           </Box>
         )}
       </Box>
 
       {!loading && tab === 0 && (
-        <Box
-          sx={{
-            flexShrink: 0,
-            px: 2,
-            pt: 1.5,
-            pb: 'max(16px, env(safe-area-inset-bottom, 0px))',
-          }}
-        >
+        <Box sx={getGamePageFooterSx(theme)}>
           <Stack spacing={1.5} sx={{ maxWidth: 640, mx: 'auto' }}>
             {playBlockedReason && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  p: 1.5,
-                  borderRadius: 2,
-                  bgcolor: 'rgba(255, 75, 141, 0.08)',
-                }}
-              >
-                <LockIcon color="primary" fontSize="small" />
+              <Box sx={getGamePageBlockedBannerSx(theme)}>
+                <LockIcon color="primary" fontSize="small" sx={{ mt: 0.15 }} />
                 <Typography variant="body2">
                   {playBlockedReason}
                   {game.requiresPartner && !hasPartner && (
@@ -330,7 +381,7 @@ const GamePage: React.FC = () => {
               </Typography>
             )}
 
-            <Button variant="contained" size="large" fullWidth disabled={!canPlay} onClick={handlePlay}>
+            <Button variant="contained" size="large" fullWidth disabled={!canPlay} onClick={handlePlay} sx={getGamePlayPrimaryButtonSx()}>
               {t('games.page.play')}
             </Button>
           </Stack>

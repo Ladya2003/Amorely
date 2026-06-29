@@ -2,9 +2,11 @@
 
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { alpha } from '@mui/material/styles';
 import {
   IconButton,
   Box,
+  useTheme,
 } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,6 +14,7 @@ import ImageCropDialog from '../../../UI/ImageCropDialog';
 import CustomSnackbar from '../../../UI/CustomSnackbar';
 import { validateFileSize, validateFileType } from '../utils/helpers';
 import { ColorTheme } from './ColorPicker';
+import { getDaysTogetherActionButtonSx } from '../daysTogetherStyles';
 
 interface PhotoUploaderProps {
   onPhotoUpload: (file: File) => void;
@@ -27,6 +30,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   colorTheme 
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -89,15 +93,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         <label htmlFor="upload-photo">
           <IconButton
             component="span"
-            color="primary"
-            sx={{
-              bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.1')}`,
-              color: colorTheme.preview,
-              '&:hover': { 
-                bgcolor: `${colorTheme.colors[0].replace(/0\.\d+/, '0.2')}`,
-                color: colorTheme.preview
-              }
-            }}
+            sx={getDaysTogetherActionButtonSx(theme, colorTheme)}
           >
             <AddPhotoAlternateIcon />
           </IconButton>
@@ -105,11 +101,14 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         
         {photo && onRemovePhoto && (
           <IconButton
-            color="error"
             onClick={handleRemovePhoto}
             sx={{
-              bgcolor: 'rgba(244, 67, 54, 0.1)',
-              '&:hover': { bgcolor: 'rgba(244, 67, 54, 0.2)' }
+              ...getDaysTogetherActionButtonSx(theme, colorTheme),
+              color: 'error.main',
+              bgcolor: (muiTheme) => alpha(muiTheme.palette.error.main, muiTheme.palette.mode === 'light' ? 0.1 : 0.18),
+              '&:hover': {
+                bgcolor: (muiTheme) => alpha(muiTheme.palette.error.main, muiTheme.palette.mode === 'light' ? 0.18 : 0.28),
+              },
             }}
           >
             <DeleteIcon />

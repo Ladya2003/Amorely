@@ -10,6 +10,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
+import { alpha, type Theme } from '@mui/material/styles';
 import BrushIcon from '@mui/icons-material/Brush';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
@@ -54,6 +55,65 @@ export interface DrawingToolsToolbarProps {
   /** Заливка замкнутых областей (только для игры «Отгадай рисунок») */
   showFillTool?: boolean;
 }
+
+const TOOLBAR_PILL_RADIUS = 999;
+const TOOLBAR_GROUP_OUTER_RADIUS = 20;
+const TOOLBAR_GROUP_INNER_RADIUS = 16;
+
+const drawingToolsToggleGroupSx = {
+  p: 0.5,
+  borderRadius: `${TOOLBAR_GROUP_OUTER_RADIUS}px`,
+  bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.14),
+  '& .MuiToggleButton-root': {
+    border: 'none',
+    borderRadius: `${TOOLBAR_GROUP_INNER_RADIUS}px !important`,
+    textTransform: 'none',
+    fontWeight: 600,
+    gap: 0.5,
+    color: 'text.primary',
+    transition: 'background-color 0.25s ease, color 0.25s ease',
+    '&.Mui-selected': {
+      bgcolor: 'primary.main',
+      color: 'primary.contrastText',
+      '&:hover': {
+        bgcolor: 'primary.dark',
+      },
+    },
+    '&:hover': {
+      bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.24),
+    },
+  },
+  '& .MuiToggleButtonGroup-grouped:not(:first-of-type)': {
+    borderLeft: 'none',
+    marginLeft: 0,
+  },
+} as const;
+
+const drawingToolsActionButtonSx = {
+  borderRadius: `${TOOLBAR_PILL_RADIUS}px`,
+  textTransform: 'none',
+  fontWeight: 600,
+} as const;
+
+const drawingToolsIconButtonSx = {
+  borderRadius: `${TOOLBAR_PILL_RADIUS}px`,
+} as const;
+
+const drawingToolsSliderSx = (accentColor: string) => ({
+  color: accentColor,
+  height: 8,
+  '& .MuiSlider-rail': {
+    borderRadius: TOOLBAR_PILL_RADIUS,
+    opacity: 0.28,
+  },
+  '& .MuiSlider-track': {
+    borderRadius: TOOLBAR_PILL_RADIUS,
+  },
+  '& .MuiSlider-thumb': {
+    width: 18,
+    height: 18,
+  },
+});
 
 const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
   tool,
@@ -117,6 +177,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
           sx={{
             border: '1px solid',
             borderColor: 'divider',
+            ...drawingToolsIconButtonSx,
           }}
         >
           <PaletteIcon fontSize="small" />
@@ -128,7 +189,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
         onClose={() => setColorAnchor(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       >
-        <Box sx={{ p: 1.5 }}>
+        <Box sx={{ p: 1.5, borderRadius: `${TOOLBAR_GROUP_OUTER_RADIUS}px`, overflow: 'hidden' }}>
           <HexColorPicker
             color={penColor}
             onChange={handleColorPick}
@@ -148,6 +209,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
         exclusive
         onChange={(_, value) => value && onToolChange(value)}
         size="small"
+        sx={drawingToolsToggleGroupSx}
       >
         <ToggleButton value="pen">
           <BrushIcon sx={{ mr: 0.5, fontSize: 18 }} />
@@ -173,7 +235,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
               onClick={onUndo}
               disabled={undoDisabled}
               aria-label={t('drawingTools.undo')}
-              sx={{ minWidth: 0, py: 0.875, px: 1.25 }}
+              sx={{ minWidth: 0, py: 0.875, px: 1.25, ...drawingToolsActionButtonSx }}
             >
               <UndoIcon sx={{ fontSize: 18 }} />
             </Button>
@@ -185,7 +247,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
               onClick={onRedo}
               disabled={redoDisabled}
               aria-label={t('drawingTools.redo')}
-              sx={{ minWidth: 0, py: 0.875, px: 1.25 }}
+              sx={{ minWidth: 0, py: 0.875, px: 1.25, ...drawingToolsActionButtonSx }}
             >
               <RedoIcon sx={{ fontSize: 18 }} />
             </Button>
@@ -196,7 +258,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
               size="small"
               onClick={onClearAll}
               disabled={clearAllDisabled}
-              sx={{ py: 0.875, px: 1.5 }}
+              sx={{ py: 0.875, px: 1.5, ...drawingToolsActionButtonSx }}
             >
               <DeleteSweepIcon sx={{ mr: 0.5, fontSize: 18 }} />
               {t('drawingTools.clearAll')}
@@ -220,7 +282,7 @@ const DrawingToolsToolbar: React.FC<DrawingToolsToolbarProps> = ({
         step={0.5}
         valueLabelDisplay="auto"
         disabled={tool === 'fill'}
-        sx={{ color: accentColor }}
+        sx={drawingToolsSliderSx(accentColor)}
       />
     </Box>
   );

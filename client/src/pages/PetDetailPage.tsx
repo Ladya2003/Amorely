@@ -1,8 +1,8 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Box, Container } from '@mui/material';
 import PetDetailView from '../components/Pets/PetDetailView';
+import { getPetPageBackdropSx } from '../components/Feed/feedBannerStyles';
 
 const PetDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,13 +13,15 @@ const PetDetailPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="sm">
-      <PetDetailView
-        petId={petId}
-        onBack={() => navigate('/')}
-        onGifted={() => navigate('/')}
-      />
-    </Container>
+    <Box sx={(theme) => getPetPageBackdropSx(theme)}>
+      <Container maxWidth="sm" sx={{ py: 2, px: { xs: 2, sm: 3 } }}>
+        <PetDetailView
+          petId={petId}
+          onBack={() => navigate('/')}
+          onGifted={() => navigate('/')}
+        />
+      </Container>
+    </Box>
   );
 };
 

@@ -1,21 +1,26 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Card, 
-  CardContent, 
-  CardMedia, 
-  Typography, 
-  Box, 
-  Chip, 
-  CardActionArea 
+import {
+  Typography,
+  Box,
+  Chip,
+  useTheme,
 } from '@mui/material';
 import AnnouncementIcon from '@mui/icons-material/Announcement';
 import { formatCalendarDate } from '../../localization/calendarHelpers';
 import { getNewsCategoryLabel } from '../../localization/newsHelpers';
 import EventIcon from '@mui/icons-material/Event';
 import UpdateIcon from '@mui/icons-material/Update';
-
 import type { NewsTranslations } from '../../localization/newsContent';
+import {
+  getNewsCardContentSx,
+  getNewsCardDateSx,
+  getNewsCardMetaSx,
+  getNewsCardSx,
+  getNewsCardTitleSx,
+  getNewsDetailMediaSx,
+  NEWS_MEDIA_RADIUS,
+} from './newsPageStyles';
 
 export interface NewsItem {
   _id: string;
@@ -42,6 +47,7 @@ interface NewsCardProps {
 
 const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -58,12 +64,12 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'update':
-        return 'info';
+        return 'primary';
       case 'event':
-        return 'success';
+        return 'secondary';
       case 'announcement':
       default:
-        return 'warning';
+        return 'success';
     }
   };
 
@@ -71,65 +77,56 @@ const NewsCard: React.FC<NewsCardProps> = ({ news, onClick }) => {
     news.images?.[0] ??
     (news.image ? { url: news.image.url, resourceType: 'image' as const } : null);
 
+  const coverMediaSx = {
+    ...getNewsDetailMediaSx(theme),
+    height: 140,
+    maxHeight: 140,
+    objectFit: 'cover' as const,
+    borderRadius: `${NEWS_MEDIA_RADIUS}px ${NEWS_MEDIA_RADIUS}px 0 0`,
+    borderBottom: 'none',
+  };
+
   return (
-    <Card 
-      elevation={2} 
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
+    <Box
+      component="button"
+      type="button"
+      onClick={() => onClick(news)}
+      sx={{
+        ...getNewsCardSx(theme),
+        height: '100%',
+        display: 'flex',
         flexDirection: 'column',
-        transition: 'transform 0.2s',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 4
-        }
+        p: 0,
       }}
     >
-      <CardActionArea onClick={() => onClick(news)}>
-        {coverMedia && (
-          (coverMedia.resourceType ?? 'image') === 'video' ? (
-            <CardMedia
-              component="video"
-              height="140"
-              src={coverMedia.url}
-              muted
-              playsInline
-              sx={{ objectFit: 'cover' }}
-            />
-          ) : (
-            <CardMedia
-              component="img"
-              height="140"
-              image={coverMedia.url}
-              alt={news.title}
-            />
-          )
-        )}
-        <CardContent sx={{ flexGrow: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Chip 
-              icon={getCategoryIcon(news.category)} 
-              label={getNewsCategoryLabel(t, news.category)} 
-              size="small" 
-              color={getCategoryColor(news.category) as any}
-              sx={{ height: 24 }}
-            />
-            <Typography variant="caption" color="text.secondary">
-              {formatCalendarDate(new Date(news.publishDate), i18n.language)}
-            </Typography>
-          </Box>
-          <Typography variant="h6" component="h2" fontWeight={400} gutterBottom>
-            {news.title}
+      {coverMedia && (
+        (coverMedia.resourceType ?? 'image') === 'video' ? (
+          <Box component="video" src={coverMedia.url} muted playsInline sx={coverMediaSx} />
+        ) : (
+          <Box component="img" src={coverMedia.url} alt={news.title} sx={coverMediaSx} />
+        )
+      )}
+      <Box sx={{ ...getNewsCardContentSx(), flexGrow: 1, width: '100%' }}>
+        <Box sx={{ ...getNewsCardMetaSx(), justifyContent: 'space-between' }}>
+          <Chip
+            icon={getCategoryIcon(news.category)}
+            label={getNewsCategoryLabel(t, news.category)}
+            size="small"
+            color={getCategoryColor(news.category) as 'primary' | 'secondary' | 'success'}
+          />
+          <Typography sx={getNewsCardDateSx()}>
+            {formatCalendarDate(new Date(news.publishDate), i18n.language)}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {news.content.length > 120 
-              ? `${news.content.substring(0, 120)}...` 
-              : news.content}
-          </Typography>
-        </CardContent>
-      </CardActionArea>
-    </Card>
+        </Box>
+        <Typography component="h2" sx={{ ...getNewsCardTitleSx(), mt: 1 }}>
+          {news.title}
+        </Typography>
+        <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary', mt: 0.75, textAlign: 'left' }}>
+          {news.content.length > 120 ? `${news.content.substring(0, 120)}...` : news.content}
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 
-export default NewsCard; 
+export default NewsCard;

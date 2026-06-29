@@ -8,11 +8,17 @@ import {
   Button,
   Box,
   Typography,
-  IconButton
+  IconButton,
+  useTheme,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { formatCalendarDate } from '../../localization/calendarHelpers';
+import {
+  getEventEditorUploadCardSx,
+  getEventMediaDeleteButtonSx,
+  getEventMediaPreviewSx,
+} from '../Calendar/calendarDrawerStyles';
 
 interface AddContentDialogProps {
   open: boolean;
@@ -23,6 +29,7 @@ interface AddContentDialogProps {
 
 const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date, onSave }) => {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
 
@@ -70,7 +77,7 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
         {t('calendar.addContent.title', { date: formattedDate })}
       </DialogTitle>
       <DialogContent>
-        <Box sx={{ mb: 2 }}>
+        <Box sx={getEventEditorUploadCardSx(theme)}>
           <input
             accept="image/*,video/*"
             style={{ display: 'none' }}
@@ -84,7 +91,8 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
               variant="outlined"
               component="span"
               startIcon={<CloudUploadIcon />}
-              sx={{ mb: 2 }}
+              fullWidth
+              sx={{ mb: 1.5 }}
             >
               {t('calendar.addContent.selectMedia')}
             </Button>
@@ -95,16 +103,9 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
         </Box>
 
         {previews.length > 0 && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
             {previews.map((preview, index) => (
-              <Box
-                key={index}
-                sx={{
-                  position: 'relative',
-                  width: 100,
-                  height: 100
-                }}
-              >
+              <Box key={index} sx={getEventMediaPreviewSx(theme)}>
                 {files[index].type.startsWith('image/') ? (
                   <img
                     src={preview}
@@ -113,7 +114,7 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      borderRadius: '4px'
+                      display: 'block',
                     }}
                   />
                 ) : (
@@ -123,22 +124,13 @@ const AddContentDialog: React.FC<AddContentDialogProps> = ({ open, onClose, date
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      borderRadius: '4px'
+                      display: 'block',
                     }}
                   />
                 )}
                 <IconButton
                   size="small"
-                  sx={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    bgcolor: 'background.paper',
-                    '&:hover': {
-                      bgcolor: 'error.light',
-                      color: 'white'
-                    }
-                  }}
+                  sx={getEventMediaDeleteButtonSx(theme)}
                   onClick={() => handleRemoveFile(index)}
                 >
                   <DeleteIcon fontSize="small" />

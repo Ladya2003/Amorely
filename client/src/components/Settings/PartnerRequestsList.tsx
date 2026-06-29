@@ -10,15 +10,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Paper,
   ToggleButton,
   ToggleButtonGroup,
-  Typography
+  Typography,
+  useTheme,
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -44,6 +43,13 @@ import {
 import type { BreakupContentOptions, Partner } from './PartnerForm';
 import { DATE_INPUT_FORMAT, getDateFnsLocale } from '../../localization/calendarHelpers';
 import { format } from 'date-fns';
+import {
+  getSettingsEmptyStateSx,
+  getSettingsListItemSx,
+  getSettingsSectionDividerSx,
+  getSettingsSectionTitleSx,
+  getSettingsToggleGroupSx,
+} from './settingsPageStyles';
 
 interface PartnerRequestsListProps {
   incomingRequests: IncomingPartnerRequestItem[];
@@ -92,6 +98,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
   onAccepted
 }) => {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const { token, user, updateUser } = useAuth();
   const dateFnsLocale = getDateFnsLocale(i18n.language);
 
@@ -318,8 +325,8 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
   );
 
   return (
-    <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent', mt: 2 }}>
-      <Typography variant="h6" sx={{ fontWeight: 400, mb: 2 }}>
+    <Box sx={{ mt: 2.5 }}>
+      <Typography component="h2" sx={getSettingsSectionTitleSx()}>
         {t('settings.partner.requests.title')}
       </Typography>
 
@@ -328,8 +335,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
         exclusive
         onChange={handleFilterChange}
         aria-label={t('settings.partner.requests.filterAria')}
-        size="small"
-        sx={{ mb: 2, flexWrap: 'wrap' }}
+        sx={{ ...getSettingsToggleGroupSx, my: 1.5 }}
       >
         <ToggleButton value="incoming" aria-label={t('settings.partner.requests.incoming')}>
           {t('settings.partner.requests.incoming')}
@@ -341,7 +347,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
         </ToggleButton>
       </ToggleButtonGroup>
 
-      <Divider sx={{ mb: 3 }} />
+      <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
 
       {actionError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setActionError(null)}>
@@ -357,7 +363,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
         <Alert severity="error">{t('settings.partner.requests.errors.loadFailed')}</Alert>
       ) : filter === 'incoming' ? (
         incomingRequests.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 3 }}>
+          <Box sx={getSettingsEmptyStateSx(theme)}>
             <Typography variant="body2" color="text.secondary">
               {t('settings.partner.requests.emptyIncoming')}
             </Typography>
@@ -368,14 +374,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
               <ListItem
                 key={request._id}
                 disableGutters
-                sx={{
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  alignItems: { xs: 'stretch', sm: 'center' },
-                  gap: 2,
-                  py: 2,
-                  borderBottom: 1,
-                  borderColor: 'divider'
-                }}
+                sx={getSettingsListItemSx(theme)}
               >
                 {renderUserInfo(request.fromUser, request.relationshipStartDate)}
                 <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, alignItems: 'center' }}>
@@ -410,7 +409,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
           </List>
         )
       ) : outgoingRequests.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 3 }}>
+        <Box sx={getSettingsEmptyStateSx(theme)}>
           <Typography variant="body2" color="text.secondary">
             {t('settings.partner.requests.emptyOutgoing')}
           </Typography>
@@ -421,14 +420,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
             <ListItem
               key={request._id}
               disableGutters
-              sx={{
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: { xs: 'stretch', sm: 'center' },
-                gap: 2,
-                py: 2,
-                borderBottom: 1,
-                borderColor: 'divider'
-              }}
+              sx={getSettingsListItemSx(theme)}
             >
               {renderUserInfo(request.toUser, request.relationshipStartDate)}
               <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, alignItems: 'center' }}>
@@ -494,7 +486,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
         severity="success"
         onClose={() => setSuccessToastOpen(false)}
       />
-    </Paper>
+    </Box>
   );
 };
 

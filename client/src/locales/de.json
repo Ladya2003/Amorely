@@ -538,6 +538,14 @@
     "news": "Neuigkeiten"
   },
   "feed": {
+    "greeting": "Hallo, {{name}}!",
+    "notificationsAriaLabel": "Benachrichtigungen",
+    "notificationsDialog": {
+      "title": "Benachrichtigungen",
+      "empty": "Noch keine neuen Benachrichtigungen",
+      "close": "OK"
+    },
+    "openEventAriaLabel": "Ereignis öffnen",
     "title": "Feed",
     "contentOfDay": "Inhalt des Tages",
     "contentUpdateTooltip": "Die Auswahl wird um 02:00 und 17:00 Uhr aktualisiert (Europe/Minsk)",
@@ -552,7 +560,11 @@
       "learnMore": "Tippe, um mehr zu erfahren",
       "closeAriaLabel": "Banner schließen"
     },
-    "emptyPlaceholder": "Noch kein Inhalt verfügbar\n\n📅 Füge deine Ereignisse im\nKalender mit Fotos und Videos hinzu",
+    "emptyState": {
+      "title": "Noch keine neuen Ereignisse",
+      "description": "Hier erscheinen Fotos und Videos aus eurem Kalender",
+      "cta": "Ereignis im Kalender hinzufügen"
+    },
     "noContent": "Kein Inhalt verfügbar",
     "birthday": "Geburtstag",
     "anniversary": "Jubiläum",
@@ -910,6 +922,10 @@
       "messageActions": "Nachrichtenaktionen",
       "optionsAria": "Chat-Optionen",
       "optionsTitle": "Optionen",
+      "messageFontSize": "Nachrichtentextgröße",
+      "messageFontSizeValue": "{{size}} px",
+      "decreaseMessageFontSize": "Nachrichtentext verkleinern",
+      "increaseMessageFontSize": "Nachrichtentext vergrößern",
       "clearChat": "Chat leeren",
       "clearChatTitle": "Chat leeren?",
       "clearChatConfirm": "Möchten Sie den Chat wirklich für Sie und Ihren Gesprächspartner leeren?",
@@ -1025,6 +1041,8 @@
       "birthday": "Geburtstag",
       "anniversary": "Jahrestag",
       "title": "Titel",
+      "expandTitleAria": "Vollständigen Titel anzeigen",
+      "fullTitleClose": "OK",
       "description": "Beschreibung",
       "created": "Erstellt",
       "author": "Autor: {{name}}",
@@ -1089,6 +1107,8 @@
       "photosAndVideosEncrypted": "Fotos und Videos (verschlüsselt)",
       "addPhotosOrVideos": "Fotos oder Videos hinzufügen",
       "supported": "Unterstützt: Bilder (JPG, PNG, GIF) und Videos (MP4, MOV)",
+      "moveEarlier": "Weiter nach vorne",
+      "moveLater": "Weiter nach hinten",
       "supportedWithHint": "Unterstützt: Bilder (JPG, PNG, GIF) und Videos (MP4, MOV). {{hint}}",
       "videoHint": "Video: bis {{sourceMb}} MB und {{durationSec}} Sek. Wird vor dem Upload automatisch auf {{uploadMb}} MB komprimiert.",
       "videoMaxSize": "Maximale Videogröße: {{max}} MB"

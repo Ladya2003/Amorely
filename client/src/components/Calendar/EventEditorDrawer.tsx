@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Drawer,
-  AppBar,
-  Toolbar,
   IconButton,
   Typography,
   Box,
@@ -21,6 +19,21 @@ import {
   DialogActions
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
+import { getModalFooterActionsSx } from '../../theme/appTheme';
+import {
+  getCalendarDrawerContentSx,
+  getCalendarDrawerFooterSx,
+  getCalendarDrawerHeaderIconButtonSx,
+  getCalendarDrawerHeaderSx,
+  getCalendarDrawerHeaderTitleSx,
+  getCalendarDrawerHeaderWrapSx,
+  getCalendarDrawerPaperSx,
+  getEventEditorFlagBoxSx,
+  getEventEditorUploadCardSx,
+  getEventMediaDeleteButtonSx,
+  getEventMediaNavButtonSx,
+  getEventMediaPreviewSx,
+} from './calendarDrawerStyles';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -33,31 +46,32 @@ import { isSaveAborted } from '../../utils/saveAbort';
 import { formatErrorForUser } from '../../utils/videoCompressionDebug';
 import type { PrepareMediaProgress } from '../../utils/parallelMediaPrepare';
 import { assertFilesReadable } from '../../utils/validateReadableFiles';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import AppDatePicker from '../UI/AppDatePicker';
 import { useEventDraft } from './hooks/useEventDraft';
 import { useAuth } from '../../contexts/AuthContext';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import {
   DATE_INPUT_FORMAT,
   formatCalendarDate,
-  getDateFnsLocale,
   getVideoLimitsHint
 } from '../../localization/calendarHelpers';
 import { isVideoFile } from '../../utils/videoMetadata';
 import ContentViewer from './ContentViewer';
 import DecryptedMedia from '../common/DecryptedMedia';
 import EncryptedIndicator from '../common/EncryptedIndicator';
-import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
-
-interface EventMediaItem {
-  _id: string;
-  url: string;
-  resourceType: 'image' | 'video';
-  encrypted?: boolean;
-  mediaEnvelope?: ContentMediaEnvelope;
-}
+import { playChatSendSound, unlockChatAudio } from '../../utils/chatSounds';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import {
+  buildMediaSequence,
+  createNewMediaItem,
+  EventEditorMediaItem,
+  EventMediaItem,
+  getNewFilesFromMediaItems,
+  moveMediaItem,
+  revokeNewMediaPreviews,
+  type EventMediaSequenceSlot,
+} from './eventEditorMedia';
 
 interface EventEditorDrawerProps {
   open: boolean;
@@ -95,6 +109,7 @@ interface EventEditorDrawerProps {
       description: string;
       files: File[];
       removeMediaIds: string[];
+      mediaSequence?: EventMediaSequenceSlot[];
       isBirthdayEvent?: boolean;
       isAnniversaryEvent?: boolean;
     },
@@ -110,16 +125,23 @@ type SaveSnapshot = {
   selectedDate: Date | null;
   title: string;
   description: string;
-  files: File[];
-  previews: string[];
+  mediaItems: EventEditorMediaItem[];
   isBirthdayEvent: boolean;
   isAnniversaryEvent: boolean;
-  existingMedia: EventMediaItem[];
   removedMediaIds: string[];
 };
 
 const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
 const TITLE_MAX_LENGTH = 100;
+
+const EVENT_MEDIA_PREVIEW_SIZE = 120;
+
+const eventMediaPreviewMediaStyle: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  display: 'block',
+};
 
 const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   open,
@@ -134,37 +156,18 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user } = useAuth();
-
-  const eventFlagBoxSx = (filledBackground = false) => ({
-    mb: 3,
-    p: 2,
-    borderRadius: 1,
-    border: '1px solid',
-    ...(theme.palette.mode === 'dark'
-      ? {
-          borderColor: 'rgba(144, 202, 249, 0.25)',
-          bgcolor: 'rgba(144, 202, 249, 0.08)',
-        }
-      : {
-          borderColor: theme.palette.info.main,
-          bgcolor: filledBackground ? theme.palette.info.light : 'transparent',
-        }),
-  });
-  
   const { draft, updateDraft, flushDraft, clearDraft, hasDraft, isDraftLoaded } = useEventDraft();
   
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [mediaItems, setMediaItems] = useState<EventEditorMediaItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [compressProgress, setCompressProgress] = useState<PrepareMediaProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isBirthdayEvent, setIsBirthdayEvent] = useState(false);
   const [isAnniversaryEvent, setIsAnniversaryEvent] = useState(false);
-  const [existingMedia, setExistingMedia] = useState<EventMediaItem[]>([]);
   const [removedMediaIds, setRemovedMediaIds] = useState<string[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerContent, setViewerContent] = useState<{
@@ -254,10 +257,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setSelectedDate(new Date(editEvent.eventDate));
       setTitle(editEvent.title);
       setDescription(editEvent.description || '');
-      setFiles([]);
-      setPreviews([]);
-      setExistingMedia(
-        (editEvent.media || []).filter((item) => item.url && item.url.trim().length > 0)
+      setMediaItems(
+        (editEvent.media || [])
+          .filter((item) => item.url && item.url.trim().length > 0)
+          .map((item) => ({ key: item._id, kind: 'existing' as const, media: item }))
       );
       setRemovedMediaIds([]);
       setIsBirthdayEvent(editEvent.isBirthdayEvent || false);
@@ -268,12 +271,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setTitle(hasDraft ? draft.title || '' : '');
       setDescription(hasDraft ? draft.description || '' : '');
       const draftFiles = hasDraft ? draft.files : [];
-      setFiles(draftFiles);
-      setPreviews((prev) => {
-        prev.forEach((url) => URL.revokeObjectURL(url));
-        return draftFiles.map((file) => URL.createObjectURL(file));
+      setMediaItems((prev) => {
+        revokeNewMediaPreviews(prev);
+        return draftFiles.map((file) => createNewMediaItem(file));
       });
-      setExistingMedia([]);
       setRemovedMediaIds([]);
     }
 
@@ -300,13 +301,13 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         date: selectedDate,
         title,
         description,
-        files,
-        previews
+        files: getNewFilesFromMediaItems(mediaItems),
+        previews: []
       });
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [selectedDate?.getTime(), title, description, files.length, previews.length, open, isInitialized, isEditMode, isSaving, updateDraft]);
+  }, [selectedDate?.getTime(), title, description, mediaItems, open, isInitialized, isEditMode, isSaving, updateDraft]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (isSaving) {
@@ -325,7 +326,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     if (accepted.length === 0) return;
 
     const acceptedVideos = accepted.filter(isVideoFile);
-    const existingNewVideos = files.filter(isVideoFile).length;
+    const existingNewVideos = getNewFilesFromMediaItems(mediaItems).filter(isVideoFile).length;
     let toAdd = accepted;
     let showMultiVideoWarning = false;
 
@@ -344,40 +345,54 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
     if (toAdd.length === 0) return;
 
-    setFiles((prev) => [...prev, ...toAdd]);
-    setPreviews((prev) => [...prev, ...toAdd.map((file) => URL.createObjectURL(file))]);
+    setMediaItems((prev) => [...prev, ...toAdd.map((file) => createNewMediaItem(file))]);
   };
 
-  const handlePreviewClick = (index: number) => {
+  const handlePreviewClick = (item: Extract<EventEditorMediaItem, { kind: 'new' }>) => {
     setViewerContent({
-      mediaUrl: previews[index],
-      resourceType: files[index].type.startsWith('image/') ? 'image' : 'video'
+      mediaUrl: item.preview,
+      resourceType: item.file.type.startsWith('image/') ? 'image' : 'video'
     });
     setViewerOpen(true);
   };
 
-  const handleRemoveFile = (index: number) => {
-    if (isSaving) {
-      showLockedToast();
-      return;
-    }
-    const newFiles = [...files];
-    newFiles.splice(index, 1);
-    setFiles(newFiles);
-
-    const newPreviews = [...previews];
-    URL.revokeObjectURL(newPreviews[index]); // Освобождаем URL
-    newPreviews.splice(index, 1);
-    setPreviews(newPreviews);
+  const handlePreviewExistingClick = (media: EventMediaItem) => {
+    setViewerContent({
+      mediaUrl: media.url,
+      resourceType: media.resourceType
+    });
+    setViewerOpen(true);
   };
 
-  const handleRemoveExistingMedia = (mediaId: string) => {
+  const handleRemoveMediaItem = (index: number) => {
     if (isSaving) {
       showLockedToast();
       return;
     }
-    setExistingMedia((prev) => prev.filter((item) => item._id !== mediaId));
-    setRemovedMediaIds((prev) => [...prev, mediaId]);
+
+    setMediaItems((prev) => {
+      const item = prev[index];
+      if (!item) {
+        return prev;
+      }
+
+      if (item.kind === 'existing') {
+        setRemovedMediaIds((removed) => [...removed, item.media._id]);
+      } else {
+        URL.revokeObjectURL(item.preview);
+      }
+
+      return prev.filter((_, itemIndex) => itemIndex !== index);
+    });
+  };
+
+  const handleMoveMediaItem = (index: number, direction: -1 | 1) => {
+    if (isSaving) {
+      showLockedToast();
+      return;
+    }
+
+    setMediaItems((prev) => moveMediaItem(prev, index, direction));
   };
 
   const handleSave = async () => {
@@ -393,8 +408,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       return;
     }
 
+    const newFiles = getNewFilesFromMediaItems(mediaItems);
+
     try {
-      await assertFilesReadable(files);
+      await assertFilesReadable(newFiles);
     } catch {
       setError(t('calendar.errors.unreadableMedia'));
       return;
@@ -404,11 +421,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       selectedDate,
       title,
       description,
-      files: [...files],
-      previews: [...previews],
+      mediaItems: [...mediaItems],
       isBirthdayEvent,
       isAnniversaryEvent,
-      existingMedia: [...existingMedia],
       removedMediaIds: [...removedMediaIds]
     };
     uploadedPublicIdsRef.current = [];
@@ -440,8 +455,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             date: selectedDate,
             title: title.trim(),
             description: description.trim(),
-            files,
+            files: newFiles,
             removeMediaIds: removedMediaIds,
+            mediaSequence: buildMediaSequence(mediaItems),
             isBirthdayEvent,
             isAnniversaryEvent
           },
@@ -453,7 +469,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             date: selectedDate,
             title: title.trim(),
             description: description.trim(),
-            files,
+            files: newFiles,
             isBirthdayEvent,
             isAnniversaryEvent
           },
@@ -462,13 +478,14 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         
         clearDraft();
       }
+
+      unlockChatAudio();
+      void playChatSendSound();
       
-      previews.forEach(url => URL.revokeObjectURL(url));
+      revokeNewMediaPreviews(mediaItems);
       setTitle('');
       setDescription('');
-      setFiles([]);
-      setPreviews([]);
-      setExistingMedia([]);
+      setMediaItems([]);
       setRemovedMediaIds([]);
       setSelectedDate(new Date());
       
@@ -507,11 +524,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setSelectedDate(snapshot.selectedDate);
       setTitle(snapshot.title);
       setDescription(snapshot.description);
-      setFiles(snapshot.files);
-      setPreviews(snapshot.previews);
+      setMediaItems(snapshot.mediaItems);
       setIsBirthdayEvent(snapshot.isBirthdayEvent);
       setIsAnniversaryEvent(snapshot.isAnniversaryEvent);
-      setExistingMedia(snapshot.existingMedia);
       setRemovedMediaIds(snapshot.removedMediaIds);
     }
 
@@ -530,7 +545,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         date: selectedDate,
         title,
         description,
-        files,
+        files: getNewFilesFromMediaItems(mediaItems),
         previews: []
       });
     }
@@ -546,17 +561,20 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleConfirmClearForm = () => {
-    previews.forEach((url) => URL.revokeObjectURL(url));
+    revokeNewMediaPreviews(mediaItems);
     setTitle('');
     setDescription('');
-    setFiles([]);
-    setPreviews([]);
+    setMediaItems([]);
     setSelectedDate(initialDate || new Date());
     if (isEditMode) {
       setRemovedMediaIds((prev) =>
-        Array.from(new Set([...prev, ...existingMedia.map((item) => item._id)]))
+        Array.from(new Set([
+          ...prev,
+          ...mediaItems
+            .filter((item): item is Extract<EventEditorMediaItem, { kind: 'existing' }> => item.kind === 'existing')
+            .map((item) => item.media._id),
+        ]))
       );
-      setExistingMedia([]);
       setIsBirthdayEvent(false);
       setIsAnniversaryEvent(false);
     } else {
@@ -567,8 +585,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
   const canSave = selectedDate && title.trim().length > 0;
   const hasFormContent = isEditMode
-    ? !!(title || description || files.length > 0 || existingMedia.length > 0)
-    : !!(title || description || files.length > 0);
+    ? !!(title || description || mediaItems.length > 0)
+    : !!(title || description || mediaItems.length > 0);
 
   return (
     <>
@@ -585,19 +603,14 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
         handleClose();
       }}
       PaperProps={{
-        sx: {
-          width: isMobile ? '100%' : '500px',
-          maxWidth: '100vw'
-        }
+        sx: getCalendarDrawerPaperSx(theme, isMobile),
       }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        {/* Верхняя панель */}
-        <AppBar position="static" color="default" elevation={1}>
-          <Toolbar>
+        <Box sx={getCalendarDrawerHeaderWrapSx()}>
+          <Box sx={getCalendarDrawerHeaderSx(theme)}>
             <IconButton
               edge="start"
-              color="inherit"
               onClick={() => {
                 if (isSaving) {
                   showLockedToast();
@@ -606,19 +619,20 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                 handleClose();
               }}
               aria-label="close"
+              size="small"
+              sx={getCalendarDrawerHeaderIconButtonSx(theme)}
             >
-              <CloseIcon />
+              <CloseIcon fontSize="small" />
             </IconButton>
-            <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
+            <Typography component="h2" sx={getCalendarDrawerHeaderTitleSx()}>
               {isEditMode ? t('calendar.event.edit') : t('calendar.event.new')}
             </Typography>
             <EncryptedIndicator />
-          </Toolbar>
-        </AppBar>
+          </Box>
+        </Box>
 
-        {/* Основной контент */}
         <Box
-          sx={{ flexGrow: 1, overflow: 'auto', p: 3 }}
+          sx={getCalendarDrawerContentSx()}
           onClickCapture={(event) => {
             if (!isSaving) return;
             const target = event.target as HTMLElement;
@@ -633,24 +647,22 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           )}
 
           {/* Выбор даты */}
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={getDateFnsLocale(i18n.language)}>
-            <DatePicker
-              label={t('calendar.event.date')}
-              value={selectedDate}
-              onChange={(newDate) => setSelectedDate(newDate)}
-              format={DATE_INPUT_FORMAT}
-              disabled={isSaving}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  sx: { mb: 3 },
-                  InputProps: {
-                    startAdornment: <CalendarTodayIcon sx={{ mr: 1, color: 'action.active' }} />
-                  }
+          <AppDatePicker
+            label={t('calendar.event.date')}
+            value={selectedDate}
+            onChange={(newDate) => setSelectedDate(newDate)}
+            format={DATE_INPUT_FORMAT}
+            disabled={isSaving}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                sx: { mb: 3 },
+                InputProps: {
+                  startAdornment: <CalendarTodayIcon sx={{ mr: 1, color: 'action.active' }} />
                 }
-              }}
-            />
-          </LocalizationProvider>
+              }
+            }}
+          />
 
           {/* Заголовок */}
           <TextField
@@ -684,7 +696,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
           {/* Чекбокс дня рождения */}
           {isDateNearBirthday(selectedDate) && (
-            <Box sx={eventFlagBoxSx()}>
+            <Box sx={getEventEditorFlagBoxSx(theme)}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -710,7 +722,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
           {/* Чекбокс годовщины */}
           {isDateNearAnniversary(selectedDate) && (
-            <Box sx={eventFlagBoxSx(true)}>
+            <Box sx={getEventEditorFlagBoxSx(theme)}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -735,8 +747,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           )}
 
           {/* Загрузка медиа */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+          <Box sx={getEventEditorUploadCardSx(theme)}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.25, fontWeight: 600 }}>
               {t('calendar.media.photosAndVideosEncrypted')}
             </Typography>
             <input
@@ -758,157 +770,128 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                 {t('calendar.media.addPhotosOrVideos')}
               </Button>
             </label>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1.25, display: 'block' }}>
               {t('calendar.media.supported')} {getVideoLimitsHint(t)}
             </Typography>
           </Box>
 
-          {isEditMode && existingMedia.length > 0 && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              {existingMedia.map((media) => (
-                <Box
-                  key={media._id}
-                  sx={{
-                    position: 'relative',
-                    width: 120,
-                    height: 120,
-                    borderRadius: 1,
-                    overflow: 'hidden',
-                    border: '2px solid',
-                    borderColor: 'divider'
-                  }}
-                >
-                  <DecryptedMedia
-                    cacheKey={`event-edit-${editEvent?.eventId}-${media._id}`}
-                    url={media.url}
-                    resourceType={media.resourceType}
-                    encrypted={media.encrypted}
-                    mediaEnvelope={media.mediaEnvelope}
-                    videoPreview={media.resourceType === 'video'}
-                    onImageClick={(blobUrl) => {
-                      setViewerContent({
-                        mediaUrl: blobUrl,
-                        resourceType: media.resourceType
-                      });
-                      setViewerOpen(true);
-                    }}
-                    imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    loadingMinHeight={120}
-                  />
-                  {!isSaving && (
-                    <IconButton
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: 4,
-                        right: 4,
-                        bgcolor: 'background.paper',
-                        '&:hover': {
-                          bgcolor: 'error.light',
-                          color: 'white'
-                        }
-                      }}
-                      onClick={() => handleRemoveExistingMedia(media._id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                </Box>
-              ))}
-            </Box>
-          )}
-
-          {/* Превью новых файлов */}
-          {previews.length > 0 && (
+          {mediaItems.length > 0 && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-              {previews.map((preview, index) => (
+              {mediaItems.map((item, index) => (
                 <Box
-                  key={index}
-                  onClick={() => handlePreviewClick(index)}
+                  key={item.key}
+                  onClick={() => {
+                    if (item.kind === 'new') {
+                      handlePreviewClick(item);
+                    }
+                  }}
                   sx={{
-                    position: 'relative',
-                    width: 120,
-                    height: 120,
-                    borderRadius: 1,
-                    overflow: 'hidden',
-                    border: '2px solid',
-                    borderColor: 'divider',
-                    cursor: 'pointer'
+                    ...getEventMediaPreviewSx(theme),
+                    cursor: item.kind === 'new' ? 'pointer' : 'default',
                   }}
                 >
-                  {files[index].type.startsWith('image/') ? (
-                    <img
-                      src={preview}
-                      alt={`Preview ${index}`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
+                  {item.kind === 'existing' ? (
+                    <DecryptedMedia
+                      cacheKey={`event-edit-${editEvent?.eventId}-${item.media._id}`}
+                      url={item.media.url}
+                      resourceType={item.media.resourceType}
+                      encrypted={item.media.encrypted}
+                      mediaEnvelope={item.media.mediaEnvelope}
+                      videoPreview={item.media.resourceType === 'video'}
+                      onImageClick={(blobUrl) => {
+                        handlePreviewExistingClick({
+                          ...item.media,
+                          url: blobUrl,
+                        });
                       }}
+                      imageStyle={eventMediaPreviewMediaStyle}
+                      videoStyle={eventMediaPreviewMediaStyle}
+                      loadingMinHeight={EVENT_MEDIA_PREVIEW_SIZE}
+                    />
+                  ) : item.file.type.startsWith('image/') ? (
+                    <img
+                      src={item.preview}
+                      alt={`Preview ${index + 1}`}
+                      style={eventMediaPreviewMediaStyle}
                     />
                   ) : (
                     <video
-                      src={preview}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                      }}
+                      src={item.preview}
+                      style={eventMediaPreviewMediaStyle}
                     />
                   )}
+
+                  {!isSaving && index > 0 && (
+                    <IconButton
+                      size="small"
+                      aria-label={t('calendar.media.moveEarlier')}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleMoveMediaItem(index, -1);
+                      }}
+                      sx={{
+                        ...getEventMediaNavButtonSx(theme),
+                        left: 4,
+                      }}
+                    >
+                      <ChevronLeftIcon />
+                    </IconButton>
+                  )}
+
+                  {!isSaving && index < mediaItems.length - 1 && (
+                    <IconButton
+                      size="small"
+                      aria-label={t('calendar.media.moveLater')}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleMoveMediaItem(index, 1);
+                      }}
+                      sx={{
+                        ...getEventMediaNavButtonSx(theme),
+                        right: 4,
+                      }}
+                    >
+                      <ChevronRightIcon />
+                    </IconButton>
+                  )}
+
                   {!isSaving && (
                     <IconButton
                       size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: 4,
-                        right: 4,
-                        bgcolor: 'background.paper',
-                        '&:hover': {
-                          bgcolor: 'error.light',
-                          color: 'white'
-                        }
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveFile(index);
+                      sx={getEventMediaDeleteButtonSx(theme)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleRemoveMediaItem(index);
                       }}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   )}
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      bgcolor: 'rgba(0,0,0,0.6)',
-                      color: 'white',
-                      p: 0.5,
-                      textAlign: 'center'
-                    }}
-                  >
-                    {formatCalendarDate(new Date(files[index].lastModified), i18n.language)}
-                  </Typography>
+
+                  {item.kind === 'new' && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        bgcolor: 'rgba(0,0,0,0.6)',
+                        color: 'white',
+                        p: 0.5,
+                        textAlign: 'center'
+                      }}
+                    >
+                      {formatCalendarDate(new Date(item.file.lastModified), i18n.language)}
+                    </Typography>
+                  )}
                 </Box>
               ))}
             </Box>
           )}
         </Box>
 
-        {/* Нижняя панель с кнопками */}
-        <Box
-          sx={{
-            borderTop: 1,
-            borderColor: 'divider',
-            p: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1
-          }}
-        >
+        <Box sx={getCalendarDrawerFooterSx(theme)}>
           {(hasFormContent || isSaving) ? (
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -942,7 +925,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             </Box>
           ) : null}
           
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={(theme) => ({ display: 'flex', gap: 2, ...getModalFooterActionsSx(theme) })}>
             <Button
               fullWidth
               variant="outlined"
@@ -965,7 +948,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                       current: compressProgress.index,
                       total: compressProgress.total
                     })
-                  : files.some(isVideoFile)
+                  : getNewFilesFromMediaItems(mediaItems).some(isVideoFile)
                     ? t('calendar.event.compressingVideo')
                     : t('calendar.common.saving')
                 : t('calendar.common.save')}

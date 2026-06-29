@@ -26,6 +26,7 @@ import PartnerBreakupNotifier from './components/Settings/PartnerBreakupNotifier
 import BlockNoticeSnackbar from './components/Auth/BlockNoticeSnackbar';
 import CalendarPartnerMigrationRunner from './components/Calendar/CalendarPartnerMigrationRunner';
 import CurrencyAwardOverlay from './components/Pets/CurrencyAwardOverlay';
+import AppDateLocalizationProvider from './components/UI/AppDateLocalizationProvider';
 
 const PushNavigationListener: React.FC = () => {
   const navigate = useNavigate();
@@ -86,6 +87,7 @@ function App() {
       <BlockNoticeSnackbar />
       <CurrencyAwardOverlay />
       <AppThemeProvider>
+        <AppDateLocalizationProvider>
         <PartnerBreakupNotifier />
         <CryptoProvider>
           <CalendarPartnerMigrationRunner />
@@ -144,6 +146,7 @@ function App() {
             </Router>
           </NavigationProvider>
         </CryptoProvider>
+        </AppDateLocalizationProvider>
       </AppThemeProvider>
       </AdminAlertsProvider>
     </AuthProvider>

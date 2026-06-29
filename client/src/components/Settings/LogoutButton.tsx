@@ -7,13 +7,14 @@ import {
   DialogContent, 
   DialogActions,
   IconButton,
+  useTheme,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import LogoutIcon from '@mui/icons-material/Logout';
 import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
-import { settingsActionButtonSx } from './settingsButtonSx';
+import { getSettingsLogoutButtonSx } from './settingsPageStyles';
 
 interface LogoutButtonProps {
   size?: 'small' | 'medium' | 'large';
@@ -21,6 +22,7 @@ interface LogoutButtonProps {
 
 const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { logout } = useAuth();
   const { clearLocalKeys } = useCrypto();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -52,7 +54,7 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ size = 'medium' }) => {
         size={size}
         startIcon={<LogoutIcon />}
         onClick={handleOpenDialog}
-        sx={settingsActionButtonSx}
+        sx={getSettingsLogoutButtonSx(theme)}
       >
         {t('settings.logout.button')}
       </Button>

@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Drawer,
-  AppBar,
-  Toolbar,
   IconButton,
   Typography,
   Box,
@@ -31,6 +29,15 @@ import DecryptedMedia from '../common/DecryptedMedia';
 import EncryptedIndicator from '../common/EncryptedIndicator';
 import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
+import ExpandableClampedTitle from '../UI/ExpandableClampedTitle';
+import {
+  getCalendarDrawerContentSx,
+  getCalendarDrawerHeaderIconButtonSx,
+  getCalendarDrawerHeaderSx,
+  getCalendarDrawerHeaderTitleSx,
+  getCalendarDrawerHeaderWrapSx,
+  getCalendarDrawerPaperSx,
+} from './calendarDrawerStyles';
 
 interface MediaFile {
   _id: string;
@@ -143,69 +150,75 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
         onClose={onClose}
         transitionDuration={{ enter: 300, exit: 250 }}
         PaperProps={{
-          sx: {
-            width: isMobile ? '100%' : '500px',
-            maxWidth: '100vw'
-          }
+          sx: getCalendarDrawerPaperSx(theme, isMobile),
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {/* Верхняя панель */}
-          <AppBar position="static" color="default" elevation={1}>
-            <Toolbar>
+          <Box sx={getCalendarDrawerHeaderWrapSx()}>
+            <Box sx={getCalendarDrawerHeaderSx(theme)}>
               <IconButton
                 edge="start"
-                color="inherit"
                 onClick={onClose}
                 aria-label="close"
+                size="small"
+                sx={getCalendarDrawerHeaderIconButtonSx(theme)}
               >
-                <CloseIcon />
+                <CloseIcon fontSize="small" />
               </IconButton>
-              <Typography variant="h6" sx={{ ml: 2, flex: 1, fontWeight: 400 }}>
-                {eventTitle}
-              </Typography>
+              <Box sx={{ ...getCalendarDrawerHeaderTitleSx(), flex: 1, minWidth: 0, fontWeight: 400 }}>
+                <ExpandableClampedTitle
+                  text={eventTitle}
+                  variant="h6"
+                  sx={{ fontWeight: 600, fontSize: '1rem' }}
+                  dialogTitle={t('calendar.detail.title')}
+                  expandAriaLabel={t('calendar.detail.expandTitleAria')}
+                  closeLabel={t('calendar.detail.fullTitleClose')}
+                />
+              </Box>
               {readOnly && (
                 <Chip
                   label={t('calendar.detail.readOnly')}
                   size="small"
-                  sx={{ mr: 1 }}
+                  sx={{ mr: 0.5 }}
                 />
               )}
               {!readOnly && onShare && (
                 <IconButton
-                  color="inherit"
                   onClick={() => onShare(event)}
                   aria-label="share"
                   title={t('calendar.detail.share')}
+                  size="small"
+                  sx={getCalendarDrawerHeaderIconButtonSx(theme)}
                 >
-                  <ReplyOutlinedIcon />
+                  <ReplyOutlinedIcon fontSize="small" />
                 </IconButton>
               )}
               {!readOnly && onEdit && (
                 <IconButton
-                  color="inherit"
                   onClick={() => onEdit(event)}
                   aria-label="edit"
                   title={t('calendar.detail.edit')}
+                  size="small"
+                  sx={getCalendarDrawerHeaderIconButtonSx(theme)}
                 >
-                  <EditIcon />
+                  <EditIcon fontSize="small" />
                 </IconButton>
               )}
               {!readOnly && onDelete && (
                 <IconButton
-                  color="inherit"
                   onClick={() => onDelete(event.eventId || event._id)}
                   aria-label="delete"
                   title={t('calendar.detail.delete')}
+                  size="small"
+                  sx={getCalendarDrawerHeaderIconButtonSx(theme)}
                 >
-                  <DeleteIcon />
+                  <DeleteIcon fontSize="small" />
                 </IconButton>
               )}
-            </Toolbar>
-          </AppBar>
+            </Box>
+          </Box>
 
-          {/* Основной контент */}
-          <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+          <Box sx={getCalendarDrawerContentSx()}>
             {/* Медиа слайдер */}
             {mediaFiles.length > 0 && (
               <Box
@@ -412,9 +425,14 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   {t('calendar.detail.title')}
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 400 }}>
-                  {eventTitle}
-                </Typography>
+                <ExpandableClampedTitle
+                  text={eventTitle}
+                  variant="h6"
+                  sx={{ fontWeight: 400 }}
+                  dialogTitle={t('calendar.detail.title')}
+                  expandAriaLabel={t('calendar.detail.expandTitleAria')}
+                  closeLabel={t('calendar.detail.fullTitleClose')}
+                />
               </Box>
 
               {/* Описание */}

@@ -143,7 +143,7 @@ app.use(
     origin: getAllowedOrigins()
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 app.use((req: Request, res: Response, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');

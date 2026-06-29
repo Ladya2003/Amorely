@@ -5,8 +5,6 @@ import {
   TextField, 
   Button, 
   Typography, 
-  Paper, 
-  Divider, 
   Alert, 
   List, 
   ListItem, 
@@ -17,14 +15,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  InputAdornment
+  InputAdornment,
+  useTheme,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import BreakupContentDialog from './BreakupContentDialog';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { getDateFnsLocale, DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
+import AppDatePicker from '../UI/AppDatePicker';
+import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -32,6 +29,13 @@ import axios from 'axios';
 import { API_URL } from '../../config';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
+import { chatSearchInputSx } from '../Chat/chatInputStyles';
+import {
+  getSettingsEmptyStateSx,
+  getSettingsPartnerCardSx,
+  getSettingsSectionDividerSx,
+  getSettingsSectionTitleSx,
+} from './settingsPageStyles';
 
 export interface Partner {
   _id: string;
@@ -64,8 +68,8 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   onRemovePartner, 
   isLoading 
 }) => {
-  const { t, i18n } = useTranslation();
-  const dateFnsLocale = getDateFnsLocale(i18n.language);
+  const { t } = useTranslation();
+  const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Partner[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
@@ -182,40 +186,42 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 400 }}>
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5, gap: 1, flexWrap: 'wrap' }}>
+        <Typography component="h2" sx={getSettingsSectionTitleSx()}>
           {t('settings.partner.title')}
         </Typography>
         {partner ? (
-          <Button 
-            variant="outlined" 
-            color="error" 
+          <Button
+            variant="outlined"
+            color="error"
             startIcon={<DeleteIcon />}
             onClick={handleOpenBreakupDialog}
             disabled={isLoading}
+            sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '19px' }}
           >
             {t('settings.partner.remove')}
           </Button>
         ) : (
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             startIcon={<PersonAddIcon />}
             onClick={handleOpenDialog}
             disabled={isLoading}
+            sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '19px', minHeight: 40 }}
           >
             {t('settings.partner.add')}
           </Button>
         )}
       </Box>
-      <Divider sx={{ mb: 3 }} />
-      
+      <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
+
       {partner ? (
         <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Avatar 
-              src={partner.avatar} 
+          <Box sx={getSettingsPartnerCardSx(theme)}>
+            <Avatar
+              src={partner.avatar}
               alt={getPartnerName(partner)}
               onClick={() => {
                 if (partner.avatar) {
@@ -225,12 +231,11 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
               sx={{
                 width: 64,
                 height: 64,
-                mr: 2,
                 cursor: partner.avatar ? 'pointer' : 'default'
               }}
             />
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 400 }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1rem' }}>
                 {getPartnerName(partner)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -244,8 +249,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             </Box>
           </Box>
           
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateFnsLocale}>
-            <DatePicker
+          <AppDatePicker
               label={t('settings.partner.relationshipStartDate')}
               value={startDate}
               onChange={(newValue) => setStartDate(newValue)}
@@ -259,10 +263,9 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                 }
               }}
             />
-          </LocalizationProvider>
         </Box>
       ) : (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Box sx={getSettingsEmptyStateSx(theme)}>
           <Typography variant="body1" color="text.secondary" gutterBottom>
             {t('settings.partner.noPartner')}
           </Typography>
@@ -283,15 +286,17 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
           
           <TextField
             fullWidth
-            label={t('settings.partner.searchLabel')}
+            size="small"
+            placeholder={t('settings.partner.searchLabel')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             margin="normal"
             variant="outlined"
+            sx={chatSearchInputSx}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon />
+                  <SearchIcon fontSize="small" color="action" />
                 </InputAdornment>
               ),
             }}
@@ -366,8 +371,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                 </Box>
               </Box>
               
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateFnsLocale}>
-                <DatePicker
+              <AppDatePicker
                   label={t('settings.partner.relationshipStartDate')}
                   value={startDate}
                   onChange={(newValue) => setStartDate(newValue)}
@@ -383,7 +387,6 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                   }}
                   disableFuture
                 />
-              </LocalizationProvider>
             </Box>
           )}
         </DialogContent>
@@ -428,7 +431,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
         severity="success"
         onClose={() => setSuccessToastOpen(false)}
       />
-    </Paper>
+    </Box>
   );
 };
 

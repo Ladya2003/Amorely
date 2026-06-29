@@ -113,11 +113,15 @@ const MediaViewerDialog: React.FC<MediaViewerDialogProps> = ({
       onClose={onClose}
       fullScreen
       disableMobileDrawer
+      variant="plain"
       sx={stackAboveParentModal ? { zIndex: (theme) => theme.zIndex.modal + 2 } : undefined}
       PaperProps={{
         sx: {
           bgcolor: '#000',
-          boxShadow: 'none'
+          boxShadow: 'none',
+          border: 'none',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
         }
       }}
     >

@@ -1,16 +1,15 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Divider, 
+import {
+  Box,
+  Typography,
   Switch,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
   ListSubheader,
+  useTheme,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -18,6 +17,12 @@ import ChatIcon from '@mui/icons-material/Chat';
 import EventIcon from '@mui/icons-material/Event';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import ReportOutlinedIcon from '@mui/icons-material/ReportOutlined';
+import {
+  getSettingsListSubheaderSx,
+  getSettingsNotificationListSx,
+  getSettingsSectionDividerSx,
+  getSettingsSectionTitleSx,
+} from './settingsPageStyles';
 
 interface NotificationSettingsProps {
   settings: {
@@ -55,6 +60,7 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   isEnablingPush
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const handlePushChange = (setting: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     onSettingChange('push', setting, event.target.checked);
@@ -65,20 +71,23 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
   const handleMasterToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     onPushMasterToggle(event.target.checked);
   };
-  
+
   return (
-    <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
+    <Box>
+      <Typography component="h2" sx={getSettingsSectionTitleSx()}>
         {t('settings.notifications.title')}
       </Typography>
-      <Divider sx={{ mb: 3 }} />
+      <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
 
       <List
+        sx={getSettingsNotificationListSx()}
         subheader={
-          <ListSubheader component="div" sx={{ bgcolor: 'transparent' }}>
+          <ListSubheader component="div" sx={getSettingsListSubheaderSx()}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <NotificationsIcon sx={{ mr: 1 }} />
-              <Typography variant="subtitle1">{t('settings.notifications.pushTitle')}</Typography>
+              <NotificationsIcon sx={{ mr: 1, fontSize: '1.125rem' }} />
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                {t('settings.notifications.pushTitle')}
+              </Typography>
             </Box>
           </ListSubheader>
         }
@@ -87,8 +96,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
           <ListItemIcon>
             <NotificationsIcon />
           </ListItemIcon>
-          <ListItemText 
-            primary={t('settings.notifications.pushEnable')} 
+          <ListItemText
+            primary={t('settings.notifications.pushEnable')}
             secondary={t('settings.notifications.pushEnableHint')}
           />
           <Switch
@@ -105,8 +114,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               <ListItemIcon>
                 <FavoriteIcon />
               </ListItemIcon>
-              <ListItemText 
-                primary={t('settings.notifications.pushNewContent')} 
+              <ListItemText
+                primary={t('settings.notifications.pushNewContent')}
                 secondary={t('settings.notifications.pushNewContentHint')}
               />
               <Switch
@@ -119,8 +128,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               <ListItemIcon>
                 <ChatIcon />
               </ListItemIcon>
-              <ListItemText 
-                primary={t('settings.notifications.pushMessages')} 
+              <ListItemText
+                primary={t('settings.notifications.pushMessages')}
                 secondary={t('settings.notifications.pushMessagesHint')}
               />
               <Switch
@@ -133,8 +142,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               <ListItemIcon>
                 <EventIcon />
               </ListItemIcon>
-              <ListItemText 
-                primary={t('settings.notifications.pushEvents')} 
+              <ListItemText
+                primary={t('settings.notifications.pushEvents')}
                 secondary={t('settings.notifications.pushEventsHint')}
               />
               <Switch
@@ -147,8 +156,8 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
               <ListItemIcon>
                 <NewReleasesIcon />
               </ListItemIcon>
-              <ListItemText 
-                primary={t('settings.notifications.pushNews')} 
+              <ListItemText
+                primary={t('settings.notifications.pushNews')}
                 secondary={t('settings.notifications.pushNewsHint')}
               />
               <Switch
@@ -176,7 +185,7 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
           </>
         )}
       </List>
-    </Paper>
+    </Box>
   );
 };
 

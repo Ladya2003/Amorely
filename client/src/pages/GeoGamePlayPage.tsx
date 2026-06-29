@@ -10,6 +10,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
@@ -25,10 +26,41 @@ import {
   type GeoGameState,
 } from '../services/gamesService';
 import GeoGuessMap, { type GeoMapMarker } from '../components/Games/GeoGuessMap';
+import {
+  getGamePlayBlockedCardSx,
+  getGamePlayBlockedPanelSx,
+  getGamePlayCenterCardSx,
+  getGamePlayCenterPanelSx,
+  getGamePlayCountdownSx,
+  getGamePlayFooterSx,
+  getGamePlayHeaderIconButtonSx,
+  getGamePlayHeaderSx,
+  getGamePlayHeaderSubtitleSx,
+  getGamePlayHeaderTitleSx,
+  getGamePlayLoadingWrapSx,
+  getGamePlayMapOverlayButtonSx,
+  getGamePlayPrimaryButtonSx,
+  getGamePlayReadyDotSx,
+  getGamePlayReadyLabelSx,
+  getGamePlayRevealStackSx,
+  getGamePlayRootSx,
+  getGamePlayTimerBarSx,
+  getGamePlayTimerProgressSx,
+  getGamePlayTimerTextSx,
+} from '../components/Games/gamePlayPageStyles';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import ContentViewer from '../components/Calendar/ContentViewer';
 import ResponsiveDialog from '../components/UI/ResponsiveDialog';
 import { fireRoundConfetti } from '../utils/roundConfetti';
+import {
+  playRoundFailureSound,
+  playRoundSuccessSound,
+  playGameReadySound,
+  playNextRoundSound,
+  unlockGameAudio,
+  useLobbyCountdownSound,
+  useRoundTimerSound,
+} from '../utils/gameSounds';
 
 const MY_GUESS_COLOR = '#FF4B8D';
 const PARTNER_GUESS_COLOR = '#6366f1';
@@ -39,6 +71,7 @@ const isGeoGameSessionEnded = (gameState: GeoGameState) =>
   !gameState.currentRound && !gameState.inLobby && gameState.dailyLimitReached;
 
 const GeoGamePlayPage: React.FC = () => {
+  const theme = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -87,6 +120,9 @@ const GeoGamePlayPage: React.FC = () => {
       );
       if (hasStrongGuess) {
         fireRoundConfetti();
+        void playRoundSuccessSound();
+      } else {
+        void playRoundFailureSound();
       }
     }
 
@@ -258,6 +294,13 @@ const GeoGamePlayPage: React.FC = () => {
     return () => window.clearInterval(timerId);
   }, [state?.inLobby, state?.lobbySecondsRemaining, applyState]);
 
+  useLobbyCountdownSound(
+    lobbySecondsLeft,
+    Boolean(state?.inLobby),
+    Boolean(state?.currentRound && !state.inLobby)
+  );
+  useRoundTimerSound(secondsLeft, state?.currentRound?.status === 'guessing');
+
   useEffect(() => {
     if (!mapViewerOpen) {
       return;
@@ -269,6 +312,8 @@ const GeoGamePlayPage: React.FC = () => {
   }, [mapViewerOpen]);
 
   const handleReady = async () => {
+    unlockGameAudio();
+    void playGameReadySound();
     setSubmitting(true);
     try {
       const socket = socketService.getSocket();
@@ -295,6 +340,7 @@ const GeoGamePlayPage: React.FC = () => {
     }
 
     setSubmitting(true);
+    unlockGameAudio();
     try {
       const socket = socketService.getSocket();
       if (socket?.connected) {
@@ -315,6 +361,8 @@ const GeoGamePlayPage: React.FC = () => {
   };
 
   const handleNextRound = async () => {
+    unlockGameAudio();
+    void playNextRoundSound();
     setSubmitting(true);
     try {
       const socket = socketService.getSocket();
@@ -338,7 +386,7 @@ const GeoGamePlayPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={getGamePlayLoadingWrapSx(theme)}>
         <CircularProgress />
       </Box>
     );
@@ -346,30 +394,34 @@ const GeoGamePlayPage: React.FC = () => {
 
   if (blockedReason) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 4 }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          {t('games.common.needPartner')}
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          {blockedReason}
-        </Typography>
-        <Stack direction="row" spacing={1} justifyContent="center">
-          <Button variant="contained" onClick={() => navigate('/settings')}>
-            {t('games.common.goToSettings')}
-          </Button>
-          <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.back')}</Button>
-        </Stack>
+      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+        <Box sx={getGamePlayBlockedCardSx(theme)}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            {t('games.common.needPartner')}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 3 }}>
+            {blockedReason}
+          </Typography>
+          <Stack direction="row" spacing={1} justifyContent="center">
+            <Button variant="contained" sx={getGamePlayPrimaryButtonSx()} onClick={() => navigate('/settings')}>
+              {t('games.common.goToSettings')}
+            </Button>
+            <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.back')}</Button>
+          </Stack>
+        </Box>
       </Box>
     );
   }
 
   if (!state) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>
-          {t('games.common.loadFailed')}
-        </Typography>
-        <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.back')}</Button>
+      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+        <Box sx={getGamePlayBlockedCardSx(theme)}>
+          <Typography color="text.secondary" sx={{ mb: 2 }}>
+            {t('games.common.loadFailed')}
+          </Typography>
+          <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.back')}</Button>
+        </Box>
       </Box>
     );
   }
@@ -382,147 +434,108 @@ const GeoGamePlayPage: React.FC = () => {
 
     if (state.inLobby) {
       return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Box
-            sx={{
-              px: 1,
-              py: 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <IconButton onClick={() => navigate('/chat/games/geo')} aria-label={t('games.common.back')}>
+        <Box sx={getGamePlayRootSx(theme)}>
+          <Box sx={getGamePlayHeaderSx(theme)}>
+            <IconButton
+              sx={getGamePlayHeaderIconButtonSx(theme)}
+              onClick={() => navigate('/chat/games/geo')}
+              aria-label={t('games.common.back')}
+            >
               <ArrowBackIcon />
             </IconButton>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                {t('games.geo.name')}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography sx={getGamePlayHeaderTitleSx()}>{t('games.geo.name')}</Typography>
+              <Typography component="span" sx={getGamePlayHeaderSubtitleSx()}>
                 {t('games.common.round')} {state.roundsCompleted + 1}
               </Typography>
             </Box>
           </Box>
 
-          <Box
-            sx={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: 3,
-              maxWidth: 420,
-              mx: 'auto',
-              textAlign: 'center',
-            }}
-          >
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              {isCountdownActive ? t('games.common.startingSoon') : t('games.geo.play.readyToRoundQuestion')}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t('games.geo.play.pairScoreToday', {
-                score: state.totalScore,
-                today: state.roundsPlayedToday,
-                max: state.maxRoundsPerDay,
-              })}
-              {state.locationsRemaining < state.locationsTotal
-                ? t('games.geo.play.poolRemaining', { count: state.locationsRemaining })
-                : ''}
-            </Typography>
-            {state.waitingForPartnerResults ? (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                {t('games.common.partnerViewingPastRound')}
+          <Box sx={getGamePlayCenterPanelSx(theme)}>
+            <Box sx={getGamePlayCenterCardSx(theme)}>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                {isCountdownActive ? t('games.common.startingSoon') : t('games.geo.play.readyToRoundQuestion')}
               </Typography>
-            ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                {isCountdownActive
-                  ? t('games.common.bothReady')
-                  : t('games.common.pressReady')}
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t('games.geo.play.pairScoreToday', {
+                  score: state.totalScore,
+                  today: state.roundsPlayedToday,
+                  max: state.maxRoundsPerDay,
+                })}
+                {state.locationsRemaining < state.locationsTotal
+                  ? t('games.geo.play.poolRemaining', { count: state.locationsRemaining })
+                  : ''}
               </Typography>
-            )}
+              {state.waitingForPartnerResults ? (
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                  {t('games.common.partnerViewingPastRound')}
+                </Typography>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                  {isCountdownActive
+                    ? t('games.common.bothReady')
+                    : t('games.common.pressReady')}
+                </Typography>
+              )}
 
-            <Stack direction="row" spacing={4} sx={{ mb: 4 }}>
-              <Stack alignItems="center" spacing={1}>
-                <Box
-                  component="button"
-                  type="button"
+              <Stack direction="row" spacing={4} sx={{ mb: 4, justifyContent: 'center' }}>
+                <Stack alignItems="center" spacing={1}>
+                  <Box
+                    component="button"
+                    type="button"
+                    onClick={handleReady}
+                    disabled={isMeReady || submitting || isCountdownActive}
+                    aria-label={isMeReady ? t('games.common.youReadyAria') : t('games.common.confirmReadyAria')}
+                    sx={getGamePlayReadyDotSx(theme, {
+                      ready: isMeReady,
+                      clickable: !isMeReady && !submitting && !isCountdownActive,
+                    })}
+                  >
+                    {isMeReady ? '✓' : '…'}
+                  </Box>
+                  <Typography sx={getGamePlayReadyLabelSx()}>{t('games.common.you')}</Typography>
+                </Stack>
+                <Stack alignItems="center" spacing={1}>
+                  <Box sx={getGamePlayReadyDotSx(theme, { ready: isPartnerReady })}>
+                    {isPartnerReady ? '✓' : '…'}
+                  </Box>
+                  <Typography sx={getGamePlayReadyLabelSx()}>{t('games.common.partner')}</Typography>
+                </Stack>
+              </Stack>
+
+              {isCountdownActive ? (
+                <Typography sx={{ ...getGamePlayCountdownSx(), mb: 3 }}>{lobbySecondsLeft}</Typography>
+              ) : (
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  sx={getGamePlayPrimaryButtonSx()}
+                  disabled={isMeReady || submitting}
                   onClick={handleReady}
-                  disabled={isMeReady || submitting || isCountdownActive}
-                  aria-label={isMeReady ? t('games.common.youReadyAria') : t('games.common.confirmReadyAria')}
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    bgcolor: isMeReady ? 'success.main' : 'action.selected',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: isMeReady ? 'success.contrastText' : 'text.secondary',
-                    fontWeight: 700,
-                    border: 'none',
-                    p: 0,
-                    cursor:
-                      isMeReady || submitting || isCountdownActive ? 'default' : 'pointer',
-                  }}
                 >
-                  {isMeReady ? '✓' : '…'}
-                </Box>
-                <Typography variant="caption">{t('games.common.you')}</Typography>
-              </Stack>
-              <Stack alignItems="center" spacing={1}>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    bgcolor: isPartnerReady ? 'success.main' : 'action.selected',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: isPartnerReady ? 'success.contrastText' : 'text.secondary',
-                    fontWeight: 700,
-                  }}
-                >
-                  {isPartnerReady ? '✓' : '…'}
-                </Box>
-                <Typography variant="caption">{t('games.common.partner')}</Typography>
-              </Stack>
-            </Stack>
-
-            {isCountdownActive ? (
-              <Typography variant="h3" sx={{ fontWeight: 800, mb: 3 }}>
-                {lobbySecondsLeft}
-              </Typography>
-            ) : (
-              <Button
-                variant="contained"
-                size="large"
-                disabled={isMeReady || submitting}
-                onClick={handleReady}
-              >
-                {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
-              </Button>
-            )}
+                  {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
+                </Button>
+              )}
+            </Box>
           </Box>
         </Box>
       );
     }
 
     return (
-      <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 6 }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          {state.dailyLimitReached ? t('games.geo.play.dailyAllDone') : t('games.common.roundNotActive')}
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          {state.dailyLimitReached
-            ? t('games.geo.play.dailyGuessedAll', { count: state.maxRoundsPerDay })
-            : t('games.geo.play.restartGame')}
-        </Typography>
-        <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.backToGame')}</Button>
+      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+        <Box sx={getGamePlayBlockedCardSx(theme)}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            {state.dailyLimitReached ? t('games.geo.play.dailyAllDone') : t('games.common.roundNotActive')}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 3 }}>
+            {state.dailyLimitReached
+              ? t('games.geo.play.dailyGuessedAll', { count: state.maxRoundsPerDay })
+              : t('games.geo.play.restartGame')}
+          </Typography>
+          <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.backToGame')}</Button>
+        </Box>
       </Box>
     );
   }
@@ -582,69 +595,36 @@ const GeoGamePlayPage: React.FC = () => {
   const mapInteractive = isGuessing && secondsLeft > 0 && !hasSubmittedMyGuess;
 
   const roundTimerBar = isGuessing ? (
-    <Box
-      sx={{
-        flexShrink: 0,
-        bgcolor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        pt: 0.75,
-        pb: 0,
-      }}
-    >
-      <Typography
-        variant="caption"
-        align="center"
-        sx={{
-          display: 'block',
-          mb: 0.5,
-          fontWeight: 700,
-          color: isTimeLow ? 'error.main' : 'text.secondary',
-        }}
-      >
+    <Box sx={getGamePlayTimerBarSx(theme)}>
+      <Typography component="span" sx={getGamePlayTimerTextSx(isTimeLow)}>
         {t('games.common.secondsLeft', { seconds: secondsLeft })}
       </Typography>
       <LinearProgress
         variant="determinate"
         value={timeProgress}
         color={isTimeLow ? 'error' : 'primary'}
-        sx={{
-          height: 6,
-          borderRadius: 0,
-          bgcolor: 'action.selected',
-          '& .MuiLinearProgress-bar': {
-            transition: 'transform 1s linear',
-          },
-        }}
+        sx={getGamePlayTimerProgressSx()}
       />
     </Box>
   ) : null;
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Box sx={getGamePlayRootSx(theme)}>
       {roundTimerBar}
 
-      <Box
-        sx={{
-          px: 1,
-          py: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
-        <IconButton onClick={() => navigate('/chat/games/geo')} aria-label={t('games.common.back')}>
+      <Box sx={getGamePlayHeaderSx(theme)}>
+        <IconButton
+          sx={getGamePlayHeaderIconButtonSx(theme)}
+          onClick={() => navigate('/chat/games/geo')}
+          aria-label={t('games.common.back')}
+        >
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.25 }}>
+          <Typography sx={getGamePlayHeaderTitleSx()}>
             {t('games.common.round')} {state.roundsCompleted + (isGuessing ? 1 : 0)}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography component="span" sx={getGamePlayHeaderSubtitleSx()}>
             {t('games.geo.play.pairScoreToday', {
               score: state.totalScore,
               today: state.roundsPlayedToday,
@@ -690,11 +670,7 @@ const GeoGamePlayPage: React.FC = () => {
               position: 'absolute',
               top: 8,
               right: 8,
-              bgcolor: 'rgba(0, 0, 0, 0.45)',
-              color: 'common.white',
-              '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.6)',
-              },
+              ...getGamePlayMapOverlayButtonSx(),
             }}
           >
             <OpenInFullIcon fontSize="medium" />
@@ -727,11 +703,7 @@ const GeoGamePlayPage: React.FC = () => {
               top: 8,
               right: 8,
               zIndex: 1000,
-              bgcolor: 'rgba(0, 0, 0, 0.45)',
-              color: 'common.white',
-              '&:hover': {
-                bgcolor: 'rgba(0, 0, 0, 0.6)',
-              },
+              ...getGamePlayMapOverlayButtonSx(),
             }}
           >
             <OpenInFullIcon fontSize="medium" />
@@ -739,7 +711,8 @@ const GeoGamePlayPage: React.FC = () => {
         </Box>
 
         {reveal ? (
-          <Stack spacing={1.5} sx={{ p: 2, flexShrink: 0 }}>
+          <Box sx={{ ...getGamePlayRevealStackSx(theme), mx: 2, mb: 2, flexShrink: 0 }}>
+            <Stack spacing={1.5}>
             {reveal.timedOut && reveal.guesses.length === 0 ? (
               <Typography variant="body1" color="error.main" align="center" sx={{ fontWeight: 600 }}>
                 {t('games.geo.play.timedOutNoGuess')}
@@ -782,20 +755,12 @@ const GeoGamePlayPage: React.FC = () => {
             <Typography variant="body1" align="center" sx={{ fontWeight: 700 }}>
               {t('games.geo.play.totalEarned', { points: reveal.totalPointsEarned })}
             </Typography>
-          </Stack>
+            </Stack>
+          </Box>
         ) : null}
       </Box>
 
-      <Box
-        sx={{
-          p: 2,
-          pb: 'max(16px, env(safe-area-inset-bottom))',
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
+      <Box sx={getGamePlayFooterSx(theme)}>
         {isGuessing ? (
           <Stack spacing={1}>
             <Typography variant="body2" color="text.secondary" align="center">
@@ -823,6 +788,7 @@ const GeoGamePlayPage: React.FC = () => {
               variant="contained"
               size="large"
               fullWidth
+              sx={getGamePlayPrimaryButtonSx()}
               disabled={!draftGuess || submitting || secondsLeft <= 0 || hasSubmittedMyGuess}
               onClick={handleSubmitGuess}
             >
@@ -836,6 +802,7 @@ const GeoGamePlayPage: React.FC = () => {
             variant="contained"
             size="large"
             fullWidth
+            sx={getGamePlayPrimaryButtonSx()}
             disabled={submitting}
             onClick={handleNextRound}
           >
@@ -887,11 +854,7 @@ const GeoGamePlayPage: React.FC = () => {
                 top: 8,
                 right: 8,
                 zIndex: 1000,
-                color: 'common.white',
-                bgcolor: 'rgba(0, 0, 0, 0.45)',
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.6)',
-                },
+                ...getGamePlayMapOverlayButtonSx(),
               }}
             >
               <CloseIcon />
@@ -906,20 +869,12 @@ const GeoGamePlayPage: React.FC = () => {
             />
           </Box>
           {isGuessing ? (
-            <Box
-              sx={{
-                flexShrink: 0,
-                p: 2,
-                pb: 'max(16px, env(safe-area-inset-bottom))',
-                borderTop: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-              }}
-            >
+            <Box sx={getGamePlayFooterSx(theme)}>
               <Button
                 variant="contained"
                 size="large"
                 fullWidth
+                sx={getGamePlayPrimaryButtonSx()}
                 disabled={!draftGuess || submitting || secondsLeft <= 0 || hasSubmittedMyGuess}
                 onClick={handleSubmitGuess}
               >

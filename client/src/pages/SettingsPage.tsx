@@ -1,17 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { 
-  Container, 
-  Box, 
-  Typography, 
-  Tabs, 
-  Tab, 
-  CircularProgress, 
+import {
+  Box,
+  Typography,
+  CircularProgress,
   Alert,
   useMediaQuery,
   useTheme,
-  Paper,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import PeopleIcon from '@mui/icons-material/People';
@@ -33,6 +29,7 @@ import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
 import { useAuth } from '../contexts/AuthContext';
+import { useTabSlideDirection } from '../hooks/useTabSlideDirection';
 import {
   checkPushSubscriptionStatus,
   ensurePushSubscription,
@@ -42,6 +39,21 @@ import {
   registerServiceWorker,
   unsubscribeFromPush
 } from '../services/pushNotifications';
+import {
+  getSettingsBodySx,
+  getSettingsContentPanelSx,
+  getSettingsContentScrollSx,
+  getSettingsLoadingWrapSx,
+  getSettingsNavPanelSx,
+  getSettingsNavTabSx,
+  getSettingsNavWrapSx,
+  getSettingsPageHeaderGlowWrapSx,
+  getSettingsPageHeaderRowSx,
+  getSettingsPageRootSx,
+  getSettingsPageTitleSx,
+  getSettingsTabPanelEnterSx,
+  settingsPageEnterSx,
+} from '../components/Settings/settingsPageStyles';
 
 const SETTINGS_TAB_KEYS = ['profile', 'partner', 'theme', 'notifications', 'security'] as const;
 
@@ -68,10 +80,22 @@ const SettingsPage: React.FC = () => {
   const [isEnablingPush, setIsEnablingPush] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
-  
+  const tabSlideDirection = useTabSlideDirection(tabValue);
+
+  const settingsTabs = useMemo(
+    () => [
+      { icon: PersonIcon, label: t('settings.tabs.profile') },
+      { icon: PeopleIcon, label: t('settings.tabs.partner') },
+      { icon: PaletteIcon, label: t('settings.tabs.theme') },
+      { icon: NotificationsIcon, label: t('settings.tabs.notifications') },
+      { icon: SecurityIcon, label: t('settings.tabs.security') },
+    ],
+    [t]
+  );
+
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -86,48 +110,46 @@ const SettingsPage: React.FC = () => {
       void registerServiceWorker();
     }
   }, []);
-  
+
   const fetchUserData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      // Получаем токен из localStorage
+
       const token = localStorage.getItem('token');
       if (!token) {
         setError(t('settings.errors.notAuthorized'));
         setIsLoading(false);
         return;
       }
-      
-      // Получаем данные пользователя
+
       const response = await axios.get(`${API_URL}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
 
-      const user = response.data;
-      
-      setUser(user);
-      setTheme(user.theme || 'system');
-      setPrimaryColor(user.primaryColor || 'pink');
-      setLocale(resolveAppLocale(user.locale));
+      const loadedUser = response.data;
+
+      setUser(loadedUser);
+      setTheme(loadedUser.theme || 'system');
+      setPrimaryColor(loadedUser.primaryColor || 'pink');
+      setLocale(resolveAppLocale(loadedUser.locale));
       const loadedNotificationSettings = {
         email: {
           newContent: true,
           messages: true,
           events: true,
           news: false,
-          ...(user.notificationSettings?.email ?? {}),
+          ...(loadedUser.notificationSettings?.email ?? {}),
         },
         push: {
           newContent: true,
           messages: true,
           events: false,
           news: false,
-          reports: user.role === 'admin',
-          ...(user.notificationSettings?.push ?? {}),
+          reports: loadedUser.role === 'admin',
+          ...(loadedUser.notificationSettings?.push ?? {}),
         },
       };
       setNotificationSettings(loadedNotificationSettings);
@@ -139,17 +161,17 @@ const SettingsPage: React.FC = () => {
       }
 
       setIsLoading(false);
-    } catch (error) {
-      console.error('Ошибка при загрузке данных пользователя:', error);
+    } catch (fetchError) {
+      console.error('Ошибка при загрузке данных пользователя:', fetchError);
       setError(t('settings.errors.loadFailed'));
       setIsLoading(false);
     }
   };
-  
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+
+  const handleTabChange = (newValue: number) => {
     setTabValue(newValue);
   };
-  
+
   const handleSaveProfile = async (formData: FormData) => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -173,18 +195,16 @@ const SettingsPage: React.FC = () => {
       updateUser({ ...authUser, displayBadgeGameId });
     }
   };
-  
+
   const handleAddPartner = async (partnerEmail: string, startDate: Date) => {
     try {
       setIsLoading(true);
-      
-      // Получаем токен из localStorage
+
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error(t('settings.errors.notAuthorizedShort'));
       }
-      
-      // Отправляем запрос на добавление партнера
+
       const response = await axios.post(`${API_URL}/api/relationships`, {
         partnerEmail,
         relationshipStartDate: startDate.toISOString()
@@ -199,26 +219,24 @@ const SettingsPage: React.FC = () => {
       }
 
       notifyPartnerRequestsChanged();
-      
+
       setIsLoading(false);
-    } catch (error: any) {
-      console.error('Ошибка при добавлении партнера:', error);
+    } catch (addError: any) {
+      console.error('Ошибка при добавлении партнера:', addError);
       setIsLoading(false);
-      throw error;
+      throw addError;
     }
   };
 
   const handleRemovePartner = async (options: { keepEvents: boolean; keepPlans: boolean }) => {
     try {
       setIsLoading(true);
-      
-      // Получаем токен из localStorage
+
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error(t('settings.errors.notAuthorizedShort'));
       }
-      
-      // Отправляем запрос на удаление партнера
+
       await axios.delete(`${API_URL}/api/relationships`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -228,8 +246,7 @@ const SettingsPage: React.FC = () => {
           keepPlans: options.keepPlans
         }
       });
-      
-      // Обновляем локальное состояние
+
       if (authUser) {
         updateUser({ ...authUser, partnerId: undefined, relationshipStartDate: undefined });
       }
@@ -238,18 +255,18 @@ const SettingsPage: React.FC = () => {
       notifyPartnerChanged();
       notifyPartnerRequestsChanged();
       notifyCalendarEventsChanged();
-      
+
       setIsLoading(false);
-    } catch (error: any) {
-      console.error('Ошибка при удалении партнера:', error);
+    } catch (removeError: any) {
+      console.error('Ошибка при удалении партнера:', removeError);
       setIsLoading(false);
-      if (error.response && error.response.data) {
-        throw error.response.data;
+      if (removeError.response && removeError.response.data) {
+        throw removeError.response.data;
       }
       throw { error: t('settings.errors.removePartnerFailed') };
     }
   };
-  
+
   const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
     const previousTheme = theme;
     try {
@@ -271,8 +288,8 @@ const SettingsPage: React.FC = () => {
           Authorization: `Bearer ${token}`
         }
       });
-    } catch (error) {
-      console.error('Ошибка при изменении темы:', error);
+    } catch (themeError) {
+      console.error('Ошибка при изменении темы:', themeError);
       setTheme(previousTheme);
       if (authUser) {
         updateUser({ ...authUser, theme: previousTheme });
@@ -306,8 +323,8 @@ const SettingsPage: React.FC = () => {
           },
         }
       );
-    } catch (error) {
-      console.error('Ошибка при изменении языка:', error);
+    } catch (localeError) {
+      console.error('Ошибка при изменении языка:', localeError);
       setLocale(previousLocale);
       setAppLocale(previousLocale);
       if (authUser) {
@@ -337,26 +354,24 @@ const SettingsPage: React.FC = () => {
           Authorization: `Bearer ${token}`
         }
       });
-    } catch (error) {
-      console.error('Ошибка при изменении основного цвета:', error);
+    } catch (colorError) {
+      console.error('Ошибка при изменении основного цвета:', colorError);
       setPrimaryColor(previousPrimaryColor);
       if (authUser) {
         updateUser({ ...authUser, primaryColor: previousPrimaryColor });
       }
     }
   };
-  
+
   const handleChangePassword = async (oldPassword: string, newPassword: string) => {
     try {
       setIsLoading(true);
-      
-      // Получаем токен из localStorage
+
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error(t('settings.errors.notAuthorizedShort'));
       }
-      
-      // Отправляем запрос на изменение пароля
+
       await axios.post(`${API_URL}/api/auth/change-password`, {
         userId: user?._id,
         oldPassword,
@@ -366,15 +381,15 @@ const SettingsPage: React.FC = () => {
           Authorization: `Bearer ${token}`
         }
       });
-      
+
       setIsLoading(false);
-    } catch (error) {
-      console.error('Ошибка при изменении пароля:', error);
+    } catch (passwordError) {
+      console.error('Ошибка при изменении пароля:', passwordError);
       setIsLoading(false);
-      throw error;
+      throw passwordError;
     }
   };
-  
+
   const syncPushSubscription = async (settings: any) => {
     const token = localStorage.getItem('token');
     if (!token || !isPushSupported()) {
@@ -449,12 +464,12 @@ const SettingsPage: React.FC = () => {
       };
 
       setNotificationSettings(nextSettings);
-      
+
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error(t('settings.errors.notAuthorizedShort'));
       }
-      
+
       await axios.put(`${API_URL}/api/settings/notifications`, {
         settings: nextSettings
       }, {
@@ -471,187 +486,123 @@ const SettingsPage: React.FC = () => {
       fetchUserData();
     }
   };
-  
+
   if (isLoading && !user) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
+      <Box sx={getSettingsPageRootSx(muiTheme)}>
+        <Box sx={getSettingsLoadingWrapSx()}>
+          <CircularProgress size={32} />
+        </Box>
       </Box>
     );
   }
-  
+
   if (error) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      </Container>
+      <Box sx={getSettingsPageRootSx(muiTheme)}>
+        <Box sx={{ px: 2, py: 3 }}>
+          <Alert severity="error">{error}</Alert>
+        </Box>
+      </Box>
     );
   }
-  
+
   return (
-    <Box
-      sx={{
-        flex: 1,
-        minHeight: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        maxWidth: 'lg',
-        width: '100%',
-        mx: 'auto',
-        px: isMobile ? 2 : 3,
-        py: isMobile ? 2 : 4,
-        boxSizing: 'border-box',
-      }}
-    >
+    <Box sx={getSettingsPageRootSx(muiTheme)}>
       <Box
         sx={{
+          position: 'relative',
+          zIndex: 1,
+          ...settingsPageEnterSx,
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-          gap: 2,
-          flexShrink: 0,
-          mb: 1,
-        }}
-      >
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{ fontSize: '1.7rem', lineHeight: 1, m: 0 }}
-        >
-          {t('settings.title')}
-        </Typography>
-        <LogoutButton size="small" />
-      </Box>
-      
-      <Box
-        sx={{
-          display: 'flex',
-          flex: 1,
-          flexDirection: isMobile ? 'column' : 'row',
-          mt: isMobile ? 2 : 3,
+          flexDirection: 'column',
+          height: '100%',
           minHeight: 0,
-          gap: isMobile ? 2 : 0,
         }}
       >
-        {/* Вкладки */}
-        <Box sx={{ 
-          width: isMobile ? '100%' : 240, 
-          flexShrink: 0,
-          mr: isMobile ? 0 : 3
-        }}>
-          <Paper elevation={1} sx={{ borderRadius: 2 }}>
-            <Tabs
-              orientation={isMobile ? 'horizontal' : 'vertical'}
-              variant={isMobile ? 'scrollable' : 'standard'}
-              value={tabValue}
-              onChange={handleTabChange}
-              aria-label="settings tabs"
-              sx={{ 
-                borderRight: isMobile ? 0 : 1, 
-                borderColor: 'divider',
-                minHeight: isMobile ? 'auto' : 300,
-                '.MuiTab-root': {
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  py: 1,
-                  px: 1.5,
-                  minHeight: 40,
-                }
-              }}
-            >
-              <Tab 
-                icon={<PersonIcon />} 
-                label={t('settings.tabs.profile')} 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<PeopleIcon />} 
-                label={t('settings.tabs.partner')} 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<PaletteIcon />} 
-                label={t('settings.tabs.theme')} 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<NotificationsIcon />} 
-                label={t('settings.tabs.notifications')} 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<SecurityIcon />} 
-                label={t('settings.tabs.security')} 
-                iconPosition="start"
-              />
-            </Tabs>
-          </Paper>
+        <Box sx={getSettingsPageHeaderGlowWrapSx(muiTheme)}>
+          <Box sx={getSettingsPageHeaderRowSx()}>
+            <Typography component="h1" sx={getSettingsPageTitleSx()}>
+              {t('settings.title')}
+            </Typography>
+            <LogoutButton size="small" />
+          </Box>
         </Box>
-        
-        {/* Содержимое вкладок */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              overflow: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: 'background.paper',
-              borderRadius: 2,
-            }}
-          >
-          {tabValue === 0 && user && (
-            <ProfileForm
-              user={user}
-              onSave={handleSaveProfile}
-              onBadgePreferenceSaved={handleBadgePreferenceSaved}
-            />
-          )}
-          
-          {tabValue === 1 && user && (
-            <PartnerSettingsTab
-              userId={user._id}
-              onAddPartner={handleAddPartner}
-              onRemovePartner={handleRemovePartner}
-              isActionLoading={isLoading}
-            />
-          )}
-          
-          {tabValue === 2 && (
-            <ThemeSettings 
-              currentTheme={theme} 
-              onThemeChange={handleThemeChange}
-              currentPrimaryColor={primaryColor}
-              onPrimaryColorChange={handlePrimaryColorChange}
-              currentLocale={locale}
-              onLocaleChange={handleLocaleChange}
-            />
-          )}
-          
-          {tabValue === 3 && notificationSettings && (
-            <NotificationSettings 
-              settings={notificationSettings}
-              isAdmin={user?.role === 'admin'}
-              onSettingChange={handleNotificationSettingChange}
-              pushSupported={isPushSupported()}
-              pushPermission={pushPermission}
-              pushSubscribed={pushSubscribed}
-              onPushMasterToggle={handlePushMasterToggle}
-              isEnablingPush={isEnablingPush}
-            />
-          )}
-          
-          {tabValue === 4 && (
-            <SecuritySettings 
-              onChangePassword={handleChangePassword}
-              isLoading={isLoading}
-            />
-          )}
+
+        <Box sx={getSettingsBodySx(isMobile)}>
+          <Box sx={getSettingsNavWrapSx(isMobile)}>
+            <Box sx={getSettingsNavPanelSx(muiTheme, isMobile)} role="tablist" aria-label={t('settings.title')}>
+              {settingsTabs.map((tab, index) => {
+                const Icon = tab.icon;
+                const selected = tabValue === index;
+                return (
+                  <Box
+                    key={SETTINGS_TAB_KEYS[index]}
+                    component="button"
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => handleTabChange(index)}
+                    sx={getSettingsNavTabSx(muiTheme, { selected, isMobile })}
+                  >
+                    <Icon />
+                    {tab.label}
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+
+          <Box sx={getSettingsContentPanelSx(muiTheme)}>
+            <Box key={tabValue} sx={{ ...getSettingsContentScrollSx(), ...getSettingsTabPanelEnterSx(tabSlideDirection) }}>
+              {tabValue === 0 && user && (
+                <ProfileForm
+                  user={user}
+                  onSave={handleSaveProfile}
+                  onBadgePreferenceSaved={handleBadgePreferenceSaved}
+                />
+              )}
+
+              {tabValue === 1 && user && (
+                <PartnerSettingsTab
+                  userId={user._id}
+                  onAddPartner={handleAddPartner}
+                  onRemovePartner={handleRemovePartner}
+                  isActionLoading={isLoading}
+                />
+              )}
+
+              {tabValue === 2 && (
+                <ThemeSettings
+                  currentTheme={theme}
+                  onThemeChange={handleThemeChange}
+                  currentPrimaryColor={primaryColor}
+                  onPrimaryColorChange={handlePrimaryColorChange}
+                  currentLocale={locale}
+                  onLocaleChange={handleLocaleChange}
+                />
+              )}
+
+              {tabValue === 3 && notificationSettings && (
+                <NotificationSettings
+                  settings={notificationSettings}
+                  isAdmin={user?.role === 'admin'}
+                  onSettingChange={handleNotificationSettingChange}
+                  pushSupported={isPushSupported()}
+                  pushPermission={pushPermission}
+                  pushSubscribed={pushSubscribed}
+                  onPushMasterToggle={handlePushMasterToggle}
+                  isEnablingPush={isEnablingPush}
+                />
+              )}
+
+              {tabValue === 4 && (
+                <SecuritySettings
+                  onChangePassword={handleChangePassword}
+                  isLoading={isLoading}
+                />
+              )}
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -659,4 +610,4 @@ const SettingsPage: React.FC = () => {
   );
 };
 
-export default SettingsPage; 
+export default SettingsPage;

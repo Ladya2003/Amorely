@@ -16,9 +16,36 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../contexts/AuthContext';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
+import {
+  getGamePlayBlockedCardSx,
+  getGamePlayBlockedPanelSx,
+  getGamePlayBoardHiddenSx,
+  getGamePlayBoardWrapSx,
+  getGamePlayCenterCardSx,
+  getGamePlayCenterPanelSx,
+  getGamePlayContentSx,
+  getGamePlayCountdownSx,
+  getGamePlayHeaderIconButtonSx,
+  getGamePlayHeaderSx,
+  getGamePlayHeaderSubtitleSx,
+  getGamePlayHeaderTitleSx,
+  getGamePlayHintCardSx,
+  getGamePlayLoadingWrapSx,
+  getGamePlayOverlaySx,
+  getGamePlayPrimaryButtonSx,
+  getGamePlayQuizCellButtonSx,
+  getGamePlayReadyDotSx,
+  getGamePlayReadyLabelSx,
+  getGamePlayRootSx,
+  getGamePlayTimerBarSx,
+  getGamePlayTimerProgressSx,
+  getGamePlayTimerTextSx,
+  getGamePlayTurnBannerSx,
+} from '../components/Games/gamePlayPageStyles';
 import socketService from '../services/socketService';
 import {
   fetchQuizGameState,
@@ -30,6 +57,16 @@ import {
   type QuizGameState,
 } from '../services/gamesService';
 import { fireRoundConfetti } from '../utils/roundConfetti';
+import {
+  GAME_TIMER_LOW_THRESHOLD,
+  playRoundFailureSound,
+  playRoundSuccessSound,
+  playGameReadySound,
+  playNextRoundSound,
+  unlockGameAudio,
+  useLobbyCountdownSound,
+  useRoundTimerSound,
+} from '../utils/gameSounds';
 import { formatGameWaitDuration } from '../localization/gameHelpers';
 
 const QUIZ_GAME_INFO_PATH = '/chat/games/quiz';
@@ -43,6 +80,7 @@ const LOVE_LANGUAGE_HINT_KEYS = [
 ] as const;
 
 const QuizGamePlayPage: React.FC = () => {
+  const theme = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -78,6 +116,9 @@ const QuizGamePlayPage: React.FC = () => {
       );
       if (hasStrongScore) {
         fireRoundConfetti();
+        void playRoundSuccessSound();
+      } else {
+        void playRoundFailureSound();
       }
     }
 
@@ -137,7 +178,7 @@ const QuizGamePlayPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [applyState]);
+  }, [applyState, t]);
 
   useEffect(() => {
     loadState();
@@ -172,7 +213,7 @@ const QuizGamePlayPage: React.FC = () => {
       socket.off('quiz_game_state', handleState);
       socket.off('quiz_game_error', handleError);
     };
-  }, [user?._id, applyState]);
+  }, [user?._id, applyState, t]);
 
   useEffect(() => {
     if (!state?.inLobby) {
@@ -205,6 +246,13 @@ const QuizGamePlayPage: React.FC = () => {
     return () => window.clearInterval(timerId);
   }, [state?.inLobby, state?.lobbySecondsRemaining, requestLobbySync]);
 
+  useLobbyCountdownSound(
+    lobbySecondsLeft,
+    Boolean(state?.inLobby),
+    Boolean(state?.currentQuestion && !state.inLobby)
+  );
+  useRoundTimerSound(questionSecondsLeft, state?.currentQuestion?.status === 'answering');
+
   useEffect(() => {
     const question = state?.currentQuestion;
     if (!question || question.status !== 'answering') {
@@ -228,9 +276,11 @@ const QuizGamePlayPage: React.FC = () => {
     }, 1000);
 
     return () => window.clearInterval(timerId);
-  }, [state?.currentQuestion?.status, state?.currentQuestion?.cellKey, applyState]);
+  }, [state?.currentQuestion, applyState]);
 
   const handleReady = async () => {
+    unlockGameAudio();
+    void playGameReadySound();
     setSubmitting(true);
     try {
       const socket = socketService.getSocket();
@@ -277,6 +327,7 @@ const QuizGamePlayPage: React.FC = () => {
       return;
     }
 
+    unlockGameAudio();
     setSubmitting(true);
     try {
       const socket = socketService.getSocket();
@@ -299,6 +350,8 @@ const QuizGamePlayPage: React.FC = () => {
   };
 
   const handleDismissReveal = async () => {
+    unlockGameAudio();
+    void playNextRoundSound();
     setSubmitting(true);
     try {
       const socket = socketService.getSocket();
@@ -321,7 +374,7 @@ const QuizGamePlayPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={getGamePlayLoadingWrapSx(theme)}>
         <CircularProgress />
       </Box>
     );
@@ -329,64 +382,62 @@ const QuizGamePlayPage: React.FC = () => {
 
   if (blockedReason) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 4 }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          {t('games.common.needPartner')}
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          {blockedReason}
-        </Typography>
-        <Button variant="contained" onClick={() => navigate('/settings')}>
-          {t('games.common.goToSettings')}
-        </Button>
+      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+        <Box sx={getGamePlayBlockedCardSx(theme)}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            {t('games.common.needPartner')}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 3 }}>
+            {blockedReason}
+          </Typography>
+          <Button variant="contained" sx={getGamePlayPrimaryButtonSx()} onClick={() => navigate('/settings')}>
+            {t('games.common.goToSettings')}
+          </Button>
+        </Box>
       </Box>
     );
   }
 
   if (!state) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>
-          {t('games.common.loadFailed')}
-        </Typography>
-        <Button onClick={() => navigate(QUIZ_GAME_INFO_PATH)}>{t('games.common.back')}</Button>
+      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+        <Box sx={getGamePlayBlockedCardSx(theme)}>
+          <Typography color="text.secondary" sx={{ mb: 2 }}>
+            {t('games.common.loadFailed')}
+          </Typography>
+          <Button onClick={() => navigate(QUIZ_GAME_INFO_PATH)}>{t('games.common.back')}</Button>
+        </Box>
       </Box>
     );
   }
 
   if (state.onCooldown) {
     return (
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ px: 1, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label={t('games.common.back')}>
+      <Box sx={getGamePlayRootSx(theme)}>
+        <Box sx={getGamePlayHeaderSx(theme)}>
+          <IconButton
+            sx={getGamePlayHeaderIconButtonSx(theme)}
+            onClick={() => navigate(QUIZ_GAME_INFO_PATH)}
+            aria-label={t('games.common.back')}
+          >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {t('games.quiz.name')}
-          </Typography>
+          <Typography sx={getGamePlayHeaderTitleSx()}>{t('games.quiz.name')}</Typography>
         </Box>
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            p: 3,
-            textAlign: 'center',
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            {t('games.quiz.play.boardComplete')}
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
-            {t('games.quiz.play.pairScore', { score: state.totalScore })}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t('games.quiz.play.newQuestionsIn', {
-              duration: formatGameWaitDuration(t, state.cooldownSecondsRemaining),
-            })}
-          </Typography>
+        <Box sx={getGamePlayCenterPanelSx(theme)}>
+          <Box sx={getGamePlayCenterCardSx(theme)}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              {t('games.quiz.play.boardComplete')}
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              {t('games.quiz.play.pairScore', { score: state.totalScore })}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('games.quiz.play.newQuestionsIn', {
+                duration: formatGameWaitDuration(t, state.cooldownSecondsRemaining),
+              })}
+            </Typography>
+          </Box>
         </Box>
       </Box>
     );
@@ -399,100 +450,69 @@ const QuizGamePlayPage: React.FC = () => {
     const isCountdownActive = lobbySecondsLeft > 0;
 
     return (
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ px: 1, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label={t('games.common.back')}>
+      <Box sx={getGamePlayRootSx(theme)}>
+        <Box sx={getGamePlayHeaderSx(theme)}>
+          <IconButton
+            sx={getGamePlayHeaderIconButtonSx(theme)}
+            onClick={() => navigate(QUIZ_GAME_INFO_PATH)}
+            aria-label={t('games.common.back')}
+          >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {t('games.quiz.name')}
-          </Typography>
+          <Typography sx={getGamePlayHeaderTitleSx()}>{t('games.quiz.name')}</Typography>
         </Box>
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            p: 3,
-            maxWidth: 420,
-            mx: 'auto',
-            textAlign: 'center',
-          }}
-        >
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            {isCountdownActive ? t('games.common.startingSoon') : t('games.common.readyToPlay')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('games.quiz.play.pairScore', { score: state.totalScore })}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-            {isCountdownActive
-              ? t('games.quiz.play.bothReadyOpen')
-              : t('games.quiz.play.pressReadyStart')}
-          </Typography>
-          <Stack direction="row" spacing={4} sx={{ mb: 4 }}>
-            <Stack alignItems="center" spacing={1}>
-              <Box
-                component="button"
-                type="button"
-                onClick={handleReady}
-                disabled={isMeReady || submitting || isCountdownActive}
-                aria-label={isMeReady ? t('games.common.youReadyAria') : t('games.common.confirmReadyAria')}
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
-                  bgcolor: isMeReady ? 'success.main' : 'action.selected',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: isMeReady ? 'success.contrastText' : 'text.secondary',
-                  fontWeight: 700,
-                  border: 'none',
-                  p: 0,
-                  cursor:
-                    isMeReady || submitting || isCountdownActive ? 'default' : 'pointer',
-                }}
-              >
-                {isMeReady ? '✓' : '…'}
-              </Box>
-              <Typography variant="caption">{t('games.common.you')}</Typography>
-            </Stack>
-            <Stack alignItems="center" spacing={1}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
-                  bgcolor: isPartnerReady ? 'success.main' : 'action.selected',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: isPartnerReady ? 'success.contrastText' : 'text.secondary',
-                  fontWeight: 700,
-                }}
-              >
-                {isPartnerReady ? '✓' : '…'}
-              </Box>
-              <Typography variant="caption">{t('games.common.partner')}</Typography>
-            </Stack>
-          </Stack>
-          {isCountdownActive ? (
-            <Typography variant="h3" sx={{ fontWeight: 800 }}>
-              {lobbySecondsLeft}
+        <Box sx={getGamePlayCenterPanelSx(theme)}>
+          <Box sx={getGamePlayCenterCardSx(theme)}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              {isCountdownActive ? t('games.common.startingSoon') : t('games.common.readyToPlay')}
             </Typography>
-          ) : (
-            <Button
-              variant="contained"
-              size="large"
-              disabled={isMeReady || submitting}
-              onClick={handleReady}
-            >
-              {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
-            </Button>
-          )}
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t('games.quiz.play.pairScore', { score: state.totalScore })}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+              {isCountdownActive
+                ? t('games.quiz.play.bothReadyOpen')
+                : t('games.quiz.play.pressReadyStart')}
+            </Typography>
+            <Stack direction="row" spacing={4} sx={{ mb: 4, justifyContent: 'center' }}>
+              <Stack alignItems="center" spacing={1}>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={handleReady}
+                  disabled={isMeReady || submitting || isCountdownActive}
+                  aria-label={isMeReady ? t('games.common.youReadyAria') : t('games.common.confirmReadyAria')}
+                  sx={getGamePlayReadyDotSx(theme, {
+                    ready: isMeReady,
+                    clickable: !isMeReady && !submitting && !isCountdownActive,
+                  })}
+                >
+                  {isMeReady ? '✓' : '…'}
+                </Box>
+                <Typography sx={getGamePlayReadyLabelSx()}>{t('games.common.you')}</Typography>
+              </Stack>
+              <Stack alignItems="center" spacing={1}>
+                <Box sx={getGamePlayReadyDotSx(theme, { ready: isPartnerReady })}>
+                  {isPartnerReady ? '✓' : '…'}
+                </Box>
+                <Typography sx={getGamePlayReadyLabelSx()}>{t('games.common.partner')}</Typography>
+              </Stack>
+            </Stack>
+            {isCountdownActive ? (
+              <Typography sx={getGamePlayCountdownSx()}>{lobbySecondsLeft}</Typography>
+            ) : (
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                sx={getGamePlayPrimaryButtonSx()}
+                disabled={isMeReady || submitting}
+                onClick={handleReady}
+              >
+                {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
+              </Button>
+            )}
+          </Box>
         </Box>
         <CustomSnackbar
           open={toast.open}
@@ -512,132 +532,111 @@ const QuizGamePlayPage: React.FC = () => {
   const reveal = question?.reveal;
   const isAnswering = question?.status === 'answering';
   const isRevealed = question?.status === 'revealed';
+  const isTimeLow = isAnswering && questionSecondsLeft <= GAME_TIMER_LOW_THRESHOLD;
   const timeProgress = question
     ? Math.max(0, Math.min(100, (questionSecondsLeft / state.questionTimeSec) * 100))
     : 0;
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Box sx={getGamePlayRootSx(theme)}>
       <Box
-        sx={{
-          px: 1,
-          py: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          flexShrink: 0,
-        }}
+        sx={question ? getGamePlayBoardHiddenSx() : undefined}
+        aria-hidden={Boolean(question)}
       >
-        <IconButton onClick={() => navigate(QUIZ_GAME_INFO_PATH)} aria-label={t('games.common.back')}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {t('games.quiz.name')}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {t('games.quiz.play.scoreRemaining', {
-              score: state.totalScore,
-              count: state.cellsRemaining,
-            })}
-          </Typography>
+        <Box sx={getGamePlayHeaderSx(theme)}>
+          <IconButton
+            sx={getGamePlayHeaderIconButtonSx(theme)}
+            onClick={() => navigate(QUIZ_GAME_INFO_PATH)}
+            aria-label={t('games.common.back')}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={getGamePlayHeaderTitleSx()}>{t('games.quiz.name')}</Typography>
+            <Typography component="span" sx={getGamePlayHeaderSubtitleSx()}>
+              {t('games.quiz.play.scoreRemaining', {
+                score: state.totalScore,
+                count: state.cellsRemaining,
+              })}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ ...getGamePlayContentSx(), p: 1 }}>
+          {!state.currentQuestion && (
+            <Typography component="div" sx={getGamePlayTurnBannerSx(theme, state.isMyTurnToPick)}>
+              {state.isMyTurnToPick
+                ? t('games.quiz.play.yourTurnPick')
+                : t('games.quiz.play.partnerTurnPick')}
+            </Typography>
+          )}
+          <Box sx={getGamePlayBoardWrapSx(theme)}>
+            <Table size="small" sx={{ tableLayout: 'fixed' }}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700, width: '28%' }} />
+                {POINT_TIERS.map((points) => (
+                  <TableCell key={points} align="center" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                    {points}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {categories.map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '0.8rem', lineHeight: 1.2 }}>
+                    {category.name}
+                  </TableCell>
+                  {POINT_TIERS.map((points) => {
+                    const cell = state.boardCells.find(
+                      (item) => item.categoryId === category.id && item.points === points
+                    );
+                    const used = cell?.used ?? true;
+                    return (
+                      <TableCell key={points} align="center" sx={{ p: 0.5 }}>
+                        <Button
+                          fullWidth
+                          variant={used ? 'outlined' : 'contained'}
+                          disabled={
+                            used ||
+                            submitting ||
+                            Boolean(state.currentQuestion) ||
+                            !state.isMyTurnToPick
+                          }
+                          onClick={() => handlePickCell(category.id, points)}
+                          sx={getGamePlayQuizCellButtonSx(theme, used)}
+                        >
+                          {used ? '—' : points}
+                        </Button>
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          </Box>
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 1 }}>
-        {!state.currentQuestion && (
-          <Typography
-            variant="body2"
-            align="center"
-            sx={{
-              mb: 1.5,
-              py: 1,
-              px: 1.5,
-              borderRadius: 1,
-              bgcolor: state.isMyTurnToPick ? 'primary.main' : 'action.selected',
-              color: state.isMyTurnToPick ? 'primary.contrastText' : 'text.secondary',
-              fontWeight: 600,
-            }}
-          >
-            {state.isMyTurnToPick
-              ? t('games.quiz.play.yourTurnPick')
-              : t('games.quiz.play.partnerTurnPick')}
-          </Typography>
-        )}
-        <Table size="small" sx={{ tableLayout: 'fixed' }}>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700, width: '28%' }} />
-              {POINT_TIERS.map((points) => (
-                <TableCell key={points} align="center" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                  {points}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {categories.map((category) => (
-              <TableRow key={category.id}>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.8rem', lineHeight: 1.2 }}>
-                  {category.name}
-                </TableCell>
-                {POINT_TIERS.map((points) => {
-                  const cell = state.boardCells.find(
-                    (item) => item.categoryId === category.id && item.points === points
-                  );
-                  const used = cell?.used ?? true;
-                  return (
-                    <TableCell key={points} align="center" sx={{ p: 0.5 }}>
-                      <Button
-                        fullWidth
-                        variant={used ? 'outlined' : 'contained'}
-                        disabled={
-                          used ||
-                          submitting ||
-                          Boolean(state.currentQuestion) ||
-                          !state.isMyTurnToPick
-                        }
-                        onClick={() => handlePickCell(category.id, points)}
-                        sx={{
-                          minHeight: 44,
-                          fontWeight: 700,
-                          opacity: used ? 0.45 : 1,
-                        }}
-                      >
-                        {used ? '—' : points}
-                      </Button>
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
-
       {question && (
-        <Box
-          sx={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 1200,
-            bgcolor: 'background.paper',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
+        <Box sx={getGamePlayOverlaySx(theme)}>
           {isAnswering && (
-            <Box sx={{ flexShrink: 0 }}>
-              <Typography variant="caption" align="center" sx={{ display: 'block', py: 0.75, fontWeight: 700 }}>
+            <Box sx={getGamePlayTimerBarSx(theme)}>
+              <Typography component="span" sx={getGamePlayTimerTextSx(isTimeLow)}>
                 {t('games.common.secondsLeft', { seconds: questionSecondsLeft })}
               </Typography>
-              <LinearProgress variant="determinate" value={timeProgress} sx={{ height: 6, borderRadius: 0 }} />
+              <LinearProgress
+                variant="determinate"
+                value={timeProgress}
+                color={isTimeLow ? 'error' : 'primary'}
+                sx={getGamePlayTimerProgressSx()}
+              />
             </Box>
           )}
 
-          <Box sx={{ flex: 1, overflow: 'auto', p: 2, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ ...getGamePlayContentSx(), display: 'flex', flexDirection: 'column' }}>
             <Typography variant="overline" color="primary.main">
               {question.categoryName} · {question.points}
             </Typography>
@@ -646,16 +645,7 @@ const QuizGamePlayPage: React.FC = () => {
             </Typography>
 
             {question.showLoveLanguagesHint && (
-              <Box
-                sx={{
-                  mb: 2,
-                  p: 1.5,
-                  borderRadius: 1,
-                  bgcolor: 'action.hover',
-                  border: 1,
-                  borderColor: 'divider',
-                }}
-              >
+              <Box sx={getGamePlayHintCardSx(theme)}>
                 <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 0.75 }}>
                   {t('games.quiz.play.loveLanguagesHint.title')}
                 </Typography>
@@ -695,6 +685,7 @@ const QuizGamePlayPage: React.FC = () => {
                   variant="contained"
                   size="large"
                   fullWidth
+                  sx={getGamePlayPrimaryButtonSx()}
                   disabled={!answerInput.trim() || question.myAnswerSubmitted || submitting}
                   onClick={handleSubmitAnswer}
                 >
@@ -731,7 +722,14 @@ const QuizGamePlayPage: React.FC = () => {
                     points: reveal.pointsAwardedTotal,
                   })}
                 </Typography>
-                <Button variant="contained" size="large" fullWidth onClick={handleDismissReveal} disabled={submitting}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  sx={getGamePlayPrimaryButtonSx()}
+                  onClick={handleDismissReveal}
+                  disabled={submitting}
+                >
                   {t('games.quiz.play.backToBoard')}
                 </Button>
               </Stack>

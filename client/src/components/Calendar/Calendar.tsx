@@ -1,17 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   Typography, 
-  Tabs, 
-  Tab, 
   ToggleButtonGroup, 
   ToggleButton, 
   IconButton,
   Button,
   ButtonBase,
   Grid,
-  Paper,
   DialogTitle,
   DialogContent,
   DialogContentText,
@@ -44,6 +41,29 @@ import {
   updateCalendarUiPreferences,
   type CalendarViewMode
 } from '../../utils/calendarUiPreferences';
+import { getChatTabToggleGroupSx } from '../Chat/chatListStyles';
+import { useTabSlideDirection } from '../../hooks/useTabSlideDirection';
+import {
+  calendarPageEnterSx,
+  getCalendarControlsRowSx,
+  getCalendarCreateButtonSx,
+  getCalendarDeleteAllButtonSx,
+  getCalendarFilterButtonSx,
+  getCalendarHeaderGlowWrapSx,
+  getCalendarIconButtonSx,
+  getCalendarMainTabsSx,
+  getCalendarMonthNavRowSx,
+  getCalendarMonthPanelEnterSx,
+  getCalendarMonthPickerButtonSx,
+  getCalendarMonthTitleEnterSx,
+  getCalendarMonthTitleSx,
+  getCalendarRootSx,
+  getCalendarScrollSx,
+  getCalendarTabPanelEnterSx,
+  getCalendarToolbarRowSx,
+  getCalendarViewToggleGroupSx,
+  getCalendarWeekdayLabelSx,
+} from './calendarPageStyles';
 
 interface MediaFile {
   _id: string;
@@ -95,33 +115,11 @@ const Calendar: React.FC<CalendarProps> = ({
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const outlinedControlSx = {
-    borderRadius: 2,
-    border: isMobile ? 1 : 0,
-    borderColor: 'divider'
-  };
-  const filterButtonSx = {
-    ...outlinedControlSx,
-    alignSelf: 'stretch',
-    width: 'auto',
-    minWidth: 'unset',
-    minHeight: 'unset',
-    px: 0.75,
-    py: 0,
-    boxSizing: 'border-box'
-  };
-  const monthNavButtonSx = {
-    ...outlinedControlSx,
-    bgcolor: 'transparent',
-    boxSizing: 'border-box',
-    '&:hover': {
-      bgcolor: 'transparent'
-    }
-  };
   const weekdays = getCalendarWeekdays(t);
   const skipNextSaveRef = useRef(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [monthDirection, setMonthDirection] = useState(0);
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [view, setView] = useState<CalendarViewMode>(() =>
@@ -130,6 +128,7 @@ const Calendar: React.FC<CalendarProps> = ({
   const [tabValue, setTabValue] = useState(() =>
     user?._id && readCalendarUiPreferences(user._id).mainTab === 'plans' ? 1 : 0
   );
+  const calendarTabDirection = useTabSlideDirection(tabValue);
   const [eventFilter, setEventFilter] = useState<EventFilter>({
     dateFrom: null,
     dateTo: null,
@@ -177,8 +176,10 @@ const Calendar: React.FC<CalendarProps> = ({
     }
   };
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const handleMainTabChange = (_event: React.MouseEvent<HTMLElement>, newValue: number | null) => {
+    if (newValue !== null) {
+      setTabValue(newValue);
+    }
   };
 
   const isPlansTab = tabValue === 1;
@@ -207,13 +208,29 @@ const Calendar: React.FC<CalendarProps> = ({
     }
   };
 
+  const goToMonth = useCallback((nextDate: Date, direction?: -1 | 0 | 1) => {
+    const normalized = startOfMonth(nextDate);
+
+    if (direction !== undefined) {
+      setMonthDirection(direction);
+    } else {
+      const currentMonthStart = startOfMonth(currentDate).getTime();
+      const diff = normalized.getTime() - currentMonthStart;
+      setMonthDirection(diff > 0 ? 1 : diff < 0 ? -1 : 0);
+    }
+
+    setCurrentDate(normalized);
+  }, [currentDate]);
+
   const handlePrevMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
+    goToMonth(subMonths(currentDate, 1), -1);
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
+    goToMonth(addMonths(currentDate, 1), 1);
   };
+
+  const monthKey = format(currentDate, 'yyyy-MM');
 
   const isFilterActive = isEventFilterActive(eventFilter);
 
@@ -284,148 +301,127 @@ const Calendar: React.FC<CalendarProps> = ({
   });
 
   return (
-    <Box sx={{ width: '100%', height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-      {/* Верхний контейнер с навигацией - фиксированный */}
-      <Box sx={{ flexShrink: 0, bgcolor: 'background.paper' }}>
-        {/* Табы */}
-        <Box sx={{ 
-          borderBottom: 1, 
-          borderColor: 'divider', 
-          p: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
-        }}>
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            aria-label="calendar tabs"
-            sx={{ flexGrow: 1, minWidth: 0 }}
-          >
-            <Tab icon={<CalendarMonthIcon />} label={t('calendar.tab')} />
-            <Tab icon={<ListAltIcon />} label={t('calendar.plansTab')} />
-          </Tabs>
-          {onDeleteAll && (
-            <IconButton
-              onClick={handleOpenDeleteAllDialog}
-              aria-label={t('calendar.deleteAll.ariaLabel')}
-              color="error"
+    <Box sx={getCalendarRootSx()}>
+      <Box sx={(muiTheme) => getCalendarHeaderGlowWrapSx(muiTheme)}>
+        <Box sx={{ position: 'relative', zIndex: 1, ...calendarPageEnterSx }}>
+          <Box sx={getCalendarToolbarRowSx()}>
+            <ToggleButtonGroup
+              value={tabValue}
+              exclusive
+              onChange={handleMainTabChange}
+              aria-label="calendar tabs"
               size="small"
-              sx={{ flexShrink: 0, mr: 0.5 }}
+              sx={{ ...getChatTabToggleGroupSx, ...getCalendarMainTabsSx }}
             >
-              <DeleteSweepIcon />
-            </IconButton>
-          )}
-        </Box>
+              <ToggleButton value={0}>
+                <CalendarMonthIcon sx={{ fontSize: 18 }} />
+                {t('calendar.tab')}
+              </ToggleButton>
+              <ToggleButton value={1}>
+                <ListAltIcon sx={{ fontSize: 18 }} />
+                {t('calendar.plansTab')}
+              </ToggleButton>
+            </ToggleButtonGroup>
+            {onDeleteAll && (
+              <IconButton
+                onClick={handleOpenDeleteAllDialog}
+                aria-label={t('calendar.deleteAll.ariaLabel')}
+                size="small"
+                sx={getCalendarDeleteAllButtonSx(theme)}
+              >
+                <DeleteSweepIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
 
-        {tabValue === 0 && (
-          <>
-            {/* Переключатель месяцев - только для календаря */}
-            {view === 'circles' && (
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                p: 2
-              }}>
-                <IconButton onClick={handlePrevMonth} size="small" sx={monthNavButtonSx}>
-                  <ArrowBackIosNewIcon fontSize="small" />
-                </IconButton>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          {tabValue === 0 && (
+            <>
+              {view === 'circles' && (
+                <Box sx={getCalendarMonthNavRowSx()}>
+                  <IconButton onClick={handlePrevMonth} size="small" sx={getCalendarIconButtonSx(theme)}>
+                    <ArrowBackIosNewIcon fontSize="small" />
+                  </IconButton>
                   <ButtonBase
                     onClick={() => setMonthPickerOpen(true)}
                     aria-label={t('calendar.monthPicker.ariaLabel')}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.25,
-                      px: isMobile ? 1.25 : 0.5,
-                      py: isMobile ? 0.5 : 0.25,
-                      ...outlinedControlSx
-                    }}
+                    sx={getCalendarMonthPickerButtonSx(theme, isMobile)}
                   >
-                    <Typography variant="h6" sx={{ fontWeight: 400, textTransform: 'capitalize' }}>
+                    <Typography
+                      key={monthKey}
+                      sx={{
+                        ...getCalendarMonthTitleSx(),
+                        ...getCalendarMonthTitleEnterSx(monthDirection),
+                      }}
+                    >
                       {formatCalendarMonthYear(currentDate, i18n.language)}
                     </Typography>
                     <ExpandMoreIcon
                       fontSize="small"
                       sx={{
-                        color: isMobile ? 'primary.main' : 'text.secondary',
+                        color: 'primary.main',
                         flexShrink: 0,
-                        mr: -0.65
+                        mr: -0.5,
                       }}
                     />
                   </ButtonBase>
+                  <IconButton onClick={handleNextMonth} size="small" sx={getCalendarIconButtonSx(theme)}>
+                    <ArrowForwardIosIcon fontSize="small" />
+                  </IconButton>
                 </Box>
-                <IconButton onClick={handleNextMonth} size="small" sx={monthNavButtonSx}>
-                  <ArrowForwardIosIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            )}
+              )}
 
-            {/* Переключатель вида */}
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              px: 2, 
-              pb: 1,
-              pt: view === 'grid' ? 2 : 0 // Отступ сверху для плитки
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 0.5 }}>
-                <ToggleButtonGroup
-                  value={view}
-                  exclusive
-                  onChange={handleViewChange}
-                  aria-label="calendar view"
-                  size="small"
+              <Box sx={getCalendarControlsRowSx({ gridView: view === 'grid' })}>
+                <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 0.75 }}>
+                  <ToggleButtonGroup
+                    value={view}
+                    exclusive
+                    onChange={handleViewChange}
+                    aria-label="calendar view"
+                    sx={getCalendarViewToggleGroupSx}
+                  >
+                    <ToggleButton value="circles" aria-label="circles view">
+                      <CalendarMonthIcon sx={{ fontSize: '1.25rem' }} />
+                    </ToggleButton>
+                    <ToggleButton value="grid" aria-label="grid view">
+                      <GridViewIcon sx={{ fontSize: '1.25rem' }} />
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                  <IconButton
+                    onClick={() => setFilterDialogOpen(true)}
+                    aria-label={t('calendar.filter.ariaLabel')}
+                    sx={getCalendarFilterButtonSx(theme, isFilterActive)}
+                  >
+                    <FilterListIcon sx={{ fontSize: '1.25rem' }} />
+                  </IconButton>
+                </Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => onAddContent(currentDate)}
+                  sx={getCalendarCreateButtonSx()}
                 >
-                  <ToggleButton value="circles" aria-label="circles view">
-                    <CalendarMonthIcon />
-                  </ToggleButton>
-                  <ToggleButton value="grid" aria-label="grid view">
-                    <GridViewIcon />
-                  </ToggleButton>
-                </ToggleButtonGroup>
-                <IconButton
-                  onClick={() => setFilterDialogOpen(true)}
-                  aria-label={t('calendar.filter.ariaLabel')}
-                  size="small"
-                  color={isFilterActive ? 'primary' : 'default'}
-                  sx={filterButtonSx}
-                >
-                  <FilterListIcon />
-                </IconButton>
+                  {t('calendar.createEvent')}
+                </Button>
               </Box>
-              <Button
-                variant="outlined"
-                color="primary"
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={() => onAddContent(currentDate)}
-                sx={{
-                  '& .MuiButton-startIcon': {
-                    marginRight: 0.5
-                  }
-                }}
-              >
-                {t('calendar.createEvent')}
-              </Button>
-            </Box>
-          </>
-        )}
+            </>
+          )}
+        </Box>
       </Box>
 
-      {/* Нижний контейнер с контентом - скроллящийся */}
-      <Box sx={{ flexGrow: 1, minHeight: 0, overflow: 'auto' }}>
+      <Box sx={getCalendarScrollSx()}>
+        <Box
+          key={tabValue}
+          sx={getCalendarTabPanelEnterSx(calendarTabDirection)}
+        >
         {tabValue === 0 ? (
-          <Box sx={{ p: 1 }}>
+          <Box>
             {view === 'circles' ? (
-              <Box>
+              <Box key={monthKey} sx={getCalendarMonthPanelEnterSx(monthDirection)}>
                 <Grid container spacing={1} sx={{ mb: 1 }}>
                   {weekdays.map((day, index) => (
                     <Grid size={{ xs: 12/7 }} key={index}>
-                      <Typography align="center" variant="body2" color="text.secondary">
+                      <Typography align="center" sx={getCalendarWeekdayLabelSx()}>
                         {day}
                       </Typography>
                     </Grid>
@@ -457,6 +453,7 @@ const Calendar: React.FC<CalendarProps> = ({
         ) : (
           <PlansNotes refreshKey={plansRefreshKey} noteIdFromUrl={noteIdFromUrl} />
         )}
+        </Box>
       </Box>
 
       <EventFilterDialog
@@ -470,7 +467,7 @@ const Calendar: React.FC<CalendarProps> = ({
         open={monthPickerOpen}
         onClose={() => setMonthPickerOpen(false)}
         value={currentDate}
-        onChange={setCurrentDate}
+        onChange={goToMonth}
       />
 
       <ResponsiveDialog

@@ -52,12 +52,6 @@ const FrequencyChangeDialog: React.FC<FrequencyChangeDialogProps> = ({
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)'
-        }
-      }}
     >
       <DialogTitle sx={{ pb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -68,7 +62,7 @@ const FrequencyChangeDialog: React.FC<FrequencyChangeDialogProps> = ({
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={{ pb: 3 }}>
+      <DialogContent sx={{ pb: 2 }}>
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2" sx={{ mb: 1 }}>
             <strong>Текущие настройки:</strong> {oldFrequency.count} контента каждые {oldFrequency.hours} часов
@@ -136,7 +130,7 @@ const FrequencyChangeDialog: React.FC<FrequencyChangeDialogProps> = ({
         </FormControl>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+      <DialogActions sx={{ gap: 1 }}>
         <Button
           onClick={handleClose}
           variant="outlined"

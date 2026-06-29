@@ -11,6 +11,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,8 +24,24 @@ import {
   type TapShopItem,
 } from '../services/gamesService';
 import TapGameShop from '../components/Games/TapGameShop';
+import {
+  getGamePlayBlockedCardSx,
+  getGamePlayBlockedPanelSx,
+  getGamePlayContentSx,
+  getGamePlayHeaderIconButtonSx,
+  getGamePlayHeaderSx,
+  getGamePlayHeaderSubtitleSx,
+  getGamePlayHeaderTitleSx,
+  getGamePlayLoadingWrapSx,
+  getGamePlayOutlinedButtonSx,
+  getGamePlayPrimaryButtonSx,
+  getGamePlayRootSx,
+  getGamePlayTapBlockSx,
+  getGamePlayTimerProgressSx,
+} from '../components/Games/gamePlayPageStyles';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import { fireRoundConfetti } from '../utils/roundConfetti';
+import { playRoundSuccessSound, playTapSound, unlockGameAudio } from '../utils/gameSounds';
 
 interface TapFloatText {
   id: number;
@@ -119,6 +136,7 @@ const showRoundCompletionToast = (
   }
 
   fireRoundConfetti();
+  void playRoundSuccessSound();
 
   setToast({
     open: true,
@@ -128,6 +146,7 @@ const showRoundCompletionToast = (
 };
 
 const TapGamePlayPage: React.FC = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -310,6 +329,9 @@ const TapGamePlayPage: React.FC = () => {
       return;
     }
 
+    unlockGameAudio();
+    void playTapSound();
+
     const optimisticNext = applyOptimisticTap(state, user._id);
     if (!optimisticNext) {
       return;
@@ -325,7 +347,7 @@ const TapGamePlayPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={getGamePlayLoadingWrapSx(theme)}>
         <CircularProgress />
       </Box>
     );
@@ -333,30 +355,34 @@ const TapGamePlayPage: React.FC = () => {
 
   if (blockedReason) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center', maxWidth: 420, mx: 'auto', mt: 4 }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>
-          {t('games.common.needPartner')}
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          {blockedReason}
-        </Typography>
-        <Stack direction="row" spacing={1} justifyContent="center">
-          <Button variant="contained" onClick={() => navigate('/settings')}>
-            {t('games.common.goToSettings')}
-          </Button>
-          <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
-        </Stack>
+      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+        <Box sx={getGamePlayBlockedCardSx(theme)}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            {t('games.common.needPartner')}
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 3 }}>
+            {blockedReason}
+          </Typography>
+          <Stack direction="row" spacing={1} justifyContent="center">
+            <Button variant="contained" sx={getGamePlayPrimaryButtonSx()} onClick={() => navigate('/settings')}>
+              {t('games.common.goToSettings')}
+            </Button>
+            <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
+          </Stack>
+        </Box>
       </Box>
     );
   }
 
   if (!state) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>
-          {t('games.common.loadFailed')}
-        </Typography>
-        <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
+      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+        <Box sx={getGamePlayBlockedCardSx(theme)}>
+          <Typography color="text.secondary" sx={{ mb: 2 }}>
+            {t('games.common.loadFailed')}
+          </Typography>
+          <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
+        </Box>
       </Box>
     );
   }
@@ -365,21 +391,10 @@ const TapGamePlayPage: React.FC = () => {
   const partnerProgress = Math.min(100, (state.partnerProgressThisRound / state.targetTaps) * 100);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <Box
-        sx={{
-          px: 1,
-          py: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
+    <Box sx={getGamePlayRootSx(theme)}>
+      <Box sx={getGamePlayHeaderSx(theme)}>
         <IconButton
+          sx={getGamePlayHeaderIconButtonSx(theme)}
           onClick={() => {
             if (flushDebounceRef.current !== null) {
               window.clearTimeout(flushDebounceRef.current);
@@ -392,10 +407,10 @@ const TapGamePlayPage: React.FC = () => {
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          <Typography sx={getGamePlayHeaderTitleSx()}>
             {t('games.common.round')} {state.round}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography component="span" sx={getGamePlayHeaderSubtitleSx()}>
             {t('games.tap.play.targetAndPoints', { target: state.targetTaps, points: state.points })}
           </Typography>
         </Box>
@@ -403,6 +418,7 @@ const TapGamePlayPage: React.FC = () => {
           size="small"
           variant="outlined"
           startIcon={<StorefrontIcon />}
+          sx={getGamePlayOutlinedButtonSx(theme)}
           onClick={() => setShopOpen(true)}
         >
           {t('games.tap.play.shop')}
@@ -411,9 +427,7 @@ const TapGamePlayPage: React.FC = () => {
 
       <Box
         sx={{
-          flex: 1,
-          overflow: 'auto',
-          p: 2,
+          ...getGamePlayContentSx(),
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -500,31 +514,9 @@ const TapGamePlayPage: React.FC = () => {
                     : t('games.tap.play.tapBlockDisabledAria')
               }
               sx={{
-                position: 'relative',
-                display: 'block',
-                width: '100%',
-                maxWidth: 320,
-                aspectRatio: '1 / 1',
-                flexShrink: 0,
-                border: state.isMyTurn ? '3px solid' : '2px solid',
-                borderColor: state.isMyTurn ? 'primary.main' : 'divider',
-                borderRadius: 4,
-                p: 0,
-                overflow: 'hidden',
-                cursor: state.isMyTurn ? 'pointer' : 'not-allowed',
-                opacity: state.isMyTurn ? 1 : 0.55,
-                transition: 'transform 0.1s ease, box-shadow 0.2s ease, opacity 0.2s ease',
-                boxShadow: state.isMyTurn
-                  ? '0 12px 32px rgba(255, 75, 141, 0.45)'
-                  : '0 4px 16px rgba(0,0,0,0.12)',
-                animation: state.isMyTurn ? 'tapBlockPulse 1.6s ease-in-out infinite' : 'none',
+                ...getGamePlayTapBlockSx(theme, state.isMyTurn),
                 ...tapBlockInteractionSx,
                 '&, & *': tapBlockInteractionSx,
-                '@keyframes tapBlockPulse': {
-                  '0%, 100%': { boxShadow: '0 12px 32px rgba(255, 75, 141, 0.35)' },
-                  '50%': { boxShadow: '0 16px 40px rgba(255, 75, 141, 0.65)' },
-                },
-                '&:active': state.isMyTurn ? { transform: 'scale(0.94)' } : undefined,
               }}
             >
               <Box
@@ -576,7 +568,7 @@ const TapGamePlayPage: React.FC = () => {
                 goal: state.targetTaps,
               })}
             </Typography>
-            <LinearProgress variant="determinate" value={myProgress} sx={{ height: 8, borderRadius: 999 }} />
+            <LinearProgress variant="determinate" value={myProgress} sx={getGamePlayTimerProgressSx()} />
           </Box>
 
           <Box>
@@ -590,7 +582,7 @@ const TapGamePlayPage: React.FC = () => {
               variant="determinate"
               value={partnerProgress}
               color="secondary"
-              sx={{ height: 8, borderRadius: 999 }}
+              sx={getGamePlayTimerProgressSx()}
             />
           </Box>
 

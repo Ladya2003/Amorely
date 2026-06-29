@@ -7,20 +7,24 @@ import {
   Avatar, 
   Typography, 
   IconButton, 
-  Paper,
-  Divider,
   Alert,
   Grid,
+  useTheme,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import AppDatePicker from '../UI/AppDatePicker';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import DisplayBadgePicker from './DisplayBadgePicker';
-import { DATE_INPUT_FORMAT, getDateFnsLocale } from '../../localization/calendarHelpers';
+import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
+import {
+  getSettingsAvatarButtonSx,
+  getSettingsAvatarWrapSx,
+  getSettingsSectionDividerSx,
+  getSettingsSectionSavingSx,
+  getSettingsSectionTitleSx,
+} from './settingsPageStyles';
 
 export interface UserProfile {
   _id: string;
@@ -55,8 +59,8 @@ const formatBirthdayForApi = (birthday: Date | null): string => {
 };
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferenceSaved }) => {
-  const { t, i18n } = useTranslation();
-  const dateFnsLocale = getDateFnsLocale(i18n.language);
+  const { t } = useTranslation();
+  const theme = useTheme();
   const [username, setUsername] = useState(user.username || '');
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
@@ -186,16 +190,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 3, mb: 0, bgcolor: 'transparent' }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
+    <Box>
+      <Typography component="h2" sx={getSettingsSectionTitleSx()}>
         {t('settings.profile.personalInfo')}
         {isSaving && (
-          <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1.5 }}>
+          <Typography component="span" sx={getSettingsSectionSavingSx()}>
             {t('settings.profile.saving')}
           </Typography>
         )}
       </Typography>
-      <Divider sx={{ mb: 3 }} />
+      <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
       
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -206,7 +210,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
       <Box component="div">
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Box sx={{ position: 'relative', mb: 2 }}>
+            <Box sx={getSettingsAvatarWrapSx(theme)}>
               <Avatar
                 src={avatarPreview}
                 alt={username}
@@ -216,8 +220,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                   }
                 }}
                 sx={{
-                  width: 120,
-                  height: 120,
                   cursor: avatarPreview ? 'pointer' : 'default'
                 }}
               />
@@ -226,15 +228,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                 aria-label="upload picture"
                 component="span"
                 onClick={handleAvatarClick}
-                sx={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  bgcolor: 'background.paper',
-                  boxShadow: 1
-                }}
+                size="small"
+                sx={getSettingsAvatarButtonSx(theme)}
               >
-                <PhotoCameraIcon />
+                <PhotoCameraIcon fontSize="small" />
               </IconButton>
               <input
                 ref={fileInputRef}
@@ -290,8 +287,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateFnsLocale}>
-                  <DatePicker
+                  <AppDatePicker
                     label={t('settings.profile.birthday')}
                     value={birthday}
                     onChange={(newValue) => setBirthday(newValue)}
@@ -304,7 +300,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                       },
                     }}
                   />
-                </LocalizationProvider>
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField
@@ -367,7 +362,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
         severity="success"
         onClose={() => setSuccessToastOpen(false)}
       />
-    </Paper>
+    </Box>
   );
 };
 

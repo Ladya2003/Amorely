@@ -1,8 +1,15 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { Box } from '@mui/material';
 import type { DrawStroke } from '../../services/gamesService';
 import type { DrawingTool } from './DrawingToolsToolbar';
 import { floodFillCanvas } from '../../utils/drawCanvasFill';
+import { GAMES_LIST_ITEM_RADIUS } from './gamesListStyles';
+
+export const DRAW_CANVAS_BORDER_RADIUS = GAMES_LIST_ITEM_RADIUS;
+
+export interface DrawCanvasHandle {
+  getCanvas: () => HTMLCanvasElement | null;
+}
 
 export interface DrawCanvasProps {
   strokes: DrawStroke[];
@@ -11,6 +18,14 @@ export interface DrawCanvasProps {
   strokeColor?: string;
   strokeWidth?: number;
   onStroke?: (stroke: DrawStroke) => void;
+  /** Фоновое изображение (например, ранее сохранённый рисунок) */
+  backgroundImageUrl?: string | null;
+  /** Минимальная высота холста в px (по умолчанию 280) */
+  minHeight?: number;
+  /** Скругление контейнера холста в px */
+  borderRadius?: number;
+  /** Показывать рамку вокруг холста */
+  showBorder?: boolean;
 }
 
 const drawCanvasInteractionSx = {
@@ -25,16 +40,21 @@ const drawCanvasInteractionSx = {
   userDrag: 'none',
 } as const;
 
-const DrawCanvas: React.FC<DrawCanvasProps> = ({
+const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
   strokes,
   canDraw,
   tool = 'pen',
   strokeColor = '#111111',
   strokeWidth = 4,
   onStroke,
-}) => {
+  backgroundImageUrl = null,
+  minHeight = 280,
+  borderRadius = DRAW_CANVAS_BORDER_RADIUS,
+  showBorder = true,
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const backgroundImageRef = useRef<HTMLImageElement | null>(null);
   const drawingRef = useRef(false);
   const currentPointsRef = useRef<Array<{ x: number; y: number }>>([]);
   const optimisticStrokesRef = useRef<DrawStroke[]>([]);
@@ -44,6 +64,10 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
   const rafIdRef = useRef<number | null>(null);
   const canDrawRef = useRef(canDraw);
   canDrawRef.current = canDraw;
+
+  useImperativeHandle(ref, () => ({
+    getCanvas: () => canvasRef.current,
+  }), []);
 
   const effectiveWidth = tool === 'eraser' ? strokeWidth * 2.5 : strokeWidth;
   const isEraser = tool === 'eraser';
@@ -109,6 +133,44 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     []
   );
 
+  const paintBackgroundImage = useCallback(
+    (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+      const img = backgroundImageRef.current;
+      if (!img) {
+        return;
+      }
+
+      let drawWidth = img.width;
+      let drawHeight = img.height;
+      let x = 0;
+      let y = 0;
+
+      if (img.width > width || img.height > height) {
+        const scale = Math.min(width / img.width, height / img.height);
+        drawWidth = img.width * scale;
+        drawHeight = img.height * scale;
+      }
+
+      x = (width - drawWidth) / 2;
+      y = (height - drawHeight) / 2;
+      ctx.drawImage(img, x, y, drawWidth, drawHeight);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!backgroundImageUrl) {
+      backgroundImageRef.current = null;
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      backgroundImageRef.current = img;
+    };
+    img.src = backgroundImageUrl;
+  }, [backgroundImageUrl]);
+
   const reconcileOptimisticStrokes = useCallback(() => {
     const serverCount = strokes.length;
 
@@ -137,7 +199,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     reconcileOptimisticStrokes();
 
     const width = container.clientWidth;
-    const height = Math.max(280, Math.round(width * 0.75));
+    const height = Math.max(minHeight, Math.round(width * 0.75));
     const dpr = window.devicePixelRatio || 1;
 
     const prevSize = canvasSizeRef.current;
@@ -160,6 +222,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
+    paintBackgroundImage(ctx, width, height);
 
     const renderedStrokes = [
       ...strokes,
@@ -191,6 +254,8 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
   }, [
     effectiveWidth,
     isEraser,
+    minHeight,
+    paintBackgroundImage,
     paintFill,
     paintStroke,
     reconcileOptimisticStrokes,
@@ -210,7 +275,7 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
 
   useEffect(() => {
     redraw();
-  }, [redraw]);
+  }, [redraw, backgroundImageUrl]);
 
   useEffect(() => {
     if (!canDraw && drawingRef.current) {
@@ -351,10 +416,16 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
       sx={{
         width: '100%',
         bgcolor: '#fff',
-        borderRadius: 2,
+        borderRadius: `${borderRadius}px`,
         overflow: 'hidden',
-        border: '1px solid',
-        borderColor: 'divider',
+        ...(showBorder
+          ? {
+              border: '1px solid',
+              borderColor: 'divider',
+            }
+          : {
+              border: 'none',
+            }),
         ...drawCanvasInteractionSx,
       }}
     >
@@ -374,6 +445,8 @@ const DrawCanvas: React.FC<DrawCanvasProps> = ({
       />
     </Box>
   );
-};
+});
+
+DrawCanvas.displayName = 'DrawCanvas';
 
 export default DrawCanvas;

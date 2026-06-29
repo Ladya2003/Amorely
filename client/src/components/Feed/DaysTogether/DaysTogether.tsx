@@ -1,8 +1,6 @@
-// Главный компонент DaysTogether с улучшениями
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { DaysTogetherProps } from './types';
 import { useDaysTogether } from './hooks/useDaysTogether';
@@ -13,6 +11,15 @@ import ProgressIndicator from './components/ProgressIndicator';
 import MilestoneCard from './components/MilestoneCard';
 import ExportButton from './components/ExportButton';
 import ColorPicker, { getThemeById } from './components/ColorPicker';
+import {
+  getDaysTogetherActionsRowSx,
+  getDaysTogetherBackgroundGradientSx,
+  getDaysTogetherBackgroundPhotoSx,
+  getDaysTogetherCardSx,
+  getDaysTogetherEmptySx,
+  getDaysTogetherHeroPanelSx,
+  getDaysTogetherSignatureImageSx,
+} from './daysTogetherStyles';
 
 const DEFAULT_ROMANTIC_BG =
   'https://img.freepik.com/free-photo/couple-making-heart-from-hands-sea-shore_23-2148019887.jpg?w=360';
@@ -26,17 +33,15 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
   signature,
   signatures,
   currentUserId,
-  relationshipOwnerId
+  relationshipOwnerId,
 }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  
-  // Определяем, является ли текущий пользователь владельцем отношений
+  const theme = useTheme();
+
   const isOwner = currentUserId && relationshipOwnerId && currentUserId === relationshipOwnerId;
-  
-  // Выбираем правильную подпись в зависимости от роли пользователя
   const currentUserSignature = isOwner ? signatures?.user : signatures?.partner;
-  
+
   const {
     showAchievements,
     nextMilestone,
@@ -45,205 +50,72 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
     daysUntilAnniversary,
     selectedTheme,
     toggleAchievements,
-    handleThemeChange
+    handleThemeChange,
   } = useDaysTogether({ daysCount, relationshipStartDate });
 
-  // Получаем цвета выбранной темы
   const currentTheme = getThemeById(selectedTheme, t);
-  const gradientColors = currentTheme.colors.join(', ');
-  const hasBackgroundImage = true;
+  const backgroundPhoto = photo || DEFAULT_ROMANTIC_BG;
 
-  // Если нет данных - показываем заглушку
   if (!daysCount || !relationshipStartDate) {
     return (
-      <Paper
-        elevation={3}
-        sx={{
-          p: 3,
-          borderRadius: 2,
-          textAlign: 'center',
-          bgcolor: 'background.paper',
-          cursor: 'pointer',
-          transition: 'all 0.3s',
-          '&:hover': {
-            transform: 'scale(1.02)',
-            boxShadow: 6
-          }
-        }}
-        onClick={() => navigate('/settings?tab=partner')}
-      >
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
+      <Box sx={getDaysTogetherEmptySx(theme)} onClick={() => navigate('/settings?tab=partner')}>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
           {t('feed.addPartnerTitle')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {t('feed.addPartnerDescription')}
         </Typography>
-      </Paper>
+      </Box>
     );
   }
 
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 3,
-        borderRadius: 2,
-        bgcolor: 'background.paper',
-        position: 'relative',
-        overflow: 'hidden'
-      }}
-      id="days-together"
-    >
-      {/* Красивый градиентный фон вместо простой opacity */}
-      {photo ? (
-        <>
-          {/* Фото на заднем плане */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              backgroundImage: `url(${photo})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'blur(8px)',
-              opacity: 0.3,
-              zIndex: 0
-            }}
-          />
-          {/* Градиентный overlay */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: `linear-gradient(135deg, ${gradientColors})`,
-              backdropFilter: 'blur(10px)',
-              opacity: 0.7,
-              zIndex: 1
-            }}
-          />
-          {/* Дополнительное затемнение для лучшей читаемости */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              bgcolor: 'rgba(0, 0, 0, 0.22)',
-              zIndex: 1
-            }}
-          />
-        </>
-      ) : (
-        <>
-          {/* Дефолтный фон как в Чат/Игры */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              backgroundImage: `url(${DEFAULT_ROMANTIC_BG})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'blur(8px)',
-              opacity: 0.3,
-              zIndex: 0
-            }}
-          />
-          {/* Градиентный слой темы поверх дефолтного фото */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: `linear-gradient(135deg, ${currentTheme.colors[0].replace(/0\.\d+/, '0.08')}, ${currentTheme.colors[1].replace(/0\.\d+/, '0.05')}, ${currentTheme.colors[2].replace(/0\.\d+/, '0.06')})`,
-              zIndex: 1
-            }}
-          />
-          {/* Дополнительное затемнение для лучшей читаемости */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              bgcolor: 'rgba(0, 0, 0, 0.22)',
-              zIndex: 1
-            }}
-          />
-        </>
-      )}
+    <Box sx={getDaysTogetherCardSx(theme)} id="days-together">
+      <Box sx={getDaysTogetherBackgroundPhotoSx(backgroundPhoto)} />
+      <Box sx={getDaysTogetherBackgroundGradientSx(theme, currentTheme)} />
 
-      {/* Основной контент */}
       <Box sx={{ position: 'relative', zIndex: 2 }}>
-        {/* Заголовок с правильной локализацией */}
-        <Typography
-          variant="h4"
-          component="h2"
-          gutterBottom
-          align="center"
-          fontWeight="bold"
-          sx={{
-            fontSize: '2rem',
-            color: hasBackgroundImage ? '#fff' : currentTheme.preview,
-            textShadow: '0 2px 8px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4)',
-            WebkitTextStroke: '0.5px rgba(0,0,0,0.2)',
-          }}
-        >
-          {t('feed.daysTogether', {
-            count: daysCount,
-            daysWord: getDaysWord(daysCount, t),
-          })}
-        </Typography>
+        <Box sx={getDaysTogetherHeroPanelSx(theme)}>
+          <Typography
+            variant="h4"
+            component="h2"
+            gutterBottom
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: '1.75rem', sm: '2rem' },
+              lineHeight: 1.15,
+              color: 'text.primary',
+            }}
+          >
+            {t('feed.daysTogether', {
+              count: daysCount,
+              daysWord: getDaysWord(daysCount, t),
+            })}
+          </Typography>
 
-        {/* Статус отношений */}
-        <Typography
-          variant="subtitle1"
-          align="center"
-          gutterBottom
-          sx={{ 
-            fontWeight: 500,
-            color: hasBackgroundImage ? 'rgba(255,255,255,0.9)' : currentTheme.preview,
-            textShadow: hasBackgroundImage ? '0 1px 2px rgba(0,0,0,0.3)' : `0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.2')}`
-          }}
-        >
-          {getRelationshipStatus(daysCount, t)}
-        </Typography>
+          <Typography
+            variant="subtitle1"
+            gutterBottom
+            sx={{
+              fontWeight: 600,
+              color: 'text.primary',
+            }}
+          >
+            {getRelationshipStatus(daysCount, t)}
+          </Typography>
 
-        {/* Дата начала */}
-        <Typography 
-          variant="body2" 
-          align="center" 
-          gutterBottom
-          sx={{
-            color: hasBackgroundImage ? 'rgba(255,255,255,0.8)' : `${currentTheme.preview}CC`,
-            textShadow: hasBackgroundImage ? '0 1px 2px rgba(0,0,0,0.2)' : `0 1px 2px ${currentTheme.colors[0].replace(/0\.\d+/, '0.15')}`
-          }}
-        >
-          {t('feed.since', { date: formatDate(relationshipStartDate, i18n.language) })}
-        </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t('feed.since', { date: formatDate(relationshipStartDate, i18n.language) })}
+          </Typography>
+        </Box>
 
-        {/* Прогресс до следующей вехи */}
         <ProgressIndicator
           nextMilestone={nextMilestone}
           progress={progress}
           daysCount={daysCount}
           theme={currentTheme}
-          hasPhoto={hasBackgroundImage}
         />
 
-        {/* Достижения */}
         {achievements.length > 0 && (
           <MilestoneCard
             achievements={achievements}
@@ -251,11 +123,9 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             onToggle={toggleAchievements}
             daysUntilAnniversary={daysUntilAnniversary}
             theme={currentTheme}
-            hasPhoto={hasBackgroundImage}
           />
         )}
 
-        {/* Подписи */}
         {(signatures?.user || signatures?.partner || signature) && (
           <Box
             sx={{
@@ -265,62 +135,38 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
               gap: 2,
               maxWidth: '100%',
               overflow: 'hidden',
-              flexWrap: 'wrap'
+              flexWrap: 'wrap',
             }}
           >
             {signatures?.user && (
-              <img
+              <Box
+                component="img"
                 src={signatures.user}
                 alt={t('feed.signatureUser')}
-                style={{
-                  maxWidth: signatures?.partner ? '45%' : '100%',
-                  maxHeight: '100px',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
-                }}
+                sx={getDaysTogetherSignatureImageSx(signatures?.partner ? '45%' : '100%')}
               />
             )}
             {signatures?.partner && (
-              <img
+              <Box
+                component="img"
                 src={signatures.partner}
                 alt={t('feed.signaturePartner')}
-                style={{
-                  maxWidth: signatures?.user ? '45%' : '100%',
-                  maxHeight: '100px',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
-                }}
+                sx={getDaysTogetherSignatureImageSx(signatures?.user ? '45%' : '100%')}
               />
             )}
-            {/* Fallback для старой подписи */}
             {!signatures?.user && !signatures?.partner && signature && (
-              <img
+              <Box
+                component="img"
                 src={signature}
                 alt={t('feed.signature')}
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '100px',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
-                }}
+                sx={getDaysTogetherSignatureImageSx()}
               />
             )}
           </Box>
         )}
 
-        {/* Кнопки управления */}
-        <Box
-          sx={{
-            mt: 3,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: 1,
-            flexWrap: 'wrap'
-          }}
-        >
-          <PhotoUploader 
-            onPhotoUpload={onAddPhoto} 
-            photo={photo} 
-            colorTheme={currentTheme}
-          />
+        <Box sx={getDaysTogetherActionsRowSx(theme)}>
+          <PhotoUploader onPhotoUpload={onAddPhoto} photo={photo} colorTheme={currentTheme} />
           <SignatureDialog
             onSave={onAddSignature}
             signature={currentUserSignature || signature}
@@ -330,9 +176,8 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           <ExportButton targetId="days-together" colorTheme={currentTheme} />
         </Box>
       </Box>
-    </Paper>
+    </Box>
   );
 };
 
 export default DaysTogether;
-

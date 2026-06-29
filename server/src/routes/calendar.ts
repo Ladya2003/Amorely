@@ -224,7 +224,8 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
     const mediaItems = Array.isArray(media) ? media : [];
 
     if (mediaItems.length > 0) {
-      for (const item of mediaItems) {
+      for (let index = 0; index < mediaItems.length; index += 1) {
+        const item = mediaItems[index];
         if (!isValidEncryptedMediaItem(item)) {
           return res.status(400).json({ error: 'Некорректные данные зашифрованного медиа' });
         }
@@ -240,6 +241,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
           eventId,
           eventDate: new Date(eventDate),
           encrypted: true,
+          sortOrder: index,
           ...buildStoredMediaFields(item),
           ...textFields,
           metadataSenderId: userId,
@@ -717,7 +719,8 @@ router.put('/events/:id', async (req: any, res: Response) => {
       isBirthdayEvent,
       isAnniversaryEvent,
       newMedia,
-      removeMediaIds
+      removeMediaIds,
+      mediaSequence
     } = req.body;
 
     // Находим все медиафайлы события
@@ -798,6 +801,7 @@ router.put('/events/:id', async (req: any, res: Response) => {
     if (Array.isArray(newMedia) && newMedia.length > 0) {
       await Content.deleteMany({ eventId: id, publicId: `text_${id}` });
 
+      const savedNewMedia = [];
       for (const item of newMedia) {
         if (!isValidEncryptedMediaItem(item)) {
           return res.status(400).json({ error: 'Некорректные данные зашифрованного медиа' });
@@ -833,7 +837,36 @@ router.put('/events/:id', async (req: any, res: Response) => {
           lastEditedAt: updateData.lastEditedAt
         });
 
-        await content.save();
+        savedNewMedia.push(await content.save());
+      }
+
+      if (Array.isArray(mediaSequence) && mediaSequence.length > 0) {
+        let sortOrder = 0;
+        for (const slot of mediaSequence) {
+          if (slot?.existingId) {
+            await Content.updateOne(
+              { _id: slot.existingId, eventId: id },
+              { $set: { sortOrder } }
+            );
+          } else if (typeof slot?.newMediaIndex === 'number') {
+            const saved = savedNewMedia[slot.newMediaIndex];
+            if (saved) {
+              await Content.updateOne({ _id: saved._id }, { $set: { sortOrder } });
+            }
+          }
+          sortOrder += 1;
+        }
+      }
+    } else if (Array.isArray(mediaSequence) && mediaSequence.length > 0) {
+      let sortOrder = 0;
+      for (const slot of mediaSequence) {
+        if (slot?.existingId) {
+          await Content.updateOne(
+            { _id: slot.existingId, eventId: id },
+            { $set: { sortOrder } }
+          );
+          sortOrder += 1;
+        }
       }
     }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
+import { getDrawGuessBubbleSx, getDrawGuessChatPanelSx } from './gamePlayPageStyles';
 
 export interface DrawGuessAttemptItem {
   userId: string;
@@ -11,13 +12,9 @@ export interface DrawGuessChatProps {
   attempts?: DrawGuessAttemptItem[];
   title?: string;
   maxVisible?: number;
-  /** Растянуть по высоте родительской колонки (для панели рисующего) */
   fillHeight?: boolean;
-  /** Максимальная высота ленты догадок в px */
   maxHeight?: number;
-  /** Цвет заголовка как у подписей панели инструментов (например primary.main) */
   titleColor?: string;
-  /** Сторона своих сообщений в ленте (у угадывающего — слева) */
   ownGuessSide?: 'left' | 'right';
 }
 
@@ -32,6 +29,7 @@ export default function DrawGuessChat({
   titleColor,
   ownGuessSide = 'right',
 }: DrawGuessChatProps) {
+  const theme = useTheme();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const safeAttempts = Array.isArray(attempts) ? attempts : [];
   const visibleAttempts = safeAttempts.slice(-maxVisible);
@@ -60,11 +58,13 @@ export default function DrawGuessChat({
       }}
     >
       <Typography
-        variant={titleColor ? 'subtitle2' : 'caption'}
+        variant="subtitle2"
         sx={{
           display: 'block',
           mb: titleColor ? 1 : 0.5,
           flexShrink: 0,
+          fontWeight: 700,
+          fontSize: '0.8125rem',
           color: titleColor ?? 'text.secondary',
         }}
       >
@@ -73,42 +73,36 @@ export default function DrawGuessChat({
       <Box
         ref={scrollRef}
         sx={{
-          flex: fillHeight && scrollMaxHeight == null ? 1 : undefined,
-          minHeight: fillHeight && scrollMaxHeight == null ? 80 : visibleAttempts.length === 0 ? 40 : undefined,
-          maxHeight: scrollMaxHeight,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 0.5,
-          p: 1,
-          borderRadius: 1.5,
-          bgcolor: 'action.hover',
-          border: '1px solid',
-          borderColor: 'divider',
+          ...getDrawGuessChatPanelSx(theme),
+          ...(scrollMaxHeight != null
+            ? {
+                height: scrollMaxHeight,
+                minHeight: scrollMaxHeight,
+                maxHeight: scrollMaxHeight,
+              }
+            : {
+                flex: fillHeight ? 1 : undefined,
+                minHeight: fillHeight ? 80 : visibleAttempts.length === 0 ? 40 : undefined,
+              }),
         }}
       >
         {visibleAttempts.map((attempt, index) => (
           <Box
             key={`${attempt.userId}-${index}-${attempt.text}`}
-            sx={{
-              alignSelf:
-                attempt.isOwnGuess && ownGuessSide === 'right' ? 'flex-end' : 'flex-start',
-              maxWidth: '100%',
-              px: 1,
-              py: 0.5,
-              borderRadius: 1.5,
-              bgcolor: attempt.isOwnGuess ? 'primary.main' : 'background.paper',
-              color: attempt.isOwnGuess ? 'primary.contrastText' : 'text.primary',
-              border: attempt.isOwnGuess ? 'none' : '1px solid',
-              borderColor: 'divider',
-            }}
+            sx={getDrawGuessBubbleSx(
+              theme,
+              attempt.isOwnGuess && ownGuessSide === 'right'
+            )}
           >
             <Typography
-              variant="caption"
+              component="span"
               sx={{
                 display: 'block',
+                fontSize: '0.75rem',
+                fontWeight: 500,
                 wordBreak: 'break-word',
                 lineHeight: 1.35,
+                textTransform: 'none',
               }}
             >
               {attempt.text}

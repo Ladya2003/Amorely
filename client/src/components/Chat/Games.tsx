@@ -8,8 +8,8 @@ import {
   TextField,
   InputAdornment,
   IconButton,
-  Stack,
   Chip,
+  useTheme,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -30,11 +30,22 @@ import {
   type TapGameState,
 } from '../../services/gamesService';
 import { getMsUntilUtcMidnight } from '../../utils/dailyReset';
+import { getChatListSearchFieldSx } from './chatListStyles';
+import {
+  getGamesListBadgeWrapSx,
+  getGamesListComingSoonChipSx,
+  getGamesListEmptyStateSx,
+  getGamesListRootSx,
+  getGamesListScrollSx,
+  getGamesListSearchWrapSx,
+  getGamesListStackSx,
+} from '../Games/gamesListStyles';
 
 const DAILY_RESET_GAME_IDS = new Set<DailyResetGameId>(['geo', 'draw', 'quiz']);
 
 const Games: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,35 +133,15 @@ const Games: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        bgcolor: 'background.default',
-      }}
-    >
-      <Box
-        sx={{
-          px: 2,
-          pb: 1,
-          pt: 1,
-          flexShrink: 0,
-          bgcolor: 'background.paper',
-        }}
-      >
+    <Box sx={getGamesListRootSx()}>
+      <Box sx={getGamesListSearchWrapSx()}>
         <TextField
           fullWidth
           size="small"
           placeholder={t('games.list.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 3,
-            },
-          }}
+          sx={getChatListSearchFieldSx(theme)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -172,29 +163,11 @@ const Games: React.FC = () => {
         />
       </Box>
 
-      <Box
-        sx={{
-          flexGrow: 1,
-          overflow: 'auto',
-          px: 2,
-          py: 2,
-        }}
-      >
+      <Box sx={getGamesListScrollSx()}>
         {filteredGames.length === 0 ? (
-          <Box
-            sx={{
-              height: '100%',
-              minHeight: 240,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              px: 2,
-            }}
-          >
-            <SportsEsportsIcon sx={{ fontSize: 56, color: 'text.secondary', mb: 2, opacity: 0.6 }} />
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 0.5 }}>
+          <Box sx={getGamesListEmptyStateSx(theme)}>
+            <SportsEsportsIcon sx={{ fontSize: 56, color: 'primary.main', mb: 2, opacity: 0.75 }} />
+            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.secondary', mb: 0.5 }}>
               {searchQuery.trim() ? t('games.list.notFound') : t('games.list.emptyList')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -202,7 +175,7 @@ const Games: React.FC = () => {
             </Typography>
           </Box>
         ) : (
-          <Stack spacing={1.5}>
+          <Box sx={getGamesListStackSx()}>
             {filteredGames.map((game) => {
               const showDailyReset =
                 DAILY_RESET_GAME_IDS.has(game.id as DailyResetGameId) &&
@@ -211,45 +184,40 @@ const Games: React.FC = () => {
               const gameName = getLocalizedGameName(t, game.id, game.name);
 
               return (
-              <Box key={game.id} sx={{ position: 'relative' }}>
-                <GameListItem
-                  game={game}
-                  onClick={() => navigate(`/chat/games/${game.id}`)}
-                  reserveTopRightSpace={showTapProgress || showDailyReset || !game.available}
-                />
-                {showTapProgress && tapState && (
-                  <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
-                    <TapGameListBadge state={tapState} />
-                  </Box>
-                )}
-                {showDailyReset && (
-                  <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
-                    <DailyResetBadge
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        event.preventDefault();
-                        setDailyResetInfo({ open: true, gameName });
-                      }}
-                    />
-                  </Box>
-                )}
-                {!game.available && (
-                  <Chip
-                    icon={<LockIcon sx={{ fontSize: '14px !important' }} />}
-                    label={t('games.list.comingSoon')}
-                    size="small"
-                    sx={{
-                      position: 'absolute',
-                      top: 12,
-                      right: 12,
-                      bgcolor: 'background.paper',
-                    }}
+                <Box key={game.id} sx={{ position: 'relative' }}>
+                  <GameListItem
+                    game={game}
+                    onClick={() => navigate(`/chat/games/${game.id}`)}
+                    reserveTopRightSpace={showTapProgress || showDailyReset || !game.available}
                   />
-                )}
-              </Box>
-            );
+                  {showTapProgress && tapState && (
+                    <Box sx={getGamesListBadgeWrapSx()}>
+                      <TapGameListBadge state={tapState} />
+                    </Box>
+                  )}
+                  {showDailyReset && (
+                    <Box sx={getGamesListBadgeWrapSx()}>
+                      <DailyResetBadge
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          event.preventDefault();
+                          setDailyResetInfo({ open: true, gameName });
+                        }}
+                      />
+                    </Box>
+                  )}
+                  {!game.available && (
+                    <Chip
+                      icon={<LockIcon sx={{ fontSize: '14px !important' }} />}
+                      label={t('games.list.comingSoon')}
+                      size="small"
+                      sx={getGamesListComingSoonChipSx(theme)}
+                    />
+                  )}
+                </Box>
+              );
             })}
-          </Stack>
+          </Box>
         )}
       </Box>
 

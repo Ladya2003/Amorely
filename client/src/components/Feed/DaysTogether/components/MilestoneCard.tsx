@@ -1,5 +1,3 @@
-// Карточка достижений и вех
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,12 +9,19 @@ import {
   Tooltip,
   useTheme,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { getDaysWord } from '../utils/helpers';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Achievement } from '../types';
 import { ColorTheme } from './ColorPicker';
+import {
+  DAYS_TOGETHER_ACTION_RADIUS,
+  getDaysTogetherAchievementItemSx,
+  getDaysTogetherChipSx,
+  getDaysTogetherInnerSurfaceSx,
+} from '../daysTogetherStyles';
 
 interface MilestoneCardProps {
   achievements: Achievement[];
@@ -24,7 +29,6 @@ interface MilestoneCardProps {
   onToggle: () => void;
   daysUntilAnniversary: number | null;
   theme: ColorTheme;
-  hasPhoto?: boolean;
 }
 
 const MilestoneCard: React.FC<MilestoneCardProps> = ({
@@ -32,114 +36,67 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
   showAchievements,
   onToggle,
   daysUntilAnniversary,
-  theme,
-  hasPhoto = false
+  theme: colorTheme,
 }) => {
   const { t } = useTranslation();
-  const muiTheme = useTheme();
-  const isDarkMode = muiTheme.palette.mode === 'dark';
-
-  const getBlockStyles = () => {
-    if (isDarkMode) {
-      return {
-        bgcolor: hasPhoto ? 'rgba(30, 30, 30, 0.78)' : 'rgba(255, 255, 255, 0.06)',
-        backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
-      };
-    }
-
-    return {
-      bgcolor: hasPhoto ? 'rgba(255, 255, 255, 0.7)' : `${theme.colors[1].replace(/0\.\d+/, '0.1')}`,
-      backdropFilter: hasPhoto ? 'blur(10px)' : 'none',
-    };
-  };
+  const theme = useTheme();
 
   if (achievements.length === 0) return null;
 
   return (
-    <Box
-      sx={{
-        mt: 2,
-        p: 2,
-        borderRadius: 2,
-        ...getBlockStyles(),
-      }}
-    >
-      {/* Заголовок с кнопкой разворачивания */}
+    <Box sx={{ mt: 2, ...getDaysTogetherInnerSurfaceSx(theme) }}>
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          cursor: 'pointer'
+          cursor: 'pointer',
         }}
         onClick={onToggle}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <EmojiEventsIcon sx={{ color: theme.preview }} />
-          <Typography variant="subtitle1" fontWeight="bold" sx={{ color: hasPhoto || isDarkMode ? 'text.primary' : theme.preview }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+          <EmojiEventsIcon sx={{ color: colorTheme.preview, flexShrink: 0 }} />
+          <Typography variant="subtitle1" fontWeight={700} noWrap>
             {t('feed.achievementsTitle')}
           </Typography>
           <Chip
             label={achievements.length}
             size="small"
-            sx={{ 
-              height: 20, 
+            sx={{
+              ...getDaysTogetherChipSx(theme, colorTheme),
+              height: 22,
               fontSize: '0.75rem',
-              bgcolor: `${theme.colors[0].replace(/0\.\d+/, '0.2')}`,
-              color: theme.preview,
-              borderColor: theme.preview
             }}
           />
         </Box>
-        <IconButton size="small" sx={{ color: hasPhoto || isDarkMode ? 'text.primary' : theme.preview }}>
+        <IconButton size="small" sx={{ color: 'text.primary', flexShrink: 0 }}>
           {showAchievements ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </IconButton>
       </Box>
 
-      {/* Список достижений */}
       <Collapse in={showAchievements}>
         <Box
           sx={{
             display: 'grid',
             gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
             gap: 1,
-            mt: 1
+            mt: 1.5,
           }}
         >
           {achievements.map((achievement) => (
             <Tooltip key={achievement.id} title={achievement.description} arrow>
-              <Box
-                sx={{
-                  p: 1.5,
-                  borderRadius: 1,
-                  bgcolor: isDarkMode
-                    ? 'rgba(255, 255, 255, 0.06)'
-                    : `${theme.colors[1].replace(/0\.\d+/, '0.15')}`,
-                  border: isDarkMode
-                    ? '1px solid rgba(255, 255, 255, 0.1)'
-                    : `1px solid ${theme.colors[0].replace(/0\.\d+/, '0.3')}`,
-                  textAlign: 'center',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                    boxShadow: 2,
-                    bgcolor: isDarkMode
-                      ? 'rgba(255, 255, 255, 0.1)'
-                      : `${theme.colors[1].replace(/0\.\d+/, '0.25')}`,
-                  },
-                }}
-              >
-                <Typography variant="h4" sx={{ mb: 0.5 }}>
+              <Box sx={getDaysTogetherAchievementItemSx(theme, colorTheme)}>
+                <Typography variant="h5" sx={{ mb: 0.5, lineHeight: 1 }}>
                   {achievement.icon}
                 </Typography>
                 <Typography
                   variant="caption"
-                  fontWeight="bold"
+                  fontWeight={700}
                   sx={{
                     display: 'block',
                     fontSize: '0.7rem',
-                    lineHeight: 1.2,
-                    color: hasPhoto || isDarkMode ? 'text.primary' : theme.preview
+                    lineHeight: 1.25,
+                    color: 'text.primary',
                   }}
                 >
                   {achievement.title}
@@ -149,26 +106,21 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
           ))}
         </Box>
 
-        {/* Обратный отсчет до годовщины */}
         {daysUntilAnniversary !== null && daysUntilAnniversary > 0 && (
           <Box
             sx={{
               mt: 2,
               p: 1.5,
-              borderRadius: 1,
-              bgcolor: isDarkMode
-                ? 'rgba(255, 255, 255, 0.06)'
-                : `${theme.colors[0].replace(/0\.\d+/, '0.1')}`,
-              border: isDarkMode
-                ? '1px dashed rgba(255, 255, 255, 0.16)'
-                : `1px dashed ${theme.colors[0].replace(/0\.\d+/, '0.5')}`,
+              borderRadius: `${DAYS_TOGETHER_ACTION_RADIUS}px`,
+              border: `1px dashed ${alpha(colorTheme.preview, 0.4)}`,
+              bgcolor: alpha(colorTheme.preview, theme.palette.mode === 'light' ? 0.06 : 0.12),
               textAlign: 'center',
             }}
           >
-            <Typography variant="body2" sx={{ color: hasPhoto || isDarkMode ? 'text.secondary' : `${theme.preview}CC` }} gutterBottom>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
               {t('feed.untilAnniversary')}
             </Typography>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: theme.preview }}>
+            <Typography variant="h6" fontWeight={800} sx={{ color: colorTheme.preview }}>
               {daysUntilAnniversary} {getDaysWord(daysUntilAnniversary, t)}
             </Typography>
           </Box>
@@ -179,4 +131,3 @@ const MilestoneCard: React.FC<MilestoneCardProps> = ({
 };
 
 export default MilestoneCard;
-

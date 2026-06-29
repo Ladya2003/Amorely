@@ -5,9 +5,12 @@ import type { PetSpecies } from '../../config/petCatalogShared';
 import { getPetEggSrc } from '../../config/petEggAssets';
 import { getPetImagePath } from '../../config/petCatalog';
 import { getPublicAssetPath } from '../../utils/publicAssetPath';
+import { SURFACE_BORDER_RADIUS } from '../../theme/appTheme';
+import { playPetRevealSound, playPetZoomSound } from '../../utils/petRevealSound';
 
 const ZOOM_MS = 2600;
 const FLASH_MS = 350;
+const PET_REVEAL_RADIUS = `${SURFACE_BORDER_RADIUS}px`;
 
 interface PetHatchOverlayProps {
   species: PetSpecies;
@@ -38,6 +41,8 @@ const PetHatchOverlay: React.FC<PetHatchOverlayProps> = ({
   const toSrc = getPublicAssetPath(getPetImagePath(species, variant, toLevel));
 
   useEffect(() => {
+    void playPetZoomSound(isHatch ? 'hatch' : 'levelUp', ZOOM_MS);
+
     const flashTimer = window.setTimeout(() => setPhase('flash'), ZOOM_MS);
     const revealTimer = window.setTimeout(() => {
       setPhase('reveal');
@@ -49,6 +54,11 @@ const PetHatchOverlay: React.FC<PetHatchOverlayProps> = ({
       window.clearTimeout(revealTimer);
     };
   }, []);
+
+  useEffect(() => {
+    if (phase !== 'flash') return;
+    void playPetRevealSound(isHatch ? 'hatch' : 'levelUp');
+  }, [phase, isHatch]);
 
   const showPet = phase === 'flash' || phase === 'reveal';
 
@@ -78,6 +88,8 @@ const PetHatchOverlay: React.FC<PetHatchOverlayProps> = ({
             width: { xs: 240, sm: 280 },
             height: { xs: 280, sm: 320 },
             flexShrink: 0,
+            overflow: 'hidden',
+            borderRadius: PET_REVEAL_RADIUS,
             transform: phase === 'reveal' ? 'scale(1)' : undefined,
             transition: phase === 'reveal' ? 'transform 500ms ease-out' : undefined,
             animation: phase === 'zoom' ? `petHatchZoom ${ZOOM_MS}ms ease-in forwards` : undefined,
@@ -98,7 +110,7 @@ const PetHatchOverlay: React.FC<PetHatchOverlayProps> = ({
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center center',
-              borderRadius: 2,
+              borderRadius: PET_REVEAL_RADIUS,
               opacity: showPet ? 0 : 1,
               transition: showPet ? 'opacity 80ms ease-out' : 'none',
             }}
@@ -114,7 +126,7 @@ const PetHatchOverlay: React.FC<PetHatchOverlayProps> = ({
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center center',
-              borderRadius: 2,
+              borderRadius: PET_REVEAL_RADIUS,
               opacity: showPet ? 1 : 0,
               transition: showPet ? 'opacity 120ms ease-in' : 'none',
             }}
@@ -125,7 +137,7 @@ const PetHatchOverlay: React.FC<PetHatchOverlayProps> = ({
               sx={{
                 position: 'absolute',
                 inset: -8,
-                borderRadius: 3,
+                borderRadius: PET_REVEAL_RADIUS,
                 bgcolor: '#fff',
                 animation: `petHatchFlash ${FLASH_MS}ms ease-out forwards`,
                 pointerEvents: 'none',

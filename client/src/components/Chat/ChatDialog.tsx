@@ -19,7 +19,6 @@ import {
   Badge,
   Alert
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -34,6 +33,8 @@ import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import BlockIcon from '@mui/icons-material/Block';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
+import TextDecreaseIcon from '@mui/icons-material/TextDecrease';
+import TextIncreaseIcon from '@mui/icons-material/TextIncrease';
 import { Contact } from './ChatList';
 import Message from './Message';
 import SharedEventCard from './SharedEventCard';
@@ -56,9 +57,36 @@ import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import { isIOSDevice } from '../../utils/isIOSDevice';
 import socketService from '../../services/socketService';
 import { useTypingAnimation } from '../../hooks/useTypingAnimation';
+import { useChatMessageFontSize } from '../../hooks/useChatMessageFontSize';
 import ChatMessageInput from './ChatMessageInput';
 
-const CHAT_FONT_FAMILY = '"Roboto", "Arial", sans-serif';
+import { APP_FONT_FAMILY } from '../../theme/fonts';
+import { playChatDeleteSound, playChatSendSound, unlockChatAudio } from '../../utils/chatSounds';
+import { getChatDialogBackdropSx } from '../Feed/feedBannerStyles';
+import {
+  getChatComposerAttachmentSx,
+  getChatComposerShellSx,
+  getChatComposerWrapSx,
+  getChatContextMenuItemSx,
+  getChatContextMenuPaperSx,
+  getChatDayBadgeSx,
+  getChatDialogDraftBarSx,
+  getChatDialogHeaderAvatarSx,
+  getChatDialogHeaderSx,
+  getChatDialogHeaderWrapSx,
+  getChatDialogPresenceTextSx,
+  getChatDialogMessagesAreaSx,
+  getChatDialogModalActionsSx,
+  getChatDialogModalContentSx,
+  getChatDialogModalTitleSx,
+  getChatDialogOptionsButtonSx,
+  getChatDialogScrollButtonSx,
+  getChatMessageFontSizeButtonSx,
+  getChatMessageFontSizeControlSx,
+  getChatOptionsActionButtonSx,
+} from './chatDialogStyles';
+
+const CHAT_FONT_FAMILY = APP_FONT_FAMILY;
 
 export interface MessageReplyRef {
   id: string;
@@ -263,6 +291,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const useIOSAccessoryFix = isMobile && isIOSDevice();
   const { otherUnreadCount } = useUnreadMessages();
   const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
+  const {
+    fontSizePx: messageFontSizePx,
+    canDecrease: canDecreaseMessageFontSize,
+    canIncrease: canIncreaseMessageFontSize,
+    decrease: decreaseMessageFontSize,
+    increase: increaseMessageFontSize,
+  } = useChatMessageFontSize();
   const [messageText, setMessageText] = useState('');
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingActiveRef = useRef(false);
@@ -857,6 +892,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     }
 
     if (forwardingMessage) {
+      unlockChatAudio();
+      void playChatSendSound();
       if (trimmedText) {
         onSendMessage(trimmedText, [], null, null, null);
       }
@@ -877,6 +914,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     }
 
     if (sharingEvent) {
+      unlockChatAudio();
+      void playChatSendSound();
       if (trimmedText) {
         onSendMessage(trimmedText, [], null, null, null);
       }
@@ -889,6 +928,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     }
 
     if (sharingNote) {
+      unlockChatAudio();
+      void playChatSendSound();
       if (trimmedText) {
         onSendMessage(trimmedText, [], null, null, null);
       }
@@ -901,6 +942,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     }
 
     if (trimmedText || attachments.length > 0) {
+      unlockChatAudio();
+      void playChatSendSound();
       onSendMessage(trimmedText, attachments, replyingTo, null);
       setMessageText('');
       setAttachments([]);
@@ -1146,6 +1189,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   const handleConfirmDelete = () => {
     if (!messageToDelete) return;
+    unlockChatAudio();
+    void playChatDeleteSound();
     onDeleteMessage(messageToDelete.id);
     handleDeleteModalClose();
   };
@@ -1226,18 +1271,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               transition: 'opacity 120ms linear'
             }}
           >
-            <Box
-              sx={{
-                px: 1.5,
-                py: 0.5,
-                borderRadius: '999px',
-                bgcolor: 'rgba(0, 0, 0, 0.35)',
-                color: '#fff',
-                fontSize: '12px',
-                lineHeight: 1.2,
-                backdropFilter: 'blur(2px)'
-              }}
-            >
+            <Box sx={getChatDayBadgeSx(theme)}>
               {formatChatDayBadge(currentDate, i18n.language)}
             </Box>
           </Box>
@@ -1272,6 +1306,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             contactName={contactName}
             contactAvatar={contactAvatar}
             mb={messageSpacing}
+            messageFontSizePx={messageFontSizePx}
             onOpenActions={handleMessageContextMenu}
             onReplyReferenceClick={handleReplyReferenceClick}
             onForwardSourceClick={handleForwardSourceClick}
@@ -1284,7 +1319,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick]);
+  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick, theme, i18n.language, messageFontSizePx]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, { url: string; mediaType: 'image' | 'video' }> = {};
@@ -1327,31 +1362,23 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const contactDisplayName = getContactDisplayName(contact, t('chat.systemMessages'));
 
   return (
-    <Box sx={{
+    <Box sx={(theme) => ({
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      bgcolor: 'background.default',
       position: 'relative',
       overflow: 'hidden',
       fontFamily: CHAT_FONT_FAMILY,
+      ...getChatDialogBackdropSx(theme),
       '& .MuiTypography-root': { fontFamily: CHAT_FONT_FAMILY },
       '& .MuiInputBase-root': { fontFamily: CHAT_FONT_FAMILY },
       '& .MuiMenuItem-root': { fontFamily: CHAT_FONT_FAMILY },
-    }}>
+    })}>
       {/* Заголовок чата - фиксированный */}
-      <Box sx={{ px: 1, pt: 1, flexShrink: 0, zIndex: 100 }}>
-      <Paper 
-        elevation={2}
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          p: 1, 
-          borderBottom: 1, 
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          borderRadius: '16px',
-        }}
+      <Box sx={getChatDialogHeaderWrapSx()}>
+      <Paper
+        elevation={0}
+        sx={getChatDialogHeaderSx(theme)}
       >
         <IconButton edge="start" onClick={handleBackClick} sx={{ mr: 1 }}>
           <Badge
@@ -1367,13 +1394,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           alt={contactDisplayName} 
           src={contact.avatar}
           onClick={() => setProfileDialogOpen(true)}
-          sx={{
-            width: 40,
-            height: 40,
-            mr: 1.5,
-            cursor: 'pointer',
-            flexShrink: 0
-          }}
+          sx={getChatDialogHeaderAvatarSx()}
         />
         <Box
           sx={{ flexGrow: 1, minWidth: 0, cursor: 'pointer' }}
@@ -1419,15 +1440,15 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             )}
           </Box>
           <Typography
-            variant="caption"
+            component="span"
             noWrap
-            sx={(theme) => ({
-              display: 'block',
+            sx={(muiTheme) => ({
+              ...getChatDialogPresenceTextSx({
+                isActive: showTypingStatus || contact.isOnline,
+              }),
               color: showTypingStatus || contact.isOnline
-                ? getOnlinePresenceColor(theme)
-                : theme.palette.text.secondary,
-              lineHeight: 1.2,
-              fontWeight: showTypingStatus || contact.isOnline ? 600 : 400,
+                ? getOnlinePresenceColor(muiTheme)
+                : muiTheme.palette.text.secondary,
             })}
           >
             {presenceText}
@@ -1451,27 +1472,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             type="button"
             onClick={() => setOptionsModalOpen(true)}
             aria-label={t('chat.dialog.optionsAria')}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.25,
-              flexShrink: 0,
-              px: 0.75,
-              py: 0.25,
-              mb: 0.75,
-              color: 'text.secondary',
-              border: '1px solid',
-              borderColor: (theme) => alpha(theme.palette.text.primary, 0.72),
-              borderRadius: 1,
-              bgcolor: 'transparent',
-              cursor: 'pointer',
-              font: 'inherit',
-              '&:hover': {
-                bgcolor: 'transparent',
-                borderColor: (theme) => alpha(theme.palette.text.primary, 0.9),
-                color: 'text.primary',
-              },
-            }}
+            sx={getChatDialogOptionsButtonSx(theme)}
           >
             <Typography
               variant="caption"
@@ -1492,12 +1493,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       </Box>
 
       {/* Область сообщений */}
-      <Box sx={{ 
-        flexGrow: 1, 
-        overflow: 'auto', 
-        p: 2,
-        bgcolor: 'background.default'
-      }}
+      <Box
+        sx={getChatDialogMessagesAreaSx()}
       ref={messagesContainerRef}
       onScroll={handleMessagesScroll}
       >
@@ -1549,15 +1546,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             <IconButton
               color="primary"
               onClick={handleScrollToBottomClick}
-              sx={{
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: 2,
-                '&:hover': {
-                  bgcolor: 'background.paper'
-                }
-              }}
+              sx={getChatDialogScrollButtonSx(theme)}
               aria-label={
                 newMessagesBelowCount > 0
                   ? t('chat.dialog.scrollDownNew', { count: newMessagesBelowCount })
@@ -1571,15 +1560,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       )}
 
       {/* Область ввода сообщения - фиксированная */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 2, 
-          bgcolor: 'background.default',
-          flexShrink: 0,
-          zIndex: 100,
-          borderRadius: 0
-        }}
+      <Box sx={getChatComposerWrapSx()}>
+      <Paper
+        elevation={0}
+        sx={getChatComposerShellSx(theme)}
       >
         {contact?.isBlocked ? (
           <Alert
@@ -1613,18 +1597,9 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             overflow: 'auto'
           }}>
             {attachments.map((file, index) => (
-              <Box 
+              <Box
                 key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
-                sx={{ 
-                  position: 'relative',
-                  width: 60,
-                  height: 60,
-                  borderRadius: 1,
-                  overflow: 'hidden',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  flexShrink: 0
-                }}
+                sx={getChatComposerAttachmentSx(theme)}
               >
                 {attachmentPreviewByIndex[index] ? (
                   <Box
@@ -1738,20 +1713,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         )}
 
         {replyingTo && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              borderLeft: '3px solid',
-              borderColor: 'primary.main',
-              bgcolor: 'action.hover',
-              px: 1.25,
-              py: 0.75,
-              borderRadius: 1,
-              mb: 1
-            }}
-          >
+          <Box sx={getChatDialogDraftBarSx(theme, 'primary')}>
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
                 {t('chat.dialog.replyTo')}
@@ -1775,20 +1737,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         )}
 
         {forwardingMessage && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              borderLeft: '3px solid',
-              borderColor: 'info.main',
-              bgcolor: 'action.hover',
-              px: 1.25,
-              py: 0.75,
-              borderRadius: 1,
-              mb: 1
-            }}
-          >
+          <Box sx={getChatDialogDraftBarSx(theme, 'info')}>
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="caption" color="info.main" sx={{ fontWeight: 600 }}>
                 {t('chat.dialog.forwarding')}
@@ -1822,20 +1771,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         )}
 
         {sharingEvent && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              borderLeft: '3px solid',
-              borderColor: 'primary.main',
-              bgcolor: 'action.hover',
-              px: 1.25,
-              py: 0.75,
-              borderRadius: 1,
-              mb: 1
-            }}
-          >
+          <Box sx={getChatDialogDraftBarSx(theme, 'primary')}>
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
                 {t('chat.dialog.shareEvent')}
@@ -1849,20 +1785,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         )}
 
         {sharingNote && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              borderLeft: '3px solid',
-              borderColor: 'primary.main',
-              bgcolor: 'action.hover',
-              px: 1.25,
-              py: 0.75,
-              borderRadius: 1,
-              mb: 1
-            }}
-          >
+          <Box sx={getChatDialogDraftBarSx(theme, 'primary')}>
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
                 {t('chat.dialog.shareNote')}
@@ -1876,20 +1799,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         )}
 
         {editingMessage && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              borderLeft: '3px solid',
-              borderColor: 'warning.main',
-              bgcolor: 'action.hover',
-              px: 1.25,
-              py: 0.75,
-              borderRadius: 1,
-              mb: 1
-            }}
-          >
+          <Box sx={getChatDialogDraftBarSx(theme, 'warning')}>
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="caption" color="warning.main" sx={{ fontWeight: 600 }}>
                 {t('chat.dialog.editing')}
@@ -1940,6 +1850,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </>
         )}
       </Paper>
+      </Box>
       <Menu
         open={contextMenu !== null}
         onClose={handleContextMenuClose}
@@ -1949,63 +1860,35 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
             : undefined
         }
+        slotProps={{
+          paper: {
+            sx: getChatContextMenuPaperSx(theme),
+          },
+        }}
       >
-        <MenuItem
-          onClick={handleReplyFromContextMenu}
-          sx={{
-            fontSize: '12px',
-            minHeight: '28px',
-            py: 0.5,
-            px: 1.25
-          }}
-        >
-          <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
-            <ForwardOutlinedIcon sx={{ fontSize: 16 }} />
+        <MenuItem onClick={handleReplyFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+          <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+            <ForwardOutlinedIcon sx={{ fontSize: 18 }} />
           </ListItemIcon>
           {t('chat.dialog.reply')}
         </MenuItem>
         {contextMenu && isMessageEditable(contextMenu.message, currentUserId) && (
-          <MenuItem
-            onClick={handleEditFromContextMenu}
-            sx={{
-              fontSize: '12px',
-              minHeight: '28px',
-              py: 0.5,
-              px: 1.25
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
-              <EditOutlinedIcon sx={{ fontSize: 16 }} />
+          <MenuItem onClick={handleEditFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+            <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+              <EditOutlinedIcon sx={{ fontSize: 18 }} />
             </ListItemIcon>
             {t('chat.dialog.edit')}
           </MenuItem>
         )}
-        <MenuItem
-          onClick={handleForwardFromContextMenu}
-          sx={{
-            fontSize: '12px',
-            minHeight: '28px',
-            py: 0.5,
-            px: 1.25
-          }}
-        >
-          <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
-            <ReplyOutlinedIcon sx={{ fontSize: 16 }} />
+        <MenuItem onClick={handleForwardFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+          <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+            <ReplyOutlinedIcon sx={{ fontSize: 18 }} />
           </ListItemIcon>
           {t('chat.dialog.forward')}
         </MenuItem>
-        <MenuItem
-          onClick={handleDeleteFromContextMenu}
-          sx={{
-            fontSize: '12px',
-            minHeight: '28px',
-            py: 0.5,
-            px: 1.25,
-            color: 'error.main'
-          }}
-        >
-          <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
-            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+        <MenuItem onClick={handleDeleteFromContextMenu} sx={getChatContextMenuItemSx(theme, { danger: true })}>
+          <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+            <DeleteOutlineIcon sx={{ fontSize: 18 }} />
           </ListItemIcon>
           {t('chat.dialog.delete')}
         </MenuItem>
@@ -2016,8 +1899,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.deleteTitle')}</DialogTitle>
-        <DialogContent sx={{ pt: '8px !important' }}>
+        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.deleteTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx()}>
           <Typography variant="body2" sx={{ mb: 1.5 }}>
             {t('chat.dialog.deleteConfirm')}
           </Typography>
@@ -2045,7 +1928,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             </Typography>
           </Paper>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        <DialogActions sx={getChatDialogModalActionsSx()}>
           <Button onClick={handleDeleteModalClose} variant="text">
             {t('chat.dialog.cancel')}
           </Button>
@@ -2080,19 +1963,48 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.optionsTitle')}</DialogTitle>
-        <DialogContent sx={{ pt: '8px !important', px: 2, pb: 2 }}>
+        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.optionsTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx()}>
+          <Box sx={getChatMessageFontSizeControlSx(theme)}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                {t('chat.dialog.messageFontSize')}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t('chat.dialog.messageFontSizeValue', { size: messageFontSizePx })}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
+              <IconButton
+                size="small"
+                onClick={decreaseMessageFontSize}
+                disabled={!canDecreaseMessageFontSize}
+                aria-label={t('chat.dialog.decreaseMessageFontSize')}
+                sx={getChatMessageFontSizeButtonSx(theme)}
+              >
+                <TextDecreaseIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={increaseMessageFontSize}
+                disabled={!canIncreaseMessageFontSize}
+                aria-label={t('chat.dialog.increaseMessageFontSize')}
+                sx={getChatMessageFontSizeButtonSx(theme)}
+              >
+                <TextIncreaseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
           <Button
             fullWidth
             variant="outlined"
-            color="warning"
             startIcon={<ReportOutlinedIcon />}
             onClick={() => {
               setOptionsModalOpen(false);
               setReportModalOpen(true);
             }}
             disabled={!onSubmitReport}
-            sx={{ justifyContent: 'flex-start', py: 1.25, mb: 1 }}
+            sx={getChatOptionsActionButtonSx(theme, 'warning')}
           >
             {t('chat.dialog.report')}
           </Button>
@@ -2100,13 +2012,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             <Button
               fullWidth
               variant="outlined"
-              color="primary"
               startIcon={<LockOpenIcon />}
               onClick={() => {
                 setOptionsModalOpen(false);
                 setUnblockConfirmOpen(true);
               }}
-              sx={{ justifyContent: 'flex-start', py: 1.25, mb: 1 }}
+              sx={getChatOptionsActionButtonSx(theme, 'primary')}
             >
               {t('chat.dialog.unblockUser')}
             </Button>
@@ -2114,13 +2025,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             <Button
               fullWidth
               variant="outlined"
-              color="error"
               startIcon={<BlockIcon />}
               onClick={() => {
                 setOptionsModalOpen(false);
                 setBlockConfirmOpen(true);
               }}
-              sx={{ justifyContent: 'flex-start', py: 1.25, mb: 1 }}
+              sx={getChatOptionsActionButtonSx(theme, 'error')}
             >
               {t('chat.dialog.blockUser')}
             </Button>
@@ -2128,19 +2038,18 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           <Button
             fullWidth
             variant="outlined"
-            color="error"
             startIcon={<DeleteOutlineIcon />}
             onClick={() => {
               setOptionsModalOpen(false);
               setClearConfirmOpen(true);
             }}
-            sx={{ justifyContent: 'flex-start', py: 1.25 }}
+            sx={{ ...getChatOptionsActionButtonSx(theme, 'error'), mb: 0 }}
           >
             {t('chat.dialog.clearChat')}
           </Button>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setOptionsModalOpen(false)} variant="text">
+        <DialogActions sx={getChatDialogModalActionsSx()}>
+          <Button onClick={() => setOptionsModalOpen(false)} variant="text" sx={{ textTransform: 'none', fontWeight: 600 }}>
             {t('chat.dialog.cancel')}
           </Button>
         </DialogActions>
@@ -2165,13 +2074,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.clearChatTitle')}</DialogTitle>
-        <DialogContent sx={{ pt: '8px !important' }}>
+        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.clearChatTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx()}>
           <Typography variant="body2">
             {t('chat.dialog.clearChatConfirm')}
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        <DialogActions sx={getChatDialogModalActionsSx()}>
           <Button
             onClick={() => setClearConfirmOpen(false)}
             variant="text"
@@ -2209,13 +2118,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.blockUserTitle')}</DialogTitle>
-        <DialogContent sx={{ pt: '8px !important' }}>
+        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.blockUserTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx()}>
           <Typography variant="body2">
             {t('chat.dialog.blockUserConfirm', { name: contact?.name || '' })}
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        <DialogActions sx={getChatDialogModalActionsSx()}>
           <Button
             onClick={() => setBlockConfirmOpen(false)}
             variant="text"
@@ -2253,13 +2162,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={{ pb: 1 }}>{t('chat.dialog.unblockUserTitle')}</DialogTitle>
-        <DialogContent sx={{ pt: '8px !important' }}>
+        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.unblockUserTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx()}>
           <Typography variant="body2">
             {t('chat.dialog.unblockUserConfirm', { name: contact?.name || '' })}
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        <DialogActions sx={getChatDialogModalActionsSx()}>
           <Button
             onClick={() => setUnblockConfirmOpen(false)}
             variant="text"

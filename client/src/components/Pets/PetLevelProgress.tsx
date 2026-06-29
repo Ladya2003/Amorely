@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Box, LinearProgress, Typography } from '@mui/material';
 import { PET_MAX_LEVEL } from '../../config/petCatalogShared';
 
+import { INPUT_BORDER_RADIUS } from '../../theme/appTheme';
+
 interface PetLevelProgressProps {
   level: number;
   subLevel: number;
@@ -42,10 +44,10 @@ const PetLevelProgress: React.FC<PetLevelProgressProps> = ({
           variant="determinate"
           value={progress}
           sx={{
-            height: compact ? 4 : 6,
-            borderRadius: 3,
+            height: compact ? 6 : 10,
+            borderRadius: INPUT_BORDER_RADIUS,
             bgcolor: 'action.hover',
-            '& .MuiLinearProgress-bar': { borderRadius: 3 },
+            '& .MuiLinearProgress-bar': { borderRadius: INPUT_BORDER_RADIUS },
           }}
         />
       )}

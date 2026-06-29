@@ -1,11 +1,16 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import { format } from 'date-fns';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
+import {
+  getCalendarDayContentSx,
+  getCalendarDayEmptySx,
+  getCalendarDayPlaceholderSx,
+} from './calendarPageStyles';
 
 interface CalendarDayProps {
   date: Date;
@@ -31,6 +36,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
   onContentClick,
   onAddContent,
 }) => {
+  const theme = useTheme();
   const day = format(date, 'd');
   const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
   const isBirthdayEvent = content && content.isBirthdayEvent;
@@ -68,50 +74,15 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
           width: 40,
           height: 40,
           overflow: 'visible',
-          bgcolor: (theme) => {
-            if (isOutsideMonth) {
-              return 'transparent';
-            }
-            if (content) {
-              return content.mediaUrl === 'placeholder' ? theme.palette.primary.light : 'transparent';
-            }
-            if (isToday) {
-              return theme.palette.primary.main;
-            }
-            return theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[200];
-          },
-          borderRadius: '50%'
         }}
       >
         {content ? (
           content.mediaUrl === 'placeholder' ? (
-            <Box
-              sx={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%',
-                border: 2,
-                borderColor: 'primary.main',
-                overflow: 'hidden'
-              }}
-            >
-              <DescriptionIcon sx={{ fontSize: 20, color: 'white' }} />
+            <Box sx={getCalendarDayPlaceholderSx(theme)}>
+              <DescriptionIcon sx={{ fontSize: 20, color: 'primary.main' }} />
             </Box>
           ) : (
-            <Box
-              sx={{
-                width: '100%',
-                height: '100%',
-                position: 'relative',
-                borderRadius: '50%',
-                border: 2,
-                borderColor: 'primary.main',
-                overflow: 'hidden'
-              }}
-            >
+            <Box sx={getCalendarDayContentSx(theme)}>
               <DecryptedMedia
                 cacheKey={`cal-day-${content._id}-${content.mediaId || '0'}`}
                 url={content.mediaUrl}
@@ -126,16 +97,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
             </Box>
           )
         ) : (
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Typography variant="body2" color={isToday && !isOutsideMonth ? 'white' : 'text.secondary'}>
+          <Box sx={getCalendarDayEmptySx(theme, { isToday, isOutsideMonth })}>
+            <Typography variant="body2" color={isToday && !isOutsideMonth ? 'primary.contrastText' : 'text.secondary'}>
               {day}
             </Typography>
           </Box>
@@ -156,7 +119,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
               justifyContent: 'center',
               boxShadow: 2,
               zIndex: 100,
-              border: '1px solid white'
+              border: '1px solid white',
             }}
           >
             <CakeIcon sx={{ fontSize: 12, color: 'white' }} />
@@ -178,7 +141,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
               justifyContent: 'center',
               boxShadow: 2,
               zIndex: 100,
-              border: '1px solid white'
+              border: '1px solid white',
             }}
           >
             <FavoriteIcon sx={{ fontSize: 12, color: 'white' }} />

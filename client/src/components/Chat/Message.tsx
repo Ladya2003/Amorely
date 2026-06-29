@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Typography, Avatar, Paper, IconButton } from '@mui/material';
+import { Box, Typography, Avatar, Paper, IconButton, useTheme } from '@mui/material';
 import MediaViewerDialog, { type MediaViewerContent } from '../common/MediaViewerDialog';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -12,14 +12,23 @@ import EncryptedAttachment from './EncryptedAttachment';
 import ChatVideoPlayer from '../common/ChatVideoPlayer';
 import SharedEventCard from './SharedEventCard';
 import SharedNoteCard from './SharedNoteCard';
+import {
+  CHAT_MESSAGE_FONT_SIZE_BASE_PX,
+} from '../../utils/chatMessageFontSize';
+import {
+  CHAT_DIALOG_INNER_RADIUS,
+  getChatMessageActionsButtonSx,
+  getChatMessageBubbleSx,
+  getChatMessageQuoteSx,
+} from './chatDialogStyles';
 
 const imagePreviewStyle: React.CSSProperties = {
   width: '100%',
   maxHeight: '200px',
   objectFit: 'cover',
-  borderRadius: '16px',
+  borderRadius: `${CHAT_DIALOG_INNER_RADIUS}px`,
   display: 'block',
-  cursor: 'pointer'
+  cursor: 'pointer',
 };
 
 function getAttachmentResourceType(
@@ -43,6 +52,7 @@ interface MessageProps {
   onSharedEventClick?: (eventId: string) => void;
   onSharedNoteClick?: (noteId: string) => void;
   onContactAvatarClick?: () => void;
+  messageFontSizePx?: number;
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -56,10 +66,14 @@ const Message: React.FC<MessageProps> = ({
   onForwardSourceClick,
   onSharedEventClick,
   onSharedNoteClick,
-  onContactAvatarClick
+  onContactAvatarClick,
+  messageFontSizePx = CHAT_MESSAGE_FONT_SIZE_BASE_PX,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [imageGalleryInitialIndex, setImageGalleryInitialIndex] = useState<number | null>(null);
+  const messageFontScale = messageFontSizePx / CHAT_MESSAGE_FONT_SIZE_BASE_PX;
+  const quoteTextFontSizePx = Math.max(10, Math.round(12 * messageFontScale));
 
   const formattedTime = useMemo(() => (
     new Date(message.timestamp).toLocaleTimeString([], {
@@ -107,7 +121,6 @@ const Message: React.FC<MessageProps> = ({
     setImageGalleryInitialIndex(null);
   };
 
-  const bubbleColor = isOwn ? 'primary.light' : 'background.paper';
   const replyTo = message.replyTo;
   const forwardFrom = message.forwardFrom;
   const sharedEvent = message.sharedEvent;
@@ -164,19 +177,11 @@ const Message: React.FC<MessageProps> = ({
           width: isImageOnlyBubble ? (isOwn ? '85%' : '72%') : 'fit-content'
         }}
       >
-        <Paper 
-          elevation={1} 
-          sx={{ 
-            position: 'relative',
+        <Paper
+          elevation={0}
+          sx={{
+            ...getChatMessageBubbleSx(theme, isOwn),
             width: hasImageAttachment ? '100%' : 'fit-content',
-            maxWidth: '100%',
-            px: 1.5,
-            pt: 1,
-            pb: 1.15,
-            borderRadius: '16px',
-            bgcolor: bubbleColor,
-            color: isOwn ? 'white' : 'text.primary',
-            overflow: 'hidden'
           }}
         >
           {replyTo && (
@@ -184,13 +189,7 @@ const Message: React.FC<MessageProps> = ({
               onClick={() => onReplyReferenceClick?.(replyTo.id)}
               sx={{
                 mb: (message.text || (message.attachments?.length || 0) > 0) ? 0.8 : 0.25,
-                px: 1,
-                py: 0.5,
-                borderLeft: '3px solid',
-                borderColor: isOwn ? 'rgba(255,255,255,0.7)' : 'primary.main',
-                bgcolor: isOwn ? 'rgba(255,255,255,0.15)' : 'action.hover',
-                borderRadius: 1,
-                cursor: 'pointer'
+                ...getChatMessageQuoteSx(theme, isOwn),
               }}
             >
               <Typography
@@ -206,6 +205,7 @@ const Message: React.FC<MessageProps> = ({
               <Typography
                 variant="body2"
                 sx={{
+                  fontSize: `${quoteTextFontSizePx}px`,
                   color: isOwn ? 'rgba(255,255,255,0.9)' : 'text.secondary',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -296,7 +296,7 @@ const Message: React.FC<MessageProps> = ({
                       )
                         ? 1
                         : 0,
-                      borderRadius: '16px',
+                      borderRadius: `${CHAT_DIALOG_INNER_RADIUS}px`,
                       overflow: 'hidden',
                       lineHeight: 0
                     }}
@@ -382,7 +382,7 @@ const Message: React.FC<MessageProps> = ({
             <Typography
               variant="body1"
               sx={{
-                fontSize: '14px',
+                fontSize: `${messageFontSizePx}px`,
                 wordBreak: 'break-word',
                 lineHeight: 1.3,
                 mb: sharedEvent || sharedNote ? 0.8 : 0
@@ -453,20 +453,7 @@ const Message: React.FC<MessageProps> = ({
                 onOpenActions?.(event, message);
               }}
               aria-label={t('chat.dialog.messageActions')}
-              sx={{
-                p: 0.1,
-                borderRadius: 1,
-                bgcolor: 'transparent',
-                border: '1px solid',
-                opacity: isOwn ? 1 : 0.7,
-                borderColor: isOwn ? 'rgba(255,255,255,0.55)' : 'text.secondary',
-                color: isOwn ? 'rgba(255,255,255,0.95)' : 'text.secondary',
-                '&:hover': {
-                  bgcolor: 'transparent',
-                  opacity: isOwn ? 1 : 0.85,
-                  borderColor: isOwn ? 'rgba(255,255,255,0.82)' : 'text.secondary',
-                },
-              }}
+              sx={getChatMessageActionsButtonSx(theme, isOwn)}
             >
               <MoreHorizIcon sx={{ fontSize: '14px' }} />
             </IconButton>

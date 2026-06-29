@@ -47,7 +47,8 @@ export interface QuizGameStateDocument extends Document {
 const quizAnswerSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    text: { type: String, required: true },
+    /** Пустая строка — участник не успел ответить до дедлайна */
+    text: { type: String, default: '' },
     isCorrect: { type: Boolean, required: true },
     pointsEarned: { type: Number, required: true },
   },

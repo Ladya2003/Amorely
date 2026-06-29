@@ -65,11 +65,8 @@ const EncryptedIndicator: React.FC<EncryptedIndicatorProps> = ({ sx }) => {
         onClose={() => setModalOpen(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{
-          sx: { borderRadius: 2 },
-        }}
       >
-        <DialogTitle sx={{ pb: 1 }}>
+        <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <LockIcon color="primary" />
@@ -91,7 +88,7 @@ const EncryptedIndicator: React.FC<EncryptedIndicatorProps> = ({ sx }) => {
             {t('crypto.encryptedModal.description')}
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+        <DialogActions>
           <Button variant="contained" onClick={() => setModalOpen(false)}>
             {t('crypto.encryptedModal.close')}
           </Button>

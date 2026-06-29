@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Divider, 
-  TextField, 
-  Button, 
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
   Alert,
-  Grid
+  Grid,
+  useTheme,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
+import {
+  getSettingsSectionDividerSx,
+  getSettingsSectionTitleSx,
+} from './settingsPageStyles';
 
 interface SecuritySettingsProps {
   onChangePassword: (oldPassword: string, newPassword: string) => Promise<void>;
@@ -19,64 +22,65 @@ interface SecuritySettingsProps {
 
 const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, isLoading }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     setSuccess(null);
-    
+
     if (!oldPassword || !newPassword || !confirmPassword) {
       setError(t('settings.security.errors.fillAll'));
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setError(t('settings.security.errors.passwordMismatch'));
       return;
     }
-    
+
     if (newPassword.length < 8) {
       setError(t('settings.security.errors.passwordTooShort'));
       return;
     }
-    
+
     try {
       await onChangePassword(oldPassword, newPassword);
       setSuccess(t('settings.security.success'));
-      
+
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error) {
-      console.error('Ошибка при изменении пароля:', error);
+    } catch (submitError) {
+      console.error('Ошибка при изменении пароля:', submitError);
       setError(t('settings.security.errors.changeFailed'));
     }
   };
-  
+
   return (
-    <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
+    <Box>
+      <Typography component="h2" sx={getSettingsSectionTitleSx()}>
         {t('settings.security.title')}
       </Typography>
-      <Divider sx={{ mb: 3 }} />
-      
+      <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
-      
+
       {success && (
         <Alert severity="success" sx={{ mb: 3 }}>
           {success}
         </Alert>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12 }}>
@@ -120,13 +124,14 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
               color="primary"
               startIcon={<LockIcon />}
               disabled={isLoading}
+              sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '19px', minHeight: 40 }}
             >
               {isLoading ? t('settings.security.changing') : t('settings.security.changePassword')}
             </Button>
           </Grid>
         </Grid>
       </form>
-    </Paper>
+    </Box>
   );
 };
 

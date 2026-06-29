@@ -1,24 +1,35 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Container, Box, Paper, Typography } from '@mui/material';
+import { Container, Box, Typography, useTheme } from '@mui/material';
 import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
 import LanguageSelector from '../components/UI/LanguageSelector';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { shouldUseBilingualLanguageLabelOnLogin } from '../localization/locale';
+import {
+  getAuthPageCardSx,
+  getAuthPageContainerSx,
+  getAuthPageLogoIconSx,
+  getAuthPageLogoRowSx,
+  getAuthPageLogoTitleSx,
+  getAuthPageRootSx,
+  getAuthPageTopBarSx,
+  getAuthTaglineSx,
+} from '../components/Auth/authPageStyles';
 
 const AuthPage: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [isLogin, setIsLogin] = useState(true);
   const [loginPrefill, setLoginPrefill] = useState<{ email: string; password: string } | null>(null);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  
+
   const handleSwitchToRegister = () => {
     setLoginPrefill(null);
     setRegistrationSuccess(false);
     setIsLogin(false);
   };
-  
+
   const handleSwitchToLogin = (credentials?: { email: string; password: string }) => {
     if (credentials) {
       setLoginPrefill(credentials);
@@ -29,36 +40,22 @@ const AuthPage: React.FC = () => {
     }
     setIsLogin(true);
   };
-  
+
   return (
-    <Container component="main" maxWidth="xs" sx={{ py: 8 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+    <Box component="main" sx={getAuthPageRootSx(theme)}>
+      <Container maxWidth="xs" sx={getAuthPageContainerSx()}>
+        <Box sx={getAuthPageTopBarSx()}>
           <LanguageSelector bilingualLabel={shouldUseBilingualLanguageLabelOnLogin()} />
         </Box>
 
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
-          <FavoriteIcon sx={{ color: 'primary.main', fontSize: 40, mr: 1 }} />
-          <Typography variant="h4" component="div" fontWeight={500}>
+        <Box sx={getAuthPageLogoRowSx()}>
+          <FavoriteIcon sx={getAuthPageLogoIconSx(theme)} />
+          <Typography component="div" sx={getAuthPageLogoTitleSx()}>
             Amorely
           </Typography>
         </Box>
-        
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            width: '100%',
-            borderRadius: 2,
-            bgcolor: 'background.paper',
-          }}
-        >
+
+        <Box sx={getAuthPageCardSx(theme)}>
           {isLogin ? (
             <LoginForm
               onSwitchToRegister={handleSwitchToRegister}
@@ -69,13 +66,11 @@ const AuthPage: React.FC = () => {
           ) : (
             <RegisterForm onSwitchToLogin={handleSwitchToLogin} />
           )}
-        </Paper>
-        
-        <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
-          {t('auth.tagline')}
-        </Typography>
-      </Box>
-    </Container>
+        </Box>
+
+        <Typography sx={getAuthTaglineSx()}>{t('auth.tagline')}</Typography>
+      </Container>
+    </Box>
   );
 };
 

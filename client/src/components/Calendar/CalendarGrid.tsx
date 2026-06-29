@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Grid, Box, Typography } from '@mui/material';
+import { Grid, Box, Typography, useTheme } from '@mui/material';
 import { format } from 'date-fns';
 import { formatCalendarDate, formatCalendarMonthYear } from '../../localization/calendarHelpers';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -8,6 +8,12 @@ import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
+import {
+  getCalendarGridDayTitleSx,
+  getCalendarGridMonthTitleSx,
+  getCalendarGridTextTileSx,
+  getCalendarGridTileSx,
+} from './calendarPageStyles';
 
 interface MediaFile {
   _id: string;
@@ -45,6 +51,7 @@ interface CalendarGridProps {
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMonthChange, onContentClick }) => {
   const { i18n } = useTranslation();
+  const theme = useTheme();
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isScrollingProgrammatically = useRef(false);
@@ -123,23 +130,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
               data-month-key={month.monthKey}
             >
               {/* Заголовок месяца */}
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
-                  mt: 2,
-                  fontWeight: 400,
-                  py: 1,
-                  textTransform: 'capitalize'
-                }}
-              >
+              <Typography sx={getCalendarGridMonthTitleSx(theme)}>
                 {formatCalendarMonthYear(month.monthDate, i18n.language)}
               </Typography>
 
-              {/* Дни месяца */}
               {month.days.map((day, dayIndex) => (
                 <Box key={dayIndex} sx={{ mb: 3 }}>
-                  <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  <Typography sx={getCalendarGridDayTitleSx()}>
                     {formatCalendarDate(day.date, i18n.language)}
                   </Typography>
                   <Grid container spacing={1}>
@@ -153,14 +150,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                         return (
                           <Grid size={{ xs: 4, sm: 3, md: 2 }} key={eventId}>
                     <Box 
-                      sx={{ 
-                        position: 'relative',
-                        paddingTop: '100%',
-                        borderRadius: 1,
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        bgcolor: 'primary.light'
-                      }}
+                      sx={getCalendarGridTextTileSx(theme)}
                       onClick={() => handleContentClick(eventId)}
                     >
                       <Box
@@ -175,7 +165,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                           justifyContent: 'center'
                         }}
                       >
-                        <DescriptionIcon sx={{ fontSize: 48, color: 'white' }} />
+                        <DescriptionIcon sx={{ fontSize: 48, color: 'primary.main', opacity: 0.85 }} />
                       </Box>
                       {/* Бейджик дня рождения */}
                       {event.isBirthdayEvent && (
@@ -245,13 +235,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                       return event.media.map((media, mediaIndex) => (
                         <Grid size={{ xs: 4, sm: 3, md: 2 }} key={`${eventId}-${media._id}`}>
                   <Box 
-                    sx={{ 
-                      position: 'relative',
-                      paddingTop: '100%',
-                      borderRadius: 1,
-                      overflow: 'hidden',
-                      cursor: 'pointer'
-                    }}
+                    sx={getCalendarGridTileSx(theme)}
                     onClick={() => handleContentClick(eventId)}
                   >
                     <Box

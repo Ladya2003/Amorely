@@ -20,6 +20,7 @@ import PetGiftDialog from './PetGiftDialog';
 import PetLevelProgress from './PetLevelProgress';
 import PetHatchOverlay from './PetHatchOverlay';
 import PetOwnerBlock from './PetOwnerBlock';
+import { unlockPetRevealAudio, playPetHeartsSound } from '../../utils/petRevealSound';
 import { fetchPet, levelUpPet, giftPet, petPet } from '../../services/petsService';
 import type { Pet } from '../../services/petsService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -30,19 +31,36 @@ import {
 import { getPublicAssetPath } from '../../utils/publicAssetPath';
 import { emitCurrencyUpdated } from '../../utils/currencyEvents';
 
+import {
+  getPetSectionPaperSx,
+  getPetHeroBackground,
+  petViewEnterSx,
+  SURFACE_BORDER_RADIUS,
+} from '../Feed/feedBannerStyles';
+import { INPUT_BORDER_RADIUS } from '../../theme/appTheme';
+
+const statProgressSx = {
+  height: 10,
+  borderRadius: 999,
+  bgcolor: 'action.hover',
+  '& .MuiLinearProgress-bar': { borderRadius: 999 },
+} as const;
+
 const StatBar: React.FC<{
   label: string;
   value: number;
   valueLabel?: React.ReactNode;
 }> = ({ label, value, valueLabel }) => (
-  <Box sx={{ mb: 1.5 }}>
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-      <Typography variant="body2">{label}</Typography>
-      <Typography variant="body2" fontWeight={600}>
+  <Box sx={{ mb: 1.75 }}>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+      <Typography variant="body2" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={700}>
         {valueLabel ?? value}
       </Typography>
     </Box>
-    <LinearProgress variant="determinate" value={value} sx={{ height: 8, borderRadius: 4 }} />
+    <LinearProgress variant="determinate" value={value} sx={statProgressSx} />
   </Box>
 );
 
@@ -148,6 +166,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
     if (!petId || !pet) return;
     const previousLevel = pet.level;
     setUpgrading(true);
+    unlockPetRevealAudio();
     try {
       const result = await levelUpPet(petId);
       setPet(result.pet);
@@ -187,6 +206,8 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
 
     setPettingPending(true);
     setIsPetting(true);
+    unlockPetRevealAudio();
+    void playPetHeartsSound();
     pettingTimeoutRef.current = window.setTimeout(() => {
       setIsPetting(false);
       void petPet(petId, { visitOnly })
@@ -267,28 +288,40 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
         />
       )}
 
-      <Box sx={{ py: embedded ? 0 : 2, pb: embedded ? 1 : 10 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+      <Box sx={{ py: embedded ? 0 : 2, pb: embedded ? 1 : 10, ...petViewEnterSx }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5, gap: 1.5 }}>
           {onBack && (
-            <IconButton onClick={onBack} aria-label={t('common.back')} size="small">
+            <IconButton
+              onClick={onBack}
+              aria-label={t('common.back')}
+              size="small"
+              sx={(theme) => ({
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.18),
+                },
+              })}
+            >
               <ArrowBackIcon />
             </IconButton>
           )}
-          <Typography variant={embedded ? 'h6' : 'h5'} fontWeight={700} sx={{ flex: 1 }}>
+          <Typography variant="h2" component="h1" sx={{ flex: 1, fontSize: embedded ? '1.15rem' : '1.35rem' }}>
             {pet.name}
           </Typography>
-          {!visitOnly && <CurrencyBadge balance={balance} size="small" />}
+          {!visitOnly && <CurrencyBadge balance={balance} variant="tinted" size="small" />}
         </Box>
 
         <Box
-          sx={{
+          sx={(theme) => ({
             position: 'relative',
-            bgcolor: '#FFF5F8',
-            borderRadius: 3,
-            mb: 2,
+            mb: 2.5,
             minHeight: imageMinHeight,
             overflow: 'hidden',
-          }}
+            borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+            border: `1px solid ${alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.22)}`,
+            boxShadow: `0 10px 32px ${alpha(theme.palette.primary.main, 0.14)}`,
+            background: getPetHeroBackground(theme),
+          })}
         >
           <Box
             component="img"
@@ -310,17 +343,18 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             disabled={pettingPending}
             sx={(theme) => ({
               position: 'absolute',
-              top: 12,
-              left: 12,
+              top: 14,
+              left: 14,
               zIndex: 2,
-              width: 44,
-              height: 44,
-              bgcolor: alpha(theme.palette.primary.dark, 0.84),
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              bgcolor: alpha(theme.palette.primary.dark, 0.88),
               color: theme.palette.primary.contrastText,
-              border: `1px solid ${alpha(theme.palette.primary.contrastText, 0.2)}`,
-              boxShadow: `0 3px 12px ${alpha(theme.palette.common.black, 0.25)}`,
+              border: `1px solid ${alpha(theme.palette.primary.contrastText, 0.22)}`,
+              boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.35)}`,
               '&:hover': {
-                bgcolor: alpha(theme.palette.primary.dark, 0.95),
+                bgcolor: theme.palette.primary.dark,
               },
               '&.Mui-disabled': {
                 bgcolor: alpha(theme.palette.primary.dark, 0.55),
@@ -371,7 +405,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
           )}
           {affectionFloat && (
             <Box
-              sx={{
+              sx={(theme) => ({
                 pointerEvents: 'none',
                 position: 'absolute',
                 top: '24%',
@@ -380,11 +414,12 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 0.5,
-                px: 1.25,
-                py: 0.55,
-                borderRadius: 2.5,
-                bgcolor: 'rgba(20, 20, 24, 0.82)',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.38)',
+                px: 1.5,
+                py: 0.75,
+                borderRadius: `${INPUT_BORDER_RADIUS}px`,
+                bgcolor: alpha(theme.palette.primary.dark, 0.82),
+                boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.28)}`,
+                border: `1px solid ${alpha(theme.palette.primary.light, 0.25)}`,
                 '@keyframes affectionFloatUp': {
                   '0%': {
                     opacity: 0,
@@ -404,7 +439,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
                   },
                 },
                 animation: `affectionFloatUp ${AFFECTION_FLOAT_MS}ms ease-in-out forwards`,
-              }}
+              })}
             >
               <Typography
                 component="span"
@@ -458,8 +493,15 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
           )}
         </Box>
 
-        <Paper sx={{ p: 2, borderRadius: 3, mb: visitOnly ? 0 : 2 }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+        <Paper
+          elevation={0}
+          sx={(theme) => ({
+            ...getPetSectionPaperSx(theme),
+            p: 2.5,
+            mb: visitOnly ? 0 : 2.5,
+          })}
+        >
+          <Typography variant="h2" component="h2" sx={{ fontSize: '1.15rem', mb: 2 }}>
             {t('pets.stats')}
           </Typography>
           <StatBar
@@ -495,7 +537,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             size="large"
             onClick={() => void handleLevelUp()}
             disabled={upgrading || !canAffordUpgrade}
-            sx={{ mb: 1.5, borderRadius: 2 }}
+            sx={{ mb: 1.5 }}
           >
             {upgrading ? (
               <CircularProgress size={24} color="inherit" />
@@ -519,7 +561,6 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             variant="outlined"
             startIcon={<CardGiftcardIcon />}
             onClick={() => setGiftOpen(true)}
-            sx={{ borderRadius: 2 }}
           >
             {t('pets.gift')}
           </Button>

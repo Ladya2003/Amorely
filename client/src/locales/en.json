@@ -538,6 +538,14 @@
     "news": "News"
   },
   "feed": {
+    "greeting": "Hi, {{name}}!",
+    "notificationsAriaLabel": "Notifications",
+    "notificationsDialog": {
+      "title": "Notifications",
+      "empty": "No new notifications yet",
+      "close": "OK"
+    },
+    "openEventAriaLabel": "Open event",
     "title": "Feed",
     "contentOfDay": "Content of the day",
     "contentUpdateTooltip": "The selection updates when you open the home screen after 02:00 and 17:00 (Europe/Minsk)",
@@ -552,7 +560,11 @@
       "learnMore": "Tap to learn more",
       "closeAriaLabel": "Dismiss banner"
     },
-    "emptyPlaceholder": "No content available yet\n\n📅 Add your events in the\nCalendar with photos and videos",
+    "emptyState": {
+      "title": "No new events yet",
+      "description": "Photos and videos from your calendar will appear here",
+      "cta": "Add an event in Calendar"
+    },
     "noContent": "No content available",
     "birthday": "Birthday",
     "anniversary": "Anniversary",
@@ -910,6 +922,10 @@
       "messageActions": "Message actions",
       "optionsAria": "Chat options",
       "optionsTitle": "Options",
+      "messageFontSize": "Message text size",
+      "messageFontSizeValue": "{{size}} px",
+      "decreaseMessageFontSize": "Decrease message text size",
+      "increaseMessageFontSize": "Increase message text size",
       "clearChat": "Clear chat",
       "clearChatTitle": "Clear chat?",
       "clearChatConfirm": "Are you sure you want to clear the chat for you and your chat partner?",
@@ -1068,6 +1084,8 @@
       "photosAndVideosEncrypted": "Photos and videos (encrypted)",
       "addPhotosOrVideos": "Add photos or videos",
       "supported": "Supported: images (JPG, PNG, GIF) and videos (MP4, MOV)",
+      "moveEarlier": "Move earlier",
+      "moveLater": "Move later",
       "supportedWithHint": "Supported: images (JPG, PNG, GIF) and videos (MP4, MOV). {{hint}}",
       "videoMaxSize": "Maximum video size is {{max}} MB"
     },
@@ -1116,6 +1134,8 @@
       "birthday": "Birthday",
       "anniversary": "Anniversary",
       "title": "Title",
+      "expandTitleAria": "Show full title",
+      "fullTitleClose": "OK",
       "description": "Description",
       "created": "Created",
       "author": "Author: {{name}}",

@@ -11,12 +11,18 @@ import {
   Select,
   MenuItem,
   Alert,
-  Divider
+  Divider,
+  useTheme,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { VIDEO_LIMITS_HINT } from '../../../../utils/mediaLimits';
+import {
+  getEventEditorUploadCardSx,
+  getEventMediaDeleteButtonSx,
+  getEventMediaPreviewSx,
+} from '../../../Calendar/calendarDrawerStyles';
 
 interface UploadTabProps {
   files: File[];
@@ -45,10 +51,12 @@ const UploadTab: React.FC<UploadTabProps> = ({
   onHoursIntervalChange,
   onShowFrequencyChange
 }) => {
+  const theme = useTheme();
+
   return (
     <>
-      <Box sx={{ mb: 3, mt: 2 }}>
-        <Typography variant="subtitle1" gutterBottom>
+      <Box sx={getEventEditorUploadCardSx(theme)}>
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
           Загрузить фото или видео
         </Typography>
         <input
@@ -81,19 +89,12 @@ const UploadTab: React.FC<UploadTabProps> = ({
 
       {previews.length > 0 && (
         <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle1" gutterBottom>
+          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
             Выбранные файлы ({previews.length})
           </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
             {previews.map((preview, index) => (
-              <Box
-                key={index}
-                sx={{
-                  position: 'relative',
-                  width: 100,
-                  height: 100
-                }}
-              >
+              <Box key={index} sx={getEventMediaPreviewSx(theme)}>
                 {files[index].type.startsWith('image/') ? (
                   <img
                     src={preview}
@@ -102,7 +103,7 @@ const UploadTab: React.FC<UploadTabProps> = ({
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      borderRadius: '4px'
+                      display: 'block',
                     }}
                   />
                 ) : (
@@ -112,22 +113,13 @@ const UploadTab: React.FC<UploadTabProps> = ({
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      borderRadius: '4px'
+                      display: 'block',
                     }}
                   />
                 )}
                 <IconButton
                   size="small"
-                  sx={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    bgcolor: 'background.paper',
-                    '&:hover': {
-                      bgcolor: 'error.light',
-                      color: 'white'
-                    }
-                  }}
+                  sx={getEventMediaDeleteButtonSx(theme)}
                   onClick={() => onRemoveFile(index)}
                 >
                   <DeleteIcon fontSize="small" />

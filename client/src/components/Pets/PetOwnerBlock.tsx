@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Box, Paper, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { INPUT_BORDER_RADIUS, SURFACE_BORDER_RADIUS } from '../../theme/appTheme';
 
 interface PetOwnerBlockProps {
   username?: string | null;
@@ -24,7 +25,7 @@ const PetOwnerBlock: React.FC<PetOwnerBlockProps> = ({
       elevation={0}
       sx={(theme) => ({
         p: overlay ? 1.25 : 1.5,
-        borderRadius: 3,
+        borderRadius: overlay ? `${INPUT_BORDER_RADIUS}px` : `${SURFACE_BORDER_RADIUS}px`,
         width: 'fit-content',
         maxWidth: '100%',
         bgcolor: overlay

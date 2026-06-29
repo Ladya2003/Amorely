@@ -13,13 +13,11 @@ import {
   DialogTitle,
   FormControlLabel,
   IconButton,
-  Paper,
   TextField,
-  Typography
+  Typography,
+  useTheme,
 } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import AppDateTimePicker from '../UI/AppDateTimePicker';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
@@ -62,6 +60,14 @@ import {
   readCalendarUiPreferences,
   updateCalendarUiPreferences
 } from '../../utils/calendarUiPreferences';
+import { playChatDeleteSound, playChatSendSound, unlockChatAudio } from '../../utils/chatSounds';
+import {
+  getCalendarPlanCategoryChipSx,
+  getCalendarPlanEmptySx,
+  getCalendarPlanNoteCardSx,
+  getCalendarPlansSubtitleSx,
+  getCalendarPlansToolbarSx,
+} from './calendarPageStyles';
 
 interface PlanNoteUser {
   _id?: string;
@@ -124,6 +130,7 @@ const PlansNotes: React.FC<{
   noteIdFromUrl?: string | null;
 }> = ({ refreshKey = 0, noteIdFromUrl = null }) => {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
@@ -658,6 +665,9 @@ const PlansNotes: React.FC<{
         setAllNotes((prev) => [decrypted, ...prev]);
       }
 
+      unlockChatAudio();
+      void playChatSendSound();
+
       resetMediaState();
       resetDeadlineState();
       setFormOpen(false);
@@ -700,6 +710,9 @@ const PlansNotes: React.FC<{
 
   const handleDelete = async () => {
     if (!noteToDelete) return;
+
+    unlockChatAudio();
+    void playChatDeleteSound();
 
     try {
       setIsDeleting(true);
@@ -792,18 +805,9 @@ const PlansNotes: React.FC<{
   );
 
   return (
-    <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box
-        sx={{
-          mb: 2,
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 1.5
-        }}
-      >
-        <Typography variant="subtitle1" color="text.secondary" sx={{ minWidth: 0 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={getCalendarPlansToolbarSx()}>
+        <Typography sx={getCalendarPlansSubtitleSx()}>
           {t('calendar.plans.subtitle')}
         </Typography>
         {!isInitialLoading && (
@@ -814,6 +818,8 @@ const PlansNotes: React.FC<{
             onClick={openCreateForm}
             sx={{
               flexShrink: 0,
+              textTransform: 'none',
+              fontWeight: 600,
               '& .MuiButton-startIcon': {
                 marginRight: 0.5
               }
@@ -832,6 +838,7 @@ const PlansNotes: React.FC<{
             color={selectedCategory === null ? 'primary' : 'default'}
             variant={selectedCategory === null ? 'filled' : 'outlined'}
             onClick={() => setSelectedCategory(null)}
+            sx={selectedCategory === null ? undefined : getCalendarPlanCategoryChipSx(theme, false)}
           />
           {categories.map((cat) => (
             <Chip
@@ -841,6 +848,7 @@ const PlansNotes: React.FC<{
               color={selectedCategory === cat ? 'primary' : 'default'}
               variant={selectedCategory === cat ? 'filled' : 'outlined'}
               onClick={() => setSelectedCategory(cat)}
+              sx={selectedCategory === cat ? undefined : getCalendarPlanCategoryChipSx(theme, false)}
             />
           ))}
         </Box>
@@ -859,44 +867,23 @@ const PlansNotes: React.FC<{
           </Box>
         )}
         {!isInitialLoading && !isRefreshingNotes && notes.length === 0 && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 4,
-              textAlign: 'center',
-              border: '1px dashed',
-              borderColor: 'divider',
-              bgcolor: 'background.default'
-            }}
-          >
+          <Box sx={getCalendarPlanEmptySx(theme)}>
             <Typography color="text.secondary">
               {selectedCategory
                 ? t('calendar.plans.emptyCategory', { category: selectedCategory })
                 : t('calendar.plans.empty')}
             </Typography>
-          </Paper>
+          </Box>
         )}
         {!isInitialLoading && !isRefreshingNotes && notes.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {notes.map((note) => {
               const isCompleted = Boolean(note.completedAt);
               return (
-              <Paper
+              <Box
                 key={note._id}
-                elevation={0}
                 onClick={() => void openView(note)}
-                sx={{
-                  p: 2,
-                  cursor: 'pointer',
-                  border: '1px solid',
-                  borderColor: isCompleted ? 'success.light' : 'divider',
-                  bgcolor: isCompleted ? 'action.hover' : 'background.paper',
-                  opacity: isCompleted ? 0.82 : 1,
-                  '&:hover': {
-                    borderColor: isCompleted ? 'success.main' : 'primary.light',
-                    bgcolor: 'action.hover'
-                  }
-                }}
+                sx={getCalendarPlanNoteCardSx(theme, { completed: isCompleted })}
               >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -964,7 +951,7 @@ const PlansNotes: React.FC<{
                     })}
                   </Typography>
                 )}
-              </Paper>
+              </Box>
             );
             })}
           </Box>
@@ -992,6 +979,7 @@ const PlansNotes: React.FC<{
           />
           <Autocomplete
             freeSolo
+            fullWidth
             options={categories}
             value={form.category}
             onChange={(_, value) => setForm((prev) => ({ ...prev, category: value || '' }))}
@@ -1036,8 +1024,7 @@ const PlansNotes: React.FC<{
           />
 
           {hasDeadline && (
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateFnsLocale}>
-              <DateTimePicker
+              <AppDateTimePicker
                 label={t('calendar.plans.deadlineAt')}
                 value={deadlineAt}
                 onChange={(value) => setDeadlineAt(value)}
@@ -1049,7 +1036,6 @@ const PlansNotes: React.FC<{
                   }
                 }}
               />
-            </LocalizationProvider>
           )}
 
           {hasDeadline && (
@@ -1077,6 +1063,7 @@ const PlansNotes: React.FC<{
           {hasDeadline && notifyOnDeadline && deadlineNotifyOptions.length > 0 && (
             <Autocomplete
               multiple
+              fullWidth
               options={deadlineNotifyOptions}
               value={deadlineNotifyOptions.filter((option) => notifyUserIds.includes(option.id))}
               onChange={(_, value) => setNotifyUserIds(value.map((item) => item.id))}

@@ -1,2 +1,1 @@
-export const MOBILE_BOTTOM_NAV_OFFSET =
-  'calc(84px + max(16px, env(safe-area-inset-bottom, 0px)))';
+export { MOBILE_BOTTOM_NAV_FLOAT_OFFSET as MOBILE_BOTTOM_NAV_OFFSET } from '../components/Layout/bottomNavStyles';

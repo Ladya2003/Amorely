@@ -9,6 +9,8 @@ import {
 } from '@mui/material';
 import type { Breakpoint } from '@mui/material/styles';
 import type { SxProps, Theme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { getAppModalDialogPaperSx, getAppModalPaperSx } from '../../theme/modalStyles';
 
 export interface ResponsiveDialogProps extends DialogProps {
   /** Keep centered Dialog on mobile (e.g. fullscreen media viewers). */
@@ -16,6 +18,8 @@ export interface ResponsiveDialogProps extends DialogProps {
   /** Breakpoint below which bottom drawer is used. */
   mobileBreakpoint?: Breakpoint;
   mobileMaxHeight?: string | number;
+  /** Skip glass/tint styling (e.g. fullscreen black media viewer). */
+  variant?: 'default' | 'plain';
 }
 
 const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
@@ -25,6 +29,7 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
   disableMobileDrawer = false,
   mobileBreakpoint = 'sm',
   mobileMaxHeight = '92vh',
+  variant = 'default',
   maxWidth,
   fullWidth,
   slotProps,
@@ -42,15 +47,16 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
       ? slotPaperProps.sx
       : undefined;
 
+  const usesDrawer = isMobile && !disableMobileDrawer;
+
   const mergedPaperSx: SxProps<Theme> = [
-    ...(isMobile && !disableMobileDrawer
+    ...(variant === 'default'
+      ? [usesDrawer ? getAppModalPaperSx(theme) : getAppModalDialogPaperSx(theme)]
+      : []),
+    ...(usesDrawer
       ? [
           {
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
             maxHeight: mobileMaxHeight,
-            bgcolor: theme.palette.mode === 'dark' ? '#2a2a2a' : theme.palette.background.paper,
-            backgroundImage: 'none'
           } as const
         ]
       : []),
@@ -62,7 +68,7 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
     onClose?.(event, 'backdropClick');
   };
 
-  if (isMobile && !disableMobileDrawer) {
+  if (usesDrawer) {
     return (
       <SwipeableDrawer
         anchor="bottom"
@@ -93,7 +99,7 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
             sx={{
               width: 40,
               height: 4,
-              bgcolor: theme.palette.mode === 'dark' ? 'grey.600' : 'grey.400',
+              bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.22 : 0.32),
               borderRadius: 2,
               mx: 'auto',
               mt: 1.5,

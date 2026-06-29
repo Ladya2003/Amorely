@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from '@mui/material';
+import { Box, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress, useTheme } from '@mui/material';
 import ResponsiveDialog from '../components/UI/ResponsiveDialog';
 import Calendar from '../components/Calendar/Calendar';
+import { getCalendarPageRootSx } from '../components/Calendar/calendarPageStyles';
 import EventDetailDrawer from '../components/Calendar/EventDetailDrawer';
 import EventEditorDrawer from '../components/Calendar/EventEditorDrawer';
+import type { EventMediaSequenceSlot } from '../components/Calendar/eventEditorMedia';
 import EventListDialog from '../components/Calendar/EventListDialog';
 import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import axios from 'axios';
@@ -26,6 +28,7 @@ import type { PrepareMediaProgress } from '../utils/parallelMediaPrepare';
 import type { ContentMediaEnvelope } from '../crypto/contentCryptoService';
 import { loadLocalKeys, prefetchPeerPublicKey, type LocalDeviceKeys } from '../crypto/cryptoService';
 import { buildSharedEventRef, prepareEventForShare, type EventLikeForShare } from '../utils/buildSharedEventRef';
+import { playChatDeleteSound, unlockChatAudio } from '../utils/chatSounds';
 
 interface MediaFile {
   _id: string;
@@ -110,6 +113,7 @@ const isViewableCalendarEvent = (
 
 const CalendarPage: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { localDeviceKeys, ensureLocalKeys } = useCrypto();
@@ -492,6 +496,9 @@ const CalendarPage: React.FC = () => {
   const handleConfirmDelete = async () => {
     if (!eventToDelete) return;
 
+    unlockChatAudio();
+    void playChatDeleteSound();
+
     try {
       setIsDeleting(true);
       const token = localStorage.getItem('token');
@@ -655,6 +662,7 @@ const CalendarPage: React.FC = () => {
     description: string;
     files: File[];
     removeMediaIds: string[];
+    mediaSequence?: EventMediaSequenceSlot[];
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
     },
@@ -717,7 +725,8 @@ const CalendarPage: React.FC = () => {
             encryptedMediaEnvelope: item.encryptedMediaEnvelope,
             encryptedMediaEnvelopePartner: item.encryptedMediaEnvelopePartner
           })),
-          removeMediaIds: eventData.removeMediaIds
+          removeMediaIds: eventData.removeMediaIds,
+          mediaSequence: eventData.mediaSequence
         },
         {
           headers: {
@@ -739,13 +748,7 @@ const CalendarPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
-      height: '100%',
-      minHeight: 0,
-      display: 'flex', 
-      flexDirection: 'column',
-      overflow: 'hidden'
-    }}>
+    <Box sx={getCalendarPageRootSx(theme)}>
       {showEventLoadingOverlay && (
         <Box
           sx={{

@@ -2,8 +2,6 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Paper,
-  Divider,
   FormControl,
   FormLabel,
   RadioGroup,
@@ -22,6 +20,13 @@ import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import CheckIcon from '@mui/icons-material/Check';
 import { ThemePreference, PrimaryColorPreference, primaryColorOptions } from '../../theme/appTheme';
 import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/locale';
+import {
+  getSettingsHintSx,
+  getSettingsPrimaryColorSwatchSx,
+  getSettingsSectionDividerSx,
+  getSettingsSectionTitleSx,
+  getSettingsSubsectionTitleSx,
+} from './settingsPageStyles';
 
 interface ThemeSettingsProps {
   currentTheme: ThemePreference;
@@ -48,13 +53,13 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 3, bgcolor: 'transparent' }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400 }}>
+    <Box>
+      <Typography component="h2" sx={getSettingsSectionTitleSx()}>
         {t('settings.themeTitle')}
       </Typography>
-      <Divider sx={{ mb: 3 }} />
+      <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
 
-      <FormControl fullWidth sx={{ mb: 3 }}>
+      <FormControl fullWidth sx={{ mb: 1 }}>
         <InputLabel id="locale-select-label">{t('settings.language')}</InputLabel>
         <Select
           labelId="locale-select-label"
@@ -68,15 +73,15 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
             </MenuItem>
           ))}
         </Select>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {t('settings.languageHint')}
-        </Typography>
+        <Typography sx={getSettingsHintSx()}>{t('settings.languageHint')}</Typography>
       </FormControl>
 
-      <Divider sx={{ mb: 3 }} />
+      <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
 
       <FormControl component="fieldset">
-        <FormLabel component="legend">{t('settings.themeLegend')}</FormLabel>
+        <FormLabel component="legend" sx={getSettingsSubsectionTitleSx()}>
+          {t('settings.themeLegend')}
+        </FormLabel>
         <RadioGroup
           aria-label="theme"
           name="theme-radio-buttons-group"
@@ -116,10 +121,12 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
         </RadioGroup>
       </FormControl>
 
-      <Divider sx={{ my: 3 }} />
+      <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
 
       <FormControl component="fieldset">
-        <FormLabel component="legend">{t('settings.primaryColor')}</FormLabel>
+        <FormLabel component="legend" sx={getSettingsSubsectionTitleSx()}>
+          {t('settings.primaryColor')}
+        </FormLabel>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mt: 1.5 }}>
           {primaryColorOptions.map((option) => {
             const isSelected = currentPrimaryColor === option.id;
@@ -139,28 +146,8 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
                     }
                   }}
                   sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
+                    ...getSettingsPrimaryColorSwatchSx(theme, isSelected),
                     bgcolor: option.preview,
-                    cursor: 'pointer',
-                    border: isSelected ? '3px solid' : '2px solid transparent',
-                    borderColor: isSelected ? 'text.primary' : 'transparent',
-                    boxShadow: isSelected ? 3 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.2s',
-                    outline: 'none',
-                    '&:hover': {
-                      transform: 'scale(1.08)',
-                      boxShadow: 3,
-                    },
-                    '&:focus-visible': {
-                      outline: '2px solid',
-                      outlineColor: 'primary.main',
-                      outlineOffset: 2,
-                    },
                   }}
                 >
                   {isSelected && (
@@ -171,7 +158,7 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
             );
           })}
         </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography sx={getSettingsHintSx()}>
           {(() => {
             const selected = primaryColorOptions.find((o) => o.id === currentPrimaryColor);
             return selected
@@ -181,10 +168,8 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
         </Typography>
       </FormControl>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-        {t('settings.themeHint')}
-      </Typography>
-    </Paper>
+      <Typography sx={{ ...getSettingsHintSx(), mt: 2 }}>{t('settings.themeHint')}</Typography>
+    </Box>
   );
 };
 

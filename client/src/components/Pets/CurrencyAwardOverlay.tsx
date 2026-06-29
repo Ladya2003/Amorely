@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Portal, Typography } from '@mui/material';
 import CurrencyCoinIcon from './CurrencyCoinIcon';
 import { CURRENCY_UPDATED_EVENT } from '../../utils/currencyEvents';
+import { playCurrencyAwardSound } from '../../utils/currencyAwardSound';
 
 const FLOAT_ANIMATION_MS = 2200;
 
@@ -24,6 +25,8 @@ const CurrencyAwardOverlay: React.FC = () => {
   const idRef = useRef(0);
 
   const spawnAward = useCallback((amount: number) => {
+    playCurrencyAwardSound();
+
     const id = idRef.current + 1;
     idRef.current = id;
     const offsetX = Math.round((Math.random() - 0.5) * 48);

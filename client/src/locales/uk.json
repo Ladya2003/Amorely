@@ -480,6 +480,14 @@
     "news": "Новини"
   },
   "feed": {
+    "greeting": "Привіт, {{name}}!",
+    "notificationsAriaLabel": "Сповіщення",
+    "notificationsDialog": {
+      "title": "Сповіщення",
+      "empty": "Поки що нових сповіщень немає",
+      "close": "Зрозуміло"
+    },
+    "openEventAriaLabel": "Відкрити подію",
     "title": "Стрічка",
     "contentOfDay": "Контент дня",
     "contentUpdateTooltip": "Підбірка оновлюється о 02:00 та 17:00 (Europe/Minsk)",
@@ -494,7 +502,11 @@
       "learnMore": "Натисніть, щоб дізнатися більше",
       "closeAriaLabel": "Закрити банер"
     },
-    "emptyPlaceholder": "Ще немає доступного контенту\n\n📅 Додайте ваші події в\nКалендарі з фото та відео",
+    "emptyState": {
+      "title": "Поки що немає нових подій",
+      "description": "Тут з’являться фото та відео з вашого календаря",
+      "cta": "Додати подію в календар"
+    },
     "noContent": "Немає доступного контенту",
     "birthday": "День народження",
     "anniversary": "Річниця",
@@ -853,6 +865,10 @@
       "messageActions": "Дії з повідомленням",
       "optionsAria": "Опції чату",
       "optionsTitle": "Опції",
+      "messageFontSize": "Розмір тексту повідомлень",
+      "messageFontSizeValue": "{{size}} px",
+      "decreaseMessageFontSize": "Зменшити текст повідомлень",
+      "increaseMessageFontSize": "Збільшити текст повідомлень",
       "clearChat": "Очистити переписку",
       "clearChatTitle": "Очистити переписку?",
       "clearChatConfirm": "Ви впевнені, що хочете очистити переписку для вас і вашого співрозмовника?",
@@ -969,6 +985,8 @@
       "birthday": "День народження",
       "anniversary": "Річниця",
       "title": "Заголовок",
+      "expandTitleAria": "Показати повну назву",
+      "fullTitleClose": "Зрозуміло",
       "description": "Опис",
       "created": "Створено",
       "author": "Автор: {{name}}",
@@ -1033,6 +1051,8 @@
       "photosAndVideosEncrypted": "Фото та відео (зашифровані)",
       "addPhotosOrVideos": "Додати фото або відео",
       "supported": "Підтримуються зображення (JPG, PNG, GIF) та відео (MP4, MOV)",
+      "moveEarlier": "Сдвинути раніше",
+      "moveLater": "Сдвинути пізніше",
       "supportedWithHint": "Підтримуються зображення (JPG, PNG, GIF) та відео (MP4, MOV). {{hint}}",
       "videoHint": "Відео: до {{sourceMb}} МБ і {{durationSec}} сек. Перед завантаженням автоматично стискається до {{uploadMb}} МБ.",
       "videoMaxSize": "Максимальний розмір відео — {{max}} МБ"

@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Container,
   Typography,
   Box,
-  Card,
-  CardActionArea,
-  CardContent,
   Chip,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import axios from 'axios';
 import { API_URL } from '../config';
@@ -20,14 +17,39 @@ import NewsDetail from '../components/News/NewsDetail';
 import { NewsItem } from '../components/News/NewsCard';
 import { useUnreadNews } from '../contexts/UnreadNewsContext';
 import { HOME_SCREEN_NEWS_QUERY, isHomeScreenNewsItem } from '../constants/homeScreenNews';
+import {
+  getNewsCardContentSx,
+  getNewsCardDateSx,
+  getNewsCardEnterSx,
+  getNewsCardExcerptSx,
+  getNewsCardMetaSx,
+  getNewsCardReadMoreSx,
+  getNewsCardSx,
+  getNewsCardTitleSx,
+  getNewsCategoryChipSx,
+  getNewsCategoryRowSx,
+  getNewsEmptySx,
+  getNewsListScrollSx,
+  getNewsListStackSx,
+  getNewsLoadingWrapSx,
+  getNewsNewBadgeSx,
+  getNewsPageHeaderGlowWrapSx,
+  getNewsPageHeaderRowSx,
+  getNewsPageRootSx,
+  getNewsPageTitleSx,
+  newsListRevealSx,
+  newsPageEnterSx,
+} from '../components/News/newsPageStyles';
 
 const NewsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [revealList, setRevealList] = useState(false);
   const { isNewsUnread, markNewsAsRead, syncNewsIds } = useUnreadNews();
 
   useEffect(() => {
@@ -103,148 +125,153 @@ const NewsPage: React.FC = () => {
   };
 
   const handleOpenNews = (item: NewsItem) => {
+    setRevealList(false);
     setSelectedNews(item);
     markNewsAsRead(item._id);
   };
 
+  const handleCloseNews = useCallback(() => {
+    setSelectedNews(null);
+    setRevealList(true);
+  }, []);
+
+  useEffect(() => {
+    if (!revealList) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setRevealList(false);
+    }, 360);
+
+    return () => window.clearTimeout(timer);
+  }, [revealList]);
+
+  const categoryFilters: Array<{ key: string | null; label: string; color?: 'primary' | 'secondary' | 'success' }> = [
+    { key: null, label: t('news.filter.all') },
+    { key: 'update', label: t('news.filter.updates'), color: 'primary' },
+    { key: 'event', label: t('news.filter.events'), color: 'secondary' },
+    { key: 'announcement', label: t('news.filter.announcements'), color: 'success' },
+  ];
+
+  const isDetailOpen = Boolean(selectedNews);
+
   return (
     <>
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 2,
-          mb: 3,
-        }}>
-          <Typography
-            key={i18n.language}
-            variant="h4"
-            component="h1"
-            sx={{ fontSize: '1.7rem', fontWeight: 400 }}
-          >
-            {t('news.title')}
-          </Typography>
-          <UserProfileChip sx={{ maxWidth: '60%' }} />
-        </Box>
-
-        <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Chip
-            label={t('news.filter.all')}
-            onClick={() => handleCategoryClick(null)}
-            color={selectedCategory === null ? 'primary' : 'default'}
-            variant={selectedCategory === null ? 'filled' : 'outlined'}
-          />
-          <Chip
-            label={t('news.filter.updates')}
-            onClick={() => handleCategoryClick('update')}
-            color={selectedCategory === 'update' ? 'primary' : 'default'}
-            variant={selectedCategory === 'update' ? 'filled' : 'outlined'}
-          />
-          <Chip
-            label={t('news.filter.events')}
-            onClick={() => handleCategoryClick('event')}
-            color={selectedCategory === 'event' ? 'secondary' : 'default'}
-            variant={selectedCategory === 'event' ? 'filled' : 'outlined'}
-          />
-          <Chip
-            label={t('news.filter.announcements')}
-            onClick={() => handleCategoryClick('announcement')}
-            color={selectedCategory === 'announcement' ? 'success' : 'default'}
-            variant={selectedCategory === 'announcement' ? 'filled' : 'outlined'}
-          />
-        </Box>
-
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-            <CircularProgress />
+      <Box
+        sx={{
+          ...getNewsPageRootSx(theme),
+          ...(isDetailOpen
+            ? {
+                visibility: 'hidden',
+                pointerEvents: 'none',
+              }
+            : {}),
+        }}
+        aria-hidden={isDetailOpen}
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            minHeight: 0,
+            ...(revealList ? newsListRevealSx : newsPageEnterSx),
+          }}
+        >
+          <Box sx={getNewsPageHeaderGlowWrapSx(theme)}>
+            <Box sx={getNewsPageHeaderRowSx()}>
+              <Typography key={i18n.language} component="h1" sx={getNewsPageTitleSx()}>
+                {t('news.title')}
+              </Typography>
+              <UserProfileChip sx={{ maxWidth: '55%', flexShrink: 0 }} />
+            </Box>
           </Box>
-        ) : news.length === 0 ? (
-          <Box sx={{ textAlign: 'center', my: 4 }}>
-            <Typography variant="body1" color="text.secondary">
-              {t('news.empty')}
-            </Typography>
-          </Box>
-        ) : (
-          <Box>
-            {news.map((item) => {
-              const showNewBadge = isNewsUnread(item._id);
 
+          <Box sx={getNewsCategoryRowSx()}>
+            {categoryFilters.map(({ key, label, color }) => {
+              const selected = selectedCategory === key;
               return (
-              <Card
-                key={item._id}
-                sx={{ borderRadius: 2.5, overflow: 'hidden', mb: 2, position: 'relative' }}
-              >
-                {showNewBadge && (
-                  <Chip
-                    label={t('news.newBadge')}
-                    size="small"
-                    color="error"
-                    sx={{
-                      position: 'absolute',
-                      top: 12,
-                      right: 12,
-                      zIndex: 1,
-                      height: 22,
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.04em',
-                      pointerEvents: 'none',
-                    }}
-                  />
-                )}
-                <CardActionArea onClick={() => handleOpenNews(item)}>
-                  <CardContent sx={showNewBadge ? { pt: 3 } : undefined}>
-                    <Typography
-                      variant="h6"
-                      component="h2"
-                      fontWeight={400}
-                      sx={{ mb: 1, ...(showNewBadge && { pr: 7 }) }}
-                    >
-                      {item.title}
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatCalendarDate(new Date(item.publishDate), i18n.language)}
-                      </Typography>
-                      <Chip
-                        label={getNewsCategoryLabel(t, item.category)}
-                        size="small"
-                        color={getCategoryColor(item.category) as 'primary' | 'secondary' | 'success'}
-                      />
-                    </Box>
-
-                    <Typography
-                      variant="body1"
-                      color="text.secondary"
-                      sx={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        whiteSpace: 'pre-line',
-                        mb: 1,
-                      }}
-                    >
-                      {item.content}
-                    </Typography>
-
-                    <Typography variant="body2" color="primary" sx={{ fontWeight: 500 }}>
-                      {t('news.readMore')}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
+                <Chip
+                  key={key ?? 'all'}
+                  label={label}
+                  onClick={() => handleCategoryClick(key)}
+                  color={selected ? color ?? 'primary' : 'default'}
+                  variant={selected ? 'filled' : 'outlined'}
+                  sx={getNewsCategoryChipSx(theme, selected)}
+                />
               );
             })}
           </Box>
-        )}
-      </Container>
+
+          {isLoading ? (
+            <Box sx={getNewsLoadingWrapSx()}>
+              <CircularProgress size={32} />
+            </Box>
+          ) : news.length === 0 ? (
+            <Box sx={{ ...getNewsListScrollSx(), display: 'flex', alignItems: 'center' }}>
+              <Box sx={getNewsEmptySx(theme)}>
+                <Typography variant="body1" color="text.secondary">
+                  {t('news.empty')}
+                </Typography>
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={getNewsListScrollSx()}>
+              <Box sx={getNewsListStackSx()}>
+                {news.map((item, index) => {
+                  const showNewBadge = isNewsUnread(item._id);
+
+                  return (
+                    <Box
+                      key={item._id}
+                      component="button"
+                      type="button"
+                      onClick={() => handleOpenNews(item)}
+                      sx={{ ...getNewsCardSx(theme), ...getNewsCardEnterSx(index) }}
+                    >
+                      {showNewBadge && (
+                        <Chip
+                          label={t('news.newBadge')}
+                          size="small"
+                          color="error"
+                          sx={getNewsNewBadgeSx()}
+                        />
+                      )}
+                      <Box sx={getNewsCardContentSx(showNewBadge)}>
+                        <Typography component="h2" sx={getNewsCardTitleSx()}>
+                          {item.title}
+                        </Typography>
+
+                        <Box sx={getNewsCardMetaSx()}>
+                          <Typography sx={getNewsCardDateSx()}>
+                            {formatCalendarDate(new Date(item.publishDate), i18n.language)}
+                          </Typography>
+                          <Chip
+                            label={getNewsCategoryLabel(t, item.category)}
+                            size="small"
+                            color={getCategoryColor(item.category) as 'primary' | 'secondary' | 'success'}
+                          />
+                        </Box>
+
+                        <Typography sx={getNewsCardExcerptSx()}>{item.content}</Typography>
+
+                        <Typography sx={getNewsCardReadMoreSx()}>{t('news.readMore')}</Typography>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Box>
 
       <NewsDetail
-        open={Boolean(selectedNews)}
-        onClose={() => setSelectedNews(null)}
+        open={isDetailOpen}
+        onClose={handleCloseNews}
         news={selectedNews}
       />
     </>

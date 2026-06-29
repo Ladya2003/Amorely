@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Box, IconButton, InputAdornment, TextField } from '@mui/material';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import SendIcon from '@mui/icons-material/Send';
+import { Box, IconButton, InputAdornment, TextField, useTheme } from '@mui/material';
+import { AppPaperClipIcon, AppSendMessageIcon } from '../UI/AppIcons';
+import { getChatComposerInputSx } from './chatInputStyles';
 
 type ChatMessageInputProps = {
   value: string;
@@ -29,7 +29,7 @@ const inputAdornment = (
       onTouchStart={(event) => event.stopPropagation()}
       onMouseDown={(event) => event.stopPropagation()}
     >
-      <AttachFileIcon />
+      <AppPaperClipIcon />
     </IconButton>
     <IconButton
       color="primary"
@@ -38,7 +38,7 @@ const inputAdornment = (
       onTouchStart={(event) => event.stopPropagation()}
       onMouseDown={(event) => event.stopPropagation()}
     >
-      <SendIcon />
+      <AppSendMessageIcon />
     </IconButton>
   </InputAdornment>
 );
@@ -54,6 +54,7 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   useIOSAccessoryFix = false,
   onFocus,
 }) => {
+  const theme = useTheme();
   const [iosInputLocked, setIosInputLocked] = useState(useIOSAccessoryFix);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
 
@@ -132,15 +133,7 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
           autoCapitalize: 'sentences',
           spellCheck: 'true',
         }}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            bgcolor: 'background.paper',
-            borderRadius: '16px',
-          },
-          '& .MuiInputBase-input': {
-            fontSize: '16px',
-          },
-        }}
+        sx={getChatComposerInputSx(theme)}
       />
     </Box>
   );

@@ -538,6 +538,14 @@
     "news": "Actualités"
   },
   "feed": {
+    "greeting": "Bonjour, {{name}} !",
+    "notificationsAriaLabel": "Notifications",
+    "notificationsDialog": {
+      "title": "Notifications",
+      "empty": "Pas de nouvelles notifications pour le moment",
+      "close": "OK"
+    },
+    "openEventAriaLabel": "Ouvrir l'événement",
     "title": "Fil",
     "contentOfDay": "Contenu du jour",
     "contentUpdateTooltip": "La sélection est mise à jour à 02:00 et 17:00 (Europe/Minsk)",
@@ -552,7 +560,11 @@
       "learnMore": "Appuyez pour en savoir plus",
       "closeAriaLabel": "Fermer la bannière"
     },
-    "emptyPlaceholder": "Pas encore de contenu disponible\n\n📅 Ajoutez vos événements dans le\nCalendrier avec photos et vidéos",
+    "emptyState": {
+      "title": "Pas encore de nouveaux événements",
+      "description": "Les photos et vidéos de votre calendrier apparaîtront ici",
+      "cta": "Ajouter un événement au calendrier"
+    },
     "noContent": "Aucun contenu disponible",
     "birthday": "Anniversaire",
     "anniversary": "Fête",
@@ -910,6 +922,10 @@
       "messageActions": "Actions sur le message",
       "optionsAria": "Options du chat",
       "optionsTitle": "Options",
+      "messageFontSize": "Taille du texte des messages",
+      "messageFontSizeValue": "{{size}} px",
+      "decreaseMessageFontSize": "Réduire le texte des messages",
+      "increaseMessageFontSize": "Augmenter le texte des messages",
       "clearChat": "Effacer la conversation",
       "clearChatTitle": "Effacer la conversation ?",
       "clearChatConfirm": "Voulez-vous vraiment effacer la conversation pour vous et votre interlocuteur ?",
@@ -1025,6 +1041,8 @@
       "birthday": "Anniversaire",
       "anniversary": "Anniversaire de couple",
       "title": "Titre",
+      "expandTitleAria": "Afficher le titre complet",
+      "fullTitleClose": "OK",
       "description": "Description",
       "created": "Créé",
       "author": "Auteur : {{name}}",
@@ -1089,6 +1107,8 @@
       "photosAndVideosEncrypted": "Photos et vidéos (chiffrées)",
       "addPhotosOrVideos": "Ajouter des photos ou vidéos",
       "supported": "Pris en charge : images (JPG, PNG, GIF) et vidéos (MP4, MOV)",
+      "moveEarlier": "Déplacer plus tôt",
+      "moveLater": "Déplacer plus tard",
       "supportedWithHint": "Pris en charge : images (JPG, PNG, GIF) et vidéos (MP4, MOV). {{hint}}",
       "videoHint": "Vidéo : jusqu'à {{sourceMb}} Mo et {{durationSec}} s. Compressée automatiquement à {{uploadMb}} Mo avant l'envoi.",
       "videoMaxSize": "Taille maximale de la vidéo : {{max}} Mo"

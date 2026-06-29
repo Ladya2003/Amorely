@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { Box, Container, Fab, Badge, CircularProgress, Typography, Tooltip, IconButton } from '@mui/material';
+import { Box, Container, Fab, Badge, CircularProgress, Typography, Tooltip, IconButton, useTheme } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import axios from 'axios';
@@ -19,6 +19,7 @@ import { useCrypto } from '../contexts/CryptoContext';
 import { decryptContentItemsWithMedia } from '../crypto/contentCryptoService';
 import { usePartnerId, useEncryptionRecipientId } from '../hooks/usePartnerId';
 import { PARTNER_CHANGED_EVENT } from '../hooks/useRelationship';
+import { getFeedContentUpdateTooltipSlotProps } from '../components/Feed/feedBannerStyles';
 
 // Интерфейс для контента из диалога управления
 interface UserContentItem {
@@ -35,6 +36,7 @@ interface UserContentItem {
 
 const FeedPage: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -448,7 +450,6 @@ const FeedPage: React.FC = () => {
         onContentClick={handleContentClick}
         onEventClick={handleEventClick}
         navigateTo="/calendar"
-        placeholder={t('feed.emptyPlaceholder')}
         currentIndex={currentIndex}
         setCurrentIndex={setCurrentIndex}
       />
@@ -463,6 +464,7 @@ const FeedPage: React.FC = () => {
           arrow
           enterTouchDelay={0}
           leaveTouchDelay={3000}
+          slotProps={getFeedContentUpdateTooltipSlotProps(theme)}
         >
           <IconButton size="small" sx={{ color: 'text.secondary', p: 0.3 }} aria-label={t('feed.contentUpdateAriaLabel')}>
             <InfoOutlinedIcon fontSize="small" />
@@ -472,17 +474,19 @@ const FeedPage: React.FC = () => {
       
       <PetSection />
 
-      <DaysTogether
-        daysCount={daysCount}
-        relationshipStartDate={relationshipStartDate}
-        onAddPhoto={handleAddPhoto}
-        onAddSignature={handleAddSignature}
-        photo={relationshipPhoto}
-        signature={relationshipSignature}
-        signatures={relationshipSignatures}
-        currentUserId={user?._id}
-        relationshipOwnerId={relationshipOwnerId}
-      />
+      <Box sx={{ pb: { xs: 10, sm: 0 } }}>
+        <DaysTogether
+          daysCount={daysCount}
+          relationshipStartDate={relationshipStartDate}
+          onAddPhoto={handleAddPhoto}
+          onAddSignature={handleAddSignature}
+          photo={relationshipPhoto}
+          signature={relationshipSignature}
+          signatures={relationshipSignatures}
+          currentUserId={user?._id}
+          relationshipOwnerId={relationshipOwnerId}
+        />
+      </Box>
       
       {/* Временно закомментировано - контент теперь добавляется через Календарь */}
       {/* <Fab 

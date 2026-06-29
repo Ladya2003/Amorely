@@ -538,6 +538,14 @@
     "news": "Noticias"
   },
   "feed": {
+    "greeting": "Hola, {{name}}!",
+    "notificationsAriaLabel": "Notificaciones",
+    "notificationsDialog": {
+      "title": "Notificaciones",
+      "empty": "Aún no hay notificaciones nuevas",
+      "close": "Entendido"
+    },
+    "openEventAriaLabel": "Abrir evento",
     "title": "Feed",
     "contentOfDay": "Contenido del día",
     "contentUpdateTooltip": "La selección se actualiza a las 02:00 y 17:00 (Europe/Minsk)",
@@ -552,7 +560,11 @@
       "learnMore": "Toca para saber más",
       "closeAriaLabel": "Cerrar banner"
     },
-    "emptyPlaceholder": "Aún no hay contenido disponible\n\n📅 Añade tus eventos en el\nCalendario con fotos y vídeos",
+    "emptyState": {
+      "title": "Aún no hay eventos nuevos",
+      "description": "Aquí aparecerán fotos y vídeos de vuestro calendario",
+      "cta": "Añadir evento en el calendario"
+    },
     "noContent": "No hay contenido disponible",
     "birthday": "Cumpleaños",
     "anniversary": "Aniversario",
@@ -910,6 +922,10 @@
       "messageActions": "Acciones del mensaje",
       "optionsAria": "Opciones del chat",
       "optionsTitle": "Opciones",
+      "messageFontSize": "Tamaño del texto de los mensajes",
+      "messageFontSizeValue": "{{size}} px",
+      "decreaseMessageFontSize": "Reducir el texto de los mensajes",
+      "increaseMessageFontSize": "Aumentar el texto de los mensajes",
       "clearChat": "Borrar chat",
       "clearChatTitle": "¿Borrar chat?",
       "clearChatConfirm": "¿Seguro que quieres borrar el chat para ti y tu interlocutor?",
@@ -1025,6 +1041,8 @@
       "birthday": "Cumpleaños",
       "anniversary": "Aniversario",
       "title": "Título",
+      "expandTitleAria": "Ver título completo",
+      "fullTitleClose": "Entendido",
       "description": "Descripción",
       "created": "Creado",
       "author": "Autor: {{name}}",
@@ -1089,6 +1107,8 @@
       "photosAndVideosEncrypted": "Fotos y vídeos (cifrados)",
       "addPhotosOrVideos": "Añadir fotos o vídeos",
       "supported": "Compatibles: imágenes (JPG, PNG, GIF) y vídeos (MP4, MOV)",
+      "moveEarlier": "Mover antes",
+      "moveLater": "Mover después",
       "supportedWithHint": "Compatibles: imágenes (JPG, PNG, GIF) y vídeos (MP4, MOV). {{hint}}",
       "videoHint": "Vídeo: hasta {{sourceMb}} MB y {{durationSec}} s. Se comprime automáticamente a {{uploadMb}} MB antes de subir.",
       "videoMaxSize": "El tamaño máximo del vídeo es {{max}} MB"

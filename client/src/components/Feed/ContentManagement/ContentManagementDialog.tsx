@@ -2,11 +2,7 @@
 
 import React from 'react';
 import {
-  Dialog,
-  DialogTitle,
   Drawer,
-  AppBar,
-  Toolbar,
   Button,
   Box,
   Typography,
@@ -15,15 +11,28 @@ import {
   Tab,
   Chip,
   useMediaQuery,
-  useTheme
+  useTheme,
+  DialogTitle,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import ResponsiveDialog from '../../UI/ResponsiveDialog';
 import { ContentManagementDialogProps } from './types';
 import { useContentManagement } from './hooks/useContentManagement';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import UploadTab from './components/UploadTab';
 import ManageTab from './components/ManageTab';
-import ConfirmDeleteDialog from '../../UI/ConfirmDeleteDialog';
+import { getModalFooterActionsSx } from '../../../theme/appTheme';
+import {
+  getCalendarDrawerContentSx,
+  getCalendarDrawerFooterSx,
+  getCalendarDrawerHeaderIconButtonSx,
+  getCalendarDrawerHeaderSx,
+  getCalendarDrawerHeaderTitleSx,
+  getCalendarDrawerHeaderWrapSx,
+  getCalendarDrawerPaperSx,
+  getContentManagementInfoBoxSx,
+  getContentManagementTabsSx,
+} from '../../Calendar/calendarDrawerStyles';import ConfirmDeleteDialog from '../../UI/ConfirmDeleteDialog';
 import FrequencyChangeDialog from '../../UI/FrequencyChangeDialog';
 
 const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
@@ -102,7 +111,7 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
     <Tabs
       value={activeTab}
       onChange={handleTabChange}
-      sx={{ borderBottom: 1, borderColor: 'divider', px: { xs: 2, sm: 3 } }}
+      sx={getContentManagementTabsSx(theme)}
     >
       <Tab label="Загрузить новое" />
       <Tab
@@ -118,19 +127,12 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
 
   // Информационное сообщение о новой логике
   const infoMessage = (
-    <Box sx={{ 
-      p: 2, 
-      mb: 2, 
-      bgcolor: 'info.light', 
-      borderRadius: 1,
-      border: '1px solid',
-      borderColor: 'info.main'
-    }}>
-      <Typography variant="body2" color="info.dark">
+    <Box sx={getContentManagementInfoBoxSx(theme)}>
+      <Typography variant="body2" color="text.primary">
         📅 <strong>Новая логика:</strong> Контент теперь добавляется через Календарь. 
-        Создавайте события с фото и видео в разделе "Календарь" - они автоматически появятся в Ленте.
+        Создавайте события с фото и видео в разделе «Календарь» — они автоматически появятся в Ленте.
         <br />
-        💡 <strong>Совет:</strong> Добавьте партнера в настройках, чтобы видеть его контент в Ленте.
+        💡 <strong>Совет:</strong> Добавьте партнёра в настройках, чтобы видеть его контент в Ленте.
       </Typography>
     </Box>
   );
@@ -140,10 +142,8 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
     <>
       {infoMessage}
       <Box sx={{
-        flexGrow: 1,
-        overflow: 'auto',
-        px: { xs: 2, sm: 3 },
-        py: 2
+        ...getCalendarDrawerContentSx(),
+        px: { xs: 2, sm: 2.5 },
       }}>
         {activeTab === 0 ? (
           <UploadTab
@@ -180,15 +180,12 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
       </Box>
 
       {/* Кнопки действий */}
-      <Box sx={{
-        borderTop: 1,
-        borderColor: 'divider',
-        px: { xs: 2, sm: 3 },
-        py: 2,
-        display: 'flex',
+      <Box sx={(themeArg) => ({
+        ...getCalendarDrawerFooterSx(themeArg),
+        flexDirection: 'row',
         justifyContent: 'flex-end',
-        gap: 1
-      }}>
+        ...getModalFooterActionsSx(themeArg),
+      })}>
         <Button onClick={handleClose}>
           {activeTab === 0 ? 'Отмена' : 'Закрыть'}
         </Button>
@@ -236,9 +233,27 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
     </>
   );
 
+  const drawerHeader = (
+    <Box sx={getCalendarDrawerHeaderWrapSx()}>
+      <Box sx={getCalendarDrawerHeaderSx(theme)}>
+        <IconButton
+          edge="start"
+          onClick={handleClose}
+          aria-label="close"
+          size="small"
+          sx={getCalendarDrawerHeaderIconButtonSx(theme)}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+        <Typography component="h2" sx={getCalendarDrawerHeaderTitleSx()}>
+          Управление контентом
+        </Typography>
+      </Box>
+    </Box>
+  );
+
   return (
     <>
-      {/* Мобильная версия - Drawer */}
       {isMobile ? (
         <Drawer
           anchor="right"
@@ -246,45 +261,19 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
           onClose={handleClose}
           transitionDuration={{ enter: 300, exit: 250 }}
           PaperProps={{
-            sx: {
-              width: '100%',
-              maxWidth: '100vw',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: 'background.default'
-            }
+            sx: getCalendarDrawerPaperSx(theme, true),
           }}
         >
-          <AppBar position="static" color="default" elevation={1}>
-            <Toolbar>
-              <IconButton
-                edge="start"
-                color="inherit"
-                onClick={handleClose}
-                aria-label="close"
-              >
-                <CloseIcon />
-              </IconButton>
-              <Typography variant="h6" sx={{ ml: 2, flex: 1 }}>
-                Управление контентом
-              </Typography>
-            </Toolbar>
-          </AppBar>
-
+          {drawerHeader}
           {tabsContent}
           {pageContent}
         </Drawer>
       ) : (
-        /* Десктопная версия - Dialog */
-        <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
-          <DialogTitle>
-            Управление контентом
-          </DialogTitle>
-
+        <ResponsiveDialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
+          <DialogTitle>Управление контентом</DialogTitle>
           {tabsContent}
           {pageContent}
-        </Dialog>
+        </ResponsiveDialog>
       )}
 
       {/* Диалог подтверждения удаления */}

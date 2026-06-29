@@ -538,6 +538,14 @@
     "news": "Новости"
   },
   "feed": {
+    "greeting": "Привет, {{name}}!",
+    "notificationsAriaLabel": "Уведомления",
+    "notificationsDialog": {
+      "title": "Уведомления",
+      "empty": "Пока что новых уведомлений нет",
+      "close": "Понятно"
+    },
+    "openEventAriaLabel": "Открыть событие",
     "title": "Лента",
     "contentOfDay": "Контент дня",
     "contentUpdateTooltip": "Подборка обновляется при открытии главной после 02:00 и 17:00 (Europe/Minsk)",
@@ -552,7 +560,11 @@
       "learnMore": "Нажмите, чтобы узнать подробнее",
       "closeAriaLabel": "Закрыть баннер"
     },
-    "emptyPlaceholder": "Еще нету доступного контента\n\n📅 Добавьте ваши события в\nКалендаре с фото и видео",
+    "emptyState": {
+      "title": "Пока нет новых событий",
+      "description": "Здесь появятся фото и видео из вашего календаря",
+      "cta": "Добавить событие в календаре"
+    },
     "noContent": "Нет доступного контента",
     "birthday": "День рождения",
     "anniversary": "Годовщина",
@@ -911,6 +923,10 @@
       "messageActions": "Действия с сообщением",
       "optionsAria": "Опции чата",
       "optionsTitle": "Опции",
+      "messageFontSize": "Размер текста сообщений",
+      "messageFontSizeValue": "{{size}} px",
+      "decreaseMessageFontSize": "Уменьшить текст сообщений",
+      "increaseMessageFontSize": "Увеличить текст сообщений",
       "clearChat": "Очистить переписку",
       "clearChatTitle": "Очистить переписку?",
       "clearChatConfirm": "Вы уверены, что хотите очистить переписку для вас и вашего собеседника?",
@@ -1070,6 +1086,8 @@
       "photosAndVideosEncrypted": "Фото и видео (зашифрованы)",
       "addPhotosOrVideos": "Добавить фото или видео",
       "supported": "Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV)",
+      "moveEarlier": "Сдвинуть раньше",
+      "moveLater": "Сдвинуть позже",
       "supportedWithHint": "Поддерживаются изображения (JPG, PNG, GIF) и видео (MP4, MOV). {{hint}}",
       "videoMaxSize": "Максимальный размер видео — {{max}} МБ"
     },
@@ -1120,6 +1138,8 @@
       "birthday": "День рождения",
       "anniversary": "Годовщина",
       "title": "Заголовок",
+      "expandTitleAria": "Показать полное название",
+      "fullTitleClose": "Понятно",
       "description": "Описание",
       "created": "Создано",
       "author": "Автор: {{name}}",

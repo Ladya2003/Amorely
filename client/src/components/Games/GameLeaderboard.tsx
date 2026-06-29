@@ -1,8 +1,17 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Stack, Typography, useTheme } from '@mui/material';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { getUserDisplayName } from '../UI/UserProfileChip';
 import type { LeaderboardEntry } from '../../services/gamesService';
+import {
+  gameLeaderboardRowEnterSx,
+  getGameLeaderboardAvatarSx,
+  getGameLeaderboardEmptySx,
+  getGameLeaderboardItemSx,
+  getGameLeaderboardRankSx,
+  getGameLeaderboardScoreSx,
+} from './gamePageStyles';
 
 interface GameLeaderboardProps {
   entries: LeaderboardEntry[];
@@ -19,57 +28,39 @@ const GameLeaderboard: React.FC<GameLeaderboardProps> = ({
   emptyMessage,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const resolvedEmptyMessage = emptyMessage ?? t('games.leaderboard.empty');
+
   if (entries.length === 0) {
     return (
-      <Box sx={{ py: 6, textAlign: 'center' }}>
+      <Box sx={getGameLeaderboardEmptySx(theme)}>
+        <EmojiEventsIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1.5, opacity: 0.75 }} />
         <Typography color="text.secondary">{resolvedEmptyMessage}</Typography>
       </Box>
     );
   }
 
   return (
-    <Stack spacing={1.5}>
-      {entries.map((entry) => (
+    <Stack spacing={1.25}>
+      {entries.map((entry, index) => (
         <Box
           key={entry.relationshipId}
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            p: 1.5,
-            borderRadius: 2,
-            border: '1px solid',
-            borderColor: entry.rank <= 3 ? 'primary.main' : 'divider',
-            bgcolor: 'background.paper',
+            ...getGameLeaderboardItemSx(theme, entry.rank),
+            ...gameLeaderboardRowEnterSx(index),
           }}
         >
-          <Typography
-            variant="subtitle1"
-            sx={{
-              width: 28,
-              fontWeight: 700,
-              color: entry.rank <= 3 ? 'primary.main' : 'text.secondary',
-              textAlign: 'center',
-              flexShrink: 0,
-            }}
-          >
+          <Typography variant="subtitle1" sx={getGameLeaderboardRankSx(entry.rank)}>
             {entry.rank}
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            {entry.users.map((user, index) => (
+            {entry.users.map((user, userIndex) => (
               <Avatar
                 key={user.id}
                 src={user.avatar}
                 alt={getUserDisplayName(user)}
-                sx={{
-                  width: 36,
-                  height: 36,
-                  ml: index === 0 ? 0 : -1,
-                  border: '2px solid',
-                  borderColor: 'background.paper',
-                }}
+                sx={getGameLeaderboardAvatarSx(userIndex)}
               >
                 {user.username.charAt(0).toUpperCase()}
               </Avatar>
@@ -77,12 +68,12 @@ const GameLeaderboard: React.FC<GameLeaderboardProps> = ({
           </Box>
 
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
+            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }} noWrap>
               {getPairLabel(entry)}
             </Typography>
           </Box>
 
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, flexShrink: 0 }}>
+          <Typography variant="body2" sx={getGameLeaderboardScoreSx()}>
             {entry.totalScore}
           </Typography>
         </Box>

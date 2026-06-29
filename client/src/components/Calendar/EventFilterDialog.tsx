@@ -11,11 +11,9 @@ import {
   TextField
 } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import AppDatePicker from '../UI/AppDatePicker';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-import { DATE_INPUT_FORMAT, getDateFnsLocale } from '../../localization/calendarHelpers';
+import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
 import { EMPTY_EVENT_FILTER, type EventFilter } from './eventFilterUtils';
 
 interface EventFilterDialogProps {
@@ -31,7 +29,7 @@ const EventFilterDialog: React.FC<EventFilterDialogProps> = ({
   filter,
   onApply
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<EventFilter>(filter);
 
   useEffect(() => {
@@ -65,12 +63,8 @@ const EventFilterDialog: React.FC<EventFilterDialogProps> = ({
     <ResponsiveDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{t('calendar.filter.title')}</DialogTitle>
       <DialogContent>
-        <LocalizationProvider
-          dateAdapter={AdapterDateFns}
-          adapterLocale={getDateFnsLocale(i18n.language)}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1, mb: 2 }}>
-            <DatePicker
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1, mb: 2 }}>
+            <AppDatePicker
               label={t('calendar.filter.dateFrom')}
               value={draft.dateFrom}
               onChange={(date) => setDraft((prev) => ({ ...prev, dateFrom: date }))}
@@ -88,7 +82,7 @@ const EventFilterDialog: React.FC<EventFilterDialogProps> = ({
             )}
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
-            <DatePicker
+            <AppDatePicker
               label={t('calendar.filter.dateTo')}
               value={draft.dateTo}
               onChange={(date) => setDraft((prev) => ({ ...prev, dateTo: date }))}
@@ -106,7 +100,6 @@ const EventFilterDialog: React.FC<EventFilterDialogProps> = ({
               draft.dateTo !== null
             )}
           </Box>
-        </LocalizationProvider>
         <TextField
           fullWidth
           label={t('calendar.filter.titleLabel')}
