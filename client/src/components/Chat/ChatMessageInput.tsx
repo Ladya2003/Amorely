@@ -1,7 +1,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Box, IconButton, InputAdornment, TextField, useTheme } from '@mui/material';
 import { AppPaperClipIcon, AppSendMessageIcon } from '../UI/AppIcons';
-import { getChatComposerInputSx } from './chatInputStyles';
+import {
+  chatComposerAttachButtonSx,
+  chatComposerAttachIconSx,
+  chatComposerSendButtonSx,
+  chatComposerSendIconSx,
+  getChatComposerInputSx,
+} from './chatInputStyles';
 
 type ChatMessageInputProps = {
   value: string;
@@ -22,23 +28,26 @@ const inputAdornment = (
   attachmentDisabled: boolean,
   sendDisabled: boolean
 ) => (
-  <InputAdornment position="end" sx={{ alignSelf: 'flex-end', mb: 0.25 }}>
+  <InputAdornment position="end" sx={{ alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 0.5 }}>
     <IconButton
+      size="small"
       onClick={onAttachmentClick}
       disabled={attachmentDisabled}
       onTouchStart={(event) => event.stopPropagation()}
       onMouseDown={(event) => event.stopPropagation()}
+      sx={chatComposerAttachButtonSx}
     >
-      <AppPaperClipIcon />
+      <AppPaperClipIcon sx={chatComposerAttachIconSx} />
     </IconButton>
     <IconButton
-      color="primary"
+      size="small"
       onClick={onSend}
       disabled={sendDisabled}
       onTouchStart={(event) => event.stopPropagation()}
       onMouseDown={(event) => event.stopPropagation()}
+      sx={chatComposerSendButtonSx}
     >
-      <AppSendMessageIcon />
+      <AppSendMessageIcon sx={chatComposerSendIconSx} />
     </IconButton>
   </InputAdornment>
 );

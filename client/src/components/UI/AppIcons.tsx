@@ -19,6 +19,31 @@ const createAppIcon = (IconSvg: React.FunctionComponent<React.SVGProps<SVGSVGEle
     return <SvgIcon component={IconSvg} inheritViewBox {...props} />;
   };
 
+const createAppStrokeIcon = (IconSvg: React.FunctionComponent<React.SVGProps<SVGSVGElement>>) =>
+  function AppStrokeIcon(props: SvgIconProps) {
+    const { sx, ...rest } = props;
+
+    return (
+      <SvgIcon
+        component={IconSvg}
+        inheritViewBox
+        {...rest}
+        sx={[
+          {
+            fill: 'none',
+            '& path': {
+              fill: 'none',
+              stroke: 'currentColor',
+              strokeLinecap: 'round',
+              strokeLinejoin: 'round',
+            },
+          },
+          ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ]}
+      />
+    );
+  };
+
 export const AppHomeIcon = createAppIcon(HomeIconSvg);
 export const AppHomeFilledIcon = createAppIcon(HomeFilledIconSvg);
 export const AppChatIcon = createAppIcon(ChatIconSvg);
@@ -29,6 +54,6 @@ export const AppNewsIcon = createAppIcon(NewsIconSvg);
 export const AppNewsFilledIcon = createAppIcon(NewsFilledIconSvg);
 export const AppSettingsIcon = createAppIcon(SettingsIconSvg);
 export const AppSettingsFilledIcon = createAppIcon(SettingsFilledIconSvg);
-export const AppPaperClipIcon = createAppIcon(PaperClipIconSvg);
+export const AppPaperClipIcon = createAppStrokeIcon(PaperClipIconSvg);
 export const AppPinIcon = createAppIcon(PinIconSvg);
 export const AppSendMessageIcon = createAppIcon(SendMessageIconSvg);
