@@ -20,6 +20,15 @@ const DATE_FNS_LOCALES: Record<AppLocale, Locale> = {
   uk,
 };
 
+/** ISO-style week: Monday first, Sunday last (matches calendar grid). */
+const withMondayWeekStart = (locale: Locale): Locale => ({
+  ...locale,
+  options: {
+    ...locale.options,
+    weekStartsOn: 1,
+  },
+});
+
 /** Day-first numeric format for date inputs and short date display. */
 export const DATE_INPUT_FORMAT = 'dd/MM/yyyy';
 
@@ -28,7 +37,7 @@ export const DATE_TIME_INPUT_FORMAT = `${DATE_INPUT_FORMAT} HH:mm`;
 
 export const getDateFnsLocale = (locale?: string | null): Locale => {
   const appLocale = resolveAppLocale(locale ?? undefined);
-  return DATE_FNS_LOCALES[appLocale];
+  return withMondayWeekStart(DATE_FNS_LOCALES[appLocale]);
 };
 
 export const formatNumericDate = (date: Date, locale?: string | null): string =>
