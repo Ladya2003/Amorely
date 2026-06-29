@@ -516,8 +516,6 @@ const SettingsPage: React.FC = () => {
           ...settingsPageEnterSx,
           display: 'flex',
           flexDirection: 'column',
-          height: '100%',
-          minHeight: 0,
         }}
       >
         <Box sx={getSettingsPageHeaderGlowWrapSx(muiTheme)}>

@@ -48,8 +48,6 @@ import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 
 import { useUnreadNews } from '../../contexts/UnreadNewsContext';
 
-import { MOBILE_BOTTOM_NAV_OFFSET } from '../../constants/layout';
-
 import { useTabSlideDirection } from '../../hooks/useTabSlideDirection';
 
 import AnimatedBottomNav from './AnimatedBottomNav';
@@ -387,11 +385,7 @@ const Layout: React.FC = () => {
 
         p: isMobile ? 0 : 2,
 
-        pb: isMobile && showBottomNav
-
-          ? MOBILE_BOTTOM_NAV_OFFSET
-
-          : isMobile ? '0px' : 2
+        pb: isMobile ? 0 : 2
 
       }}>
 

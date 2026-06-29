@@ -5,6 +5,7 @@ import {
   getFeedHeaderGlowSx,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
+import { getTabPageBottomPaddingSx, getTabPageDesktopShellSx } from '../../theme/pageLayout';
 
 export const NEWS_CARD_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 export const NEWS_CHIP_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.5);
@@ -60,11 +61,10 @@ export const newsListRevealSx = {
 } as const;
 
 export const getNewsPageRootSx = (theme: Theme) => ({
-  height: '100%',
-  minHeight: 0,
+  ...getTabPageDesktopShellSx(),
   display: 'flex',
   flexDirection: 'column' as const,
-  overflow: 'hidden' as const,
+  ...getTabPageBottomPaddingSx(),
   ...getChatDialogBackdropSx(theme),
 });
 
@@ -115,12 +115,8 @@ export const getNewsCategoryChipSx = (theme: Theme, selected?: boolean) =>
       };
 
 export const getNewsListScrollSx = () => ({
-  flex: 1,
-  minHeight: 0,
-  overflow: 'auto',
   px: 2,
   py: 1,
-  pb: { xs: 2.5, sm: 2 },
 });
 
 export const getNewsListStackSx = () => ({

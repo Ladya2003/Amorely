@@ -55,6 +55,7 @@ import {
   getChatListPanelEnterSx,
 } from '../components/Chat/chatListStyles';
 import { getChatDialogBackdropSx } from '../components/Feed/feedBannerStyles';
+import { getTabPageBottomPaddingSx, getTabPageDesktopShellSx } from '../theme/pageLayout';
 import { useTabSlideDirection } from '../hooks/useTabSlideDirection';
 import UserProfileChip from '../components/UI/UserProfileChip';
 import axios from 'axios';
@@ -2312,16 +2313,18 @@ const ChatPage: React.FC = () => {
   const chatTabSlideDirection = useTabSlideDirection(tabValue);
   const visualViewportLayout = useVisualViewportLayout(isMobileChatOpen);
   useDisableForeignFormFields(isMobileChatOpen && isIOSDevice());
-  const pageHeight = isMobile && selectedContactId ? '100dvh' : '100%';
   const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
   const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady && !selectedContactId;
 
   return (
     <Box sx={(muiTheme) => ({
-      ...(!isMobileChatOpen ? { height: pageHeight, ...getChatListPageBackdropSx(muiTheme) } : {}),
+      ...(!isMobileChatOpen ? {
+        ...getChatListPageBackdropSx(muiTheme),
+        ...getTabPageDesktopShellSx(),
+        ...getTabPageBottomPaddingSx(),
+      } : {}),
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden',
       ...(isMobileChatOpen ? {
         position: 'fixed',
         top: visualViewportLayout.offsetTop,
@@ -2330,6 +2333,7 @@ const ChatPage: React.FC = () => {
         width: '100%',
         height: visualViewportLayout.height,
         maxHeight: visualViewportLayout.height,
+        overflow: 'hidden',
         ...getChatDialogBackdropSx(muiTheme),
         zIndex: muiTheme.zIndex.appBar,
         paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -2420,7 +2424,7 @@ const ChatPage: React.FC = () => {
         </Box>
       )}
 
-      <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', position: 'relative', ...(isMobileChatOpen ? { flexGrow: 1, overflow: 'hidden' } : {}) }}>
         {showChatListLoadingOverlay && (
           <Box
             sx={{
@@ -2491,9 +2495,8 @@ const ChatPage: React.FC = () => {
             key="chat-tab-panel"
             sx={{
               ...getChatTabPanelEnterSx(chatTabSlideDirection),
-              flexGrow: 1,
               display: 'flex',
-              overflow: 'hidden',
+              ...(isMobileChatOpen ? { flexGrow: 1, overflow: 'hidden' } : {}),
             }}
           >
             {/* На мобильных устройствах показываем либо список, либо диалог */}
@@ -2688,11 +2691,8 @@ const ChatPage: React.FC = () => {
             key="games-tab-panel"
             sx={{
               ...getChatTabPanelEnterSx(chatTabSlideDirection),
-              flex: 1,
-              overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
-              minHeight: 0,
             }}
           >
             <Games />

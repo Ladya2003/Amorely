@@ -5,6 +5,7 @@ import {
   getFeedHeaderGlowSx,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
+import { getTabPageBottomPaddingSx, getTabPageDesktopShellSx } from '../../theme/pageLayout';
 
 export const SETTINGS_NAV_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 export const SETTINGS_ACTION_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.5);
@@ -25,8 +26,6 @@ export const settingsPageEnterSx = {
 } as const;
 
 export const getSettingsTabPanelEnterSx = (direction: number) => ({
-  flex: 1,
-  minHeight: 0,
   display: 'flex',
   flexDirection: 'column' as const,
   animation: 'settingsTabPanelEnter 340ms cubic-bezier(0.22, 1, 0.36, 1)',
@@ -48,11 +47,10 @@ export const getSettingsTabPanelEnterSx = (direction: number) => ({
 });
 
 export const getSettingsPageRootSx = (theme: Theme) => ({
-  height: '100%',
-  minHeight: 0,
+  ...getTabPageDesktopShellSx(),
   display: 'flex',
   flexDirection: 'column' as const,
-  overflow: 'hidden' as const,
+  ...getTabPageBottomPaddingSx(),
   ...getChatDialogBackdropSx(theme),
 });
 
@@ -83,13 +81,10 @@ export const getSettingsPageTitleSx = () => ({
 });
 
 export const getSettingsBodySx = (isMobile: boolean) => ({
-  flex: 1,
-  minHeight: 0,
   display: 'flex',
   flexDirection: isMobile ? ('column' as const) : ('row' as const),
   gap: isMobile ? 1.25 : 1.5,
   px: 2,
-  pb: { xs: 2.5, sm: 2 },
 });
 
 export const getSettingsNavWrapSx = (isMobile: boolean) => ({
@@ -155,7 +150,6 @@ export const getSettingsNavTabSx = (theme: Theme, options: { selected?: boolean;
 export const getSettingsContentPanelSx = (theme: Theme) => ({
   flex: 1,
   minWidth: 0,
-  minHeight: 0,
   display: 'flex',
   flexDirection: 'column' as const,
   borderRadius: `${SETTINGS_NAV_RADIUS}px`,
@@ -165,13 +159,9 @@ export const getSettingsContentPanelSx = (theme: Theme) => ({
   }),
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
-  overflow: 'hidden',
 });
 
 export const getSettingsContentScrollSx = () => ({
-  flex: 1,
-  minHeight: 0,
-  overflow: 'auto',
   p: { xs: 2, sm: 2.5 },
 });
 

@@ -14,10 +14,8 @@ const getSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medium') 
   )}`;
 
 export const getGamesListRootSx = () => ({
-  height: '100%',
   display: 'flex',
   flexDirection: 'column' as const,
-  overflow: 'hidden' as const,
   bgcolor: 'transparent',
 });
 
@@ -29,11 +27,8 @@ export const getGamesListSearchWrapSx = () => ({
 });
 
 export const getGamesListScrollSx = () => ({
-  flexGrow: 1,
-  overflow: 'auto',
   px: 2,
   py: 2,
-  pb: { xs: 3, sm: 2 },
 });
 
 export const getGamesListStackSx = () => ({

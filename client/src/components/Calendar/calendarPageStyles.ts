@@ -5,6 +5,7 @@ import {
   getFeedHeaderGlowSx,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
+import { getTabPageBottomPaddingSx, getTabPageDesktopShellSx } from '../../theme/pageLayout';
 import { CALENDAR_DRAWER_INNER_RADIUS, CALENDAR_DRAWER_ACTION_RADIUS } from './calendarDrawerStyles';
 
 const getSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medium') =>
@@ -22,8 +23,6 @@ export const calendarPageEnterSx = {
 } as const;
 
 export const getCalendarTabPanelEnterSx = (direction: number) => ({
-  flex: 1,
-  minHeight: 0,
   display: 'flex',
   flexDirection: 'column' as const,
   animation: 'calendarTabPanelEnter 340ms cubic-bezier(0.22, 1, 0.36, 1)',
@@ -83,18 +82,15 @@ export const getCalendarMonthTitleEnterSx = (direction: number) => ({
 });
 
 export const getCalendarPageRootSx = (theme: Theme) => ({
-  height: '100%',
-  minHeight: 0,
+  ...getTabPageDesktopShellSx(),
   display: 'flex',
   flexDirection: 'column' as const,
-  overflow: 'hidden' as const,
+  ...getTabPageBottomPaddingSx(),
   ...getChatDialogBackdropSx(theme),
 });
 
 export const getCalendarRootSx = () => ({
   width: '100%',
-  height: '100%',
-  minHeight: 0,
   display: 'flex',
   flexDirection: 'column' as const,
 });
@@ -251,12 +247,8 @@ export const getCalendarCreateButtonSx = () => ({
 });
 
 export const getCalendarScrollSx = () => ({
-  flexGrow: 1,
-  minHeight: 0,
-  overflow: 'auto',
   px: { xs: 1.5, sm: 2 },
   py: 1,
-  pb: { xs: 2.5, sm: 2 },
 });
 
 export const getCalendarWeekdayLabelSx = () => ({

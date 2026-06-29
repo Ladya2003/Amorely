@@ -805,7 +805,7 @@ const PlansNotes: React.FC<{
   );
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <Box sx={getCalendarPlansToolbarSx()}>
         <Typography sx={getCalendarPlansSubtitleSx()}>
           {t('calendar.plans.subtitle')}

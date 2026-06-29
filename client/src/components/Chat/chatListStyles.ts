@@ -105,8 +105,6 @@ export const getChatListPanelSx = (theme: Theme, options?: { withSideBorder?: bo
 });
 
 export const getChatListScrollSx = () => ({
-  flexGrow: 1,
-  overflow: 'auto',
   px: 2,
   py: 2,
 });
