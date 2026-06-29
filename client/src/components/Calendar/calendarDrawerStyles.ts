@@ -140,6 +140,19 @@ export const getEventMediaPreviewSx = (theme: Theme) => ({
       : `0 8px 22px ${alpha(theme.palette.common.black, 0.28)}`,
 });
 
+export const getEventDetailMediaCarouselSx = (theme: Theme) => ({
+  width: '100%',
+  aspectRatio: '1 / 1',
+  position: 'relative' as const,
+  bgcolor: 'grey.100',
+  borderRadius: `${CALENDAR_DRAWER_INNER_RADIUS}px`,
+  overflow: 'hidden',
+  boxShadow:
+    theme.palette.mode === 'light'
+      ? `0 6px 18px ${alpha(theme.palette.common.black, 0.08)}`
+      : `0 8px 22px ${alpha(theme.palette.common.black, 0.24)}`,
+});
+
 export const getEventMediaDeleteButtonSx = (theme: Theme) => ({
   position: 'absolute',
   top: 6,

@@ -37,6 +37,7 @@ import {
   getCalendarDrawerHeaderTitleSx,
   getCalendarDrawerHeaderWrapSx,
   getCalendarDrawerPaperSx,
+  getEventDetailMediaCarouselSx,
 } from './calendarDrawerStyles';
 
 interface MediaFile {
@@ -223,12 +224,8 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
             {mediaFiles.length > 0 && (
               <Box
                 sx={{
-                  width: '100%',
-                  aspectRatio: '1 / 1',
-                  position: 'relative',
-                  bgcolor: 'grey.100',
-                  overflow: 'hidden',
-                  ...swipeContainerSx
+                  ...getEventDetailMediaCarouselSx(theme),
+                  ...swipeContainerSx,
                 }}
                 {...swipeHandlers}
               >
