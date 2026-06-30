@@ -138,7 +138,7 @@ export const getChatComposerShellSx = (theme: Theme) => ({
 export const getChatComposerWrapSx = () => ({
   px: 1.5,
   pt: 0.5,
-  pb: 'max(12px, env(safe-area-inset-bottom, 0px))',
+  pb: 1.5,
   flexShrink: 0,
 });
 
