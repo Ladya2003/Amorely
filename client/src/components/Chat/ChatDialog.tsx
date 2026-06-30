@@ -40,7 +40,7 @@ import Message from './Message';
 import SharedEventCard from './SharedEventCard';
 import SharedNoteCard from './SharedNoteCard';
 import ContactProfileDialog from './ContactProfileDialog';
-import GameBadges from '../Games/GameBadges';
+import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
@@ -332,9 +332,10 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const [sharingNote, setSharingNote] = useState<SharedNoteRef | null>(null);
   const [editingMessage, setEditingMessage] = useState<MessageType | null>(null);
   const [contextMenu, setContextMenu] = useState<{
-    mouseX: number;
-    mouseY: number;
     message: MessageType;
+    anchorEl?: HTMLElement | null;
+    mouseX?: number;
+    mouseY?: number;
   } | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<MessageType | null>(null);
@@ -1131,10 +1132,24 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     if (event.type === 'contextmenu') {
       event.preventDefault();
     }
+
+    if (isMobile) {
+      setContextMenu({ message });
+      return;
+    }
+
+    if (event.type === 'contextmenu') {
+      setContextMenu({
+        message,
+        mouseX: event.clientX + 2,
+        mouseY: event.clientY - 6,
+      });
+      return;
+    }
+
     setContextMenu({
-      mouseX: event.clientX + 2,
-      mouseY: event.clientY - 6,
-      message
+      message,
+      anchorEl: event.currentTarget as HTMLElement,
     });
   };
 
@@ -1181,6 +1196,37 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setDeleteModalOpen(true);
     setContextMenu(null);
   };
+
+  const renderMessageActionItems = () => (
+    <>
+      <MenuItem onClick={handleReplyFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+        <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+          <ForwardOutlinedIcon sx={{ fontSize: 18 }} />
+        </ListItemIcon>
+        {t('chat.dialog.reply')}
+      </MenuItem>
+      {contextMenu && isMessageEditable(contextMenu.message, currentUserId) && (
+        <MenuItem onClick={handleEditFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+          <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+            <EditOutlinedIcon sx={{ fontSize: 18 }} />
+          </ListItemIcon>
+          {t('chat.dialog.edit')}
+        </MenuItem>
+      )}
+      <MenuItem onClick={handleForwardFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+        <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+          <ReplyOutlinedIcon sx={{ fontSize: 18 }} />
+        </ListItemIcon>
+        {t('chat.dialog.forward')}
+      </MenuItem>
+      <MenuItem onClick={handleDeleteFromContextMenu} sx={getChatContextMenuItemSx(theme, { danger: true })}>
+        <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+          <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+        </ListItemIcon>
+        {t('chat.dialog.delete')}
+      </MenuItem>
+    </>
+  );
 
   const handleDeleteModalClose = () => {
     setDeleteModalOpen(false);
@@ -1390,12 +1436,18 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             <ArrowBackIcon />
           </Badge>
         </IconButton>
-        <Avatar 
-          alt={contactDisplayName} 
-          src={contact.avatar}
-          onClick={() => setProfileDialogOpen(true)}
-          sx={getChatDialogHeaderAvatarSx()}
-        />
+        <AvatarGameRankMedal
+          badges={contact.isPartner ? badges : []}
+          displayGameId={partnerDisplayBadgeGameId}
+          avatarSize={44}
+        >
+          <Avatar
+            alt={contactDisplayName}
+            src={contact.avatar}
+            onClick={() => setProfileDialogOpen(true)}
+            sx={getChatDialogHeaderAvatarSx()}
+          />
+        </AvatarGameRankMedal>
         <Box
           sx={{ flexGrow: 1, minWidth: 0, cursor: 'pointer' }}
           onClick={() => setProfileDialogOpen(true)}
@@ -1433,11 +1485,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             >
               {contactDisplayName}
             </Typography>
-            {contact.isPartner && (
-              <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                <GameBadges badges={badges} displayGameId={partnerDisplayBadgeGameId} size={22} />
-              </Box>
-            )}
           </Box>
           <Typography
             component="span"
@@ -1851,48 +1898,44 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         )}
       </Paper>
       </Box>
-      <Menu
-        open={contextMenu !== null}
-        onClose={handleContextMenuClose}
-        anchorReference="anchorPosition"
-        anchorPosition={
-          contextMenu !== null
-            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-            : undefined
-        }
-        slotProps={{
-          paper: {
-            sx: getChatContextMenuPaperSx(theme),
-          },
-        }}
-      >
-        <MenuItem onClick={handleReplyFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
-          <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-            <ForwardOutlinedIcon sx={{ fontSize: 18 }} />
-          </ListItemIcon>
-          {t('chat.dialog.reply')}
-        </MenuItem>
-        {contextMenu && isMessageEditable(contextMenu.message, currentUserId) && (
-          <MenuItem onClick={handleEditFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
-            <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-              <EditOutlinedIcon sx={{ fontSize: 18 }} />
-            </ListItemIcon>
-            {t('chat.dialog.edit')}
-          </MenuItem>
-        )}
-        <MenuItem onClick={handleForwardFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
-          <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-            <ReplyOutlinedIcon sx={{ fontSize: 18 }} />
-          </ListItemIcon>
-          {t('chat.dialog.forward')}
-        </MenuItem>
-        <MenuItem onClick={handleDeleteFromContextMenu} sx={getChatContextMenuItemSx(theme, { danger: true })}>
-          <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-            <DeleteOutlineIcon sx={{ fontSize: 18 }} />
-          </ListItemIcon>
-          {t('chat.dialog.delete')}
-        </MenuItem>
-      </Menu>
+      {isMobile ? (
+        <ResponsiveDialog
+          open={contextMenu !== null}
+          onClose={handleContextMenuClose}
+          mobileMaxHeight="auto"
+        >
+          <Box sx={{ py: 0.5 }}>
+            {renderMessageActionItems()}
+          </Box>
+        </ResponsiveDialog>
+      ) : (
+        <Menu
+          open={contextMenu !== null}
+          onClose={handleContextMenuClose}
+          anchorReference={contextMenu?.anchorEl ? 'anchorEl' : 'anchorPosition'}
+          anchorEl={contextMenu?.anchorEl ?? null}
+          anchorPosition={
+            contextMenu?.mouseX != null && contextMenu?.mouseY != null
+              ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+              : undefined
+          }
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          slotProps={{
+            paper: {
+              sx: getChatContextMenuPaperSx(theme),
+            },
+          }}
+        >
+          {renderMessageActionItems()}
+        </Menu>
+      )}
       <ResponsiveDialog
         open={deleteModalOpen}
         onClose={handleDeleteModalClose}

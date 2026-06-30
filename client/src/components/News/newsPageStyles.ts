@@ -70,6 +70,7 @@ export const getNewsPageRootSx = (theme: Theme) => ({
 
 export const getNewsPageHeaderGlowWrapSx = (theme: Theme) => ({
   ...getFeedHeaderGlowSx(theme),
+  px: 0,
   flexShrink: 0,
   pt: {
     xs: `calc(${theme.spacing(2)} + env(safe-area-inset-top, 0px))`,

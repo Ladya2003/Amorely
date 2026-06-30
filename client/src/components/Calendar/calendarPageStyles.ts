@@ -97,6 +97,7 @@ export const getCalendarRootSx = () => ({
 
 export const getCalendarHeaderGlowWrapSx = (theme: Theme) => ({
   ...getFeedHeaderGlowSx(theme),
+  px: 0,
   flexShrink: 0,
   pt: {
     xs: `calc(${theme.spacing(2)} + env(safe-area-inset-top, 0px))`,
@@ -109,7 +110,7 @@ export const getCalendarToolbarRowSx = () => ({
   display: 'flex',
   alignItems: 'center',
   gap: 1,
-  px: 2,
+  px: { xs: 1.5, sm: 2 },
   pb: 1,
 });
 
@@ -133,7 +134,7 @@ export const getCalendarMonthNavRowSx = () => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  px: 2,
+  px: { xs: 1.5, sm: 2 },
   py: 1.25,
 });
 
@@ -176,7 +177,7 @@ export const getCalendarControlsRowSx = (options?: { gridView?: boolean }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  px: 2,
+  px: { xs: 1.5, sm: 2 },
   pb: 1.25,
   pt: options?.gridView ? 1.5 : 0,
   gap: 1,

@@ -37,6 +37,7 @@ interface PetSectionProps {
   userId?: string;
   onPetSelect?: (pet: Pet) => void;
   embedded?: boolean;
+  compact?: boolean;
 }
 
 type PetView = 'mine' | 'partner';
@@ -212,6 +213,7 @@ const PetSection: React.FC<PetSectionProps> = ({
   userId,
   onPetSelect,
   embedded = false,
+  compact = false,
 }) => {
   const { t } = useTranslation();
   const partnerId = usePartnerId();
@@ -323,8 +325,8 @@ const PetSection: React.FC<PetSectionProps> = ({
     }
 
     return (
-      <PetHintCard sx={{ py: 2 }}>
-        <Typography variant="body2" color="text.secondary">
+      <PetHintCard sx={{ py: compact ? 1.25 : 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={compact ? { fontSize: '0.8125rem' } : undefined}>
           {t('pets.contactEmpty')}
         </Typography>
       </PetHintCard>
@@ -383,7 +385,11 @@ const PetSection: React.FC<PetSectionProps> = ({
         sx={(theme) => ({
           ...getPetSectionPaperSx(theme),
           mb: embedded ? 0 : 3,
-          mt: embedded ? 2 : 0,
+          mt: embedded ? (compact ? 0 : 2) : 0,
+          ...(compact && {
+            px: 1.75,
+            py: 1.5,
+          }),
         })}
       >
         <Box
@@ -392,10 +398,14 @@ const PetSection: React.FC<PetSectionProps> = ({
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: 1.5,
-            mb: showPartnerTab ? 1.5 : isReadonly ? 1.5 : 2,
+            mb: showPartnerTab ? 1.5 : isReadonly ? (compact ? 1 : 1.5) : 2,
           }}
         >
-          <Typography variant="h2" component="h2" sx={{ fontSize: '1.35rem' }}>
+          <Typography
+            variant="h2"
+            component="h2"
+            sx={{ fontSize: compact ? '1rem' : '1.35rem', fontWeight: 700 }}
+          >
             {t('pets.sectionTitle')}
           </Typography>
           {!isReadonly && <CurrencyBadge balance={balance} variant="tinted" size="small" />}

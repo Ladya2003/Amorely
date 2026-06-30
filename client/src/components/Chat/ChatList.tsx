@@ -17,7 +17,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
-import GameBadges from '../Games/GameBadges';
+import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { formatChatListTimestamp } from '../../localization/chatHelpers';
 import { getContactDisplayName } from '../../utils/contactDisplayName';
@@ -133,27 +133,33 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
             }}
           >
             <ListItemAvatar sx={{ minWidth: 64, mt: 0.25 }}>
-              <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                <Avatar alt={displayName} src={contact.avatar} sx={getChatListAvatarSx()} />
-                {contact.isOnline && (
-                  <Box
-                    sx={(muiTheme) => ({
-                      position: 'absolute',
-                      bottom: 1,
-                      right: 1,
-                      width: 12,
-                      height: 12,
-                      borderRadius: '50%',
-                      bgcolor: getOnlinePresenceColor(muiTheme),
-                      border: `2px solid ${alpha(
-                        muiTheme.palette.primary.main,
-                        muiTheme.palette.mode === 'light' ? 0.12 : 0.2
-                      )}`,
-                      boxSizing: 'border-box',
-                    })}
-                  />
-                )}
-              </Box>
+              <AvatarGameRankMedal
+                badges={contact.isPartner ? badges : []}
+                displayGameId={partnerDisplayBadgeGameId}
+                avatarSize={52}
+              >
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <Avatar alt={displayName} src={contact.avatar} sx={getChatListAvatarSx()} />
+                  {contact.isOnline && (
+                    <Box
+                      sx={(muiTheme) => ({
+                        position: 'absolute',
+                        bottom: 1,
+                        right: 1,
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        bgcolor: getOnlinePresenceColor(muiTheme),
+                        border: `2px solid ${alpha(
+                          muiTheme.palette.primary.main,
+                          muiTheme.palette.mode === 'light' ? 0.12 : 0.2
+                        )}`,
+                        boxSizing: 'border-box',
+                      })}
+                    />
+                  )}
+                </Box>
+              </AvatarGameRankMedal>
             </ListItemAvatar>
             <ListItemText
               secondaryTypographyProps={{ component: 'div' }}
@@ -192,15 +198,6 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                     >
                       {displayName}
                     </Typography>
-                    {contact.isPartner && (
-                      <Box component="span" sx={{ flexShrink: 0, display: 'inline-flex' }}>
-                        <GameBadges
-                          badges={badges}
-                          displayGameId={partnerDisplayBadgeGameId}
-                          size={22}
-                        />
-                      </Box>
-                    )}
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, flexShrink: 0 }}>
                     {renderLastMessageStatusIcon(contact)}

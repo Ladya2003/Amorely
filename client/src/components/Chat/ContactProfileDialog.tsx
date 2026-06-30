@@ -7,7 +7,8 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Typography
+  Typography,
+  useTheme,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import CloseIcon from '@mui/icons-material/Close';
@@ -16,12 +17,26 @@ import axios from 'axios';
 import { API_URL } from '../../config';
 import ContentViewer from '../Calendar/ContentViewer';
 import { Contact } from './ChatList';
-import GameBadges from '../Games/GameBadges';
+import GameBadges, { AvatarGameRankMedal } from '../Games/GameBadges';
 import type { RelationshipBadge } from '../../utils/gameBadges';
 import { formatChatBirthday, getChatPlaceholderBio } from '../../localization/chatHelpers';
 import PetSection from '../Pets/PetSection';
 import PetDetailView from '../Pets/PetDetailView';
 import type { Pet } from '../../services/petsService';
+import {
+  CONTACT_PROFILE_AVATAR_SIZE,
+  getContactProfileAvatarWrapSx,
+  getContactProfileBioSx,
+  getContactProfileBirthdaySx,
+  getContactProfileDialogContentSx,
+  getContactProfileHeroSx,
+  getContactProfileIdentitySx,
+  getContactProfileMetaSx,
+  getContactProfileNameSx,
+  getContactProfileRootSx,
+  getContactProfileSectionSx,
+  getContactProfileSectionTitleSx,
+} from './contactProfileDialogStyles';
 
 export interface ContactProfile extends Contact {
   bio?: string;
@@ -38,6 +53,7 @@ interface ContactProfileDialogProps {
 
 const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClose, contact }) => {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const [profile, setProfile] = useState<ContactProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
@@ -144,7 +160,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 0, pb: 3 }}>
+        <DialogContent sx={getContactProfileDialogContentSx()}>
           {showingPet && selectedPetId ? (
             <PetDetailView
               petId={selectedPetId}
@@ -154,89 +170,81 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
               onBack={() => setSelectedPetId(null)}
             />
           ) : isLoading && !displayProfile ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
               <CircularProgress size={28} />
             </Box>
           ) : displayProfile ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-              <Avatar
-                src={avatarUrl}
-                alt={fullName}
-                onClick={() => {
-                  if (avatarUrl) {
-                    setAvatarViewerOpen(true);
-                  }
-                }}
-                sx={{
-                  width: 112,
-                  height: 112,
-                  mb: 1.5,
-                  cursor: avatarUrl ? 'pointer' : 'default',
-                  boxShadow: 2,
-                }}
-              />
+            <Box sx={getContactProfileRootSx()}>
+              <Box sx={getContactProfileHeroSx()}>
+                <Box sx={getContactProfileAvatarWrapSx()}>
+                  <AvatarGameRankMedal
+                    badges={profile?.badges}
+                    displayGameId={profile?.displayBadgeGameId}
+                    avatarSize={CONTACT_PROFILE_AVATAR_SIZE}
+                  >
+                    <Avatar
+                      src={avatarUrl}
+                      alt={fullName}
+                      onClick={() => {
+                        if (avatarUrl) {
+                          setAvatarViewerOpen(true);
+                        }
+                      }}
+                      sx={{
+                        width: CONTACT_PROFILE_AVATAR_SIZE,
+                        height: CONTACT_PROFILE_AVATAR_SIZE,
+                        cursor: avatarUrl ? 'pointer' : 'default',
+                        boxShadow: 2,
+                      }}
+                    />
+                  </AvatarGameRankMedal>
+                </Box>
+
+                <Box sx={getContactProfileIdentitySx()}>
+                  <Typography component="h2" sx={getContactProfileNameSx()}>
+                    {fullName}
+                  </Typography>
+
+                  {displayProfile.username && (
+                    <Typography sx={getContactProfileMetaSx()}>@{displayProfile.username}</Typography>
+                  )}
+
+                  {displayProfile.email && (
+                    <Typography sx={getContactProfileMetaSx()} noWrap>
+                      {displayProfile.email}
+                    </Typography>
+                  )}
+
+                  {birthdayLabel && (
+                    <Box sx={getContactProfileBirthdaySx(theme)}>
+                      <CakeOutlinedIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+                      <Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
+                        {birthdayLabel}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+
+              <Box sx={getContactProfileBioSx(theme, !displayProfile.bio?.trim())}>
+                <Typography variant="body2">{bioText}</Typography>
+              </Box>
 
               {profile?.badges && profile.badges.length > 0 && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                <Box sx={getContactProfileSectionSx(theme)}>
+                  <Typography component="span" sx={getContactProfileSectionTitleSx()}>
                     {t('chat.profile.medals')}
                   </Typography>
-                  <GameBadges badges={profile.badges} variant="all" size={20} />
+                  <GameBadges badges={profile.badges} variant="list" dense />
                 </Box>
               )}
-
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                {fullName}
-              </Typography>
-
-              {displayProfile.username && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  @{displayProfile.username}
-                </Typography>
-              )}
-
-              {displayProfile.email && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: birthdayLabel ? 1 : 1.5 }}>
-                  {displayProfile.email}
-                </Typography>
-              )}
-
-              {birthdayLabel && (
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.75,
-                    mb: 1.5,
-                    px: 1.25,
-                    py: 0.5,
-                    borderRadius: '999px',
-                    bgcolor: 'action.hover'
-                  }}
-                >
-                  <CakeOutlinedIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-                  <Typography variant="body2">{birthdayLabel}</Typography>
-                </Box>
-              )}
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  mt: 0.5,
-                  mb: 1,
-                  lineHeight: 1.6,
-                  fontStyle: displayProfile.bio?.trim() ? 'normal' : 'italic'
-                }}
-              >
-                {bioText}
-              </Typography>
 
               {contactId && (
                 <PetSection
                   variant="readonly"
                   userId={contactId}
                   embedded
+                  compact
                   onPetSelect={handlePetSelect}
                 />
               )}

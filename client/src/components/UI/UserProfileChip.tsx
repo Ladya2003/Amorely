@@ -3,7 +3,7 @@ import { Box, Typography, Avatar, SxProps, Theme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import GameBadges from '../Games/GameBadges';
+import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 
 export const getUserDisplayName = (user: {
@@ -23,13 +23,11 @@ export const getUserDisplayName = (user: {
 interface UserProfileChipProps {
   sx?: SxProps<Theme>;
   maxNameWidth?: number | string;
-  badgeSize?: number;
 }
 
 const UserProfileChip: React.FC<UserProfileChipProps> = ({
   sx,
   maxNameWidth = 96,
-  badgeSize = 22,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -61,13 +59,19 @@ const UserProfileChip: React.FC<UserProfileChipProps> = ({
         ...(sx ? (Array.isArray(sx) ? sx : [sx]) : []),
       ]}
     >
-      <Avatar
-        src={user.avatar}
-        alt={getUserDisplayName(user)}
-        sx={{ width: 40, height: 40, flexShrink: 0 }}
+      <AvatarGameRankMedal
+        badges={badges}
+        displayGameId={user.displayBadgeGameId}
+        avatarSize={40}
       >
-        {user.username.charAt(0).toUpperCase()}
-      </Avatar>
+        <Avatar
+          src={user.avatar}
+          alt={getUserDisplayName(user)}
+          sx={{ width: 40, height: 40, flexShrink: 0 }}
+        >
+          {user.username.charAt(0).toUpperCase()}
+        </Avatar>
+      </AvatarGameRankMedal>
       <Box
         sx={{
           display: 'flex',
@@ -80,7 +84,6 @@ const UserProfileChip: React.FC<UserProfileChipProps> = ({
         <Typography variant="body2" noWrap component="span" sx={{ fontWeight: 500 }}>
           {getUserDisplayName(user)}
         </Typography>
-        <GameBadges badges={badges} displayGameId={user.displayBadgeGameId} size={badgeSize} />
       </Box>
     </Box>
   );

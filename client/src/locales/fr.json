@@ -977,6 +977,7 @@
       "title": "Profil",
       "closeAria": "Fermer le profil",
       "medals": "Médailles",
+      "medalItem": "{{rank}}e place dans « {{game}} »",
       "defaultName": "Contact",
       "placeholderBio1": "{{name}} n'a pas encore ajouté de description — les surprises ne sont pas que dans le chat.",
       "placeholderBio2": "Sur {{name}}, une chose est sûre : la discussion n'est jamais ennuyeuse.",

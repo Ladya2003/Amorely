@@ -17,6 +17,8 @@ import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import DisplayBadgePicker from './DisplayBadgePicker';
+import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
+import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
 import {
   getSettingsAvatarButtonSx,
@@ -61,6 +63,7 @@ const formatBirthdayForApi = (birthday: Date | null): string => {
 const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferenceSaved }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { badges } = useRelationshipBadges();
   const [username, setUsername] = useState(user.username || '');
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
@@ -211,18 +214,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box sx={getSettingsAvatarWrapSx(theme)}>
-              <Avatar
-                src={avatarPreview}
-                alt={username}
-                onClick={() => {
-                  if (avatarPreview) {
-                    setAvatarViewerOpen(true);
-                  }
-                }}
-                sx={{
-                  cursor: avatarPreview ? 'pointer' : 'default'
-                }}
-              />
+              <AvatarGameRankMedal
+                badges={badges}
+                displayGameId={user.displayBadgeGameId}
+                avatarSize={120}
+              >
+                <Avatar
+                  src={avatarPreview}
+                  alt={username}
+                  onClick={() => {
+                    if (avatarPreview) {
+                      setAvatarViewerOpen(true);
+                    }
+                  }}
+                  sx={{
+                    cursor: avatarPreview ? 'pointer' : 'default',
+                  }}
+                />
+              </AvatarGameRankMedal>
               <IconButton
                 color="primary"
                 aria-label="upload picture"

@@ -4,11 +4,14 @@ import { Avatar, Box, Stack, Typography, useTheme } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { getUserDisplayName } from '../UI/UserProfileChip';
 import type { LeaderboardEntry } from '../../services/gamesService';
+import GameRankMedalIcon, { getMedalSizeForAvatar } from './GameRankMedalIcon';
 import {
   gameLeaderboardRowEnterSx,
+  getAvatarRankMedalOverlaySx,
   getGameLeaderboardAvatarSx,
   getGameLeaderboardEmptySx,
   getGameLeaderboardItemSx,
+  getGameLeaderboardRankSlotSx,
   getGameLeaderboardRankSx,
   getGameLeaderboardScoreSx,
 } from './gamePageStyles';
@@ -23,6 +26,8 @@ const getPairLabel = (entry: LeaderboardEntry) =>
     .map((user) => getUserDisplayName(user))
     .join(' & ');
 
+const LEADERBOARD_AVATAR_SIZE = 38;
+
 const GameLeaderboard: React.FC<GameLeaderboardProps> = ({
   entries,
   emptyMessage,
@@ -30,6 +35,7 @@ const GameLeaderboard: React.FC<GameLeaderboardProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const resolvedEmptyMessage = emptyMessage ?? t('games.leaderboard.empty');
+  const medalSize = getMedalSizeForAvatar(LEADERBOARD_AVATAR_SIZE);
 
   if (entries.length === 0) {
     return (
@@ -50,11 +56,18 @@ const GameLeaderboard: React.FC<GameLeaderboardProps> = ({
             ...gameLeaderboardRowEnterSx(index),
           }}
         >
-          <Typography variant="subtitle1" sx={getGameLeaderboardRankSx(entry.rank)}>
-            {entry.rank}
-          </Typography>
+          <Box sx={getGameLeaderboardRankSlotSx()}>
+            <Typography variant="subtitle1" sx={getGameLeaderboardRankSx(theme, entry.rank)}>
+              {entry.rank}
+            </Typography>
+          </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            {entry.rank <= 3 && (
+              <Box sx={getAvatarRankMedalOverlaySx()}>
+                <GameRankMedalIcon rank={entry.rank} size={medalSize} />
+              </Box>
+            )}
             {entry.users.map((user, userIndex) => (
               <Avatar
                 key={user.id}

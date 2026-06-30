@@ -16,6 +16,8 @@ import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNone
 import { useAuth } from '../../contexts/AuthContext';
 import { useAdminAlerts } from '../../contexts/AdminAlertsContext';
 import { getUserDisplayName } from '../UI/UserProfileChip';
+import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
+import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getFeedHeaderGlowSx } from './feedBannerStyles';
 
@@ -30,6 +32,7 @@ const FeedHeader: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { badges } = useRelationshipBadges();
   const { feedDot } = useAdminAlerts();
   const isAdmin = user?.role === 'admin';
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -76,7 +79,7 @@ const FeedHeader: React.FC = () => {
 
   return (
     <Box sx={{ mb: 2.5 }}>
-      <Box sx={(theme) => getFeedHeaderGlowSx(theme)}>
+      <Box sx={(theme) => getFeedHeaderGlowSx(theme, { bleed: true })}>
         <Box sx={{ position: 'relative', zIndex: 1 }}>
           <Box
             sx={{
@@ -119,23 +122,29 @@ const FeedHeader: React.FC = () => {
                 height: avatarSize,
               }}
             >
-              <Avatar
-                src={hasAvatar ? user.avatar : undefined}
-                alt={displayName}
-                onClick={handleProfileClick}
-                sx={{
-                  width: avatarSize,
-                  height: avatarSize,
-                  fontSize: hasAvatar ? undefined : '1.25rem',
-                  cursor: 'pointer',
-                  boxShadow: (theme) =>
-                    theme.palette.mode === 'light'
-                      ? '0 4px 16px rgba(0, 0, 0, 0.08)'
-                      : '0 4px 16px rgba(0, 0, 0, 0.35)',
-                }}
+              <AvatarGameRankMedal
+                badges={badges}
+                displayGameId={user.displayBadgeGameId}
+                avatarSize={avatarSize}
               >
-                {user.username.charAt(0).toUpperCase()}
-              </Avatar>
+                <Avatar
+                  src={hasAvatar ? user.avatar : undefined}
+                  alt={displayName}
+                  onClick={handleProfileClick}
+                  sx={{
+                    width: avatarSize,
+                    height: avatarSize,
+                    fontSize: hasAvatar ? undefined : '1.25rem',
+                    cursor: 'pointer',
+                    boxShadow: (theme) =>
+                      theme.palette.mode === 'light'
+                        ? '0 4px 16px rgba(0, 0, 0, 0.08)'
+                        : '0 4px 16px rgba(0, 0, 0, 0.35)',
+                  }}
+                >
+                  {user.username.charAt(0).toUpperCase()}
+                </Avatar>
+              </AvatarGameRankMedal>
 
               <IconButton
                 aria-label={t('feed.notificationsAriaLabel')}

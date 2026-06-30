@@ -113,14 +113,22 @@ export const getChatDialogBackdropSx = (theme: Theme) => ({
   background: getPageTopGlowBackground(theme, theme.palette.background.default),
 });
 
-/** Свечение primary за шапкой главной («Привет, …») */
-export const getFeedHeaderGlowSx = (theme: Theme) => {
+type FeedHeaderGlowOptions = {
+  /** Растянуть glow до краёв родителя (нужен внутри MUI Container на главной). */
+  bleed?: boolean;
+};
+
+/** Свечение primary за шапкой («Привет, …» и вкладки). */
+export const getFeedHeaderGlowSx = (theme: Theme, options: FeedHeaderGlowOptions = {}) => {
+  const { bleed = false } = options;
   const gutterXs = theme.spacing(2);
   const gutterSm = theme.spacing(3);
 
   return {
     position: 'relative' as const,
-    mx: { xs: `calc(-1 * ${gutterXs})`, sm: `calc(-1 * ${gutterSm})` },
+    mx: bleed
+      ? { xs: `calc(-1 * ${gutterXs})`, sm: `calc(-1 * ${gutterSm})` }
+      : 0,
     px: { xs: gutterXs, sm: gutterSm },
     pt: { xs: 0.5, sm: 0 },
     mt: { xs: -1, sm: -0.5 },

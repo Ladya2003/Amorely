@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -33,6 +32,7 @@ import {
   getGamePlayHeaderSx,
   getGamePlayHeaderSubtitleSx,
   getGamePlayHeaderTitleSx,
+  getGamePlayHintCardSx,
   getGamePlayLoadingWrapSx,
   getGamePlayPrimaryButtonSx,
   getGamePlayReadyDotSx,
@@ -646,9 +646,11 @@ const DrawGamePlayPage: React.FC = () => {
                 })}
               </Typography>
               {state.dailyScoredLimitReached && (
-                <Alert severity="info" sx={{ mb: 2, textAlign: 'left' }}>
-                  {t('games.draw.play.dailyLimitLobby')}
-                </Alert>
+                <Box sx={getGamePlayHintCardSx(theme)}>
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'left' }}>
+                    {t('games.draw.play.dailyLimitLobby')}
+                  </Typography>
+                </Box>
               )}
               {state.waitingForPartnerResults ? (
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>

@@ -79,6 +79,7 @@ export const getGamePageRootSx = (theme: Theme) => ({
 
 export const getGamePageHeaderGlowWrapSx = (theme: Theme) => ({
   ...getFeedHeaderGlowSx(theme),
+  px: 0,
   flexShrink: 0,
   pt: {
     xs: `calc(${theme.spacing(3)} + env(safe-area-inset-top, 0px))`,
@@ -271,13 +272,28 @@ export const getGameLeaderboardItemSx = (theme: Theme, rank: number) => ({
   }),
 });
 
-export const getGameLeaderboardRankSx = (rank: number) => ({
+export const getGameLeaderboardRankSlotSx = () => ({
   width: 30,
+  display: 'flex' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  flexShrink: 0,
+});
+
+export const getGameLeaderboardRankSx = (theme: Theme, rank: number) => ({
   fontWeight: 800,
   fontSize: rank <= 3 ? '1rem' : '0.9375rem',
-  color: rank <= 3 ? 'primary.main' : 'text.secondary',
+  lineHeight: 1,
   textAlign: 'center' as const,
-  flexShrink: 0,
+  color: rank <= 3 ? theme.palette.primary.main : theme.palette.text.secondary,
+});
+
+export const getAvatarRankMedalOverlaySx = () => ({
+  position: 'absolute' as const,
+  top: -6,
+  left: -6,
+  zIndex: 2,
+  pointerEvents: 'none' as const,
 });
 
 export const getGameLeaderboardAvatarSx = (index: number) => ({

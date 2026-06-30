@@ -96,10 +96,3 @@ export type Game = GameCatalogEntry;
 
 export const getGameById = (gameId: string): GameCatalogEntry | undefined =>
   GAMES.find((game) => game.id === gameId);
-
-export const GAME_BADGE_ICONS: Record<string, string> = {
-  tap: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/tikalka-badge_vgchxc.jpg',
-  geo: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967132/geofinder-badge_mbxrks.jpg',
-  draw: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967132/paintguesser-badge_gp6lvr.jpg',
-  quiz: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967132/amorelyquestions-badge_nknj08.jpg',
-};
