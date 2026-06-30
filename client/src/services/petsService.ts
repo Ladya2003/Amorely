@@ -74,6 +74,17 @@ export const fetchPet = async (petId: string, options?: { visit?: boolean }): Pr
   return data;
 };
 
+export const fetchUserPet = async (
+  userId: string,
+  petId: string,
+  options?: { visit?: boolean }
+): Promise<PetDetailResponse> => {
+  const { data } = await axios.get(`${API_URL}/api/pets/by-user/${userId}/${petId}`, {
+    params: options?.visit ? { visit: '1' } : undefined,
+  });
+  return data;
+};
+
 export const createPet = async (payload: {
   species: PetSpecies;
   variant: string;

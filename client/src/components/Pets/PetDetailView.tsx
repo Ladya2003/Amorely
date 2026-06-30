@@ -21,7 +21,7 @@ import PetLevelProgress from './PetLevelProgress';
 import PetHatchOverlay from './PetHatchOverlay';
 import PetOwnerBlock from './PetOwnerBlock';
 import { unlockPetRevealAudio, playPetHeartsSound } from '../../utils/petRevealSound';
-import { fetchPet, levelUpPet, giftPet, petPet } from '../../services/petsService';
+import { fetchPet, fetchUserPet, levelUpPet, giftPet, petPet } from '../../services/petsService';
 import type { Pet } from '../../services/petsService';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -77,6 +77,7 @@ const AFFECTION_FLOAT_MS = 1800;
 
 export interface PetDetailViewProps {
   petId: string;
+  ownerUserId?: string;
   visitOnly?: boolean;
   embedded?: boolean;
   onBack?: () => void;
@@ -85,6 +86,7 @@ export interface PetDetailViewProps {
 
 const PetDetailView: React.FC<PetDetailViewProps> = ({
   petId,
+  ownerUserId,
   visitOnly = false,
   embedded = false,
   onBack,
@@ -116,7 +118,10 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
     if (!petId) return;
     try {
       setLoading(true);
-      const data = await fetchPet(petId, { visit: visitOnly });
+      const data =
+        visitOnly && ownerUserId
+          ? await fetchUserPet(ownerUserId, petId, { visit: true })
+          : await fetchPet(petId, { visit: visitOnly });
       setPet(data.pet);
       setBalance(data.balance);
       setIsOwner(data.isOwner);
@@ -128,7 +133,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [petId, t, visitOnly]);
+  }, [ownerUserId, petId, t, visitOnly]);
 
   useEffect(() => {
     void loadPet();

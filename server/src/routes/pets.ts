@@ -125,6 +125,39 @@ const formatPet = (
 const loadOwnerUser = (ownerId: string | mongoose.Types.ObjectId) =>
   User.findById(ownerId).select('username firstName lastName avatar').lean();
 
+const buildPetDetailResponse = async (
+  userId: string,
+  pet: any,
+  visitOnly: boolean
+) => {
+  if (applyPendingAffectionDecay(pet)) {
+    await pet.save();
+  }
+
+  let giftedByUser = null;
+  if (pet.giftedByUserId) {
+    giftedByUser = await User.findById(pet.giftedByUserId).select('username firstName lastName avatar').lean();
+  }
+  const ownerUser = await loadOwnerUser(pet.ownerId);
+
+  const wallet = await getBalance(userId);
+  const ownerId = pet.ownerId.toString();
+  const subLevel = pet.subLevel ?? 0;
+  const levelUpCost = getNextUpgradeCost(pet.level, subLevel);
+  const isOwner = ownerId === userId;
+  const canManagePet = isOwner || (await canUpgradePartnerPet(userId, ownerId));
+
+  return {
+    pet: formatPet(pet.toObject(), giftedByUser, ownerUser),
+    isOwner,
+    canLevelUp: !visitOnly && levelUpCost !== null && canManagePet,
+    levelUpCost: visitOnly ? null : levelUpCost,
+    isMainLevelUpgrade: isMainLevelUpgradeNext(pet.level, subLevel),
+    balance: wallet.balance,
+    visitOnly,
+  };
+};
+
 const canUpgradePartnerPet = async (viewerId: string, ownerId: string): Promise<boolean> => {
   if (viewerId === ownerId) return true;
   const partnerContext = await resolvePartnerContext(viewerId);
@@ -240,10 +273,50 @@ router.get('/by-user/:userId', async (req: ExtendedRequest, res: Response) => {
   }
 });
 
+router.get('/by-user/:userId/:petId', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const ownerId = String(req.params.userId || '');
+    const petId = String(req.params.petId || '');
+
+    if (
+      !ownerId ||
+      !petId ||
+      !mongoose.Types.ObjectId.isValid(ownerId) ||
+      !mongoose.Types.ObjectId.isValid(petId)
+    ) {
+      return res.status(400).json({ error: 'Valid userId and petId required' });
+    }
+
+    const allowed = await canAccessUserProfile(userId, ownerId);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const pet = await Pet.findOne({ _id: petId, ownerId });
+    if (!pet) {
+      return res.status(404).json({ error: 'Pet not found' });
+    }
+
+    const visitOnly = req.query.visit === '1' || req.query.visit === 'true' || userId !== ownerId;
+    const payload = await buildPetDetailResponse(userId, pet, visitOnly);
+    res.json(payload);
+  } catch (error) {
+    console.error('GET /api/pets/by-user/:userId/:petId error:', error);
+    res.status(500).json({ error: 'Failed to load pet' });
+  }
+});
+
 router.get('/:id', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
-    const pet = await Pet.findById(req.params.id);
+    const petId = String(req.params.id || '');
+
+    if (!petId || !mongoose.Types.ObjectId.isValid(petId)) {
+      return res.status(400).json({ error: 'Valid pet id required' });
+    }
+
+    const pet = await Pet.findById(petId);
     if (!pet) {
       return res.status(404).json({ error: 'Pet not found' });
     }
@@ -254,32 +327,9 @@ router.get('/:id', async (req: ExtendedRequest, res: Response) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    if (applyPendingAffectionDecay(pet)) {
-      await pet.save();
-    }
-
-    let giftedByUser = null;
-    if (pet.giftedByUserId) {
-      giftedByUser = await User.findById(pet.giftedByUserId).select('username firstName lastName avatar').lean();
-    }
-    const ownerUser = await loadOwnerUser(pet.ownerId);
-
-    const wallet = await getBalance(userId);
-    const subLevel = pet.subLevel ?? 0;
-    const levelUpCost = getNextUpgradeCost(pet.level, subLevel);
-    const isOwner = ownerId === userId;
     const visitOnly = req.query.visit === '1' || req.query.visit === 'true';
-    const canManagePet = isOwner || (await canUpgradePartnerPet(userId, ownerId));
-
-    res.json({
-      pet: formatPet(pet.toObject(), giftedByUser, ownerUser),
-      isOwner,
-      canLevelUp: !visitOnly && levelUpCost !== null && canManagePet,
-      levelUpCost: visitOnly ? null : levelUpCost,
-      isMainLevelUpgrade: isMainLevelUpgradeNext(pet.level, subLevel),
-      balance: wallet.balance,
-      visitOnly,
-    });
+    const payload = await buildPetDetailResponse(userId, pet, visitOnly);
+    res.json(payload);
   } catch (error) {
     console.error('GET /api/pets/:id error:', error);
     res.status(500).json({ error: 'Failed to load pet' });

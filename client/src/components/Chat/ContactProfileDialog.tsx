@@ -148,6 +148,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
           {showingPet && selectedPetId ? (
             <PetDetailView
               petId={selectedPetId}
+              ownerUserId={contactId ?? undefined}
               visitOnly
               embedded
               onBack={() => setSelectedPetId(null)}
