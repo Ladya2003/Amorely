@@ -46,7 +46,7 @@ if (files.length === 0) {
   process.exit(0);
 }
 
-console.log(`Optimizing ${files.length} pet images → WebP (max ${process.env.PET_IMAGE_MAX_DIMENSION || 768}px)`);
+console.log(`Optimizing ${files.length} pet images → WebP (max ${process.env.PET_IMAGE_MAX_DIMENSION || 1024}px)`);
 
 let totalBefore = 0;
 let totalAfter = 0;
