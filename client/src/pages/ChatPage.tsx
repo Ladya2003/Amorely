@@ -257,15 +257,15 @@ const matchesPendingServerMessage = (
   }
 
   if (
-    pendingMessage.sharedEvent?.id &&
-    serverMessage.sharedEvent?.id === pendingMessage.sharedEvent.id
+    pendingMessage.sharedEvent?.eventId &&
+    serverMessage.sharedEvent?.eventId === pendingMessage.sharedEvent.eventId
   ) {
     return true;
   }
 
   if (
-    pendingMessage.sharedNote?.id &&
-    serverMessage.sharedNote?.id === pendingMessage.sharedNote.id
+    pendingMessage.sharedNote?.noteId &&
+    serverMessage.sharedNote?.noteId === pendingMessage.sharedNote.noteId
   ) {
     return true;
   }
