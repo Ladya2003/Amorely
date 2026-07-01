@@ -6,7 +6,21 @@ export interface EventMediaItem {
   resourceType: 'image' | 'video';
   encrypted?: boolean;
   mediaEnvelope?: ContentMediaEnvelope;
+  sortOrder?: number;
+  createdAt?: string;
 }
+
+export const sortEventMediaItems = <T extends { sortOrder?: number; createdAt?: string }>(
+  items: T[]
+): T[] =>
+  [...items].sort((a, b) => {
+    const orderA = a.sortOrder ?? 0;
+    const orderB = b.sortOrder ?? 0;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+  });
 
 export type EventEditorMediaItem =
   | { key: string; kind: 'existing'; media: EventMediaItem }

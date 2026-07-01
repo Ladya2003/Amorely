@@ -140,6 +140,20 @@ export const getEventMediaPreviewSx = (theme: Theme) => ({
       : `0 8px 22px ${alpha(theme.palette.common.black, 0.28)}`,
 });
 
+export const getEventEditorMediaGridSx = () => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gap: 2,
+  mt: 2,
+});
+
+export const getEventEditorMediaPreviewSx = (theme: Theme) => ({
+  ...getEventMediaPreviewSx(theme),
+  width: '100%',
+  height: 'auto',
+  aspectRatio: '1 / 1',
+});
+
 export const getEventDetailMediaCarouselSx = (theme: Theme) => ({
   width: '100%',
   aspectRatio: '1 / 1',

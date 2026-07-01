@@ -1101,7 +1101,15 @@
       "completedAt": "Concluída {{date}}",
       "completedBy": "Concluída por {{name}} · {{date}}",
       "markCompleted": "Concluída",
-      "markIncomplete": "Marcar como pendente"
+      "markIncomplete": "Marcar como pendente",
+      "filter": {
+        "ariaLabel": "Filtrar planos",
+        "title": "Filtrar planos",
+        "descriptionLabel": "Descrição",
+        "descriptionPlaceholder": "Pesquisar por descrição..."
+      },
+      "emptyFilter": "Nenhuma nota corresponde ao filtro",
+      "emptyCategoryFilter": "Nenhuma nota em «{{category}}» corresponde ao filtro"
     },
     "media": {
       "photosAndVideos": "Fotos e vídeos",

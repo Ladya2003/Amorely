@@ -1045,7 +1045,15 @@
       "completedAt": "Виконано {{date}}",
       "completedBy": "Виконав(ла) {{name}} · {{date}}",
       "markCompleted": "Виконано",
-      "markIncomplete": "Повернути в роботу"
+      "markIncomplete": "Повернути в роботу",
+      "filter": {
+        "ariaLabel": "Фільтр планів",
+        "title": "Фільтр планів",
+        "descriptionLabel": "Опис",
+        "descriptionPlaceholder": "Пошук за описом..."
+      },
+      "emptyFilter": "Немає нотаток за цим фільтром",
+      "emptyCategoryFilter": "У категорії «{{category}}» немає нотаток за цим фільтром"
     },
     "media": {
       "photosAndVideos": "Фото та відео",

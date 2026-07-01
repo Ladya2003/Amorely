@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { resolveDisplayBadge, type RelationshipBadge } from '../../utils/gameBadges';
+import { normalizeMedalRank, resolveDisplayBadge, type RelationshipBadge } from '../../utils/gameBadges';
 import GameRankMedalIcon, { getMedalSizeForAvatar } from './GameRankMedalIcon';
 import { getAvatarRankMedalOverlaySx } from './gamePageStyles';
 
@@ -18,9 +18,10 @@ const AvatarGameRankMedal: React.FC<AvatarGameRankMedalProps> = ({
   children,
 }) => {
   const badge = resolveDisplayBadge(badges, displayGameId);
+  const medalRank = badge ? normalizeMedalRank(badge.rank) : null;
   const medalSize = avatarSize ? getMedalSizeForAvatar(avatarSize) : 26;
 
-  if (!badge) {
+  if (!badge || !medalRank) {
     return <>{children}</>;
   }
 
@@ -28,7 +29,7 @@ const AvatarGameRankMedal: React.FC<AvatarGameRankMedalProps> = ({
     <Box sx={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
       {children}
       <Box sx={getAvatarRankMedalOverlaySx()}>
-        <GameRankMedalIcon rank={badge.rank} size={medalSize} />
+        <GameRankMedalIcon rank={medalRank} size={medalSize} />
       </Box>
     </Box>
   );

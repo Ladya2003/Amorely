@@ -51,6 +51,7 @@ export type RawContentFields = {
   mediaEnvelope?: MediaEnvelopeMeta;
   metadataSenderId?: string;
   metadataRecipientId?: string;
+  mediaUploadedBy?: string;
   targetId?: string;
   userId?: string | { _id?: string };
   createdBy?: string | { _id?: string };
@@ -143,6 +144,17 @@ const resolveSenderId = (item: RawContentFields): string | null =>
   normalizeUserId(item.createdBy) ||
   normalizeUserId(item.userId) ||
   null;
+
+const resolveMediaSenderCandidates = (item: RawContentFields): string[] => {
+  const candidates = [
+    normalizeUserId(item.mediaUploadedBy),
+    normalizeUserId(item.createdBy),
+    normalizeUserId(item.metadataSenderId),
+    normalizeUserId(item.userId)
+  ].filter((value): value is string => Boolean(value));
+
+  return candidates.filter((value, index, array) => array.indexOf(value) === index);
+};
 
 const resolveRecipientId = (
   item: RawContentFields,
@@ -459,26 +471,44 @@ export const decryptContentMediaEnvelope = async (
     };
   }
 
-  const context = pickMediaDecryptionContext(item, currentUserId, fallbackPartnerId);
-  if (!context) {
-    return undefined;
+  const authorCandidates = resolveMediaSenderCandidates(item);
+  const candidates =
+    authorCandidates.length > 0
+      ? authorCandidates
+      : [resolveSenderId(item)].filter((value): value is string => Boolean(value));
+
+  for (const authorId of candidates) {
+    const context = pickMediaDecryptionContext(
+      { ...item, metadataSenderId: authorId },
+      currentUserId,
+      fallbackPartnerId
+    );
+    if (!context) {
+      continue;
+    }
+
+    try {
+      const plaintext = await decryptWithContext(
+        keys,
+        { ...item, metadataSenderId: authorId },
+        context,
+        currentUserId,
+        fallbackPartnerId
+      );
+      const secrets = parseMediaSecrets(plaintext);
+
+      return {
+        mediaKey: secrets.mediaKey,
+        iv: secrets.iv,
+        mimeType: meta?.mimeType || 'application/octet-stream',
+        displayType: meta?.displayType
+      };
+    } catch {
+      continue;
+    }
   }
 
-  const plaintext = await decryptWithContext(
-    keys,
-    item,
-    context,
-    currentUserId,
-    fallbackPartnerId
-  );
-  const secrets = parseMediaSecrets(plaintext);
-
-  return {
-    mediaKey: secrets.mediaKey,
-    iv: secrets.iv,
-    mimeType: meta?.mimeType || 'application/octet-stream',
-    displayType: meta?.displayType
-  };
+  return undefined;
 };
 
 export const decryptSharedEventPreviewEnvelope = async (
@@ -668,6 +698,7 @@ export const decryptCalendarEventsWithMedia = async <
                 ...mediaItem,
                 encrypted: mediaItem.encrypted ?? event.encrypted,
                 encryptedMediaEnvelopePartner: mediaItem.encryptedMediaEnvelopePartner,
+                mediaUploadedBy: mediaItem.mediaUploadedBy,
                 metadataSenderId:
                   mediaItem.metadataSenderId || event.metadataSenderId || normalizeUserId(event.userId) || undefined,
                 metadataRecipientId:

@@ -1,5 +1,6 @@
 import React, { useId } from 'react';
 import { Box } from '@mui/material';
+import { normalizeMedalRank } from '../../utils/gameBadges';
 
 export type GameRankMedalVariant = 'gold' | 'silver' | 'bronze';
 export type GameRankMedalSize = 'xs' | 'sm' | 'md';
@@ -13,10 +14,11 @@ const MEDAL_DIMENSIONS: Record<GameRankMedalSize, number> = {
 export const getMedalSizeForAvatar = (avatarSize: number) =>
   Math.min(48, Math.max(22, Math.round(avatarSize * 0.52)));
 
-export const getRankMedalVariant = (rank: number): GameRankMedalVariant | null => {
-  if (rank === 1) return 'gold';
-  if (rank === 2) return 'silver';
-  if (rank === 3) return 'bronze';
+export const getRankMedalVariant = (rank: unknown): GameRankMedalVariant | null => {
+  const normalizedRank = normalizeMedalRank(rank);
+  if (normalizedRank === 1) return 'gold';
+  if (normalizedRank === 2) return 'silver';
+  if (normalizedRank === 3) return 'bronze';
   return null;
 };
 
@@ -32,16 +34,16 @@ const MEDAL_PALETTES: Record<
     ribbonDark: '#e0437d',
   },
   silver: {
-    outer: '#9EA7B3',
-    inner: '#ECEFF4',
-    highlight: '#FFFFFF',
+    outer: '#7B8794',
+    inner: '#C5CDD6',
+    highlight: '#F5F7FA',
     ribbon: '#ff4b8d',
     ribbonDark: '#e0437d',
   },
   bronze: {
-    outer: '#B87333',
-    inner: '#E6A86E',
-    highlight: '#FFE0B2',
+    outer: '#A0622A',
+    inner: '#D4925A',
+    highlight: '#FFD9B3',
     ribbon: '#ff4b8d',
     ribbonDark: '#e0437d',
   },

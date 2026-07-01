@@ -774,6 +774,7 @@ const CalendarPage: React.FC = () => {
         plansRefreshKey={plansRefreshKey}
         noteIdFromUrl={noteIdFromUrl}
         forcePlansTab={Boolean(noteIdFromUrl)}
+        eventsLoading={isLoading}
       />
       
       <EventListDialog

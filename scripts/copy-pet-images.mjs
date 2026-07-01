@@ -3,6 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { optimizePetImage } from './pet-image-optimize.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ASSETS =
@@ -26,7 +27,8 @@ for (const file of files) {
     const dest = path.join(OUT, species, variant, 'egg.png');
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(path.join(ASSETS, file), dest);
-    console.log(`${file} → ${path.relative(OUT, dest)}`);
+    await optimizePetImage(dest);
+    console.log(`${file} → ${path.relative(OUT, dest).replace(/\.png$/i, '.webp')}`);
     copied++;
     continue;
   }
@@ -36,7 +38,8 @@ for (const file of files) {
     const dest = path.join(OUT, species, variant, `level-${level}.png`);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(path.join(ASSETS, file), dest);
-    console.log(`${file} → ${path.relative(OUT, dest)}`);
+    await optimizePetImage(dest);
+    console.log(`${file} → ${path.relative(OUT, dest).replace(/\.png$/i, '.webp')}`);
     copied++;
   }
 }

@@ -1181,7 +1181,15 @@
       "completedAt": "Выполнено {{date}}",
       "completedBy": "Выполнил(а) {{name}} · {{date}}",
       "markCompleted": "Выполнено",
-      "markIncomplete": "Вернуть в работу"
+      "markIncomplete": "Вернуть в работу",
+      "filter": {
+        "ariaLabel": "Фильтр планов",
+        "title": "Фильтр планов",
+        "descriptionLabel": "Описание",
+        "descriptionPlaceholder": "Поиск по описанию..."
+      },
+      "emptyFilter": "Нет заметок по этому фильтру",
+      "emptyCategoryFilter": "В категории «{{category}}» нет заметок по этому фильтру"
     },
     "common": {
       "cancel": "Отмена",

@@ -1101,7 +1101,15 @@
       "completedAt": "Erledigt {{date}}",
       "completedBy": "Erledigt von {{name}} · {{date}}",
       "markCompleted": "Erledigt",
-      "markIncomplete": "Als offen markieren"
+      "markIncomplete": "Als offen markieren",
+      "filter": {
+        "ariaLabel": "Pläne filtern",
+        "title": "Pläne filtern",
+        "descriptionLabel": "Beschreibung",
+        "descriptionPlaceholder": "Nach Beschreibung suchen..."
+      },
+      "emptyFilter": "Keine Notizen entsprechen dem Filter",
+      "emptyCategoryFilter": "In «{{category}}» entsprechen keine Notizen dem Filter"
     },
     "media": {
       "photosAndVideos": "Fotos und Videos",

@@ -1101,7 +1101,15 @@
       "completedAt": "Completada {{date}}",
       "completedBy": "Completada por {{name}} · {{date}}",
       "markCompleted": "Hecho",
-      "markIncomplete": "Marcar como pendiente"
+      "markIncomplete": "Marcar como pendiente",
+      "filter": {
+        "ariaLabel": "Filtrar planes",
+        "title": "Filtrar planes",
+        "descriptionLabel": "Descripción",
+        "descriptionPlaceholder": "Buscar por descripción..."
+      },
+      "emptyFilter": "Ninguna nota coincide con el filtro",
+      "emptyCategoryFilter": "Ninguna nota en «{{category}}» coincide con el filtro"
     },
     "media": {
       "photosAndVideos": "Fotos y vídeos",

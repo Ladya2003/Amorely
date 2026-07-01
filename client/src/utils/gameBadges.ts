@@ -6,6 +6,32 @@ export interface RelationshipBadge {
   rank: number;
 }
 
+export type MedalRank = 1 | 2 | 3;
+
+/** Приводит ранг медали к 1 | 2 | 3 (поддерживает строки из API). */
+export const normalizeMedalRank = (rank: unknown): MedalRank | null => {
+  const numericRank = typeof rank === 'number' ? rank : Number(rank);
+  if (!Number.isFinite(numericRank)) {
+    return null;
+  }
+
+  const roundedRank = Math.round(numericRank);
+  if (roundedRank === 1 || roundedRank === 2 || roundedRank === 3) {
+    return roundedRank;
+  }
+
+  return null;
+};
+
+const withNormalizedRank = (badge: RelationshipBadge): RelationshipBadge | null => {
+  const rank = normalizeMedalRank(badge.rank);
+  if (!rank) {
+    return null;
+  }
+
+  return { ...badge, rank };
+};
+
 export const getGameName = (gameId: string): string => {
   const fallback = GAMES.find((game) => game.id === gameId)?.name ?? gameId;
   return i18n.t(`games.${gameId}.name`, { defaultValue: fallback });
@@ -14,7 +40,8 @@ export const getGameName = (gameId: string): string => {
 /** Лучший ранг по каждой игре (только топ-1..3). */
 export const getBestBadgesByGame = (badges: RelationshipBadge[]): RelationshipBadge[] =>
   badges
-    .filter((badge) => badge.rank >= 1 && badge.rank <= 3)
+    .map(withNormalizedRank)
+    .filter((badge): badge is RelationshipBadge => badge !== null)
     .reduce<RelationshipBadge[]>((bestByGame, badge) => {
       const existing = bestByGame.find((item) => item.gameId === badge.gameId);
       if (!existing) {

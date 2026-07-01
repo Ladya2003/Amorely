@@ -100,6 +100,7 @@ export const formatCalendarEventMedia = (media: any) => ({
   resourceType: media.resourceType,
   fileSize: media.fileSize,
   createdAt: media.createdAt,
+  sortOrder: typeof media.sortOrder === 'number' ? media.sortOrder : 0,
   encrypted: Boolean(media.encrypted),
   mediaEnvelope: formatMediaEnvelope(media),
   encryptedMediaEnvelope: formatEncryptedText(media.encryptedMediaEnvelope),
@@ -111,6 +112,7 @@ export const formatCalendarEventMedia = (media: any) => ({
   metadataRecipientId:
     normalizeId(media.metadataRecipientId) ||
     normalizeId(media.targetId),
+  mediaUploadedBy: normalizeId(media.mediaUploadedBy) || undefined,
   userId: normalizeId(media.userId),
   createdBy: normalizeId(media.createdBy)
 });

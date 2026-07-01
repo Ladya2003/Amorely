@@ -174,7 +174,7 @@ export const getPetImagePath = (
   species: PetSpecies,
   variant: string,
   level: number
-): string => `/pets/${species}/${variant}/level-${Math.min(Math.max(level, 1), PET_MAX_LEVEL)}.png`;
+): string => `/pets/${species}/${variant}/level-${Math.min(Math.max(level, 1), PET_MAX_LEVEL)}.webp`;
 
 export const getPetEggPath = (species: PetSpecies, variant: string): string =>
-  `/pets/${species}/${variant}/egg.png`;
+  `/pets/${species}/${variant}/egg.webp`;

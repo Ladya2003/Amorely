@@ -12,8 +12,13 @@ export const EMPTY_EVENT_FILTER: EventFilter = {
   title: ''
 };
 
+export const getEventFilterActiveCount = (filter: EventFilter): number =>
+  (filter.dateFrom !== null ? 1 : 0) +
+  (filter.dateTo !== null ? 1 : 0) +
+  (filter.title.trim().length > 0 ? 1 : 0);
+
 export const isEventFilterActive = (filter: EventFilter): boolean =>
-  filter.dateFrom !== null || filter.dateTo !== null || filter.title.trim().length > 0;
+  getEventFilterActiveCount(filter) > 0;
 
 interface FilterableEvent {
   title?: string;

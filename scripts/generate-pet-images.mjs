@@ -15,6 +15,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { buildAllJobs } from './pet-image-prompts.mjs';
+import { optimizePetImage } from './pet-image-optimize.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_ROOT = path.join(__dirname, '../client/public/pets');
@@ -97,6 +98,10 @@ async function generateOne(job) {
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
   fs.writeFileSync(fullPath, buffer);
   console.log(`  saved: ${job.outPath} (${(buffer.length / 1024).toFixed(0)} KB)`);
+
+  const { webpPath, bytesAfter } = await optimizePetImage(fullPath);
+  const webpRel = path.relative(OUT_ROOT, webpPath);
+  console.log(`  optimized: ${webpRel} (${(bytesAfter / 1024).toFixed(0)} KB)`);
 }
 
 async function main() {

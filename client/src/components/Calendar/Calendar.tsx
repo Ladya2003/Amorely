@@ -14,6 +14,7 @@ import {
   DialogContentText,
   DialogActions,
   CircularProgress,
+  Badge,
   useMediaQuery,
   useTheme
 } from '@mui/material';
@@ -28,8 +29,10 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import EventFilterDialog from './EventFilterDialog';
+import PlanFilterDialog from './PlanFilterDialog';
 import MonthYearPickerDialog from './MonthYearPickerDialog';
-import { eventMatchesFilter, isEventFilterActive, type EventFilter } from './eventFilterUtils';
+import { eventMatchesFilter, getEventFilterActiveCount, isEventFilterActive, type EventFilter } from './eventFilterUtils';
+import { getPlanFilterActiveCount, isPlanFilterActive, type PlanFilter } from './planFilterUtils';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { formatCalendarMonthYear, getCalendarWeekdays } from '../../localization/calendarHelpers';
 import CalendarDay from './CalendarDay';
@@ -48,6 +51,7 @@ import {
   getCalendarControlsRowSx,
   getCalendarCreateButtonSx,
   getCalendarDeleteAllButtonSx,
+  getCalendarFilterBadgeSx,
   getCalendarFilterButtonSx,
   getCalendarHeaderGlowWrapSx,
   getCalendarIconButtonSx,
@@ -99,6 +103,7 @@ interface CalendarProps {
   plansRefreshKey?: number;
   noteIdFromUrl?: string | null;
   forcePlansTab?: boolean;
+  eventsLoading?: boolean;
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -109,7 +114,8 @@ const Calendar: React.FC<CalendarProps> = ({
   onDeleteAll,
   plansRefreshKey,
   noteIdFromUrl = null,
-  forcePlansTab = false
+  forcePlansTab = false,
+  eventsLoading = false
 }) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -134,7 +140,12 @@ const Calendar: React.FC<CalendarProps> = ({
     dateTo: null,
     title: ''
   });
+  const [planFilter, setPlanFilter] = useState<PlanFilter>({
+    title: '',
+    description: ''
+  });
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [planFilterDialogOpen, setPlanFilterDialogOpen] = useState(false);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
 
   useEffect(() => {
@@ -233,6 +244,9 @@ const Calendar: React.FC<CalendarProps> = ({
   const monthKey = format(currentDate, 'yyyy-MM');
 
   const isFilterActive = isEventFilterActive(eventFilter);
+  const activeFilterCount = getEventFilterActiveCount(eventFilter);
+  const isPlansFilterActive = isPlanFilterActive(planFilter);
+  const activePlansFilterCount = getPlanFilterActiveCount(planFilter);
 
   const filteredAllEvents = useMemo(
     () => allEvents.filter((event) => eventMatchesFilter(event, eventFilter)),
@@ -371,7 +385,7 @@ const Calendar: React.FC<CalendarProps> = ({
               )}
 
               <Box sx={getCalendarControlsRowSx({ gridView: view === 'grid' })}>
-                <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 0.75 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                   <ToggleButtonGroup
                     value={view}
                     exclusive
@@ -386,13 +400,22 @@ const Calendar: React.FC<CalendarProps> = ({
                       <GridViewIcon sx={{ fontSize: '1.25rem' }} />
                     </ToggleButton>
                   </ToggleButtonGroup>
-                  <IconButton
-                    onClick={() => setFilterDialogOpen(true)}
-                    aria-label={t('calendar.filter.ariaLabel')}
-                    sx={getCalendarFilterButtonSx(theme, isFilterActive)}
+                  <Badge
+                    badgeContent={activeFilterCount}
+                    color="primary"
+                    invisible={activeFilterCount === 0}
+                    overlap="rectangular"
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    sx={getCalendarFilterBadgeSx(theme)}
                   >
-                    <FilterListIcon sx={{ fontSize: '1.25rem' }} />
-                  </IconButton>
+                    <IconButton
+                      onClick={() => setFilterDialogOpen(true)}
+                      aria-label={t('calendar.filter.ariaLabel')}
+                      sx={getCalendarFilterButtonSx(theme, isFilterActive)}
+                    >
+                      <FilterListIcon sx={{ fontSize: '1.25rem' }} />
+                    </IconButton>
+                  </Badge>
                 </Box>
                 <Button
                   variant="contained"
@@ -406,6 +429,27 @@ const Calendar: React.FC<CalendarProps> = ({
               </Box>
             </>
           )}
+
+          {tabValue === 1 && (
+            <Box sx={getCalendarControlsRowSx()}>
+              <Badge
+                badgeContent={activePlansFilterCount}
+                color="primary"
+                invisible={activePlansFilterCount === 0}
+                overlap="rectangular"
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                sx={getCalendarFilterBadgeSx(theme)}
+              >
+                <IconButton
+                  onClick={() => setPlanFilterDialogOpen(true)}
+                  aria-label={t('calendar.plans.filter.ariaLabel')}
+                  sx={getCalendarFilterButtonSx(theme, isPlansFilterActive)}
+                >
+                  <FilterListIcon sx={{ fontSize: '1.25rem' }} />
+                </IconButton>
+              </Badge>
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -416,7 +460,11 @@ const Calendar: React.FC<CalendarProps> = ({
         >
         {tabValue === 0 ? (
           <Box>
-            {view === 'circles' ? (
+            {eventsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                <CircularProgress />
+              </Box>
+            ) : view === 'circles' ? (
               <Box key={monthKey} sx={getCalendarMonthPanelEnterSx(monthDirection)}>
                 <Grid container spacing={1} sx={{ mb: 1 }}>
                   {weekdays.map((day, index) => (
@@ -451,7 +499,11 @@ const Calendar: React.FC<CalendarProps> = ({
             )}
           </Box>
         ) : (
-          <PlansNotes refreshKey={plansRefreshKey} noteIdFromUrl={noteIdFromUrl} />
+          <PlansNotes
+            refreshKey={plansRefreshKey}
+            noteIdFromUrl={noteIdFromUrl}
+            planFilter={planFilter}
+          />
         )}
         </Box>
       </Box>
@@ -461,6 +513,13 @@ const Calendar: React.FC<CalendarProps> = ({
         onClose={() => setFilterDialogOpen(false)}
         filter={eventFilter}
         onApply={setEventFilter}
+      />
+
+      <PlanFilterDialog
+        open={planFilterDialogOpen}
+        onClose={() => setPlanFilterDialogOpen(false)}
+        filter={planFilter}
+        onApply={setPlanFilter}
       />
 
       <MonthYearPickerDialog

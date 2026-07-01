@@ -39,6 +39,7 @@ const contentSchema = new mongoose.Schema({
   },
   metadataSenderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   metadataRecipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  mediaUploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   fileSize: { type: Number, default: 0 }, // Размер файла в байтах
   sortOrder: { type: Number, default: 0 }, // Порядок сортировки для drag & drop
   frequency: {

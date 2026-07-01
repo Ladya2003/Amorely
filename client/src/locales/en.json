@@ -1177,7 +1177,15 @@
       "completedAt": "Completed {{date}}",
       "completedBy": "Completed by {{name}} · {{date}}",
       "markCompleted": "Done",
-      "markIncomplete": "Mark as incomplete"
+      "markIncomplete": "Mark as incomplete",
+      "filter": {
+        "ariaLabel": "Filter plans",
+        "title": "Filter plans",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Search by description..."
+      },
+      "emptyFilter": "No notes match the filter",
+      "emptyCategoryFilter": "No notes in «{{category}}» match the filter"
     },
     "common": {
       "cancel": "Cancel",

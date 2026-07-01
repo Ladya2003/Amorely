@@ -38,6 +38,7 @@ import {
   SURFACE_BORDER_RADIUS,
 } from '../Feed/feedBannerStyles';
 import { INPUT_BORDER_RADIUS } from '../../theme/appTheme';
+import { MOBILE_BOTTOM_NAV_OFFSET } from '../../constants/layout';
 
 const statProgressSx = {
   height: 10,
@@ -293,7 +294,13 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
         />
       )}
 
-      <Box sx={{ py: embedded ? 0 : 2, pb: embedded ? 1 : 10, ...petViewEnterSx }}>
+      <Box
+        sx={{
+          py: embedded ? 0 : 2,
+          pb: embedded ? 1 : { xs: MOBILE_BOTTOM_NAV_OFFSET, sm: 2 },
+          ...petViewEnterSx,
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5, gap: 1.5 }}>
           {onBack && (
             <IconButton

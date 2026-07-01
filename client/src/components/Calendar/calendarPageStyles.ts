@@ -214,10 +214,24 @@ export const getCalendarViewToggleGroupSx = {
   },
 } as const;
 
+export const getCalendarFilterBadgeSx = (theme: Theme) => ({
+  '& .MuiBadge-badge': {
+    top: 6,
+    right: 6,
+    minWidth: 16,
+    height: 16,
+    px: 0.375,
+    fontSize: '0.625rem',
+    fontWeight: 700,
+    lineHeight: 1,
+    boxShadow: `0 2px 6px ${alpha(theme.palette.primary.main, 0.35)}`,
+  },
+});
+
 export const getCalendarFilterButtonSx = (theme: Theme, active?: boolean) => ({
-  alignSelf: 'stretch',
-  width: 38,
-  minWidth: 38,
+  width: 44,
+  minWidth: 44,
+  height: 38,
   minHeight: 38,
   px: 0,
   py: 0,

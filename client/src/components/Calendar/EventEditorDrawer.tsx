@@ -32,7 +32,8 @@ import {
   getEventEditorUploadCardSx,
   getEventMediaDeleteButtonSx,
   getEventMediaNavButtonSx,
-  getEventMediaPreviewSx,
+  getEventEditorMediaGridSx,
+  getEventEditorMediaPreviewSx,
 } from './calendarDrawerStyles';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -69,6 +70,7 @@ import {
   EventMediaItem,
   getNewFilesFromMediaItems,
   moveMediaItem,
+  sortEventMediaItems,
   revokeNewMediaPreviews,
   type EventMediaSequenceSlot,
 } from './eventEditorMedia';
@@ -133,8 +135,6 @@ type SaveSnapshot = {
 
 const EVENT_DESCRIPTION_MAX_LENGTH = 5000;
 const TITLE_MAX_LENGTH = 100;
-
-const EVENT_MEDIA_PREVIEW_SIZE = 120;
 
 const eventMediaPreviewMediaStyle: React.CSSProperties = {
   width: '100%',
@@ -258,9 +258,9 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setTitle(editEvent.title);
       setDescription(editEvent.description || '');
       setMediaItems(
-        (editEvent.media || [])
-          .filter((item) => item.url && item.url.trim().length > 0)
-          .map((item) => ({ key: item._id, kind: 'existing' as const, media: item }))
+        sortEventMediaItems(
+          (editEvent.media || []).filter((item) => item.url && item.url.trim().length > 0)
+        ).map((item) => ({ key: item._id, kind: 'existing' as const, media: item }))
       );
       setRemovedMediaIds([]);
       setIsBirthdayEvent(editEvent.isBirthdayEvent || false);
@@ -776,7 +776,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           </Box>
 
           {mediaItems.length > 0 && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+            <Box sx={getEventEditorMediaGridSx()}>
               {mediaItems.map((item, index) => (
                 <Box
                   key={item.key}
@@ -786,7 +786,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                     }
                   }}
                   sx={{
-                    ...getEventMediaPreviewSx(theme),
+                    ...getEventEditorMediaPreviewSx(theme),
                     cursor: item.kind === 'new' ? 'pointer' : 'default',
                   }}
                 >
@@ -806,7 +806,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                       }}
                       imageStyle={eventMediaPreviewMediaStyle}
                       videoStyle={eventMediaPreviewMediaStyle}
-                      loadingMinHeight={EVENT_MEDIA_PREVIEW_SIZE}
+                      loadingMinHeight={0}
                     />
                   ) : item.file.type.startsWith('image/') ? (
                     <img

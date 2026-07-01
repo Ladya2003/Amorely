@@ -1,4 +1,5 @@
 import { Theme } from '@mui/material/styles';
+import { MOBILE_BOTTOM_NAV_FLOAT_OFFSET } from '../components/Layout/bottomNavStyles';
 
 /** Боковые отступы и ширина контента как у Container maxWidth="md" на главной. */
 export const getTabPageDesktopShellSx = () => ({
@@ -7,7 +8,7 @@ export const getTabPageDesktopShellSx = () => ({
   maxWidth: { xs: '100%', sm: (theme: Theme) => theme.breakpoints.values.md },
 });
 
-/** Нижний отступ как на главной — контент может уходить под плавающее меню. */
+/** Нижний отступ над плавающим меню на мобилках. */
 export const getTabPageBottomPaddingSx = () => ({
-  pb: { xs: 10, sm: 0 },
+  pb: { xs: MOBILE_BOTTOM_NAV_FLOAT_OFFSET, sm: 0 },
 });

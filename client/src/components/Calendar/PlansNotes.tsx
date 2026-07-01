@@ -70,6 +70,7 @@ import {
   getCalendarPlansToolbarSx,
 } from './calendarPageStyles';
 import { getEventMediaPreviewSx } from './calendarDrawerStyles';
+import { EMPTY_PLAN_FILTER, isPlanFilterActive, planNoteMatchesFilter, type PlanFilter } from './planFilterUtils';
 
 const planNoteMediaPreviewStyle: React.CSSProperties = {
   width: '100%',
@@ -137,7 +138,8 @@ const emptyForm: NoteFormState = {
 const PlansNotes: React.FC<{
   refreshKey?: number;
   noteIdFromUrl?: string | null;
-}> = ({ refreshKey = 0, noteIdFromUrl = null }) => {
+  planFilter?: PlanFilter;
+}> = ({ refreshKey = 0, noteIdFromUrl = null, planFilter = EMPTY_PLAN_FILTER }) => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
@@ -161,9 +163,13 @@ const PlansNotes: React.FC<{
   );
   const notes = useMemo(
     () => {
-      const filtered = selectedCategory
+      let filtered = selectedCategory
         ? allNotes.filter((note) => note.category === selectedCategory)
         : allNotes;
+
+      if (isPlanFilterActive(planFilter)) {
+        filtered = filtered.filter((note) => planNoteMatchesFilter(note, planFilter));
+      }
 
       return [...filtered].sort((a, b) => {
         const aCompleted = Boolean(a.completedAt);
@@ -174,7 +180,7 @@ const PlansNotes: React.FC<{
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       });
     },
-    [allNotes, selectedCategory]
+    [allNotes, selectedCategory, planFilter]
   );
   const [isPrefsHydrated, setIsPrefsHydrated] = useState(() => Boolean(user?._id));
   const skipNextCategorySaveRef = useRef(false);
@@ -872,9 +878,13 @@ const PlansNotes: React.FC<{
         {!isInitialLoading && !isRefreshingNotes && notes.length === 0 && (
           <Box sx={getCalendarPlanEmptySx(theme)}>
             <Typography color="text.secondary">
-              {selectedCategory
-                ? t('calendar.plans.emptyCategory', { category: selectedCategory })
-                : t('calendar.plans.empty')}
+              {isPlanFilterActive(planFilter)
+                ? selectedCategory
+                  ? t('calendar.plans.emptyCategoryFilter', { category: selectedCategory })
+                  : t('calendar.plans.emptyFilter')
+                : selectedCategory
+                  ? t('calendar.plans.emptyCategory', { category: selectedCategory })
+                  : t('calendar.plans.empty')}
             </Typography>
           </Box>
         )}
