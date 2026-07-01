@@ -40,6 +40,8 @@ const drawCanvasInteractionSx = {
   userDrag: 'none',
 } as const;
 
+const getCanvasDpr = () => Math.min(window.devicePixelRatio || 1, 2);
+
 const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
   strokes,
   canDraw,
@@ -61,6 +63,10 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
   const pendingStrokeCountRef = useRef(0);
   const lastServerStrokeCountRef = useRef(0);
   const canvasSizeRef = useRef({ width: 0, height: 0, dpr: 0 });
+  const committedCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const committedGenerationRef = useRef(-1);
+  const commitGenerationRef = useRef(0);
+  const scheduleRedrawRef = useRef<(() => void) | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const canDrawRef = useRef(canDraw);
   canDrawRef.current = canDraw;
@@ -86,6 +92,10 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       x: (clientX - rect.left) / rect.width,
       y: (clientY - rect.top) / rect.height,
     };
+  }, []);
+
+  const bumpCommitGeneration = useCallback(() => {
+    commitGenerationRef.current += 1;
   }, []);
 
   const paintStroke = useCallback(
@@ -158,21 +168,9 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
     []
   );
 
-  useEffect(() => {
-    if (!backgroundImageUrl) {
-      backgroundImageRef.current = null;
-      return;
-    }
-
-    const img = new Image();
-    img.onload = () => {
-      backgroundImageRef.current = img;
-    };
-    img.src = backgroundImageUrl;
-  }, [backgroundImageUrl]);
-
   const reconcileOptimisticStrokes = useCallback(() => {
     const serverCount = strokes.length;
+    const optimisticBefore = optimisticStrokesRef.current.length;
 
     if (serverCount < lastServerStrokeCountRef.current) {
       optimisticStrokesRef.current = [];
@@ -186,8 +184,56 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       }
     }
 
+    if (optimisticBefore !== optimisticStrokesRef.current.length) {
+      bumpCommitGeneration();
+    }
+
     lastServerStrokeCountRef.current = serverCount;
-  }, [strokes.length]);
+  }, [bumpCommitGeneration, strokes.length]);
+
+  const rebuildCommittedLayer = useCallback(
+    (
+      cssWidth: number,
+      cssHeight: number,
+      dpr: number,
+      renderedStrokes: DrawStroke[]
+    ) => {
+      const pixelWidth = Math.floor(cssWidth * dpr);
+      const pixelHeight = Math.floor(cssHeight * dpr);
+
+      let committed = committedCanvasRef.current;
+      if (!committed) {
+        committed = document.createElement('canvas');
+        committedCanvasRef.current = committed;
+      }
+
+      if (committed.width !== pixelWidth || committed.height !== pixelHeight) {
+        committed.width = pixelWidth;
+        committed.height = pixelHeight;
+      }
+
+      const ctx = committed.getContext('2d', { willReadFrequently: true });
+      if (!ctx) {
+        return;
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, cssWidth, cssHeight);
+      paintBackgroundImage(ctx, cssWidth, cssHeight);
+
+      renderedStrokes.forEach((stroke) => {
+        if (stroke.isFill) {
+          paintFill(ctx, committed!, stroke);
+          return;
+        }
+        paintStroke(ctx, stroke, cssWidth, cssHeight);
+      });
+
+      committedGenerationRef.current = commitGenerationRef.current;
+    },
+    [paintBackgroundImage, paintFill, paintStroke]
+  );
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -200,7 +246,7 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
 
     const width = container.clientWidth;
     const height = Math.max(minHeight, Math.round(width * 0.75));
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getCanvasDpr();
 
     const prevSize = canvasSizeRef.current;
     const needsResize =
@@ -212,6 +258,7 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       canvasSizeRef.current = { width, height, dpr };
+      bumpCommitGeneration();
     }
 
     const ctx = canvas.getContext('2d');
@@ -219,23 +266,31 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       return;
     }
 
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, width, height);
-    paintBackgroundImage(ctx, width, height);
-
     const renderedStrokes = [
       ...strokes,
       ...optimisticStrokesRef.current,
     ];
 
-    renderedStrokes.forEach((stroke) => {
-      if (stroke.isFill) {
-        paintFill(ctx, canvas, stroke);
-        return;
-      }
-      paintStroke(ctx, stroke, width, height);
-    });
+    const needsCommittedRebuild =
+      needsResize ||
+      committedGenerationRef.current !== commitGenerationRef.current ||
+      committedCanvasRef.current === null;
+
+    if (needsCommittedRebuild) {
+      rebuildCommittedLayer(width, height, dpr, renderedStrokes);
+    }
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const committed = committedCanvasRef.current;
+    if (committed) {
+      ctx.drawImage(committed, 0, 0, width, height);
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      paintBackgroundImage(ctx, width, height);
+    }
 
     const livePoints = currentPointsRef.current;
     if (livePoints.length >= 2) {
@@ -252,12 +307,13 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       );
     }
   }, [
+    bumpCommitGeneration,
     effectiveWidth,
     isEraser,
     minHeight,
     paintBackgroundImage,
-    paintFill,
     paintStroke,
+    rebuildCommittedLayer,
     reconcileOptimisticStrokes,
     strokeColor,
     strokes,
@@ -272,6 +328,28 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       redraw();
     });
   }, [redraw]);
+
+  scheduleRedrawRef.current = scheduleRedraw;
+
+  useEffect(() => {
+    if (!backgroundImageUrl) {
+      backgroundImageRef.current = null;
+      bumpCommitGeneration();
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      backgroundImageRef.current = img;
+      bumpCommitGeneration();
+      scheduleRedrawRef.current?.();
+    };
+    img.src = backgroundImageUrl;
+  }, [backgroundImageUrl, bumpCommitGeneration]);
+
+  useEffect(() => {
+    bumpCommitGeneration();
+  }, [bumpCommitGeneration, strokes.length]);
 
   useEffect(() => {
     redraw();
@@ -336,13 +414,14 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       };
       optimisticStrokesRef.current = [...optimisticStrokesRef.current, stroke];
       pendingStrokeCountRef.current += 1;
+      bumpCommitGeneration();
       redraw();
       onStroke?.(stroke);
       return;
     }
 
     redraw();
-  }, [effectiveWidth, isEraser, onStroke, redraw, strokeColor]);
+  }, [bumpCommitGeneration, effectiveWidth, isEraser, onStroke, redraw, strokeColor]);
 
   const applyFill = useCallback(
     (point: { x: number; y: number }) => {
@@ -358,10 +437,11 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       };
       optimisticStrokesRef.current = [...optimisticStrokesRef.current, stroke];
       pendingStrokeCountRef.current += 1;
+      bumpCommitGeneration();
       redraw();
       onStroke?.(stroke);
     },
-    [onStroke, redraw, strokeColor]
+    [bumpCommitGeneration, onStroke, redraw, strokeColor]
   );
 
   const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
