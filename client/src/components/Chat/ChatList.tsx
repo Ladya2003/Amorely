@@ -18,7 +18,7 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
-import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
+import type { RelationshipBadge } from '../../utils/gameBadges';
 import { formatChatListTimestamp } from '../../localization/chatHelpers';
 import { getContactDisplayName } from '../../utils/contactDisplayName';
 import {
@@ -40,6 +40,8 @@ export interface Contact {
   bio?: string;
   birthday?: string | null;
   avatar: string;
+  badges?: RelationshipBadge[];
+  displayBadgeGameId?: string | null;
   isOnline?: boolean;
   lastSeen?: string | null;
   unreadCount?: number;
@@ -80,7 +82,6 @@ interface ChatListProps {
 const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selectedContactId, currentUserId }) => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
-  const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
   const formatLastMessageTimestamp = (timestamp: string) =>
     formatChatListTimestamp(timestamp, i18n.language);
 
@@ -134,8 +135,8 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
           >
             <ListItemAvatar sx={{ minWidth: 64, mt: 0.25 }}>
               <AvatarGameRankMedal
-                badges={contact.isPartner ? badges : []}
-                displayGameId={partnerDisplayBadgeGameId}
+                badges={contact.badges}
+                displayGameId={contact.displayBadgeGameId}
                 avatarSize={52}
               >
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>

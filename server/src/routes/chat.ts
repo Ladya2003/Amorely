@@ -27,6 +27,34 @@ const getDisplayName = (user: {
   return fullName || user.username;
 };
 
+const mapRelationshipBadges = (badges: Array<{ gameId: string; rank: number }> = []) =>
+  badges.map((badge) => ({
+    gameId: badge.gameId,
+    rank: badge.rank,
+  }));
+
+const buildContactBadgesMap = async (contactIds: string[]) => {
+  const badgesByContactId = new Map<string, Array<{ gameId: string; rank: number }>>();
+
+  if (contactIds.length === 0) {
+    return badgesByContactId;
+  }
+
+  const contactObjectIds = contactIds.map((id) => new mongoose.Types.ObjectId(id));
+  const relationships = await Relationship.find({
+    status: 'active',
+    $or: [{ userId: { $in: contactObjectIds } }, { partnerId: { $in: contactObjectIds } }],
+  }).select('userId partnerId badges');
+
+  for (const relationship of relationships) {
+    const badges = mapRelationshipBadges(relationship.badges);
+    badgesByContactId.set(relationship.userId.toString(), badges);
+    badgesByContactId.set(relationship.partnerId.toString(), badges);
+  }
+
+  return badgesByContactId;
+};
+
 const sortContactsByLastMessageDesc = <T extends { isPartner?: boolean; lastMessage: { timestamp: Date | string } }>(contacts: T[]) => {
   return contacts.sort((a, b) => {
     if (a.isPartner && !b.isPartner) return -1;
@@ -112,10 +140,15 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
 
     const users = await User.find({
       _id: { $in: Array.from(contactIdSet).map((id) => new mongoose.Types.ObjectId(id)) }
-    });
+    }).select(
+      'username email firstName lastName avatar bio birthday role partnerId displayBadgeGameId lastSeen'
+    );
 
     const contactIds = users.map((user) => user._id.toString());
-    const blockStatuses = await getChatBlockStatusesForContacts(userId, contactIds);
+    const [blockStatuses, badgesByContactId] = await Promise.all([
+      getChatBlockStatusesForContacts(userId, contactIds),
+      buildContactBadgesMap(contactIds),
+    ]);
     
     // Для каждого пользователя находим последнее сообщение
     const contacts = await Promise.all(users.map(async (user) => {
@@ -159,6 +192,8 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
         bio: user.bio || '',
         birthday: user.birthday ? user.birthday.toISOString() : null,
         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
+        displayBadgeGameId: user.displayBadgeGameId || null,
+        badges: badgesByContactId.get(contactId) || [],
         unreadCount,
         isOnline: isUserOnline(user._id.toString()),
         lastSeen: user.lastSeen ? user.lastSeen.toISOString() : null,

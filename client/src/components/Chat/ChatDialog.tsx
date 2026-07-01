@@ -41,7 +41,6 @@ import SharedEventCard from './SharedEventCard';
 import SharedNoteCard from './SharedNoteCard';
 import ContactProfileDialog from './ContactProfileDialog';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
-import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
@@ -290,7 +289,6 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const useIOSAccessoryFix = isMobile && isIOSDevice();
   const { otherUnreadCount } = useUnreadMessages();
-  const { badges, partnerDisplayBadgeGameId } = useRelationshipBadges();
   const {
     fontSizePx: messageFontSizePx,
     canDecrease: canDecreaseMessageFontSize,
@@ -1437,8 +1435,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           </Badge>
         </IconButton>
         <AvatarGameRankMedal
-          badges={contact.isPartner ? badges : []}
-          displayGameId={partnerDisplayBadgeGameId}
+          badges={contact.badges}
+          displayGameId={contact.displayBadgeGameId}
           avatarSize={44}
         >
           <Avatar
