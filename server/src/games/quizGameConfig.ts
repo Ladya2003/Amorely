@@ -91,22 +91,7 @@ export const getCategoryById = (categoryId: string) =>
 export const getQuestionsForCategory = (categoryId: string) =>
   QUIZ_QUESTIONS.filter((question) => question.categoryId === categoryId);
 
-export const pickDailyCategories = (boardDayKey: string): QuizCategory[] => {
-  const shuffled = seededShuffle(QUIZ_CATEGORIES, `categories:${boardDayKey}`);
-  return shuffled.slice(0, QUIZ_DAILY_CATEGORY_COUNT);
-};
-
-export const pickDailyQuestionsForCategory = (
-  categoryId: string,
-  boardDayKey: string
-): QuizQuestion[] => {
-  const pool = getQuestionsForCategory(categoryId);
-  if (pool.length < QUIZ_BOARD_QUESTIONS_PER_CATEGORY) {
-    return [];
-  }
-  const shuffled = seededShuffle(pool, `questions:${boardDayKey}:${categoryId}`);
-  return shuffled.slice(0, QUIZ_BOARD_QUESTIONS_PER_CATEGORY);
-};
+export const QUIZ_BOARD_CELL_COUNT = QUIZ_DAILY_CATEGORY_COUNT * QUIZ_BOARD_QUESTIONS_PER_CATEGORY;
 
 export interface QuizBoardCellPublic {
   cellKey: string;
@@ -117,13 +102,74 @@ export interface QuizBoardCellPublic {
   used: boolean;
 }
 
-export const buildDailyBoard = (boardDayKey: string): QuizBoardCellPublic[] => {
+export const pickDailyCategories = (
+  boardDayKey: string,
+  relationshipId: string,
+  seenQuestionIds: Set<string>
+): QuizCategory[] => {
+  const shuffled = seededShuffle(QUIZ_CATEGORIES, `categories:${boardDayKey}:${relationshipId}`);
+  return shuffled
+    .filter((category) => {
+      const available = getQuestionsForCategory(category.id).filter(
+        (question) => !seenQuestionIds.has(question.id)
+      );
+      return available.length >= QUIZ_BOARD_QUESTIONS_PER_CATEGORY;
+    })
+    .slice(0, QUIZ_DAILY_CATEGORY_COUNT);
+};
+
+export const pickDailyQuestionsForCategory = (
+  categoryId: string,
+  boardDayKey: string,
+  relationshipId: string,
+  seenQuestionIds: Set<string>,
+  reservedQuestionIds: Set<string>
+): QuizQuestion[] => {
+  const pool = getQuestionsForCategory(categoryId).filter(
+    (question) => !seenQuestionIds.has(question.id) && !reservedQuestionIds.has(question.id)
+  );
+  if (pool.length < QUIZ_BOARD_QUESTIONS_PER_CATEGORY) {
+    return [];
+  }
+  const shuffled = seededShuffle(pool, `questions:${boardDayKey}:${relationshipId}:${categoryId}`);
+  return shuffled.slice(0, QUIZ_BOARD_QUESTIONS_PER_CATEGORY);
+};
+
+export const countUnseenQuizQuestions = (seenQuestionIds: Set<string>) =>
+  QUIZ_QUESTIONS.filter((question) => !seenQuestionIds.has(question.id)).length;
+
+export interface DailyBoardBuildResult {
+  cells: QuizBoardCellPublic[];
+  didResetSeenPool: boolean;
+}
+
+export const buildDailyBoard = (
+  boardDayKey: string,
+  relationshipId: string,
+  seenQuestionIds: Iterable<string> = []
+): DailyBoardBuildResult => {
+  let seen = new Set(seenQuestionIds);
+  let didResetSeenPool = false;
+
+  if (countUnseenQuizQuestions(seen) < QUIZ_BOARD_CELL_COUNT) {
+    seen = new Set();
+    didResetSeenPool = true;
+  }
+
   const cells: QuizBoardCellPublic[] = [];
-  const dailyCategories = pickDailyCategories(boardDayKey);
+  const reservedQuestionIds = new Set<string>();
+  const dailyCategories = pickDailyCategories(boardDayKey, relationshipId, seen);
 
   for (const category of dailyCategories) {
-    const questions = pickDailyQuestionsForCategory(category.id, boardDayKey);
+    const questions = pickDailyQuestionsForCategory(
+      category.id,
+      boardDayKey,
+      relationshipId,
+      seen,
+      reservedQuestionIds
+    );
     questions.forEach((question, index) => {
+      reservedQuestionIds.add(question.id);
       const points = QUIZ_POINT_TIERS[index];
       cells.push({
         cellKey: getQuizCellKey(category.id, points),
@@ -136,7 +182,7 @@ export const buildDailyBoard = (boardDayKey: string): QuizBoardCellPublic[] => {
     });
   }
 
-  return cells;
+  return { cells, didResetSeenPool };
 };
 
 export const getQuizQuestionById = (questionId: string) =>

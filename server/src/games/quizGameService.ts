@@ -184,6 +184,20 @@ const markCellUsed = (state: any, cellKey: string) => {
   }));
 };
 
+const markQuestionSeen = (state: any, questionId: string) => {
+  if (!questionId) {
+    return;
+  }
+
+  if (!Array.isArray(state.seenQuestionIds)) {
+    state.seenQuestionIds = [];
+  }
+
+  if (!state.seenQuestionIds.includes(questionId)) {
+    state.seenQuestionIds.push(questionId);
+  }
+};
+
 const allCellsUsed = (state: any) => {
   const cells = state.boardCells || [];
   return cells.length > 0 && cells.every((cell: any) => cell.used || state.usedCellKeys.includes(cell.cellKey));
@@ -203,13 +217,24 @@ const finishBoardIfComplete = (state: any) => {
 
 const initializeBoardSession = (state: any, participantIds: string[]) => {
   const boardDayKey = getBoardDayKey();
+  const relationshipId = state.relationshipId.toString();
+  const { cells, didResetSeenPool } = buildDailyBoard(
+    boardDayKey,
+    relationshipId,
+    state.seenQuestionIds || []
+  );
+
   state.boardDayKey = boardDayKey;
-  state.boardCells = buildDailyBoard(boardDayKey);
+  state.boardCells = cells;
   state.usedCellKeys = [];
   state.sessionActive = true;
   state.nextBoardAvailableAt = null;
   state.currentQuestion = null;
   state.pickerUserId = new mongoose.Types.ObjectId(pickRandomParticipantId(participantIds));
+
+  if (didResetSeenPool) {
+    state.seenQuestionIds = [];
+  }
 };
 
 const clearCooldownIfExpired = (state: any): boolean => {
@@ -239,6 +264,8 @@ const resolveQuestionOnDocument = (state: any, participantIds: string[]) => {
 
   const configQuestion = getQuizQuestionById(round.questionId);
   if (!configQuestion) {
+    markCellUsed(state, round.cellKey);
+    markQuestionSeen(state, round.questionId);
     state.currentQuestion = null;
     return;
   }
@@ -277,6 +304,7 @@ const resolveQuestionOnDocument = (state: any, participantIds: string[]) => {
   round.status = 'revealed';
   state.totalScore += pointsAwardedTotal;
   markCellUsed(state, round.cellKey);
+  markQuestionSeen(state, round.questionId);
 };
 
 const maybeAwardQuizDailyComplete = async (state: any, context: QuizGameContext) => {
@@ -501,6 +529,7 @@ export const getOrCreateQuizGameState = async (context: QuizGameContext) => {
         boardDayKey: null,
         boardCells: [],
         usedCellKeys: [],
+        seenQuestionIds: [],
         readyUserIds: [],
         lobbyCountdownEndsAt: null,
         sessionActive: false,

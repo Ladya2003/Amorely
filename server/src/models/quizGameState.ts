@@ -34,6 +34,7 @@ export interface QuizGameStateDocument extends Document {
   boardDayKey: string | null;
   boardCells: QuizBoardCell[];
   usedCellKeys: string[];
+  seenQuestionIds: string[];
   readyUserIds: mongoose.Types.ObjectId[];
   lobbyCountdownEndsAt: Date | null;
   sessionActive: boolean;
@@ -94,6 +95,7 @@ const quizGameStateSchema = new mongoose.Schema({
   boardDayKey: { type: String, default: null },
   boardCells: { type: [quizBoardCellSchema], default: [] },
   usedCellKeys: { type: [String], default: [] },
+  seenQuestionIds: { type: [String], default: [] },
   readyUserIds: { type: [mongoose.Schema.Types.ObjectId], ref: 'User', default: [] },
   lobbyCountdownEndsAt: { type: Date, default: null },
   sessionActive: { type: Boolean, default: false },
