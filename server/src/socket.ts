@@ -204,26 +204,32 @@ export default function setupSocketIO(server: HttpServer) {
 
         const savedMessage = await newMessage.save();
 
-        const dailyAward = await awardChatDaily(senderId);
-        emitCurrencyAwardToClient(socket, dailyAward);
-
-        const priorMessages = await Message.countDocuments({
-          senderId: new mongoose.Types.ObjectId(senderId),
-          receiverId: new mongoose.Types.ObjectId(receiverId),
-        });
-        if (priorMessages <= 1) {
-          const contactAward = await awardChatNewContact(senderId, receiverId);
-          emitCurrencyAwardToClient(socket, contactAward);
-        }
-
         // Форматируем сообщение для отправки клиенту
         const formattedMessage = formatSocketMessage(savedMessage, clientTempId);
 
+        // Подтверждаем отправку сразу после сохранения, не дожидаясь побочных эффектов
+        socket.emit('message_sent', formattedMessage);
+
+        void (async () => {
+          try {
+            const dailyAward = await awardChatDaily(senderId);
+            emitCurrencyAwardToClient(socket, dailyAward);
+
+            const priorMessages = await Message.countDocuments({
+              senderId: new mongoose.Types.ObjectId(senderId),
+              receiverId: new mongoose.Types.ObjectId(receiverId),
+            });
+            if (priorMessages <= 1) {
+              const contactAward = await awardChatNewContact(senderId, receiverId);
+              emitCurrencyAwardToClient(socket, contactAward);
+            }
+          } catch (awardError) {
+            console.error('Ошибка при начислении наград за чат:', awardError);
+          }
+        })();
+
         // Находим получателя в списке подключенных пользователей
         const receiverSocketData = connectedUsers.find(user => user.userId === receiverId);
-
-        // Отправляем сообщение отправителю для подтверждения
-        socket.emit('message_sent', formattedMessage);
 
         // Если получатель онлайн, отправляем ему сообщение
         if (receiverSocketData) {

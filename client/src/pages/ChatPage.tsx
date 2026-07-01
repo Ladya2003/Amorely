@@ -241,6 +241,62 @@ const hasEncryptedMediaMessage = (message: MessageType) =>
     )
   );
 
+const matchesPendingServerMessage = (
+  pendingMessage: MessageType,
+  serverMessage: MessageType,
+  currentUserId: string
+) => {
+  if (serverMessage.senderId !== currentUserId) {
+    return false;
+  }
+
+  const pendingTime = new Date(pendingMessage.timestamp).getTime();
+  const serverTime = new Date(serverMessage.timestamp).getTime();
+  if (serverTime < pendingTime - 5000 || serverTime > pendingTime + 120000) {
+    return false;
+  }
+
+  if (
+    pendingMessage.sharedEvent?.id &&
+    serverMessage.sharedEvent?.id === pendingMessage.sharedEvent.id
+  ) {
+    return true;
+  }
+
+  if (
+    pendingMessage.sharedNote?.id &&
+    serverMessage.sharedNote?.id === pendingMessage.sharedNote.id
+  ) {
+    return true;
+  }
+
+  const pendingText = (pendingMessage.text || '').trim();
+  const serverText = (serverMessage.text || '').trim();
+  if (pendingText && serverText && pendingText === serverText) {
+    return true;
+  }
+
+  const pendingAttachments = pendingMessage.attachments?.length || 0;
+  const serverAttachments = serverMessage.attachments?.length || 0;
+  if (pendingAttachments > 0 && pendingAttachments === serverAttachments) {
+    return true;
+  }
+
+  if (pendingMessage.forwardFrom && serverMessage.forwardFrom) {
+    return true;
+  }
+
+  if (
+    pendingMessage.encryptedPayload &&
+    serverMessage.encryptedPayload &&
+    pendingAttachments === 0
+  ) {
+    return serverTime >= pendingTime - 2000 && serverTime <= pendingTime + 60000;
+  }
+
+  return false;
+};
+
 const ChatPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -459,9 +515,9 @@ const ChatPage: React.FC = () => {
   const pendingSendsRef = useRef<Map<string, {
     message: MessageType;
     contactId: string;
-    timeoutId: ReturnType<typeof setTimeout>;
+    timeoutId: ReturnType<typeof setTimeout> | null;
   }>>(new Map());
-  const PENDING_SEND_TIMEOUT_MS = 30000;
+  const PENDING_SEND_TIMEOUT_MS = 45000;
   const hasRestoredSelectedChatRef = useRef(false);
   const selectedChatStorageKey = useCallback(() => {
     if (!CURRENT_USER_ID) return null;
@@ -766,7 +822,9 @@ const ChatPage: React.FC = () => {
       return;
     }
 
-    clearTimeout(pending.timeoutId);
+    if (pending.timeoutId) {
+      clearTimeout(pending.timeoutId);
+    }
     pendingSendsRef.current.delete(clientTempId);
   }, []);
 
@@ -779,7 +837,9 @@ const ChatPage: React.FC = () => {
       return;
     }
 
-    clearTimeout(pending.timeoutId);
+    if (pending.timeoutId) {
+      clearTimeout(pending.timeoutId);
+    }
     pendingSendsRef.current.delete(clientTempId);
 
     const { message, contactId } = pending;
@@ -798,24 +858,149 @@ const ChatPage: React.FC = () => {
     });
   }, [updateContactLastMessageAfterDelete]);
 
+  const applyConfirmedSentMessage = useCallback((message: MessageType) => {
+    const processSent = async () => {
+      const contactId =
+        selectedContactIdRef.current ||
+        (message.clientTempId
+          ? pendingSendsRef.current.get(message.clientTempId)?.contactId
+          : undefined);
+      const messageForDialog = contactId
+        ? await decryptMessageForDialog(message, contactId)
+        : message;
+
+      setMessages((prevMessages) => {
+        const tempMessageIndex = prevMessages.findIndex((msg) =>
+          msg.id.startsWith('temp-') &&
+          (
+            (Boolean(message.clientTempId) && msg.clientTempId === message.clientTempId) ||
+            msg.text === message.text
+          )
+        );
+
+        if (tempMessageIndex !== -1) {
+          const newMessages = [...prevMessages];
+          const tempMessage = newMessages[tempMessageIndex];
+          newMessages[tempMessageIndex] = {
+            ...messageForDialog,
+            text: tempMessage.text || messageForDialog.text,
+            replyTo: message.replyTo || tempMessage.replyTo,
+            forwardFrom: message.forwardFrom || tempMessage.forwardFrom,
+            sharedEvent: message.sharedEvent || tempMessage.sharedEvent,
+            sharedNote: message.sharedNote || tempMessage.sharedNote
+          };
+          return newMessages;
+        }
+
+        if (prevMessages.some((msg) => msg.id === message.id)) {
+          return prevMessages;
+        }
+
+        return [...prevMessages, messageForDialog];
+      });
+
+      if (contactId) {
+        const hasMedia = message.attachments && message.attachments.length > 0;
+        const displayText = previewMessage(messageForDialog);
+        updateContactLastMessage(
+          contactId,
+          displayText,
+          message.timestamp,
+          false,
+          hasMedia,
+          message.senderId,
+          message.id,
+          false
+        );
+      }
+    };
+
+    void processSent();
+  }, [decryptMessageForDialog, previewMessage, updateContactLastMessage]);
+
+  const reconcileOrFailPendingSend = useCallback(async (
+    clientTempId: string,
+    errorMessage: string
+  ) => {
+    const pending = pendingSendsRef.current.get(clientTempId);
+    if (!pending || !CURRENT_USER_ID) {
+      return;
+    }
+
+    const { message, contactId } = pending;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await axios.get(`${API_URL}/api/messages`, {
+          params: { contactId, page: 1, limit: 20 },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const responseData = response.data;
+        const items: MessageType[] = Array.isArray(responseData)
+          ? responseData
+          : (responseData.items || []);
+        const match = items.find((item) =>
+          matchesPendingServerMessage(message, item, CURRENT_USER_ID)
+        );
+
+        if (match) {
+          applyConfirmedSentMessage({ ...match, clientTempId });
+          resolvePendingSend(clientTempId);
+          return;
+        }
+      }
+    } catch (reconcileError) {
+      console.warn('Не удалось проверить статус отправки сообщения:', reconcileError);
+    }
+
+    failPendingSend(clientTempId, errorMessage);
+  }, [
+    CURRENT_USER_ID,
+    applyConfirmedSentMessage,
+    failPendingSend,
+    resolvePendingSend
+  ]);
+
+  const registerPendingSend = useCallback((
+    clientTempId: string,
+    message: MessageType,
+    contactId: string
+  ) => {
+    pendingSendsRef.current.set(clientTempId, {
+      message,
+      contactId,
+      timeoutId: null
+    });
+  }, []);
+
+  const startPendingSendTimeout = useCallback((clientTempId: string) => {
+    const pending = pendingSendsRef.current.get(clientTempId);
+    if (!pending) {
+      return;
+    }
+
+    if (pending.timeoutId) {
+      clearTimeout(pending.timeoutId);
+    }
+
+    pending.timeoutId = setTimeout(() => {
+      void reconcileOrFailPendingSend(
+        clientTempId,
+        t('chat.errors.sendFailed')
+      );
+    }, PENDING_SEND_TIMEOUT_MS);
+  }, [reconcileOrFailPendingSend, t]);
+
   const trackPendingSend = useCallback((
     clientTempId: string,
     message: MessageType,
     contactId: string
   ) => {
-    const timeoutId = setTimeout(() => {
-      failPendingSend(
-        clientTempId,
-        t('chat.errors.sendFailed')
-      );
-    }, PENDING_SEND_TIMEOUT_MS);
-
-    pendingSendsRef.current.set(clientTempId, {
-      message,
-      contactId,
-      timeoutId
-    });
-  }, [failPendingSend, t]);
+    registerPendingSend(clientTempId, message, contactId);
+    startPendingSendTimeout(clientTempId);
+  }, [registerPendingSend, startPendingSendTimeout]);
 
   const forwardEncryptedMessage = useCallback(
     async (
@@ -999,54 +1184,8 @@ const ChatPage: React.FC = () => {
     };
 
     const onMessageSent = (message: MessageType) => {
+      applyConfirmedSentMessage(message);
       resolvePendingSend(message.clientTempId);
-
-      const processSent = async () => {
-        const peerId = selectedContactIdRef.current || '';
-        const messageForDialog = peerId ? await decryptMessageForDialog(message, peerId) : message;
-
-        setMessages((prevMessages) => {
-          const tempMessageIndex = prevMessages.findIndex((msg) =>
-            msg.id.startsWith('temp-') &&
-            (
-              (Boolean(message.clientTempId) && msg.clientTempId === message.clientTempId) ||
-              msg.text === message.text
-            )
-          );
-
-          if (tempMessageIndex !== -1) {
-            const newMessages = [...prevMessages];
-            const tempMessage = newMessages[tempMessageIndex];
-            newMessages[tempMessageIndex] = {
-              ...messageForDialog,
-              text: tempMessage.text || messageForDialog.text,
-              replyTo: message.replyTo || tempMessage.replyTo,
-              forwardFrom: message.forwardFrom || tempMessage.forwardFrom,
-              sharedEvent: message.sharedEvent || tempMessage.sharedEvent,
-              sharedNote: message.sharedNote || tempMessage.sharedNote
-            };
-            return newMessages;
-          }
-          return [...prevMessages, messageForDialog];
-        });
-
-        if (selectedContactIdRef.current) {
-          const hasMedia = message.attachments && message.attachments.length > 0;
-          const displayText = previewMessage(messageForDialog);
-          updateContactLastMessage(
-            selectedContactIdRef.current,
-            displayText,
-            message.timestamp,
-            false,
-            hasMedia,
-            message.senderId,
-            message.id,
-            false
-          );
-        }
-      };
-
-      processSent();
     };
 
     const onMessageRead = (messageId: string) => {
@@ -1260,7 +1399,8 @@ const ChatPage: React.FC = () => {
     decryptMessageForDialog,
     sortContactsByLastMessageDesc,
     resolvePendingSend,
-    failPendingSend
+    failPendingSend,
+    applyConfirmedSentMessage
   ]);
 
   useEffect(() => {
@@ -1923,7 +2063,7 @@ const ChatPage: React.FC = () => {
     };
 
     setMessages((prevMessages) => [...prevMessages, newMessage]);
-    trackPendingSend(clientTempId, newMessage, selectedContactId);
+    registerPendingSend(clientTempId, newMessage, selectedContactId);
     updateContactLastMessage(
       selectedContactId,
       trimmedText || (sharedEvent
@@ -2003,6 +2143,8 @@ const ChatPage: React.FC = () => {
             sharedNote || null
           );
         }
+
+        startPendingSendTimeout(clientTempId);
       } catch (error) {
         console.error('Ошибка при отправке сообщения:', error);
         failPendingSend(
