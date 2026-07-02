@@ -899,6 +899,7 @@
       "edit": "Edit",
       "forward": "Forward",
       "delete": "Delete",
+      "react": "React with {{emoji}}",
       "deleteTitle": "Delete message?",
       "deleteConfirm": "Are you sure you want to delete this message for you and your chat partner?",
       "cancel": "Cancel",

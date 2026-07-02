@@ -899,6 +899,7 @@
       "edit": "Modifier",
       "forward": "Transférer",
       "delete": "Supprimer",
+      "react": "Réagir avec {{emoji}}",
       "deleteTitle": "Supprimer le message ?",
       "deleteConfirm": "Voulez-vous vraiment supprimer ce message pour vous et votre interlocuteur ?",
       "cancel": "Annuler",

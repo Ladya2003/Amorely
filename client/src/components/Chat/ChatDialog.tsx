@@ -12,6 +12,7 @@ import {
   Menu,
   MenuItem,
   ListItemIcon,
+  Divider,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -83,6 +84,7 @@ import {
   getChatMessageFontSizeButtonSx,
   getChatMessageFontSizeControlSx,
   getChatOptionsActionButtonSx,
+  CHAT_DIALOG_ACTION_RADIUS,
 } from './chatDialogStyles';
 
 const CHAT_FONT_FAMILY = APP_FONT_FAMILY;
@@ -157,6 +159,13 @@ export interface SharedNoteRef {
   media?: SharedNoteMediaRef[];
 }
 
+export interface MessageReaction {
+  emoji: string;
+  userId: string;
+}
+
+export const POPULAR_MESSAGE_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥', '🎉'] as const;
+
 export interface MessageType {
   id: string;
   senderId: string;
@@ -183,6 +192,7 @@ export interface MessageType {
     encrypted?: boolean;
   }>;
   mediaEnvelopes?: ChatMediaEnvelope[];
+  reactions?: MessageReaction[];
 }
 
 interface ChatDialogProps {
@@ -204,6 +214,7 @@ interface ChatDialogProps {
   onOpenChatWithUser: (userId: string, forwardHint?: MessageForwardRef | null) => void;
   onEditMessage: (messageId: string, text: string) => void;
   onDeleteMessage: (messageId: string) => void;
+  onToggleReaction: (messageId: string, emoji: string) => void;
   onClearChat?: () => Promise<void>;
   onSubmitReport?: (text: string, files: File[]) => Promise<void>;
   onBlockUser?: () => Promise<void>;
@@ -261,6 +272,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onOpenChatWithUser,
   onEditMessage,
   onDeleteMessage,
+  onToggleReaction,
   onClearChat,
   onSubmitReport,
   onBlockUser,
@@ -1195,6 +1207,50 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setContextMenu(null);
   };
 
+  const handleReactionFromContextMenu = (emoji: string) => {
+    if (!contextMenu) return;
+    if (contextMenu.message.id.startsWith('temp-')) {
+      setContextMenu(null);
+      return;
+    }
+    onToggleReaction(contextMenu.message.id, emoji);
+    setContextMenu(null);
+  };
+
+  const renderReactionPicker = () => (
+    <>
+      <Divider sx={{ my: 0.5 }} />
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          gap: 0.25,
+          px: 1,
+          py: 0.75,
+        }}
+      >
+        {POPULAR_MESSAGE_REACTIONS.map((emoji) => (
+          <IconButton
+            key={emoji}
+            size="small"
+            onClick={() => handleReactionFromContextMenu(emoji)}
+            aria-label={t('chat.dialog.react', { emoji })}
+            sx={{
+              fontSize: '20px',
+              width: 36,
+              height: 36,
+              borderRadius: `${CHAT_DIALOG_ACTION_RADIUS}px`,
+              lineHeight: 1,
+            }}
+          >
+            {emoji}
+          </IconButton>
+        ))}
+      </Box>
+    </>
+  );
+
   const renderMessageActionItems = () => (
     <>
       <MenuItem onClick={handleReplyFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
@@ -1223,6 +1279,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         </ListItemIcon>
         {t('chat.dialog.delete')}
       </MenuItem>
+      {renderReactionPicker()}
     </>
   );
 
@@ -1352,6 +1409,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             mb={messageSpacing}
             messageFontSizePx={messageFontSizePx}
             onOpenActions={handleMessageContextMenu}
+            onToggleReaction={onToggleReaction}
+            currentUserId={currentUserId}
             onReplyReferenceClick={handleReplyReferenceClick}
             onForwardSourceClick={handleForwardSourceClick}
             onSharedEventClick={onSharedEventClick}

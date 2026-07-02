@@ -68,7 +68,11 @@ const formatSocketMessage = (message: any, clientTempId?: string) => ({
     url: attachment.url,
     publicId: attachment.publicId,
     encrypted: Boolean(attachment.encrypted)
-  }))
+  })),
+  reactions: message.reactions?.map((reaction: any) => ({
+    emoji: reaction.emoji,
+    userId: reaction.userId.toString()
+  })) ?? []
 });
 
 export default function setupSocketIO(server: HttpServer) {
@@ -425,6 +429,79 @@ export default function setupSocketIO(server: HttpServer) {
       const receiverSocketData = connectedUsers.find(user => user.userId === receiverId);
       if (receiverSocketData) {
         io.to(receiverSocketData.socketId).emit('user_stop_typing', senderSocketData.userId);
+      }
+    });
+
+    socket.on('toggle_reaction', async (data: { messageId: string; emoji: string }) => {
+      try {
+        const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
+
+        if (!senderSocketData) {
+          socket.emit('error', { message: 'Пользователь не авторизован' });
+          return;
+        }
+
+        const userId = senderSocketData.userId;
+        const emoji = String(data.emoji || '').trim();
+
+        if (!emoji) {
+          socket.emit('error', { message: 'Эмодзи обязательно' });
+          return;
+        }
+
+        const message = await Message.findById(data.messageId);
+
+        if (!message) {
+          socket.emit('error', { message: 'Сообщение не найдено' });
+          return;
+        }
+
+        const senderId = message.senderId.toString();
+        const receiverId = message.receiverId.toString();
+        const isParticipant = senderId === userId || receiverId === userId;
+
+        if (!isParticipant) {
+          socket.emit('error', { message: 'Недостаточно прав для реакции на сообщение' });
+          return;
+        }
+
+        const reactions = message.reactions ?? [];
+        const existingIndex = reactions.findIndex(
+          (reaction) => reaction.userId.toString() === userId && reaction.emoji === emoji
+        );
+
+        if (existingIndex >= 0) {
+          reactions.splice(existingIndex, 1);
+        } else {
+          reactions.push({
+            emoji,
+            userId: new mongoose.Types.ObjectId(userId)
+          });
+        }
+
+        message.reactions = reactions;
+        await message.save();
+
+        const payload = {
+          messageId: message._id.toString(),
+          senderId,
+          receiverId,
+          reactions: reactions.map((reaction) => ({
+            emoji: reaction.emoji,
+            userId: reaction.userId.toString()
+          }))
+        };
+
+        socket.emit('message_reaction_updated', payload);
+
+        const targetUserId = senderId === userId ? receiverId : senderId;
+        const targetSocketData = connectedUsers.find((user) => user.userId === targetUserId);
+        if (targetSocketData) {
+          io.to(targetSocketData.socketId).emit('message_reaction_updated', payload);
+        }
+      } catch (error) {
+        console.error('Ошибка при обновлении реакции:', error);
+        socket.emit('error', { message: 'Ошибка при обновлении реакции' });
       }
     });
 

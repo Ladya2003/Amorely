@@ -1262,6 +1262,26 @@ const ChatPage: React.FC = () => {
       applyChatBlockStatus(payload.contactId, payload.blockStatus);
     };
 
+    const onMessageReactionUpdated = (payload: {
+      messageId: string;
+      senderId: string;
+      receiverId: string;
+      reactions: Array<{ emoji: string; userId: string }>;
+    }) => {
+      setMessages((prevMessages) => {
+        const hasMessage = prevMessages.some((message) => message.id === payload.messageId);
+        if (!hasMessage) {
+          return prevMessages;
+        }
+
+        return prevMessages.map((message) =>
+          message.id === payload.messageId
+            ? { ...message, reactions: payload.reactions }
+            : message
+        );
+      });
+    };
+
     const onMessageDeleted = (payload: { messageId: string; senderId: string; receiverId: string }) => {
       const contactId = payload.senderId === CURRENT_USER_ID ? payload.receiverId : payload.senderId;
       setMessages((prevMessages) => {
@@ -1363,6 +1383,7 @@ const ChatPage: React.FC = () => {
     newSocket.on('message_sent', onMessageSent);
     newSocket.on('message_read', onMessageRead);
     newSocket.on('message_edited', onMessageEdited);
+    newSocket.on('message_reaction_updated', onMessageReactionUpdated);
     newSocket.on('message_deleted', onMessageDeleted);
     newSocket.on('chat_cleared', onChatCleared);
     newSocket.on('chat_blocked', onChatBlocked);
@@ -1379,6 +1400,7 @@ const ChatPage: React.FC = () => {
       newSocket.off('message_sent', onMessageSent);
       newSocket.off('message_read', onMessageRead);
       newSocket.off('message_edited', onMessageEdited);
+      newSocket.off('message_reaction_updated', onMessageReactionUpdated);
       newSocket.off('message_deleted', onMessageDeleted);
       newSocket.off('chat_cleared', onChatCleared);
       newSocket.off('chat_blocked', onChatBlocked);
@@ -2342,6 +2364,32 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  const handleToggleReaction = (messageId: string, emoji: string) => {
+    if (!selectedContactId || !CURRENT_USER_ID) return;
+
+    setMessages((prevMessages) =>
+      prevMessages.map((message) => {
+        if (message.id !== messageId) {
+          return message;
+        }
+
+        const reactions = message.reactions ?? [];
+        const existingIndex = reactions.findIndex(
+          (reaction) => reaction.userId === CURRENT_USER_ID && reaction.emoji === emoji
+        );
+
+        const nextReactions =
+          existingIndex >= 0
+            ? reactions.filter((_, index) => index !== existingIndex)
+            : [...reactions, { emoji, userId: CURRENT_USER_ID }];
+
+        return { ...message, reactions: nextReactions };
+      })
+    );
+
+    socketService.toggleReaction(messageId, emoji);
+  };
+
   const handleDeleteMessage = (messageId: string) => {
     if (!selectedContactId || !CURRENT_USER_ID) return;
 
@@ -2765,6 +2813,7 @@ const ChatPage: React.FC = () => {
                       onOpenChatWithUser={handleOpenChatWithUser}
                       onEditMessage={handleEditMessage}
                       onDeleteMessage={handleDeleteMessage}
+                      onToggleReaction={handleToggleReaction}
                       onClearChat={handleClearChat}
                       onSubmitReport={handleSubmitReport}
                       onBlockUser={handleBlockUser}

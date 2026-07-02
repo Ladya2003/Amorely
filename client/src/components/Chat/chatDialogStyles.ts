@@ -230,6 +230,37 @@ export const getChatMessageActionsButtonSx = (theme: Theme, isOwn: boolean) => (
   },
 });
 
+export const getChatMessageReactionChipSx = (
+  theme: Theme,
+  options: { isActive?: boolean } = {}
+) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 0.25,
+  minHeight: 22,
+  px: 0.625,
+  py: 0.125,
+  borderRadius: '999px',
+  border: '1px solid',
+  borderColor: options.isActive
+    ? theme.palette.primary.main
+    : alpha(theme.palette.divider, theme.palette.mode === 'light' ? 0.9 : 0.55),
+  bgcolor: theme.palette.mode === 'light' ? theme.palette.background.paper : alpha(theme.palette.background.paper, 0.92),
+  boxShadow:
+    theme.palette.mode === 'light'
+      ? `0 2px 8px ${alpha(theme.palette.common.black, 0.08)}`
+      : `0 2px 10px ${alpha(theme.palette.common.black, 0.28)}`,
+  cursor: 'pointer',
+  lineHeight: 1,
+  fontSize: '15px',
+  userSelect: 'none' as const,
+  transition: 'border-color 160ms ease, transform 120ms ease',
+  '&:hover': {
+    borderColor: theme.palette.primary.main,
+    transform: 'translateY(-1px)',
+  },
+});
+
 export const getChatComposerInputSx = (theme: Theme) => ({
   '& .MuiOutlinedInput-root': {
     borderRadius: `${CHAT_DIALOG_INNER_RADIUS}px`,

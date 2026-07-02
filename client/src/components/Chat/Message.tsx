@@ -7,7 +7,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import DoneIcon from '@mui/icons-material/Done';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import { MessageType, MessageForwardRef } from './ChatDialog';
+import { MessageType, MessageForwardRef, MessageReaction } from './ChatDialog';
 import EncryptedAttachment from './EncryptedAttachment';
 import ChatVideoPlayer from '../common/ChatVideoPlayer';
 import SharedEventCard from './SharedEventCard';
@@ -20,6 +20,7 @@ import {
   getChatMessageActionsButtonSx,
   getChatMessageBubbleSx,
   getChatMessageQuoteSx,
+  getChatMessageReactionChipSx,
 } from './chatDialogStyles';
 
 const imagePreviewStyle: React.CSSProperties = {
@@ -30,6 +31,23 @@ const imagePreviewStyle: React.CSSProperties = {
   display: 'block',
   cursor: 'pointer',
 };
+
+function groupMessageReactions(reactions: MessageReaction[]) {
+  const grouped = new Map<string, { count: number; userIds: string[] }>();
+
+  reactions.forEach((reaction) => {
+    const existing = grouped.get(reaction.emoji) ?? { count: 0, userIds: [] };
+    existing.count += 1;
+    existing.userIds.push(reaction.userId);
+    grouped.set(reaction.emoji, existing);
+  });
+
+  return Array.from(grouped.entries()).map(([emoji, data]) => ({
+    emoji,
+    count: data.count,
+    userIds: data.userIds,
+  }));
+}
 
 function getAttachmentResourceType(
   attachment: NonNullable<MessageType['attachments']>[number],
@@ -47,6 +65,8 @@ interface MessageProps {
   contactAvatar: string;
   mb?: number;
   onOpenActions?: (event: React.MouseEvent, message: MessageType) => void;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+  currentUserId?: string;
   onReplyReferenceClick?: (messageId: string) => void;
   onForwardSourceClick?: (userId: string, forwardFrom: MessageForwardRef) => void;
   onSharedEventClick?: (eventId: string) => void;
@@ -62,6 +82,8 @@ const Message: React.FC<MessageProps> = ({
   contactAvatar,
   mb = 0.75,
   onOpenActions,
+  onToggleReaction,
+  currentUserId,
   onReplyReferenceClick,
   onForwardSourceClick,
   onSharedEventClick,
@@ -149,6 +171,13 @@ const Message: React.FC<MessageProps> = ({
     ? (message.editedAt ? 118 : 94)
     : (message.editedAt ? 96 : 74);
 
+  const groupedReactions = useMemo(
+    () => groupMessageReactions(message.reactions ?? []),
+    [message.reactions]
+  );
+  const hasReactions = groupedReactions.length > 0;
+  const canToggleReactions = Boolean(onToggleReaction && !isPending);
+
   return (
     <Box 
       sx={{ 
@@ -173,8 +202,10 @@ const Message: React.FC<MessageProps> = ({
       )}
       <Box
         sx={{
+          position: 'relative',
           maxWidth: isOwn ? '85%' : '72%',
-          width: isImageOnlyBubble ? (isOwn ? '85%' : '72%') : 'fit-content'
+          width: isImageOnlyBubble ? (isOwn ? '85%' : '72%') : 'fit-content',
+          pb: hasReactions ? 1.25 : 0,
         }}
       >
         <Paper
@@ -483,6 +514,63 @@ const Message: React.FC<MessageProps> = ({
             </Typography>
           </Box>
         </Paper>
+
+        {hasReactions && (
+          <Box
+            sx={{
+              position: 'absolute',
+              left: 6,
+              bottom: -2,
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 0.375,
+              maxWidth: '100%',
+              zIndex: 2,
+              pointerEvents: canToggleReactions ? 'auto' : 'none',
+            }}
+          >
+            {groupedReactions.map(({ emoji, count, userIds }) => {
+              const isActive = Boolean(currentUserId && userIds.includes(currentUserId));
+
+              return (
+                <Box
+                  key={emoji}
+                  component="button"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (!canToggleReactions) return;
+                    onToggleReaction?.(message.id, emoji);
+                  }}
+                  aria-label={t('chat.dialog.react', { emoji })}
+                  sx={{
+                    ...getChatMessageReactionChipSx(theme, { isActive }),
+                    font: 'inherit',
+                    appearance: 'none',
+                  }}
+                >
+                  <Box component="span" aria-hidden sx={{ fontSize: '15px', lineHeight: 1 }}>
+                    {emoji}
+                  </Box>
+                  {count > 1 && (
+                    <Box
+                      component="span"
+                      aria-hidden
+                      sx={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {count}
+                    </Box>
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        )}
       </Box>
 
       <MediaViewerDialog

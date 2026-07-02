@@ -59,6 +59,14 @@ const sharedEventSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const reactionSchema = new mongoose.Schema(
+  {
+    emoji: { type: String, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+  },
+  { _id: false }
+);
+
 const sharedNoteSchema = new mongoose.Schema(
   {
     noteId: { type: String, required: true },
@@ -89,6 +97,7 @@ const messageSchema = new mongoose.Schema({
   sharedEvent: { type: sharedEventSchema, required: false },
   sharedNote: { type: sharedNoteSchema, required: false },
   editedAt: { type: Date, required: false },
+  reactions: { type: [reactionSchema], default: [] },
   isRead: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });

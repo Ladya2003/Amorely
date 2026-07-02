@@ -221,6 +221,14 @@ class SocketService {
     this.socket.emit('delete_message', { messageId });
   }
 
+  toggleReaction(messageId: string, emoji: string) {
+    if (!this.socket) {
+      throw new Error('Socket not initialized');
+    }
+
+    this.socket.emit('toggle_reaction', { messageId, emoji });
+  }
+
   startTyping(receiverId: string) {
     if (!this.socket) {
       throw new Error('Socket not initialized');

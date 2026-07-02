@@ -91,7 +91,11 @@ const formatMessageForClient = (message: any) => ({
     url: attachment.url,
     publicId: attachment.publicId,
     encrypted: Boolean(attachment.encrypted)
-  }))
+  })),
+  reactions: message.reactions?.map((reaction: any) => ({
+    emoji: reaction.emoji,
+    userId: reaction.userId.toString()
+  })) ?? []
 });
 
 // Получение списка контактов
