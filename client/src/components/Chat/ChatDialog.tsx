@@ -186,6 +186,7 @@ export const POPULAR_MESSAGE_REACTIONS = [
   '🤍',
   '🥰',
   '😍',
+  '😘',
   '😂',
   '🥹',
   '😳',
@@ -206,7 +207,6 @@ export const POPULAR_MESSAGE_REACTIONS = [
   '🚗',
   '🚕',
   '🏎️',
-  '🚜',
   '🏍️',
   '🚔',
 ] as const;
