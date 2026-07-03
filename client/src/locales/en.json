@@ -449,6 +449,10 @@
       "partner": "Partner",
       "ready": "Ready",
       "waitingPartner": "Waiting for partner…",
+      "remindPartner": "Call partner",
+      "partnerReminded": "Partner called to chat",
+      "partnerRemindedShort": "Partner called",
+      "remindPartnerFailed": "Could not call partner",
       "readyToPlay": "Ready to play?",
       "startingSoon": "Starting soon!",
       "bothReady": "Both partners are ready — the round will start at the same time.",
@@ -869,6 +873,8 @@
       "encryptedMedia": "Encrypted media",
       "event": "Event: {{title}}",
       "note": "Note: {{title}}",
+      "game": "Game: {{title}}",
+      "gameInvite": "Join the game: {{title}}",
       "noMessages": "No messages",
       "decryptFailed": "Failed to decrypt message",
       "deleted": "Message deleted",
@@ -993,6 +999,10 @@
     },
     "note": {
       "label": "Note"
+    },
+    "game": {
+      "label": "Game",
+      "joinHint": "Tap to join"
     }
   },
   "calendar": {

@@ -26,6 +26,7 @@ import {
   type GeoGameState,
 } from '../services/gamesService';
 import GeoGuessMap, { type GeoMapMarker } from '../components/Games/GeoGuessMap';
+import GameLobbyRemindButton from '../components/Games/GameLobbyRemindButton';
 import {
   getGamePlayBlockedCardSx,
   getGamePlayBlockedPanelSx,
@@ -506,16 +507,22 @@ const GeoGamePlayPage: React.FC = () => {
               {isCountdownActive ? (
                 <Typography sx={{ ...getGamePlayCountdownSx(), mb: 3 }}>{lobbySecondsLeft}</Typography>
               ) : (
-                <Button
-                  variant="contained"
-                  size="large"
-                  fullWidth
-                  sx={getGamePlayPrimaryButtonSx()}
-                  disabled={isMeReady || submitting}
-                  onClick={handleReady}
-                >
-                  {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
-                </Button>
+                <>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    sx={getGamePlayPrimaryButtonSx()}
+                    disabled={isMeReady || submitting}
+                    onClick={handleReady}
+                  >
+                    {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
+                  </Button>
+                  <GameLobbyRemindButton
+                    gameId="geo"
+                    visible={isMeReady && !isPartnerReady && !isCountdownActive}
+                  />
+                </>
               )}
             </Box>
           </Box>

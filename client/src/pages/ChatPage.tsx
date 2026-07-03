@@ -270,6 +270,13 @@ const matchesPendingServerMessage = (
     return true;
   }
 
+  if (
+    pendingMessage.sharedGame?.gameId &&
+    serverMessage.sharedGame?.gameId === pendingMessage.sharedGame.gameId
+  ) {
+    return true;
+  }
+
   const pendingText = (pendingMessage.text || '').trim();
   const serverText = (serverMessage.text || '').trim();
   if (pendingText && serverText && pendingText === serverText) {
@@ -301,7 +308,7 @@ const ChatPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const previewMessage = useCallback(
-    (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'sharedNote' | 'encryptedPayload' | 'mediaEnvelopes'>) =>
+    (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'sharedNote' | 'sharedGame' | 'encryptedPayload' | 'mediaEnvelopes'>) =>
       getChatMessagePreview(t, message),
     [t]
   );
@@ -2189,6 +2196,10 @@ const ChatPage: React.FC = () => {
     navigate(`/calendar?note=${encodeURIComponent(noteId)}`);
   };
 
+  const handleSharedGameClick = (gameId: string) => {
+    navigate(`/chat/games/${encodeURIComponent(gameId)}/play`);
+  };
+
   const handleEditMessage = (messageId: string, text: string) => {
     if (!selectedContactId || !CURRENT_USER_ID) return;
 
@@ -2373,15 +2384,31 @@ const ChatPage: React.FC = () => {
           return message;
         }
 
+        const MAX_REACTIONS_PER_USER = 3;
         const reactions = message.reactions ?? [];
         const existingIndex = reactions.findIndex(
           (reaction) => reaction.userId === CURRENT_USER_ID && reaction.emoji === emoji
         );
 
-        const nextReactions =
-          existingIndex >= 0
-            ? reactions.filter((_, index) => index !== existingIndex)
-            : [...reactions, { emoji, userId: CURRENT_USER_ID }];
+        let nextReactions;
+        if (existingIndex >= 0) {
+          nextReactions = reactions.filter((_, index) => index !== existingIndex);
+        } else {
+          const userReactionIndices = reactions.reduce<number[]>((indices, reaction, index) => {
+            if (reaction.userId === CURRENT_USER_ID) {
+              indices.push(index);
+            }
+            return indices;
+          }, []);
+
+          let workingReactions = reactions;
+          if (userReactionIndices.length >= MAX_REACTIONS_PER_USER) {
+            const lastReactionIndex = userReactionIndices[userReactionIndices.length - 1];
+            workingReactions = reactions.filter((_, index) => index !== lastReactionIndex);
+          }
+
+          nextReactions = [...workingReactions, { emoji, userId: CURRENT_USER_ID }];
+        }
 
         return { ...message, reactions: nextReactions };
       })
@@ -2838,6 +2865,7 @@ const ChatPage: React.FC = () => {
                       onPendingSharedNoteApplied={() => setPendingSharedNote(null)}
                       onSharedEventClick={handleSharedEventClick}
                       onSharedNoteClick={handleSharedNoteClick}
+                      onSharedGameClick={handleSharedGameClick}
                       hasMoreMessages={hasMoreMessages}
                       isLoadingOlder={isLoadingOlderMessages}
                       isLoading={isLoadingMessages}

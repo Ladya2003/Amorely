@@ -6,7 +6,7 @@ import type { CurrencyAwardResult } from './services/currencyService';
 import User from './models/user';
 import mongoose from 'mongoose';
 import { getAllowedOrigins } from './utils/corsOrigins';
-import { notifyNewMessage } from './services/pushService';
+import { notifyNewMessage, buildGamePlayUrl } from './services/pushService';
 import { isChatBlockedBetween } from './services/chatBlockService';
 import { markUserOnline, markUserOffline, getOnlineUserIds } from './presence';
 import { attachGameSocketHandlers } from './games/gameSocketHandlers';
@@ -53,6 +53,7 @@ const formatSocketMessage = (message: any, clientTempId?: string) => ({
   forwardFrom: message.forwardFrom || undefined,
   sharedEvent: message.sharedEvent || undefined,
   sharedNote: message.sharedNote || undefined,
+  sharedGame: message.sharedGame || undefined,
   clientTempId,
   encryptedPayload: message.encryptedPayload
     ? {
@@ -147,6 +148,11 @@ export default function setupSocketIO(server: HttpServer) {
         previewEncrypted?: boolean;
         previewMediaEnvelope?: unknown;
         updatedAt?: string;
+      } | null,
+      sharedGame?: {
+        gameId: string;
+        title: string;
+        imageUrl?: string;
       } | null
     }) => {
       try {
@@ -159,6 +165,7 @@ export default function setupSocketIO(server: HttpServer) {
           forwardFrom,
           sharedEvent,
           sharedNote,
+          sharedGame,
           clientTempId,
           pushPreview
         } = data;
@@ -202,6 +209,7 @@ export default function setupSocketIO(server: HttpServer) {
           forwardFrom: sanitizedForwardFrom,
           sharedEvent: sharedEvent || undefined,
           sharedNote: sharedNote || undefined,
+          sharedGame: sharedGame || undefined,
           isRead: false,
           createdAt: new Date()
         });
@@ -239,6 +247,10 @@ export default function setupSocketIO(server: HttpServer) {
         if (receiverSocketData) {
           io.to(receiverSocketData.socketId).emit('new_message', formattedMessage);
         } else {
+          const gamePlayUrl = sharedGame?.gameId
+            ? buildGamePlayUrl(sharedGame.gameId)
+            : undefined;
+
           void notifyNewMessage({
             receiverId,
             senderId,
@@ -248,7 +260,9 @@ export default function setupSocketIO(server: HttpServer) {
             attachments,
             sharedEvent: sharedEvent || undefined,
             sharedNote: sharedNote || undefined,
-            forwardFrom: sanitizedForwardFrom
+            sharedGame: sharedGame || undefined,
+            forwardFrom: sanitizedForwardFrom,
+            chatUrl: gamePlayUrl,
           });
         }
       } catch (error) {
@@ -294,7 +308,7 @@ export default function setupSocketIO(server: HttpServer) {
           return;
         }
 
-        if (message.forwardFrom || message.sharedEvent || message.sharedNote) {
+        if (message.forwardFrom || message.sharedEvent || message.sharedNote || message.sharedGame) {
           socket.emit('error', { message: 'Это сообщение нельзя редактировать' });
           return;
         }
@@ -465,6 +479,7 @@ export default function setupSocketIO(server: HttpServer) {
           return;
         }
 
+        const MAX_REACTIONS_PER_USER = 3;
         const reactions = message.reactions ?? [];
         const existingIndex = reactions.findIndex(
           (reaction) => reaction.userId.toString() === userId && reaction.emoji === emoji
@@ -473,6 +488,17 @@ export default function setupSocketIO(server: HttpServer) {
         if (existingIndex >= 0) {
           reactions.splice(existingIndex, 1);
         } else {
+          const userReactionIndices = reactions.reduce<number[]>((indices, reaction, index) => {
+            if (reaction.userId.toString() === userId) {
+              indices.push(index);
+            }
+            return indices;
+          }, []);
+
+          if (userReactionIndices.length >= MAX_REACTIONS_PER_USER) {
+            reactions.splice(userReactionIndices[userReactionIndices.length - 1], 1);
+          }
+
           reactions.push({
             emoji,
             userId: new mongoose.Types.ObjectId(userId)

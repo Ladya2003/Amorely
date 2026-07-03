@@ -159,12 +159,57 @@ export interface SharedNoteRef {
   media?: SharedNoteMediaRef[];
 }
 
+export interface SharedGameRef {
+  gameId: string;
+  title: string;
+  imageUrl?: string;
+}
+
 export interface MessageReaction {
   emoji: string;
   userId: string;
 }
 
-export const POPULAR_MESSAGE_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥', '🎉'] as const;
+export const POPULAR_MESSAGE_REACTIONS = [
+  '👍',
+  '❤️',
+  '❤️‍🔥',
+  '🩷',
+  '🧡',
+  '💛',
+  '💚',
+  '🩵',
+  '💙',
+  '💜',
+  '🖤',
+  '🩶',
+  '🤍',
+  '🥰',
+  '😍',
+  '😂',
+  '🥹',
+  '😳',
+  '😮',
+  '😢',
+  '😎',
+  '💀',
+  '🔥',
+  '🎉',
+  '🍓',
+  '🍰',
+  '🍺',
+  '🍻',
+  '💩',
+  '⚽️',
+  '🏀',
+  '🏐',
+  '🚗',
+  '🚕',
+  '🏎️',
+  '🚜',
+  '🏍️',
+  '🚔',
+] as const;
 
 export interface MessageType {
   id: string;
@@ -177,6 +222,7 @@ export interface MessageType {
   forwardFrom?: MessageForwardRef;
   sharedEvent?: SharedEventRef;
   sharedNote?: SharedNoteRef;
+  sharedGame?: SharedGameRef;
   clientTempId?: string;
   encryptedPayload?: {
     version: number;
@@ -234,6 +280,7 @@ interface ChatDialogProps {
   onPendingSharedNoteApplied?: () => void;
   onSharedEventClick?: (eventId: string) => void;
   onSharedNoteClick?: (noteId: string) => void;
+  onSharedGameClick?: (gameId: string) => void;
   hasMoreMessages?: boolean;
   isLoadingOlder?: boolean;
   isLoading?: boolean;
@@ -245,6 +292,7 @@ const isMessageEditable = (message: MessageType, currentUserId: string) => {
   if (message.forwardFrom) return false;
   if (message.sharedEvent && !message.text?.trim() && !message.encryptedPayload) return false;
   if (message.sharedNote && !message.text?.trim() && !message.encryptedPayload) return false;
+  if (message.sharedGame && !message.text?.trim() && !message.encryptedPayload) return false;
 
   const hasMediaAttachments = Boolean(
     message.attachments?.some(
@@ -292,6 +340,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
   onPendingSharedNoteApplied,
   onSharedEventClick,
   onSharedNoteClick,
+  onSharedGameClick,
   hasMoreMessages = false,
   isLoadingOlder = false,
   isLoading = false
@@ -1415,6 +1464,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             onForwardSourceClick={handleForwardSourceClick}
             onSharedEventClick={onSharedEventClick}
             onSharedNoteClick={onSharedNoteClick}
+            onSharedGameClick={onSharedGameClick}
             onContactAvatarClick={() => setProfileDialogOpen(true)}
           />
         </Box>
@@ -1422,7 +1472,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick, theme, i18n.language, messageFontSizePx]);
+  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick, onSharedGameClick, theme, i18n.language, messageFontSizePx]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, { url: string; mediaType: 'image' | 'video' }> = {};

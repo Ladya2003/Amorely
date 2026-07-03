@@ -10,6 +10,7 @@ type MessagePreviewSource = {
   forwardFrom?: { text?: string } | null;
   sharedEvent?: { title?: string } | null;
   sharedNote?: { title?: string } | null;
+  sharedGame?: { title?: string } | null;
   encryptedPayload?: unknown;
   mediaEnvelopes?: unknown[];
 };
@@ -39,6 +40,10 @@ export const getChatMessagePreview = (t: TFunction, message: MessagePreviewSourc
 
   if (!message.text && message.sharedNote) {
     return t('chat.message.note', { title: message.sharedNote.title });
+  }
+
+  if (!message.text && message.sharedGame) {
+    return t('chat.message.game', { title: message.sharedGame.title });
   }
 
   if (message.encryptedPayload && hasEncryptedMedia) {

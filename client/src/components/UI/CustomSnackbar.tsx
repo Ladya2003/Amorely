@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Snackbar, Alert, AlertColor, Box, SxProps, Theme } from '@mui/material';
+import { Alert, AlertColor, Box, Fade, Portal, SxProps, Theme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { SURFACE_BORDER_RADIUS } from '../../theme/appTheme';
 
@@ -122,6 +122,19 @@ interface CustomSnackbarProps {
   autoHideDuration?: number;
 }
 
+const getToastShellSx = (): SxProps<Theme> => ({
+  position: 'fixed',
+  top: {
+    xs: 'calc(12px + env(safe-area-inset-top, 0px))',
+    sm: 'calc(20px + env(safe-area-inset-top, 0px))',
+  },
+  left: { xs: 16, sm: 24 },
+  right: { xs: 16, sm: 24 },
+  maxWidth: 480,
+  mx: 'auto',
+  zIndex: (theme) => theme.zIndex.snackbar + 20,
+});
+
 const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
   open,
   message,
@@ -138,39 +151,41 @@ const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
     }
   }, [open, message, autoHideDuration, showProgress]);
 
+  useEffect(() => {
+    if (!open || !showProgress) {
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(onClose, autoHideDuration);
+    return () => window.clearTimeout(timerId);
+  }, [open, showProgress, autoHideDuration, onClose, message, progressRunKey]);
+
+  if (!message) {
+    return null;
+  }
+
   return (
-    <Snackbar
-      open={open}
-      autoHideDuration={showProgress ? autoHideDuration : undefined}
-      onClose={onClose}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      sx={{
-        top: {
-          xs: 'calc(12px + env(safe-area-inset-top, 0px)) !important',
-          sm: 'calc(20px + env(safe-area-inset-top, 0px)) !important',
-        },
-        left: { xs: 16, sm: 24 },
-        right: { xs: 16, sm: 24 },
-        maxWidth: 480,
-        mx: 'auto',
-      }}
-    >
-      <Alert
-        onClose={onClose}
-        severity={severity}
-        variant="standard"
-        sx={getToastAlertSx(severity)}
-      >
-        {message}
-        {showProgress && open && (
-          <ToastCountdownBar
-            duration={autoHideDuration}
+    <Portal>
+      <Fade in={open} unmountOnExit>
+        <Box sx={getToastShellSx()}>
+          <Alert
+            onClose={onClose}
             severity={severity}
-            runKey={progressRunKey}
-          />
-        )}
-      </Alert>
-    </Snackbar>
+            variant="standard"
+            sx={getToastAlertSx(severity)}
+          >
+            {message}
+            {showProgress && (
+              <ToastCountdownBar
+                duration={autoHideDuration}
+                severity={severity}
+                runKey={progressRunKey}
+              />
+            )}
+          </Alert>
+        </Box>
+      </Fade>
+    </Portal>
   );
 };
 

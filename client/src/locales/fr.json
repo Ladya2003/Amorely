@@ -449,6 +449,10 @@
       "partner": "Partenaire",
       "ready": "Prêt",
       "waitingPartner": "Waiting for partner…",
+      "remindPartner": "Appeler le partenaire",
+      "partnerReminded": "Partenaire appelé dans le chat",
+      "partnerRemindedShort": "Partenaire appelé",
+      "remindPartnerFailed": "Impossible d'appeler le partenaire",
       "readyToPlay": "Ready to play?",
       "startingSoon": "Starting soon!",
       "bothReady": "Both partners are ready — the round will start at the same time.",
@@ -869,6 +873,8 @@
       "encryptedMedia": "Média chiffré",
       "event": "Événement : {{title}}",
       "note": "Note : {{title}}",
+      "game": "Jeu : {{title}}",
+      "gameInvite": "Rejoins le jeu : {{title}}",
       "noMessages": "Aucun message",
       "decryptFailed": "Impossible de déchiffrer le message",
       "deleted": "Message supprimé",
@@ -993,6 +999,10 @@
     },
     "note": {
       "label": "Note"
+    },
+    "game": {
+      "label": "Jeu",
+      "joinHint": "Appuyez pour rejoindre"
     }
   },
   "calendar": {

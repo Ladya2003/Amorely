@@ -67,6 +67,15 @@ const reactionSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const sharedGameSchema = new mongoose.Schema(
+  {
+    gameId: { type: String, required: true },
+    title: { type: String, required: true },
+    imageUrl: { type: String, required: false },
+  },
+  { _id: false }
+);
+
 const sharedNoteSchema = new mongoose.Schema(
   {
     noteId: { type: String, required: true },
@@ -96,6 +105,7 @@ const messageSchema = new mongoose.Schema({
   forwardFrom: { type: replySchema, required: false },
   sharedEvent: { type: sharedEventSchema, required: false },
   sharedNote: { type: sharedNoteSchema, required: false },
+  sharedGame: { type: sharedGameSchema, required: false },
   editedAt: { type: Date, required: false },
   reactions: { type: [reactionSchema], default: [] },
   isRead: { type: Boolean, default: false },

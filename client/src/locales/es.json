@@ -449,6 +449,10 @@
       "partner": "Pareja",
       "ready": "Listo",
       "waitingPartner": "Waiting for partner…",
+      "remindPartner": "Llamar a la pareja",
+      "partnerReminded": "Pareja llamada al chat",
+      "partnerRemindedShort": "Pareja llamada",
+      "remindPartnerFailed": "No se pudo llamar a la pareja",
       "readyToPlay": "Ready to play?",
       "startingSoon": "Starting soon!",
       "bothReady": "Both partners are ready — the round will start at the same time.",
@@ -869,6 +873,8 @@
       "encryptedMedia": "Multimedia cifrada",
       "event": "Evento: {{title}}",
       "note": "Nota: {{title}}",
+      "game": "Juego: {{title}}",
+      "gameInvite": "Únete al juego: {{title}}",
       "noMessages": "Sin mensajes",
       "decryptFailed": "No se pudo descifrar el mensaje",
       "deleted": "Mensaje eliminado",
@@ -993,6 +999,10 @@
     },
     "note": {
       "label": "Nota"
+    },
+    "game": {
+      "label": "Juego",
+      "joinHint": "Toca para unirte"
     }
   },
   "calendar": {

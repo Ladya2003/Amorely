@@ -161,6 +161,11 @@ class SocketService {
       previewEncrypted?: boolean;
       previewMediaEnvelope?: unknown;
       updatedAt?: string;
+    } | null,
+    sharedGame?: {
+      gameId: string;
+      title: string;
+      imageUrl?: string;
     } | null
   ) {
     if (!this.socket) {
@@ -183,7 +188,8 @@ class SocketService {
       sharedEvent,
       clientTempId,
       pushPreview,
-      sharedNote
+      sharedNote,
+      sharedGame
     });
   }
 

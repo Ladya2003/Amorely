@@ -20,6 +20,7 @@ import { useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../contexts/AuthContext';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
+import GameLobbyRemindButton from '../components/Games/GameLobbyRemindButton';
 import {
   getGamePlayBlockedCardSx,
   getGamePlayBlockedPanelSx,
@@ -501,16 +502,22 @@ const QuizGamePlayPage: React.FC = () => {
             {isCountdownActive ? (
               <Typography sx={getGamePlayCountdownSx()}>{lobbySecondsLeft}</Typography>
             ) : (
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                sx={getGamePlayPrimaryButtonSx()}
-                disabled={isMeReady || submitting}
-                onClick={handleReady}
-              >
-                {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
-              </Button>
+              <>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  sx={getGamePlayPrimaryButtonSx()}
+                  disabled={isMeReady || submitting}
+                  onClick={handleReady}
+                >
+                  {isMeReady ? t('games.common.waitingPartner') : t('games.common.ready')}
+                </Button>
+                <GameLobbyRemindButton
+                  gameId="quiz"
+                  visible={isMeReady && !isPartnerReady && !isCountdownActive}
+                />
+              </>
             )}
           </Box>
         </Box>

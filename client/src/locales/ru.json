@@ -449,6 +449,10 @@
       "partner": "Партнёр",
       "ready": "Готов",
       "waitingPartner": "Ждём партнёра…",
+      "remindPartner": "Позвать партнёра",
+      "partnerReminded": "Партнёра позвали в чат",
+      "partnerRemindedShort": "Партнёр позван",
+      "remindPartnerFailed": "Не удалось позвать партнёра",
       "readyToPlay": "Готовы к игре?",
       "startingSoon": "Скоро начнём!",
       "bothReady": "Оба партнёра готовы — раунд начнётся одновременно.",
@@ -870,6 +874,8 @@
       "encryptedMedia": "Зашифрованное медиа",
       "event": "Событие: {{title}}",
       "note": "Заметка: {{title}}",
+      "game": "Игра: {{title}}",
+      "gameInvite": "Присоединяйся к игре: {{title}}",
       "noMessages": "Нет сообщений",
       "decryptFailed": "Не удалось расшифровать сообщение",
       "deleted": "Сообщение удалено",
@@ -994,6 +1000,10 @@
     },
     "note": {
       "label": "Заметка"
+    },
+    "game": {
+      "label": "Игра",
+      "joinHint": "Нажмите, чтобы присоединиться"
     }
   },
   "calendar": {

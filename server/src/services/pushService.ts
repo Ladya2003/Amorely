@@ -124,6 +124,7 @@ const getMessagePreview = (params: {
   hasAttachments: boolean;
   sharedEvent?: { title?: string };
   sharedNote?: { title?: string };
+  sharedGame?: { title?: string };
   forwardFrom?: { text?: string };
 }) => {
   const pushPreview = params.pushPreview?.trim();
@@ -142,6 +143,10 @@ const getMessagePreview = (params: {
 
   if (params.sharedNote?.title?.trim()) {
     return truncatePreview(`Заметка: ${params.sharedNote.title.trim()}`);
+  }
+
+  if (params.sharedGame?.title?.trim()) {
+    return truncatePreview(`Игра: ${params.sharedGame.title.trim()}`);
   }
 
   const forwardText = params.forwardFrom?.text?.trim();
@@ -171,6 +176,9 @@ const buildAppUrl = (path: string) => {
 const buildChatUrl = (senderId: string) =>
   buildAppUrl(`/chat?contact=${encodeURIComponent(senderId)}`);
 
+export const buildGamePlayUrl = (gameId: string) =>
+  buildAppUrl(`/chat/games/${encodeURIComponent(gameId)}/play`);
+
 const buildFeedContentUrl = (contentId?: string) => {
   const query = contentId ? `?content=${encodeURIComponent(contentId)}` : '';
   return buildAppUrl(`/${query}`);
@@ -195,6 +203,7 @@ export const notifyNewMessage = async (params: {
   attachments?: unknown[];
   sharedEvent?: { title?: string };
   sharedNote?: { title?: string };
+  sharedGame?: { title?: string };
   forwardFrom?: { text?: string };
   chatUrl?: string;
 }) => {
@@ -216,6 +225,7 @@ export const notifyNewMessage = async (params: {
     hasAttachments: Boolean(params.attachments?.length),
     sharedEvent: params.sharedEvent,
     sharedNote: params.sharedNote,
+    sharedGame: params.sharedGame,
     forwardFrom: params.forwardFrom,
   });
 

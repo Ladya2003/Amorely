@@ -391,6 +391,10 @@
       "partner": "Партнер",
       "ready": "Готовий",
       "waitingPartner": "Waiting for partner…",
+      "remindPartner": "Покликати партнера",
+      "partnerReminded": "Партнера покликали в чат",
+      "partnerRemindedShort": "Партнера покликано",
+      "remindPartnerFailed": "Не вдалося покликати партнера",
       "readyToPlay": "Ready to play?",
       "startingSoon": "Starting soon!",
       "bothReady": "Both partners are ready — the round will start at the same time.",
@@ -812,6 +816,8 @@
       "encryptedMedia": "Зашифровані медіа",
       "event": "Подія: {{title}}",
       "note": "Нотатка: {{title}}",
+      "game": "Гра: {{title}}",
+      "gameInvite": "Приєднуйся до гри: {{title}}",
       "noMessages": "Немає повідомлень",
       "decryptFailed": "Не вдалося розшифрувати повідомлення",
       "deleted": "Повідомлення видалено",
@@ -936,6 +942,10 @@
     },
     "note": {
       "label": "Нотатка"
+    },
+    "game": {
+      "label": "Гра",
+      "joinHint": "Натисніть, щоб приєднатися"
     }
   },
   "calendar": {

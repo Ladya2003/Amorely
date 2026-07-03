@@ -12,6 +12,7 @@ import EncryptedAttachment from './EncryptedAttachment';
 import ChatVideoPlayer from '../common/ChatVideoPlayer';
 import SharedEventCard from './SharedEventCard';
 import SharedNoteCard from './SharedNoteCard';
+import SharedGameCard from './SharedGameCard';
 import {
   CHAT_MESSAGE_FONT_SIZE_BASE_PX,
 } from '../../utils/chatMessageFontSize';
@@ -71,6 +72,7 @@ interface MessageProps {
   onForwardSourceClick?: (userId: string, forwardFrom: MessageForwardRef) => void;
   onSharedEventClick?: (eventId: string) => void;
   onSharedNoteClick?: (noteId: string) => void;
+  onSharedGameClick?: (gameId: string) => void;
   onContactAvatarClick?: () => void;
   messageFontSizePx?: number;
 }
@@ -88,6 +90,7 @@ const Message: React.FC<MessageProps> = ({
   onForwardSourceClick,
   onSharedEventClick,
   onSharedNoteClick,
+  onSharedGameClick,
   onContactAvatarClick,
   messageFontSizePx = CHAT_MESSAGE_FONT_SIZE_BASE_PX,
 }) => {
@@ -147,6 +150,7 @@ const Message: React.FC<MessageProps> = ({
   const forwardFrom = message.forwardFrom;
   const sharedEvent = message.sharedEvent;
   const sharedNote = message.sharedNote;
+  const sharedGame = message.sharedGame;
   const isPending = message.id.startsWith('temp-');
 
   const hasVideoAttachment = useMemo(
@@ -161,11 +165,11 @@ const Message: React.FC<MessageProps> = ({
   );
 
   const isVideoOnlyBubble =
-    hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote;
+    hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote && !sharedGame;
 
   const hasImageAttachment = imageAttachmentIndices.length > 0;
   const isImageOnlyBubble =
-    hasImageAttachment && !hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote;
+    hasImageAttachment && !hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote && !sharedGame;
 
   const footerReserveWidth = isOwn
     ? (message.editedAt ? 118 : 94)
@@ -416,7 +420,7 @@ const Message: React.FC<MessageProps> = ({
                 fontSize: `${messageFontSizePx}px`,
                 wordBreak: 'break-word',
                 lineHeight: 1.3,
-                mb: sharedEvent || sharedNote ? 0.8 : 0
+                mb: sharedEvent || sharedNote || sharedGame ? 0.8 : 0
               }}
             >
               {message.text}
@@ -448,6 +452,16 @@ const Message: React.FC<MessageProps> = ({
                 sharedNote={sharedNote}
                 isOwn={isOwn}
                 onClick={() => onSharedNoteClick?.(sharedNote.noteId)}
+              />
+            </Box>
+          )}
+
+          {sharedGame && (
+            <Box sx={{ mb: message.text ? 0 : 0.25, pb: 2.5 }}>
+              <SharedGameCard
+                sharedGame={sharedGame}
+                isOwn={isOwn}
+                onClick={() => onSharedGameClick?.(sharedGame.gameId)}
               />
             </Box>
           )}
