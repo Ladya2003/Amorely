@@ -172,6 +172,7 @@ export interface MessageReaction {
 
 export const POPULAR_MESSAGE_REACTIONS = [
   '👍',
+  '👎',
   '❤️',
   '❤️‍🔥',
   '🩷',
@@ -193,6 +194,7 @@ export const POPULAR_MESSAGE_REACTIONS = [
   '😳',
   '😮',
   '😢',
+  '😡',
   '😎',
   '💀',
   '🔥',
