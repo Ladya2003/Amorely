@@ -62,6 +62,7 @@ const UserProfileChip: React.FC<UserProfileChipProps> = ({
       <AvatarGameRankMedal
         badges={badges}
         displayGameId={user.displayBadgeGameId}
+        showBadge={user.showDisplayBadge !== false}
         avatarSize={40}
       >
         <Avatar

@@ -17,6 +17,7 @@ export interface UserDocument extends mongoose.Document {
   locale?: string;
   primaryColor: 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
   displayBadgeGameId?: string | null;
+  showDisplayBadge?: boolean;
   notificationSettings?: {
     email: {
       newContent: boolean;
@@ -65,6 +66,7 @@ const userSchema = new mongoose.Schema({
   locale: { type: String, default: 'ru' },
   primaryColor: { type: String, enum: ['pink', 'purple', 'blue', 'orange', 'dark-red', 'dark-green'], default: 'pink' },
   displayBadgeGameId: { type: String, default: null },
+  showDisplayBadge: { type: Boolean, default: true },
   notificationSettings: {
     email: {
       newContent: { type: Boolean, default: true },

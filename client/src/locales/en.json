@@ -177,8 +177,10 @@
       "auto": "Auto (best badge)",
       "gameRank": "{{game}} · top {{rank}}",
       "save": "Save badge",
+      "showDisplayBadge": "Show badge next to name",
       "errors": {
-        "saveFailed": "Failed to save badge"
+        "saveFailed": "Failed to save badge",
+        "visibilityFailed": "Failed to save display setting"
       },
       "hint": "One badge is shown in chat and the header. By default — the best (top 1, else 2, else 3).",
       "saveFailed": "Could not save badge"

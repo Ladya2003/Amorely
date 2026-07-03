@@ -177,8 +177,10 @@
       "auto": "Auto (mejor medalla)",
       "gameRank": "{{game}} · top {{rank}}",
       "save": "Guardar medalla",
+      "showDisplayBadge": "Mostrar medalla junto al nombre",
       "errors": {
-        "saveFailed": "No se pudo guardar la medalla"
+        "saveFailed": "No se pudo guardar la medalla",
+        "visibilityFailed": "No se pudo guardar la configuración de visualización"
       },
       "hint": "En el chat y la cabecera se muestra una medalla. Por defecto, la mejor (top 1, si no 2, si no 3).",
       "saveFailed": "No se pudo guardar la medalla"

@@ -180,6 +180,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
                   <AvatarGameRankMedal
                     badges={profile?.badges}
                     displayGameId={profile?.displayBadgeGameId}
+                    showBadge={profile?.showDisplayBadge !== false}
                     avatarSize={CONTACT_PROFILE_AVATAR_SIZE}
                   >
                     <Avatar

@@ -7,6 +7,7 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
+  Switch,
   Typography,
 } from '@mui/material';
 import axios from 'axios';
@@ -15,27 +16,40 @@ import GameBadgeIcon from '../Games/GameBadgeIcon';
 import { getBestBadgesByGame, getGameName } from '../../utils/gameBadges';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 
+export interface BadgePreference {
+  displayBadgeGameId?: string | null;
+  showDisplayBadge?: boolean;
+}
+
 interface DisplayBadgePickerProps {
   userId: string;
   displayBadgeGameId?: string | null;
-  onSaved: (displayBadgeGameId: string | null) => void;
+  showDisplayBadge?: boolean;
+  onSaved: (prefs: BadgePreference) => void;
 }
 
 const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
   userId,
   displayBadgeGameId,
+  showDisplayBadge = true,
   onSaved,
 }) => {
   const { t } = useTranslation();
   const { badges } = useRelationshipBadges();
   const availableBadges = getBestBadgesByGame(badges);
   const [selected, setSelected] = useState<string>(displayBadgeGameId || 'auto');
+  const [showBadge, setShowBadge] = useState(showDisplayBadge);
+  const [saving, setSaving] = useState(false);
+  const [togglingVisibility, setTogglingVisibility] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setSelected(displayBadgeGameId || 'auto');
   }, [displayBadgeGameId]);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setShowBadge(showDisplayBadge);
+  }, [showDisplayBadge]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -51,11 +65,42 @@ const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      onSaved(response.data.user?.displayBadgeGameId ?? null);
+      onSaved({
+        displayBadgeGameId: response.data.user?.displayBadgeGameId ?? null,
+      });
     } catch {
       setError(t('settings.badge.errors.saveFailed'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleVisibilityToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.checked;
+    const previousValue = showBadge;
+
+    setShowBadge(nextValue);
+    setTogglingVisibility(true);
+    setError(null);
+    onSaved({ showDisplayBadge: nextValue });
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `${API_URL}/api/settings/user/${userId}`,
+        { showDisplayBadge: nextValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      onSaved({
+        showDisplayBadge: response.data.user?.showDisplayBadge !== false,
+      });
+    } catch {
+      setShowBadge(previousValue);
+      onSaved({ showDisplayBadge: previousValue });
+      setError(t('settings.badge.errors.visibilityFailed'));
+    } finally {
+      setTogglingVisibility(false);
     }
   };
 
@@ -81,45 +126,62 @@ const DisplayBadgePicker: React.FC<DisplayBadgePickerProps> = ({
         {t('settings.badge.description')}
       </Typography>
 
-      <RadioGroup value={selected} onChange={(event) => setSelected(event.target.value)}>
-        <FormControlLabel
-          value="auto"
-          control={<Radio size="small" />}
-          label={t('settings.badge.auto')}
-        />
-        {availableBadges.map((badge) => (
-          <FormControlLabel
-            key={badge.gameId}
-            value={badge.gameId}
-            control={<Radio size="small" />}
-            sx={{ alignItems: 'center' }}
-            label={
-              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-                <GameBadgeIcon badge={badge} size={22} showTooltip={false} />
-                <Typography variant="body2">
-                  {t('settings.badge.gameRank', { game: getGameName(badge.gameId), rank: badge.rank })}
-                </Typography>
-              </Box>
-            }
+      <FormControlLabel
+        control={
+          <Switch
+            size="small"
+            checked={showBadge}
+            disabled={togglingVisibility}
+            onChange={handleVisibilityToggle}
           />
-        ))}
-      </RadioGroup>
+        }
+        label={t('settings.badge.showDisplayBadge')}
+        sx={{ mb: showBadge ? 1.5 : 0 }}
+      />
+
+      {showBadge && (
+        <>
+          <RadioGroup value={selected} onChange={(event) => setSelected(event.target.value)}>
+            <FormControlLabel
+              value="auto"
+              control={<Radio size="small" />}
+              label={t('settings.badge.auto')}
+            />
+            {availableBadges.map((badge) => (
+              <FormControlLabel
+                key={badge.gameId}
+                value={badge.gameId}
+                control={<Radio size="small" />}
+                sx={{ alignItems: 'center' }}
+                label={
+                  <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                    <GameBadgeIcon badge={badge} size={22} showTooltip={false} />
+                    <Typography variant="body2">
+                      {t('settings.badge.gameRank', { game: getGameName(badge.gameId), rank: badge.rank })}
+                    </Typography>
+                  </Box>
+                }
+              />
+            ))}
+          </RadioGroup>
+
+          <Button
+            size="small"
+            variant="outlined"
+            sx={{ mt: 1.5 }}
+            disabled={saving || selected === (displayBadgeGameId || 'auto')}
+            onClick={handleSave}
+          >
+            {saving ? <CircularProgress size={18} /> : t('settings.badge.save')}
+          </Button>
+        </>
+      )}
 
       {error && (
         <Typography variant="body2" color="error" sx={{ mt: 1 }}>
           {error}
         </Typography>
       )}
-
-      <Button
-        size="small"
-        variant="outlined"
-        sx={{ mt: 1.5 }}
-        disabled={saving || selected === (displayBadgeGameId || 'auto')}
-        onClick={handleSave}
-      >
-        {saving ? <CircularProgress size={18} /> : t('settings.badge.save')}
-      </Button>
     </Box>
   );
 };

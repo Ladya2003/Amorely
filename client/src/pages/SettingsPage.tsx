@@ -189,10 +189,10 @@ const SettingsPage: React.FC = () => {
     updateUser(response.data.user);
   };
 
-  const handleBadgePreferenceSaved = (displayBadgeGameId: string | null) => {
-    setUser((prev) => (prev ? { ...prev, displayBadgeGameId } : prev));
+  const handleBadgePreferenceSaved = (prefs: { displayBadgeGameId?: string | null; showDisplayBadge?: boolean }) => {
+    setUser((prev) => (prev ? { ...prev, ...prefs } : prev));
     if (authUser) {
-      updateUser({ ...authUser, displayBadgeGameId });
+      updateUser({ ...authUser, ...prefs });
     }
   };
 

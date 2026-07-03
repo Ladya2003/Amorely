@@ -177,8 +177,10 @@
       "auto": "Auto (bestes Abzeichen)",
       "gameRank": "{{game}} · Top {{rank}}",
       "save": "Abzeichen speichern",
+      "showDisplayBadge": "Abzeichen neben dem Namen anzeigen",
       "errors": {
-        "saveFailed": "Abzeichen konnte nicht gespeichert werden"
+        "saveFailed": "Abzeichen konnte nicht gespeichert werden",
+        "visibilityFailed": "Anzeigeeinstellung konnte nicht gespeichert werden"
       },
       "hint": "Im Chat und in der Kopfzeile wird ein Abzeichen angezeigt. Standard: das beste (Top 1, sonst 2, sonst 3).",
       "saveFailed": "Abzeichen konnte nicht gespeichert werden"

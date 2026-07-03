@@ -177,8 +177,10 @@
       "auto": "Auto (meilleure médaille)",
       "gameRank": "{{game}} · top {{rank}}",
       "save": "Enregistrer la médaille",
+      "showDisplayBadge": "Afficher la médaille à côté du nom",
       "errors": {
-        "saveFailed": "Impossible d'enregistrer la médaille"
+        "saveFailed": "Impossible d'enregistrer la médaille",
+        "visibilityFailed": "Impossible d'enregistrer le paramètre d'affichage"
       },
       "hint": "Une médaille s’affiche dans le chat et l’en-tête. Par défaut, la meilleure (top 1, sinon 2, sinon 3).",
       "saveFailed": "Impossible d’enregistrer la médaille"

@@ -7,6 +7,7 @@ import { getAvatarRankMedalOverlaySx } from './gamePageStyles';
 interface AvatarGameRankMedalProps {
   badges?: RelationshipBadge[];
   displayGameId?: string | null;
+  showBadge?: boolean;
   avatarSize?: number;
   children: React.ReactNode;
 }
@@ -14,6 +15,7 @@ interface AvatarGameRankMedalProps {
 const AvatarGameRankMedal: React.FC<AvatarGameRankMedalProps> = ({
   badges = [],
   displayGameId,
+  showBadge = true,
   avatarSize,
   children,
 }) => {
@@ -21,7 +23,7 @@ const AvatarGameRankMedal: React.FC<AvatarGameRankMedalProps> = ({
   const medalRank = badge ? normalizeMedalRank(badge.rank) : null;
   const medalSize = avatarSize ? getMedalSizeForAvatar(avatarSize) : 26;
 
-  if (!badge || !medalRank) {
+  if (!showBadge || !badge || !medalRank) {
     return <>{children}</>;
   }
 

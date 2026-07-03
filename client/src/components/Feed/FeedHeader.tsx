@@ -125,6 +125,7 @@ const FeedHeader: React.FC = () => {
               <AvatarGameRankMedal
                 badges={badges}
                 displayGameId={user.displayBadgeGameId}
+                showBadge={user.showDisplayBadge !== false}
                 avatarSize={avatarSize}
               >
                 <Avatar

@@ -42,6 +42,7 @@ export interface Contact {
   avatar: string;
   badges?: RelationshipBadge[];
   displayBadgeGameId?: string | null;
+  showDisplayBadge?: boolean;
   isOnline?: boolean;
   lastSeen?: string | null;
   unreadCount?: number;
@@ -137,6 +138,7 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
               <AvatarGameRankMedal
                 badges={contact.badges}
                 displayGameId={contact.displayBadgeGameId}
+                showBadge={contact.showDisplayBadge !== false}
                 avatarSize={52}
               >
                 <Box sx={{ position: 'relative', display: 'inline-flex' }}>

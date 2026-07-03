@@ -16,7 +16,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
-import DisplayBadgePicker from './DisplayBadgePicker';
+import DisplayBadgePicker, { type BadgePreference } from './DisplayBadgePicker';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
@@ -38,13 +38,14 @@ export interface UserProfile {
   avatar?: string;
   birthday?: string;
   displayBadgeGameId?: string | null;
+  showDisplayBadge?: boolean;
   role?: 'user' | 'admin';
 }
 
 interface ProfileFormProps {
   user: UserProfile;
   onSave: (userData: FormData) => Promise<void>;
-  onBadgePreferenceSaved?: (displayBadgeGameId: string | null) => void;
+  onBadgePreferenceSaved?: (prefs: BadgePreference) => void;
 }
 
 const SAVE_DEBOUNCE_MS = 800;
@@ -217,6 +218,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
               <AvatarGameRankMedal
                 badges={badges}
                 displayGameId={user.displayBadgeGameId}
+                showBadge={user.showDisplayBadge !== false}
                 avatarSize={120}
               >
                 <Avatar
@@ -325,7 +327,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                 <DisplayBadgePicker
                   userId={user._id}
                   displayBadgeGameId={user.displayBadgeGameId}
-                  onSaved={(displayBadgeGameId) => onBadgePreferenceSaved?.(displayBadgeGameId)}
+                  showDisplayBadge={user.showDisplayBadge}
+                  onSaved={(prefs) => onBadgePreferenceSaved?.(prefs)}
                 />
               </Grid>
             </Grid>

@@ -177,8 +177,10 @@
       "auto": "Auto (melhor medalha)",
       "gameRank": "{{game}} · top {{rank}}",
       "save": "Salvar medalha",
+      "showDisplayBadge": "Mostrar medalha ao lado do nome",
       "errors": {
-        "saveFailed": "Não foi possível salvar a medalha"
+        "saveFailed": "Não foi possível salvar a medalha",
+        "visibilityFailed": "Não foi possível salvar a configuração de exibição"
       },
       "hint": "Uma medalha aparece no chat e no cabeçalho. Por padrão, a melhor (top 1, senão 2, senão 3).",
       "saveFailed": "Não foi possível salvar a medalha"

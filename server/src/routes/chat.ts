@@ -145,7 +145,7 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
     const users = await User.find({
       _id: { $in: Array.from(contactIdSet).map((id) => new mongoose.Types.ObjectId(id)) }
     }).select(
-      'username email firstName lastName avatar bio birthday role partnerId displayBadgeGameId lastSeen'
+      'username email firstName lastName avatar bio birthday role partnerId displayBadgeGameId showDisplayBadge lastSeen'
     );
 
     const contactIds = users.map((user) => user._id.toString());
@@ -197,6 +197,7 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
         birthday: user.birthday ? user.birthday.toISOString() : null,
         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
         displayBadgeGameId: user.displayBadgeGameId || null,
+        showDisplayBadge: user.showDisplayBadge !== false,
         badges: badgesByContactId.get(contactId) || [],
         unreadCount,
         isOnline: isUserOnline(user._id.toString()),
@@ -356,7 +357,7 @@ router.get('/contacts/:contactId/profile', authMiddleware, async (req: any, res:
     }
 
     const user = await User.findById(contactId).select(
-      'username email firstName lastName avatar bio birthday displayBadgeGameId'
+      'username email firstName lastName avatar bio birthday displayBadgeGameId showDisplayBadge'
     );
 
     if (!user) {
@@ -380,6 +381,7 @@ router.get('/contacts/:contactId/profile', authMiddleware, async (req: any, res:
       birthday: user.birthday ? user.birthday.toISOString() : null,
       avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
       displayBadgeGameId: user.displayBadgeGameId || null,
+      showDisplayBadge: user.showDisplayBadge !== false,
       badges: relationship?.badges || [],
     });
   } catch (error) {

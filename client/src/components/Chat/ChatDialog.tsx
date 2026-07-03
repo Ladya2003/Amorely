@@ -1496,6 +1496,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         <AvatarGameRankMedal
           badges={contact.badges}
           displayGameId={contact.displayBadgeGameId}
+          showBadge={contact.showDisplayBadge !== false}
           avatarSize={44}
         >
           <Avatar
