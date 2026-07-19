@@ -1396,6 +1396,7 @@
     "feedConfirm": "Feed",
     "feedFailed": "Could not feed this pet",
     "feedInsufficientBalance": "Not enough AmoreCoins (need {{cost}})",
+    "satietyFullReward": "Pet is fully fed! +{{amount}} AmoreCoins",
     "mood": {
       "angry": "Hungry pet",
       "neutral": "Calm pet",

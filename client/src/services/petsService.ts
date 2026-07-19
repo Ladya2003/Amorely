@@ -126,7 +126,7 @@ export const petPet = async (
 
 export const feedPet = async (
   petId: string
-): Promise<{ pet: Pet; balance: number; satietyGain: number }> => {
+): Promise<{ pet: Pet; balance: number; satietyGain: number; satietyFullAward: number }> => {
   const { data } = await axios.post(`${API_URL}/api/pets/${petId}/feed`);
   return data;
 };

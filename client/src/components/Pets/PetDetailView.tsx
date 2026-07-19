@@ -364,6 +364,12 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
       setBalance(result.balance);
       emitCurrencyUpdated(result.balance);
       spawnSatietyFloat(result.satietyGain);
+      if (result.satietyFullAward > 0) {
+        setToast({
+          message: t('pets.satietyFullReward', { amount: result.satietyFullAward }),
+          severity: 'success',
+        });
+      }
       if (feedAnimationTimeoutRef.current !== null) {
         window.clearTimeout(feedAnimationTimeoutRef.current);
       }

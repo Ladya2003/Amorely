@@ -30,6 +30,7 @@ const PETTING_REWARD_AMOUNT = 3;
 const FEED_COST = 2;
 const FEED_SATIETY_MIN = 10;
 const FEED_SATIETY_MAX = 20;
+const SATIETY_FULL_REWARD = 5;
 const SATIETY_DEFAULT = 60;
 const SATIETY_DECAY_PER_HOUR = 2;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -578,11 +579,28 @@ router.post('/:id/feed', async (req: ExtendedRequest, res: Response) => {
       return res.status(402).json({ error: 'Insufficient balance', balance: spend.balance, required: FEED_COST });
     }
 
+    const previousSatiety = getPetSatiety(pet);
     const satietyGain =
       FEED_SATIETY_MIN +
       Math.floor(Math.random() * (FEED_SATIETY_MAX - FEED_SATIETY_MIN + 1));
-    pet.satiety = clamp(getPetSatiety(pet) + satietyGain, 0, 100);
+    pet.satiety = clamp(previousSatiety + satietyGain, 0, 100);
     await pet.save();
+
+    let balance = spend.balance;
+    let satietyFullAward = 0;
+    if (previousSatiety < 100 && getPetSatiety(pet) === 100) {
+      const awardResult = await awardCurrency(
+        userId,
+        SATIETY_FULL_REWARD,
+        'pet_satiety_full',
+        `pet_satiety_full:${pet._id.toString()}:${Date.now()}`,
+        { petId: pet._id.toString(), ownerId }
+      );
+      if (awardResult.awarded) {
+        satietyFullAward = SATIETY_FULL_REWARD;
+        balance = awardResult.balance;
+      }
+    }
 
     const ownerUser = await loadOwnerUser(pet.ownerId);
     let giftedByUser = null;
@@ -592,8 +610,9 @@ router.post('/:id/feed', async (req: ExtendedRequest, res: Response) => {
 
     res.json({
       pet: formatPet(pet.toObject(), giftedByUser, ownerUser),
-      balance: spend.balance,
+      balance,
       satietyGain,
+      satietyFullAward,
     });
   } catch (error) {
     console.error('POST /api/pets/:id/feed error:', error);

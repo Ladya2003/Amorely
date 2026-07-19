@@ -1400,6 +1400,7 @@
     "feedConfirm": "Покормить",
     "feedFailed": "Не удалось покормить питомца",
     "feedInsufficientBalance": "Недостаточно Аморок (нужно {{cost}})",
+    "satietyFullReward": "Питомец полностью сыт! +{{amount}} Аморок",
     "mood": {
       "angry": "Голодный питомец",
       "neutral": "Спокойный питомец",

@@ -32,6 +32,7 @@ export const CURRENCY_REASONS = [
   'pet_level_up',
   'pet_petting',
   'pet_feed',
+  'pet_satiety_full',
   'manual_claim',
 ] as const;
 
