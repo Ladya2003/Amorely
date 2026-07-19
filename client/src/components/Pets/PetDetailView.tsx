@@ -82,11 +82,11 @@ const FEED_ANIMATION_MS = 2400;
 const SATIETY_HUNGRY_THRESHOLD = 20;
 
 const ANGRY_FACE_POSITIONS = [
-  { left: '20%', top: '16%', size: 28 },
-  { left: '74%', top: '22%', size: 26 },
-  { left: '46%', top: '40%', size: 30 },
-  { left: '28%', top: '56%', size: 24 },
-  { left: '66%', top: '50%', size: 26 },
+  { left: '20%', top: '16%', size: 28, emoji: '😾' },
+  { left: '74%', top: '22%', size: 26, emoji: '😡' },
+  { left: '46%', top: '40%', size: 30, emoji: '🥺' },
+  { left: '28%', top: '56%', size: 24, emoji: '😡' },
+  { left: '66%', top: '50%', size: 26, emoji: '🥺' },
 ] as const;
 
 const FEED_PARTICLE_POSITIONS = [
@@ -698,7 +698,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
                     filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.35))',
                   }}
                 >
-                  😾
+                  {face.emoji}
                 </Box>
               ))}
             </Box>
