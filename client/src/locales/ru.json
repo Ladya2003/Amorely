@@ -549,7 +549,9 @@
     "notificationsDialog": {
       "title": "Уведомления",
       "empty": "Пока что новых уведомлений нет",
-      "close": "Понятно"
+      "close": "Понятно",
+      "back": "Назад",
+      "newBadge": "Новое"
     },
     "openEventAriaLabel": "Открыть событие",
     "title": "Лента",

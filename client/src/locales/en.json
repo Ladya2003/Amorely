@@ -549,7 +549,9 @@
     "notificationsDialog": {
       "title": "Notifications",
       "empty": "No new notifications yet",
-      "close": "OK"
+      "close": "OK",
+      "back": "Back",
+      "newBadge": "New"
     },
     "openEventAriaLabel": "Open event",
     "title": "Feed",

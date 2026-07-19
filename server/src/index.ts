@@ -12,6 +12,7 @@ import User from './models/user';
 import Content from './models/content';
 import feedRoutes from './routes/feed';
 import newsRoutes from './routes/news';
+import announcementsRoutes from './routes/announcements';
 import settingsRoutes from './routes/settings';
 import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
@@ -343,6 +344,7 @@ app.use('/api/feed', authMiddleware, feedRoutes);
 
 // Маршруты для новостей
 app.use('/api/news', authMiddleware, newsRoutes);
+app.use('/api/announcements', authMiddleware, announcementsRoutes);
 
 // Маршруты для настроек
 app.use('/api/settings', authMiddleware, settingsRoutes);

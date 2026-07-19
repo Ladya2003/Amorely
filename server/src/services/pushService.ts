@@ -331,3 +331,38 @@ export const notifyNewsPublished = async (params: {
     )
   );
 };
+
+const buildFeedUrl = (query = '') => {
+  const normalizedQuery = query.startsWith('?') ? query : query ? `?${query}` : '';
+  return buildAppUrl(`/${normalizedQuery}`);
+};
+
+export const notifyAppAnnouncement = async (params: {
+  announcementKey: string;
+  pushTitle?: string;
+  pushBody: string;
+}) => {
+  const subscriptions = await PushSubscription.find().select('userId').lean();
+  const userIds = [...new Set(subscriptions.map((item) => item.userId.toString()))];
+
+  if (!userIds.length) {
+    return { sent: 0 };
+  }
+
+  const body = truncatePreview(params.pushBody.trim() || 'Новое уведомление');
+  const title = params.pushTitle?.trim() || 'Amorely';
+  const url = buildFeedUrl(`announcement=${encodeURIComponent(params.announcementKey)}`);
+
+  await Promise.all(
+    userIds.map((userId) =>
+      sendPushToUser(userId, {
+        title,
+        body,
+        url,
+        tag: `announcement-${params.announcementKey}`,
+      })
+    )
+  );
+
+  return { sent: userIds.length };
+};
