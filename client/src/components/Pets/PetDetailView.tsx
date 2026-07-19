@@ -76,6 +76,31 @@ const HEART_POSITIONS = [
 ] as const;
 const AFFECTION_FLOAT_MS = 1800;
 
+const PET_HEART_RISE_KEYFRAMES = {
+  '0%': { transform: 'translate(-50%, 0) scale(0.65)', opacity: 0 },
+  '22%': { opacity: 1 },
+  '100%': { transform: 'translate(-50%, -52px) scale(1.15)', opacity: 0 },
+} as const;
+
+type AmbientAffectionHeart = {
+  id: number;
+  left: string;
+  top: string;
+  size: number;
+  durationMs: number;
+};
+
+const createAmbientAffectionHeart = (id: number): AmbientAffectionHeart => ({
+  id,
+  left: `${18 + Math.random() * 64}%`,
+  top: `${14 + Math.random() * 58}%`,
+  size: 20 + Math.floor(Math.random() * 9),
+  durationMs: 920 + Math.floor(Math.random() * 180),
+});
+
+const getAmbientHeartSpawnIntervalMs = (affectionDelta: number) =>
+  Math.max(1600, 4200 - affectionDelta * 520) + Math.floor(Math.random() * 1200);
+
 export interface PetDetailViewProps {
   petId: string;
   ownerUserId?: string;
@@ -110,10 +135,13 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   const [isPetting, setIsPetting] = useState(false);
   const [pettingPending, setPettingPending] = useState(false);
   const [affectionFloat, setAffectionFloat] = useState<{ id: number; amount: number } | null>(null);
+  const [ambientHearts, setAmbientHearts] = useState<AmbientAffectionHeart[]>([]);
   const [toast, setToast] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
   const pettingTimeoutRef = useRef<number | null>(null);
   const affectionFloatTimeoutRef = useRef<number | null>(null);
   const affectionFloatIdRef = useRef(0);
+  const ambientHeartIdRef = useRef(0);
+  const ambientHeartTimeoutsRef = useRef<number[]>([]);
 
   const loadPet = useCallback(async () => {
     if (!petId) return;
@@ -148,9 +176,75 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
       if (affectionFloatTimeoutRef.current !== null) {
         window.clearTimeout(affectionFloatTimeoutRef.current);
       }
+      ambientHeartTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      ambientHeartTimeoutsRef.current = [];
     },
     []
   );
+
+  const affectionDelta = pet?.affectionDelta ?? 0;
+
+  useEffect(() => {
+    if (isPetting || affectionDelta <= 0) {
+      setAmbientHearts([]);
+      return;
+    }
+
+    const clearAmbientHeartTimeout = (timeoutId: number) => {
+      window.clearTimeout(timeoutId);
+      ambientHeartTimeoutsRef.current = ambientHeartTimeoutsRef.current.filter(
+        (storedId) => storedId !== timeoutId
+      );
+    };
+
+    const spawnAmbientHeart = () => {
+      const nextId = ambientHeartIdRef.current + 1;
+      ambientHeartIdRef.current = nextId;
+      const heart = createAmbientAffectionHeart(nextId);
+
+      setAmbientHearts((prev) => {
+        const maxHearts = affectionDelta;
+        return [...prev, heart].slice(-maxHearts);
+      });
+
+      const removeTimeoutId = window.setTimeout(() => {
+        setAmbientHearts((prev) => prev.filter((item) => item.id !== nextId));
+        clearAmbientHeartTimeout(removeTimeoutId);
+      }, heart.durationMs);
+      ambientHeartTimeoutsRef.current.push(removeTimeoutId);
+    };
+
+    let spawnTimeoutId: number | null = null;
+    let cancelled = false;
+
+    const scheduleNextSpawn = () => {
+      if (cancelled) {
+        return;
+      }
+      spawnTimeoutId = window.setTimeout(() => {
+        if (cancelled) {
+          return;
+        }
+        const spawnCount = affectionDelta >= 4 && Math.random() < 0.35 ? 2 : 1;
+        for (let index = 0; index < spawnCount; index += 1) {
+          spawnAmbientHeart();
+        }
+        scheduleNextSpawn();
+      }, getAmbientHeartSpawnIntervalMs(affectionDelta));
+    };
+
+    scheduleNextSpawn();
+
+    return () => {
+      cancelled = true;
+      if (spawnTimeoutId !== null) {
+        window.clearTimeout(spawnTimeoutId);
+      }
+      ambientHeartTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      ambientHeartTimeoutsRef.current = [];
+      setAmbientHearts([]);
+    };
+  }, [affectionDelta, isPetting]);
 
   const spawnAffectionFloat = useCallback((amount: number) => {
     if (amount <= 0) {
@@ -275,7 +369,6 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   const nextMainLevel = pet.level + 1;
   const ownerUsername = isOwner ? user?.username ?? pet.ownerUsername : pet.ownerUsername;
   const ownerAvatar = isOwner ? user?.avatar ?? pet.ownerAvatar : pet.ownerAvatar;
-  const affectionDelta = pet.affectionDelta ?? 0;
   const affectionDeltaText = affectionDelta > 0 ? `+${affectionDelta}` : `${affectionDelta}`;
   const affectionDeltaColor =
     affectionDelta > 0 ? 'success.main' : affectionDelta < 0 ? 'error.main' : 'text.secondary';
@@ -333,6 +426,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             border: `1px solid ${alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.22)}`,
             boxShadow: `0 10px 32px ${alpha(theme.palette.primary.main, 0.14)}`,
             background: getPetHeroBackground(theme),
+            '@keyframes petHeartRiseDetail': PET_HEART_RISE_KEYFRAMES,
           })}
         >
           <Box
@@ -385,11 +479,6 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
                 left: 0,
                 right: 0,
                 zIndex: 2,
-                '@keyframes petHeartRiseDetail': {
-                  '0%': { transform: 'translate(-50%, 0) scale(0.65)', opacity: 0 },
-                  '22%': { opacity: 1 },
-                  '100%': { transform: 'translate(-50%, -52px) scale(1.15)', opacity: 0 },
-                },
               }}
             >
               {HEART_POSITIONS.map((heart) => (
@@ -408,6 +497,38 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
                     animationTimingFunction: 'ease-out',
                     animationDelay: heart.delay,
                     animationIterationCount: 'infinite',
+                  })}
+                >
+                  ❤
+                </Box>
+              ))}
+            </Box>
+          )}
+          {!isPetting && affectionDelta > 0 && ambientHearts.length > 0 && (
+            <Box
+              sx={{
+                pointerEvents: 'none',
+                position: 'absolute',
+                inset: 0,
+                zIndex: 1,
+              }}
+            >
+              {ambientHearts.map((heart) => (
+                <Box
+                  key={heart.id}
+                  component="span"
+                  sx={(theme) => ({
+                    position: 'absolute',
+                    left: heart.left,
+                    top: heart.top,
+                    color: alpha(theme.palette.error.main, 0.88),
+                    fontSize: heart.size,
+                    lineHeight: 1,
+                    animationName: 'petHeartRiseDetail',
+                    animationDuration: `${heart.durationMs}ms`,
+                    animationTimingFunction: 'ease-out',
+                    animationIterationCount: 1,
+                    animationFillMode: 'forwards',
                   })}
                 >
                   ❤
