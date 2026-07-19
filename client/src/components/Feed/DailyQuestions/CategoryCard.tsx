@@ -23,13 +23,11 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, onOpen, onResults
   const showTimer = category.bothCompleted && category.bothCompletedAt;
 
   const handleClick = () => {
-    if (showResults && category.bothCompleted) {
+    if (category.userCompleted) {
       onResults();
-    } else if (!category.userCompleted) {
-      onOpen();
-    } else {
-      onResults();
+      return;
     }
+    onOpen();
   };
 
   return (

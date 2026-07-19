@@ -31,7 +31,7 @@ import {
 } from './dailyQuestionsStyles';
 
 const DailyQuestionsSection: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const [state, setState] = useState<DailyQuestionsState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,7 +56,7 @@ const DailyQuestionsSection: React.FC = () => {
 
   useEffect(() => {
     void loadState();
-  }, [loadState]);
+  }, [loadState, i18n.language]);
 
   useEffect(() => {
     const handlePartnerChanged = () => {
@@ -145,7 +145,13 @@ const DailyQuestionsSection: React.FC = () => {
             <CategoryCard
               key={cat.id}
               category={cat}
-              onOpen={() => setFlowCategoryId(cat.id)}
+              onOpen={() => {
+                if (cat.userCompleted) {
+                  void openResults(cat.id);
+                } else {
+                  setFlowCategoryId(cat.id);
+                }
+              }}
               onResults={() => void openResults(cat.id)}
             />
           ))}
@@ -157,6 +163,7 @@ const DailyQuestionsSection: React.FC = () => {
         categoryId={flowCategoryId}
         onClose={() => setFlowCategoryId(null)}
         onComplete={() => void loadState()}
+        onShowResults={(categoryId) => void openResults(categoryId)}
       />
 
       <ResponsiveDialog

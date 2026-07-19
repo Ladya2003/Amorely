@@ -1,6 +1,8 @@
 import express, { Response } from 'express';
 import { ExtendedRequest } from '../types/mongoose';
 import { resolvePartnerContext } from '../utils/resolvePartnerId';
+import { resolveLocale } from '../i18n/locales';
+import { getUserLocale } from '../utils/userLocale';
 import {
   getOrCreateState,
   buildDailyQuestionsResponse,
@@ -13,9 +15,17 @@ import {
 
 const router = express.Router();
 
+const resolveRequestLocale = async (req: ExtendedRequest) => {
+  if (typeof req.query.locale === 'string' && req.query.locale.trim()) {
+    return resolveLocale(req.query.locale);
+  }
+  return getUserLocale(req.userId as string);
+};
+
 router.get('/', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
+    const locale = await resolveRequestLocale(req);
     const { hasPartner } = await resolvePartnerContext(userId);
 
     if (!hasPartner) {
@@ -27,7 +37,7 @@ router.get('/', async (req: ExtendedRequest, res: Response) => {
       return res.json({ hasPartner: false });
     }
 
-    res.json(buildDailyQuestionsResponse(state, userId));
+    res.json(buildDailyQuestionsResponse(state, userId, locale));
   } catch (error) {
     console.error('Daily questions GET error:', error);
     res.status(500).json({ error: 'Failed to load daily questions' });
@@ -37,6 +47,7 @@ router.get('/', async (req: ExtendedRequest, res: Response) => {
 router.get('/category/:categoryId', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
+    const locale = await resolveRequestLocale(req);
     const { categoryId } = req.params;
 
     const state = await getOrCreateState(userId);
@@ -44,12 +55,12 @@ router.get('/category/:categoryId', async (req: ExtendedRequest, res: Response) 
       return res.status(404).json({ error: 'No active relationship' });
     }
 
-    const questions = getCategoryQuestions(categoryId);
+    const questions = getCategoryQuestions(categoryId, locale);
     if (!questions) {
       return res.status(404).json({ error: 'Category not found' });
     }
 
-    const results = getCategoryResults(state, userId, categoryId);
+    const results = getCategoryResults(state, userId, categoryId, locale);
 
     res.json({ ...questions, results });
   } catch (error) {
@@ -61,13 +72,20 @@ router.get('/category/:categoryId', async (req: ExtendedRequest, res: Response) 
 router.post('/answer', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
+    const locale = await resolveRequestLocale(req);
     const { categoryId, questionId, value } = req.body;
 
     if (!categoryId || !questionId || value === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const response = await submitAnswer(userId, categoryId, questionId, String(value));
+    const response = await submitAnswer(
+      userId,
+      categoryId,
+      questionId,
+      String(value),
+      locale
+    );
     res.json(response);
   } catch (error: any) {
     console.error('Daily questions answer error:', error);
@@ -78,6 +96,7 @@ router.post('/answer', async (req: ExtendedRequest, res: Response) => {
 router.get('/results/:categoryId', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
+    const locale = await resolveRequestLocale(req);
     const { categoryId } = req.params;
 
     const state = await getOrCreateState(userId);
@@ -85,7 +104,7 @@ router.get('/results/:categoryId', async (req: ExtendedRequest, res: Response) =
       return res.status(404).json({ error: 'No active relationship' });
     }
 
-    const results = getCategoryResults(state, userId, categoryId);
+    const results = getCategoryResults(state, userId, categoryId, locale);
     if (!results) {
       return res.status(404).json({ error: 'Category not found' });
     }
@@ -100,13 +119,14 @@ router.get('/results/:categoryId', async (req: ExtendedRequest, res: Response) =
 router.get('/history', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
+    const locale = await resolveRequestLocale(req);
 
     const state = await getOrCreateState(userId);
     if (!state) {
       return res.json([]);
     }
 
-    res.json(getHistory(state, userId));
+    res.json(getHistory(state, userId, locale));
   } catch (error) {
     console.error('Daily questions history error:', error);
     res.status(500).json({ error: 'Failed to load history' });

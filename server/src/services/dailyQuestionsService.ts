@@ -7,6 +7,12 @@ import {
   pickRandomCategories,
   DailyQuestion,
 } from '../dailyQuestions/dailyQuestionsContent';
+import {
+  getLocalizedAnswerLabel,
+  getLocalizedCategoryTitle,
+  localizeCategory,
+} from '../dailyQuestions/dailyQuestionsI18n';
+import { AppLocale } from '../i18n/locales';
 import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 import { normalizeIdStr, idsEqual } from '../utils/normalizeId';
 import { sendPushToUser } from './pushService';
@@ -20,14 +26,55 @@ const generateRoundKey = () =>
 const normalizeText = (value: string) =>
   value.trim().toLowerCase().replace(/\s+/g, ' ');
 
-const getAnswerLabel = (question: DailyQuestion, value: string): string => {
-  if (question.type === 'choice' && question.options) {
-    return question.options.find((o) => o.id === value)?.label ?? value;
+const getAnswerLabel = (
+  categoryId: string,
+  question: DailyQuestion,
+  value: string,
+  locale: AppLocale
+): string => getLocalizedAnswerLabel(categoryId, question, value, locale);
+
+const isCategoryFullyAnswered = (
+  progress: { answers: { questionId: string }[] } | undefined,
+  category: { questions: { id: string }[] }
+) => {
+  if (!progress) return false;
+  const answeredIds = new Set(progress.answers.map((a) => a.questionId));
+  return category.questions.every((q) => answeredIds.has(q.id));
+};
+
+const syncCategoryCompletion = (state: any, categoryId: string) => {
+  const category = getCategoryById(categoryId);
+  if (!category) return false;
+
+  let changed = false;
+  const userId = normalizeIdStr(state.userId);
+  const partnerId = normalizeIdStr(state.partnerId);
+
+  for (const uid of [userId, partnerId]) {
+    if (!uid) continue;
+    const progress = getUserProgress(state, uid, categoryId);
+    if (!progress || progress.completedAt) continue;
+    if (!isCategoryFullyAnswered(progress, category)) continue;
+
+    progress.completedAt = new Date();
+    changed = true;
+    checkCategoryBothCompleted(state, categoryId);
   }
-  if (question.type === 'image' && question.images) {
-    return question.images.find((o) => o.id === value)?.label ?? value;
+
+  if (changed) {
+    checkBothCompletedAll(state);
   }
-  return value;
+  return changed;
+};
+
+const syncAllCompletions = (state: any) => {
+  let changed = false;
+  for (const categoryId of state.categoryIds as string[]) {
+    if (syncCategoryCompletion(state, categoryId)) {
+      changed = true;
+    }
+  }
+  return changed;
 };
 
 const answersMatch = (question: DailyQuestion, a: string, b: string): boolean => {
@@ -213,7 +260,8 @@ export const getOrCreateState = async (userId: string) => {
   }
 
   const rotated = maybeRotateRound(state);
-  if (rotated) {
+  const synced = syncAllCompletions(state);
+  if (rotated || synced) {
     await state.save();
   }
 
@@ -244,10 +292,14 @@ export interface DailyQuestionsResponse {
   allCategories: { id: string; emoji: string; title: string }[];
 }
 
+const countAnsweredQuestions = (answers: { questionId: string }[] | undefined) =>
+  new Set((answers ?? []).map((a) => a.questionId)).size;
+
 const buildCategoryStatus = (
   state: any,
   userId: string,
-  categoryId: string
+  categoryId: string,
+  locale: AppLocale
 ): CategoryStatus | null => {
   const category = getCategoryById(categoryId);
   if (!category) return null;
@@ -266,23 +318,24 @@ const buildCategoryStatus = (
   return {
     id: category.id,
     emoji: category.emoji,
-    title: category.title,
+    title: getLocalizedCategoryTitle(category.id, category.title, locale),
     questionCount: category.questions.length,
     userCompleted: Boolean(userProg?.completedAt),
     partnerCompleted: Boolean(partnerProg?.completedAt),
     bothCompleted: Boolean(bothEntry),
     bothCompletedAt: bothEntry?.completedAt?.toISOString() ?? null,
-    userProgress: userProg?.answers?.length ?? 0,
-    partnerProgress: partnerProg?.answers?.length ?? 0,
+    userProgress: countAnsweredQuestions(userProg?.answers),
+    partnerProgress: countAnsweredQuestions(partnerProg?.answers),
   };
 };
 
 export const buildDailyQuestionsResponse = (
   state: any,
-  userId: string
+  userId: string,
+  locale: AppLocale = 'ru'
 ): DailyQuestionsResponse => {
   const categories = state.categoryIds
-    .map((id: string) => buildCategoryStatus(state, userId, id))
+    .map((id: string) => buildCategoryStatus(state, userId, id, locale))
     .filter(Boolean) as CategoryStatus[];
 
   let nextRoundAt: string | null = null;
@@ -305,19 +358,20 @@ export const buildDailyQuestionsResponse = (
     allCategories: DAILY_QUESTION_CATEGORIES.map((c) => ({
       id: c.id,
       emoji: c.emoji,
-      title: c.title,
+      title: getLocalizedCategoryTitle(c.id, c.title, locale),
     })),
   };
 };
 
-export const getCategoryQuestions = (categoryId: string) => {
+export const getCategoryQuestions = (categoryId: string, locale: AppLocale = 'ru') => {
   const category = getCategoryById(categoryId);
   if (!category) return null;
+  const localized = localizeCategory(category, locale);
   return {
-    id: category.id,
-    emoji: category.emoji,
-    title: category.title,
-    questions: category.questions,
+    id: localized.id,
+    emoji: localized.emoji,
+    title: localized.title,
+    questions: localized.questions,
   };
 };
 
@@ -325,7 +379,8 @@ export const submitAnswer = async (
   userId: string,
   categoryId: string,
   questionId: string,
-  value: string
+  value: string,
+  locale: AppLocale = 'ru'
 ) => {
   const state = await getOrCreateState(userId);
   if (!state) throw new Error('No active relationship');
@@ -360,14 +415,14 @@ export const submitAnswer = async (
     progress.answers.push({ questionId, value: value.trim() });
   }
 
-  if (progress.answers.length >= category.questions.length && !progress.completedAt) {
+  if (isCategoryFullyAnswered(progress, category) && !progress.completedAt) {
     progress.completedAt = new Date();
     checkCategoryBothCompleted(state, categoryId);
     checkBothCompletedAll(state);
   }
 
   await state.save();
-  return buildDailyQuestionsResponse(state, userId);
+  return buildDailyQuestionsResponse(state, userId, locale);
 };
 
 export interface CategoryResultItem {
@@ -395,10 +450,12 @@ export interface CategoryResults {
 export const getCategoryResults = (
   state: any,
   userId: string,
-  categoryId: string
+  categoryId: string,
+  locale: AppLocale = 'ru'
 ): CategoryResults | null => {
   const category = getCategoryById(categoryId);
   if (!category) return null;
+  const localized = localizeCategory(category, locale);
 
   const partnerId = idsEqual(state.userId, userId)
     ? normalizeIdStr(state.partnerId)
@@ -419,9 +476,10 @@ export const getCategoryResults = (
       ? calculateSimilarity(categoryId, userAnswers, partnerAnswers)
       : null;
 
-  const items: CategoryResultItem[] = category.questions.map((question) => {
+  const items: CategoryResultItem[] = localized.questions.map((question) => {
     const userAns = userAnswers.find((a: any) => a.questionId === question.id);
     const partnerAns = partnerAnswers.find((a: any) => a.questionId === question.id);
+    const baseQuestion = category.questions.find((q) => q.id === question.id)!;
 
     const userValue = userAns?.value ?? '';
     const partnerValue = partnerAns?.value ?? '';
@@ -431,20 +489,24 @@ export const getCategoryResults = (
       questionText: question.text,
       questionType: question.type,
       userAnswer: userValue,
-      userAnswerLabel: userValue ? getAnswerLabel(question, userValue) : '',
+      userAnswerLabel: userValue
+        ? getAnswerLabel(categoryId, baseQuestion, userValue, locale)
+        : '',
       partnerAnswer: partnerValue || null,
-      partnerAnswerLabel: partnerValue ? getAnswerLabel(question, partnerValue) : null,
+      partnerAnswerLabel: partnerValue
+        ? getAnswerLabel(categoryId, baseQuestion, partnerValue, locale)
+        : null,
       isMatch:
         userValue && partnerValue
-          ? answersMatch(question, userValue, partnerValue)
+          ? answersMatch(baseQuestion, userValue, partnerValue)
           : null,
     };
   });
 
   return {
-    categoryId: category.id,
-    emoji: category.emoji,
-    title: category.title,
+    categoryId: localized.id,
+    emoji: localized.emoji,
+    title: localized.title,
     similarity,
     userCompleted: Boolean(userProg?.completedAt),
     partnerCompleted: Boolean(partnerProg?.completedAt),
@@ -468,7 +530,7 @@ export interface HistoryEntry {
   }[];
 }
 
-export const getHistory = (state: any, userId: string): HistoryEntry[] => {
+export const getHistory = (state: any, userId: string, locale: AppLocale = 'ru'): HistoryEntry[] => {
   const partnerId = idsEqual(state.userId, userId)
     ? normalizeIdStr(state.partnerId)
     : normalizeIdStr(state.userId);
@@ -500,7 +562,7 @@ export const getHistory = (state: any, userId: string): HistoryEntry[] => {
         return {
           id: catId,
           emoji: cat?.emoji ?? '❓',
-          title: cat?.title ?? catId,
+          title: cat ? getLocalizedCategoryTitle(cat.id, cat.title, locale) : catId,
           similarity,
           userCompleted: Boolean(userProg?.completedAt),
           partnerCompleted: Boolean(partnerProg?.completedAt),

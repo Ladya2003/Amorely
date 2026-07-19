@@ -70,6 +70,42 @@ export const getQuestionProgressSx = (theme: Theme) => ({
   mb: 2,
 });
 
+export const getChoiceButtonSx = (theme: Theme, selected: boolean) => ({
+  textTransform: 'none' as const,
+  justifyContent: 'flex-start' as const,
+  py: 1.25,
+  px: 2,
+  fontWeight: selected ? 600 : 500,
+  ...(selected
+    ? {}
+    : {
+        color: theme.palette.text.primary,
+        borderColor: alpha(
+          theme.palette.primary.main,
+          theme.palette.mode === 'light' ? 0.4 : 0.55
+        ),
+        bgcolor: alpha(
+          theme.palette.primary.main,
+          theme.palette.mode === 'light' ? 0.08 : 0.18
+        ),
+        '&:hover': {
+          bgcolor: alpha(
+            theme.palette.primary.main,
+            theme.palette.mode === 'light' ? 0.14 : 0.26
+          ),
+          borderColor: theme.palette.primary.main,
+        },
+      }),
+});
+
+export const getImageChoiceLabelSx = (theme: Theme) => ({
+  color: theme.palette.text.primary,
+  bgcolor: alpha(
+    theme.palette.background.paper,
+    theme.palette.mode === 'light' ? 0.92 : 0.72
+  ),
+});
+
 export const getImageChoiceSx = (theme: Theme, selected: boolean) => ({
   flex: 1,
   borderRadius: `${Math.round(SURFACE_BORDER_RADIUS * 0.6)}px`,
@@ -77,7 +113,7 @@ export const getImageChoiceSx = (theme: Theme, selected: boolean) => ({
   cursor: 'pointer',
   border: selected
     ? `2px solid ${theme.palette.primary.main}`
-    : `2px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+    : `2px solid ${alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.15 : 0.35)}`,
   transition: 'border-color 200ms ease, transform 200ms ease',
   '&:hover': {
     transform: 'scale(1.02)',

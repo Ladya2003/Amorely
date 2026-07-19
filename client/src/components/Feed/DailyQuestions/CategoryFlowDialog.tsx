@@ -18,13 +18,19 @@ import {
   fetchCategoryDetail,
   submitDailyAnswer,
 } from '../../../services/dailyQuestionsService';
-import { getImageChoiceSx, getQuestionProgressSx } from './dailyQuestionsStyles';
+import {
+  getChoiceButtonSx,
+  getImageChoiceLabelSx,
+  getImageChoiceSx,
+  getQuestionProgressSx,
+} from './dailyQuestionsStyles';
 
 interface CategoryFlowDialogProps {
   open: boolean;
   categoryId: string | null;
   onClose: () => void;
   onComplete: () => void;
+  onShowResults: (categoryId: string) => void;
 }
 
 const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
@@ -32,6 +38,7 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
   categoryId,
   onClose,
   onComplete,
+  onShowResults,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -42,6 +49,15 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
   const [textValue, setTextValue] = useState('');
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
 
+  const redirectToResults = useCallback(
+    (id: string) => {
+      onClose();
+      onComplete();
+      onShowResults(id);
+    },
+    [onClose, onComplete, onShowResults]
+  );
+
   const loadCategory = useCallback(async () => {
     if (!categoryId) return;
     setLoading(true);
@@ -49,16 +65,30 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
       const data = await fetchCategoryDetail(categoryId);
       setDetail(data);
 
+      if (data.results?.userCompleted) {
+        redirectToResults(categoryId);
+        return;
+      }
+
       const firstUnanswered = data.questions.findIndex(
-        (_q: unknown, idx: number) => !data.results?.items[idx]?.userAnswer
+        (question) =>
+          !data.results?.items.some(
+            (item) => item.questionId === question.id && item.userAnswer
+          )
       );
-      setStep(firstUnanswered >= 0 ? firstUnanswered : 0);
+
+      if (firstUnanswered === -1) {
+        redirectToResults(categoryId);
+        return;
+      }
+
+      setStep(firstUnanswered);
     } catch {
       setDetail(null);
     } finally {
       setLoading(false);
     }
-  }, [categoryId]);
+  }, [categoryId, redirectToResults]);
 
   useEffect(() => {
     if (open && categoryId) {
@@ -92,8 +122,7 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
       await submitDailyAnswer(categoryId, currentQuestion.id, value);
 
       if (step + 1 >= questions.length) {
-        onComplete();
-        onClose();
+        redirectToResults(categoryId);
       } else {
         setStep((s) => s + 1);
         setTextValue('');
@@ -129,7 +158,7 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
               key={opt.id}
               variant={selectedValue === opt.id ? 'contained' : 'outlined'}
               onClick={() => setSelectedValue(opt.id)}
-              sx={{ textTransform: 'none', justifyContent: 'flex-start', py: 1.25 }}
+              sx={getChoiceButtonSx(theme, selectedValue === opt.id)}
             >
               {opt.label}
             </Button>
@@ -150,7 +179,13 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
               tabIndex={0}
             >
               <img src={img.url} alt={img.label} loading="lazy" />
-              <Typography variant="caption" display="block" p={0.75} fontWeight={600}>
+              <Typography
+                variant="caption"
+                display="block"
+                p={0.75}
+                fontWeight={600}
+                sx={getImageChoiceLabelSx(theme)}
+              >
                 {img.label}
               </Typography>
             </Box>
@@ -177,7 +212,7 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
             <Typography variant="body2" color="text.secondary" mb={2}>
               {t('dailyQuestions.questionOf', { current: step + 1, total: questions.length })}
             </Typography>
-            <Typography variant="h6" fontWeight={600} mb={2.5}>
+            <Typography variant="h6" fontWeight={600} mb={2.5} color="text.primary">
               {currentQuestion.text}
             </Typography>
             {renderQuestionInput()}
