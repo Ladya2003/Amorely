@@ -1331,6 +1331,27 @@
       "clearPassphrase": "Clear"
     }
   },
+  "dailyQuestions": {
+    "title": "Questions of the day",
+    "results": "Results",
+    "progress": "{{current}} of {{total}}",
+    "waitingPartner": "Waiting for partner",
+    "similarityLabel": "Answer similarity",
+    "partnerNotFinished": "Your partner hasn't finished this category yet",
+    "notifyPartner": "Notify partner",
+    "notifySent": "Notification sent",
+    "yourAnswer": "Your answer",
+    "partnerAnswer": "Partner's answer",
+    "partnerNoAnswer": "Partner hasn't answered yet",
+    "questionOf": "Question {{current}} of {{total}}",
+    "textPlaceholder": "Write your answer...",
+    "next": "Next",
+    "finish": "Finish",
+    "historyTitle": "Question history",
+    "historyEmpty": "No completed rounds yet",
+    "nextRoundIn": "New categories in",
+    "timerDone": "New categories soon"
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel"

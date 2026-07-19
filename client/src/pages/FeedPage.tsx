@@ -13,6 +13,7 @@ import InstallAppBanner from '../components/Feed/InstallAppBanner';
 import ContentSlider, { ContentItem } from '../components/Feed/ContentSlider';
 import DaysTogether from '../components/Feed/DaysTogether';
 import PetSection from '../components/Pets/PetSection';
+import DailyQuestionsSection from '../components/Feed/DailyQuestions/DailyQuestionsSection';
 import ContentManagementDialog from '../components/Feed/ContentManagement';
 import ContentViewer from '../components/Feed/ContentViewer';
 import { useCrypto } from '../contexts/CryptoContext';
@@ -472,6 +473,8 @@ const FeedPage: React.FC = () => {
         </Tooltip>
       </Box>
       
+      <DailyQuestionsSection />
+
       <PetSection />
 
       <Box sx={{ pb: { xs: 10, sm: 0 } }}>

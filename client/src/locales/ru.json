@@ -1335,6 +1335,27 @@
       "clearPassphrase": "Очистить"
     }
   },
+  "dailyQuestions": {
+    "title": "Вопросы дня",
+    "results": "Результат",
+    "progress": "{{current}} из {{total}}",
+    "waitingPartner": "Ждём партнёра",
+    "similarityLabel": "Схожесть ваших ответов",
+    "partnerNotFinished": "Партнёр ещё не прошёл эту категорию",
+    "notifyPartner": "Уведомить партнёра",
+    "notifySent": "Уведомление отправлено",
+    "yourAnswer": "Ваш ответ",
+    "partnerAnswer": "Ответ партнёра",
+    "partnerNoAnswer": "Партнёр ещё не ответил",
+    "questionOf": "Вопрос {{current}} из {{total}}",
+    "textPlaceholder": "Напишите свой ответ...",
+    "next": "Далее",
+    "finish": "Завершить",
+    "historyTitle": "История вопросов",
+    "historyEmpty": "Пока нет завершённых раундов",
+    "nextRoundIn": "Новые категории через",
+    "timerDone": "Скоро новые категории"
+  },
   "common": {
     "back": "Назад",
     "cancel": "Отмена"
