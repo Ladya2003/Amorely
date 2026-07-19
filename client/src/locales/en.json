@@ -1396,6 +1396,11 @@
     "feedConfirm": "Feed",
     "feedFailed": "Could not feed this pet",
     "feedInsufficientBalance": "Not enough AmoreCoins (need {{cost}})",
+    "mood": {
+      "angry": "Hungry pet",
+      "neutral": "Calm pet",
+      "happy": "Happy pet"
+    },
     "petSuccess": "Your pet loved it! +{{amount}} AmoreCoins",
     "petLimitReached": "This pet has already been petted twice today",
     "petFailed": "Could not pet this pet",

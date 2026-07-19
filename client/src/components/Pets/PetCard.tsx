@@ -1,12 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardActionArea, CardContent, Typography, Box } from '@mui/material';
+import { Card, CardActionArea, CardContent, Typography, Box, CircularProgress } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import { alpha } from '@mui/material/styles';
 import type { Pet } from '../../services/petsService';
 import { getPublicAssetPath } from '../../utils/publicAssetPath';
 import { getSubLevelMax } from '../../config/petCatalogShared';
+import { getPetMood, getPetMoodEmoji } from '../../utils/petMood';
 import { SURFACE_BORDER_RADIUS } from '../Feed/feedBannerStyles';
 import PetLevelProgress from './PetLevelProgress';
 
@@ -14,14 +15,17 @@ interface PetCardProps {
   pet: Pet;
   compact?: boolean;
   onSelect?: (pet: Pet) => void;
+  moodLoading?: boolean;
 }
 
-const PetCard: React.FC<PetCardProps> = ({ pet, compact = false, onSelect }) => {
+const PetCard: React.FC<PetCardProps> = ({ pet, compact = false, onSelect, moodLoading = false }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const subLevel = pet.subLevel ?? 0;
   const subLevelMax = pet.subLevelMax ?? getSubLevelMax(pet.level);
   const cardRadius = compact ? 20 : SURFACE_BORDER_RADIUS;
+  const moodEmoji = getPetMoodEmoji(getPetMood(pet));
+  const showMoodBadge = moodLoading || moodEmoji !== null;
 
   const handleClick = () => {
     if (onSelect) {
@@ -80,6 +84,35 @@ const PetCard: React.FC<PetCardProps> = ({ pet, compact = false, onSelect }) => 
               display: 'block',
             }}
           />
+          {showMoodBadge && (
+            <Box
+              aria-hidden={moodLoading}
+              aria-label={moodLoading ? undefined : t(`pets.mood.${getPetMood(pet)}`)}
+              sx={(theme) => ({
+                position: 'absolute',
+                bottom: 8,
+                right: 8,
+                zIndex: 1,
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: alpha(theme.palette.background.paper, 0.92),
+                boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.22)}`,
+                border: `1px solid ${alpha(theme.palette.divider, 0.35)}`,
+              })}
+            >
+              {moodLoading ? (
+                <CircularProgress size={14} thickness={5} />
+              ) : (
+                <Box component="span" sx={{ fontSize: 16, lineHeight: 1 }}>
+                  {moodEmoji}
+                </Box>
+              )}
+            </Box>
+          )}
           {pet.giftedByUsername && (
             <Box
               aria-label={t('pets.giftedByLabel')}

@@ -223,6 +223,7 @@ const PetSection: React.FC<PetSectionProps> = ({
   const [partnerPets, setPartnerPets] = useState<Pet[]>([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [moodLoading, setMoodLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
 
@@ -232,6 +233,8 @@ const PetSection: React.FC<PetSectionProps> = ({
       if (!silent) {
         setLoading(true);
       }
+      setMoodLoading(true);
+
       if (isReadonly && userId) {
         const userData = await fetchUserPets(userId);
         setPets(userData.pets);
@@ -253,6 +256,7 @@ const PetSection: React.FC<PetSectionProps> = ({
       console.error('Failed to load pets:', error);
       setToast({ message: t('pets.loadFailed'), severity: 'error' });
     } finally {
+      setMoodLoading(false);
       if (!silent) {
         setLoading(false);
       }
@@ -313,7 +317,7 @@ const PetSection: React.FC<PetSectionProps> = ({
     <PetScrollRow>
       {items.map((pet, index) => (
         <Box key={pet.id} sx={{ ...petScrollItemSx, ...petCardEnterAnimation(index) }}>
-          <PetCard pet={pet} onSelect={onSelect} />
+          <PetCard pet={pet} onSelect={onSelect} moodLoading={moodLoading} />
         </Box>
       ))}
     </PetScrollRow>
@@ -344,7 +348,7 @@ const PetSection: React.FC<PetSectionProps> = ({
           <PetScrollRow>
             {pets.map((pet, index) => (
               <Box key={pet.id} sx={{ ...petScrollItemSx, ...petCardEnterAnimation(index) }}>
-                <PetCard pet={pet} />
+                <PetCard pet={pet} moodLoading={moodLoading} />
               </Box>
             ))}
             <AddPetCard
@@ -428,7 +432,7 @@ const PetSection: React.FC<PetSectionProps> = ({
           </ToggleButtonGroup>
         )}
 
-        {loading ? (
+        {loading && pets.length === 0 && partnerPets.length === 0 ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 220, py: 3 }}>
             <CircularProgress size={32} />
           </Box>
