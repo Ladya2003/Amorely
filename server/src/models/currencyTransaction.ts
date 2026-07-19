@@ -28,6 +28,7 @@ export const CURRENCY_REASONS = [
   'settings_notifications',
   'settings_push',
   'news_read',
+  'announcement_read',
   'pet_purchase',
   'pet_level_up',
   'pet_petting',

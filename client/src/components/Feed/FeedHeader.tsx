@@ -25,7 +25,7 @@ import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getFeedHeaderGlowSx } from './feedBannerStyles';
-import { fetchAnnouncements, type AppAnnouncement } from '../../services/announcementsService';
+import { fetchAnnouncements, type AppAnnouncement, claimAnnouncementReadReward } from '../../services/announcementsService';
 import {
   addReadAnnouncementKey,
   readReadAnnouncementKeys,
@@ -100,6 +100,9 @@ const FeedHeader: React.FC = () => {
       setSelectedAnnouncement(announcement);
       setNotificationsView('detail');
       markAnnouncementRead(announcement.key);
+      void claimAnnouncementReadReward(announcement.key).catch(() => {
+        // Reward is best-effort; ignore network errors.
+      });
     },
     [markAnnouncementRead]
   );

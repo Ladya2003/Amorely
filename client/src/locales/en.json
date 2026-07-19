@@ -1545,6 +1545,10 @@
         "news_read": {
           "action": "Read a news article",
           "period": "Once per article"
+        },
+        "announcement_read": {
+          "action": "Read a notification",
+          "period": "Once per notification"
         }
       }
     },

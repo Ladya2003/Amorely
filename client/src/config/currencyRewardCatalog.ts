@@ -58,4 +58,5 @@ export const CURRENCY_EARN_RULES: CurrencyEarnRule[] = [
   { id: 'settings_notifications', section: 'settings', amount: 5 },
   { id: 'settings_push', section: 'settings', amount: 50 },
   { id: 'news_read', section: 'news', amount: 5 },
+  { id: 'announcement_read', section: 'news', amount: 3 },
 ];

@@ -17,3 +17,8 @@ export const fetchAnnouncements = async (): Promise<AppAnnouncement[]> => {
   });
   return data.announcements as AppAnnouncement[];
 };
+
+export const claimAnnouncementReadReward = async (announcementKey: string) => {
+  const { data } = await axios.post(`${API_URL}/api/announcements/${encodeURIComponent(announcementKey)}/read`);
+  return data as { awarded: boolean; awardedAmount: number; balance: number };
+};

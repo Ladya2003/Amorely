@@ -126,3 +126,6 @@ export const awardFeedNewSlot = (userId: string, contentId: string) =>
 
 export const awardNewsRead = (userId: string, newsId: string) =>
   awardCurrency(userId, 5, 'news_read', `news_read:${userId}:${newsId}`);
+
+export const awardAnnouncementRead = (userId: string, announcementKey: string) =>
+  awardCurrency(userId, 3, 'announcement_read', `announcement_read:${userId}:${announcementKey}`);
