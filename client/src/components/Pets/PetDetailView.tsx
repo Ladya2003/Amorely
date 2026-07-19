@@ -12,16 +12,18 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import PanToolAltOutlinedIcon from '@mui/icons-material/PanToolAltOutlined';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import { alpha } from '@mui/material/styles';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import CurrencyBadge from './CurrencyBadge';
 import PetGiftDialog from './PetGiftDialog';
+import PetFeedDialog from './PetFeedDialog';
 import PetLevelProgress from './PetLevelProgress';
 import PetHatchOverlay from './PetHatchOverlay';
 import PetOwnerBlock from './PetOwnerBlock';
 import { unlockPetRevealAudio, playPetHeartsSound } from '../../utils/petRevealSound';
-import { fetchPet, fetchUserPet, levelUpPet, giftPet, petPet } from '../../services/petsService';
+import { fetchPet, fetchUserPet, levelUpPet, giftPet, petPet, feedPet } from '../../services/petsService';
 import type { Pet } from '../../services/petsService';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -75,6 +77,25 @@ const HEART_POSITIONS = [
   { left: '59%', delay: '980ms', duration: '1020ms', size: 26 },
 ] as const;
 const AFFECTION_FLOAT_MS = 1800;
+const SATIETY_FLOAT_MS = 2200;
+const FEED_ANIMATION_MS = 2400;
+const SATIETY_HUNGRY_THRESHOLD = 20;
+
+const ANGRY_FACE_POSITIONS = [
+  { left: '20%', top: '16%', size: 28 },
+  { left: '74%', top: '22%', size: 26 },
+  { left: '46%', top: '40%', size: 30 },
+  { left: '28%', top: '56%', size: 24 },
+  { left: '66%', top: '50%', size: 26 },
+] as const;
+
+const FEED_PARTICLE_POSITIONS = [
+  { left: '38%', top: '58%', emoji: '🍖', delay: '0ms' },
+  { left: '50%', top: '52%', emoji: '🥣', delay: '120ms' },
+  { left: '62%', top: '58%', emoji: '✨', delay: '240ms' },
+  { left: '44%', top: '48%', emoji: '🍗', delay: '180ms' },
+  { left: '56%', top: '48%', emoji: '💫', delay: '300ms' },
+] as const;
 
 const PET_HEART_RISE_KEYFRAMES = {
   '0%': { transform: 'translate(-50%, 0) scale(0.65)', opacity: 0 },
@@ -123,23 +144,31 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   const [pet, setPet] = useState<Pet | null>(null);
   const [balance, setBalance] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
+  const [canFeed, setCanFeed] = useState(false);
   const [canLevelUp, setCanLevelUp] = useState(false);
   const [levelUpCost, setLevelUpCost] = useState<number | null>(null);
   const [isMainLevelUpgrade, setIsMainLevelUpgrade] = useState(false);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  const [feedOpen, setFeedOpen] = useState(false);
+  const [isFeeding, setIsFeeding] = useState(false);
+  const [feedingPending, setFeedingPending] = useState(false);
   const [levelUpReveal, setLevelUpReveal] = useState<{ fromLevel: number; toLevel: number } | null>(
     null
   );
   const [isPetting, setIsPetting] = useState(false);
   const [pettingPending, setPettingPending] = useState(false);
   const [affectionFloat, setAffectionFloat] = useState<{ id: number; amount: number } | null>(null);
+  const [satietyFloat, setSatietyFloat] = useState<{ id: number; amount: number } | null>(null);
   const [ambientHearts, setAmbientHearts] = useState<AmbientAffectionHeart[]>([]);
   const [toast, setToast] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
   const pettingTimeoutRef = useRef<number | null>(null);
   const affectionFloatTimeoutRef = useRef<number | null>(null);
+  const satietyFloatTimeoutRef = useRef<number | null>(null);
+  const feedAnimationTimeoutRef = useRef<number | null>(null);
   const affectionFloatIdRef = useRef(0);
+  const satietyFloatIdRef = useRef(0);
   const ambientHeartIdRef = useRef(0);
   const ambientHeartTimeoutsRef = useRef<number[]>([]);
 
@@ -154,6 +183,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
       setPet(data.pet);
       setBalance(data.balance);
       setIsOwner(data.isOwner);
+      setCanFeed(data.canFeed ?? false);
       setCanLevelUp(data.canLevelUp);
       setLevelUpCost(data.levelUpCost);
       setIsMainLevelUpgrade(data.isMainLevelUpgrade);
@@ -176,6 +206,12 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
       if (affectionFloatTimeoutRef.current !== null) {
         window.clearTimeout(affectionFloatTimeoutRef.current);
       }
+      if (satietyFloatTimeoutRef.current !== null) {
+        window.clearTimeout(satietyFloatTimeoutRef.current);
+      }
+      if (feedAnimationTimeoutRef.current !== null) {
+        window.clearTimeout(feedAnimationTimeoutRef.current);
+      }
       ambientHeartTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
       ambientHeartTimeoutsRef.current = [];
     },
@@ -183,9 +219,11 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   );
 
   const affectionDelta = pet?.affectionDelta ?? 0;
+  const satiety = pet?.stats.satiety ?? 60;
+  const isHungry = satiety < SATIETY_HUNGRY_THRESHOLD;
 
   useEffect(() => {
-    if (isPetting || affectionDelta <= 0) {
+    if (isPetting || isFeeding || affectionDelta <= 0 || isHungry) {
       setAmbientHearts([]);
       return;
     }
@@ -244,7 +282,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
       ambientHeartTimeoutsRef.current = [];
       setAmbientHearts([]);
     };
-  }, [affectionDelta, isPetting]);
+  }, [affectionDelta, isFeeding, isHungry, isPetting]);
 
   const spawnAffectionFloat = useCallback((amount: number) => {
     if (amount <= 0) {
@@ -260,6 +298,22 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
       setAffectionFloat((prev) => (prev?.id === nextId ? null : prev));
       affectionFloatTimeoutRef.current = null;
     }, AFFECTION_FLOAT_MS);
+  }, []);
+
+  const spawnSatietyFloat = useCallback((amount: number) => {
+    if (amount <= 0) {
+      return;
+    }
+    const nextId = satietyFloatIdRef.current + 1;
+    satietyFloatIdRef.current = nextId;
+    setSatietyFloat({ id: nextId, amount });
+    if (satietyFloatTimeoutRef.current !== null) {
+      window.clearTimeout(satietyFloatTimeoutRef.current);
+    }
+    satietyFloatTimeoutRef.current = window.setTimeout(() => {
+      setSatietyFloat((prev) => (prev?.id === nextId ? null : prev));
+      satietyFloatTimeoutRef.current = null;
+    }, SATIETY_FLOAT_MS);
   }, []);
 
   const handleLevelUp = async () => {
@@ -295,6 +349,38 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
     await giftPet(petId, recipientUserId);
     setToast({ message: t('pets.giftSuccess'), severity: 'success' });
     onGifted?.();
+  };
+
+  const handleFeed = async () => {
+    if (!petId || feedingPending) {
+      return;
+    }
+
+    setFeedingPending(true);
+    setIsFeeding(true);
+    try {
+      const result = await feedPet(petId);
+      setPet(result.pet);
+      setBalance(result.balance);
+      emitCurrencyUpdated(result.balance);
+      spawnSatietyFloat(result.satietyGain);
+      if (feedAnimationTimeoutRef.current !== null) {
+        window.clearTimeout(feedAnimationTimeoutRef.current);
+      }
+      feedAnimationTimeoutRef.current = window.setTimeout(() => {
+        setIsFeeding(false);
+        feedAnimationTimeoutRef.current = null;
+      }, FEED_ANIMATION_MS);
+    } catch (error: any) {
+      setIsFeeding(false);
+      setToast({
+        message: error?.response?.data?.error || t('pets.feedFailed'),
+        severity: 'error',
+      });
+      throw error;
+    } finally {
+      setFeedingPending(false);
+    }
   };
 
   const handlePetting = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -372,6 +458,15 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   const affectionDeltaText = affectionDelta > 0 ? `+${affectionDelta}` : `${affectionDelta}`;
   const affectionDeltaColor =
     affectionDelta > 0 ? 'success.main' : affectionDelta < 0 ? 'error.main' : 'text.secondary';
+  const satietyColor =
+    satiety < SATIETY_HUNGRY_THRESHOLD
+      ? 'error.main'
+      : satiety < 40
+        ? 'warning.main'
+        : 'success.main';
+  const angryFaceCount = isHungry
+    ? Math.min(ANGRY_FACE_POSITIONS.length, Math.max(2, 6 - Math.floor(satiety / 4)))
+    : 0;
   const imageMinHeight = embedded ? '36vh' : '50vh';
 
   return (
@@ -427,6 +522,17 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             boxShadow: `0 10px 32px ${alpha(theme.palette.primary.main, 0.14)}`,
             background: getPetHeroBackground(theme),
             '@keyframes petHeartRiseDetail': PET_HEART_RISE_KEYFRAMES,
+            '@keyframes petFeedParticleRise': {
+              '0%': { transform: 'translate(-50%, 12px) scale(0.6)', opacity: 0 },
+              '20%': { opacity: 1 },
+              '100%': { transform: 'translate(-50%, -72px) scale(1.2)', opacity: 0 },
+            },
+            '@keyframes petFeedGlowPulse': {
+              '0%': { opacity: 0, transform: 'scale(0.85)' },
+              '18%': { opacity: 1, transform: 'scale(1)' },
+              '72%': { opacity: 1, transform: 'scale(1.02)' },
+              '100%': { opacity: 0, transform: 'scale(1.08)' },
+            },
           })}
         >
           <Box
@@ -443,33 +549,66 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
               display: 'block',
             }}
           />
-          <IconButton
-            aria-label={t('pets.petAction')}
-            onClick={handlePetting}
-            disabled={pettingPending}
-            sx={(theme) => ({
+          <Box
+            sx={{
               position: 'absolute',
               top: 14,
               left: 14,
               zIndex: 2,
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              bgcolor: alpha(theme.palette.primary.dark, 0.88),
-              color: theme.palette.primary.contrastText,
-              border: `1px solid ${alpha(theme.palette.primary.contrastText, 0.22)}`,
-              boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.35)}`,
-              '&:hover': {
-                bgcolor: theme.palette.primary.dark,
-              },
-              '&.Mui-disabled': {
-                bgcolor: alpha(theme.palette.primary.dark, 0.55),
-                color: alpha(theme.palette.primary.contrastText, 0.78),
-              },
-            })}
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+            }}
           >
-            <PanToolAltOutlinedIcon sx={{ fontSize: 24 }} />
-          </IconButton>
+            <IconButton
+              aria-label={t('pets.petAction')}
+              onClick={handlePetting}
+              disabled={pettingPending}
+              sx={(theme) => ({
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                bgcolor: alpha(theme.palette.primary.dark, 0.88),
+                color: theme.palette.primary.contrastText,
+                border: `1px solid ${alpha(theme.palette.primary.contrastText, 0.22)}`,
+                boxShadow: `0 4px 16px ${alpha(theme.palette.primary.main, 0.35)}`,
+                '&:hover': {
+                  bgcolor: theme.palette.primary.dark,
+                },
+                '&.Mui-disabled': {
+                  bgcolor: alpha(theme.palette.primary.dark, 0.55),
+                  color: alpha(theme.palette.primary.contrastText, 0.78),
+                },
+              })}
+            >
+              <PanToolAltOutlinedIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+            {canFeed && (
+              <IconButton
+                aria-label={t('pets.feedAction')}
+                onClick={() => setFeedOpen(true)}
+                disabled={feedingPending || isFeeding}
+                sx={(theme) => ({
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  bgcolor: alpha(theme.palette.warning.dark, 0.9),
+                  color: theme.palette.warning.contrastText,
+                  border: `1px solid ${alpha(theme.palette.warning.contrastText, 0.22)}`,
+                  boxShadow: `0 4px 16px ${alpha(theme.palette.warning.main, 0.35)}`,
+                  '&:hover': {
+                    bgcolor: theme.palette.warning.dark,
+                  },
+                  '&.Mui-disabled': {
+                    bgcolor: alpha(theme.palette.warning.dark, 0.55),
+                    color: alpha(theme.palette.warning.contrastText, 0.78),
+                  },
+                })}
+              >
+                <RestaurantMenuIcon sx={{ fontSize: 24 }} />
+              </IconButton>
+            )}
+          </Box>
           {isPetting && (
             <Box
               sx={{
@@ -504,7 +643,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
               ))}
             </Box>
           )}
-          {!isPetting && affectionDelta > 0 && ambientHearts.length > 0 && (
+          {!isPetting && !isFeeding && affectionDelta > 0 && !isHungry && ambientHearts.length > 0 && (
             <Box
               sx={{
                 pointerEvents: 'none',
@@ -534,6 +673,135 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
                   ❤
                 </Box>
               ))}
+            </Box>
+          )}
+          {!isPetting && !isFeeding && isHungry && (
+            <Box
+              sx={{
+                pointerEvents: 'none',
+                position: 'absolute',
+                inset: 0,
+                zIndex: 1,
+              }}
+            >
+              {ANGRY_FACE_POSITIONS.slice(0, angryFaceCount).map((face) => (
+                <Box
+                  key={`${face.left}-${face.top}`}
+                  component="span"
+                  sx={{
+                    position: 'absolute',
+                    left: face.left,
+                    top: face.top,
+                    fontSize: face.size,
+                    lineHeight: 1,
+                    transform: 'translate(-50%, -50%)',
+                    filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.35))',
+                  }}
+                >
+                  😾
+                </Box>
+              ))}
+            </Box>
+          )}
+          {isFeeding && (
+            <Box
+              sx={{
+                pointerEvents: 'none',
+                position: 'absolute',
+                inset: 0,
+                zIndex: 3,
+              }}
+            >
+              <Box
+                sx={(theme) => ({
+                  position: 'absolute',
+                  inset: 0,
+                  background: `radial-gradient(circle at 50% 62%, ${alpha(theme.palette.warning.main, 0.28)} 0%, transparent 58%)`,
+                  animation: `petFeedGlowPulse ${FEED_ANIMATION_MS}ms ease-in-out forwards`,
+                })}
+              />
+              {FEED_PARTICLE_POSITIONS.map((particle) => (
+                <Box
+                  key={`${particle.emoji}-${particle.left}`}
+                  component="span"
+                  sx={{
+                    position: 'absolute',
+                    left: particle.left,
+                    top: particle.top,
+                    fontSize: 28,
+                    lineHeight: 1,
+                    animationName: 'petFeedParticleRise',
+                    animationDuration: '1100ms',
+                    animationTimingFunction: 'ease-out',
+                    animationDelay: particle.delay,
+                    animationIterationCount: 2,
+                  }}
+                >
+                  {particle.emoji}
+                </Box>
+              ))}
+            </Box>
+          )}
+          {satietyFloat && (
+            <Box
+              sx={(theme) => ({
+                pointerEvents: 'none',
+                position: 'absolute',
+                top: '30%',
+                left: '50%',
+                zIndex: 4,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.75,
+                px: 1.75,
+                py: 0.9,
+                borderRadius: `${INPUT_BORDER_RADIUS}px`,
+                bgcolor: alpha(theme.palette.warning.dark, 0.88),
+                boxShadow: `0 10px 28px ${alpha(theme.palette.common.black, 0.3)}`,
+                border: `1px solid ${alpha(theme.palette.warning.light, 0.35)}`,
+                '@keyframes satietyFloatUp': {
+                  '0%': {
+                    opacity: 0,
+                    transform: 'translate(-50%, 12px) scale(0.88)',
+                  },
+                  '16%': {
+                    opacity: 1,
+                    transform: 'translate(-50%, 0) scale(1)',
+                  },
+                  '78%': {
+                    opacity: 1,
+                    transform: 'translate(-50%, -34px) scale(1.04)',
+                  },
+                  '100%': {
+                    opacity: 0,
+                    transform: 'translate(-50%, -48px) scale(1.08)',
+                  },
+                },
+                animation: `satietyFloatUp ${SATIETY_FLOAT_MS}ms ease-in-out forwards`,
+              })}
+            >
+              <Typography
+                component="span"
+                sx={{
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: '1.05rem',
+                  lineHeight: 1,
+                  textShadow: '0 2px 10px rgba(0,0,0,0.55)',
+                }}
+              >
+                +{satietyFloat.amount}
+              </Typography>
+              <Typography component="span" sx={{ fontSize: '0.95rem', fontWeight: 700, color: '#fff' }}>
+                {t('pets.statSatiety')}
+              </Typography>
+              <RestaurantMenuIcon
+                sx={{
+                  fontSize: 18,
+                  color: '#ffd27d',
+                  filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.45))',
+                }}
+              />
             </Box>
           )}
           {affectionFloat && (
@@ -638,6 +906,15 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             {t('pets.stats')}
           </Typography>
           <StatBar
+            label={t('pets.statSatiety')}
+            value={satiety}
+            valueLabel={
+              <Box component="span" sx={{ color: satietyColor }}>
+                {satiety}/100
+              </Box>
+            }
+          />
+          <StatBar
             label={t('pets.statAffection')}
             value={pet.stats.affection}
             valueLabel={
@@ -701,6 +978,15 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
 
         {!visitOnly && (
           <PetGiftDialog open={giftOpen} onClose={() => setGiftOpen(false)} onGift={handleGift} />
+        )}
+
+        {canFeed && (
+          <PetFeedDialog
+            open={feedOpen}
+            onClose={() => setFeedOpen(false)}
+            onFeed={handleFeed}
+            balance={balance}
+          />
         )}
 
         <CustomSnackbar

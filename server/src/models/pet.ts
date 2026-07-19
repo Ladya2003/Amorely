@@ -9,6 +9,8 @@ const petSchema = new mongoose.Schema({
   level: { type: Number, default: 1, min: 1, max: 5 },
   subLevel: { type: Number, default: 0, min: 0 },
   affectionDelta: { type: Number, default: 0, min: -5, max: 5 },
+  satiety: { type: Number, default: 60, min: 0, max: 100 },
+  lastSatietyAt: { type: Date, default: null },
   lastPettedAt: { type: Date, default: null },
   affectionDecayAppliedDays: { type: Number, default: 0, min: 0 },
   pettingWindowDate: { type: String, default: null },

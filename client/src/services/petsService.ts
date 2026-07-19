@@ -6,6 +6,7 @@ export interface PetStats {
   affection: number;
   playfulness: number;
   charm: number;
+  satiety: number;
 }
 
 export interface Pet {
@@ -46,6 +47,7 @@ export interface PetDetailResponse {
   pet: Pet;
   isOwner: boolean;
   canLevelUp: boolean;
+  canFeed: boolean;
   levelUpCost: number | null;
   isMainLevelUpgrade: boolean;
   balance: number;
@@ -119,6 +121,13 @@ export const petPet = async (
   const { data } = await axios.post(`${API_URL}/api/pets/${petId}/pet`, {
     visitOnly: options?.visitOnly ?? false,
   });
+  return data;
+};
+
+export const feedPet = async (
+  petId: string
+): Promise<{ pet: Pet; balance: number; satietyGain: number }> => {
+  const { data } = await axios.post(`${API_URL}/api/pets/${petId}/feed`);
   return data;
 };
 

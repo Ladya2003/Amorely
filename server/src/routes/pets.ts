@@ -27,7 +27,13 @@ import { canAccessUserProfile } from '../utils/canAccessUserProfile';
 const router = express.Router();
 const PETTING_DAILY_LIMIT = 2;
 const PETTING_REWARD_AMOUNT = 3;
+const FEED_COST = 2;
+const FEED_SATIETY_MIN = 10;
+const FEED_SATIETY_MAX = 20;
+const SATIETY_DEFAULT = 60;
+const SATIETY_DECAY_PER_HOUR = 2;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const MS_PER_HOUR = 60 * 60 * 1000;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -45,6 +51,36 @@ const getUtcHalfDayKey = (value: Date) => {
 };
 
 const getPetAffectionDelta = (pet: any) => clamp(Number(pet.affectionDelta ?? 0), -5, 5);
+
+const getPetSatiety = (pet: any) => clamp(Number(pet.satiety ?? SATIETY_DEFAULT), 0, 100);
+
+const applyPendingSatietyDecay = (pet: any): boolean => {
+  const now = new Date();
+
+  if (pet.lastSatietyAt == null && pet.satiety == null) {
+    pet.satiety = SATIETY_DEFAULT;
+    pet.lastSatietyAt = now;
+    return true;
+  }
+
+  if (pet.lastSatietyAt == null) {
+    pet.satiety = getPetSatiety(pet);
+    pet.lastSatietyAt = now;
+    return true;
+  }
+
+  const lastChecked = new Date(pet.lastSatietyAt);
+  const hoursElapsed = Math.max(0, Math.floor((now.getTime() - lastChecked.getTime()) / MS_PER_HOUR));
+
+  if (hoursElapsed <= 0) {
+    return false;
+  }
+
+  const decay = hoursElapsed * SATIETY_DECAY_PER_HOUR;
+  pet.satiety = clamp(getPetSatiety(pet) - decay, 0, 100);
+  pet.lastSatietyAt = new Date(lastChecked.getTime() + hoursElapsed * MS_PER_HOUR);
+  return true;
+};
 
 const applyPendingAffectionDecay = (pet: any): boolean => {
   const now = new Date();
@@ -105,6 +141,7 @@ const formatPet = (
     stats: {
       ...baseStats,
       affection: affectionCurrent,
+      satiety: getPetSatiety(pet),
     },
     affectionBase,
     affectionDelta: affectionCurrent - affectionBase,
@@ -125,14 +162,20 @@ const formatPet = (
 const loadOwnerUser = (ownerId: string | mongoose.Types.ObjectId) =>
   User.findById(ownerId).select('username firstName lastName avatar').lean();
 
+const applyPendingPetStateDecay = async (pet: any) => {
+  const affectionChanged = applyPendingAffectionDecay(pet);
+  const satietyChanged = applyPendingSatietyDecay(pet);
+  if (affectionChanged || satietyChanged) {
+    await pet.save();
+  }
+};
+
 const buildPetDetailResponse = async (
   userId: string,
   pet: any,
   visitOnly: boolean
 ) => {
-  if (applyPendingAffectionDecay(pet)) {
-    await pet.save();
-  }
+  await applyPendingPetStateDecay(pet);
 
   let giftedByUser = null;
   if (pet.giftedByUserId) {
@@ -151,6 +194,7 @@ const buildPetDetailResponse = async (
     pet: formatPet(pet.toObject(), giftedByUser, ownerUser),
     isOwner,
     canLevelUp: !visitOnly && levelUpCost !== null && canManagePet,
+    canFeed: canManagePet,
     levelUpCost: visitOnly ? null : levelUpCost,
     isMainLevelUpgrade: isMainLevelUpgradeNext(pet.level, subLevel),
     balance: wallet.balance,
@@ -169,13 +213,7 @@ const canViewPet = async (viewerId: string, ownerId: string): Promise<boolean> =
 
 const loadPetsForOwner = async (ownerId: string) => {
   const pets = await Pet.find({ ownerId }).sort({ createdAt: 1 });
-  await Promise.all(
-    pets.map(async (pet) => {
-      if (applyPendingAffectionDecay(pet)) {
-        await pet.save();
-      }
-    })
-  );
+  await Promise.all(pets.map((pet) => applyPendingPetStateDecay(pet)));
 
   const giftedByIds = pets
     .map((p) => p.giftedByUserId?.toString())
@@ -199,13 +237,7 @@ router.get('/', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
     const pets = await Pet.find({ ownerId: userId }).sort({ createdAt: 1 });
-    await Promise.all(
-      pets.map(async (pet) => {
-        if (applyPendingAffectionDecay(pet)) {
-          await pet.save();
-        }
-      })
-    );
+    await Promise.all(pets.map((pet) => applyPendingPetStateDecay(pet)));
     const wallet = await getBalance(userId);
 
     const giftedByIds = pets
@@ -370,6 +402,8 @@ router.post('/', async (req: ExtendedRequest, res: Response) => {
       variant,
       name: name.trim(),
       stats: getPetStats(species, variant, 1),
+      satiety: SATIETY_DEFAULT,
+      lastSatietyAt: new Date(),
     });
 
     const ownerUser = await loadOwnerUser(userId);
@@ -515,6 +549,55 @@ router.post('/:id/pet', async (req: ExtendedRequest, res: Response) => {
   } catch (error) {
     console.error('POST /api/pets/:id/pet error:', error);
     res.status(500).json({ error: 'Failed to pet this pet' });
+  }
+});
+
+router.post('/:id/feed', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const pet = await Pet.findById(req.params.id);
+    if (!pet) {
+      return res.status(404).json({ error: 'Pet not found' });
+    }
+
+    const ownerId = pet.ownerId.toString();
+    const canFeed = ownerId === userId || (await canUpgradePartnerPet(userId, ownerId));
+    if (!canFeed) {
+      return res.status(403).json({ error: 'Cannot feed this pet' });
+    }
+
+    await applyPendingPetStateDecay(pet);
+
+    const spend = await spendCurrency(
+      userId,
+      FEED_COST,
+      'pet_feed',
+      `pet_feed:${pet._id.toString()}:${Date.now()}`
+    );
+    if (!spend.success) {
+      return res.status(402).json({ error: 'Insufficient balance', balance: spend.balance, required: FEED_COST });
+    }
+
+    const satietyGain =
+      FEED_SATIETY_MIN +
+      Math.floor(Math.random() * (FEED_SATIETY_MAX - FEED_SATIETY_MIN + 1));
+    pet.satiety = clamp(getPetSatiety(pet) + satietyGain, 0, 100);
+    await pet.save();
+
+    const ownerUser = await loadOwnerUser(pet.ownerId);
+    let giftedByUser = null;
+    if (pet.giftedByUserId) {
+      giftedByUser = await User.findById(pet.giftedByUserId).select('username firstName lastName avatar').lean();
+    }
+
+    res.json({
+      pet: formatPet(pet.toObject(), giftedByUser, ownerUser),
+      balance: spend.balance,
+      satietyGain,
+    });
+  } catch (error) {
+    console.error('POST /api/pets/:id/feed error:', error);
+    res.status(500).json({ error: 'Failed to feed this pet' });
   }
 });
 
