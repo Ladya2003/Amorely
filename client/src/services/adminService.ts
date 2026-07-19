@@ -285,3 +285,72 @@ export const deleteAdminNews = async (id: string) => {
   const response = await axios.delete(`${API_URL}/api/news/${id}`);
   return response.data;
 };
+
+export interface AdminAnnouncementItem {
+  _id: string;
+  key: string;
+  translations: Record<AppLocale, {
+    title: string;
+    preview: string;
+    content: string;
+  }>;
+  pushTitle: string;
+  pushBody: string;
+  isActive: boolean;
+  publishedAt: string;
+  pushSentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const fetchAdminAnnouncements = async () => {
+  const response = await axios.get<{ announcements: AdminAnnouncementItem[] }>(
+    `${API_URL}/api/admin/announcements`
+  );
+  return response.data;
+};
+
+export const createAdminAnnouncement = async (payload: {
+  key?: string;
+  translations: AdminAnnouncementItem['translations'];
+  pushTitle: string;
+  pushBody: string;
+  isActive: boolean;
+  sendPush: boolean;
+}) => {
+  const response = await axios.post(`${API_URL}/api/admin/announcements`, payload);
+  return response.data as {
+    announcement: AdminAnnouncementItem;
+    pushResult?: { sent: number } | null;
+  };
+};
+
+export const updateAdminAnnouncement = async (
+  id: string,
+  payload: {
+    translations: AdminAnnouncementItem['translations'];
+    pushTitle: string;
+    pushBody: string;
+    isActive: boolean;
+    sendPush: boolean;
+  }
+) => {
+  const response = await axios.put(`${API_URL}/api/admin/announcements/${id}`, payload);
+  return response.data as {
+    announcement: AdminAnnouncementItem;
+    pushResult?: { sent: number } | null;
+  };
+};
+
+export const sendAdminAnnouncementPush = async (id: string) => {
+  const response = await axios.post(`${API_URL}/api/admin/announcements/${id}/push`);
+  return response.data as {
+    pushResult: { sent: number };
+    announcement: AdminAnnouncementItem;
+  };
+};
+
+export const deleteAdminAnnouncement = async (id: string) => {
+  const response = await axios.delete(`${API_URL}/api/admin/announcements/${id}`);
+  return response.data;
+};

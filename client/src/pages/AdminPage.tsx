@@ -16,16 +16,18 @@ import { useAdminAlerts } from '../contexts/AdminAlertsContext';
 import AdminDashboard from '../components/Admin/AdminDashboard';
 import AdminUsers from '../components/Admin/AdminUsers';
 import AdminNews from '../components/Admin/AdminNews';
+import AdminAnnouncements from '../components/Admin/AdminAnnouncements';
 import AdminHealth from '../components/Admin/AdminHealth';
 import AdminModeration from '../components/Admin/AdminModeration';
 
 const USERS_TAB_INDEX = 1;
-const MODERATION_TAB_INDEX = 4;
+const MODERATION_TAB_INDEX = 5;
 
 const ADMIN_TABS = [
   { key: 'dashboard', label: 'Дашборд' },
   { key: 'users', label: 'Пользователи' },
   { key: 'news', label: 'Новости' },
+  { key: 'announcements', label: 'Уведомления' },
   { key: 'health', label: 'Система' },
   { key: 'moderation', label: 'Модерация' },
 ] as const;
@@ -90,6 +92,8 @@ const AdminPage: React.FC = () => {
         return <AdminUsers />;
       case 'news':
         return <AdminNews />;
+      case 'announcements':
+        return <AdminAnnouncements />;
       case 'health':
         return <AdminHealth />;
       case 'moderation':

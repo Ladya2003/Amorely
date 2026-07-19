@@ -22,6 +22,13 @@ import { sendPushToUser } from '../services/pushService';
 import { buildBlockReasons } from '../utils/userBlock';
 import { getEffectiveIsNewForAdmin } from '../utils/adminUserFlags';
 import { AppLocale, SUPPORTED_LOCALES } from '../i18n/locales';
+import AppAnnouncement from '../models/appAnnouncement';
+import {
+  formatAnnouncementForAdmin,
+  normalizeAnnouncementTranslations,
+  parseAnnouncementTranslationsInput,
+} from '../i18n/announcementContent';
+import { notifyAppAnnouncement } from '../services/pushService';
 
 const router = express.Router();
 
@@ -1106,6 +1113,220 @@ router.patch('/users/:id/new-user-flag', async (req: ExtendedRequest, res: Respo
   } catch (error) {
     console.error('Ошибка изменения флага нового пользователя:', error);
     res.status(500).json({ error: 'Ошибка изменения флага' });
+  }
+});
+
+const slugifyAnnouncementKey = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64);
+
+const createUniqueAnnouncementKey = async (base: string) => {
+  const normalizedBase = slugifyAnnouncementKey(base) || `announcement-${Date.now()}`;
+  let candidate = normalizedBase;
+  let counter = 1;
+
+  while (await AppAnnouncement.findOne({ key: candidate })) {
+    candidate = `${normalizedBase}-${counter}`;
+    counter += 1;
+  }
+
+  return candidate;
+};
+
+const sendAnnouncementPush = async (announcement: any) => {
+  const pushBody =
+    announcement.pushBody?.trim() ||
+    announcement.translations?.ru?.preview?.trim() ||
+    announcement.translations?.en?.preview?.trim() ||
+    '';
+
+  if (!pushBody) {
+    throw new Error('PUSH_BODY_REQUIRED');
+  }
+
+  const result = await notifyAppAnnouncement({
+    announcementKey: announcement.key,
+    pushTitle: announcement.pushTitle?.trim() || 'Amorely',
+    pushBody,
+  });
+
+  announcement.pushSentAt = new Date();
+  await announcement.save();
+
+  return result;
+};
+
+router.get('/announcements', async (_req: ExtendedRequest, res: Response) => {
+  try {
+    const announcements = await AppAnnouncement.find().sort({ publishedAt: -1 }).limit(100);
+    res.json({
+      announcements: announcements.map((item) => formatAnnouncementForAdmin(item)),
+    });
+  } catch (error) {
+    console.error('Ошибка получения уведомлений для админки:', error);
+    res.status(500).json({ error: 'Ошибка получения уведомлений' });
+  }
+});
+
+router.post('/announcements', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { key, translations, pushTitle, pushBody, isActive, sendPush } = req.body ?? {};
+    const parsedTranslations = parseAnnouncementTranslationsInput(translations);
+
+    if (!parsedTranslations?.ru?.title?.trim() || !parsedTranslations.ru.preview?.trim()) {
+      return res.status(400).json({ error: 'Заполните русский заголовок и краткий текст' });
+    }
+    if (!parsedTranslations.ru.content?.trim()) {
+      return res.status(400).json({ error: 'Заполните полный текст на русском языке' });
+    }
+
+    const announcementKey =
+      typeof key === 'string' && key.trim()
+        ? slugifyAnnouncementKey(key.trim())
+        : await createUniqueAnnouncementKey(parsedTranslations.ru.title);
+
+    if (!announcementKey) {
+      return res.status(400).json({ error: 'Некорректный ключ уведомления' });
+    }
+
+    const existing = await AppAnnouncement.findOne({ key: announcementKey });
+    if (existing) {
+      return res.status(409).json({ error: 'Уведомление с таким ключом уже существует' });
+    }
+
+    const announcement = await AppAnnouncement.create({
+      key: announcementKey,
+      translations: parsedTranslations,
+      pushTitle: typeof pushTitle === 'string' && pushTitle.trim() ? pushTitle.trim() : 'Amorely',
+      pushBody: typeof pushBody === 'string' ? pushBody.trim() : '',
+      isActive: isActive !== false,
+      publishedAt: new Date(),
+    });
+
+    let pushResult = null;
+    if (sendPush === true || sendPush === 'true') {
+      if (!announcement.isActive) {
+        return res.status(400).json({ error: 'Нельзя отправить push для неактивного уведомления' });
+      }
+      try {
+        pushResult = await sendAnnouncementPush(announcement);
+      } catch (pushError: any) {
+        if (pushError?.message === 'PUSH_BODY_REQUIRED') {
+          return res.status(400).json({ error: 'Укажите текст push-уведомления' });
+        }
+        throw pushError;
+      }
+    }
+
+    res.status(201).json({
+      message: 'Уведомление создано',
+      announcement: formatAnnouncementForAdmin(announcement),
+      pushResult,
+    });
+  } catch (error) {
+    console.error('Ошибка создания уведомления:', error);
+    res.status(500).json({ error: 'Ошибка создания уведомления' });
+  }
+});
+
+router.put('/announcements/:id', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { translations, pushTitle, pushBody, isActive, sendPush } = req.body ?? {};
+
+    const announcement = await AppAnnouncement.findById(id);
+    if (!announcement) {
+      return res.status(404).json({ error: 'Уведомление не найдено' });
+    }
+
+    const parsedTranslations = parseAnnouncementTranslationsInput(translations);
+    if (parsedTranslations) {
+      if (!parsedTranslations.ru?.title?.trim() || !parsedTranslations.ru.preview?.trim()) {
+        return res.status(400).json({ error: 'Заполните русский заголовок и краткий текст' });
+      }
+      if (!parsedTranslations.ru.content?.trim()) {
+        return res.status(400).json({ error: 'Заполните полный текст на русском языке' });
+      }
+      announcement.translations = parsedTranslations;
+    }
+
+    if (typeof pushTitle === 'string') {
+      announcement.pushTitle = pushTitle.trim() || 'Amorely';
+    }
+    if (typeof pushBody === 'string') {
+      announcement.pushBody = pushBody.trim();
+    }
+    if (isActive !== undefined) {
+      announcement.isActive = isActive === true || isActive === 'true';
+    }
+
+    await announcement.save();
+
+    let pushResult = null;
+    if (sendPush === true || sendPush === 'true') {
+      if (!announcement.isActive) {
+        return res.status(400).json({ error: 'Нельзя отправить push для неактивного уведомления' });
+      }
+      try {
+        pushResult = await sendAnnouncementPush(announcement);
+      } catch (pushError: any) {
+        if (pushError?.message === 'PUSH_BODY_REQUIRED') {
+          return res.status(400).json({ error: 'Укажите текст push-уведомления' });
+        }
+        throw pushError;
+      }
+    }
+
+    res.json({
+      message: 'Уведомление обновлено',
+      announcement: formatAnnouncementForAdmin(announcement),
+      pushResult,
+    });
+  } catch (error) {
+    console.error('Ошибка обновления уведомления:', error);
+    res.status(500).json({ error: 'Ошибка обновления уведомления' });
+  }
+});
+
+router.post('/announcements/:id/push', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const announcement = await AppAnnouncement.findById(req.params.id);
+    if (!announcement) {
+      return res.status(404).json({ error: 'Уведомление не найдено' });
+    }
+    if (!announcement.isActive) {
+      return res.status(400).json({ error: 'Уведомление неактивно' });
+    }
+
+    const pushResult = await sendAnnouncementPush(announcement);
+    res.json({
+      message: 'Push отправлен',
+      pushResult,
+      announcement: formatAnnouncementForAdmin(announcement),
+    });
+  } catch (error: any) {
+    if (error?.message === 'PUSH_BODY_REQUIRED') {
+      return res.status(400).json({ error: 'Укажите текст push-уведомления' });
+    }
+    console.error('Ошибка отправки push для уведомления:', error);
+    res.status(500).json({ error: 'Ошибка отправки push' });
+  }
+});
+
+router.delete('/announcements/:id', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const announcement = await AppAnnouncement.findByIdAndDelete(req.params.id);
+    if (!announcement) {
+      return res.status(404).json({ error: 'Уведомление не найдено' });
+    }
+    res.json({ message: 'Уведомление удалено' });
+  } catch (error) {
+    console.error('Ошибка удаления уведомления:', error);
+    res.status(500).json({ error: 'Ошибка удаления уведомления' });
   }
 });
 
