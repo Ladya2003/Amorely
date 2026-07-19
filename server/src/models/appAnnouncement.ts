@@ -9,6 +9,11 @@ export interface AnnouncementLocaleContent {
 
 export type AnnouncementTranslations = Partial<Record<AppLocale, AnnouncementLocaleContent>>;
 
+/** Mongoose lean() may return null for unset nested locale entries. */
+export type AnnouncementTranslationsSource = Partial<
+  Record<AppLocale, AnnouncementLocaleContent | null | undefined>
+>;
+
 const localeContentSchema = new mongoose.Schema(
   {
     title: { type: String, default: '' },

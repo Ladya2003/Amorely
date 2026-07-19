@@ -1,7 +1,7 @@
 import { AppLocale, SUPPORTED_LOCALES } from './locales';
-import { AnnouncementLocaleContent, AnnouncementTranslations } from '../models/appAnnouncement';
+import { AnnouncementLocaleContent, AnnouncementTranslations, AnnouncementTranslationsSource } from '../models/appAnnouncement';
 
-export type { AnnouncementLocaleContent, AnnouncementTranslations };
+export type { AnnouncementLocaleContent, AnnouncementTranslations, AnnouncementTranslationsSource };
 
 export const createEmptyAnnouncementTranslations = (): Record<AppLocale, AnnouncementLocaleContent> =>
   Object.fromEntries(
@@ -9,20 +9,21 @@ export const createEmptyAnnouncementTranslations = (): Record<AppLocale, Announc
   ) as Record<AppLocale, AnnouncementLocaleContent>;
 
 export const normalizeAnnouncementTranslations = (doc: {
-  translations?: AnnouncementTranslations | null;
+  translations?: AnnouncementTranslationsSource | null;
 }): Record<AppLocale, AnnouncementLocaleContent> => {
   const empty = createEmptyAnnouncementTranslations();
   const source = doc.translations ?? {};
 
   for (const locale of SUPPORTED_LOCALES) {
     const entry = source[locale];
-    if (entry) {
-      empty[locale] = {
-        title: entry.title ?? '',
-        preview: entry.preview ?? '',
-        content: entry.content ?? '',
-      };
+    if (!entry || typeof entry !== 'object') {
+      continue;
     }
+    empty[locale] = {
+      title: entry.title ?? '',
+      preview: entry.preview ?? '',
+      content: entry.content ?? '',
+    };
   }
 
   return empty;
@@ -67,7 +68,7 @@ export const parseAnnouncementTranslationsInput = (
 
 export const getLocalizedAnnouncementContent = (
   doc: {
-    translations?: AnnouncementTranslations | null;
+    translations?: AnnouncementTranslationsSource | null;
   },
   locale: AppLocale
 ): AnnouncementLocaleContent => {
