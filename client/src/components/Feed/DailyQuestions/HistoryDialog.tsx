@@ -16,9 +16,14 @@ import { getHistoryRoundSx } from './dailyQuestionsStyles';
 interface HistoryDialogProps {
   open: boolean;
   onClose: () => void;
+  onOpenCategoryResults: (roundKey: string, categoryId: string) => void;
 }
 
-const HistoryDialog: React.FC<HistoryDialogProps> = ({ open, onClose }) => {
+const HistoryDialog: React.FC<HistoryDialogProps> = ({
+  open,
+  onClose,
+  onOpenCategoryResults,
+}) => {
   const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -37,7 +42,7 @@ const HistoryDialog: React.FC<HistoryDialogProps> = ({ open, onClose }) => {
 
   useEffect(() => {
     if (open) void loadHistory();
-  }, [open, loadHistory]);
+  }, [open, loadHistory, i18n.language]);
 
   const formatDate = (iso: string) => {
     try {
@@ -49,6 +54,12 @@ const HistoryDialog: React.FC<HistoryDialogProps> = ({ open, onClose }) => {
     } catch {
       return iso;
     }
+  };
+
+  const handleCategoryClick = (roundKey: string, categoryId: string, canOpen: boolean) => {
+    if (!canOpen) return;
+    onClose();
+    onOpenCategoryResults(roundKey, categoryId);
   };
 
   return (
@@ -74,25 +85,31 @@ const HistoryDialog: React.FC<HistoryDialogProps> = ({ open, onClose }) => {
                 {formatDate(round.archivedAt)}
               </Typography>
               <Box display="flex" flexWrap="wrap" gap={1}>
-                {round.categories.map((cat) => (
-                  <Chip
-                    key={cat.id}
-                    label={
-                      cat.similarity !== null
-                        ? `${cat.emoji} ${cat.title} — ${cat.similarity}%`
-                        : `${cat.emoji} ${cat.title}`
-                    }
-                    size="small"
-                    variant="outlined"
-                    color={
-                      cat.similarity !== null && cat.similarity >= 75
-                        ? 'success'
-                        : cat.similarity !== null
-                          ? 'default'
+                {round.categories.map((cat) => {
+                  const canOpen = cat.userCompleted || cat.partnerCompleted;
+                  return (
+                    <Chip
+                      key={`${round.roundKey}-${cat.id}`}
+                      label={
+                        cat.similarity !== null
+                          ? `${cat.emoji} ${cat.title} — ${cat.similarity}%`
+                          : `${cat.emoji} ${cat.title}`
+                      }
+                      size="small"
+                      variant="outlined"
+                      clickable={canOpen}
+                      onClick={() =>
+                        handleCategoryClick(round.roundKey, cat.id, canOpen)
+                      }
+                      color={
+                        cat.similarity !== null && cat.similarity >= 75
+                          ? 'success'
                           : 'default'
-                    }
-                  />
-                ))}
+                      }
+                      sx={canOpen ? { cursor: 'pointer' } : undefined}
+                    />
+                  );
+                })}
               </Box>
             </Box>
           ))}

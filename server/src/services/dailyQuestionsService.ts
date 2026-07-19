@@ -255,14 +255,14 @@ export const getOrCreateState = async (userId: string) => {
       categoryBothCompleted: [],
       history: [],
     });
-    await state.save();
+    await persistState(state);
     return state;
   }
 
   const rotated = maybeRotateRound(state);
   const synced = syncAllCompletions(state);
   if (rotated || synced) {
-    await state.save();
+    await persistState(state);
   }
 
   return state;
@@ -292,8 +292,112 @@ export interface DailyQuestionsResponse {
   allCategories: { id: string; emoji: string; title: string }[];
 }
 
+export interface CategoryResultItem {
+  questionId: string;
+  questionText: string;
+  questionType: string;
+  userAnswer: string;
+  userAnswerLabel: string;
+  partnerAnswer: string | null;
+  partnerAnswerLabel: string | null;
+  isMatch: boolean | null;
+}
+
+export interface CategoryResults {
+  categoryId: string;
+  emoji: string;
+  title: string;
+  similarity: number | null;
+  userCompleted: boolean;
+  partnerCompleted: boolean;
+  bothCompleted: boolean;
+  items: CategoryResultItem[];
+}
+
 const countAnsweredQuestions = (answers: { questionId: string }[] | undefined) =>
   new Set((answers ?? []).map((a) => a.questionId)).size;
+
+const isUserCategoryCompleted = (
+  userProg: { answers: { questionId: string }[]; completedAt?: Date | null } | undefined,
+  category: { questions: { id: string }[] }
+) => Boolean(userProg?.completedAt) || isCategoryFullyAnswered(userProg, category);
+
+const persistState = async (state: any) => {
+  state.markModified('progress');
+  state.markModified('categoryBothCompleted');
+  state.markModified('history');
+  await state.save();
+};
+
+const buildResultsFromProgress = (
+  categoryId: string,
+  userId: string,
+  partnerId: string | null,
+  progressEntries: any[],
+  bothCompletedEntries: { categoryId: string; completedAt?: Date }[],
+  locale: AppLocale
+): CategoryResults | null => {
+  const category = getCategoryById(categoryId);
+  if (!category) return null;
+  const localized = localizeCategory(category, locale);
+
+  const userProg = progressEntries.find(
+    (p: any) => idsEqual(p.userId, userId) && p.categoryId === categoryId
+  );
+  const partnerProg = partnerId
+    ? progressEntries.find(
+        (p: any) => idsEqual(p.userId, partnerId) && p.categoryId === categoryId
+      )
+    : null;
+
+  const bothEntry = bothCompletedEntries.find((c) => c.categoryId === categoryId);
+
+  const userAnswers = userProg?.answers ?? [];
+  const partnerAnswers = partnerProg?.answers ?? [];
+
+  const similarity =
+    bothEntry && userAnswers.length && partnerAnswers.length
+      ? calculateSimilarity(categoryId, userAnswers, partnerAnswers)
+      : null;
+
+  const items: CategoryResultItem[] = localized.questions.map((question) => {
+    const userAns = userAnswers.find((a: any) => a.questionId === question.id);
+    const partnerAns = partnerAnswers.find((a: any) => a.questionId === question.id);
+    const baseQuestion = category.questions.find((q) => q.id === question.id)!;
+
+    const userValue = userAns?.value ?? '';
+    const partnerValue = partnerAns?.value ?? '';
+
+    return {
+      questionId: question.id,
+      questionText: question.text,
+      questionType: question.type,
+      userAnswer: userValue,
+      userAnswerLabel: userValue
+        ? getAnswerLabel(categoryId, baseQuestion, userValue, locale)
+        : '',
+      partnerAnswer: partnerValue || null,
+      partnerAnswerLabel: partnerValue
+        ? getAnswerLabel(categoryId, baseQuestion, partnerValue, locale)
+        : null,
+      isMatch:
+        userValue && partnerValue
+          ? answersMatch(baseQuestion, userValue, partnerValue)
+          : null,
+    };
+  });
+
+  return {
+    categoryId: localized.id,
+    emoji: localized.emoji,
+    title: localized.title,
+    similarity,
+    userCompleted: isUserCategoryCompleted(userProg, category),
+    partnerCompleted: isUserCategoryCompleted(partnerProg, category),
+    bothCompleted: Boolean(bothEntry),
+    items,
+  };
+};
 
 const buildCategoryStatus = (
   state: any,
@@ -320,8 +424,8 @@ const buildCategoryStatus = (
     emoji: category.emoji,
     title: getLocalizedCategoryTitle(category.id, category.title, locale),
     questionCount: category.questions.length,
-    userCompleted: Boolean(userProg?.completedAt),
-    partnerCompleted: Boolean(partnerProg?.completedAt),
+    userCompleted: isUserCategoryCompleted(userProg, category),
+    partnerCompleted: isUserCategoryCompleted(partnerProg, category),
     bothCompleted: Boolean(bothEntry),
     bothCompletedAt: bothEntry?.completedAt?.toISOString() ?? null,
     userProgress: countAnsweredQuestions(userProg?.answers),
@@ -421,98 +525,57 @@ export const submitAnswer = async (
     checkBothCompletedAll(state);
   }
 
-  await state.save();
+  await persistState(state);
   return buildDailyQuestionsResponse(state, userId, locale);
 };
 
-export interface CategoryResultItem {
-  questionId: string;
-  questionText: string;
-  questionType: string;
-  userAnswer: string;
-  userAnswerLabel: string;
-  partnerAnswer: string | null;
-  partnerAnswerLabel: string | null;
-  isMatch: boolean | null;
-}
-
-export interface CategoryResults {
-  categoryId: string;
-  emoji: string;
-  title: string;
-  similarity: number | null;
-  userCompleted: boolean;
-  partnerCompleted: boolean;
-  bothCompleted: boolean;
-  items: CategoryResultItem[];
-}
-
-export const getCategoryResults = (
+export const getCategoryResults = async (
   state: any,
   userId: string,
   categoryId: string,
   locale: AppLocale = 'ru'
-): CategoryResults | null => {
-  const category = getCategoryById(categoryId);
-  if (!category) return null;
-  const localized = localizeCategory(category, locale);
+): Promise<CategoryResults | null> => {
+  const changed = syncCategoryCompletion(state, categoryId);
+  if (changed) {
+    await persistState(state);
+  }
 
   const partnerId = idsEqual(state.userId, userId)
     ? normalizeIdStr(state.partnerId)
     : normalizeIdStr(state.userId);
 
-  const userProg = getUserProgress(state, userId, categoryId);
-  const partnerProg = partnerId ? getUserProgress(state, partnerId, categoryId) : null;
-
-  const bothEntry = state.categoryBothCompleted.find(
-    (c: any) => c.categoryId === categoryId
+  return buildResultsFromProgress(
+    categoryId,
+    userId,
+    partnerId,
+    state.progress ?? [],
+    state.categoryBothCompleted ?? [],
+    locale
   );
+};
 
-  const userAnswers = userProg?.answers ?? [];
-  const partnerAnswers = partnerProg?.answers ?? [];
+export const getHistoricalCategoryResults = (
+  state: any,
+  userId: string,
+  roundKey: string,
+  categoryId: string,
+  locale: AppLocale = 'ru'
+): CategoryResults | null => {
+  const round = (state.history ?? []).find((h: any) => h.roundKey === roundKey);
+  if (!round) return null;
 
-  const similarity =
-    bothEntry && userAnswers.length && partnerAnswers.length
-      ? calculateSimilarity(categoryId, userAnswers, partnerAnswers)
-      : null;
+  const partnerId = idsEqual(state.userId, userId)
+    ? normalizeIdStr(state.partnerId)
+    : normalizeIdStr(state.userId);
 
-  const items: CategoryResultItem[] = localized.questions.map((question) => {
-    const userAns = userAnswers.find((a: any) => a.questionId === question.id);
-    const partnerAns = partnerAnswers.find((a: any) => a.questionId === question.id);
-    const baseQuestion = category.questions.find((q) => q.id === question.id)!;
-
-    const userValue = userAns?.value ?? '';
-    const partnerValue = partnerAns?.value ?? '';
-
-    return {
-      questionId: question.id,
-      questionText: question.text,
-      questionType: question.type,
-      userAnswer: userValue,
-      userAnswerLabel: userValue
-        ? getAnswerLabel(categoryId, baseQuestion, userValue, locale)
-        : '',
-      partnerAnswer: partnerValue || null,
-      partnerAnswerLabel: partnerValue
-        ? getAnswerLabel(categoryId, baseQuestion, partnerValue, locale)
-        : null,
-      isMatch:
-        userValue && partnerValue
-          ? answersMatch(baseQuestion, userValue, partnerValue)
-          : null,
-    };
-  });
-
-  return {
-    categoryId: localized.id,
-    emoji: localized.emoji,
-    title: localized.title,
-    similarity,
-    userCompleted: Boolean(userProg?.completedAt),
-    partnerCompleted: Boolean(partnerProg?.completedAt),
-    bothCompleted: Boolean(bothEntry),
-    items,
-  };
+  return buildResultsFromProgress(
+    categoryId,
+    userId,
+    partnerId,
+    round.progress ?? [],
+    round.categoryBothCompleted ?? [],
+    locale
+  );
 };
 
 export interface HistoryEntry {
@@ -564,8 +627,8 @@ export const getHistory = (state: any, userId: string, locale: AppLocale = 'ru')
           emoji: cat?.emoji ?? '❓',
           title: cat ? getLocalizedCategoryTitle(cat.id, cat.title, locale) : catId,
           similarity,
-          userCompleted: Boolean(userProg?.completedAt),
-          partnerCompleted: Boolean(partnerProg?.completedAt),
+          userCompleted: cat ? isUserCategoryCompleted(userProg, cat) : Boolean(userProg?.completedAt),
+          partnerCompleted: cat ? isUserCategoryCompleted(partnerProg, cat) : Boolean(partnerProg?.completedAt),
         };
       });
 

@@ -9,6 +9,7 @@ import {
   getCategoryQuestions,
   submitAnswer,
   getCategoryResults,
+  getHistoricalCategoryResults,
   getHistory,
   notifyPartnerAboutQuestions,
 } from '../services/dailyQuestionsService';
@@ -60,7 +61,7 @@ router.get('/category/:categoryId', async (req: ExtendedRequest, res: Response) 
       return res.status(404).json({ error: 'Category not found' });
     }
 
-    const results = getCategoryResults(state, userId, categoryId, locale);
+    const results = await getCategoryResults(state, userId, categoryId, locale);
 
     res.json({ ...questions, results });
   } catch (error) {
@@ -104,7 +105,7 @@ router.get('/results/:categoryId', async (req: ExtendedRequest, res: Response) =
       return res.status(404).json({ error: 'No active relationship' });
     }
 
-    const results = getCategoryResults(state, userId, categoryId, locale);
+    const results = await getCategoryResults(state, userId, categoryId, locale);
     if (!results) {
       return res.status(404).json({ error: 'Category not found' });
     }
@@ -113,6 +114,29 @@ router.get('/results/:categoryId', async (req: ExtendedRequest, res: Response) =
   } catch (error) {
     console.error('Daily questions results error:', error);
     res.status(500).json({ error: 'Failed to load results' });
+  }
+});
+
+router.get('/history/:roundKey/results/:categoryId', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const locale = await resolveRequestLocale(req);
+    const { roundKey, categoryId } = req.params;
+
+    const state = await getOrCreateState(userId);
+    if (!state) {
+      return res.status(404).json({ error: 'No active relationship' });
+    }
+
+    const results = getHistoricalCategoryResults(state, userId, roundKey, categoryId, locale);
+    if (!results) {
+      return res.status(404).json({ error: 'History round not found' });
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error('Daily questions history results error:', error);
+    res.status(500).json({ error: 'Failed to load history results' });
   }
 });
 

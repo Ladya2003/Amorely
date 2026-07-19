@@ -20,6 +20,7 @@ import type { CategoryResults, CategoryStatus, DailyQuestionsState } from './typ
 import {
   fetchDailyQuestions,
   fetchCategoryResults,
+  fetchHistoricalCategoryResults,
   notifyPartnerDailyQuestions,
 } from '../../../services/dailyQuestionsService';
 import { PARTNER_CHANGED_EVENT } from '../../../hooks/useRelationship';
@@ -37,6 +38,7 @@ const DailyQuestionsSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [flowCategoryId, setFlowCategoryId] = useState<string | null>(null);
   const [resultsCategoryId, setResultsCategoryId] = useState<string | null>(null);
+  const [resultsRoundKey, setResultsRoundKey] = useState<string | null>(null);
   const [results, setResults] = useState<CategoryResults | null>(null);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -66,12 +68,15 @@ const DailyQuestionsSection: React.FC = () => {
     return () => window.removeEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
   }, [loadState]);
 
-  const openResults = async (categoryId: string) => {
+  const openResults = async (categoryId: string, roundKey?: string | null) => {
     setResultsCategoryId(categoryId);
+    setResultsRoundKey(roundKey ?? null);
     setResultsLoading(true);
     setNotifySent(false);
     try {
-      const data = await fetchCategoryResults(categoryId);
+      const data = roundKey
+        ? await fetchHistoricalCategoryResults(roundKey, categoryId)
+        : await fetchCategoryResults(categoryId);
       setResults(data);
     } catch {
       setResults(null);
@@ -81,7 +86,7 @@ const DailyQuestionsSection: React.FC = () => {
   };
 
   const handleNotifyPartner = async () => {
-    if (!resultsCategoryId) return;
+    if (!resultsCategoryId || resultsRoundKey) return;
     setNotifyLoading(true);
     try {
       await notifyPartnerDailyQuestions(resultsCategoryId);
@@ -170,6 +175,7 @@ const DailyQuestionsSection: React.FC = () => {
         open={Boolean(resultsCategoryId)}
         onClose={() => {
           setResultsCategoryId(null);
+          setResultsRoundKey(null);
           setResults(null);
         }}
         maxWidth="sm"
@@ -190,12 +196,19 @@ const DailyQuestionsSection: React.FC = () => {
               onNotifyPartner={() => void handleNotifyPartner()}
               notifyLoading={notifyLoading}
               notifySent={notifySent}
+              readOnly={Boolean(resultsRoundKey)}
             />
           )}
         </DialogContent>
       </ResponsiveDialog>
 
-      <HistoryDialog open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        onOpenCategoryResults={(roundKey, categoryId) => {
+          void openResults(categoryId, roundKey);
+        }}
+      />
     </>
   );
 };

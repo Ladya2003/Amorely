@@ -18,6 +18,7 @@ interface CategoryResultsViewProps {
   onNotifyPartner: () => void;
   notifyLoading?: boolean;
   notifySent?: boolean;
+  readOnly?: boolean;
 }
 
 const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
@@ -25,6 +26,7 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
   onNotifyPartner,
   notifyLoading,
   notifySent,
+  readOnly = false,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -43,7 +45,7 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
         </Typography>
       )}
 
-      {!results.partnerCompleted && results.userCompleted && (
+      {!readOnly && !results.partnerCompleted && results.userCompleted && (
         <Box sx={{ textAlign: 'center', mb: 2 }}>
           <Typography variant="body2" color="text.secondary" mb={1.5}>
             {t('dailyQuestions.partnerNotFinished')}

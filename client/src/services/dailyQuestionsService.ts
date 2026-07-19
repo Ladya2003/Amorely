@@ -53,6 +53,20 @@ export const fetchCategoryResults = async (categoryId: string): Promise<Category
   return data;
 };
 
+export const fetchHistoricalCategoryResults = async (
+  roundKey: string,
+  categoryId: string
+): Promise<CategoryResults> => {
+  const { data } = await axios.get(
+    `${API_URL}/api/daily-questions/history/${roundKey}/results/${categoryId}`,
+    {
+      headers: authHeaders(),
+      params: localeParams(),
+    }
+  );
+  return data;
+};
+
 export const fetchDailyQuestionsHistory = async (): Promise<HistoryEntry[]> => {
   const { data } = await axios.get(`${API_URL}/api/daily-questions/history`, {
     headers: authHeaders(),

@@ -119,15 +119,32 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
 
     setSubmitting(true);
     try {
-      await submitDailyAnswer(categoryId, currentQuestion.id, value);
+      const updatedState = await submitDailyAnswer(categoryId, currentQuestion.id, value);
+      const categoryStatus = updatedState.categories?.find((cat) => cat.id === categoryId);
 
-      if (step + 1 >= questions.length) {
+      if (categoryStatus?.userCompleted) {
         redirectToResults(categoryId);
-      } else {
-        setStep((s) => s + 1);
-        setTextValue('');
-        setSelectedValue(null);
+        return;
       }
+
+      const refreshed = await fetchCategoryDetail(categoryId);
+      setDetail(refreshed);
+
+      const nextUnanswered = refreshed.questions.findIndex(
+        (question) =>
+          !refreshed.results?.items.some(
+            (item) => item.questionId === question.id && item.userAnswer
+          )
+      );
+
+      if (nextUnanswered === -1) {
+        redirectToResults(categoryId);
+        return;
+      }
+
+      setStep(nextUnanswered);
+      setTextValue('');
+      setSelectedValue(null);
     } finally {
       setSubmitting(false);
     }
