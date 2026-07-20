@@ -3,18 +3,20 @@ import {
   Box,
   Button,
   CircularProgress,
+  IconButton,
   Typography,
   useTheme,
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useTranslation } from 'react-i18next';
 import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsActiveOutlined';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useRelationship } from '../../../hooks/useRelationship';
 import type { CategoryResults } from './types';
 import AnswerInput from './AnswerInput';
-import {
-  getSimilarityRingSx,
-  getResultItemSx,
-} from './dailyQuestionsStyles';
+import { ResultImageChoiceBlock, ResultTextChoiceBlock } from './ResultQuestionBlocks';
+import { getSimilarityRingSx } from './dailyQuestionsStyles';
+import { getResultQuestionCardSx, getResultQuestionTitleSx } from './resultQuestionStyles';
 
 interface CategoryResultsViewProps {
   results: CategoryResults;
@@ -24,6 +26,9 @@ interface CategoryResultsViewProps {
   notifySent?: boolean;
   readOnly?: boolean;
 }
+
+const getDisplayName = (firstName?: string, username?: string, fallback = '') =>
+  firstName?.trim() || username?.trim() || fallback;
 
 const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
   results,
@@ -35,12 +40,26 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { user } = useAuth();
+  const { partner } = useRelationship();
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [textValue, setTextValue] = useState('');
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const editingItem = results.items.find((item) => item.questionId === editingQuestionId);
+
+  const userProfile = {
+    avatar: user?.avatar,
+    name: getDisplayName(user?.firstName, user?.username, t('dailyQuestions.youFallback')),
+  };
+
+  const partnerProfile = partner
+    ? {
+        avatar: partner.avatar,
+        name: getDisplayName(partner.firstName, partner.username, t('dailyQuestions.partnerFallback')),
+      }
+    : null;
 
   useEffect(() => {
     if (!editingItem) {
@@ -57,14 +76,6 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
       setTextValue('');
     }
   }, [editingItem]);
-
-  const startEditing = (questionId: string) => {
-    setEditingQuestionId(questionId);
-  };
-
-  const cancelEditing = () => {
-    setEditingQuestionId(null);
-  };
 
   const canSaveEdit = () => {
     if (!editingItem) return false;
@@ -133,90 +144,91 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
         </Box>
       )}
 
-      {results.items.map((item) => {
+      {results.items.map((item, index) => {
         const isEditing = editingQuestionId === item.questionId;
+        const isImage = item.questionType === 'image';
 
-        return (
-          <Box key={item.questionId} sx={getResultItemSx(theme, item.isMatch)}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: 1,
-                mb: 1,
-              }}
-            >
-              <Typography variant="subtitle2" fontWeight={600} sx={{ flex: 1 }}>
-                {item.questionText}
+        if (isEditing) {
+          return (
+            <Box key={item.questionId} sx={getResultQuestionCardSx(theme)}>
+              <Typography sx={getResultQuestionTitleSx(theme)}>
+                {index + 1}. {item.questionText}
               </Typography>
-              {!readOnly && item.userAnswer && !isEditing && (
+              <AnswerInput
+                type={item.questionType as 'text' | 'choice' | 'image'}
+                textValue={textValue}
+                selectedValue={selectedValue}
+                options={item.options}
+                images={item.images}
+                onTextChange={setTextValue}
+                onSelect={setSelectedValue}
+                disabled={saving}
+                autoFocus
+              />
+              <Box sx={{ display: 'flex', gap: 1, mt: 1.5, justifyContent: 'flex-end' }}>
                 <Button
                   size="small"
-                  startIcon={<EditOutlinedIcon fontSize="small" />}
-                  onClick={() => startEditing(item.questionId)}
-                  disabled={Boolean(editingQuestionId) || saving}
-                  sx={{ textTransform: 'none', flexShrink: 0, minWidth: 0 }}
-                >
-                  {t('dailyQuestions.editAnswer')}
-                </Button>
-              )}
-            </Box>
-
-            {isEditing ? (
-              <Box mt={1.5}>
-                <AnswerInput
-                  type={item.questionType as 'text' | 'choice' | 'image'}
-                  textValue={textValue}
-                  selectedValue={selectedValue}
-                  options={item.options}
-                  images={item.images}
-                  onTextChange={setTextValue}
-                  onSelect={setSelectedValue}
+                  onClick={() => setEditingQuestionId(null)}
                   disabled={saving}
-                  autoFocus
-                />
-                <Box sx={{ display: 'flex', gap: 1, mt: 1.5, justifyContent: 'flex-end' }}>
-                  <Button
-                    size="small"
-                    onClick={cancelEditing}
-                    disabled={saving}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    {t('common.cancel')}
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={() => void handleSaveEdit()}
-                    disabled={saving || !canSaveEdit() || !hasEditChanges()}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    {saving ? (
-                      <CircularProgress size={18} color="inherit" />
-                    ) : (
-                      t('dailyQuestions.saveAnswer')
-                    )}
-                  </Button>
-                </Box>
+                  sx={{ textTransform: 'none' }}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => void handleSaveEdit()}
+                  disabled={saving || !canSaveEdit() || !hasEditChanges()}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {saving ? (
+                    <CircularProgress size={18} color="inherit" />
+                  ) : (
+                    t('dailyQuestions.saveAnswer')
+                  )}
+                </Button>
               </Box>
+            </Box>
+          );
+        }
+
+        return (
+          <Box key={item.questionId} sx={{ position: 'relative' }}>
+            {!readOnly && item.userAnswer && (
+              <IconButton
+                size="small"
+                onClick={() => setEditingQuestionId(item.questionId)}
+                disabled={Boolean(editingQuestionId) || saving}
+                sx={{
+                  position: 'absolute',
+                  top: 10,
+                  right: 10,
+                  zIndex: 2,
+                  bgcolor: (muiTheme) =>
+                    muiTheme.palette.mode === 'light'
+                      ? 'rgba(255,255,255,0.85)'
+                      : 'rgba(0,0,0,0.35)',
+                }}
+                aria-label={t('dailyQuestions.editAnswer')}
+              >
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+            )}
+
+            {isImage ? (
+              <ResultImageChoiceBlock
+                index={index}
+                item={item}
+                user={userProfile}
+                partner={partnerProfile}
+              />
             ) : (
-              <>
-                <Typography variant="body2" color="text.secondary" mb={0.5}>
-                  {t('dailyQuestions.yourAnswer')}: {item.userAnswerLabel || '—'}
-                </Typography>
-                {item.partnerAnswerLabel ? (
-                  <Typography variant="body2">
-                    {t('dailyQuestions.partnerAnswer')}: {item.partnerAnswerLabel}
-                    {item.isMatch === true && ' ✓'}
-                    {item.isMatch === false && ' ✗'}
-                  </Typography>
-                ) : (
-                  <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                    {t('dailyQuestions.partnerNoAnswer')}
-                  </Typography>
-                )}
-              </>
+              <ResultTextChoiceBlock
+                index={index}
+                item={item}
+                user={userProfile}
+                partner={partnerProfile}
+              />
             )}
           </Box>
         );

@@ -1352,7 +1352,11 @@
     "nextRoundIn": "New categories in",
     "timerDone": "New categories soon",
     "editAnswer": "Edit",
-    "saveAnswer": "Save"
+    "saveAnswer": "Save",
+    "youFallback": "You",
+    "partnerFallback": "Partner",
+    "noYourAnswer": "No answer",
+    "partnerNoAnswerShort": "Waiting for answer"
   },
   "common": {
     "back": "Back",
