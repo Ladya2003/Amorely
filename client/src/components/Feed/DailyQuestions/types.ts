@@ -51,6 +51,8 @@ export interface CategoryResultItem {
   partnerAnswer: string | null;
   partnerAnswerLabel: string | null;
   isMatch: boolean | null;
+  options?: DailyQuestionChoice[];
+  images?: DailyQuestionImageOption[];
 }
 
 export interface CategoryResults {

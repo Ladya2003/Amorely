@@ -22,6 +22,7 @@ import {
   fetchCategoryResults,
   fetchHistoricalCategoryResults,
   notifyPartnerDailyQuestions,
+  submitDailyAnswer,
 } from '../../../services/dailyQuestionsService';
 import { PARTNER_CHANGED_EVENT } from '../../../hooks/useRelationship';
 import {
@@ -83,6 +84,16 @@ const DailyQuestionsSection: React.FC = () => {
     } finally {
       setResultsLoading(false);
     }
+  };
+
+  const handleEditAnswer = async (questionId: string, value: string) => {
+    if (!resultsCategoryId || resultsRoundKey) return null;
+
+    await submitDailyAnswer(resultsCategoryId, questionId, value);
+    const updated = await fetchCategoryResults(resultsCategoryId);
+    setResults(updated);
+    void loadState();
+    return updated;
   };
 
   const handleNotifyPartner = async () => {
@@ -194,6 +205,7 @@ const DailyQuestionsSection: React.FC = () => {
             <CategoryResultsView
               results={results}
               onNotifyPartner={() => void handleNotifyPartner()}
+              onEditAnswer={handleEditAnswer}
               notifyLoading={notifyLoading}
               notifySent={notifySent}
               readOnly={Boolean(resultsRoundKey)}

@@ -5,7 +5,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
   Typography,
   LinearProgress,
   useTheme,
@@ -14,16 +13,12 @@ import { useTranslation } from 'react-i18next';
 import ResponsiveDialog from '../../UI/ResponsiveDialog';
 import { getAppModalActionsSx } from '../../../theme/modalStyles';
 import type { CategoryDetail, DailyQuestion } from './types';
+import AnswerInput from './AnswerInput';
 import {
   fetchCategoryDetail,
   submitDailyAnswer,
 } from '../../../services/dailyQuestionsService';
-import {
-  getChoiceButtonSx,
-  getImageChoiceLabelSx,
-  getImageChoiceSx,
-  getQuestionProgressSx,
-} from './dailyQuestionsStyles';
+import { getQuestionProgressSx } from './dailyQuestionsStyles';
 
 interface CategoryFlowDialogProps {
   open: boolean;
@@ -153,65 +148,19 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
   const renderQuestionInput = () => {
     if (!currentQuestion) return null;
 
-    if (currentQuestion.type === 'text') {
-      return (
-        <TextField
-          fullWidth
-          multiline
-          minRows={3}
-          value={textValue}
-          onChange={(e) => setTextValue(e.target.value)}
-          placeholder={t('dailyQuestions.textPlaceholder')}
-          autoFocus
-        />
-      );
-    }
-
-    if (currentQuestion.type === 'choice' && currentQuestion.options) {
-      return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {currentQuestion.options.map((opt) => (
-            <Button
-              key={opt.id}
-              variant={selectedValue === opt.id ? 'contained' : 'outlined'}
-              onClick={() => setSelectedValue(opt.id)}
-              sx={getChoiceButtonSx(theme, selectedValue === opt.id)}
-            >
-              {opt.label}
-            </Button>
-          ))}
-        </Box>
-      );
-    }
-
-    if (currentQuestion.type === 'image' && currentQuestion.images) {
-      return (
-        <Box sx={{ display: 'flex', gap: 1.5 }}>
-          {currentQuestion.images.map((img) => (
-            <Box
-              key={img.id}
-              sx={getImageChoiceSx(theme, selectedValue === img.id)}
-              onClick={() => setSelectedValue(img.id)}
-              role="button"
-              tabIndex={0}
-            >
-              <img src={img.url} alt={img.label} loading="lazy" />
-              <Typography
-                variant="caption"
-                display="block"
-                p={0.75}
-                fontWeight={600}
-                sx={getImageChoiceLabelSx(theme)}
-              >
-                {img.label}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      );
-    }
-
-    return null;
+    return (
+      <AnswerInput
+        type={currentQuestion.type}
+        textValue={textValue}
+        selectedValue={selectedValue}
+        options={currentQuestion.options}
+        images={currentQuestion.images}
+        onTextChange={setTextValue}
+        onSelect={setSelectedValue}
+        disabled={submitting}
+        autoFocus
+      />
+    );
   };
 
   return (

@@ -1350,7 +1350,9 @@
     "historyTitle": "Question history",
     "historyEmpty": "No completed rounds yet",
     "nextRoundIn": "New categories in",
-    "timerDone": "New categories soon"
+    "timerDone": "New categories soon",
+    "editAnswer": "Edit",
+    "saveAnswer": "Save"
   },
   "common": {
     "back": "Back",

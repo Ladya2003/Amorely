@@ -6,6 +6,8 @@ import {
   getCategoryById,
   pickRandomCategories,
   DailyQuestion,
+  DailyQuestionChoice,
+  DailyQuestionImageOption,
 } from '../dailyQuestions/dailyQuestionsContent';
 import {
   getLocalizedAnswerLabel,
@@ -301,6 +303,8 @@ export interface CategoryResultItem {
   partnerAnswer: string | null;
   partnerAnswerLabel: string | null;
   isMatch: boolean | null;
+  options?: DailyQuestionChoice[];
+  images?: DailyQuestionImageOption[];
 }
 
 export interface CategoryResults {
@@ -384,6 +388,8 @@ const buildResultsFromProgress = (
         userValue && partnerValue
           ? answersMatch(baseQuestion, userValue, partnerValue)
           : null,
+      options: question.type === 'choice' ? question.options : undefined,
+      images: question.type === 'image' ? question.images : undefined,
     };
   });
 
