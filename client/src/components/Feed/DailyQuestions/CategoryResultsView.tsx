@@ -16,7 +16,7 @@ import type { CategoryResults } from './types';
 import AnswerInput from './AnswerInput';
 import { ResultImageChoiceBlock, ResultTextChoiceBlock } from './ResultQuestionBlocks';
 import { getSimilarityRingSx } from './dailyQuestionsStyles';
-import { getResultQuestionCardSx, getResultQuestionTitleSx } from './resultQuestionStyles';
+import { getResultQuestionCardSx, getResultQuestionTitleSx, getResultEditButtonSx } from './resultQuestionStyles';
 
 interface CategoryResultsViewProps {
   results: CategoryResults;
@@ -126,7 +126,7 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
 
       {!readOnly && !results.partnerCompleted && results.userCompleted && (
         <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <Typography variant="body2" color="text.secondary" mb={1.5}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }} mb={1.5}>
             {t('dailyQuestions.partnerNotFinished')}
           </Typography>
           <Button
@@ -199,16 +199,7 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
                 size="small"
                 onClick={() => setEditingQuestionId(item.questionId)}
                 disabled={Boolean(editingQuestionId) || saving}
-                sx={{
-                  position: 'absolute',
-                  top: 10,
-                  right: 10,
-                  zIndex: 2,
-                  bgcolor: (muiTheme) =>
-                    muiTheme.palette.mode === 'light'
-                      ? 'rgba(255,255,255,0.85)'
-                      : 'rgba(0,0,0,0.35)',
-                }}
+                sx={getResultEditButtonSx(theme)}
                 aria-label={t('dailyQuestions.editAnswer')}
               >
                 <EditOutlinedIcon fontSize="small" />

@@ -12,6 +12,7 @@ import {
   getResultImagePairSx,
   getResultImagePhotoSx,
   getResultImagePlaceholderSx,
+  getResultMutedTextSx,
   getResultQuestionCardSx,
   getResultQuestionTitleSx,
 } from './resultQuestionStyles';
@@ -55,9 +56,9 @@ export const ResultTextChoiceBlock: React.FC<ResultTextChoiceBlockProps> = ({
         <Avatar src={user.avatar} sx={getResultAvatarSx()}>
           {getInitials(user.name)}
         </Avatar>
-        <Box sx={getResultAnswerBubbleSx(theme, 'left')}>
+        <Typography component="span" sx={getResultAnswerBubbleSx(theme, 'left')}>
           {item.userAnswerLabel || '—'}
-        </Box>
+        </Typography>
       </Box>
 
       {item.partnerAnswerLabel ? (
@@ -65,12 +66,16 @@ export const ResultTextChoiceBlock: React.FC<ResultTextChoiceBlockProps> = ({
           <Avatar src={partner?.avatar} sx={getResultAvatarSx()}>
             {getInitials(partner?.name ?? t('dailyQuestions.partnerFallback'))}
           </Avatar>
-          <Box sx={getResultAnswerBubbleSx(theme, 'right')}>
+          <Typography component="span" sx={getResultAnswerBubbleSx(theme, 'right')}>
             {item.partnerAnswerLabel}
-          </Box>
+          </Typography>
         </Box>
       ) : (
-        <Typography variant="body2" color="text.secondary" fontStyle="italic" textAlign="right">
+        <Typography
+          variant="body2"
+          textAlign="right"
+          sx={getResultMutedTextSx(theme)}
+        >
           {t('dailyQuestions.partnerNoAnswer')}
         </Typography>
       )}

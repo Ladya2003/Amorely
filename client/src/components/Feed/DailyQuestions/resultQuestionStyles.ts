@@ -1,24 +1,28 @@
 import { alpha, Theme } from '@mui/material/styles';
-import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from '../../../theme/surfaceStyles';
+import { SURFACE_BORDER_RADIUS } from '../../../theme/surfaceStyles';
 
 export const getResultQuestionCardSx = (theme: Theme) => ({
   p: 2.25,
   mb: 2,
   borderRadius: `${Math.round(SURFACE_BORDER_RADIUS * 0.85)}px`,
-  border: `1px solid ${alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.18 : 0.28)}`,
+  bgcolor: theme.palette.background.paper,
+  border: `1px solid ${alpha(
+    theme.palette.primary.main,
+    theme.palette.mode === 'light' ? 0.2 : 0.32
+  )}`,
   boxShadow:
     theme.palette.mode === 'light'
-      ? `0 8px 28px ${alpha(theme.palette.primary.main, 0.1)}`
-      : `0 10px 32px ${alpha(theme.palette.common.black, 0.28)}`,
-  ...getPrimaryTintSurface(theme, { tint: { light: 0.06, dark: 0.12 } }),
+      ? `0 8px 28px ${alpha(theme.palette.common.black, 0.08)}`
+      : `0 10px 32px ${alpha(theme.palette.common.black, 0.35)}`,
 });
 
 export const getResultQuestionTitleSx = (theme: Theme) => ({
   fontWeight: 700,
   fontSize: '1rem',
   lineHeight: 1.45,
-  color: theme.palette.mode === 'light' ? '#3b0051' : theme.palette.primary.light,
+  color: theme.palette.text.primary,
   mb: 2,
+  pr: 4,
 });
 
 export const getResultAnswerRowSx = (align: 'left' | 'right') => ({
@@ -30,19 +34,30 @@ export const getResultAnswerRowSx = (align: 'left' | 'right') => ({
   justifyContent: align === 'right' ? 'flex-start' : 'flex-start',
 });
 
-export const getResultAnswerBubbleSx = (theme: Theme, align: 'left' | 'right') => ({
-  px: 2,
-  py: 1.25,
-  maxWidth: '78%',
-  borderRadius: '999px',
-  bgcolor:
-    theme.palette.mode === 'light'
-      ? alpha(theme.palette.common.black, 0.06)
-      : alpha(theme.palette.common.white, 0.1),
-  color: theme.palette.text.primary,
-  fontSize: '0.9375rem',
-  lineHeight: 1.4,
-  textAlign: align === 'right' ? 'right' : 'left',
+export const getResultAnswerBubbleSx = (theme: Theme, align: 'left' | 'right') => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    px: 2,
+    py: 1.25,
+    maxWidth: '78%',
+    borderRadius: '999px',
+    bgcolor: isLight ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.14),
+    border: `1px solid ${alpha(
+      theme.palette.common.black,
+      isLight ? 0.06 : 0
+    )}`,
+    color: theme.palette.text.primary,
+    fontSize: '0.9375rem',
+    lineHeight: 1.45,
+    fontWeight: 500,
+    textAlign: align === 'right' ? 'right' : 'left',
+  };
+};
+
+export const getResultMutedTextSx = (theme: Theme) => ({
+  color: theme.palette.text.secondary,
+  fontStyle: 'italic' as const,
 });
 
 export const getResultAvatarSx = () => ({
@@ -97,9 +112,24 @@ export const getResultImagePlaceholderSx = (theme: Theme) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.16),
+  bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.1),
+  border: `1px dashed ${alpha(theme.palette.text.secondary, 0.45)}`,
   color: theme.palette.text.secondary,
   fontSize: '0.8125rem',
   textAlign: 'center' as const,
   px: 1.5,
+});
+
+export const getResultEditButtonSx = (theme: Theme) => ({
+  position: 'absolute' as const,
+  top: 10,
+  right: 10,
+  zIndex: 2,
+  bgcolor: theme.palette.background.paper,
+  border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
+  boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.12)}`,
+  color: theme.palette.text.primary,
+  '&:hover': {
+    bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.1),
+  },
 });
