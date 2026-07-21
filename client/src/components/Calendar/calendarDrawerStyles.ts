@@ -4,6 +4,10 @@ import {
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
 import { MODAL_INNER_RADIUS, MODAL_ACTION_RADIUS, getAppGlassSurfaceLightTextSx, MODAL_TEXT_PRIMARY_LIGHT, MODAL_TEXT_SECONDARY_LIGHT } from '../../theme/modalStyles';
+import { getModalFooterActionsSx } from '../../theme/appTheme';
+
+const CALENDAR_DRAWER_SURFACE_TINT = 0.07;
+const CALENDAR_DRAWER_FOOTER_TINT = 0.1;
 
 export const CALENDAR_DRAWER_INNER_RADIUS = MODAL_INNER_RADIUS;
 export const CALENDAR_DRAWER_ACTION_RADIUS = MODAL_ACTION_RADIUS;
@@ -30,7 +34,7 @@ export const getCalendarDrawerPaperSx = (theme: Theme, isMobile: boolean): Recor
     theme.palette.mode === 'light'
       ? `-12px 0 40px ${alpha(theme.palette.common.black, 0.08)}`
       : `-16px 0 48px ${alpha(theme.palette.common.black, 0.32)}`,
-  ...getAppGlassSurfaceLightTextSx(theme),
+  ...getAppGlassSurfaceLightTextSx(theme, { surfaceTint: CALENDAR_DRAWER_SURFACE_TINT }),
 });
 
 export const getCalendarDrawerHeaderWrapSx = () => ({
@@ -58,7 +62,7 @@ export const getCalendarDrawerHeaderSx = (theme: Theme) => ({
     theme.palette.mode === 'light'
       ? `0 8px 24px ${alpha(theme.palette.common.black, 0.06)}`
       : `0 10px 32px ${alpha(theme.palette.common.black, 0.24)}`,
-  ...getAppGlassSurfaceLightTextSx(theme),
+  ...getAppGlassSurfaceLightTextSx(theme, { surfaceTint: 0.12 }),
 });
 
 export const getCalendarDrawerHeaderTitleSx = (theme: Theme) => ({
@@ -101,7 +105,7 @@ export const getCalendarDrawerContentSx = (theme: Theme) => ({
   px: 2.5,
   py: 2,
   pb: 3,
-  ...getAppGlassSurfaceLightTextSx(theme),
+  ...getAppGlassSurfaceLightTextSx(theme, { surfaceTint: CALENDAR_DRAWER_SURFACE_TINT }),
 });
 
 export const getCalendarDrawerFooterSx = (theme: Theme) => ({
@@ -115,11 +119,12 @@ export const getCalendarDrawerFooterSx = (theme: Theme) => ({
   flexDirection: 'column',
   gap: 1,
   ...getPrimaryTintSurface(theme, {
-    tint: { light: 0.1, dark: 0.18 },
+    tint: { light: CALENDAR_DRAWER_FOOTER_TINT, dark: 0.18 },
   }),
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
-  ...getAppGlassSurfaceLightTextSx(theme),
+  ...getAppGlassSurfaceLightTextSx(theme, { surfaceTint: CALENDAR_DRAWER_FOOTER_TINT }),
+  ...getModalFooterActionsSx(theme),
 });
 
 export const getEventEditorFlagBoxSx = (theme: Theme) => ({

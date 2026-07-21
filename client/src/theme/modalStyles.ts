@@ -15,11 +15,21 @@ const getModalSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medi
   )}`;
 
 /** Белый текст для glass-поверхностей в light-теме (модалки, drawer и т.п.) */
-export const getAppGlassSurfaceLightTextSx = (theme: Theme): Record<string, unknown> => {
+export type GlassSurfaceLightTextOptions = {
+  /** Прозрачность tint фона родительской поверхности — для notch лейбла */
+  surfaceTint?: number;
+};
+
+export const getAppGlassSurfaceLightTextSx = (
+  theme: Theme,
+  options?: GlassSurfaceLightTextOptions
+): Record<string, unknown> => {
   if (theme.palette.mode !== 'light') {
     return {};
   }
 
+  const surfaceTint = options?.surfaceTint ?? 0.12;
+  const labelNotchBg = alpha(theme.palette.primary.main, surfaceTint);
   const glassField = getModalGlassFieldSx(theme);
 
   return {
@@ -43,9 +53,18 @@ export const getAppGlassSurfaceLightTextSx = (theme: Theme): Record<string, unkn
       color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
     },
     '& .MuiInputLabel-root.MuiInputLabel-shrink, & .MuiFormLabel-root.MuiInputLabel-shrink': {
-      bgcolor: `${alpha(theme.palette.primary.main, 0.14)} !important`,
+      bgcolor: `${labelNotchBg} !important`,
       px: 0.75,
+      zIndex: 1,
     },
+    '& .MuiInputLabel-root.MuiInputLabel-shrink + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend, & .MuiInputLabel-root.MuiInputLabel-shrink + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
+      {
+        maxWidth: '100% !important',
+      },
+    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline legend, & .MuiPickersOutlinedInput-root.Mui-focused .MuiPickersOutlinedInput-notchedOutline legend':
+      {
+        maxWidth: '100% !important',
+      },
     '& .MuiOutlinedInput-root': glassField,
     '& .MuiTextField-root .MuiOutlinedInput-root': glassField,
     '& .MuiAutocomplete-root .MuiOutlinedInput-root': glassField,
@@ -86,11 +105,33 @@ export const getAppGlassSurfaceLightTextSx = (theme: Theme): Record<string, unkn
       borderColor: alpha(theme.palette.common.white, 0.24),
     },
     '& .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
-      borderColor: alpha(theme.palette.common.white, 0.55),
-      color: MODAL_TEXT_PRIMARY_LIGHT,
+      borderColor: `${alpha(theme.palette.common.white, 0.75)} !important`,
+      color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
       '&:hover': {
-        borderColor: alpha(theme.palette.common.white, 0.85),
-        bgcolor: alpha(theme.palette.common.white, 0.12),
+        borderColor: `${alpha(theme.palette.common.white, 0.95)} !important`,
+        bgcolor: `${alpha(theme.palette.common.white, 0.12)} !important`,
+      },
+    },
+    '& .MuiButton-contained:not(.MuiButton-colorError):not(.MuiButton-colorWarning):not(.Mui-disabled)': {
+      bgcolor: `${theme.palette.primary.main} !important`,
+      color: `${theme.palette.primary.contrastText} !important`,
+      boxShadow: 'none !important',
+      '&:hover': {
+        bgcolor: `${theme.palette.primary.dark} !important`,
+        boxShadow: 'none !important',
+      },
+    },
+    '& .MuiButton-contained.Mui-disabled:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+      bgcolor: `${alpha(theme.palette.common.white, 0.22)} !important`,
+      color: `${alpha(theme.palette.common.white, 0.55)} !important`,
+      border: `1px solid ${alpha(theme.palette.common.white, 0.35)} !important`,
+    },
+    '& .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+      border: `1px solid ${alpha(theme.palette.common.white, 0.55)} !important`,
+      color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+      '&:hover': {
+        borderColor: `${alpha(theme.palette.common.white, 0.85)} !important`,
+        bgcolor: `${alpha(theme.palette.common.white, 0.12)} !important`,
       },
     },
     '& .MuiIconButton-root': {

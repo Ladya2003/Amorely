@@ -128,8 +128,8 @@ export const getModalFooterActionsSx = (theme: Theme) => ({
     padding: modalSecondaryButtonPadding(theme),
   },
   '& .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
-    border: `1px solid ${theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.55)' : theme.palette.primary.main}`,
-    ...(theme.palette.mode === 'light' ? { color: MODAL_TEXT_PRIMARY_LIGHT } : {}),
+    border: `1px solid ${theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.75)' : theme.palette.primary.main}`,
+    ...(theme.palette.mode === 'light' ? { color: `${MODAL_TEXT_PRIMARY_LIGHT} !important` } : {}),
     '&:hover': {
       borderColor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.85)' : theme.palette.primary.dark,
       backgroundColor: alpha(
@@ -139,16 +139,33 @@ export const getModalFooterActionsSx = (theme: Theme) => ({
     },
   },
   '& .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
-    borderColor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.55)' : theme.palette.primary.main,
-    color: theme.palette.mode === 'light' ? MODAL_TEXT_PRIMARY_LIGHT : theme.palette.primary.main,
+    borderColor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.75) !important' : theme.palette.primary.main,
+    color: theme.palette.mode === 'light' ? `${MODAL_TEXT_PRIMARY_LIGHT} !important` : theme.palette.primary.main,
     '&:hover': {
-      borderColor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.85)' : theme.palette.primary.dark,
+      borderColor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.95) !important' : theme.palette.primary.dark,
       backgroundColor: alpha(
         theme.palette.mode === 'light' ? theme.palette.common.white : theme.palette.primary.main,
         theme.palette.mode === 'light' ? 0.12 : 0.08
       ),
     },
   },
+  ...(theme.palette.mode === 'light'
+    ? {
+        '& .MuiButton-contained:not(.MuiButton-colorError):not(.MuiButton-colorWarning):not(.Mui-disabled)': {
+          bgcolor: `${theme.palette.primary.main} !important`,
+          color: `${theme.palette.primary.contrastText} !important`,
+          boxShadow: 'none !important',
+          '&:hover': {
+            bgcolor: `${theme.palette.primary.dark} !important`,
+          },
+        },
+        '& .MuiButton-contained.Mui-disabled:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+          bgcolor: 'rgba(255, 255, 255, 0.22) !important',
+          color: 'rgba(255, 255, 255, 0.55) !important',
+          border: '1px solid rgba(255, 255, 255, 0.35) !important',
+        },
+      }
+    : {}),
   '& .MuiButton-outlined.MuiButton-colorError, & .MuiButton-outlined.MuiButton-colorWarning': {
     padding: modalSecondaryButtonPadding(theme),
   },
@@ -356,6 +373,10 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
             '&.Mui-focused': {
               color: theme.palette.primary.main,
             },
+            '&.MuiInputLabel-shrink + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend, &.MuiInputLabel-shrink + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
+              {
+                maxWidth: '100% !important',
+              },
             '&:not(.MuiInputLabel-shrink) + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend': {
               maxWidth: '0.01px !important',
               padding: 0,
