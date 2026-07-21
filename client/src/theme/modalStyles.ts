@@ -15,10 +15,26 @@ const getModalSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medi
   )}`;
 
 /** Белый текст для glass-модалок в light-теме (фон — фиолетовый tint) */
+const getModalGlassFieldSx = (theme: Theme) => ({
+  color: MODAL_TEXT_PRIMARY_LIGHT,
+  bgcolor: alpha(theme.palette.common.white, 0.12),
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.32)} !important`,
+  },
+  '&:hover .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.48)} !important`,
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.72)} !important`,
+  },
+});
+
 const getAppModalLightTextSx = (theme: Theme) => {
   if (theme.palette.mode !== 'light') {
     return {};
   }
+
+  const glassField = getModalGlassFieldSx(theme);
 
   return {
     color: MODAL_TEXT_PRIMARY_LIGHT,
@@ -34,22 +50,36 @@ const getAppModalLightTextSx = (theme: Theme) => {
     '& .MuiDialogContentText-root': {
       color: MODAL_TEXT_SECONDARY_LIGHT,
     },
-    '& .MuiTextField-root .MuiInputLabel-root': {
-      color: theme.palette.text.secondary,
+    '& .MuiInputLabel-root': {
+      color: MODAL_TEXT_SECONDARY_LIGHT,
     },
-    '& .MuiTextField-root .MuiInputLabel-root.Mui-focused': {
-      color: theme.palette.primary.main,
+    '& .MuiInputLabel-root.Mui-focused': {
+      color: MODAL_TEXT_PRIMARY_LIGHT,
     },
-    '& .MuiTextField-root .MuiOutlinedInput-root': {
-      color: theme.palette.text.primary,
-      bgcolor: theme.palette.background.paper,
-    },
-    '& .MuiTextField-root .MuiFormHelperText-root': {
-      color: theme.palette.text.secondary,
+    '& .MuiTextField-root .MuiOutlinedInput-root': glassField,
+    '& .MuiAutocomplete-root .MuiOutlinedInput-root': glassField,
+    '& .MuiPickersOutlinedInput-root': glassField,
+    '& .MuiFormHelperText-root': {
+      color: MODAL_TEXT_SECONDARY_LIGHT,
     },
     '& .MuiFormControlLabel-label': {
       color: MODAL_TEXT_PRIMARY_LIGHT,
     },
+    '& .MuiChip-root:not(.MuiChip-colorSuccess):not(.MuiChip-colorWarning):not(.MuiChip-colorError):not(.MuiChip-colorInfo)':
+      {
+        bgcolor: alpha(theme.palette.common.white, 0.2),
+        color: MODAL_TEXT_PRIMARY_LIGHT,
+        border: `1px solid ${alpha(theme.palette.common.white, 0.34)}`,
+        '& .MuiChip-label': {
+          color: MODAL_TEXT_PRIMARY_LIGHT,
+        },
+        '& .MuiChip-deleteIcon': {
+          color: MODAL_TEXT_SECONDARY_LIGHT,
+          '&:hover': {
+            color: MODAL_TEXT_PRIMARY_LIGHT,
+          },
+        },
+      },
     '& .MuiIconButton-root': {
       color: MODAL_TEXT_PRIMARY_LIGHT,
     },

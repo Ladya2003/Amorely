@@ -5,21 +5,34 @@ import { SURFACE_BORDER_RADIUS } from '../../../theme/surfaceStyles';
 const getResultCardBackground = (theme: Theme) =>
   theme.palette.mode === 'light' ? theme.palette.common.white : '#242424';
 
-export const getResultQuestionCardSx = (theme: Theme) => ({
-  p: 2.25,
-  mb: 2,
-  borderRadius: `${Math.round(SURFACE_BORDER_RADIUS * 0.85)}px`,
-  bgcolor: getResultCardBackground(theme),
-  color: theme.palette.text.primary,
-  border: `1px solid ${alpha(
-    theme.palette.primary.main,
-    theme.palette.mode === 'light' ? 0.2 : 0.32
-  )}`,
-  boxShadow:
-    theme.palette.mode === 'light'
+export const getResultQuestionCardSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    p: 2.25,
+    mb: 2,
+    borderRadius: `${Math.round(SURFACE_BORDER_RADIUS * 0.85)}px`,
+    bgcolor: getResultCardBackground(theme),
+    color: theme.palette.text.primary,
+    border: `1px solid ${alpha(
+      theme.palette.primary.main,
+      isLight ? 0.2 : 0.32
+    )}`,
+    boxShadow: isLight
       ? `0 8px 28px ${alpha(theme.palette.common.black, 0.08)}`
       : `0 10px 32px ${alpha(theme.palette.common.black, 0.35)}`,
-});
+    '& .MuiOutlinedInput-root': {
+      color: isLight ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)',
+      bgcolor: isLight ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.1),
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: `${alpha(theme.palette.common.black, isLight ? 0.14 : 0.22)} !important`,
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: `${isLight ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.65)'} !important`,
+    },
+  };
+};
 
 export const getResultQuestionTitleSx = (theme: Theme) => ({
   fontWeight: 700,
