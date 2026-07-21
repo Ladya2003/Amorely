@@ -24,7 +24,7 @@ import { getUserDisplayName } from '../UI/UserProfileChip';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-import { getFeedHeaderGlowSx } from './feedBannerStyles';
+import { getFeedHeaderGlowSx, getNotificationBellButtonAnimSx, getNotificationBellIconSx } from './feedBannerStyles';
 import { fetchAnnouncements, type AppAnnouncement, claimAnnouncementReadReward } from '../../services/announcementsService';
 import {
   addReadAnnouncementKey,
@@ -35,7 +35,6 @@ const AVATAR_SIZE_WITH_PHOTO = 92;
 const AVATAR_SIZE_WITHOUT_PHOTO = 56;
 const NOTIFICATION_SIZE_WITH_PHOTO = 38;
 const NOTIFICATION_SIZE_WITHOUT_PHOTO = 30;
-const NOTIFICATION_BELL_ROTATE = '16deg';
 
 type NotificationsView = 'list' | 'detail';
 
@@ -139,6 +138,9 @@ const FeedHeader: React.FC = () => {
   const hasAvatar = Boolean(user.avatar?.trim());
   const avatarSize = hasAvatar ? AVATAR_SIZE_WITH_PHOTO : AVATAR_SIZE_WITHOUT_PHOTO;
   const notificationSize = hasAvatar ? NOTIFICATION_SIZE_WITH_PHOTO : NOTIFICATION_SIZE_WITHOUT_PHOTO;
+  const hasUnreadNotifications =
+    !announcementsLoading && unreadCount > 0 && !notificationsOpen;
+  const notificationIconSize = hasAvatar ? 21 : 17;
   const displayName = getUserDisplayName(user);
 
   const handleProfileClick = () => {
@@ -287,17 +289,14 @@ const FeedHeader: React.FC = () => {
                     '&:hover': {
                       bgcolor: theme.palette.mode === 'light' ? '#333' : '#3a3a3a',
                     },
+                    ...getNotificationBellButtonAnimSx(hasUnreadNotifications),
                   })}
                 >
                   {announcementsLoading ? (
                     <CircularProgress size={hasAvatar ? 16 : 14} sx={{ color: '#fff' }} />
                   ) : (
                     <NotificationsNoneOutlinedIcon
-                      sx={{
-                        fontSize: hasAvatar ? 21 : 17,
-                        transform: `rotate(${NOTIFICATION_BELL_ROTATE})`,
-                        transformOrigin: 'center',
-                      }}
+                      sx={getNotificationBellIconSx(notificationIconSize, hasUnreadNotifications)}
                     />
                   )}
                 </IconButton>

@@ -200,6 +200,57 @@ export const getFeedContentUpdateTooltipSlotProps = (theme: Theme) => {
   };
 };
 
+export const NOTIFICATION_BELL_BASE_ROTATE = 16;
+
+export const getNotificationBellIconSx = (fontSize: number, hasUnread: boolean) => {
+  const baseRotate = `${NOTIFICATION_BELL_BASE_ROTATE}deg`;
+  const origin = '50% 12%';
+
+  if (!hasUnread) {
+    return {
+      fontSize,
+      transform: `rotate(${baseRotate})`,
+      transformOrigin: origin,
+    };
+  }
+
+  return {
+    fontSize,
+    transformOrigin: origin,
+    animation: 'feedNotificationBellRing 2.5s ease-in-out infinite',
+    '@keyframes feedNotificationBellRing': {
+      '0%, 58%, 100%': { transform: `rotate(${baseRotate})` },
+      '6%': { transform: 'rotate(32deg)' },
+      '12%': { transform: 'rotate(0deg)' },
+      '18%': { transform: 'rotate(30deg)' },
+      '24%': { transform: 'rotate(4deg)' },
+      '30%': { transform: 'rotate(26deg)' },
+      '36%': { transform: 'rotate(8deg)' },
+      '42%': { transform: 'rotate(22deg)' },
+      '48%': { transform: `rotate(${baseRotate})` },
+    },
+    '@media (prefers-reduced-motion: reduce)': {
+      animation: 'none',
+      transform: `rotate(${baseRotate})`,
+    },
+  };
+};
+
+/** Плавная пульсация кнопки колокольчика при непрочитанных уведомлениях */
+export const getNotificationBellButtonAnimSx = (hasUnread: boolean) =>
+  hasUnread
+    ? {
+        animation: 'feedNotificationBellButtonPulse 2.5s ease-in-out infinite',
+        '@keyframes feedNotificationBellButtonPulse': {
+          '0%, 58%, 100%': { boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)' },
+          '30%': { boxShadow: '0 2px 14px rgba(255, 77, 109, 0.45)' },
+        },
+        '@media (prefers-reduced-motion: reduce)': {
+          animation: 'none',
+        },
+      }
+    : {};
+
 export const petCardEnterAnimation = (index: number) => ({
   animation: `petCardIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) ${index * 0.06}s both`,
   '@keyframes petCardIn': {
