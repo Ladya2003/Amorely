@@ -624,7 +624,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             >
               <CloseIcon fontSize="small" />
             </IconButton>
-            <Typography component="h2" sx={getCalendarDrawerHeaderTitleSx()}>
+            <Typography component="h2" sx={getCalendarDrawerHeaderTitleSx(theme)}>
               {isEditMode ? t('calendar.event.edit') : t('calendar.event.new')}
             </Typography>
             <EncryptedIndicator />

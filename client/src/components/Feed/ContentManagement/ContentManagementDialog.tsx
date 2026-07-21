@@ -245,7 +245,7 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
         >
           <CloseIcon fontSize="small" />
         </IconButton>
-        <Typography component="h2" sx={getCalendarDrawerHeaderTitleSx()}>
+        <Typography component="h2" sx={getCalendarDrawerHeaderTitleSx(theme)}>
           Управление контентом
         </Typography>
       </Box>

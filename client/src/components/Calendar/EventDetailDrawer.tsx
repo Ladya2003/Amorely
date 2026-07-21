@@ -166,7 +166,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
-              <Box sx={{ ...getCalendarDrawerHeaderTitleSx(), flex: 1, minWidth: 0, fontWeight: 400 }}>
+              <Box sx={{ ...getCalendarDrawerHeaderTitleSx(theme), flex: 1, minWidth: 0, fontWeight: 400 }}>
                 <ExpandableClampedTitle
                   text={eventTitle}
                   variant="h6"
@@ -387,7 +387,12 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
             <Box sx={{ p: 3 }}>
               {/* Дата */}
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <CalendarTodayIcon sx={{ color: 'primary.main', mr: 1 }} />
+                <CalendarTodayIcon
+                  sx={{
+                    mr: 1,
+                    color: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.72)' : 'primary.main',
+                  }}
+                />
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" color="text.secondary">
                     {t('calendar.detail.date')}

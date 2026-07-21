@@ -14,22 +14,8 @@ const getModalSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medi
     theme.palette.mode === 'light' ? (strength === 'soft' ? 0.1 : 0.14) : strength === 'soft' ? 0.18 : 0.24
   )}`;
 
-/** Белый текст для glass-модалок в light-теме (фон — фиолетовый tint) */
-const getModalGlassFieldSx = (theme: Theme) => ({
-  color: MODAL_TEXT_PRIMARY_LIGHT,
-  bgcolor: alpha(theme.palette.common.white, 0.12),
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: `${alpha(theme.palette.common.white, 0.32)} !important`,
-  },
-  '&:hover .MuiOutlinedInput-notchedOutline': {
-    borderColor: `${alpha(theme.palette.common.white, 0.48)} !important`,
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: `${alpha(theme.palette.common.white, 0.72)} !important`,
-  },
-});
-
-const getAppModalLightTextSx = (theme: Theme) => {
+/** Белый текст для glass-поверхностей в light-теме (модалки, drawer и т.п.) */
+export const getAppGlassSurfaceLightTextSx = (theme: Theme) => {
   if (theme.palette.mode !== 'light') {
     return {};
   }
@@ -59,13 +45,22 @@ const getAppModalLightTextSx = (theme: Theme) => {
     '& .MuiTextField-root .MuiOutlinedInput-root': glassField,
     '& .MuiAutocomplete-root .MuiOutlinedInput-root': glassField,
     '& .MuiPickersOutlinedInput-root': glassField,
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      color: MODAL_TEXT_SECONDARY_LIGHT,
+    },
     '& .MuiFormHelperText-root': {
       color: MODAL_TEXT_SECONDARY_LIGHT,
     },
     '& .MuiFormControlLabel-label': {
       color: MODAL_TEXT_PRIMARY_LIGHT,
     },
-    '& .MuiChip-root:not(.MuiChip-colorSuccess):not(.MuiChip-colorWarning):not(.MuiChip-colorError):not(.MuiChip-colorInfo)':
+    '& .MuiCheckbox-root': {
+      color: MODAL_TEXT_SECONDARY_LIGHT,
+    },
+    '& .MuiCheckbox-root.Mui-checked': {
+      color: MODAL_TEXT_PRIMARY_LIGHT,
+    },
+    '& .MuiChip-root:not(.MuiChip-colorSuccess):not(.MuiChip-colorWarning):not(.MuiChip-colorError):not(.MuiChip-colorInfo):not(.MuiChip-colorSecondary)':
       {
         bgcolor: alpha(theme.palette.common.white, 0.2),
         color: MODAL_TEXT_PRIMARY_LIGHT,
@@ -80,11 +75,36 @@ const getAppModalLightTextSx = (theme: Theme) => {
           },
         },
       },
+    '& .MuiDivider-root': {
+      borderColor: alpha(theme.palette.common.white, 0.24),
+    },
+    '& .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+      borderColor: alpha(theme.palette.common.white, 0.55),
+      color: MODAL_TEXT_PRIMARY_LIGHT,
+      '&:hover': {
+        borderColor: alpha(theme.palette.common.white, 0.85),
+        bgcolor: alpha(theme.palette.common.white, 0.12),
+      },
+    },
     '& .MuiIconButton-root': {
       color: MODAL_TEXT_PRIMARY_LIGHT,
     },
   };
 };
+
+const getModalGlassFieldSx = (theme: Theme) => ({
+  color: MODAL_TEXT_PRIMARY_LIGHT,
+  bgcolor: alpha(theme.palette.common.white, 0.12),
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.32)} !important`,
+  },
+  '&:hover .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.48)} !important`,
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.72)} !important`,
+  },
+});
 
 /** Общая glass-поверхность модалки */
 const getAppModalPaperBase = (theme: Theme) => ({
@@ -99,7 +119,7 @@ const getAppModalPaperBase = (theme: Theme) => ({
     theme.palette.mode === 'light'
       ? `0 16px 48px ${alpha(theme.palette.common.black, 0.14)}`
       : `0 20px 56px ${alpha(theme.palette.common.black, 0.48)}`,
-  ...getAppModalLightTextSx(theme),
+  ...getAppGlassSurfaceLightTextSx(theme),
 });
 
 /** Центрированный Dialog — скругление со всех сторон */
@@ -228,7 +248,7 @@ export const getAppContextMenuPaperSx = (theme: Theme) => ({
   '& .MuiList-root': {
     p: 0.75,
   },
-  ...getAppModalLightTextSx(theme),
+  ...getAppGlassSurfaceLightTextSx(theme),
 });
 
 export const getAppContextMenuItemSx = (

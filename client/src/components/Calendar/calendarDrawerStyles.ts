@@ -3,7 +3,7 @@ import {
   SURFACE_BORDER_RADIUS,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
-import { MODAL_INNER_RADIUS, MODAL_ACTION_RADIUS } from '../../theme/modalStyles';
+import { MODAL_INNER_RADIUS, MODAL_ACTION_RADIUS, getAppGlassSurfaceLightTextSx, MODAL_TEXT_PRIMARY_LIGHT } from '../../theme/modalStyles';
 
 export const CALENDAR_DRAWER_INNER_RADIUS = MODAL_INNER_RADIUS;
 export const CALENDAR_DRAWER_ACTION_RADIUS = MODAL_ACTION_RADIUS;
@@ -14,7 +14,7 @@ const getSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medium') 
     theme.palette.mode === 'light' ? (strength === 'soft' ? 0.1 : 0.14) : strength === 'soft' ? 0.18 : 0.24
   )}`;
 
-export const getCalendarDrawerPaperSx = (theme: Theme, isMobile: boolean) => ({
+export const getCalendarDrawerPaperSx = (theme: Theme, isMobile: boolean): Record<string, unknown> => ({
   width: isMobile ? '100%' : 500,
   maxWidth: '100vw',
   display: 'flex',
@@ -30,6 +30,7 @@ export const getCalendarDrawerPaperSx = (theme: Theme, isMobile: boolean) => ({
     theme.palette.mode === 'light'
       ? `-12px 0 40px ${alpha(theme.palette.common.black, 0.08)}`
       : `-16px 0 48px ${alpha(theme.palette.common.black, 0.32)}`,
+  ...getAppGlassSurfaceLightTextSx(theme),
 });
 
 export const getCalendarDrawerHeaderWrapSx = () => ({
@@ -59,17 +60,18 @@ export const getCalendarDrawerHeaderSx = (theme: Theme) => ({
       : `0 10px 32px ${alpha(theme.palette.common.black, 0.24)}`,
 });
 
-export const getCalendarDrawerHeaderTitleSx = () => ({
+export const getCalendarDrawerHeaderTitleSx = (theme: Theme) => ({
   flex: 1,
   minWidth: 0,
   fontWeight: 700,
   fontSize: '1.0625rem',
   lineHeight: 1.3,
+  ...(theme.palette.mode === 'light' ? { color: MODAL_TEXT_PRIMARY_LIGHT } : {}),
 });
 
 export const getCalendarDrawerHeaderIconButtonSx = (theme: Theme) => ({
   flexShrink: 0,
-  color: 'text.secondary',
+  color: theme.palette.mode === 'light' ? MODAL_TEXT_PRIMARY_LIGHT : 'text.secondary',
   border: getSurfaceBorder(theme, 'soft'),
   borderRadius: `${CALENDAR_DRAWER_ACTION_RADIUS}px`,
   ...getPrimaryTintSurface(theme, {
@@ -77,7 +79,7 @@ export const getCalendarDrawerHeaderIconButtonSx = (theme: Theme) => ({
   }),
   transition: 'background-color 180ms ease, color 180ms ease',
   '&:hover': {
-    color: 'text.primary',
+    color: theme.palette.mode === 'light' ? MODAL_TEXT_PRIMARY_LIGHT : 'text.primary',
     bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.24),
   },
 });
