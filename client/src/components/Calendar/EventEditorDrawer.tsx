@@ -23,6 +23,7 @@ import { getModalFooterActionsSx } from '../../theme/appTheme';
 import {
   getCalendarDrawerContentSx,
   getCalendarDrawerFooterSx,
+  getCalendarDrawerEncryptedIndicatorSx,
   getCalendarDrawerHeaderIconButtonSx,
   getCalendarDrawerHeaderSx,
   getCalendarDrawerHeaderTitleSx,
@@ -627,12 +628,12 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             <Typography component="h2" sx={getCalendarDrawerHeaderTitleSx(theme)}>
               {isEditMode ? t('calendar.event.edit') : t('calendar.event.new')}
             </Typography>
-            <EncryptedIndicator />
+            <EncryptedIndicator sx={getCalendarDrawerEncryptedIndicatorSx(theme)} />
           </Box>
         </Box>
 
         <Box
-          sx={getCalendarDrawerContentSx()}
+          sx={getCalendarDrawerContentSx(theme)}
           onClickCapture={(event) => {
             if (!isSaving) return;
             const target = event.target as HTMLElement;
@@ -658,7 +659,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
                 fullWidth: true,
                 sx: { mb: 3 },
                 InputProps: {
-                  startAdornment: <CalendarTodayIcon sx={{ mr: 1, color: 'action.active' }} />
+                  startAdornment: <CalendarTodayIcon sx={{ mr: 1 }} />
                 }
               }
             }}

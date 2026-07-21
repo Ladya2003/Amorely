@@ -142,7 +142,7 @@ const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
     <>
       {infoMessage}
       <Box sx={{
-        ...getCalendarDrawerContentSx(),
+        ...getCalendarDrawerContentSx(theme),
         px: { xs: 2, sm: 2.5 },
       }}>
         {activeTab === 0 ? (

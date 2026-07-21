@@ -3,7 +3,7 @@ import {
   SURFACE_BORDER_RADIUS,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
-import { MODAL_INNER_RADIUS, MODAL_ACTION_RADIUS, getAppGlassSurfaceLightTextSx, MODAL_TEXT_PRIMARY_LIGHT } from '../../theme/modalStyles';
+import { MODAL_INNER_RADIUS, MODAL_ACTION_RADIUS, getAppGlassSurfaceLightTextSx, MODAL_TEXT_PRIMARY_LIGHT, MODAL_TEXT_SECONDARY_LIGHT } from '../../theme/modalStyles';
 
 export const CALENDAR_DRAWER_INNER_RADIUS = MODAL_INNER_RADIUS;
 export const CALENDAR_DRAWER_ACTION_RADIUS = MODAL_ACTION_RADIUS;
@@ -58,6 +58,7 @@ export const getCalendarDrawerHeaderSx = (theme: Theme) => ({
     theme.palette.mode === 'light'
       ? `0 8px 24px ${alpha(theme.palette.common.black, 0.06)}`
       : `0 10px 32px ${alpha(theme.palette.common.black, 0.24)}`,
+  ...getAppGlassSurfaceLightTextSx(theme),
 });
 
 export const getCalendarDrawerHeaderTitleSx = (theme: Theme) => ({
@@ -66,8 +67,18 @@ export const getCalendarDrawerHeaderTitleSx = (theme: Theme) => ({
   fontWeight: 700,
   fontSize: '1.0625rem',
   lineHeight: 1.3,
-  ...(theme.palette.mode === 'light' ? { color: MODAL_TEXT_PRIMARY_LIGHT } : {}),
+  ...(theme.palette.mode === 'light' ? { color: `${MODAL_TEXT_PRIMARY_LIGHT} !important` } : {}),
 });
+
+export const getCalendarDrawerEncryptedIndicatorSx = (theme: Theme) =>
+  theme.palette.mode === 'light'
+    ? {
+        color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
+        '&:hover': {
+          color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+        },
+      }
+    : {};
 
 export const getCalendarDrawerHeaderIconButtonSx = (theme: Theme) => ({
   flexShrink: 0,
@@ -84,12 +95,13 @@ export const getCalendarDrawerHeaderIconButtonSx = (theme: Theme) => ({
   },
 });
 
-export const getCalendarDrawerContentSx = () => ({
+export const getCalendarDrawerContentSx = (theme: Theme) => ({
   flexGrow: 1,
   overflow: 'auto',
   px: 2.5,
   py: 2,
   pb: 3,
+  ...getAppGlassSurfaceLightTextSx(theme),
 });
 
 export const getCalendarDrawerFooterSx = (theme: Theme) => ({
@@ -107,6 +119,7 @@ export const getCalendarDrawerFooterSx = (theme: Theme) => ({
   }),
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
+  ...getAppGlassSurfaceLightTextSx(theme),
 });
 
 export const getEventEditorFlagBoxSx = (theme: Theme) => ({

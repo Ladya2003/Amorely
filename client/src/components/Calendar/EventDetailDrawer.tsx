@@ -32,6 +32,7 @@ import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import ExpandableClampedTitle from '../UI/ExpandableClampedTitle';
 import {
   getCalendarDrawerContentSx,
+  getCalendarDrawerEncryptedIndicatorSx,
   getCalendarDrawerHeaderIconButtonSx,
   getCalendarDrawerHeaderSx,
   getCalendarDrawerHeaderTitleSx,
@@ -219,7 +220,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
             </Box>
           </Box>
 
-          <Box sx={getCalendarDrawerContentSx()}>
+          <Box sx={getCalendarDrawerContentSx(theme)}>
             {/* Медиа слайдер */}
             {mediaFiles.length > 0 && (
               <Box
@@ -464,7 +465,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                     {t('calendar.detail.author', { name: event.createdBy.username })}
                   </Typography>
                 )}
-                <EncryptedIndicator sx={{ mt: 1 }} />
+                <EncryptedIndicator sx={{ mt: 1, ...getCalendarDrawerEncryptedIndicatorSx(theme) }} />
               </Box>
 
               {/* Информация о редактировании */}

@@ -15,7 +15,7 @@ const getModalSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medi
   )}`;
 
 /** Белый текст для glass-поверхностей в light-теме (модалки, drawer и т.п.) */
-export const getAppGlassSurfaceLightTextSx = (theme: Theme) => {
+export const getAppGlassSurfaceLightTextSx = (theme: Theme): Record<string, unknown> => {
   if (theme.palette.mode !== 'light') {
     return {};
   }
@@ -24,8 +24,8 @@ export const getAppGlassSurfaceLightTextSx = (theme: Theme) => {
 
   return {
     color: MODAL_TEXT_PRIMARY_LIGHT,
-    '& .MuiTypography-root': {
-      color: 'inherit',
+    '& .MuiTypography-root:not(.MuiAlert-message)': {
+      color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
     },
     '& .MuiTypography-colorTextSecondary': {
       color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
@@ -36,23 +36,26 @@ export const getAppGlassSurfaceLightTextSx = (theme: Theme) => {
     '& .MuiDialogContentText-root': {
       color: MODAL_TEXT_SECONDARY_LIGHT,
     },
-    '& .MuiInputLabel-root': {
-      color: MODAL_TEXT_SECONDARY_LIGHT,
+    '& .MuiInputLabel-root, & .MuiFormLabel-root': {
+      color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
     },
-    '& .MuiInputLabel-root.Mui-focused': {
-      color: MODAL_TEXT_PRIMARY_LIGHT,
+    '& .MuiInputLabel-root.Mui-focused, & .MuiFormLabel-root.Mui-focused': {
+      color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
     },
+    '& .MuiOutlinedInput-root': glassField,
     '& .MuiTextField-root .MuiOutlinedInput-root': glassField,
     '& .MuiAutocomplete-root .MuiOutlinedInput-root': glassField,
+    '& .MuiPickersTextField-root .MuiPickersOutlinedInput-root': glassField,
+    '& .MuiFormControl-root .MuiPickersOutlinedInput-root': glassField,
     '& .MuiPickersOutlinedInput-root': glassField,
     '& .MuiInputAdornment-root .MuiSvgIcon-root': {
-      color: MODAL_TEXT_SECONDARY_LIGHT,
+      color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
     },
     '& .MuiFormHelperText-root': {
-      color: MODAL_TEXT_SECONDARY_LIGHT,
+      color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
     },
     '& .MuiFormControlLabel-label': {
-      color: MODAL_TEXT_PRIMARY_LIGHT,
+      color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
     },
     '& .MuiCheckbox-root': {
       color: MODAL_TEXT_SECONDARY_LIGHT,
@@ -93,15 +96,38 @@ export const getAppGlassSurfaceLightTextSx = (theme: Theme) => {
 };
 
 const getModalGlassFieldSx = (theme: Theme) => ({
-  color: MODAL_TEXT_PRIMARY_LIGHT,
+  color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
   bgcolor: alpha(theme.palette.common.white, 0.12),
+  '& .MuiInputBase-input, & .MuiInputBase-inputMultiline': {
+    color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+    WebkitTextFillColor: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+  },
+  '& .MuiInputBase-input::placeholder, & .MuiInputBase-inputMultiline::placeholder': {
+    color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
+    opacity: '1 !important',
+  },
+  '& .MuiPickersSectionList-root, & .MuiPickersSectionList-sectionContent': {
+    color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+  },
+  '& .MuiPickersInputBase-sectionContent, & .MuiPickersOutlinedInput-sectionContent': {
+    color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+  },
   '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.32)} !important`,
+  },
+  '& .MuiPickersOutlinedInput-notchedOutline': {
     borderColor: `${alpha(theme.palette.common.white, 0.32)} !important`,
   },
   '&:hover .MuiOutlinedInput-notchedOutline': {
     borderColor: `${alpha(theme.palette.common.white, 0.48)} !important`,
   },
+  '&:hover .MuiPickersOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.48)} !important`,
+  },
   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: `${alpha(theme.palette.common.white, 0.72)} !important`,
+  },
+  '&.Mui-focused .MuiPickersOutlinedInput-notchedOutline': {
     borderColor: `${alpha(theme.palette.common.white, 0.72)} !important`,
   },
 });
