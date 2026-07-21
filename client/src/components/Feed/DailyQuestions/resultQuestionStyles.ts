@@ -127,16 +127,27 @@ export const getResultImagePlaceholderSx = (theme: Theme) => ({
   px: 1.5,
 });
 
-export const getResultEditButtonSx = (theme: Theme) => ({
-  position: 'absolute' as const,
-  top: 10,
-  right: 10,
-  zIndex: 2,
-  bgcolor: theme.palette.background.paper,
-  border: `1px solid ${alpha(theme.palette.divider, 0.8)}`,
-  boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.12)}`,
-  color: theme.palette.text.primary,
-  '&:hover': {
-    bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.1),
-  },
-});
+export const getResultEditButtonSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+  const iconColor = isLight ? 'rgba(0, 0, 0, 0.72)' : theme.palette.text.primary;
+
+  return {
+    position: 'absolute' as const,
+    top: 10,
+    right: 10,
+    zIndex: 2,
+    bgcolor: isLight ? theme.palette.common.white : theme.palette.background.paper,
+    border: `1px solid ${alpha(
+      isLight ? theme.palette.common.black : theme.palette.divider,
+      isLight ? 0.14 : 0.8
+    )}`,
+    boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, isLight ? 0.12 : 0.12)}`,
+    color: `${iconColor} !important`,
+    '& .MuiSvgIcon-root': {
+      color: `${iconColor} !important`,
+    },
+    '&:hover': {
+      bgcolor: isLight ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.1),
+    },
+  };
+};
