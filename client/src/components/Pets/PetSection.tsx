@@ -30,6 +30,7 @@ import {
   petViewEnterSx,
   SURFACE_BORDER_RADIUS,
 } from '../Feed/feedBannerStyles';
+import { getAppGlassSurfaceLightTextSx } from '../../theme/modalStyles';
 
 interface PetSectionProps {
   onBalanceChange?: (balance: number) => void;
@@ -38,6 +39,7 @@ interface PetSectionProps {
   onPetSelect?: (pet: Pet) => void;
   embedded?: boolean;
   compact?: boolean;
+  glassSurface?: boolean;
 }
 
 type PetView = 'mine' | 'partner';
@@ -218,6 +220,7 @@ const PetSection: React.FC<PetSectionProps> = ({
   onPetSelect,
   embedded = false,
   compact = false,
+  glassSurface = false,
 }) => {
   const { t } = useTranslation();
   const partnerId = usePartnerId();
@@ -394,6 +397,7 @@ const PetSection: React.FC<PetSectionProps> = ({
           ...getPetSectionPaperSx(theme),
           mb: embedded ? 0 : 3,
           mt: embedded ? (compact ? 0 : 2) : 0,
+          ...(glassSurface ? getAppGlassSurfaceLightTextSx(theme) : {}),
           ...(compact && {
             px: 1.75,
             py: 1.5,

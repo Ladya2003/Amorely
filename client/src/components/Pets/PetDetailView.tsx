@@ -39,6 +39,7 @@ import {
   petViewEnterSx,
   SURFACE_BORDER_RADIUS,
 } from '../Feed/feedBannerStyles';
+import { getAppGlassSurfaceLightTextSx } from '../../theme/modalStyles';
 import { INPUT_BORDER_RADIUS } from '../../theme/appTheme';
 import { MOBILE_BOTTOM_NAV_OFFSET } from '../../constants/layout';
 
@@ -127,6 +128,7 @@ export interface PetDetailViewProps {
   ownerUserId?: string;
   visitOnly?: boolean;
   embedded?: boolean;
+  glassSurface?: boolean;
   onBack?: () => void;
   onGifted?: () => void;
 }
@@ -136,6 +138,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   ownerUserId,
   visitOnly = false,
   embedded = false,
+  glassSurface = false,
   onBack,
   onGifted,
 }) => {
@@ -493,6 +496,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
           py: embedded ? 0 : 2,
           pb: embedded ? 1 : { xs: MOBILE_BOTTOM_NAV_OFFSET, sm: 2 },
           ...petViewEnterSx,
+          ...(glassSurface ? (theme) => getAppGlassSurfaceLightTextSx(theme) : {}),
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5, gap: 1.5 }}>
@@ -906,6 +910,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             ...getPetSectionPaperSx(theme),
             p: 2.5,
             mb: visitOnly ? 0 : 2.5,
+            ...(glassSurface ? getAppGlassSurfaceLightTextSx(theme) : {}),
           })}
         >
           <Typography variant="h2" component="h2" sx={{ fontSize: '1.15rem', mb: 2 }}>

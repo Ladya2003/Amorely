@@ -42,6 +42,10 @@ export const getAppGlassSurfaceLightTextSx = (theme: Theme): Record<string, unkn
     '& .MuiInputLabel-root.Mui-focused, & .MuiFormLabel-root.Mui-focused': {
       color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
     },
+    '& .MuiInputLabel-root.MuiInputLabel-shrink, & .MuiFormLabel-root.MuiInputLabel-shrink': {
+      bgcolor: `${alpha(theme.palette.primary.main, 0.14)} !important`,
+      px: 0.75,
+    },
     '& .MuiOutlinedInput-root': glassField,
     '& .MuiTextField-root .MuiOutlinedInput-root': glassField,
     '& .MuiAutocomplete-root .MuiOutlinedInput-root': glassField,
@@ -97,13 +101,19 @@ export const getAppGlassSurfaceLightTextSx = (theme: Theme): Record<string, unkn
 
 const getModalGlassFieldSx = (theme: Theme) => ({
   color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
-  bgcolor: alpha(theme.palette.common.white, 0.12),
+  bgcolor: `${alpha(theme.palette.primary.main, 0.1)} !important`,
   '& .MuiInputBase-input, & .MuiInputBase-inputMultiline': {
     color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
     WebkitTextFillColor: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
   },
   '& .MuiInputBase-input::placeholder, & .MuiInputBase-inputMultiline::placeholder': {
     color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
+  },
+  '&:not(.Mui-focused) .MuiInputBase-input::placeholder, &:not(.Mui-focused) .MuiInputBase-inputMultiline::placeholder':
+    {
+      opacity: '0 !important',
+    },
+  '&.Mui-focused .MuiInputBase-input::placeholder, &.Mui-focused .MuiInputBase-inputMultiline::placeholder': {
     opacity: '1 !important',
   },
   '& .MuiPickersSectionList-root, & .MuiPickersSectionList-sectionContent': {

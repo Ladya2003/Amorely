@@ -13,9 +13,7 @@ import {
   Avatar,
   CircularProgress,
   Typography,
-  useMediaQuery,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { searchUsers } from '../../services/petsService';
 
@@ -34,12 +32,6 @@ interface PetGiftDialogProps {
 
 const PetGiftDialog: React.FC<PetGiftDialogProps> = ({ open, onClose, onGift }) => {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const isMobileDrawer = useMediaQuery(theme.breakpoints.down('sm'));
-  const surfaceColor =
-    isMobileDrawer && theme.palette.mode === 'dark'
-      ? '#2a2a2a'
-      : theme.palette.background.paper;
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState<SearchUser[]>([]);
   const [searching, setSearching] = useState(false);
@@ -97,16 +89,6 @@ const PetGiftDialog: React.FC<PetGiftDialogProps> = ({ open, onClose, onGift }) 
           onChange={(e) => setQuery(e.target.value)}
           sx={{ mb: 2 }}
           autoFocus
-          slotProps={{
-            inputLabel: {
-              sx: {
-                px: 0.75,
-                '&.MuiInputLabel-shrink': {
-                  bgcolor: surfaceColor,
-                },
-              },
-            },
-          }}
         />
         {searching && <CircularProgress size={24} />}
         {!searching && query.length >= 2 && users.length === 0 && (

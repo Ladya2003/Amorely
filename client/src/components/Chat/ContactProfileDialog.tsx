@@ -167,6 +167,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
               ownerUserId={contactId ?? undefined}
               visitOnly
               embedded
+              glassSurface
               onBack={() => setSelectedPetId(null)}
             />
           ) : isLoading && !displayProfile ? (
@@ -233,7 +234,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
 
               {profile?.badges && profile.badges.length > 0 && (
                 <Box sx={getContactProfileSectionSx(theme)}>
-                  <Typography component="span" sx={getContactProfileSectionTitleSx()}>
+                  <Typography component="span" sx={getContactProfileSectionTitleSx(theme)}>
                     {t('chat.profile.medals')}
                   </Typography>
                   <GameBadges badges={profile.badges} variant="list" dense />
@@ -246,6 +247,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
                   userId={contactId}
                   embedded
                   compact
+                  glassSurface
                   onPetSelect={handlePetSelect}
                 />
               )}

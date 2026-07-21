@@ -1,5 +1,6 @@
 import { alpha, Theme } from '@mui/material/styles';
 import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from '../../theme/surfaceStyles';
+import { MODAL_TEXT_SECONDARY_LIGHT } from '../../theme/modalStyles';
 
 const PROFILE_SECTION_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 
@@ -80,7 +81,7 @@ export const getContactProfileBioSx = (theme: Theme, isPlaceholder: boolean) => 
   '& .MuiTypography-root': {
     fontSize: '0.8125rem',
     lineHeight: 1.55,
-    color: 'text.secondary',
+    color: theme.palette.mode === 'light' ? MODAL_TEXT_SECONDARY_LIGHT : 'text.secondary',
     fontStyle: isPlaceholder ? 'italic' : 'normal',
   },
 });
@@ -96,14 +97,14 @@ export const getContactProfileSectionSx = (theme: Theme) => ({
   }),
 });
 
-export const getContactProfileSectionTitleSx = () => ({
+export const getContactProfileSectionTitleSx = (theme: Theme) => ({
   display: 'block',
   mb: 0.75,
   fontSize: '0.6875rem',
   fontWeight: 700,
   letterSpacing: '0.06em',
   textTransform: 'uppercase' as const,
-  color: 'text.secondary',
+  color: theme.palette.mode === 'light' ? MODAL_TEXT_SECONDARY_LIGHT : 'text.secondary',
   textAlign: 'left' as const,
 });
 
