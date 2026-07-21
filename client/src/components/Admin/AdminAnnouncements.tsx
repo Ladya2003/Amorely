@@ -50,6 +50,7 @@ import {
   normalizeAnnouncementTranslations,
   PET_FEEDING_ANNOUNCEMENT_PRESET,
 } from '../../localization/announcementContent';
+import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
 
 type AnnouncementFormState = {
   key: string;
@@ -380,7 +381,13 @@ const AdminAnnouncements: React.FC = () => {
         </TableContainer>
       )}
 
-      <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="md">
+      <Dialog
+        open={dialogOpen}
+        onClose={closeDialog}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{ sx: getAppPlainDialogPaperSx }}
+      >
         <DialogTitle>{editingItem ? 'Редактировать уведомление' : 'Новое уведомление'}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           {!editingItem && (

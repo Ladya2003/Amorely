@@ -34,8 +34,21 @@ const getAppModalLightTextSx = (theme: Theme) => {
     '& .MuiDialogContentText-root': {
       color: MODAL_TEXT_SECONDARY_LIGHT,
     },
-    '& .MuiFormLabel-root, & .MuiInputLabel-root': {
-      color: MODAL_TEXT_SECONDARY_LIGHT,
+    '& .MuiTextField-root .MuiInputLabel-root': {
+      color: theme.palette.text.secondary,
+    },
+    '& .MuiTextField-root .MuiInputLabel-root.Mui-focused': {
+      color: theme.palette.primary.main,
+    },
+    '& .MuiTextField-root .MuiOutlinedInput-root': {
+      color: theme.palette.text.primary,
+      bgcolor: theme.palette.background.paper,
+    },
+    '& .MuiTextField-root .MuiFormHelperText-root': {
+      color: theme.palette.text.secondary,
+    },
+    '& .MuiFormControlLabel-label': {
+      color: MODAL_TEXT_PRIMARY_LIGHT,
     },
     '& .MuiIconButton-root': {
       color: MODAL_TEXT_PRIMARY_LIGHT,
@@ -97,6 +110,44 @@ export const getAppModalActionsSx = (theme: Theme) => ({
   pb: 2.5,
   pt: 0.5,
   ...(theme.palette.mode === 'light' ? { color: MODAL_TEXT_PRIMARY_LIGHT } : {}),
+});
+
+/** Обычная модалка (админка и формы) — без glass и без белого текста */
+export const getAppPlainDialogPaperSx = (theme: Theme) => ({
+  borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+  bgcolor: theme.palette.background.paper,
+  color: theme.palette.text.primary,
+  backgroundImage: 'none',
+  backdropFilter: 'none',
+  WebkitBackdropFilter: 'none',
+  border: `1px solid ${alpha(theme.palette.divider, theme.palette.mode === 'light' ? 0.9 : 0.35)}`,
+  boxShadow:
+    theme.palette.mode === 'light'
+      ? `0 16px 48px ${alpha(theme.palette.common.black, 0.14)}`
+      : `0 20px 56px ${alpha(theme.palette.common.black, 0.48)}`,
+  '& .MuiDialogTitle-root': {
+    color: theme.palette.text.primary,
+  },
+  '& .MuiDialogContent-root': {
+    color: theme.palette.text.primary,
+  },
+  '& .MuiDialogActions-root': {
+    color: theme.palette.text.primary,
+  },
+  '& .MuiTypography-colorTextSecondary': {
+    color: `${theme.palette.text.secondary} !important`,
+  },
+  '& .MuiFormControlLabel-label': {
+    color: theme.palette.text.primary,
+  },
+  '& .MuiDialogActions-root .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+    border: `1px solid ${theme.palette.primary.main}`,
+    color: theme.palette.primary.main,
+  },
+  '& .MuiDialogActions-root .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+    borderColor: theme.palette.primary.main,
+    color: theme.palette.primary.main,
+  },
 });
 
 export type ModalOptionsActionColor = 'warning' | 'error' | 'primary';

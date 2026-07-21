@@ -42,6 +42,7 @@ import {
   unblockAdminUser,
   updateAdminReportStatus,
 } from '../../services/adminService';
+import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
 import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/locale';
 import { useAuth } from '../../contexts/AuthContext';
 import { saveOpenChatTarget, type StoredOpenChatTarget } from '../../utils/openChatTargetStorage';
@@ -280,6 +281,7 @@ const AdminModeration: React.FC = () => {
         maxWidth="md"
         disableRestoreFocus
         TransitionProps={{ onExited: handleReportDialogExited }}
+        PaperProps={{ sx: getAppPlainDialogPaperSx }}
       >
         {selectedReport && (
           <>
@@ -399,7 +401,13 @@ const AdminModeration: React.FC = () => {
         )}
       </Dialog>
 
-      <Dialog open={unblockDialogOpen} onClose={() => !isUnblocking && setUnblockDialogOpen(false)} fullWidth maxWidth="xs">
+      <Dialog
+        open={unblockDialogOpen}
+        onClose={() => !isUnblocking && setUnblockDialogOpen(false)}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{ sx: getAppPlainDialogPaperSx }}
+      >
         <DialogTitle>Разблокировать пользователя</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
@@ -423,7 +431,13 @@ const AdminModeration: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={blockDialogOpen} onClose={() => !isBlocking && setBlockDialogOpen(false)} fullWidth maxWidth="md">
+      <Dialog
+        open={blockDialogOpen}
+        onClose={() => !isBlocking && setBlockDialogOpen(false)}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{ sx: getAppPlainDialogPaperSx }}
+      >
         <DialogTitle>Заблокировать пользователя</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

@@ -47,6 +47,7 @@ import {
   LOCALE_LABELS,
   SUPPORTED_LOCALES,
 } from '../../localization/locale';
+import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
 import {
   createEmptyNewsTranslations,
   normalizeNewsTranslations,
@@ -342,7 +343,13 @@ const AdminNews: React.FC = () => {
         </TableContainer>
       )}
 
-      <Dialog open={dialogOpen} onClose={closeDialog} fullWidth maxWidth="md">
+      <Dialog
+        open={dialogOpen}
+        onClose={closeDialog}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{ sx: getAppPlainDialogPaperSx }}
+      >
         <DialogTitle>{editingNews ? 'Редактировать новость' : 'Новая новость'}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           <Tabs

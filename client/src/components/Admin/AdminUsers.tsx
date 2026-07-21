@@ -33,6 +33,7 @@ import {
 } from '../../services/adminService';
 import { useAdminAlerts } from '../../contexts/AdminAlertsContext';
 import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/locale';
+import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
 
 const GAME_LABELS: Record<string, string> = {
   tap: 'Тыкалка',
@@ -334,6 +335,7 @@ const AdminUsers: React.FC = () => {
         }}
         fullWidth
         maxWidth={selectedUser?.isBlocked ? 'xs' : 'md'}
+        PaperProps={{ sx: getAppPlainDialogPaperSx }}
       >
         {selectedUser && (
           <>
