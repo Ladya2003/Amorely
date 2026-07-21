@@ -105,14 +105,12 @@ const CurrencyBadge: React.FC<CurrencyBadgeProps> = ({
           sx={(theme) => ({
             fontSize,
             color: isTinted
-              ? theme.palette.mode === 'light'
-                ? theme.palette.primary.dark
-                : theme.palette.primary.contrastText
-              : '#B8860B',
+              ? theme.palette.common.white
+              : theme.palette.mode === 'light'
+                ? '#7A5200'
+                : '#FFE082',
             textShadow: isTinted
-              ? theme.palette.mode === 'light'
-                ? `0 1px 0 ${alpha('#fff', 0.7)}`
-                : '0 1px 3px rgba(0, 0, 0, 0.45)'
+              ? `0 1px 2px ${alpha(theme.palette.common.black, 0.42)}`
               : 'none',
             fontVariantNumeric: 'tabular-nums',
             minWidth: '2.75ch',

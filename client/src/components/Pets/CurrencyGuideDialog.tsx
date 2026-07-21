@@ -113,14 +113,18 @@ const CurrencyGuideDialog: React.FC<CurrencyGuideDialogProps> = ({ open, onClose
                         bgcolor:
                           theme.palette.mode === 'dark'
                             ? 'rgba(255, 213, 79, 0.16)'
-                            : 'rgba(255, 215, 0, 0.2)',
-                        color: theme.palette.mode === 'dark' ? '#FFE082' : '#9A7200',
+                            : '#FFF3C4',
+                        color:
+                          theme.palette.mode === 'dark' ? '#FFE082' : '#6B4E00',
                         border: `1px solid ${
                           theme.palette.mode === 'dark'
                             ? 'rgba(255, 213, 79, 0.45)'
-                            : 'rgba(255, 165, 0, 0.35)'
+                            : 'rgba(180, 130, 0, 0.45)'
                         }`,
                         flexShrink: 0,
+                        '& .MuiChip-label': {
+                          color: theme.palette.mode === 'dark' ? '#FFE082' : '#6B4E00',
+                        },
                       })}
                     />
                   </Box>

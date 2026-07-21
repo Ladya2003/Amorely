@@ -194,10 +194,14 @@ const AddPetCard: React.FC<AddPetCardProps> = ({ canAfford, cost, onClick, anima
           <Typography
             variant="body2"
             fontWeight={700}
-            sx={{
+            sx={(theme) => ({
               fontSize: '0.95rem',
-              color: canAfford ? 'primary.main' : 'text.disabled',
-            }}
+              color: canAfford
+                ? theme.palette.mode === 'light'
+                  ? '#5A1A52'
+                  : theme.palette.primary.light
+                : 'text.disabled',
+            })}
           >
             {cost}
           </Typography>
