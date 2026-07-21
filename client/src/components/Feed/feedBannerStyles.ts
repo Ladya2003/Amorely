@@ -91,13 +91,24 @@ export const getPetHintSurfaceSx = (theme: Theme) => ({
   }),
 });
 
-const getPageTopGlowBackground = (theme: Theme, fadeTo: string) => {
+export type PageTopGlowIntensity = 'default' | 'soft';
+
+export const getPageTopGlowBackground = (
+  theme: Theme,
+  fadeTo: string,
+  intensity: PageTopGlowIntensity = 'default'
+) => {
   const { primary } = theme.palette;
   const isLight = theme.palette.mode === 'light';
 
-  return isLight
-    ? `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.58)} 0%, ${alpha(primary.main, 0.16)} 44%, ${fadeTo} 74%)`
-    : `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.main, 0.38)} 0%, ${alpha(primary.dark, 0.24)} 42%, ${fadeTo} 74%)`;
+  if (isLight) {
+    if (intensity === 'soft') {
+      return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.26)} 0%, ${alpha(primary.main, 0.07)} 44%, ${fadeTo} 74%)`;
+    }
+    return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.58)} 0%, ${alpha(primary.main, 0.16)} 44%, ${fadeTo} 74%)`;
+  }
+
+  return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.main, 0.38)} 0%, ${alpha(primary.dark, 0.24)} 42%, ${fadeTo} 74%)`;
 };
 
 /** Фон страницы питомца — мягкое свечение primary сверху */
@@ -108,19 +119,21 @@ export const getPetPageBackdropSx = (theme: Theme) => ({
   background: getPageTopGlowBackground(theme, theme.palette.background.default),
 });
 
-/** Фон диалога чата с собеседником */
+/** Фон диалога чата и вкладок (чат, календарь, новости, настройки) */
 export const getChatDialogBackdropSx = (theme: Theme) => ({
-  background: getPageTopGlowBackground(theme, theme.palette.background.default),
+  background: getPageTopGlowBackground(theme, theme.palette.background.default, 'soft'),
 });
 
 type FeedHeaderGlowOptions = {
   /** Растянуть glow до краёв родителя (нужен внутри MUI Container на главной). */
   bleed?: boolean;
+  /** Мягче свечение для вкладок; на главной — default. */
+  intensity?: PageTopGlowIntensity;
 };
 
 /** Свечение primary за шапкой («Привет, …» и вкладки). */
 export const getFeedHeaderGlowSx = (theme: Theme, options: FeedHeaderGlowOptions = {}) => {
-  const { bleed = false } = options;
+  const { bleed = false, intensity = 'default' } = options;
   const gutterXs = theme.spacing(2);
   const gutterSm = theme.spacing(3);
 
@@ -140,7 +153,7 @@ export const getFeedHeaderGlowSx = (theme: Theme, options: FeedHeaderGlowOptions
       left: 0,
       right: 0,
       height: { xs: 300, sm: 320 },
-      background: getPageTopGlowBackground(theme, 'transparent'),
+      background: getPageTopGlowBackground(theme, 'transparent', intensity),
       pointerEvents: 'none',
       zIndex: 0,
     },

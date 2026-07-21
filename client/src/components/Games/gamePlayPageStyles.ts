@@ -2,6 +2,7 @@ import { alpha, Theme } from '@mui/material/styles';
 import {
   SURFACE_BORDER_RADIUS,
   getChatDialogBackdropSx,
+  getPageTopGlowBackground,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
 import { GAMES_LIST_ITEM_RADIUS, GAMES_LIST_THUMB_RADIUS } from './gamesListStyles';
@@ -292,12 +293,8 @@ export const getGamePlayQuizCellButtonSx = (theme: Theme, used: boolean) => ({
 });
 
 export const getGamePlayOverlaySx = (theme: Theme) => {
-  const { primary } = theme.palette;
-  const isLight = theme.palette.mode === 'light';
   const base = theme.palette.background.default;
-  const glow = isLight
-    ? `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.58)} 0%, ${alpha(primary.main, 0.16)} 44%, ${base} 74%)`
-    : `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.main, 0.38)} 0%, ${alpha(primary.dark, 0.24)} 42%, ${base} 74%)`;
+  const glow = getPageTopGlowBackground(theme, base, 'soft');
 
   return {
     position: 'fixed' as const,

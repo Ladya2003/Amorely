@@ -3,6 +3,7 @@ import {
   SURFACE_BORDER_RADIUS,
   getChatDialogBackdropSx,
   getFeedHeaderGlowSx,
+  getPageTopGlowBackground,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
 import { getTabPageBottomPaddingSx, getTabPageDesktopShellSx } from '../../theme/pageLayout';
@@ -69,7 +70,7 @@ export const getNewsPageRootSx = (theme: Theme) => ({
 });
 
 export const getNewsPageHeaderGlowWrapSx = (theme: Theme) => ({
-  ...getFeedHeaderGlowSx(theme),
+  ...getFeedHeaderGlowSx(theme, { intensity: 'soft' }),
   px: 0,
   flexShrink: 0,
   pt: {
@@ -229,12 +230,8 @@ export const getNewsLoadingWrapSx = () => ({
 });
 
 export const getNewsDetailRootSx = (theme: Theme) => {
-  const { primary } = theme.palette;
-  const isLight = theme.palette.mode === 'light';
   const base = theme.palette.background.default;
-  const glow = isLight
-    ? `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.58)} 0%, ${alpha(primary.main, 0.16)} 44%, ${base} 74%)`
-    : `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.main, 0.38)} 0%, ${alpha(primary.dark, 0.24)} 42%, ${base} 74%)`;
+  const glow = getPageTopGlowBackground(theme, base, 'soft');
 
   return {
     position: 'absolute' as const,

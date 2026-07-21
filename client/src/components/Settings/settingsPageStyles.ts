@@ -55,7 +55,7 @@ export const getSettingsPageRootSx = (theme: Theme) => ({
 });
 
 export const getSettingsPageHeaderGlowWrapSx = (theme: Theme) => ({
-  ...getFeedHeaderGlowSx(theme),
+  ...getFeedHeaderGlowSx(theme, { intensity: 'soft' }),
   px: 0,
   flexShrink: 0,
   pt: {

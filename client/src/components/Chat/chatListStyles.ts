@@ -25,7 +25,7 @@ export const getChatListHeaderShellSx = () => ({
 });
 
 export const getChatListHeaderGlowWrapSx = (theme: Theme) => ({
-  ...getFeedHeaderGlowSx(theme),
+  ...getFeedHeaderGlowSx(theme, { intensity: 'soft' }),
   px: 0,
   mt: 0,
   pt: {

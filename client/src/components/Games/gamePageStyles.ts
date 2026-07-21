@@ -78,7 +78,7 @@ export const getGamePageRootSx = (theme: Theme) => ({
 });
 
 export const getGamePageHeaderGlowWrapSx = (theme: Theme) => ({
-  ...getFeedHeaderGlowSx(theme),
+  ...getFeedHeaderGlowSx(theme, { intensity: 'soft' }),
   px: 0,
   flexShrink: 0,
   pt: {

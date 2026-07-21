@@ -96,7 +96,7 @@ export const getCalendarRootSx = () => ({
 });
 
 export const getCalendarHeaderGlowWrapSx = (theme: Theme) => ({
-  ...getFeedHeaderGlowSx(theme),
+  ...getFeedHeaderGlowSx(theme, { intensity: 'soft' }),
   px: 0,
   flexShrink: 0,
   pt: {
