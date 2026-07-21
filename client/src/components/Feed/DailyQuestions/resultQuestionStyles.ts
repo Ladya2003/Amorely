@@ -1,11 +1,16 @@
 import { alpha, Theme } from '@mui/material/styles';
 import { SURFACE_BORDER_RADIUS } from '../../../theme/surfaceStyles';
 
+/** Непрозрачная поверхность карточки — не смешивается с фиолетовым glass-модалом */
+const getResultCardBackground = (theme: Theme) =>
+  theme.palette.mode === 'light' ? theme.palette.common.white : '#242424';
+
 export const getResultQuestionCardSx = (theme: Theme) => ({
   p: 2.25,
   mb: 2,
   borderRadius: `${Math.round(SURFACE_BORDER_RADIUS * 0.85)}px`,
-  bgcolor: theme.palette.background.paper,
+  bgcolor: getResultCardBackground(theme),
+  color: theme.palette.text.primary,
   border: `1px solid ${alpha(
     theme.palette.primary.main,
     theme.palette.mode === 'light' ? 0.2 : 0.32
@@ -20,7 +25,7 @@ export const getResultQuestionTitleSx = (theme: Theme) => ({
   fontWeight: 700,
   fontSize: '1rem',
   lineHeight: 1.45,
-  color: theme.palette.text.primary,
+  color: theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)',
   mb: 2,
   pr: 4,
 });
@@ -38,26 +43,32 @@ export const getResultAnswerBubbleSx = (theme: Theme, align: 'left' | 'right') =
   const isLight = theme.palette.mode === 'light';
 
   return {
+    display: 'inline-block',
     px: 2,
     py: 1.25,
     maxWidth: '78%',
-    borderRadius: '999px',
-    bgcolor: isLight ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.14),
+    borderRadius: '20px',
+    bgcolor: isLight ? '#f0f0f0' : 'rgba(255, 255, 255, 0.16)',
     border: `1px solid ${alpha(
       theme.palette.common.black,
-      isLight ? 0.06 : 0
+      isLight ? 0.08 : 0.12
     )}`,
-    color: theme.palette.text.primary,
+    color: isLight ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)',
     fontSize: '0.9375rem',
     lineHeight: 1.45,
     fontWeight: 500,
     textAlign: align === 'right' ? 'right' : 'left',
+    wordBreak: 'break-word' as const,
   };
 };
 
 export const getResultMutedTextSx = (theme: Theme) => ({
-  color: theme.palette.text.secondary,
+  color: theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.65)',
   fontStyle: 'italic' as const,
+});
+
+export const getResultDialogContentSx = (theme: Theme) => ({
+  color: theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)',
 });
 
 export const getResultAvatarSx = () => ({

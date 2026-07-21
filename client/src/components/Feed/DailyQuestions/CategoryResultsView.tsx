@@ -16,7 +16,12 @@ import type { CategoryResults } from './types';
 import AnswerInput from './AnswerInput';
 import { ResultImageChoiceBlock, ResultTextChoiceBlock } from './ResultQuestionBlocks';
 import { getSimilarityRingSx } from './dailyQuestionsStyles';
-import { getResultQuestionCardSx, getResultQuestionTitleSx, getResultEditButtonSx } from './resultQuestionStyles';
+import {
+  getResultQuestionCardSx,
+  getResultQuestionTitleSx,
+  getResultEditButtonSx,
+  getResultMutedTextSx,
+} from './resultQuestionStyles';
 
 interface CategoryResultsViewProps {
   results: CategoryResults;
@@ -126,7 +131,7 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
 
       {!readOnly && !results.partnerCompleted && results.userCompleted && (
         <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }} mb={1.5}>
+          <Typography variant="body2" sx={getResultMutedTextSx(theme)} mb={1.5}>
             {t('dailyQuestions.partnerNotFinished')}
           </Typography>
           <Button

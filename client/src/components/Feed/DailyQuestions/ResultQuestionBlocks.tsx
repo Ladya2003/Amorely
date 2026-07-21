@@ -48,7 +48,7 @@ export const ResultTextChoiceBlock: React.FC<ResultTextChoiceBlockProps> = ({
 
   return (
     <Box sx={getResultQuestionCardSx(theme)}>
-      <Typography sx={getResultQuestionTitleSx(theme)}>
+      <Typography component="p" sx={getResultQuestionTitleSx(theme)}>
         {index + 1}. {item.questionText}
       </Typography>
 
@@ -56,9 +56,9 @@ export const ResultTextChoiceBlock: React.FC<ResultTextChoiceBlockProps> = ({
         <Avatar src={user.avatar} sx={getResultAvatarSx()}>
           {getInitials(user.name)}
         </Avatar>
-        <Typography component="span" sx={getResultAnswerBubbleSx(theme, 'left')}>
+        <Box component="span" sx={getResultAnswerBubbleSx(theme, 'left')}>
           {item.userAnswerLabel || '—'}
-        </Typography>
+        </Box>
       </Box>
 
       {item.partnerAnswerLabel ? (
@@ -66,9 +66,9 @@ export const ResultTextChoiceBlock: React.FC<ResultTextChoiceBlockProps> = ({
           <Avatar src={partner?.avatar} sx={getResultAvatarSx()}>
             {getInitials(partner?.name ?? t('dailyQuestions.partnerFallback'))}
           </Avatar>
-          <Typography component="span" sx={getResultAnswerBubbleSx(theme, 'right')}>
+          <Box component="span" sx={getResultAnswerBubbleSx(theme, 'right')}>
             {item.partnerAnswerLabel}
-          </Typography>
+          </Box>
         </Box>
       ) : (
         <Typography
@@ -130,7 +130,7 @@ export const ResultImageChoiceBlock: React.FC<ResultImageChoiceBlockProps> = ({
 
   return (
     <Box sx={getResultQuestionCardSx(theme)}>
-      <Typography sx={getResultQuestionTitleSx(theme)}>
+      <Typography component="p" sx={getResultQuestionTitleSx(theme)}>
         {index + 1}. {item.questionText}
       </Typography>
 
