@@ -185,7 +185,7 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
           </>
         )}
       </DialogContent>
-      <DialogActions sx={getAppModalActionsSx()}>
+      <DialogActions sx={getAppModalActionsSx(theme)}>
         <Button onClick={onClose} disabled={submitting}>
           {t('common.cancel')}
         </Button>

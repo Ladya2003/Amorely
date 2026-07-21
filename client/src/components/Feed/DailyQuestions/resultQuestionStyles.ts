@@ -67,10 +67,6 @@ export const getResultMutedTextSx = (theme: Theme) => ({
   fontStyle: 'italic' as const,
 });
 
-export const getResultDialogContentSx = (theme: Theme) => ({
-  color: theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)',
-});
-
 export const getResultAvatarSx = () => ({
   width: 36,
   height: 36,

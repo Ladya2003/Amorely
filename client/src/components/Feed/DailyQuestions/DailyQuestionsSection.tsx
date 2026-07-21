@@ -31,7 +31,6 @@ import {
   getDailyQuestionsCardsRowSx,
   getCategoryTimerSx,
 } from './dailyQuestionsStyles';
-import { getResultDialogContentSx } from './resultQuestionStyles';
 
 const DailyQuestionsSection: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -193,10 +192,10 @@ const DailyQuestionsSection: React.FC = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle sx={{ color: theme.palette.mode === 'light' ? 'rgba(0,0,0,0.87)' : 'rgba(255,255,255,0.95)' }}>
+        <DialogTitle>
           {results ? `${results.emoji} ${results.title}` : t('dailyQuestions.results')}
         </DialogTitle>
-        <DialogContent sx={getResultDialogContentSx(theme)}>
+        <DialogContent>
           {resultsLoading && (
             <Box display="flex" justifyContent="center" py={4}>
               <CircularProgress size={32} />

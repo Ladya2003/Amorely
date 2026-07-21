@@ -6,6 +6,7 @@ import {
   getAppModalContentSx,
   getAppModalDialogPaperSx,
   getAppModalTitleSx,
+  MODAL_TEXT_PRIMARY_LIGHT,
 } from './modalStyles';
 import { SURFACE_BORDER_RADIUS } from './surfaceStyles';
 
@@ -127,18 +128,25 @@ export const getModalFooterActionsSx = (theme: Theme) => ({
     padding: modalSecondaryButtonPadding(theme),
   },
   '& .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
-    border: `1px solid ${theme.palette.primary.main}`,
+    border: `1px solid ${theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.55)' : theme.palette.primary.main}`,
+    ...(theme.palette.mode === 'light' ? { color: MODAL_TEXT_PRIMARY_LIGHT } : {}),
     '&:hover': {
-      borderColor: theme.palette.primary.dark,
-      backgroundColor: alpha(theme.palette.primary.main, theme.palette.action.hoverOpacity),
+      borderColor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.85)' : theme.palette.primary.dark,
+      backgroundColor: alpha(
+        theme.palette.mode === 'light' ? theme.palette.common.white : theme.palette.primary.main,
+        theme.palette.mode === 'light' ? 0.12 : theme.palette.action.hoverOpacity
+      ),
     },
   },
   '& .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
-    borderColor: theme.palette.primary.main,
-    color: theme.palette.primary.main,
+    borderColor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.55)' : theme.palette.primary.main,
+    color: theme.palette.mode === 'light' ? MODAL_TEXT_PRIMARY_LIGHT : theme.palette.primary.main,
     '&:hover': {
-      borderColor: theme.palette.primary.dark,
-      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+      borderColor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.85)' : theme.palette.primary.dark,
+      backgroundColor: alpha(
+        theme.palette.mode === 'light' ? theme.palette.common.white : theme.palette.primary.main,
+        theme.palette.mode === 'light' ? 0.12 : 0.08
+      ),
     },
   },
   '& .MuiButton-outlined.MuiButton-colorError, & .MuiButton-outlined.MuiButton-colorWarning': {
@@ -249,18 +257,18 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
       },
       MuiDialogTitle: {
         styleOverrides: {
-          root: getAppModalTitleSx(),
+          root: ({ theme }) => getAppModalTitleSx(theme),
         },
       },
       MuiDialogContent: {
         styleOverrides: {
-          root: getAppModalContentSx(),
+          root: ({ theme }) => getAppModalContentSx(theme),
         },
       },
       MuiDialogActions: {
         styleOverrides: {
           root: ({ theme }) => ({
-            ...getAppModalActionsSx(),
+            ...getAppModalActionsSx(theme),
             ...getModalFooterActionsSx(theme),
           }),
         },

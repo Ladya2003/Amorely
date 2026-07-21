@@ -2052,8 +2052,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.deleteTitle')}</DialogTitle>
-        <DialogContent sx={getChatDialogModalContentSx()}>
+        <DialogTitle sx={getChatDialogModalTitleSx(theme)}>{t('chat.dialog.deleteTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx(theme)}>
           <Typography variant="body2" sx={{ mb: 1.5 }}>
             {t('chat.dialog.deleteConfirm')}
           </Typography>
@@ -2081,7 +2081,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             </Typography>
           </Paper>
         </DialogContent>
-        <DialogActions sx={getChatDialogModalActionsSx()}>
+        <DialogActions sx={getChatDialogModalActionsSx(theme)}>
           <Button onClick={handleDeleteModalClose} variant="text">
             {t('chat.dialog.cancel')}
           </Button>
@@ -2116,8 +2116,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.optionsTitle')}</DialogTitle>
-        <DialogContent sx={getChatDialogModalContentSx()}>
+        <DialogTitle sx={getChatDialogModalTitleSx(theme)}>{t('chat.dialog.optionsTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx(theme)}>
           <Box sx={getChatMessageFontSizeControlSx(theme)}>
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
@@ -2201,7 +2201,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
             {t('chat.dialog.clearChat')}
           </Button>
         </DialogContent>
-        <DialogActions sx={getChatDialogModalActionsSx()}>
+        <DialogActions sx={getChatDialogModalActionsSx(theme)}>
           <Button onClick={() => setOptionsModalOpen(false)} variant="text" sx={{ textTransform: 'none', fontWeight: 600 }}>
             {t('chat.dialog.cancel')}
           </Button>
@@ -2227,13 +2227,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.clearChatTitle')}</DialogTitle>
-        <DialogContent sx={getChatDialogModalContentSx()}>
+        <DialogTitle sx={getChatDialogModalTitleSx(theme)}>{t('chat.dialog.clearChatTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx(theme)}>
           <Typography variant="body2">
             {t('chat.dialog.clearChatConfirm')}
           </Typography>
         </DialogContent>
-        <DialogActions sx={getChatDialogModalActionsSx()}>
+        <DialogActions sx={getChatDialogModalActionsSx(theme)}>
           <Button
             onClick={() => setClearConfirmOpen(false)}
             variant="text"
@@ -2271,13 +2271,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.blockUserTitle')}</DialogTitle>
-        <DialogContent sx={getChatDialogModalContentSx()}>
+        <DialogTitle sx={getChatDialogModalTitleSx(theme)}>{t('chat.dialog.blockUserTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx(theme)}>
           <Typography variant="body2">
             {t('chat.dialog.blockUserConfirm', { name: contact?.name || '' })}
           </Typography>
         </DialogContent>
-        <DialogActions sx={getChatDialogModalActionsSx()}>
+        <DialogActions sx={getChatDialogModalActionsSx(theme)}>
           <Button
             onClick={() => setBlockConfirmOpen(false)}
             variant="text"
@@ -2315,13 +2315,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle sx={getChatDialogModalTitleSx()}>{t('chat.dialog.unblockUserTitle')}</DialogTitle>
-        <DialogContent sx={getChatDialogModalContentSx()}>
+        <DialogTitle sx={getChatDialogModalTitleSx(theme)}>{t('chat.dialog.unblockUserTitle')}</DialogTitle>
+        <DialogContent sx={getChatDialogModalContentSx(theme)}>
           <Typography variant="body2">
             {t('chat.dialog.unblockUserConfirm', { name: contact?.name || '' })}
           </Typography>
         </DialogContent>
-        <DialogActions sx={getChatDialogModalActionsSx()}>
+        <DialogActions sx={getChatDialogModalActionsSx(theme)}>
           <Button
             onClick={() => setUnblockConfirmOpen(false)}
             variant="text"

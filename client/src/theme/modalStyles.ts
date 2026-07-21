@@ -4,11 +4,44 @@ import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from './surfaceStyles';
 export const MODAL_INNER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 export const MODAL_ACTION_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.5);
 
+/** Текст на glass-поверхности модалки в светлой теме */
+export const MODAL_TEXT_PRIMARY_LIGHT = 'rgba(255, 255, 255, 0.95)';
+export const MODAL_TEXT_SECONDARY_LIGHT = 'rgba(255, 255, 255, 0.72)';
+
 const getModalSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medium') =>
   `1px solid ${alpha(
     theme.palette.primary.main,
     theme.palette.mode === 'light' ? (strength === 'soft' ? 0.1 : 0.14) : strength === 'soft' ? 0.18 : 0.24
   )}`;
+
+/** Белый текст для glass-модалок в light-теме (фон — фиолетовый tint) */
+const getAppModalLightTextSx = (theme: Theme) => {
+  if (theme.palette.mode !== 'light') {
+    return {};
+  }
+
+  return {
+    color: MODAL_TEXT_PRIMARY_LIGHT,
+    '& .MuiTypography-root': {
+      color: 'inherit',
+    },
+    '& .MuiTypography-colorTextSecondary': {
+      color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
+    },
+    '& .MuiTypography-colorTextPrimary': {
+      color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+    },
+    '& .MuiDialogContentText-root': {
+      color: MODAL_TEXT_SECONDARY_LIGHT,
+    },
+    '& .MuiFormLabel-root, & .MuiInputLabel-root': {
+      color: MODAL_TEXT_SECONDARY_LIGHT,
+    },
+    '& .MuiIconButton-root': {
+      color: MODAL_TEXT_PRIMARY_LIGHT,
+    },
+  };
+};
 
 /** Общая glass-поверхность модалки */
 const getAppModalPaperBase = (theme: Theme) => ({
@@ -23,6 +56,7 @@ const getAppModalPaperBase = (theme: Theme) => ({
     theme.palette.mode === 'light'
       ? `0 16px 48px ${alpha(theme.palette.common.black, 0.14)}`
       : `0 20px 56px ${alpha(theme.palette.common.black, 0.48)}`,
+  ...getAppModalLightTextSx(theme),
 });
 
 /** Центрированный Dialog — скругление со всех сторон */
@@ -42,24 +76,27 @@ export const getAppModalPaperSx = (theme: Theme) => ({
   overflow: 'hidden',
 });
 
-export const getAppModalTitleSx = () => ({
+export const getAppModalTitleSx = (theme: Theme) => ({
   pb: 1,
   px: 2.5,
   pt: 2.5,
   fontWeight: 700,
   fontSize: '1.125rem',
+  ...(theme.palette.mode === 'light' ? { color: MODAL_TEXT_PRIMARY_LIGHT } : {}),
 });
 
-export const getAppModalContentSx = () => ({
+export const getAppModalContentSx = (theme: Theme) => ({
   pt: '8px !important',
   px: 2.5,
   pb: 1,
+  ...(theme.palette.mode === 'light' ? { color: MODAL_TEXT_PRIMARY_LIGHT } : {}),
 });
 
-export const getAppModalActionsSx = () => ({
+export const getAppModalActionsSx = (theme: Theme) => ({
   px: 2.5,
   pb: 2.5,
   pt: 0.5,
+  ...(theme.palette.mode === 'light' ? { color: MODAL_TEXT_PRIMARY_LIGHT } : {}),
 });
 
 export type ModalOptionsActionColor = 'warning' | 'error' | 'primary';
@@ -110,6 +147,7 @@ export const getAppContextMenuPaperSx = (theme: Theme) => ({
   '& .MuiList-root': {
     p: 0.75,
   },
+  ...getAppModalLightTextSx(theme),
 });
 
 export const getAppContextMenuItemSx = (
@@ -123,7 +161,14 @@ export const getAppContextMenuItemSx = (
   px: 1.25,
   borderRadius: `${MODAL_ACTION_RADIUS}px`,
   mx: 0.25,
-  color: options?.danger ? 'error.main' : 'text.primary',
+  color:
+    theme.palette.mode === 'light'
+      ? options?.danger
+        ? theme.palette.error.light
+        : MODAL_TEXT_PRIMARY_LIGHT
+      : options?.danger
+        ? 'error.main'
+        : 'text.primary',
   transition: 'background-color 180ms ease',
   '&:hover': {
     bgcolor: alpha(
