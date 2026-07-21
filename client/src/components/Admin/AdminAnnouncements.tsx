@@ -46,6 +46,7 @@ import {
 import {
   AnnouncementLocaleContent,
   createEmptyAnnouncementTranslations,
+  DAILY_QUESTIONS_ANNOUNCEMENT_PRESET,
   normalizeAnnouncementTranslations,
   PET_FEEDING_ANNOUNCEMENT_PRESET,
 } from '../../localization/announcementContent';
@@ -68,14 +69,19 @@ const emptyForm = (): AnnouncementFormState => ({
   sendPush: false,
 });
 
-const presetForm = (): AnnouncementFormState => ({
-  key: PET_FEEDING_ANNOUNCEMENT_PRESET.key,
-  translations: PET_FEEDING_ANNOUNCEMENT_PRESET.translations,
-  pushTitle: PET_FEEDING_ANNOUNCEMENT_PRESET.pushTitle,
-  pushBody: PET_FEEDING_ANNOUNCEMENT_PRESET.pushBody.ru,
+const formFromPreset = (preset: typeof PET_FEEDING_ANNOUNCEMENT_PRESET): AnnouncementFormState => ({
+  key: preset.key,
+  translations: preset.translations,
+  pushTitle: preset.pushTitle,
+  pushBody: preset.pushBody.ru,
   isActive: true,
   sendPush: false,
 });
+
+const presetForm = (): AnnouncementFormState => formFromPreset(PET_FEEDING_ANNOUNCEMENT_PRESET);
+
+const dailyQuestionsPresetForm = (): AnnouncementFormState =>
+  formFromPreset(DAILY_QUESTIONS_ANNOUNCEMENT_PRESET);
 
 const AdminAnnouncements: React.FC = () => {
   const [announcements, setAnnouncements] = useState<AdminAnnouncementItem[]>([]);
@@ -116,6 +122,13 @@ const AdminAnnouncements: React.FC = () => {
   const openPresetDialog = () => {
     setEditingItem(null);
     setForm(presetForm());
+    setActiveLocale('ru');
+    setDialogOpen(true);
+  };
+
+  const openDailyQuestionsPresetDialog = () => {
+    setEditingItem(null);
+    setForm(dailyQuestionsPresetForm());
     setActiveLocale('ru');
     setDialogOpen(true);
   };
@@ -257,6 +270,9 @@ const AdminAnnouncements: React.FC = () => {
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Button variant="outlined" onClick={openPresetDialog}>
             Шаблон: кормление
+          </Button>
+          <Button variant="outlined" onClick={openDailyQuestionsPresetDialog}>
+            Шаблон: вопросы дня
           </Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateDialog}>
             Новое уведомление
