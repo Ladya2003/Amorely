@@ -18,6 +18,8 @@ import { AppLocale } from '../i18n/locales';
 import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 import { normalizeIdStr, idsEqual } from '../utils/normalizeId';
 import { sendPushToUser } from './pushService';
+import { awardDailyQuestionCategory } from '../utils/currencyRewards';
+import type { CurrencyAwardResult } from './currencyService';
 
 const MS_24H = 24 * 60 * 60 * 1000;
 const CATEGORIES_PER_ROUND = 2;
@@ -491,7 +493,7 @@ export const submitAnswer = async (
   questionId: string,
   value: string,
   locale: AppLocale = 'ru'
-) => {
+): Promise<{ response: ReturnType<typeof buildDailyQuestionsResponse>; currencyAward: CurrencyAwardResult | null }> => {
   const state = await getOrCreateState(userId);
   if (!state) throw new Error('No active relationship');
 
@@ -525,14 +527,19 @@ export const submitAnswer = async (
     progress.answers.push({ questionId, value: value.trim() });
   }
 
+  let currencyAward: CurrencyAwardResult | null = null;
   if (isCategoryFullyAnswered(progress, category) && !progress.completedAt) {
     progress.completedAt = new Date();
     checkCategoryBothCompleted(state, categoryId);
     checkBothCompletedAll(state);
+    currencyAward = await awardDailyQuestionCategory(userId, state.roundKey, categoryId);
   }
 
   await persistState(state);
-  return buildDailyQuestionsResponse(state, userId, locale);
+  return {
+    response: buildDailyQuestionsResponse(state, userId, locale),
+    currencyAward,
+  };
 };
 
 export const getCategoryResults = async (

@@ -1293,6 +1293,7 @@
       "sections": {
         "welcome": "Старт",
         "relationship": "Пара",
+        "dailyQuestions": "Питання дня",
         "daysTogether": "Днів разом",
         "chat": "Чат",
         "games": "Ігри",
@@ -1309,6 +1310,10 @@
         "partner_linked": {
           "action": "Прив'язка партнера",
           "period": "Один раз на акаунт"
+        },
+        "daily_question_category": {
+          "action": "Пройти категорію в «Питання дня»",
+          "period": "10 за категорію, до 2 категорій на день"
         },
         "signature": {
           "action": "Додати малюнок у блоці «Днів разом» (ранок або вечір)",

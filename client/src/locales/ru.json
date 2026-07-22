@@ -1452,6 +1452,7 @@
       "sections": {
         "welcome": "Старт",
         "relationship": "Пара",
+        "dailyQuestions": "Вопросы дня",
         "daysTogether": "Дней вместе",
         "chat": "Чат",
         "games": "Игры",
@@ -1468,6 +1469,10 @@
         "partner_linked": {
           "action": "Привязка партнёра",
           "period": "Один раз на аккаунт"
+        },
+        "daily_question_category": {
+          "action": "Пройти категорию в «Вопросы дня»",
+          "period": "10 за категорию, до 2 категорий в день"
         },
         "signature": {
           "action": "Добавить рисунок в блоке «Дней вместе» (утро или вечер)",

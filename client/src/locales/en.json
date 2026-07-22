@@ -1448,6 +1448,7 @@
       "sections": {
         "welcome": "Getting started",
         "relationship": "Couple",
+        "dailyQuestions": "Daily questions",
         "daysTogether": "Days together",
         "chat": "Chat",
         "games": "Games",
@@ -1464,6 +1465,10 @@
         "partner_linked": {
           "action": "Link your partner",
           "period": "Once per account"
+        },
+        "daily_question_category": {
+          "action": "Complete a category in Daily questions",
+          "period": "10 per category, up to 2 categories per day"
         },
         "signature": {
           "action": "Add a drawing in Days together (morning or afternoon)",

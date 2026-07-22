@@ -1,6 +1,7 @@
 export type CurrencyGuideSection =
   | 'welcome'
   | 'relationship'
+  | 'dailyQuestions'
   | 'daysTogether'
   | 'chat'
   | 'games'
@@ -18,6 +19,7 @@ export interface CurrencyEarnRule {
 export const CURRENCY_GUIDE_SECTIONS: CurrencyGuideSection[] = [
   'welcome',
   'relationship',
+  'dailyQuestions',
   'daysTogether',
   'chat',
   'games',
@@ -31,6 +33,7 @@ export const CURRENCY_GUIDE_SECTIONS: CurrencyGuideSection[] = [
 export const CURRENCY_EARN_RULES: CurrencyEarnRule[] = [
   { id: 'registration_bonus', section: 'welcome', amount: 100 },
   { id: 'partner_linked', section: 'relationship', amount: 50 },
+  { id: 'daily_question_category', section: 'dailyQuestions', amount: 10 },
   { id: 'signature', section: 'daysTogether', amount: 15 },
   { id: 'both_signatures', section: 'daysTogether', amount: 25 },
   { id: 'days_achievement', section: 'daysTogether', amount: 50 },

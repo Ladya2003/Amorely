@@ -29,6 +29,7 @@ export const CURRENCY_REASONS = [
   'settings_push',
   'news_read',
   'announcement_read',
+  'daily_question_category',
   'pet_purchase',
   'pet_level_up',
   'pet_petting',

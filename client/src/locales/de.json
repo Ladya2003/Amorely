@@ -1349,6 +1349,7 @@
       "sections": {
         "welcome": "Start",
         "relationship": "Paar",
+        "dailyQuestions": "Tagesfragen",
         "daysTogether": "Tage zusammen",
         "chat": "Chat",
         "games": "Spiele",
@@ -1365,6 +1366,10 @@
         "partner_linked": {
           "action": "Partner verknüpfen",
           "period": "Einmal pro Konto"
+        },
+        "daily_question_category": {
+          "action": "Eine Kategorie in „Tagesfragen“ abschließen",
+          "period": "10 pro Kategorie, bis zu 2 Kategorien pro Tag"
         },
         "signature": {
           "action": "Zeichnung im Block „Tage zusammen“ hinzufügen (Vormittag oder Nachmittag)",

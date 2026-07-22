@@ -1349,6 +1349,7 @@
       "sections": {
         "welcome": "Inicio",
         "relationship": "Pareja",
+        "dailyQuestions": "Preguntas del día",
         "daysTogether": "Días juntos",
         "chat": "Chat",
         "games": "Juegos",
@@ -1365,6 +1366,10 @@
         "partner_linked": {
           "action": "Vincular a tu pareja",
           "period": "Una vez por cuenta"
+        },
+        "daily_question_category": {
+          "action": "Completar una categoría en Preguntas del día",
+          "period": "10 por categoría, hasta 2 categorías al día"
         },
         "signature": {
           "action": "Añadir un dibujo en el bloque Días juntos (mañana o tarde)",

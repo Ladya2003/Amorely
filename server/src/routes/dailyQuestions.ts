@@ -13,6 +13,7 @@ import {
   getHistory,
   notifyPartnerAboutQuestions,
 } from '../services/dailyQuestionsService';
+import { attachCurrencyToResponse } from '../utils/currencyRewards';
 
 const router = express.Router();
 
@@ -80,14 +81,18 @@ router.post('/answer', async (req: ExtendedRequest, res: Response) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const response = await submitAnswer(
+    const { response, currencyAward } = await submitAnswer(
       userId,
       categoryId,
       questionId,
       String(value),
       locale
     );
-    res.json(response);
+    attachCurrencyToResponse(
+      res,
+      response,
+      currencyAward?.awarded ? currencyAward : undefined
+    );
   } catch (error: any) {
     console.error('Daily questions answer error:', error);
     res.status(400).json({ error: error.message || 'Failed to submit answer' });
