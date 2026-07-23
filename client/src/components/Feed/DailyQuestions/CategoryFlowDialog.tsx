@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -52,49 +52,65 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
     },
     [onClose, onComplete, onShowResults]
   );
+  const redirectToResultsRef = useRef(redirectToResults);
+  redirectToResultsRef.current = redirectToResults;
 
-  const loadCategory = useCallback(async () => {
-    if (!categoryId) return;
-    setLoading(true);
-    try {
-      const data = await fetchCategoryDetail(categoryId);
-      setDetail(data);
-
-      if (data.results?.userCompleted) {
-        redirectToResults(categoryId);
-        return;
-      }
-
-      const firstUnanswered = data.questions.findIndex(
-        (question) =>
-          !data.results?.items.some(
-            (item) => item.questionId === question.id && item.userAnswer
-          )
-      );
-
-      if (firstUnanswered === -1) {
-        redirectToResults(categoryId);
-        return;
-      }
-
-      setStep(firstUnanswered);
-    } catch {
-      setDetail(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [categoryId, redirectToResults]);
+  const findFirstUnansweredStep = (data: CategoryDetail) =>
+    data.questions.findIndex(
+      (question) =>
+        !data.results?.items?.some(
+          (item) => item.questionId === question.id && Boolean(item.userAnswer)
+        )
+    );
 
   useEffect(() => {
-    if (open && categoryId) {
-      void loadCategory();
-    } else {
+    if (!open || !categoryId) {
       setDetail(null);
       setStep(0);
       setTextValue('');
       setSelectedValue(null);
+      return undefined;
     }
-  }, [open, categoryId, loadCategory]);
+
+    let cancelled = false;
+
+    const loadCategory = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchCategoryDetail(categoryId);
+        if (cancelled) return;
+
+        setDetail(data);
+
+        if (data.results?.userCompleted) {
+          redirectToResultsRef.current(categoryId);
+          return;
+        }
+
+        const firstUnanswered = findFirstUnansweredStep(data);
+        if (firstUnanswered === -1) {
+          redirectToResultsRef.current(categoryId);
+          return;
+        }
+
+        setStep(firstUnanswered);
+      } catch {
+        if (!cancelled) {
+          setDetail(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadCategory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, categoryId]);
 
   const questions = detail?.questions ?? [];
   const currentQuestion: DailyQuestion | undefined = questions[step];
@@ -122,24 +138,22 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
         return;
       }
 
-      const refreshed = await fetchCategoryDetail(categoryId);
-      setDetail(refreshed);
-
-      const nextUnanswered = refreshed.questions.findIndex(
-        (question) =>
-          !refreshed.results?.items.some(
-            (item) => item.questionId === question.id && item.userAnswer
-          )
-      );
-
-      if (nextUnanswered === -1) {
+      const nextStep = step + 1;
+      if (nextStep >= questions.length) {
         redirectToResults(categoryId);
         return;
       }
 
-      setStep(nextUnanswered);
+      setStep(nextStep);
       setTextValue('');
       setSelectedValue(null);
+
+      try {
+        const refreshed = await fetchCategoryDetail(categoryId);
+        setDetail(refreshed);
+      } catch {
+        // Keep local step progression even if refresh fails.
+      }
     } finally {
       setSubmitting(false);
     }

@@ -69,7 +69,7 @@ const DailyQuestionsSection: React.FC = () => {
     return () => window.removeEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
   }, [loadState]);
 
-  const openResults = async (categoryId: string, roundKey?: string | null) => {
+  const openResults = useCallback(async (categoryId: string, roundKey?: string | null) => {
     setResultsCategoryId(categoryId);
     setResultsRoundKey(roundKey ?? null);
     setResultsLoading(true);
@@ -84,7 +84,19 @@ const DailyQuestionsSection: React.FC = () => {
     } finally {
       setResultsLoading(false);
     }
-  };
+  }, []);
+
+  const handleFlowClose = useCallback(() => {
+    setFlowCategoryId(null);
+  }, []);
+
+  const handleFlowComplete = useCallback(() => {
+    void loadState();
+  }, [loadState]);
+
+  const handleShowResults = useCallback((categoryId: string) => {
+    void openResults(categoryId);
+  }, [openResults]);
 
   const handleEditAnswer = async (questionId: string, value: string) => {
     if (!resultsCategoryId || resultsRoundKey) return null;
@@ -177,9 +189,9 @@ const DailyQuestionsSection: React.FC = () => {
       <CategoryFlowDialog
         open={Boolean(flowCategoryId)}
         categoryId={flowCategoryId}
-        onClose={() => setFlowCategoryId(null)}
-        onComplete={() => void loadState()}
-        onShowResults={(categoryId) => void openResults(categoryId)}
+        onClose={handleFlowClose}
+        onComplete={handleFlowComplete}
+        onShowResults={handleShowResults}
       />
 
       <ResponsiveDialog
