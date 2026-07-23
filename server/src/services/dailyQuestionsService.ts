@@ -129,20 +129,6 @@ const getUserProgress = (
     (p: any) => idsEqual(p.userId, userId) && p.categoryId === categoryId
   );
 
-const ensureUserProgress = (state: any, userId: string, categoryId: string) => {
-  let entry = getUserProgress(state, userId, categoryId);
-  if (!entry) {
-    entry = {
-      userId: new mongoose.Types.ObjectId(normalizeIdStr(userId)!),
-      categoryId,
-      answers: [],
-      completedAt: null,
-    };
-    state.progress.push(entry);
-  }
-  return entry;
-};
-
 const checkCategoryBothCompleted = (state: any, categoryId: string) => {
   const userId = normalizeIdStr(state.userId);
   const partnerId = normalizeIdStr(state.partnerId);
@@ -328,8 +314,18 @@ const isUserCategoryCompleted = (
   category: { questions: { id: string }[] }
 ) => Boolean(userProg?.completedAt) || isCategoryFullyAnswered(userProg, category);
 
-const persistState = async (state: any) => {
+const markProgressNestedPathsModified = (state: any) => {
+  if (!Array.isArray(state.progress)) return;
+
+  state.progress.forEach((_: unknown, index: number) => {
+    state.markModified(`progress.${index}.answers`);
+    state.markModified(`progress.${index}.completedAt`);
+  });
   state.markModified('progress');
+};
+
+const persistState = async (state: any) => {
+  markProgressNestedPathsModified(state);
   state.markModified('categoryBothCompleted');
   state.markModified('history');
   await state.save();
@@ -517,14 +513,26 @@ export const submitAnswer = async (
     throw new Error('Answer required');
   }
 
-  const progress = ensureUserProgress(state, userId, categoryId);
-  const existingIdx = progress.answers.findIndex(
+  const trimmedValue = value.trim();
+  let progress = getUserProgress(state, userId, categoryId);
+  const existingIdx = progress?.answers.findIndex(
     (a: any) => a.questionId === questionId
-  );
-  if (existingIdx >= 0) {
-    progress.answers[existingIdx].value = value.trim();
+  ) ?? -1;
+
+  if (progress) {
+    if (existingIdx >= 0) {
+      progress.answers[existingIdx].value = trimmedValue;
+    } else {
+      progress.answers.push({ questionId, value: trimmedValue });
+    }
   } else {
-    progress.answers.push({ questionId, value: value.trim() });
+    progress = {
+      userId: new mongoose.Types.ObjectId(normalizeIdStr(userId)!),
+      categoryId,
+      answers: [{ questionId, value: trimmedValue }],
+      completedAt: null,
+    };
+    state.progress.push(progress);
   }
 
   let currencyAward: CurrencyAwardResult | null = null;
