@@ -140,7 +140,22 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
 
       const nextStep = step + 1;
       if (nextStep >= questions.length) {
-        redirectToResults(categoryId);
+        try {
+          const refreshed = await fetchCategoryDetail(categoryId);
+          setDetail(refreshed);
+          if (refreshed.results?.userCompleted) {
+            redirectToResults(categoryId);
+            return;
+          }
+          const firstUnanswered = findFirstUnansweredStep(refreshed);
+          if (firstUnanswered >= 0) {
+            setStep(firstUnanswered);
+            setTextValue('');
+            setSelectedValue(null);
+          }
+        } catch {
+          // Keep user on the last question if sync fails.
+        }
         return;
       }
 
