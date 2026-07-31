@@ -1,0 +1,40 @@
+name: Upload daily questions images to Cloudinary
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/assets/daily-questions/**'
+      - 'server/scripts/upload-daily-questions-images.ts'
+      - 'server/src/services/dailyQuestionsImageService.ts'
+      - '.github/workflows/upload-daily-questions-images.yml'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Upload to Cloudinary
+        working-directory: server
+        env:
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: npm run upload:daily-questions-images

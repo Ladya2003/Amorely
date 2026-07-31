@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { processPlanNoteDeadlineReminders } from '../services/planNoteDeadlineService';
+import { ensureDailyQuestionImagesUploaded } from '../services/dailyQuestionsImageService';
 
 const router = express.Router();
 
@@ -45,6 +46,28 @@ router.get('/plan-deadline-reminders', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Ошибка cron-напоминаний о дедлайнах заметок:', error);
     res.status(500).json({ error: 'Ошибка обработки напоминаний о дедлайнах' });
+  }
+});
+
+/**
+ * Загрузка/обновление изображений вопросов дня на Cloudinary.
+ * Example: GET /api/cron/upload-daily-questions-images?secret=YOUR_CRON_SECRET
+ */
+router.get('/upload-daily-questions-images', async (req: Request, res: Response) => {
+  if (!verifyCronSecret(req, res)) {
+    return;
+  }
+
+  try {
+    await ensureDailyQuestionImagesUploaded();
+    res.json({
+      ok: true,
+      timestamp: new Date().toISOString(),
+      message: 'Изображения вопросов дня загружены на Cloudinary',
+    });
+  } catch (error) {
+    console.error('Ошибка загрузки изображений вопросов дня:', error);
+    res.status(500).json({ error: 'Ошибка загрузки изображений вопросов дня' });
   }
 });
 
