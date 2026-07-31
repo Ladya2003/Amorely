@@ -26,7 +26,7 @@ import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getFeedHeaderGlowSx, getNotificationBellButtonAnimSx, getNotificationBellIconSx } from './feedBannerStyles';
 import FeedCoupleAvatars, { FeedCoupleAvatarsLoader } from './FeedCoupleAvatars';
-import { COUPLE_AVATAR_ROW_WIDTH } from './feedCoupleAvatarsStyles';
+import { COUPLE_AVATAR_ROW_WIDTH, COUPLE_BUBBLES_TOP_INSET } from './feedCoupleAvatarsStyles';
 import { useRelationship } from '../../hooks/useRelationship';
 import { fetchAnnouncements, type AppAnnouncement, claimAnnouncementReadReward } from '../../services/announcementsService';
 import {
@@ -197,7 +197,12 @@ const FeedHeader: React.FC = () => {
 
   return (
     <Box sx={{ mb: 2.5 }}>
-      <Box sx={(theme) => getFeedHeaderGlowSx(theme, { bleed: true })}>
+      <Box
+        sx={(theme) => ({
+          ...getFeedHeaderGlowSx(theme, { bleed: true }),
+          overflow: 'visible',
+        })}
+      >
         <Box sx={{ position: 'relative', zIndex: 1 }}>
           <Box
             sx={{
@@ -206,6 +211,10 @@ const FeedHeader: React.FC = () => {
               alignItems: 'center',
               gap: 2,
               mb: 2.5,
+              overflow: 'visible',
+              ...(useCoupleAvatarLayout && {
+                pt: `${COUPLE_BUBBLES_TOP_INSET}px`,
+              }),
             }}
           >
             <Box

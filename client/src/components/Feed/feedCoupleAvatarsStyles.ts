@@ -4,6 +4,8 @@ export const COUPLE_AVATAR_SIZE = 64;
 export const COUPLE_AVATAR_OVERLAP = 14;
 export const COUPLE_AVATAR_ROW_WIDTH = COUPLE_AVATAR_SIZE * 2 - COUPLE_AVATAR_OVERLAP;
 export const STATUS_BUBBLE_MAX_WIDTH = 118;
+/** Отступ сверху под абсолютные облачка (партнёрское выше пользовательского) */
+export const COUPLE_BUBBLES_TOP_INSET = 52;
 
 /** Центр левого аватара от левого края блока */
 export const COUPLE_USER_AVATAR_CENTER_X = COUPLE_AVATAR_SIZE / 2;
