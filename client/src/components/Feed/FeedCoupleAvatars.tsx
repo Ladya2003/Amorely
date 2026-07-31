@@ -75,12 +75,24 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
       type={editable ? 'button' : undefined}
       onClick={editable ? onClick : undefined}
       aria-label={ariaLabel}
+      title={text}
       sx={{
         ...getThoughtBubbleBodySx(theme, editable),
         ...(editable && { fontFamily: 'inherit' }),
       }}
     >
-      {text}
+      <Box
+        component="span"
+        sx={{
+          display: 'block',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          maxWidth: '100%',
+        }}
+      >
+        {text}
+      </Box>
     </Box>
   );
 

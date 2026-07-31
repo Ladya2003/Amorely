@@ -61,10 +61,11 @@ export const getUserThoughtBubbleWrapSx = () => ({
   transform: 'translateX(calc(-50% - 8px))',
   display: 'flex',
   flexDirection: 'column' as const,
-  alignItems: 'center',
+  alignItems: 'flex-start',
   zIndex: 2,
   pointerEvents: 'none' as const,
   mb: '-4px',
+  maxWidth: STATUS_BUBBLE_MAX_WIDTH,
 });
 
 /** Облачко партнёра выше и с большим z-index — может перекрывать наше */
@@ -78,6 +79,7 @@ export const getPartnerThoughtBubbleWrapSx = () => ({
   alignItems: 'flex-end',
   zIndex: 4,
   pointerEvents: 'none' as const,
+  maxWidth: STATUS_BUBBLE_MAX_WIDTH,
 });
 
 export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
@@ -85,10 +87,10 @@ export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
 
   return {
     position: 'relative' as const,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: 'block',
+    boxSizing: 'border-box' as const,
     maxWidth: STATUS_BUBBLE_MAX_WIDTH,
+    width: '100%',
     minWidth: 36,
     px: 1.5,
     py: 0.75,
@@ -103,6 +105,8 @@ export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap' as const,
+    textAlign: 'left' as const,
+    direction: 'ltr' as const,
     pointerEvents: editable ? ('auto' as const) : ('none' as const),
     cursor: editable ? 'pointer' : 'default',
     transition: 'transform 150ms ease, box-shadow 150ms ease',
@@ -176,7 +180,8 @@ export const getThoughtBubbleTrailBottomRightSx = (theme: Theme, dots: 2 | 3 = 3
     alignItems: 'flex-end',
     alignSelf: 'flex-end',
     mt: 0.25,
-    mr: 0.25,
+    mr: 1.25,
+    transform: 'translateX(-10px)',
     pointerEvents: 'none' as const,
     '& .thought-bubble-dot-lg': {
       ...dotBase,
@@ -188,14 +193,14 @@ export const getThoughtBubbleTrailBottomRightSx = (theme: Theme, dots: 2 | 3 = 3
       width: 7,
       height: 7,
       mt: '-2px',
-      mr: '-3px',
+      ml: '2px',
     },
     '& .thought-bubble-dot-sm': {
       ...dotBase,
       width: 4,
       height: 4,
       mt: '-2px',
-      mr: '-6px',
+      ml: '4px',
     },
   };
 };
