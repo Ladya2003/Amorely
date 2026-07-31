@@ -2,9 +2,14 @@ import { alpha, Theme } from '@mui/material/styles';
 
 export const COUPLE_AVATAR_SIZE = 64;
 export const COUPLE_AVATAR_OVERLAP = 14;
-export const COUPLE_AVATARS_WIDTH = 196;
-export const COUPLE_AVATARS_HEIGHT = 112;
+export const COUPLE_AVATAR_ROW_WIDTH = COUPLE_AVATAR_SIZE * 2 - COUPLE_AVATAR_OVERLAP;
 export const STATUS_BUBBLE_MAX_WIDTH = 118;
+
+/** Центр левого аватара от левого края блока */
+export const COUPLE_USER_AVATAR_CENTER_X = COUPLE_AVATAR_SIZE / 2;
+/** Центр правого аватара от левого края блока */
+export const COUPLE_PARTNER_AVATAR_CENTER_X =
+  COUPLE_AVATAR_SIZE + COUPLE_AVATAR_SIZE - COUPLE_AVATAR_OVERLAP - COUPLE_AVATAR_SIZE / 2;
 
 const getBubbleSurface = (theme: Theme) => {
   const isLight = theme.palette.mode === 'light';
@@ -19,20 +24,18 @@ const getBubbleSurface = (theme: Theme) => {
   };
 };
 
+/** Корневой блок — только ширина/высота ряда аватаров; облачка не влияют на layout */
 export const getCoupleAvatarsRootSx = () => ({
   position: 'relative' as const,
   flexShrink: 0,
-  width: COUPLE_AVATARS_WIDTH,
-  minHeight: COUPLE_AVATARS_HEIGHT,
-  display: 'flex',
-  flexDirection: 'column' as const,
-  alignItems: 'center',
-  justifyContent: 'flex-end',
+  width: COUPLE_AVATAR_ROW_WIDTH,
+  height: COUPLE_AVATAR_SIZE,
+  overflow: 'visible' as const,
 });
 
 export const getCoupleAvatarsLoaderSx = () => ({
-  width: COUPLE_AVATARS_WIDTH,
-  minHeight: COUPLE_AVATARS_HEIGHT,
+  width: COUPLE_AVATAR_ROW_WIDTH,
+  height: COUPLE_AVATAR_SIZE,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -41,32 +44,38 @@ export const getCoupleAvatarsLoaderSx = () => ({
 
 export const getCoupleAvatarsRowSx = () => ({
   display: 'flex',
-  alignItems: 'flex-end',
-  justifyContent: 'center',
-  width: '100%',
-});
-
-export const getCoupleAvatarColumnSx = (side: 'left' | 'right') => ({
-  position: 'relative' as const,
-  display: 'flex',
-  flexDirection: 'column' as const,
   alignItems: 'center',
-  ...(side === 'right' && {
-    ml: `-${COUPLE_AVATAR_OVERLAP}px`,
-  }),
+  height: '100%',
 });
 
-export const getThoughtBubbleWrapSx = (theme: Theme, side: 'left' | 'right') => ({
+export const getCouplePartnerAvatarWrapSx = () => ({
+  ml: `-${COUPLE_AVATAR_OVERLAP}px`,
+});
+
+export const getUserThoughtBubbleWrapSx = () => ({
   position: 'absolute' as const,
-  bottom: `calc(100% - 6px)`,
+  left: COUPLE_USER_AVATAR_CENTER_X,
+  bottom: '100%',
+  transform: 'translateX(calc(-50% - 8px))',
   display: 'flex',
   flexDirection: 'column' as const,
   alignItems: 'center',
-  zIndex: 3,
+  zIndex: 2,
   pointerEvents: 'none' as const,
-  ...(side === 'left'
-    ? { left: '50%', transform: 'translateX(calc(-50% - 10px))' }
-    : { left: '50%', transform: 'translateX(calc(-50% + 10px))' }),
+  mb: '-4px',
+});
+
+/** Облачко партнёра выше и с большим z-index — может перекрывать наше */
+export const getPartnerThoughtBubbleWrapSx = () => ({
+  position: 'absolute' as const,
+  left: COUPLE_PARTNER_AVATAR_CENTER_X,
+  bottom: 'calc(100% + 14px)',
+  transform: 'translateX(calc(-50% + 6px))',
+  display: 'flex',
+  flexDirection: 'column' as const,
+  alignItems: 'center',
+  zIndex: 4,
+  pointerEvents: 'none' as const,
 });
 
 export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
@@ -149,4 +158,5 @@ export const getCoupleAvatarSx = (theme: Theme, zIndex: number) => ({
 
 export const getCoupleUserAvatarWrapSx = () => ({
   position: 'relative' as const,
+  flexShrink: 0,
 });

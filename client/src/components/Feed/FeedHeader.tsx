@@ -26,7 +26,7 @@ import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getFeedHeaderGlowSx, getNotificationBellButtonAnimSx, getNotificationBellIconSx } from './feedBannerStyles';
 import FeedCoupleAvatars, { FeedCoupleAvatarsLoader } from './FeedCoupleAvatars';
-import { COUPLE_AVATARS_WIDTH } from './feedCoupleAvatarsStyles';
+import { COUPLE_AVATAR_ROW_WIDTH } from './feedCoupleAvatarsStyles';
 import { useRelationship } from '../../hooks/useRelationship';
 import { fetchAnnouncements, type AppAnnouncement, claimAnnouncementReadReward } from '../../services/announcementsService';
 import {
@@ -145,7 +145,7 @@ const FeedHeader: React.FC = () => {
   const isPartnerAvatarLoading = mayHavePartner && isRelationshipLoading;
   const hasPartner = Boolean(partner);
   const useCoupleAvatarLayout = isPartnerAvatarLoading || hasPartner;
-  const avatarAreaWidth = useCoupleAvatarLayout ? COUPLE_AVATARS_WIDTH : avatarSize;
+  const avatarAreaWidth = useCoupleAvatarLayout ? COUPLE_AVATAR_ROW_WIDTH : avatarSize;
   const notificationSize = hasAvatar ? NOTIFICATION_SIZE_WITH_PHOTO : NOTIFICATION_SIZE_WITHOUT_PHOTO;
   const hasUnreadNotifications =
     !announcementsLoading && unreadCount > 0 && !notificationsOpen;
@@ -215,7 +215,6 @@ const FeedHeader: React.FC = () => {
                 maxWidth: `calc(100% - ${avatarAreaWidth + 16}px)`,
                 display: 'flex',
                 alignItems: 'center',
-                alignSelf: 'stretch',
               }}
             >
               {isAdmin ? (

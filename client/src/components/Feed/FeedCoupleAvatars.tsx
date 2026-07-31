@@ -30,15 +30,16 @@ import {
 } from './feedBannerStyles';
 import {
   COUPLE_AVATAR_SIZE,
-  getCoupleAvatarColumnSx,
   getCoupleAvatarsLoaderSx,
   getCoupleAvatarsRootSx,
   getCoupleAvatarsRowSx,
   getCoupleAvatarSx,
+  getCouplePartnerAvatarWrapSx,
   getCoupleUserAvatarWrapSx,
+  getPartnerThoughtBubbleWrapSx,
   getThoughtBubbleBodySx,
   getThoughtBubbleTrailSx,
-  getThoughtBubbleWrapSx,
+  getUserThoughtBubbleWrapSx,
 } from './feedCoupleAvatarsStyles';
 
 const NOTIFICATION_SIZE = 30;
@@ -47,6 +48,7 @@ const NOTIFICATION_ICON_SIZE = 17;
 interface StatusThoughtBubbleProps {
   text: string;
   side: 'left' | 'right';
+  wrapSx: object;
   editable?: boolean;
   ariaLabel?: string;
   onClick?: () => void;
@@ -55,14 +57,15 @@ interface StatusThoughtBubbleProps {
 const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
   text,
   side,
+  wrapSx,
   editable = false,
   ariaLabel,
   onClick,
 }) => {
   const theme = useTheme();
 
-  const bubbleBody = (
-    <>
+  return (
+    <Box sx={wrapSx}>
       <Box
         component={editable ? 'button' : 'span'}
         type={editable ? 'button' : undefined}
@@ -70,9 +73,7 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
         aria-label={ariaLabel}
         sx={{
           ...getThoughtBubbleBodySx(theme, editable),
-          ...(editable && {
-            fontFamily: 'inherit',
-          }),
+          ...(editable && { fontFamily: 'inherit' }),
         }}
       >
         {text}
@@ -81,12 +82,6 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
         <Box className="thought-bubble-dot-lg" />
         <Box className="thought-bubble-dot-sm" />
       </Box>
-    </>
-  );
-
-  return (
-    <Box sx={getThoughtBubbleWrapSx(theme, side)}>
-      {bubbleBody}
     </Box>
   );
 };
@@ -166,96 +161,96 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
   return (
     <>
       <Box sx={getCoupleAvatarsRootSx()}>
+        <StatusThoughtBubble
+          text={myDisplayText}
+          side="left"
+          wrapSx={getUserThoughtBubbleWrapSx()}
+          editable
+          ariaLabel={t('feed.statusBubble.editAriaLabel')}
+          onClick={handleOpenEdit}
+        />
+
+        <StatusThoughtBubble
+          text={partnerDisplayText}
+          side="right"
+          wrapSx={getPartnerThoughtBubbleWrapSx()}
+          ariaLabel={t('feed.statusBubble.partnerBubbleAriaLabel', { name: partnerDisplayName })}
+        />
+
         <Box sx={getCoupleAvatarsRowSx()}>
-          <Box sx={getCoupleAvatarColumnSx('left')}>
-            <StatusThoughtBubble
-              text={myDisplayText}
-              side="left"
-              editable
-              ariaLabel={t('feed.statusBubble.editAriaLabel')}
-              onClick={handleOpenEdit}
-            />
-
-            <Box sx={getCoupleUserAvatarWrapSx()}>
-              <AvatarGameRankMedal
-                badges={badges}
-                displayGameId={user.displayBadgeGameId}
-                showBadge={user.showDisplayBadge !== false}
-                avatarSize={COUPLE_AVATAR_SIZE}
-              >
-                <Avatar
-                  src={userHasAvatar ? user.avatar : undefined}
-                  alt={userDisplayName}
-                  onClick={() => navigate('/settings')}
-                  sx={{
-                    ...getCoupleAvatarSx(theme, 2),
-                    cursor: 'pointer',
-                  }}
-                >
-                  {user.username.charAt(0).toUpperCase()}
-                </Avatar>
-              </AvatarGameRankMedal>
-
-              <Badge
-                color="error"
-                variant="dot"
-                invisible={announcementsLoading || unreadCount === 0}
-                overlap="circular"
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          <Box sx={getCoupleUserAvatarWrapSx()}>
+            <AvatarGameRankMedal
+              badges={badges}
+              displayGameId={user.displayBadgeGameId}
+              showBadge={user.showDisplayBadge !== false}
+              avatarSize={COUPLE_AVATAR_SIZE}
+            >
+              <Avatar
+                src={userHasAvatar ? user.avatar : undefined}
+                alt={userDisplayName}
+                onClick={() => navigate('/settings')}
                 sx={{
-                  position: 'absolute',
-                  top: -2,
-                  right: -2,
-                  zIndex: 4,
-                  '& .MuiBadge-badge': {
-                    top: 4,
-                    right: 4,
-                    boxShadow: '0 0 0 2px var(--mui-palette-background-default, #fff)',
-                  },
+                  ...getCoupleAvatarSx(theme, 2),
+                  cursor: 'pointer',
                 }}
               >
-                <IconButton
-                  aria-label={t('feed.notificationsAriaLabel')}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenNotifications();
-                  }}
-                  sx={(t) => ({
-                    position: 'absolute',
-                    top: -4,
-                    right: -4,
-                    zIndex: 3,
-                    width: NOTIFICATION_SIZE,
-                    height: NOTIFICATION_SIZE,
-                    bgcolor: t.palette.mode === 'light' ? '#1a1a1a' : '#2a2a2a',
-                    color: '#fff',
-                    border: `3px solid ${t.palette.background.default}`,
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
-                    '&:hover': {
-                      bgcolor: t.palette.mode === 'light' ? '#333' : '#3a3a3a',
-                    },
-                    ...getNotificationBellButtonAnimSx(hasUnreadNotifications),
-                  })}
-                >
-                  {announcementsLoading ? (
-                    <CircularProgress size={14} sx={{ color: '#fff' }} />
-                  ) : (
-                    <NotificationsNoneOutlinedIcon
-                      sx={getNotificationBellIconSx(NOTIFICATION_ICON_SIZE, hasUnreadNotifications)}
-                    />
-                  )}
-                </IconButton>
-              </Badge>
-            </Box>
+                {user.username.charAt(0).toUpperCase()}
+              </Avatar>
+            </AvatarGameRankMedal>
+
+            <Badge
+              color="error"
+              variant="dot"
+              invisible={announcementsLoading || unreadCount === 0}
+              overlap="circular"
+              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+              sx={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                zIndex: 5,
+                '& .MuiBadge-badge': {
+                  top: 4,
+                  right: 4,
+                  boxShadow: '0 0 0 2px var(--mui-palette-background-default, #fff)',
+                },
+              }}
+            >
+              <IconButton
+                aria-label={t('feed.notificationsAriaLabel')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenNotifications();
+                }}
+                sx={(t) => ({
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  zIndex: 5,
+                  width: NOTIFICATION_SIZE,
+                  height: NOTIFICATION_SIZE,
+                  bgcolor: t.palette.mode === 'light' ? '#1a1a1a' : '#2a2a2a',
+                  color: '#fff',
+                  border: `3px solid ${t.palette.background.default}`,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
+                  '&:hover': {
+                    bgcolor: t.palette.mode === 'light' ? '#333' : '#3a3a3a',
+                  },
+                  ...getNotificationBellButtonAnimSx(hasUnreadNotifications),
+                })}
+              >
+                {announcementsLoading ? (
+                  <CircularProgress size={14} sx={{ color: '#fff' }} />
+                ) : (
+                  <NotificationsNoneOutlinedIcon
+                    sx={getNotificationBellIconSx(NOTIFICATION_ICON_SIZE, hasUnreadNotifications)}
+                  />
+                )}
+              </IconButton>
+            </Badge>
           </Box>
 
-          <Box sx={getCoupleAvatarColumnSx('right')}>
-            <StatusThoughtBubble
-              text={partnerDisplayText}
-              side="right"
-              ariaLabel={t('feed.statusBubble.partnerBubbleAriaLabel', { name: partnerDisplayName })}
-            />
-
+          <Box sx={getCouplePartnerAvatarWrapSx()}>
             <Avatar
               src={partnerHasAvatar ? partner.avatar : undefined}
               alt={partnerDisplayName}
