@@ -74,8 +74,8 @@ export const getPartnerThoughtBubbleWrapSx = () => ({
   bottom: 'calc(100% + 14px)',
   transform: 'translateX(calc(-50% - 10px))',
   display: 'flex',
-  flexDirection: 'row' as const,
-  alignItems: 'flex-start',
+  flexDirection: 'column' as const,
+  alignItems: 'flex-end',
   zIndex: 4,
   pointerEvents: 'none' as const,
 });
@@ -158,46 +158,44 @@ export const getThoughtBubbleTrailSx = (
   };
 };
 
-/** Цепочка «мыслей» справа от таблетки — по диагонали вниз-вправо */
-export const getThoughtBubbleTrailRightSx = (theme: Theme, dots: 2 | 3 = 3) => {
+/** Цепочка «мыслей» снизу справа от таблетки — по диагонали к аватару */
+export const getThoughtBubbleTrailBottomRightSx = (theme: Theme, dots: 2 | 3 = 3) => {
   const surface = getBubbleSurface(theme);
 
   const dotBase = {
-    position: 'absolute' as const,
     borderRadius: '50%',
     bgcolor: surface.bgcolor,
     border: surface.border,
     boxShadow: surface.shadow,
+    flexShrink: 0,
   };
 
   return {
-    position: 'relative' as const,
-    width: dots === 3 ? 34 : 26,
-    height: dots === 3 ? 36 : 28,
-    flexShrink: 0,
-    ml: 0.25,
-    mt: 0.5,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'flex-end',
+    alignSelf: 'flex-end',
+    mt: 0.25,
+    mr: 0.25,
     pointerEvents: 'none' as const,
     '& .thought-bubble-dot-lg': {
       ...dotBase,
-      width: 11,
-      height: 11,
-      top: 0,
-      left: 0,
+      width: 10,
+      height: 10,
     },
     '& .thought-bubble-dot-md': {
       ...dotBase,
-      width: 8,
-      height: 8,
-      top: 11,
-      left: 12,
+      width: 7,
+      height: 7,
+      mt: '-2px',
+      mr: '-3px',
     },
     '& .thought-bubble-dot-sm': {
       ...dotBase,
-      width: 5,
-      height: 5,
-      top: 22,
-      left: 22,
+      width: 4,
+      height: 4,
+      mt: '-2px',
+      mr: '-6px',
     },
   };
 };

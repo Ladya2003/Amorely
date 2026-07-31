@@ -39,7 +39,7 @@ import {
   getPartnerThoughtBubbleWrapSx,
   getThoughtBubbleBodySx,
   getThoughtBubbleTrailSx,
-  getThoughtBubbleTrailRightSx,
+  getThoughtBubbleTrailBottomRightSx,
   getUserThoughtBubbleWrapSx,
 } from './feedCoupleAvatarsStyles';
 
@@ -52,7 +52,7 @@ interface StatusThoughtBubbleProps {
   wrapSx: object;
   editable?: boolean;
   trailDots?: 2 | 3;
-  trailPosition?: 'bottom' | 'right';
+  trailPosition?: 'bottom' | 'bottom-right';
   ariaLabel?: string;
   onClick?: () => void;
 }
@@ -92,19 +92,19 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
     </Box>
   );
 
-  const trailRight = (
-    <Box sx={getThoughtBubbleTrailRightSx(theme, trailDots)}>
+  const trailBottomRight = (
+    <Box sx={getThoughtBubbleTrailBottomRightSx(theme, trailDots)}>
       <Box className="thought-bubble-dot-lg" />
       {trailDots === 3 && <Box className="thought-bubble-dot-md" />}
       <Box className="thought-bubble-dot-sm" />
     </Box>
   );
 
-  if (trailPosition === 'right') {
+  if (trailPosition === 'bottom-right') {
     return (
       <Box sx={wrapSx}>
         {pill}
-        {trailRight}
+        {trailBottomRight}
       </Box>
     );
   }
@@ -209,7 +209,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
           side="right"
           wrapSx={getPartnerThoughtBubbleWrapSx()}
           trailDots={3}
-          trailPosition="right"
+          trailPosition="bottom-right"
           ariaLabel={partnerBubbleAriaLabel}
         />
 
