@@ -201,7 +201,7 @@ const AddPetCard: React.FC<AddPetCardProps> = ({ canAfford, cost, onClick, anima
               color: canAfford
                 ? theme.palette.mode === 'light'
                   ? '#5A1A52'
-                  : theme.palette.primary.light
+                  : '#FFE082'
                 : 'text.disabled',
             })}
           >
