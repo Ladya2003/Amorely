@@ -34,7 +34,8 @@ jobs:
       - name: Upload to Cloudinary
         working-directory: server
         env:
-          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          UPLOAD_REQUIRED: 'true'
+          CLOUDINARY_CLOUD_NAME: dlbrkdlco
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         run: npm run upload:daily-questions-images

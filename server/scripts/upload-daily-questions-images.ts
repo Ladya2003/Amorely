@@ -18,19 +18,21 @@ import { uploadDailyQuestionImage } from '../src/services/dailyQuestionsImageSer
 dotenv.config();
 
 const main = async (): Promise<void> => {
-  if (
-    !process.env.CLOUDINARY_CLOUD_NAME ||
-    !process.env.CLOUDINARY_API_KEY ||
-    !process.env.CLOUDINARY_API_SECRET
-  ) {
-    console.error(
-      'Добавьте CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET в server/.env'
-    );
-    process.exit(1);
+  const uploadRequired = process.env.UPLOAD_REQUIRED === 'true';
+
+  if (!process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    const message =
+      'Cloudinary не настроен — загрузка изображений вопросов дня пропущена (нужны CLOUDINARY_* в .env)';
+    if (uploadRequired) {
+      console.error(message);
+      process.exit(1);
+    }
+    console.warn(message);
+    return;
   }
 
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dlbrkdlco',
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
