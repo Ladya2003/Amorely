@@ -554,6 +554,7 @@
     "statusBubble": {
       "placeholder": "Ich liebe dich ❤️",
       "partnerPlaceholder": "💭",
+      "partnerEmptyThoughtAriaLabel": "{{name}} hat noch keine Sprechblase",
       "editTitle": "Deine Sprechblase",
       "editHint": "Dieser Text ist für dich und deinen Partner sichtbar",
       "editAriaLabel": "Sprechblasentext bearbeiten",

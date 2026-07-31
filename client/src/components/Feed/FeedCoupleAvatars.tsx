@@ -37,6 +37,7 @@ import {
   getCouplePartnerAvatarWrapSx,
   getCoupleUserAvatarWrapSx,
   getPartnerThoughtBubbleWrapSx,
+  getEmptyPartnerThoughtClusterSx,
   getThoughtBubbleBodySx,
   getThoughtBubbleTrailSx,
   getUserThoughtBubbleWrapSx,
@@ -50,6 +51,7 @@ interface StatusThoughtBubbleProps {
   side: 'left' | 'right';
   wrapSx: object;
   editable?: boolean;
+  trailDots?: 2 | 3;
   ariaLabel?: string;
   onClick?: () => void;
 }
@@ -59,6 +61,7 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
   side,
   wrapSx,
   editable = false,
+  trailDots = 2,
   ariaLabel,
   onClick,
 }) => {
@@ -78,9 +81,25 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
       >
         {text}
       </Box>
-      <Box sx={getThoughtBubbleTrailSx(theme, side)}>
+      <Box sx={getThoughtBubbleTrailSx(theme, side, trailDots)}>
         <Box className="thought-bubble-dot-lg" />
+        {trailDots === 3 && <Box className="thought-bubble-dot-md" />}
         <Box className="thought-bubble-dot-sm" />
+      </Box>
+    </Box>
+  );
+};
+
+const EmptyPartnerThoughtBubble: React.FC<{ ariaLabel?: string }> = ({ ariaLabel }) => {
+  const theme = useTheme();
+
+  return (
+    <Box sx={getPartnerThoughtBubbleWrapSx()} aria-label={ariaLabel} role="img">
+      <Box sx={getEmptyPartnerThoughtClusterSx(theme)}>
+        <Box className="thought-cluster-main" />
+        <Box className="thought-cluster-md" />
+        <Box className="thought-cluster-sm" />
+        <Box className="thought-cluster-xs" />
       </Box>
     </Box>
   );
@@ -143,8 +162,12 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
   const userHasAvatar = Boolean(user.avatar?.trim());
   const partnerHasAvatar = Boolean(partner.avatar?.trim());
 
+  const hasPartnerBubbleText = Boolean(partnerBubbleText.trim());
   const myDisplayText = myBubbleText.trim() || t('feed.statusBubble.placeholder');
-  const partnerDisplayText = partnerBubbleText.trim() || t('feed.statusBubble.partnerPlaceholder');
+  const partnerDisplayText = partnerBubbleText.trim();
+  const partnerBubbleAriaLabel = hasPartnerBubbleText
+    ? t('feed.statusBubble.partnerBubbleAriaLabel', { name: partnerDisplayName })
+    : t('feed.statusBubble.partnerEmptyThoughtAriaLabel', { name: partnerDisplayName });
 
   const handleOpenEdit = () => {
     setEditText(myBubbleText);
@@ -170,12 +193,17 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
           onClick={handleOpenEdit}
         />
 
-        <StatusThoughtBubble
-          text={partnerDisplayText}
-          side="right"
-          wrapSx={getPartnerThoughtBubbleWrapSx()}
-          ariaLabel={t('feed.statusBubble.partnerBubbleAriaLabel', { name: partnerDisplayName })}
-        />
+        {hasPartnerBubbleText ? (
+          <StatusThoughtBubble
+            text={partnerDisplayText}
+            side="right"
+            wrapSx={getPartnerThoughtBubbleWrapSx()}
+            trailDots={3}
+            ariaLabel={partnerBubbleAriaLabel}
+          />
+        ) : (
+          <EmptyPartnerThoughtBubble ariaLabel={partnerBubbleAriaLabel} />
+        )}
 
         <Box sx={getCoupleAvatarsRowSx()}>
           <Box sx={getCoupleUserAvatarWrapSx()}>

@@ -554,6 +554,7 @@
     "statusBubble": {
       "placeholder": "Eu te amo ❤️",
       "partnerPlaceholder": "💭",
+      "partnerEmptyThoughtAriaLabel": "{{name}} ainda não tem nuvem",
       "editTitle": "Sua nuvem",
       "editHint": "Você e seu parceiro verão este texto",
       "editAriaLabel": "Editar texto da nuvem",
