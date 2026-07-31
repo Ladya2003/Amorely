@@ -1,3 +1,5 @@
+import { DAILY_QUESTION_IMAGES as IMG } from './dailyQuestionsImages';
+
 export type DailyQuestionType = 'text' | 'choice' | 'image';
 
 export interface DailyQuestionChoice {
@@ -25,21 +27,6 @@ export interface DailyQuestionCategory {
   title: string;
   questions: DailyQuestion[];
 }
-
-const IMG = {
-  modern: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop',
-  cozy: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
-  cottage: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop',
-  loft: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop',
-  beach: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=400&h=300&fit=crop',
-  mountain: 'https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=400&h=300&fit=crop',
-  city: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop',
-  garden: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop',
-  kitchen: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=400&h=300&fit=crop',
-  bedroom: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=400&h=300&fit=crop',
-  balcony: 'https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=400&h=300&fit=crop',
-  fireplace: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop',
-};
 
 export const DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
   {

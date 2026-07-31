@@ -32,6 +32,7 @@ import { adminMiddleware } from './middleware/admin';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { migrateLegacyTapGameStates } from './games/tapGameService';
 import { ensureSystemUser } from './services/systemUserService';
+import { ensureDailyQuestionImagesUploaded } from './services/dailyQuestionsImageService';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ mongoose.connect(mongoUri)
     console.log(`URI: ${mongoUri.replace(/\/\/.*@/, '//***@')}`); // Скрываем пароль в логах
     await migrateLegacyTapGameStates();
     await ensureSystemUser();
+    await ensureDailyQuestionImagesUploaded();
   })
   .catch((err: any) => {
     console.error('Ошибка подключения к MongoDB:', err);
