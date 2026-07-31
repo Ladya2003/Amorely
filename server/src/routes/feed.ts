@@ -461,7 +461,7 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
     }
 
     if (!relationship.signatureHistory) {
-      relationship.signatureHistory = [];
+      relationship.set('signatureHistory', []);
     }
     relationship.signatureHistory.push({
       userId: new mongoose.Types.ObjectId(userId),
@@ -470,7 +470,7 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
     });
     // Храним последние 200 рисунков
     if (relationship.signatureHistory.length > 200) {
-      relationship.signatureHistory = relationship.signatureHistory.slice(-200);
+      relationship.signatureHistory.splice(0, relationship.signatureHistory.length - 200);
     }
     
     await relationship.save();
