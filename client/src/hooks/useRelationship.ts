@@ -24,16 +24,21 @@ export const useRelationship = () => {
   const { user, token } = useAuth();
   const [partner, setPartner] = useState<Partner | null>(null);
   const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => Boolean(user?.partnerId));
 
   const refresh = useCallback(async () => {
     if (!token) {
       setPartner(null);
       setRelationshipStartDate(null);
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    if (user?.partnerId) {
+      setIsLoading(true);
+    } else {
+      setIsLoading(false);
+    }
     try {
       const response = await axios.get(`${API_URL}/api/relationships`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -53,7 +58,7 @@ export const useRelationship = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, user?.partnerId]);
 
   useEffect(() => {
     void refresh();

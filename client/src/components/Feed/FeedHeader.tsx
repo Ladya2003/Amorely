@@ -25,7 +25,8 @@ import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getFeedHeaderGlowSx, getNotificationBellButtonAnimSx, getNotificationBellIconSx } from './feedBannerStyles';
-import FeedCoupleAvatars from './FeedCoupleAvatars';
+import FeedCoupleAvatars, { FeedCoupleAvatarsLoader } from './FeedCoupleAvatars';
+import { COUPLE_AVATARS_WIDTH } from './feedCoupleAvatarsStyles';
 import { useRelationship } from '../../hooks/useRelationship';
 import { fetchAnnouncements, type AppAnnouncement, claimAnnouncementReadReward } from '../../services/announcementsService';
 import {
@@ -35,7 +36,6 @@ import {
 
 const AVATAR_SIZE_WITH_PHOTO = 92;
 const AVATAR_SIZE_WITHOUT_PHOTO = 56;
-const COUPLE_AVATARS_WIDTH = 130;
 const NOTIFICATION_SIZE_WITH_PHOTO = 38;
 const NOTIFICATION_SIZE_WITHOUT_PHOTO = 30;
 
@@ -46,7 +46,7 @@ const FeedHeader: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const { partner } = useRelationship();
+  const { partner, isLoading: isRelationshipLoading } = useRelationship();
   const { badges } = useRelationshipBadges();
   const { feedDot } = useAdminAlerts();
   const isAdmin = user?.role === 'admin';
@@ -141,8 +141,11 @@ const FeedHeader: React.FC = () => {
 
   const hasAvatar = Boolean(user.avatar?.trim());
   const avatarSize = hasAvatar ? AVATAR_SIZE_WITH_PHOTO : AVATAR_SIZE_WITHOUT_PHOTO;
+  const mayHavePartner = Boolean(user.partnerId);
+  const isPartnerAvatarLoading = mayHavePartner && isRelationshipLoading;
   const hasPartner = Boolean(partner);
-  const avatarAreaWidth = hasPartner ? COUPLE_AVATARS_WIDTH : avatarSize;
+  const useCoupleAvatarLayout = isPartnerAvatarLoading || hasPartner;
+  const avatarAreaWidth = useCoupleAvatarLayout ? COUPLE_AVATARS_WIDTH : avatarSize;
   const notificationSize = hasAvatar ? NOTIFICATION_SIZE_WITH_PHOTO : NOTIFICATION_SIZE_WITHOUT_PHOTO;
   const hasUnreadNotifications =
     !announcementsLoading && unreadCount > 0 && !notificationsOpen;
@@ -205,7 +208,16 @@ const FeedHeader: React.FC = () => {
               mb: 2.5,
             }}
           >
-            <Box sx={{ flex: 1, minWidth: 0, maxWidth: `calc(100% - ${avatarAreaWidth + 16}px)` }}>
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                maxWidth: `calc(100% - ${avatarAreaWidth + 16}px)`,
+                display: 'flex',
+                alignItems: 'center',
+                alignSelf: 'stretch',
+              }}
+            >
               {isAdmin ? (
                 <Badge
                   color="error"
@@ -229,8 +241,11 @@ const FeedHeader: React.FC = () => {
               )}
             </Box>
 
-            {hasPartner ? (
+            {isPartnerAvatarLoading ? (
+              <FeedCoupleAvatarsLoader />
+            ) : partner ? (
               <FeedCoupleAvatars
+                partner={partner}
                 announcementsLoading={announcementsLoading}
                 unreadCount={unreadCount}
                 hasUnreadNotifications={hasUnreadNotifications}

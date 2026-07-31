@@ -16,7 +16,6 @@ import {
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRelationship } from '../../hooks/useRelationship';
 import { useStatusBubbles } from '../../hooks/useStatusBubbles';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { getUserDisplayName } from '../UI/UserProfileChip';
@@ -24,24 +23,82 @@ import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import ContactProfileDialog from '../Chat/ContactProfileDialog';
 import type { Contact } from '../Chat/ChatList';
+import type { Partner } from '../Settings/PartnerForm';
 import {
   getNotificationBellButtonAnimSx,
   getNotificationBellIconSx,
 } from './feedBannerStyles';
 import {
   COUPLE_AVATAR_SIZE,
-  getCoupleAvatarSx,
+  getCoupleAvatarColumnSx,
+  getCoupleAvatarsLoaderSx,
   getCoupleAvatarsRootSx,
   getCoupleAvatarsRowSx,
-  getCoupleBubblesRowSx,
-  getCouplePartnerAvatarWrapSx,
-  getStatusBubbleSx,
+  getCoupleAvatarSx,
+  getCoupleUserAvatarWrapSx,
+  getThoughtBubbleBodySx,
+  getThoughtBubbleTrailSx,
+  getThoughtBubbleWrapSx,
 } from './feedCoupleAvatarsStyles';
 
 const NOTIFICATION_SIZE = 30;
 const NOTIFICATION_ICON_SIZE = 17;
 
+interface StatusThoughtBubbleProps {
+  text: string;
+  side: 'left' | 'right';
+  editable?: boolean;
+  ariaLabel?: string;
+  onClick?: () => void;
+}
+
+const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
+  text,
+  side,
+  editable = false,
+  ariaLabel,
+  onClick,
+}) => {
+  const theme = useTheme();
+
+  const bubbleBody = (
+    <>
+      <Box
+        component={editable ? 'button' : 'span'}
+        type={editable ? 'button' : undefined}
+        onClick={editable ? onClick : undefined}
+        aria-label={ariaLabel}
+        sx={{
+          ...getThoughtBubbleBodySx(theme, editable),
+          ...(editable && {
+            fontFamily: 'inherit',
+          }),
+        }}
+      >
+        {text}
+      </Box>
+      <Box sx={getThoughtBubbleTrailSx(theme, side)}>
+        <Box className="thought-bubble-dot-lg" />
+        <Box className="thought-bubble-dot-sm" />
+      </Box>
+    </>
+  );
+
+  return (
+    <Box sx={getThoughtBubbleWrapSx(theme, side)}>
+      {bubbleBody}
+    </Box>
+  );
+};
+
+export const FeedCoupleAvatarsLoader: React.FC = () => (
+  <Box sx={getCoupleAvatarsLoaderSx()} aria-busy="true" aria-label="Loading">
+    <CircularProgress size={28} />
+  </Box>
+);
+
 interface FeedCoupleAvatarsProps {
+  partner: Partner;
   announcementsLoading: boolean;
   unreadCount: number;
   hasUnreadNotifications: boolean;
@@ -49,6 +106,7 @@ interface FeedCoupleAvatarsProps {
 }
 
 const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
+  partner,
   announcementsLoading,
   unreadCount,
   hasUnreadNotifications,
@@ -58,7 +116,6 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
   const theme = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { partner } = useRelationship();
   const { badges } = useRelationshipBadges();
   const { myBubbleText, partnerBubbleText, isSaving, updateStatusBubble } = useStatusBubbles();
 
@@ -66,11 +123,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
   const [editText, setEditText] = useState('');
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
-  const partnerContact: Contact | null = useMemo(() => {
-    if (!partner) {
-      return null;
-    }
-
+  const partnerContact: Contact = useMemo(() => {
     const partnerDisplayName = getUserDisplayName(partner);
 
     return {
@@ -86,7 +139,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
     };
   }, [partner]);
 
-  if (!user || !partner || !partnerContact) {
+  if (!user) {
     return null;
   }
 
@@ -113,32 +166,17 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
   return (
     <>
       <Box sx={getCoupleAvatarsRootSx()}>
-        <Box sx={getCoupleBubblesRowSx()}>
-          <Box
-            component="button"
-            type="button"
-            onClick={handleOpenEdit}
-            aria-label={t('feed.statusBubble.editAriaLabel')}
-            sx={{
-              ...getStatusBubbleSx(theme, true),
-              border: 'none',
-              fontFamily: 'inherit',
-            }}
-          >
-            {myDisplayText}
-          </Box>
-          <Box
-            component="span"
-            sx={getStatusBubbleSx(theme, false)}
-            aria-label={t('feed.statusBubble.partnerBubbleAriaLabel', { name: partnerDisplayName })}
-          >
-            {partnerDisplayText}
-          </Box>
-        </Box>
+        <Box sx={getCoupleAvatarsRowSx()}>
+          <Box sx={getCoupleAvatarColumnSx('left')}>
+            <StatusThoughtBubble
+              text={myDisplayText}
+              side="left"
+              editable
+              ariaLabel={t('feed.statusBubble.editAriaLabel')}
+              onClick={handleOpenEdit}
+            />
 
-        <Box sx={{ position: 'relative' }}>
-          <Box sx={getCoupleAvatarsRowSx()}>
-            <Box sx={{ position: 'relative' }}>
+            <Box sx={getCoupleUserAvatarWrapSx()}>
               <AvatarGameRankMedal
                 badges={badges}
                 displayGameId={user.displayBadgeGameId}
@@ -209,20 +247,26 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
                 </IconButton>
               </Badge>
             </Box>
+          </Box>
 
-            <Box sx={getCouplePartnerAvatarWrapSx()}>
-              <Avatar
-                src={partnerHasAvatar ? partner.avatar : undefined}
-                alt={partnerDisplayName}
-                onClick={() => setProfileDialogOpen(true)}
-                sx={{
-                  ...getCoupleAvatarSx(theme, 1),
-                  cursor: 'pointer',
-                }}
-              >
-                {partner.username.charAt(0).toUpperCase()}
-              </Avatar>
-            </Box>
+          <Box sx={getCoupleAvatarColumnSx('right')}>
+            <StatusThoughtBubble
+              text={partnerDisplayText}
+              side="right"
+              ariaLabel={t('feed.statusBubble.partnerBubbleAriaLabel', { name: partnerDisplayName })}
+            />
+
+            <Avatar
+              src={partnerHasAvatar ? partner.avatar : undefined}
+              alt={partnerDisplayName}
+              onClick={() => setProfileDialogOpen(true)}
+              sx={{
+                ...getCoupleAvatarSx(theme, 1),
+                cursor: 'pointer',
+              }}
+            >
+              {partner.username.charAt(0).toUpperCase()}
+            </Avatar>
           </Box>
         </Box>
       </Box>
