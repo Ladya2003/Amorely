@@ -39,6 +39,7 @@ import {
   getPartnerThoughtBubbleWrapSx,
   getThoughtBubbleBodySx,
   getThoughtBubbleTrailSx,
+  getThoughtBubbleTrailRightSx,
   getUserThoughtBubbleWrapSx,
 } from './feedCoupleAvatarsStyles';
 
@@ -51,6 +52,7 @@ interface StatusThoughtBubbleProps {
   wrapSx: object;
   editable?: boolean;
   trailDots?: 2 | 3;
+  trailPosition?: 'bottom' | 'right';
   ariaLabel?: string;
   onClick?: () => void;
 }
@@ -61,30 +63,56 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
   wrapSx,
   editable = false,
   trailDots = 2,
+  trailPosition = 'bottom',
   ariaLabel,
   onClick,
 }) => {
   const theme = useTheme();
 
+  const pill = (
+    <Box
+      component={editable ? 'button' : 'span'}
+      type={editable ? 'button' : undefined}
+      onClick={editable ? onClick : undefined}
+      aria-label={ariaLabel}
+      sx={{
+        ...getThoughtBubbleBodySx(theme, editable),
+        ...(editable && { fontFamily: 'inherit' }),
+      }}
+    >
+      {text}
+    </Box>
+  );
+
+  const trailBottom = (
+    <Box sx={getThoughtBubbleTrailSx(theme, side, trailDots)}>
+      <Box className="thought-bubble-dot-lg" />
+      {trailDots === 3 && <Box className="thought-bubble-dot-md" />}
+      <Box className="thought-bubble-dot-sm" />
+    </Box>
+  );
+
+  const trailRight = (
+    <Box sx={getThoughtBubbleTrailRightSx(theme, trailDots)}>
+      <Box className="thought-bubble-dot-lg" />
+      {trailDots === 3 && <Box className="thought-bubble-dot-md" />}
+      <Box className="thought-bubble-dot-sm" />
+    </Box>
+  );
+
+  if (trailPosition === 'right') {
+    return (
+      <Box sx={wrapSx}>
+        {pill}
+        {trailRight}
+      </Box>
+    );
+  }
+
   return (
     <Box sx={wrapSx}>
-      <Box
-        component={editable ? 'button' : 'span'}
-        type={editable ? 'button' : undefined}
-        onClick={editable ? onClick : undefined}
-        aria-label={ariaLabel}
-        sx={{
-          ...getThoughtBubbleBodySx(theme, editable),
-          ...(editable && { fontFamily: 'inherit' }),
-        }}
-      >
-        {text}
-      </Box>
-      <Box sx={getThoughtBubbleTrailSx(theme, side, trailDots)}>
-        <Box className="thought-bubble-dot-lg" />
-        {trailDots === 3 && <Box className="thought-bubble-dot-md" />}
-        <Box className="thought-bubble-dot-sm" />
-      </Box>
+      {pill}
+      {trailBottom}
     </Box>
   );
 };
@@ -181,6 +209,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
           side="right"
           wrapSx={getPartnerThoughtBubbleWrapSx()}
           trailDots={3}
+          trailPosition="right"
           ariaLabel={partnerBubbleAriaLabel}
         />
 
