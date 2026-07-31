@@ -639,6 +639,13 @@
       "cancel": "Cancel",
       "save": "Save"
     },
+    "signaturesHistory": {
+      "title": "All drawings",
+      "openHint": "Drawing history",
+      "empty": "No saved drawings yet",
+      "close": "Close",
+      "you": "You"
+    },
     "status": {
       "lt3": "The very beginning of our love story 💕",
       "lt7": "The first magical days together ✨",

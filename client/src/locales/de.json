@@ -637,6 +637,13 @@
       "cancel": "Abbrechen",
       "save": "Speichern"
     },
+    "signaturesHistory": {
+      "title": "Alle Zeichnungen",
+      "openHint": "Zeichnungsverlauf",
+      "empty": "Noch keine gespeicherten Zeichnungen",
+      "close": "Schließen",
+      "you": "Du"
+    },
     "status": {
       "lt3": "Der allererste Anfang unserer Liebesgeschichte 💕",
       "lt7": "Die ersten magischen Tage zusammen ✨",

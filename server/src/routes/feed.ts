@@ -459,6 +459,19 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
     } else {
       relationship.signatures.partner = signature;
     }
+
+    if (!relationship.signatureHistory) {
+      relationship.signatureHistory = [];
+    }
+    relationship.signatureHistory.push({
+      userId: new mongoose.Types.ObjectId(userId),
+      signature,
+      createdAt: new Date(),
+    });
+    // Храним последние 200 рисунков
+    if (relationship.signatureHistory.length > 200) {
+      relationship.signatureHistory = relationship.signatureHistory.slice(-200);
+    }
     
     await relationship.save();
 
@@ -482,6 +495,43 @@ router.post('/relationship/signature', async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при сохранении рисунка:', error);
     res.status(500).json({ error: 'Ошибка при сохранении рисунка' });
+  }
+});
+
+// История рисунков в блоке «Дней вместе»
+router.get('/relationship/signatures', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+
+    const relationship = await findActiveRelationshipForUser(userId);
+
+    if (!relationship) {
+      return res.json({ items: [], ownerId: null });
+    }
+
+    const history = (relationship.signatureHistory || [])
+      .slice()
+      .sort((a: { createdAt: Date }, b: { createdAt: Date }) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .map((entry: { _id?: mongoose.Types.ObjectId; userId: mongoose.Types.ObjectId; signature: string; createdAt: Date }) => ({
+        _id: entry._id?.toString(),
+        userId: entry.userId.toString(),
+        signature: entry.signature,
+        createdAt: entry.createdAt,
+      }));
+
+    res.json({
+      items: history,
+      ownerId: relationship.userId.toString(),
+    });
+  } catch (error) {
+    console.error('Ошибка при получении истории рисунков:', error);
+    res.status(500).json({ error: 'Ошибка при получении истории рисунков' });
   }
 });
 

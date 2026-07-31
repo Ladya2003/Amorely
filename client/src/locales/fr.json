@@ -637,6 +637,13 @@
       "cancel": "Annuler",
       "save": "Enregistrer"
     },
+    "signaturesHistory": {
+      "title": "Tous les dessins",
+      "openHint": "Historique des dessins",
+      "empty": "Aucun dessin enregistré pour l'instant",
+      "close": "Fermer",
+      "you": "Vous"
+    },
     "status": {
       "lt3": "Le tout début de notre histoire d'amour 💕",
       "lt7": "Les premiers jours magiques ensemble ✨",

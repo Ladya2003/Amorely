@@ -22,6 +22,13 @@ const relationshipSchema = new mongoose.Schema({
     user: { type: String }, // Подпись первого партнера (userId)
     partner: { type: String } // Подпись второго партнера (partnerId)
   },
+  signatureHistory: [
+    {
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      signature: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
   badges: [
     {
       gameId: { type: String, required: true },

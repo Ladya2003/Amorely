@@ -11,6 +11,7 @@ import ProgressIndicator from './components/ProgressIndicator';
 import MilestoneCard from './components/MilestoneCard';
 import ExportButton from './components/ExportButton';
 import ColorPicker, { getThemeById } from './components/ColorPicker';
+import SignaturesHistoryDialog from './components/SignaturesHistoryDialog';
 import {
   getDaysTogetherActionsRowSx,
   getDaysTogetherBackgroundGradientSx,
@@ -173,6 +174,11 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             colorTheme={currentTheme}
           />
           <ColorPicker selectedTheme={selectedTheme} onThemeChange={handleThemeChange} />
+          <SignaturesHistoryDialog
+            colorTheme={currentTheme}
+            relationshipOwnerId={relationshipOwnerId}
+            currentUserId={currentUserId}
+          />
           <ExportButton targetId="days-together" colorTheme={currentTheme} />
         </Box>
       </Box>
