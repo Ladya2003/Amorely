@@ -123,7 +123,7 @@ export const getThoughtBubbleTrailSx = (
   dots: 2 | 3 = 2
 ) => {
   const surface = getBubbleSurface(theme);
-  const offsetX = side === 'left' ? -4 : 4;
+  const offsetX = side === 'left' ? -4 : -2;
 
   return {
     display: 'flex',
