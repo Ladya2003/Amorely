@@ -3,9 +3,11 @@ import { alpha, Theme } from '@mui/material/styles';
 export const COUPLE_AVATAR_SIZE = 64;
 export const COUPLE_AVATAR_OVERLAP = 14;
 export const COUPLE_AVATAR_ROW_WIDTH = COUPLE_AVATAR_SIZE * 2 - COUPLE_AVATAR_OVERLAP;
-export const STATUS_BUBBLE_MAX_WIDTH = 118;
-/** Отступ сверху под абсолютные облачка */
-export const COUPLE_BUBBLES_TOP_INSET = 38;
+export const STATUS_BUBBLE_MAX_WIDTH = 148;
+/** Отступ сверху под два ряда облачков */
+export const COUPLE_BUBBLES_TOP_INSET = 56;
+/** Высота одной таблетки + зазор до второй (~py*2 + line + gap) */
+export const COUPLE_PARTNER_BUBBLE_LIFT = 40;
 
 const getBubbleSurface = (theme: Theme) => {
   const isLight = theme.palette.mode === 'light';
