@@ -1,5 +1,6 @@
 import { AppLocale } from '../i18n/locales';
-import type { DailyQuestion, DailyQuestionCategory } from './dailyQuestionsContent';
+import type { DailyQuestion, DailyQuestionCategory } from './dailyQuestionsTypes';
+import { EXTRA_DAILY_QUESTIONS_EN } from './extraCategoriesI18n';
 
 type QuestionOverlay = {
   text?: string;
@@ -248,6 +249,7 @@ const EN: Record<string, CategoryOverlay> = {
       g4: { text: 'What small daily gesture would make you happier?' },
     },
   },
+  ...EXTRA_DAILY_QUESTIONS_EN,
 };
 
 const localizeQuestion = (question: DailyQuestion, overlay?: QuestionOverlay): DailyQuestion => {
