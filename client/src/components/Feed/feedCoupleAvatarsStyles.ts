@@ -72,7 +72,7 @@ export const getPartnerThoughtBubbleWrapSx = () => ({
   position: 'absolute' as const,
   left: COUPLE_PARTNER_AVATAR_CENTER_X,
   bottom: 'calc(100% + 14px)',
-  transform: 'translateX(calc(-50% + 6px))',
+  transform: 'translateX(calc(-50% - 10px))',
   display: 'flex',
   flexDirection: 'column' as const,
   alignItems: 'center',
