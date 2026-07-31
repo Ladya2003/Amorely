@@ -4,14 +4,8 @@ export const COUPLE_AVATAR_SIZE = 64;
 export const COUPLE_AVATAR_OVERLAP = 14;
 export const COUPLE_AVATAR_ROW_WIDTH = COUPLE_AVATAR_SIZE * 2 - COUPLE_AVATAR_OVERLAP;
 export const STATUS_BUBBLE_MAX_WIDTH = 118;
-/** Отступ сверху под абсолютные облачка (партнёрское выше пользовательского) */
-export const COUPLE_BUBBLES_TOP_INSET = 52;
-
-/** Центр левого аватара от левого края блока */
-export const COUPLE_USER_AVATAR_CENTER_X = COUPLE_AVATAR_SIZE / 2;
-/** Центр правого аватара от левого края блока */
-export const COUPLE_PARTNER_AVATAR_CENTER_X =
-  COUPLE_AVATAR_SIZE + COUPLE_AVATAR_SIZE - COUPLE_AVATAR_OVERLAP - COUPLE_AVATAR_SIZE / 2;
+/** Отступ сверху под абсолютные облачка */
+export const COUPLE_BUBBLES_TOP_INSET = 38;
 
 const getBubbleSurface = (theme: Theme) => {
   const isLight = theme.palette.mode === 'light';
@@ -56,24 +50,23 @@ export const getCouplePartnerAvatarWrapSx = () => ({
 
 export const getUserThoughtBubbleWrapSx = () => ({
   position: 'absolute' as const,
-  left: COUPLE_USER_AVATAR_CENTER_X,
+  left: 0,
   bottom: '100%',
-  transform: 'translateX(calc(-50% - 8px))',
   display: 'flex',
   flexDirection: 'column' as const,
   alignItems: 'flex-start',
   zIndex: 2,
   pointerEvents: 'none' as const,
-  mb: '-4px',
+  mb: '-2px',
   maxWidth: STATUS_BUBBLE_MAX_WIDTH,
 });
 
-/** Облачко партнёра выше и с большим z-index — может перекрывать наше */
+/** Облачко партнёра — прижато к правому краю блока аватаров */
 export const getPartnerThoughtBubbleWrapSx = () => ({
   position: 'absolute' as const,
-  left: COUPLE_PARTNER_AVATAR_CENTER_X,
-  bottom: 'calc(100% + 14px)',
-  transform: 'translateX(calc(-50% - 10px))',
+  right: 0,
+  left: 'auto',
+  bottom: 'calc(100% + 10px)',
   display: 'flex',
   flexDirection: 'column' as const,
   alignItems: 'flex-end',
@@ -87,11 +80,10 @@ export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
 
   return {
     position: 'relative' as const,
-    display: 'block',
+    display: 'inline-block',
     boxSizing: 'border-box' as const,
     maxWidth: STATUS_BUBBLE_MAX_WIDTH,
-    width: '100%',
-    minWidth: 36,
+    verticalAlign: 'top',
     px: 1.5,
     py: 0.75,
     borderRadius: '16px',
@@ -103,8 +95,6 @@ export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
     lineHeight: 1.25,
     boxShadow: surface.shadow,
     overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
     textAlign: 'left' as const,
     direction: 'ltr' as const,
     pointerEvents: editable ? ('auto' as const) : ('none' as const),
@@ -118,90 +108,6 @@ export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
           : `0 4px 16px ${alpha(theme.palette.common.black, 0.36)}`,
       },
     }),
-  };
-};
-
-export const getThoughtBubbleTrailSx = (
-  theme: Theme,
-  side: 'left' | 'right',
-  dots: 2 | 3 = 2
-) => {
-  const surface = getBubbleSurface(theme);
-  const offsetX = side === 'left' ? -4 : -2;
-
-  return {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    mt: 0.25,
-    transform: `translateX(${offsetX}px)`,
-    '& .thought-bubble-dot-lg': {
-      width: dots === 3 ? 10 : 9,
-      height: dots === 3 ? 10 : 9,
-      borderRadius: '50%',
-      bgcolor: surface.bgcolor,
-      border: surface.border,
-      boxShadow: surface.shadow,
-    },
-    '& .thought-bubble-dot-md': {
-      width: 7,
-      height: 7,
-      borderRadius: '50%',
-      bgcolor: surface.bgcolor,
-      border: surface.border,
-      mt: '-2px',
-    },
-    '& .thought-bubble-dot-sm': {
-      width: dots === 3 ? 4 : 5,
-      height: dots === 3 ? 4 : 5,
-      borderRadius: '50%',
-      bgcolor: surface.bgcolor,
-      border: surface.border,
-      mt: '-2px',
-    },
-  };
-};
-
-/** Цепочка «мыслей» снизу справа от таблетки — по диагонали к аватару */
-export const getThoughtBubbleTrailBottomRightSx = (theme: Theme, dots: 2 | 3 = 3) => {
-  const surface = getBubbleSurface(theme);
-
-  const dotBase = {
-    borderRadius: '50%',
-    bgcolor: surface.bgcolor,
-    border: surface.border,
-    boxShadow: surface.shadow,
-    flexShrink: 0,
-  };
-
-  return {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'flex-end',
-    alignSelf: 'flex-end',
-    mt: 0.25,
-    mr: 1.25,
-    transform: 'translateX(-10px)',
-    pointerEvents: 'none' as const,
-    '& .thought-bubble-dot-lg': {
-      ...dotBase,
-      width: 10,
-      height: 10,
-    },
-    '& .thought-bubble-dot-md': {
-      ...dotBase,
-      width: 7,
-      height: 7,
-      mt: '-2px',
-      ml: '2px',
-    },
-    '& .thought-bubble-dot-sm': {
-      ...dotBase,
-      width: 4,
-      height: 4,
-      mt: '-2px',
-      ml: '4px',
-    },
   };
 };
 

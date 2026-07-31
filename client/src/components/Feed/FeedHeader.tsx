@@ -211,7 +211,7 @@ const FeedHeader: React.FC = () => {
               alignItems: 'center',
               gap: 2,
               mb: 2.5,
-              overflow: 'visible',
+              overflowX: 'clip',
               ...(useCoupleAvatarLayout && {
                 pt: `${COUPLE_BUBBLES_TOP_INSET}px`,
               }),
