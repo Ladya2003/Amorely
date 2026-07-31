@@ -551,6 +551,16 @@
       "empty": "Aún no hay notificaciones nuevas",
       "close": "Entendido"
     },
+    "statusBubble": {
+      "placeholder": "Te quiero ❤️",
+      "partnerPlaceholder": "💭",
+      "editTitle": "Tu nube",
+      "editHint": "Tú y tu pareja verán este texto",
+      "editAriaLabel": "Editar texto de la nube",
+      "partnerBubbleAriaLabel": "Nube de {{name}}",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
     "openEventAriaLabel": "Abrir evento",
     "title": "Feed",
     "contentOfDay": "Contenido del día",

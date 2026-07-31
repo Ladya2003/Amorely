@@ -493,6 +493,16 @@
       "empty": "Поки що нових сповіщень немає",
       "close": "Зрозуміло"
     },
+    "statusBubble": {
+      "placeholder": "Я люблю тебе ❤️",
+      "partnerPlaceholder": "💭",
+      "editTitle": "Ваша хмаринка",
+      "editHint": "Цей текст побачите ви та ваш партнер",
+      "editAriaLabel": "Змінити текст хмаринки",
+      "partnerBubbleAriaLabel": "Хмаринка {{name}}",
+      "save": "Зберегти",
+      "cancel": "Скасувати"
+    },
     "openEventAriaLabel": "Відкрити подію",
     "title": "Стрічка",
     "contentOfDay": "Контент дня",

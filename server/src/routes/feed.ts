@@ -13,8 +13,10 @@ import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 import { calculateDaysTogether } from '../config/daysAchievementCatalog';
 import { processNewDaysAchievements } from '../services/daysAchievementService';
 import { notifyNewPartnerContent } from '../services/pushService';
+import { notifySocketUser } from '../socket';
 
 const router = express.Router();
+const STATUS_BUBBLE_MAX_LENGTH = 100;
 
 const isValidEncryptedMediaItem = (item: any): boolean =>
   Boolean(
@@ -366,6 +368,7 @@ router.get('/relationship', async (req: any, res: Response) => {
       photo: relationship.photo?.url,
       signature: relationship.signature, // Для обратной совместимости
       signatures: relationship.signatures || { user: '', partner: '' },
+      statusBubbles: relationship.statusBubbles || { user: '', partner: '' },
       ownerId: relationship.userId.toString(), // ID владельца отношений для определения текущей роли
       awardedAmount: achievementAward.amount,
       balance: achievementAward.balance,
@@ -374,6 +377,81 @@ router.get('/relationship', async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при получении информации об отношениях:', error);
     res.status(500).json({ error: 'Ошибка при получении информации об отношениях' });
+  }
+});
+
+// Получение облачков статуса пары
+router.get('/relationship/status-bubbles', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+
+    const relationship = await findActiveRelationshipForUser(userId);
+
+    if (!relationship) {
+      return res.json(null);
+    }
+
+    res.json({
+      statusBubbles: relationship.statusBubbles || { user: '', partner: '' },
+      ownerId: relationship.userId.toString(),
+    });
+  } catch (error) {
+    console.error('Ошибка при получении облачков статуса:', error);
+    res.status(500).json({ error: 'Ошибка при получении облачков статуса' });
+  }
+});
+
+// Обновление облачка статуса текущего пользователя
+router.post('/relationship/status-bubble', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { text } = req.body;
+
+    if (!userId || text === undefined || text === null) {
+      return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    const trimmedText = String(text).trim().slice(0, STATUS_BUBBLE_MAX_LENGTH);
+
+    const relationship = await findActiveRelationshipForUser(userId);
+
+    if (!relationship) {
+      return res.status(404).json({ error: 'Отношения не найдены' });
+    }
+
+    if (!relationship.statusBubbles) {
+      relationship.statusBubbles = { user: '', partner: '' };
+    }
+
+    const isUser = relationship.userId.toString() === userId;
+    if (isUser) {
+      relationship.statusBubbles.user = trimmedText;
+    } else {
+      relationship.statusBubbles.partner = trimmedText;
+    }
+
+    await relationship.save();
+
+    const partnerId =
+      relationship.userId.toString() === userId
+        ? relationship.partnerId.toString()
+        : relationship.userId.toString();
+
+    notifySocketUser(partnerId, 'status_bubble_updated', {
+      statusBubbles: relationship.statusBubbles,
+    });
+
+    res.json({
+      message: 'Облачко статуса сохранено',
+      statusBubbles: relationship.statusBubbles,
+    });
+  } catch (error) {
+    console.error('Ошибка при сохранении облачка статуса:', error);
+    res.status(500).json({ error: 'Ошибка при сохранении облачка статуса' });
   }
 });
 

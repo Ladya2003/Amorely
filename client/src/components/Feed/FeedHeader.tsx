@@ -25,6 +25,8 @@ import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getFeedHeaderGlowSx, getNotificationBellButtonAnimSx, getNotificationBellIconSx } from './feedBannerStyles';
+import FeedCoupleAvatars from './FeedCoupleAvatars';
+import { useRelationship } from '../../hooks/useRelationship';
 import { fetchAnnouncements, type AppAnnouncement, claimAnnouncementReadReward } from '../../services/announcementsService';
 import {
   addReadAnnouncementKey,
@@ -33,6 +35,7 @@ import {
 
 const AVATAR_SIZE_WITH_PHOTO = 92;
 const AVATAR_SIZE_WITHOUT_PHOTO = 56;
+const COUPLE_AVATARS_WIDTH = 130;
 const NOTIFICATION_SIZE_WITH_PHOTO = 38;
 const NOTIFICATION_SIZE_WITHOUT_PHOTO = 30;
 
@@ -43,6 +46,7 @@ const FeedHeader: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  const { partner } = useRelationship();
   const { badges } = useRelationshipBadges();
   const { feedDot } = useAdminAlerts();
   const isAdmin = user?.role === 'admin';
@@ -137,6 +141,8 @@ const FeedHeader: React.FC = () => {
 
   const hasAvatar = Boolean(user.avatar?.trim());
   const avatarSize = hasAvatar ? AVATAR_SIZE_WITH_PHOTO : AVATAR_SIZE_WITHOUT_PHOTO;
+  const hasPartner = Boolean(partner);
+  const avatarAreaWidth = hasPartner ? COUPLE_AVATARS_WIDTH : avatarSize;
   const notificationSize = hasAvatar ? NOTIFICATION_SIZE_WITH_PHOTO : NOTIFICATION_SIZE_WITHOUT_PHOTO;
   const hasUnreadNotifications =
     !announcementsLoading && unreadCount > 0 && !notificationsOpen;
@@ -199,7 +205,7 @@ const FeedHeader: React.FC = () => {
               mb: 2.5,
             }}
           >
-            <Box sx={{ flex: 1, minWidth: 0, maxWidth: `calc(100% - ${avatarSize + 16}px)` }}>
+            <Box sx={{ flex: 1, minWidth: 0, maxWidth: `calc(100% - ${avatarAreaWidth + 16}px)` }}>
               {isAdmin ? (
                 <Badge
                   color="error"
@@ -223,85 +229,94 @@ const FeedHeader: React.FC = () => {
               )}
             </Box>
 
-            <Box
-              sx={{
-                position: 'relative',
-                flexShrink: 0,
-                width: avatarSize,
-                height: avatarSize,
-              }}
-            >
-              <AvatarGameRankMedal
-                badges={badges}
-                displayGameId={user.displayBadgeGameId}
-                showBadge={user.showDisplayBadge !== false}
-                avatarSize={avatarSize}
-              >
-                <Avatar
-                  src={hasAvatar ? user.avatar : undefined}
-                  alt={displayName}
-                  onClick={handleProfileClick}
-                  sx={{
-                    width: avatarSize,
-                    height: avatarSize,
-                    fontSize: hasAvatar ? undefined : '1.25rem',
-                    cursor: 'pointer',
-                    boxShadow: (theme) =>
-                      theme.palette.mode === 'light'
-                        ? '0 4px 16px rgba(0, 0, 0, 0.08)'
-                        : '0 4px 16px rgba(0, 0, 0, 0.35)',
-                  }}
-                >
-                  {user.username.charAt(0).toUpperCase()}
-                </Avatar>
-              </AvatarGameRankMedal>
-
-              <Badge
-                color="error"
-                variant="dot"
-                invisible={announcementsLoading || unreadCount === 0}
-                overlap="circular"
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            {hasPartner ? (
+              <FeedCoupleAvatars
+                announcementsLoading={announcementsLoading}
+                unreadCount={unreadCount}
+                hasUnreadNotifications={hasUnreadNotifications}
+                onOpenNotifications={handleOpenNotifications}
+              />
+            ) : (
+              <Box
                 sx={{
-                  position: 'absolute',
-                  top: -2,
-                  right: -2,
-                  '& .MuiBadge-badge': {
-                    top: 4,
-                    right: 4,
-                    boxShadow: '0 0 0 2px var(--mui-palette-background-default, #fff)',
-                  },
+                  position: 'relative',
+                  flexShrink: 0,
+                  width: avatarSize,
+                  height: avatarSize,
                 }}
               >
-                <IconButton
-                  aria-label={t('feed.notificationsAriaLabel')}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenNotifications();
-                  }}
-                  sx={(theme) => ({
-                    width: notificationSize,
-                    height: notificationSize,
-                    bgcolor: theme.palette.mode === 'light' ? '#1a1a1a' : '#2a2a2a',
-                    color: '#fff',
-                    border: `3px solid ${theme.palette.background.default}`,
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
-                    '&:hover': {
-                      bgcolor: theme.palette.mode === 'light' ? '#333' : '#3a3a3a',
-                    },
-                    ...getNotificationBellButtonAnimSx(hasUnreadNotifications),
-                  })}
+                <AvatarGameRankMedal
+                  badges={badges}
+                  displayGameId={user.displayBadgeGameId}
+                  showBadge={user.showDisplayBadge !== false}
+                  avatarSize={avatarSize}
                 >
-                  {announcementsLoading ? (
-                    <CircularProgress size={hasAvatar ? 16 : 14} sx={{ color: '#fff' }} />
-                  ) : (
-                    <NotificationsNoneOutlinedIcon
-                      sx={getNotificationBellIconSx(notificationIconSize, hasUnreadNotifications)}
-                    />
-                  )}
-                </IconButton>
-              </Badge>
-            </Box>
+                  <Avatar
+                    src={hasAvatar ? user.avatar : undefined}
+                    alt={displayName}
+                    onClick={handleProfileClick}
+                    sx={{
+                      width: avatarSize,
+                      height: avatarSize,
+                      fontSize: hasAvatar ? undefined : '1.25rem',
+                      cursor: 'pointer',
+                      boxShadow: (theme) =>
+                        theme.palette.mode === 'light'
+                          ? '0 4px 16px rgba(0, 0, 0, 0.08)'
+                          : '0 4px 16px rgba(0, 0, 0, 0.35)',
+                    }}
+                  >
+                    {user.username.charAt(0).toUpperCase()}
+                  </Avatar>
+                </AvatarGameRankMedal>
+
+                <Badge
+                  color="error"
+                  variant="dot"
+                  invisible={announcementsLoading || unreadCount === 0}
+                  overlap="circular"
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  sx={{
+                    position: 'absolute',
+                    top: -2,
+                    right: -2,
+                    '& .MuiBadge-badge': {
+                      top: 4,
+                      right: 4,
+                      boxShadow: '0 0 0 2px var(--mui-palette-background-default, #fff)',
+                    },
+                  }}
+                >
+                  <IconButton
+                    aria-label={t('feed.notificationsAriaLabel')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenNotifications();
+                    }}
+                    sx={(theme) => ({
+                      width: notificationSize,
+                      height: notificationSize,
+                      bgcolor: theme.palette.mode === 'light' ? '#1a1a1a' : '#2a2a2a',
+                      color: '#fff',
+                      border: `3px solid ${theme.palette.background.default}`,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
+                      '&:hover': {
+                        bgcolor: theme.palette.mode === 'light' ? '#333' : '#3a3a3a',
+                      },
+                      ...getNotificationBellButtonAnimSx(hasUnreadNotifications),
+                    })}
+                  >
+                    {announcementsLoading ? (
+                      <CircularProgress size={hasAvatar ? 16 : 14} sx={{ color: '#fff' }} />
+                    ) : (
+                      <NotificationsNoneOutlinedIcon
+                        sx={getNotificationBellIconSx(notificationIconSize, hasUnreadNotifications)}
+                      />
+                    )}
+                  </IconButton>
+                </Badge>
+              </Box>
+            )}
           </Box>
 
           <Typography variant="h2" component="h2" sx={{ fontSize: '1.35rem' }}>

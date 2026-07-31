@@ -22,6 +22,10 @@ const relationshipSchema = new mongoose.Schema({
     user: { type: String }, // Подпись первого партнера (userId)
     partner: { type: String } // Подпись второго партнера (partnerId)
   },
+  statusBubbles: {
+    user: { type: String, default: '' },
+    partner: { type: String, default: '' }
+  },
   signatureHistory: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

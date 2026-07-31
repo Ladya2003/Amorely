@@ -553,6 +553,16 @@
       "back": "Back",
       "newBadge": "New"
     },
+    "statusBubble": {
+      "placeholder": "I love you ❤️",
+      "partnerPlaceholder": "💭",
+      "editTitle": "Your bubble",
+      "editHint": "You and your partner will see this text",
+      "editAriaLabel": "Edit bubble text",
+      "partnerBubbleAriaLabel": "{{name}}'s bubble",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
     "openEventAriaLabel": "Open event",
     "title": "Feed",
     "contentOfDay": "Content of the day",

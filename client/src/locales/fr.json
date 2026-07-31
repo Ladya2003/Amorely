@@ -551,6 +551,16 @@
       "empty": "Pas de nouvelles notifications pour le moment",
       "close": "OK"
     },
+    "statusBubble": {
+      "placeholder": "Je t'aime ❤️",
+      "partnerPlaceholder": "💭",
+      "editTitle": "Votre bulle",
+      "editHint": "Ce texte sera visible par vous et votre partenaire",
+      "editAriaLabel": "Modifier le texte de la bulle",
+      "partnerBubbleAriaLabel": "Bulle de {{name}}",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
     "openEventAriaLabel": "Ouvrir l'événement",
     "title": "Fil",
     "contentOfDay": "Contenu du jour",

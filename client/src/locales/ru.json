@@ -553,6 +553,16 @@
       "back": "Назад",
       "newBadge": "Новое"
     },
+    "statusBubble": {
+      "placeholder": "Я люблю тебя ❤️",
+      "partnerPlaceholder": "💭",
+      "editTitle": "Ваше облачко",
+      "editHint": "Этот текст увидите вы и ваш партнёр",
+      "editAriaLabel": "Изменить текст облачка",
+      "partnerBubbleAriaLabel": "Облачко {{name}}",
+      "save": "Сохранить",
+      "cancel": "Отмена"
+    },
     "openEventAriaLabel": "Открыть событие",
     "title": "Лента",
     "contentOfDay": "Контент дня",

@@ -551,6 +551,16 @@
       "empty": "Noch keine neuen Benachrichtigungen",
       "close": "OK"
     },
+    "statusBubble": {
+      "placeholder": "Ich liebe dich ❤️",
+      "partnerPlaceholder": "💭",
+      "editTitle": "Deine Sprechblase",
+      "editHint": "Dieser Text ist für dich und deinen Partner sichtbar",
+      "editAriaLabel": "Sprechblasentext bearbeiten",
+      "partnerBubbleAriaLabel": "Sprechblase von {{name}}",
+      "save": "Speichern",
+      "cancel": "Abbrechen"
+    },
     "openEventAriaLabel": "Ereignis öffnen",
     "title": "Feed",
     "contentOfDay": "Inhalt des Tages",
