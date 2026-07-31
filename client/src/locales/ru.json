@@ -555,8 +555,7 @@
     },
     "statusBubble": {
       "placeholder": "Я люблю тебя ❤️",
-      "partnerPlaceholder": "💭",
-      "partnerEmptyThoughtAriaLabel": "У {{name}} пока нет облачка",
+      "partnerPlaceholder": "Я тоже люблю тебя ❤️",
       "editTitle": "Ваше облачко",
       "editHint": "Этот текст увидите вы и ваш партнёр",
       "editAriaLabel": "Изменить текст облачка",

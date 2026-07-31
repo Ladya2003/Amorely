@@ -495,8 +495,7 @@
     },
     "statusBubble": {
       "placeholder": "Я люблю тебе ❤️",
-      "partnerPlaceholder": "💭",
-      "partnerEmptyThoughtAriaLabel": "У {{name}} поки немає хмаринки",
+      "partnerPlaceholder": "Я теж люблю тебе ❤️",
       "editTitle": "Ваша хмаринка",
       "editHint": "Цей текст побачите ви та ваш партнер",
       "editAriaLabel": "Змінити текст хмаринки",

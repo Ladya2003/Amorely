@@ -555,8 +555,7 @@
     },
     "statusBubble": {
       "placeholder": "I love you ❤️",
-      "partnerPlaceholder": "💭",
-      "partnerEmptyThoughtAriaLabel": "{{name}} has no bubble yet",
+      "partnerPlaceholder": "Love you too ❤️",
       "editTitle": "Your bubble",
       "editHint": "You and your partner will see this text",
       "editAriaLabel": "Edit bubble text",

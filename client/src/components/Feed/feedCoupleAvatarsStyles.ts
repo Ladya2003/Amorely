@@ -158,51 +158,6 @@ export const getThoughtBubbleTrailSx = (
   };
 };
 
-/** Пустое облачко партнёра — только цепочка «мыслей» из кружков */
-export const getEmptyPartnerThoughtClusterSx = (theme: Theme) => {
-  const surface = getBubbleSurface(theme);
-  const dotBase = {
-    borderRadius: '50%',
-    bgcolor: surface.bgcolor,
-    border: surface.border,
-    boxShadow: surface.shadow,
-    flexShrink: 0,
-  };
-
-  return {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    transform: 'translateX(5px)',
-    '& .thought-cluster-main': {
-      ...dotBase,
-      width: 18,
-      height: 18,
-    },
-    '& .thought-cluster-md': {
-      ...dotBase,
-      width: 11,
-      height: 11,
-      mt: '-3px',
-      ml: '3px',
-    },
-    '& .thought-cluster-sm': {
-      ...dotBase,
-      width: 7,
-      height: 7,
-      mt: '-2px',
-      ml: '5px',
-    },
-    '& .thought-cluster-xs': {
-      ...dotBase,
-      width: 4,
-      height: 4,
-      mt: '-1px',
-      ml: '6px',
-    },
-  };
-};
-
 export const getCoupleAvatarSx = (theme: Theme, zIndex: number) => ({
   width: COUPLE_AVATAR_SIZE,
   height: COUPLE_AVATAR_SIZE,

@@ -553,8 +553,7 @@
     },
     "statusBubble": {
       "placeholder": "Je t'aime ❤️",
-      "partnerPlaceholder": "💭",
-      "partnerEmptyThoughtAriaLabel": "{{name}} n'a pas encore de bulle",
+      "partnerPlaceholder": "Je t'aime aussi ❤️",
       "editTitle": "Votre bulle",
       "editHint": "Ce texte sera visible par vous et votre partenaire",
       "editAriaLabel": "Modifier le texte de la bulle",
