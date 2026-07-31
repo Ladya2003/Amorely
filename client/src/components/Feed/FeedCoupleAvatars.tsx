@@ -34,11 +34,11 @@ import {
   getCoupleAvatarsRootSx,
   getCoupleAvatarsRowSx,
   getCoupleAvatarSx,
+  getCoupleBubbleItemSx,
+  getCoupleBubblesStackSx,
   getCouplePartnerAvatarWrapSx,
   getCoupleUserAvatarWrapSx,
-  getPartnerThoughtBubbleWrapSx,
   getThoughtBubbleBodySx,
-  getUserThoughtBubbleWrapSx,
 } from './feedCoupleAvatarsStyles';
 
 const NOTIFICATION_SIZE = 30;
@@ -46,7 +46,6 @@ const NOTIFICATION_ICON_SIZE = 17;
 
 interface StatusThoughtBubbleProps {
   text: string;
-  wrapSx: object;
   editable?: boolean;
   ariaLabel?: string;
   onClick?: () => void;
@@ -54,7 +53,6 @@ interface StatusThoughtBubbleProps {
 
 const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
   text,
-  wrapSx,
   editable = false,
   ariaLabel,
   onClick,
@@ -62,30 +60,28 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
   const theme = useTheme();
 
   return (
-    <Box sx={wrapSx}>
+    <Box
+      component={editable ? 'button' : 'span'}
+      type={editable ? 'button' : undefined}
+      onClick={editable ? onClick : undefined}
+      aria-label={ariaLabel}
+      title={text}
+      sx={{
+        ...getThoughtBubbleBodySx(theme, editable),
+        ...(editable && { fontFamily: 'inherit' }),
+      }}
+    >
       <Box
-        component={editable ? 'button' : 'span'}
-        type={editable ? 'button' : undefined}
-        onClick={editable ? onClick : undefined}
-        aria-label={ariaLabel}
-        title={text}
+        component="span"
         sx={{
-          ...getThoughtBubbleBodySx(theme, editable),
-          ...(editable && { fontFamily: 'inherit' }),
+          display: 'block',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          maxWidth: '100%',
         }}
       >
-        <Box
-          component="span"
-          sx={{
-            display: 'block',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            maxWidth: '100%',
-          }}
-        >
-          {text}
-        </Box>
+        {text}
       </Box>
     </Box>
   );
@@ -169,19 +165,22 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
   return (
     <>
       <Box sx={getCoupleAvatarsRootSx()}>
-        <StatusThoughtBubble
-          text={myDisplayText}
-          wrapSx={getUserThoughtBubbleWrapSx()}
-          editable
-          ariaLabel={t('feed.statusBubble.editAriaLabel')}
-          onClick={handleOpenEdit}
-        />
-
-        <StatusThoughtBubble
-          text={partnerDisplayText}
-          wrapSx={getPartnerThoughtBubbleWrapSx()}
-          ariaLabel={partnerBubbleAriaLabel}
-        />
+        <Box sx={getCoupleBubblesStackSx()}>
+          <Box sx={getCoupleBubbleItemSx('right')}>
+            <StatusThoughtBubble
+              text={partnerDisplayText}
+              ariaLabel={partnerBubbleAriaLabel}
+            />
+          </Box>
+          <Box sx={getCoupleBubbleItemSx('left')}>
+            <StatusThoughtBubble
+              text={myDisplayText}
+              editable
+              ariaLabel={t('feed.statusBubble.editAriaLabel')}
+              onClick={handleOpenEdit}
+            />
+          </Box>
+        </Box>
 
         <Box sx={getCoupleAvatarsRowSx()}>
           <Box sx={getCoupleUserAvatarWrapSx()}>

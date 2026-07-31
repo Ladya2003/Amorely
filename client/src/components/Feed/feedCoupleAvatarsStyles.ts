@@ -4,10 +4,8 @@ export const COUPLE_AVATAR_SIZE = 64;
 export const COUPLE_AVATAR_OVERLAP = 14;
 export const COUPLE_AVATAR_ROW_WIDTH = COUPLE_AVATAR_SIZE * 2 - COUPLE_AVATAR_OVERLAP;
 export const STATUS_BUBBLE_MAX_WIDTH = 148;
-/** Отступ сверху под два ряда облачков */
-export const COUPLE_BUBBLES_TOP_INSET = 56;
-/** Высота одной таблетки + зазор до второй (~py*2 + line + gap) */
-export const COUPLE_PARTNER_BUBBLE_LIFT = 40;
+/** Отступ сверху под стек из двух облачков */
+export const COUPLE_BUBBLES_TOP_INSET = 72;
 
 const getBubbleSurface = (theme: Theme) => {
   const isLight = theme.palette.mode === 'light';
@@ -50,31 +48,24 @@ export const getCouplePartnerAvatarWrapSx = () => ({
   ml: `-${COUPLE_AVATAR_OVERLAP}px`,
 });
 
-export const getUserThoughtBubbleWrapSx = () => ({
-  position: 'absolute' as const,
-  left: 0,
-  bottom: '100%',
-  display: 'flex',
-  flexDirection: 'column' as const,
-  alignItems: 'flex-start',
-  zIndex: 2,
-  pointerEvents: 'none' as const,
-  mb: '-2px',
-  maxWidth: STATUS_BUBBLE_MAX_WIDTH,
-});
-
-/** Облачко партнёра — прижато к правому краю блока аватаров */
-export const getPartnerThoughtBubbleWrapSx = () => ({
+/** Стек облачков над аватарами — партнёр сверху, пользователь снизу, с gap */
+export const getCoupleBubblesStackSx = () => ({
   position: 'absolute' as const,
   right: 0,
-  left: 'auto',
-  bottom: 'calc(100% + 10px)',
+  bottom: '100%',
+  width: STATUS_BUBBLE_MAX_WIDTH,
+  mb: 0.5,
   display: 'flex',
   flexDirection: 'column' as const,
-  alignItems: 'flex-end',
+  gap: 1,
   zIndex: 4,
   pointerEvents: 'none' as const,
-  maxWidth: STATUS_BUBBLE_MAX_WIDTH,
+});
+
+export const getCoupleBubbleItemSx = (align: 'left' | 'right') => ({
+  alignSelf: align === 'right' ? 'flex-end' : 'flex-start',
+  maxWidth: '100%',
+  pointerEvents: 'auto' as const,
 });
 
 export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
