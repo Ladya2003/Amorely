@@ -16,7 +16,7 @@ import type { CategoryResults } from './types';
 import AnswerInput from './AnswerInput';
 import { ResultImageChoiceBlock, ResultTextChoiceBlock } from './ResultQuestionBlocks';
 import { getSimilarityRingSx } from './dailyQuestionsStyles';
-import { getResultQuestionCardSx, getResultQuestionTitleSx, getResultEditButtonSx } from './resultQuestionStyles';
+import { getResultQuestionCardProps, getResultQuestionTitleSx, getResultEditButtonSx } from './resultQuestionStyles';
 
 interface CategoryResultsViewProps {
   results: CategoryResults;
@@ -150,7 +150,7 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
 
         if (isEditing) {
           return (
-            <Box key={item.questionId} sx={getResultQuestionCardSx(theme)}>
+            <Box key={item.questionId} {...getResultQuestionCardProps(theme)}>
               <Typography sx={getResultQuestionTitleSx(theme)}>
                 {index + 1}. {item.questionText}
               </Typography>

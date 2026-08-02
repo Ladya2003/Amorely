@@ -8,6 +8,9 @@ export const MODAL_ACTION_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.5);
 export const MODAL_TEXT_PRIMARY_LIGHT = 'rgba(255, 255, 255, 0.95)';
 export const MODAL_TEXT_SECONDARY_LIGHT = 'rgba(255, 255, 255, 0.72)';
 
+/** Вложенная непрозрачная поверхность внутри glass-модалки (белая карточка и т.п.) */
+export const APP_OPAQUE_SURFACE_CLASS = 'app-opaque-surface';
+
 const getModalSurfaceBorder = (theme: Theme, strength: 'soft' | 'medium' = 'medium') =>
   `1px solid ${alpha(
     theme.palette.primary.main,
@@ -37,8 +40,14 @@ export const getAppGlassSurfaceLightTextSx = (
     '& .MuiTypography-root:not(.MuiAlert-message)': {
       color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
     },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiTypography-root:not(.MuiAlert-message)`]: {
+      color: `${theme.palette.text.primary} !important`,
+    },
     '& .MuiTypography-colorTextSecondary': {
       color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
+    },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiTypography-colorTextSecondary`]: {
+      color: `${theme.palette.text.secondary} !important`,
     },
     '& .MuiTypography-colorTextPrimary': {
       color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,

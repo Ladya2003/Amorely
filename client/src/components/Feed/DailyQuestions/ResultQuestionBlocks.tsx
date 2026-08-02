@@ -13,7 +13,7 @@ import {
   getResultImagePhotoSx,
   getResultImagePlaceholderSx,
   getResultMutedTextSx,
-  getResultQuestionCardSx,
+  getResultQuestionCardProps,
   getResultQuestionTitleSx,
 } from './resultQuestionStyles';
 
@@ -47,7 +47,7 @@ export const ResultTextChoiceBlock: React.FC<ResultTextChoiceBlockProps> = ({
   const { t } = useTranslation();
 
   return (
-    <Box sx={getResultQuestionCardSx(theme)}>
+    <Box {...getResultQuestionCardProps(theme)}>
       <Typography component="p" sx={getResultQuestionTitleSx(theme)}>
         {index + 1}. {item.questionText}
       </Typography>
@@ -129,7 +129,7 @@ export const ResultImageChoiceBlock: React.FC<ResultImageChoiceBlockProps> = ({
   );
 
   return (
-    <Box sx={getResultQuestionCardSx(theme)}>
+    <Box {...getResultQuestionCardProps(theme)}>
       <Typography component="p" sx={getResultQuestionTitleSx(theme)}>
         {index + 1}. {item.questionText}
       </Typography>

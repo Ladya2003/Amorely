@@ -1,9 +1,15 @@
 import { alpha, Theme } from '@mui/material/styles';
+import { APP_OPAQUE_SURFACE_CLASS } from '../../../theme/modalStyles';
 import { SURFACE_BORDER_RADIUS } from '../../../theme/surfaceStyles';
 
 /** Непрозрачная поверхность карточки — не смешивается с фиолетовым glass-модалом */
 const getResultCardBackground = (theme: Theme) =>
   theme.palette.mode === 'light' ? theme.palette.common.white : '#242424';
+
+export const getResultQuestionCardProps = (theme: Theme) => ({
+  className: APP_OPAQUE_SURFACE_CLASS,
+  sx: getResultQuestionCardSx(theme),
+});
 
 export const getResultQuestionCardSx = (theme: Theme) => {
   const isLight = theme.palette.mode === 'light';
