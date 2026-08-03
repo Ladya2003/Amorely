@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import NorthEastIcon from '@mui/icons-material/NorthEast';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import DecryptedMedia from '../../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../../crypto/contentCryptoService';
+import { useHorizontalSwipe } from '../../../hooks/useHorizontalSwipe';
 import { getCompletedEventPreviewSx } from './datingIdeasStyles';
 
 export interface CompletedEventMediaItem {
@@ -82,7 +84,6 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
 
   const hasMedia = mediaItems.length > 0;
   const showSlider = mediaItems.length > 1;
-  const currentMedia = mediaItems[Math.min(mediaIndex, Math.max(mediaItems.length - 1, 0))];
   const canOpenEvent = Boolean(event?.eventId);
 
   const handleOpenEvent = () => {
@@ -90,42 +91,26 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
     navigate(`/calendar?event=${encodeURIComponent(event.eventId)}`);
   };
 
-  const handlePrev = (clickEvent: React.MouseEvent) => {
-    clickEvent.stopPropagation();
+  const handlePrev = () => {
     setMediaIndex((prev) => (prev > 0 ? prev - 1 : mediaItems.length - 1));
   };
 
-  const handleNext = (clickEvent: React.MouseEvent) => {
-    clickEvent.stopPropagation();
+  const handleNext = () => {
     setMediaIndex((prev) => (prev < mediaItems.length - 1 ? prev + 1 : 0));
   };
+
+  const { swipeHandlers, swipeContainerSx } = useHorizontalSwipe({
+    enabled: showSlider,
+    onPrev: handlePrev,
+    onNext: handleNext,
+  });
 
   return (
     <Box
       sx={{
         ...getCompletedEventPreviewSx(theme),
-        cursor: canOpenEvent ? 'pointer' : 'default',
-        transition: 'transform 200ms ease',
-        ...(canOpenEvent && {
-          '&:hover': {
-            transform: 'translateY(-2px)',
-          },
-        }),
+        position: 'relative',
       }}
-      role={canOpenEvent ? 'button' : undefined}
-      tabIndex={canOpenEvent ? 0 : undefined}
-      onClick={canOpenEvent ? handleOpenEvent : undefined}
-      onKeyDown={
-        canOpenEvent
-          ? (keyEvent) => {
-              if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
-                keyEvent.preventDefault();
-                handleOpenEvent();
-              }
-            }
-          : undefined
-      }
-      aria-label={canOpenEvent ? t('datingIdeas.openEventAria') : undefined}
     >
       <Box
         sx={{
@@ -133,27 +118,51 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
           width: '100%',
           aspectRatio: '4 / 5',
           maxHeight: 360,
-          bgcolor: 'action.hover',
+          bgcolor: 'grey.900',
           overflow: 'hidden',
+          ...swipeContainerSx,
         }}
+        {...swipeHandlers}
       >
         {loading ? (
           <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
             <CircularProgress size={28} />
           </Box>
-        ) : hasMedia && currentMedia ? (
-          <Box sx={{ position: 'absolute', inset: 0, '& > *': { width: '100%', height: '100%' } }}>
-            <DecryptedMedia
-              cacheKey={`dating-idea-event-${event?.eventId || 'x'}-${currentMedia.mediaId || mediaIndex}`}
-              url={currentMedia.mediaUrl}
-              resourceType={currentMedia.resourceType || 'image'}
-              encrypted={currentMedia.encrypted}
-              mediaEnvelope={currentMedia.mediaEnvelope}
-              videoPreview={currentMedia.resourceType === 'video'}
-              imageStyle={MEDIA_FILL_STYLE}
-              videoStyle={MEDIA_FILL_STYLE}
-              loadingMinHeight={0}
-            />
+        ) : hasMedia ? (
+          <Box
+            sx={{
+              display: 'flex',
+              width: '100%',
+              height: '100%',
+              transform: `translateX(-${mediaIndex * 100}%)`,
+              transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            {mediaItems.map((item, index) => (
+              <Box
+                key={item.mediaId || `${item.mediaUrl}-${index}`}
+                sx={{
+                  position: 'relative',
+                  minWidth: '100%',
+                  height: '100%',
+                  flexShrink: 0,
+                }}
+              >
+                <Box sx={{ position: 'absolute', inset: 0, '& > *': { width: '100%', height: '100%' } }}>
+                  <DecryptedMedia
+                    cacheKey={`dating-idea-event-${event?.eventId || 'x'}-${item.mediaId || index}`}
+                    url={item.mediaUrl}
+                    resourceType={item.resourceType || 'image'}
+                    encrypted={item.encrypted}
+                    mediaEnvelope={item.mediaEnvelope}
+                    videoPreview={item.resourceType === 'video'}
+                    imageStyle={MEDIA_FILL_STYLE}
+                    videoStyle={MEDIA_FILL_STYLE}
+                    loadingMinHeight={0}
+                  />
+                </Box>
+              </Box>
+            ))}
           </Box>
         ) : (
           <Box
@@ -170,43 +179,30 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
           </Box>
         )}
 
-        {showSlider && (
-          <>
-            <IconButton
-              size="small"
-              onClick={handlePrev}
-              aria-label={t('datingIdeas.mediaPrevAria')}
-              sx={{
-                position: 'absolute',
-                left: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 2,
-                bgcolor: 'rgba(0, 0, 0, 0.5)',
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.7)' },
-              }}
-            >
-              <ArrowBackIosNewIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={handleNext}
-              aria-label={t('datingIdeas.mediaNextAria')}
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 2,
-                bgcolor: 'rgba(0, 0, 0, 0.5)',
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.7)' },
-              }}
-            >
-              <ArrowForwardIosIcon fontSize="small" />
-            </IconButton>
-          </>
+        {canOpenEvent && !loading && (
+          <IconButton
+            aria-label={t('datingIdeas.openEventAria')}
+            onClick={(clickEvent) => {
+              clickEvent.stopPropagation();
+              handleOpenEvent();
+            }}
+            sx={{
+              position: 'absolute',
+              top: 14,
+              right: 14,
+              zIndex: 3,
+              width: 52,
+              height: 52,
+              bgcolor: 'primary.main',
+              color: 'primary.contrastText',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.28)',
+              '&:hover': {
+                bgcolor: 'primary.dark',
+              },
+            }}
+          >
+            <NorthEastIcon sx={{ fontSize: 26 }} />
+          </IconButton>
         )}
 
         {!loading && event && (event.title || event.description) && (
@@ -223,21 +219,29 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
                 content: '""',
                 position: 'absolute',
                 inset: 0,
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                maskImage: 'linear-gradient(to top, black 40%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to top, black 40%, transparent 100%)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                maskImage: 'linear-gradient(to top, black 35%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to top, black 35%, transparent 100%)',
               },
               '&::after': {
                 content: '""',
                 position: 'absolute',
                 inset: 0,
                 background:
-                  'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+                  'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 45%, transparent 100%)',
               },
             }}
           >
-            <Box sx={{ position: 'relative', zIndex: 1, px: 2, pt: 4, pb: 2 }}>
+            <Box
+              sx={{
+                position: 'relative',
+                zIndex: 1,
+                px: 2.5,
+                pt: 6,
+                pb: showSlider ? 7.5 : 2.5,
+              }}
+            >
               {event.title && (
                 <Typography
                   variant="h6"
@@ -271,6 +275,83 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
               )}
             </Box>
           </Box>
+        )}
+
+        {showSlider && !loading && (
+          <>
+            <IconButton
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation();
+                handlePrev();
+              }}
+              aria-label={t('datingIdeas.mediaPrevAria')}
+              sx={{
+                position: 'absolute',
+                left: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                bgcolor: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.7)' },
+              }}
+            >
+              <ArrowBackIosNewIcon />
+            </IconButton>
+            <IconButton
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation();
+                handleNext();
+              }}
+              aria-label={t('datingIdeas.mediaNextAria')}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                bgcolor: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.7)' },
+              }}
+            >
+              <ArrowForwardIosIcon />
+            </IconButton>
+
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 18,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 2,
+                display: 'flex',
+                gap: 1.25,
+                bgcolor: 'rgba(0,0,0,0.5)',
+                borderRadius: 2.5,
+                px: 1.25,
+                py: 0.75,
+              }}
+            >
+              {mediaItems.map((item, index) => (
+                <Box
+                  key={item.mediaId || `dot-${index}`}
+                  sx={{
+                    width: 11,
+                    height: 11,
+                    borderRadius: '50%',
+                    bgcolor: index === mediaIndex ? 'white' : 'rgba(255, 255, 255, 0.4)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={(clickEvent) => {
+                    clickEvent.stopPropagation();
+                    setMediaIndex(index);
+                  }}
+                />
+              ))}
+            </Box>
+          </>
         )}
       </Box>
 
