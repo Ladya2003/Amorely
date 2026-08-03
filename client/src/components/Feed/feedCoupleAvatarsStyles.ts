@@ -102,6 +102,8 @@ export const getCoupleLockBadgeSx = (theme: Theme) => {
 };
 
 const BUBBLE_TAIL_HALF_WIDTH = 6;
+/** Отступ хвостика от края облака — чтобы не упирался в скругление */
+const BUBBLE_TAIL_EDGE_INSET = 12;
 
 export const getThoughtBubbleBodySx = (
   theme: Theme,
@@ -142,8 +144,8 @@ export const getThoughtBubbleBodySx = (
       borderRight: `${BUBBLE_TAIL_HALF_WIDTH}px solid transparent`,
       borderTop: `${BUBBLE_TAIL_HALF_WIDTH}px solid ${surface.bgcolor}`,
       ...(tailAlign === 'left'
-        ? { left: 0, transform: 'none' }
-        : { right: 0, left: 'auto', transform: 'none' }),
+        ? { left: BUBBLE_TAIL_EDGE_INSET, transform: 'none' }
+        : { right: BUBBLE_TAIL_EDGE_INSET, left: 'auto', transform: 'none' }),
     },
     ...(editable && {
       '&:hover': {
