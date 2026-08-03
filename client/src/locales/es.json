@@ -1556,6 +1556,7 @@
     "generateError": "No se pudo generar una idea",
     "insufficientBalance": "AmoreCoins insuficientes. Se necesitan {{cost}}",
     "eventPreviewMissing": "El evento de esta idea no está disponible",
-    "ideaInEventTitle": "Idea para cita"
+    "ideaInEventTitle": "Idea para cita",
+    "openEventAria": "Abrir evento"
   }
 }

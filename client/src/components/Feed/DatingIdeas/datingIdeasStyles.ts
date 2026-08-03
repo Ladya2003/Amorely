@@ -1,5 +1,6 @@
 import { alpha, Theme, keyframes } from '@mui/material/styles';
 import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from '../../../theme/surfaceStyles';
+import { MOBILE_BOTTOM_NAV_FLOAT_OFFSET } from '../../Layout/bottomNavStyles';
 
 export const DATING_IDEAS_INNER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.85);
 
@@ -44,7 +45,10 @@ export const shuffleGlow = keyframes`
 
 export const getDatingIdeasPageRootSx = (theme: Theme) => ({
   py: 2,
-  pb: { xs: 12, sm: 4 },
+  pb: {
+    xs: MOBILE_BOTTOM_NAV_FLOAT_OFFSET,
+    sm: 4,
+  },
   minHeight: '70vh',
   background: `radial-gradient(120% 80% at 50% -10%, ${alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.16 : 0.28)} 0%, transparent 55%)`,
 });

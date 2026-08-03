@@ -1556,6 +1556,7 @@
     "generateError": "Idee konnte nicht generiert werden",
     "insufficientBalance": "Nicht genug AmoreCoins. Benötigt: {{cost}}",
     "eventPreviewMissing": "Das Event zu dieser Idee ist nicht verfügbar",
-    "ideaInEventTitle": "Date-Idee"
+    "ideaInEventTitle": "Date-Idee",
+    "openEventAria": "Event öffnen"
   }
 }

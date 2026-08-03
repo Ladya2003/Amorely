@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import DecryptedMedia from '../../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../../crypto/contentCryptoService';
 import { getCompletedEventPreviewSx } from './datingIdeasStyles';
@@ -23,6 +24,18 @@ interface CompletedEventPreviewProps {
   fallbackEmoji: string;
 }
 
+const MEDIA_FILL_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  maxWidth: 'none',
+  maxHeight: 'none',
+  objectFit: 'cover',
+  objectPosition: 'center',
+  display: 'block',
+};
+
 const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
   loading,
   error,
@@ -31,10 +44,42 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const navigate = useNavigate();
   const hasMedia = Boolean(event?.mediaUrl && event.mediaUrl.trim() && event.mediaUrl !== 'placeholder');
+  const canOpenEvent = Boolean(event?.eventId);
+
+  const handleOpenEvent = () => {
+    if (!event?.eventId) return;
+    navigate(`/calendar?event=${encodeURIComponent(event.eventId)}`);
+  };
 
   return (
-    <Box sx={getCompletedEventPreviewSx(theme)}>
+    <Box
+      sx={{
+        ...getCompletedEventPreviewSx(theme),
+        cursor: canOpenEvent ? 'pointer' : 'default',
+        transition: 'transform 200ms ease',
+        ...(canOpenEvent && {
+          '&:hover': {
+            transform: 'translateY(-2px)',
+          },
+        }),
+      }}
+      role={canOpenEvent ? 'button' : undefined}
+      tabIndex={canOpenEvent ? 0 : undefined}
+      onClick={canOpenEvent ? handleOpenEvent : undefined}
+      onKeyDown={
+        canOpenEvent
+          ? (keyEvent) => {
+              if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
+                keyEvent.preventDefault();
+                handleOpenEvent();
+              }
+            }
+          : undefined
+      }
+      aria-label={canOpenEvent ? t('datingIdeas.openEventAria') : undefined}
+    >
       <Box
         sx={{
           position: 'relative',
@@ -46,25 +91,28 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
         }}
       >
         {loading ? (
-          <Box sx={{ height: '100%', display: 'grid', placeItems: 'center' }}>
+          <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
             <CircularProgress size={28} />
           </Box>
         ) : hasMedia && event ? (
-          <DecryptedMedia
-            cacheKey={`dating-idea-event-${event.eventId || 'x'}-${event.mediaId || '0'}`}
-            url={event.mediaUrl!}
-            resourceType={event.resourceType || 'image'}
-            encrypted={event.encrypted}
-            mediaEnvelope={event.mediaEnvelope}
-            videoPreview={event.resourceType === 'video'}
-            imageStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            videoStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            loadingMinHeight={0}
-          />
+          <Box sx={{ position: 'absolute', inset: 0, '& > *': { width: '100%', height: '100%' } }}>
+            <DecryptedMedia
+              cacheKey={`dating-idea-event-${event.eventId || 'x'}-${event.mediaId || '0'}`}
+              url={event.mediaUrl!}
+              resourceType={event.resourceType || 'image'}
+              encrypted={event.encrypted}
+              mediaEnvelope={event.mediaEnvelope}
+              videoPreview={event.resourceType === 'video'}
+              imageStyle={MEDIA_FILL_STYLE}
+              videoStyle={MEDIA_FILL_STYLE}
+              loadingMinHeight={0}
+            />
+          </Box>
         ) : (
           <Box
             sx={{
-              height: '100%',
+              position: 'absolute',
+              inset: 0,
               display: 'grid',
               placeItems: 'center',
               background: (tTheme) =>
@@ -82,6 +130,7 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
               bottom: 0,
               left: 0,
               right: 0,
+              zIndex: 1,
               color: 'white',
               pointerEvents: 'none',
               '&::before': {

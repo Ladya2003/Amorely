@@ -1556,6 +1556,7 @@
     "generateError": "Échec de la génération d’une idée",
     "insufficientBalance": "Pas assez d’AmoreCoins. Il en faut {{cost}}",
     "eventPreviewMissing": "L’événement de cette idée est indisponible",
-    "ideaInEventTitle": "Idée de rendez-vous"
+    "ideaInEventTitle": "Idée de rendez-vous",
+    "openEventAria": "Ouvrir l’événement"
   }
 }

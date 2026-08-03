@@ -1660,6 +1660,7 @@
     "generateError": "Не удалось сгенерировать идею",
     "insufficientBalance": "Недостаточно Аморок. Нужно {{cost}}",
     "eventPreviewMissing": "Событие по этой идее пока недоступно",
-    "ideaInEventTitle": "Идея для свидания"
+    "ideaInEventTitle": "Идея для свидания",
+    "openEventAria": "Открыть событие"
   }
 }
