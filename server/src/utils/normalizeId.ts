@@ -5,9 +5,23 @@ export const normalizeIdStr = (value: unknown): string | null => {
     return null;
   }
 
-  if (typeof value === 'object' && value !== null && 'toString' in value) {
-    const asString = String((value as { toString(): string }).toString()).trim();
-    return asString && asString !== '[object Object]' ? asString : null;
+  if (typeof value === 'object' && value !== null) {
+    if ('_id' in (value as Record<string, unknown>)) {
+      const nested = normalizeIdStr((value as { _id: unknown })._id);
+      if (nested) {
+        return nested;
+      }
+    }
+    if ('id' in (value as Record<string, unknown>)) {
+      const nested = normalizeIdStr((value as { id: unknown }).id);
+      if (nested) {
+        return nested;
+      }
+    }
+    if ('toString' in value) {
+      const asString = String((value as { toString(): string }).toString()).trim();
+      return asString && asString !== '[object Object]' ? asString : null;
+    }
   }
 
   const asString = String(value).trim();

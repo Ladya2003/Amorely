@@ -14,6 +14,7 @@ import {
 } from '../utils/contentFormat';
 import { awardCalendarEvent, awardPlanNote, awardPlanNoteComplete } from '../utils/currencyRewards';
 import { getBalance } from '../services/currencyService';
+import { completeDatingIdea } from '../services/datingIdeasService';
 import { resolvePartnerUserId } from '../utils/resolvePartnerId';
 import { hasActivePartner } from '../utils/normalizeId';
 import {
@@ -196,6 +197,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
       datingIdeaEmoji,
       datingIdeaTitle,
       datingIdeaDescription,
+      datingIdeaId,
       encryptedTitle,
       encryptedDescription,
       encryptedTitlePartner,
@@ -294,7 +296,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
         ...textFields,
         metadataSenderId: userId,
         metadataRecipientId: targetId,
-        showInFeed: false,
+        showInFeed: isDatingIdeaEvent === true || isDatingIdeaEvent === 'true',
         isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
         isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
         isDatingIdeaEvent: isDatingIdeaEvent === true || isDatingIdeaEvent === 'true',
@@ -307,6 +309,18 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
     }
 
     const eventAward = await awardCalendarEvent(userId, eventId);
+
+    if (
+      (isDatingIdeaEvent === true || isDatingIdeaEvent === 'true') &&
+      typeof datingIdeaId === 'string' &&
+      datingIdeaId.trim()
+    ) {
+      try {
+        await completeDatingIdea(userId, datingIdeaId.trim(), eventId);
+      } catch (linkError) {
+        console.error('Failed to link dating idea to calendar event:', linkError);
+      }
+    }
 
     res.json({
       message: 'Зашифрованное событие успешно создано',

@@ -1,4 +1,5 @@
 import DatingIdea from '../models/datingIdea';
+import Content from '../models/content';
 import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 import { resolveLocale, AppLocale } from '../i18n/locales';
 import { getUserLocale } from '../utils/userLocale';
@@ -39,6 +40,57 @@ const formatIdea = (doc: DatingIdeaLike) => ({
   skippedAt: doc.skippedAt || null,
 });
 
+const repairMissingEventLinks = async (ideas: DatingIdeaLike[]) => {
+  const broken = ideas.filter((idea) => idea.status === 'completed' && !idea.eventId);
+  if (broken.length === 0) {
+    return ideas;
+  }
+
+  await Promise.all(
+    broken.map(async (idea) => {
+      const byTitle = await Content.findOne({
+        isDatingIdeaEvent: true,
+        datingIdeaTitle: idea.title,
+        eventId: { $exists: true, $nin: [null, ''] },
+      })
+        .sort({ createdAt: -1 })
+        .select('eventId')
+        .lean();
+
+      let matchedEventId = byTitle?.eventId ? String(byTitle.eventId) : null;
+
+      if (!matchedEventId && idea.completedAt) {
+        const completedAt = new Date(idea.completedAt).getTime();
+        const nearby = await Content.find({
+          isDatingIdeaEvent: true,
+          createdBy: idea.createdBy,
+          eventId: { $exists: true, $nin: [null, ''] },
+          createdAt: {
+            $gte: new Date(completedAt - 15 * 60 * 1000),
+            $lte: new Date(completedAt + 15 * 60 * 1000),
+          },
+        })
+          .sort({ createdAt: -1 })
+          .select('eventId')
+          .lean();
+
+        if (nearby[0]?.eventId) {
+          matchedEventId = String(nearby[0].eventId);
+        }
+      }
+
+      if (!matchedEventId) {
+        return;
+      }
+
+      await DatingIdea.updateOne({ _id: idea._id }, { $set: { eventId: matchedEventId } });
+      idea.eventId = matchedEventId;
+    })
+  );
+
+  return ideas;
+};
+
 export const getDatingIdeasOverview = async (userId: string, localeHint?: string) => {
   const relationship = await findActiveRelationshipForUser(userId);
   if (!relationship) {
@@ -52,16 +104,17 @@ export const getDatingIdeasOverview = async (userId: string, localeHint?: string
     .limit(100)
     .lean();
 
-  const active = ideas.find((idea) => idea.status === 'active') || null;
-  const history = ideas.filter((idea) => idea.status !== 'active');
+  const repaired = await repairMissingEventLinks(ideas as DatingIdeaLike[]);
+  const active = repaired.find((idea) => idea.status === 'active') || null;
+  const history = repaired.filter((idea) => idea.status !== 'active');
 
   return {
     hasPartner: true as const,
     cost: DATING_IDEA_COST,
     balance: wallet.balance,
     locale,
-    active: active ? formatIdea(active as DatingIdeaLike) : null,
-    history: history.map((idea) => formatIdea(idea as DatingIdeaLike)),
+    active: active ? formatIdea(active) : null,
+    history: history.map((idea) => formatIdea(idea)),
   };
 };
 

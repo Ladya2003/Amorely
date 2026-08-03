@@ -123,8 +123,29 @@ const DatingIdeasPage: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
 
+    const toPreview = (
+      event: any,
+      fallbackEventId?: string | null
+    ): CompletedEventPreviewData => {
+      const media = Array.isArray(event?.media) ? event.media : [];
+      const firstMedia = media.find(
+        (item: { url?: string }) => item.url && String(item.url).trim().length > 0
+      );
+
+      return {
+        title: event?.title,
+        description: event?.description,
+        mediaUrl: firstMedia?.url,
+        resourceType: firstMedia?.resourceType,
+        encrypted: firstMedia?.encrypted,
+        mediaEnvelope: firstMedia?.mediaEnvelope,
+        mediaId: firstMedia?._id,
+        eventId: event?.eventId || fallbackEventId || undefined,
+      };
+    };
+
     const loadCompletedEvent = async () => {
-      if (!selectedHistoryIdea || selectedHistoryIdea.status !== 'completed' || !selectedHistoryIdea.eventId) {
+      if (!selectedHistoryIdea || selectedHistoryIdea.status !== 'completed') {
         setCompletedEventPreview(null);
         setCompletedEventError(null);
         setCompletedEventLoading(false);
@@ -135,20 +156,63 @@ const DatingIdeasPage: React.FC = () => {
       setCompletedEventError(null);
       setCompletedEventPreview(null);
 
+      const fallbackPreview: CompletedEventPreviewData = {
+        title: selectedHistoryIdea.title,
+        description: selectedHistoryIdea.description,
+        eventId: selectedHistoryIdea.eventId || undefined,
+      };
+
       try {
         const token = localStorage.getItem('token');
         if (!token) {
           throw new Error(t('calendar.errors.notAuthorized'));
         }
 
-        const response = await axios.get(
-          `${API_URL}/api/calendar/events/${encodeURIComponent(selectedHistoryIdea.eventId)}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        let event = response.data;
         const keys = localDeviceKeys || (user?._id ? await loadLocalKeys(user._id) : null);
-        if (keys) {
+        let event: any = null;
+
+        if (selectedHistoryIdea.eventId) {
+          try {
+            const response = await axios.get(
+              `${API_URL}/api/calendar/events/${encodeURIComponent(selectedHistoryIdea.eventId)}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            event = response.data;
+          } catch {
+            event = null;
+          }
+        }
+
+        if (!event) {
+          try {
+            const listResponse = await axios.get(`${API_URL}/api/calendar/events`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const events = Array.isArray(listResponse.data) ? listResponse.data : [];
+            event =
+              events.find(
+                (item: { eventId?: string; _id?: string }) =>
+                  selectedHistoryIdea.eventId &&
+                  (item.eventId === selectedHistoryIdea.eventId ||
+                    item._id === selectedHistoryIdea.eventId)
+              ) ||
+              events.find(
+                (item: {
+                  isDatingIdeaEvent?: boolean;
+                  datingIdeaTitle?: string;
+                  title?: string;
+                }) =>
+                  item.isDatingIdeaEvent &&
+                  (item.datingIdeaTitle === selectedHistoryIdea.title ||
+                    item.title === selectedHistoryIdea.title)
+              ) ||
+              null;
+          } catch {
+            event = null;
+          }
+        }
+
+        if (event && keys) {
           const [decrypted] = await decryptCalendarEventsWithMedia(
             keys,
             [event],
@@ -160,25 +224,23 @@ const DatingIdeasPage: React.FC = () => {
 
         if (cancelled) return;
 
-        const media = Array.isArray(event.media) ? event.media : [];
-        const firstMedia = media.find(
-          (item: { url?: string }) => item.url && String(item.url).trim().length > 0
-        );
-
-        setCompletedEventPreview({
-          title: event.title,
-          description: event.description,
-          mediaUrl: firstMedia?.url,
-          resourceType: firstMedia?.resourceType,
-          encrypted: firstMedia?.encrypted,
-          mediaEnvelope: firstMedia?.mediaEnvelope,
-          mediaId: firstMedia?._id,
-          eventId: event.eventId || selectedHistoryIdea.eventId,
-        });
-      } catch {
+        if (event) {
+          const preview = toPreview(event, selectedHistoryIdea.eventId);
+          if (!preview.title && !preview.description) {
+            preview.title = selectedHistoryIdea.title;
+            preview.description = selectedHistoryIdea.description;
+          }
+          setCompletedEventPreview(preview);
+          setCompletedEventError(null);
+        } else {
+          setCompletedEventPreview(fallbackPreview);
+          setCompletedEventError(null);
+        }
+      } catch (loadError) {
+        console.error('Failed to load dating idea event preview:', loadError);
         if (!cancelled) {
-          setCompletedEventError(t('datingIdeas.eventPreviewMissing'));
-          setCompletedEventPreview(null);
+          setCompletedEventPreview(fallbackPreview);
+          setCompletedEventError(null);
         }
       } finally {
         if (!cancelled) {
@@ -362,6 +424,7 @@ const DatingIdeasPage: React.FC = () => {
           isBirthdayEvent: eventData.isBirthdayEvent,
           isAnniversaryEvent: eventData.isAnniversaryEvent,
           isDatingIdeaEvent: true,
+          datingIdeaId: idea.id,
           datingIdeaEmoji: idea.emoji,
           datingIdeaTitle: idea.title,
           datingIdeaDescription: idea.description,
@@ -389,7 +452,11 @@ const DatingIdeasPage: React.FC = () => {
         null;
 
       if (eventId) {
-        await completeDatingIdea(idea.id, eventId);
+        try {
+          await completeDatingIdea(idea.id, eventId);
+        } catch {
+          // Server may already have linked the idea via datingIdeaId.
+        }
       }
 
       notifyCalendarEventsChanged();
