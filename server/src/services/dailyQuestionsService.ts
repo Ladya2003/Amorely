@@ -101,14 +101,16 @@ export const calculateSimilarity = (
   categoryId: string,
   answersA: { questionId: string; value: string }[],
   answersB: { questionId: string; value: string }[]
-): number => {
+): number | null => {
   const category = getCategoryById(categoryId);
-  if (!category) return 0;
+  if (!category) return null;
 
   let matched = 0;
   let total = 0;
 
   for (const question of category.questions) {
+    if (question.type === 'text') continue;
+
     const a = answersA.find((x) => x.questionId === question.id);
     const b = answersB.find((x) => x.questionId === question.id);
     if (!a?.value || !b?.value) continue;
@@ -116,7 +118,7 @@ export const calculateSimilarity = (
     if (answersMatch(question, a.value, b.value)) matched++;
   }
 
-  if (total === 0) return 0;
+  if (total === 0) return null;
   return Math.round((matched / total) * 100);
 };
 
