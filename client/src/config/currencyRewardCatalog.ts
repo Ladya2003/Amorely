@@ -49,6 +49,7 @@ export const CURRENCY_EARN_RULES: CurrencyEarnRule[] = [
   { id: 'game_medal_stipend_2', section: 'games', amount: 15 },
   { id: 'game_medal_stipend_3', section: 'games', amount: 10 },
   { id: 'calendar_event', section: 'calendar', amount: 5 },
+  { id: 'dating_idea_event', section: 'calendar', amount: 25 },
   { id: 'plan_note', section: 'calendar', amount: 3 },
   { id: 'plan_note_complete', section: 'calendar', amount: 3 },
   { id: 'profile_avatar', section: 'profile', amount: 10 },

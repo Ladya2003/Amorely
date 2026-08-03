@@ -123,7 +123,11 @@ router.post('/:ideaId/complete', async (req: ExtendedRequest, res: Response) => 
       return res.status(404).json({ error: 'Idea not found' });
     }
 
-    res.json(result);
+    res.json({
+      ...result,
+      awardedAmount: result.awardedAmount || 0,
+      balance: result.balance,
+    });
   } catch (error) {
     console.error('Dating ideas complete error:', error);
     res.status(500).json({ error: 'Failed to complete dating idea' });

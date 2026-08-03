@@ -1467,6 +1467,10 @@
           "action": "Crear un evento en el calendario",
           "period": "Por los primeros 3 eventos nuevos al día"
         },
+        "dating_idea_event": {
+          "action": "Crear un evento desde una idea para cita",
+          "period": "Una vez por idea"
+        },
         "plan_note": {
           "action": "Crear una nota de plan",
           "period": "Por las primeras 3 notas nuevas al día"
@@ -1542,9 +1546,9 @@
     "title": "Ideas para citas",
     "subtitle": "Inspiración para vuestros momentos especiales",
     "sectionAria": "Abrir ideas para citas",
-    "sectionHint": "Generar una idea por {{cost}} AmoreCoin",
+    "sectionHint": "Generar una idea por {{cost}} AmoreCoins",
     "sectionActiveHint": "Tienes una idea activa — ábrela para continuar",
-    "costLabel": "{{cost}} AmoreCoin",
+    "costLabel": "{{cost}} AmoreCoins",
     "generateTitle": "Nueva idea para una cita",
     "generateHint": "Toca el botón — elegiremos una idea solo para vosotros dos.",
     "generateCta": "Generar por {{cost}}",

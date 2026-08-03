@@ -1563,6 +1563,10 @@
           "action": "Create a calendar event",
           "period": "For the first 3 new events each day"
         },
+        "dating_idea_event": {
+          "action": "Create an event from a date idea",
+          "period": "Once per idea"
+        },
         "plan_note": {
           "action": "Create a plan note",
           "period": "For the first 3 new notes each day"
@@ -1642,9 +1646,9 @@
     "title": "Date ideas",
     "subtitle": "Inspiration for your special moments",
     "sectionAria": "Open date ideas",
-    "sectionHint": "Generate an idea for {{cost}} AmoreCoin",
+    "sectionHint": "Generate an idea for {{cost}} AmoreCoins",
     "sectionActiveHint": "You have an active idea — open to continue",
-    "costLabel": "{{cost}} AmoreCoin",
+    "costLabel": "{{cost}} AmoreCoins",
     "generateTitle": "New date idea",
     "generateHint": "Tap the button — we’ll pick an idea just for the two of you.",
     "generateCta": "Generate for {{cost}}",

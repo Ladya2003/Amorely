@@ -110,7 +110,7 @@ const DatingIdeasPage: React.FC = () => {
 
   const [phase, setPhase] = useState<PagePhase>('loading');
   const [balance, setBalance] = useState(0);
-  const [cost, setCost] = useState(1);
+  const [cost, setCost] = useState(100);
   const [activeIdea, setActiveIdea] = useState<DatingIdea | null>(null);
   const [history, setHistory] = useState<DatingIdea[]>([]);
   const [flipped, setFlipped] = useState(false);

@@ -309,6 +309,8 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
     }
 
     const eventAward = await awardCalendarEvent(userId, eventId);
+    let datingIdeaAwarded = 0;
+    let balance = eventAward.balance;
 
     if (
       (isDatingIdeaEvent === true || isDatingIdeaEvent === 'true') &&
@@ -316,18 +318,27 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
       datingIdeaId.trim()
     ) {
       try {
-        await completeDatingIdea(userId, datingIdeaId.trim(), eventId);
+        const linked = await completeDatingIdea(userId, datingIdeaId.trim(), eventId);
+        if (!('error' in linked)) {
+          datingIdeaAwarded = linked.awardedAmount || 0;
+          if (typeof linked.balance === 'number') {
+            balance = linked.balance;
+          }
+        }
       } catch (linkError) {
         console.error('Failed to link dating idea to calendar event:', linkError);
       }
     }
 
+    const awardedAmount =
+      (eventAward.awarded ? eventAward.amount : 0) + datingIdeaAwarded;
+
     res.json({
       message: 'Зашифрованное событие успешно создано',
       content: savedContent,
       eventId,
-      awardedAmount: eventAward.awarded ? eventAward.amount : 0,
-      balance: eventAward.balance,
+      awardedAmount,
+      balance,
     });
   } catch (error) {
     console.error('Ошибка при создании зашифрованного события:', error);

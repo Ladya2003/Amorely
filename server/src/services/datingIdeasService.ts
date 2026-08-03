@@ -4,13 +4,14 @@ import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 import { resolveLocale, AppLocale } from '../i18n/locales';
 import { getUserLocale } from '../utils/userLocale';
 import { spendCurrency, getBalance } from './currencyService';
+import { awardDatingIdeaEvent } from '../utils/currencyRewards';
 import {
   DATING_IDEA_COST,
   getDatingIdeaLocalized,
   pickRandomDatingIdea,
 } from '../datingIdeas/datingIdeasContent';
 
-export { DATING_IDEA_COST };
+export { DATING_IDEA_COST, DATING_IDEA_EVENT_REWARD } from '../datingIdeas/datingIdeasContent';
 
 type DatingIdeaLike = {
   _id: unknown;
@@ -243,10 +244,20 @@ export const completeDatingIdea = async (
     return { error: 'NOT_FOUND' as const };
   }
 
+  const wasAlreadyCompleted = idea.status === 'completed' && Boolean(idea.eventId);
+
   idea.status = 'completed';
   idea.eventId = eventId;
-  idea.completedAt = new Date();
+  idea.completedAt = idea.completedAt || new Date();
   await idea.save();
 
-  return { idea: formatIdea(idea) };
+  const award = wasAlreadyCompleted
+    ? { awarded: false as const, amount: 0, balance: (await getBalance(userId)).balance }
+    : await awardDatingIdeaEvent(userId, String(idea._id));
+
+  return {
+    idea: formatIdea(idea),
+    awardedAmount: award.awarded ? award.amount : 0,
+    balance: award.balance,
+  };
 };

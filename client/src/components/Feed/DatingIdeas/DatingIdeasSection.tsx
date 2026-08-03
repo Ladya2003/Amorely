@@ -15,7 +15,7 @@ const DatingIdeasSection: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
-  const [cost, setCost] = useState(1);
+  const [cost, setCost] = useState(100);
   const [hasActive, setHasActive] = useState(false);
 
   const load = useCallback(async () => {

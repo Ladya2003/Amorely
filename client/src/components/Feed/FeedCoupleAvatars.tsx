@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import MyLocationOutlinedIcon from '@mui/icons-material/MyLocationOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useStatusBubbles } from '../../hooks/useStatusBubbles';
@@ -25,7 +26,10 @@ import ContactProfileDialog from '../Chat/ContactProfileDialog';
 import CoupleDistanceDialog from './CoupleDistanceDialog';
 import type { Contact } from '../Chat/ChatList';
 import type { Partner } from '../Settings/PartnerForm';
-import { fetchCoupleDistanceStatus } from '../../services/coupleDistanceService';
+import {
+  fetchCoupleDistanceStatus,
+  shareLocationSilentlyIfPermitted,
+} from '../../services/coupleDistanceService';
 import { formatDistanceKm } from '../../utils/geoDistance';
 import {
   COUPLE_AVATAR_SIZE,
@@ -128,9 +132,9 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
           pointerEvents: 'none',
         }}
       >
-        {/* Конец дуги в центре бейджа (~y=14), а не у нижнего края (~y=24) */}
+        {/* Старт у середины аватара (~y=28), конец в центре бейджа (~y=14) */}
         <path
-          d="M 0 50 Q 80 2 80 14"
+          d="M 0 28 Q 80 2 80 14"
           fill="none"
           stroke={strokeColor}
           strokeWidth="2.5"
@@ -138,7 +142,7 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
           strokeLinecap="round"
         />
         <path
-          d="M 160 50 Q 80 2 80 14"
+          d="M 160 28 Q 80 2 80 14"
           fill="none"
           stroke={strokeColor}
           strokeWidth="2.5"
@@ -158,7 +162,11 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
           <CircularProgress size={16} thickness={5} sx={{ color: '#6b4c9a' }} />
         ) : (
           <>
-            <LockOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
+            {distanceKm != null ? (
+              <MyLocationOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
+            ) : (
+              <LockOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
+            )}
             <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 'inherit', lineHeight: 1 }}>
               {distanceLabel}
             </Typography>
@@ -215,10 +223,13 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
 
     const loadDistance = async () => {
       setIsDistanceLoading(true);
+      let myLocationShared = false;
+
       try {
         const status = await fetchCoupleDistanceStatus();
         if (!cancelled) {
           setDistanceKm(status.distanceKm);
+          myLocationShared = status.myLocationShared;
         }
       } catch {
         if (!cancelled) {
@@ -228,6 +239,27 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
         if (!cancelled) {
           setIsDistanceLoading(false);
         }
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      // Фоново обновляем координаты без блокировки UI; при ошибке оставляем последние данные
+      const shared = await shareLocationSilentlyIfPermitted({
+        previouslyShared: myLocationShared,
+      });
+      if (cancelled || !shared) {
+        return;
+      }
+
+      try {
+        const nextStatus = await fetchCoupleDistanceStatus();
+        if (!cancelled) {
+          setDistanceKm(nextStatus.distanceKm);
+        }
+      } catch {
+        // оставляем уже показанное расстояние
       }
     };
 

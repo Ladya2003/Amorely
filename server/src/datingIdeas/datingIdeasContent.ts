@@ -11,7 +11,9 @@ export type DatingIdeaDefinition = {
   locales: Partial<Record<AppLocale, DatingIdeaLocalized>> & { ru: DatingIdeaLocalized; en: DatingIdeaLocalized };
 };
 
-export const DATING_IDEA_COST = 1;
+export const DATING_IDEA_COST = 100;
+/** Reward for creating a calendar event from a dating idea. */
+export const DATING_IDEA_EVENT_REWARD = 25;
 
 /** Catalog of dating ideas. Base copy is Russian + English; other locales fall back to en/ru. */
 export const DATING_IDEAS: DatingIdeaDefinition[] = [

@@ -1467,6 +1467,10 @@
           "action": "Kalenderereignis erstellen",
           "period": "Für die ersten 3 neuen Ereignisse pro Tag"
         },
+        "dating_idea_event": {
+          "action": "Ereignis aus einer Date-Idee erstellen",
+          "period": "Einmal pro Idee"
+        },
         "plan_note": {
           "action": "Plan-Notiz erstellen",
           "period": "Für die ersten 3 neuen Notizen pro Tag"
@@ -1542,9 +1546,9 @@
     "title": "Date-Ideen",
     "subtitle": "Inspiration für eure besonderen Momente",
     "sectionAria": "Date-Ideen öffnen",
-    "sectionHint": "Idee für {{cost}} AmoreCoin generieren",
+    "sectionHint": "Idee für {{cost}} AmoreCoins generieren",
     "sectionActiveHint": "Ihr habt eine aktive Idee — öffnen zum Fortfahren",
-    "costLabel": "{{cost}} AmoreCoin",
+    "costLabel": "{{cost}} AmoreCoins",
     "generateTitle": "Neue Date-Idee",
     "generateHint": "Tippt den Button — wir wählen eine Idee nur für euch beide.",
     "generateCta": "Für {{cost}} generieren",

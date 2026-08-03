@@ -1467,6 +1467,10 @@
           "action": "Criar um evento no calendário",
           "period": "Pelos primeiros 3 eventos novos por dia"
         },
+        "dating_idea_event": {
+          "action": "Criar um evento a partir de uma ideia para encontro",
+          "period": "Uma vez por ideia"
+        },
         "plan_note": {
           "action": "Criar uma nota de plano",
           "period": "Pelas primeiras 3 notas novas por dia"
@@ -1542,9 +1546,9 @@
     "title": "Ideias para encontros",
     "subtitle": "Inspiração para os vossos momentos especiais",
     "sectionAria": "Abrir ideias para encontros",
-    "sectionHint": "Gerar uma ideia por {{cost}} AmoreCoin",
+    "sectionHint": "Gerar uma ideia por {{cost}} AmoreCoins",
     "sectionActiveHint": "Têm uma ideia ativa — abram para continuar",
-    "costLabel": "{{cost}} AmoreCoin",
+    "costLabel": "{{cost}} AmoreCoins",
     "generateTitle": "Nova ideia para encontro",
     "generateHint": "Toquem no botão — vamos escolher uma ideia só para vocês dois.",
     "generateCta": "Gerar por {{cost}}",

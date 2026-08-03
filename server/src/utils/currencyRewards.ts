@@ -1,6 +1,7 @@
 import { awardCurrency, incrementActivityAndAward, incrementDailyActivityAward, getOrCreateWallet } from '../services/currencyService';
 import CurrencyTransaction from '../models/currencyTransaction';
 import type { CurrencyReason } from '../models/currencyTransaction';
+import { DATING_IDEA_EVENT_REWARD } from '../datingIdeas/datingIdeasContent';
 
 export const attachCurrencyToResponse = (
   res: { json: (body: object) => void },
@@ -38,6 +39,15 @@ export const awardCalendarEvent = (userId: string, eventId: string) =>
     5,
     'calendar_event',
     `calendar_event:${userId}:${eventId}`
+  );
+
+/** Создание события из идеи для свидания — один раз на идею. */
+export const awardDatingIdeaEvent = (userId: string, ideaId: string) =>
+  awardCurrency(
+    userId,
+    DATING_IDEA_EVENT_REWARD,
+    'dating_idea_event',
+    `dating_idea_event:${ideaId}`
   );
 
 export const awardPlanNote = (userId: string, noteId: string) =>
