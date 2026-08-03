@@ -1,34 +1,17 @@
 import { DAILY_QUESTION_IMAGES as IMG } from './dailyQuestionsImages';
+import { EXTRA_DAILY_QUESTION_CATEGORIES } from './extraCategories';
 
-export type DailyQuestionType = 'text' | 'choice' | 'image';
+export type {
+  DailyQuestionType,
+  DailyQuestionChoice,
+  DailyQuestionImageOption,
+  DailyQuestion,
+  DailyQuestionCategory,
+} from './dailyQuestionsTypes';
 
-export interface DailyQuestionChoice {
-  id: string;
-  label: string;
-}
+import type { DailyQuestionCategory } from './dailyQuestionsTypes';
 
-export interface DailyQuestionImageOption {
-  id: string;
-  label: string;
-  url: string;
-}
-
-export interface DailyQuestion {
-  id: string;
-  type: DailyQuestionType;
-  text: string;
-  options?: DailyQuestionChoice[];
-  images?: DailyQuestionImageOption[];
-}
-
-export interface DailyQuestionCategory {
-  id: string;
-  emoji: string;
-  title: string;
-  questions: DailyQuestion[];
-}
-
-export const DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
+const BASE_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
   {
     id: 'never_have_i_ever',
     emoji: '🙈',
@@ -488,6 +471,11 @@ export const DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
       { id: 'g4', type: 'text', text: 'Какой маленький жест каждый день сделал бы тебя счастливее?' },
     ],
   },
+];
+
+export const DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
+  ...BASE_DAILY_QUESTION_CATEGORIES,
+  ...EXTRA_DAILY_QUESTION_CATEGORIES,
 ];
 
 export const getCategoryById = (id: string): DailyQuestionCategory | undefined =>
