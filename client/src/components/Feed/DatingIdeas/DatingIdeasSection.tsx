@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Paper, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, Paper, Typography, useTheme } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNavigate } from 'react-router-dom';
@@ -13,11 +13,13 @@ const DatingIdeasSection: React.FC = () => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [cost, setCost] = useState(1);
   const [hasActive, setHasActive] = useState(false);
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
       const data = await fetchDatingIdeas(i18n.language);
       if (!data.hasPartner) {
@@ -29,6 +31,8 @@ const DatingIdeasSection: React.FC = () => {
       setHasActive(Boolean(data.active));
     } catch {
       setVisible(false);
+    } finally {
+      setLoading(false);
     }
   }, [i18n.language]);
 
@@ -43,6 +47,16 @@ const DatingIdeasSection: React.FC = () => {
     window.addEventListener(PARTNER_CHANGED_EVENT, onPartnerChanged);
     return () => window.removeEventListener(PARTNER_CHANGED_EVENT, onPartnerChanged);
   }, [load]);
+
+  if (loading) {
+    return (
+      <Paper elevation={0} sx={getDatingIdeasSectionSx(theme)}>
+        <Box display="flex" justifyContent="center" py={2.5}>
+          <CircularProgress size={28} />
+        </Box>
+      </Paper>
+    );
+  }
 
   if (!visible) {
     return null;
@@ -60,7 +74,10 @@ const DatingIdeasSection: React.FC = () => {
           navigate('/dating-ideas');
         }
       }}
-      sx={getDatingIdeasSectionSx(theme)}
+      sx={{
+        ...getDatingIdeasSectionSx(theme),
+        cursor: 'pointer',
+      }}
       aria-label={t('datingIdeas.sectionAria')}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>

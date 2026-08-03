@@ -486,7 +486,11 @@ const FeedPage: React.FC = () => {
 
       <PetSection />
 
-      <Box sx={{ pb: 0 }}>
+      <Box sx={{ mb: 3 }}>
+        <DatingIdeasSection />
+      </Box>
+
+      <Box sx={{ pb: { xs: 10, sm: 0 } }}>
         <DaysTogether
           daysCount={daysCount}
           relationshipStartDate={relationshipStartDate}
@@ -498,10 +502,6 @@ const FeedPage: React.FC = () => {
           currentUserId={user?._id}
           relationshipOwnerId={relationshipOwnerId}
         />
-      </Box>
-
-      <Box sx={{ pb: { xs: 10, sm: 0 }, mt: 3 }}>
-        <DatingIdeasSection />
       </Box>
       
       {/* Временно закомментировано - контент теперь добавляется через Календарь */}

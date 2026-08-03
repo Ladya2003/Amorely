@@ -1661,6 +1661,8 @@
     "insufficientBalance": "Недостаточно Аморок. Нужно {{cost}}",
     "eventPreviewMissing": "Событие по этой идее пока недоступно",
     "ideaInEventTitle": "Идея для свидания",
-    "openEventAria": "Открыть событие"
+    "openEventAria": "Открыть событие",
+    "mediaPrevAria": "Предыдущий медиафайл",
+    "mediaNextAria": "Следующий медиафайл"
   }
 }

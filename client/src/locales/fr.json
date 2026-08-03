@@ -1557,6 +1557,8 @@
     "insufficientBalance": "Pas assez d’AmoreCoins. Il en faut {{cost}}",
     "eventPreviewMissing": "L’événement de cette idée est indisponible",
     "ideaInEventTitle": "Idée de rendez-vous",
-    "openEventAria": "Ouvrir l’événement"
+    "openEventAria": "Ouvrir l’événement",
+    "mediaPrevAria": "Média précédent",
+    "mediaNextAria": "Média suivant"
   }
 }
