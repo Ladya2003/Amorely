@@ -54,7 +54,6 @@ export const getIdeaCardSx = (theme: Theme, flipped: boolean) => ({
   width: '100%',
   maxWidth: 420,
   mx: 'auto',
-  minHeight: 320,
   perspective: 1200,
   '& .idea-card-inner': {
     position: 'relative' as const,
@@ -65,14 +64,16 @@ export const getIdeaCardSx = (theme: Theme, flipped: boolean) => ({
     transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
   },
   '& .idea-card-face': {
-    position: 'absolute' as const,
-    inset: 0,
+    position: 'relative' as const,
     backfaceVisibility: 'hidden' as const,
     borderRadius: `${SURFACE_BORDER_RADIUS}px`,
     border: getSurfaceBorder(theme),
     p: 3,
     display: 'flex',
     flexDirection: 'column' as const,
+    gap: 0,
+    overflow: 'hidden' as const,
+    boxSizing: 'border-box' as const,
     ...getPrimaryTintSurface(theme, {
       tint: { light: 0.14, dark: 0.26 },
     }),
@@ -84,8 +85,22 @@ export const getIdeaCardSx = (theme: Theme, flipped: boolean) => ({
         : `0 18px 48px ${alpha(theme.palette.common.black, 0.4)}`,
   },
   '& .idea-card-back': {
+    position: 'absolute' as const,
+    inset: 0,
     transform: 'rotateY(180deg)',
   },
+});
+
+export const getCompletedEventPreviewSx = (theme: Theme) => ({
+  mt: 2,
+  maxWidth: 420,
+  mx: 'auto',
+  borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+  border: getSurfaceBorder(theme),
+  overflow: 'hidden' as const,
+  ...getPrimaryTintSurface(theme, {
+    tint: { light: 0.1, dark: 0.2 },
+  }),
 });
 
 export const getHistoryCardSx = (theme: Theme, status: 'completed' | 'skipped') => ({

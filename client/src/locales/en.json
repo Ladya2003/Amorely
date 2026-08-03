@@ -847,7 +847,8 @@
         "title": "Pearl anniversary",
         "description": "30 years — pearl strength"
       }
-    }
+    },
+    "datingIdea": "From date ideas"
   },
   "drawingTools": {
     "tool": "Tool",
@@ -1653,6 +1654,8 @@
     "partnerRequired": "Date ideas are available after linking a partner",
     "loadError": "Failed to load ideas",
     "generateError": "Failed to generate an idea",
-    "insufficientBalance": "Not enough AmoreCoins. Need {{cost}}"
+    "insufficientBalance": "Not enough AmoreCoins. Need {{cost}}",
+    "eventPreviewMissing": "The event for this idea is unavailable",
+    "ideaInEventTitle": "Date idea"
   }
 }

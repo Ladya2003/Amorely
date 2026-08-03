@@ -70,6 +70,9 @@ interface ContentItem {
   isBirthdayEvent?: boolean;
   isAnniversaryEvent?: boolean;
   isDatingIdeaEvent?: boolean;
+  datingIdeaEmoji?: string;
+  datingIdeaTitle?: string;
+  datingIdeaDescription?: string;
   readOnly?: boolean;
 }
 
@@ -433,6 +436,9 @@ const CalendarPage: React.FC = () => {
       isBirthdayEvent: event.isBirthdayEvent || false,
       isAnniversaryEvent: event.isAnniversaryEvent || false,
       isDatingIdeaEvent: event.isDatingIdeaEvent || false,
+      datingIdeaEmoji: event.datingIdeaEmoji,
+      datingIdeaTitle: event.datingIdeaTitle,
+      datingIdeaDescription: event.datingIdeaDescription,
       media: (event.media || []).filter((item) => item.url && item.url.trim().length > 0)
     });
     setEventDetailOpen(false); // Закрываем детальный просмотр

@@ -7,6 +7,7 @@ import NorthEastIcon from '@mui/icons-material/NorthEast';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import DecryptedMedia from '../common/DecryptedMedia';
@@ -39,6 +40,10 @@ export interface ContentItem {
   eventId?: string;
   isBirthdayEvent?: boolean;
   isAnniversaryEvent?: boolean;
+  isDatingIdeaEvent?: boolean;
+  datingIdeaEmoji?: string;
+  datingIdeaTitle?: string;
+  datingIdeaDescription?: string;
 }
 
 interface ContentSliderProps {
@@ -246,7 +251,7 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                 )}
               </Box>
 
-              {(item.isBirthdayEvent || item.isAnniversaryEvent) && (
+              {(item.isBirthdayEvent || item.isAnniversaryEvent || item.isDatingIdeaEvent) && (
                 <Box
                   sx={{
                     position: 'absolute',
@@ -264,6 +269,14 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                   )}
                   {item.isAnniversaryEvent && (
                     <Chip icon={<FavoriteIcon />} label={t('feed.anniversary')} color="error" size="small" />
+                  )}
+                  {item.isDatingIdeaEvent && (
+                    <Chip
+                      icon={<AutoAwesomeIcon />}
+                      label={t('feed.datingIdea')}
+                      color="secondary"
+                      size="small"
+                    />
                   )}
                 </Box>
               )}

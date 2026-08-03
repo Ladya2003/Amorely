@@ -845,7 +845,8 @@
         "title": "Noces de perle",
         "description": "30 ans — force de perle"
       }
-    }
+    },
+    "datingIdea": "Via idées de rendez-vous"
   },
   "drawingTools": {
     "tool": "Outil",
@@ -1553,6 +1554,8 @@
     "partnerRequired": "Les idées de rendez-vous sont disponibles après avoir lié un partenaire",
     "loadError": "Échec du chargement des idées",
     "generateError": "Échec de la génération d’une idée",
-    "insufficientBalance": "Pas assez d’AmoreCoins. Il en faut {{cost}}"
+    "insufficientBalance": "Pas assez d’AmoreCoins. Il en faut {{cost}}",
+    "eventPreviewMissing": "L’événement de cette idée est indisponible",
+    "ideaInEventTitle": "Idée de rendez-vous"
   }
 }

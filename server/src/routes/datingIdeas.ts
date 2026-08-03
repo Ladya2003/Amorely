@@ -5,6 +5,7 @@ import { getUserLocale } from '../utils/userLocale';
 import {
   completeDatingIdea,
   generateDatingIdea,
+  getDatingIdeaByEventId,
   getDatingIdeasOverview,
   skipDatingIdea,
 } from '../services/datingIdeasService';
@@ -60,6 +61,26 @@ router.post('/generate', async (req: ExtendedRequest, res: Response) => {
   } catch (error) {
     console.error('Dating ideas generate error:', error);
     res.status(500).json({ error: 'Failed to generate dating idea' });
+  }
+});
+
+router.get('/by-event/:eventId', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { eventId } = req.params;
+    const result = await getDatingIdeaByEventId(userId, eventId);
+
+    if ('error' in result) {
+      if (result.error === 'NO_PARTNER') {
+        return res.status(400).json({ error: 'Partner required' });
+      }
+      return res.status(404).json({ error: 'Idea not found' });
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('Dating ideas by-event GET error:', error);
+    res.status(500).json({ error: 'Failed to load dating idea' });
   }
 });
 

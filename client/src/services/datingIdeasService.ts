@@ -70,3 +70,11 @@ export const completeDatingIdea = async (ideaId: string, eventId: string) => {
   );
   return response.data as { idea: DatingIdea };
 };
+
+export const fetchDatingIdeaByEventId = async (eventId: string) => {
+  const response = await axios.get(
+    `${API_URL}/api/dating-ideas/by-event/${encodeURIComponent(eventId)}`,
+    { headers: authHeaders() }
+  );
+  return response.data as { idea: DatingIdea };
+};

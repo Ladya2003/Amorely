@@ -845,7 +845,8 @@
         "title": "Bodas de pérola",
         "description": "30 anos — força de pérola"
       }
-    }
+    },
+    "datingIdea": "Das ideias para encontros"
   },
   "drawingTools": {
     "tool": "Ferramenta",
@@ -1553,6 +1554,8 @@
     "partnerRequired": "As ideias para encontros ficam disponíveis após ligar um parceiro",
     "loadError": "Falha ao carregar ideias",
     "generateError": "Falha ao gerar uma ideia",
-    "insufficientBalance": "AmoreCoins insuficientes. É preciso {{cost}}"
+    "insufficientBalance": "AmoreCoins insuficientes. É preciso {{cost}}",
+    "eventPreviewMissing": "O evento desta ideia não está disponível",
+    "ideaInEventTitle": "Ideia para encontro"
   }
 }

@@ -193,6 +193,9 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
       isBirthdayEvent,
       isAnniversaryEvent,
       isDatingIdeaEvent,
+      datingIdeaEmoji,
+      datingIdeaTitle,
+      datingIdeaDescription,
       encryptedTitle,
       encryptedDescription,
       encryptedTitlePartner,
@@ -200,6 +203,24 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
       encryptionRecipientId,
       media
     } = req.body || {};
+
+    const datingIdeaSnapshot =
+      isDatingIdeaEvent === true || isDatingIdeaEvent === 'true'
+        ? {
+            datingIdeaEmoji:
+              typeof datingIdeaEmoji === 'string' && datingIdeaEmoji.trim()
+                ? datingIdeaEmoji.trim().slice(0, 16)
+                : undefined,
+            datingIdeaTitle:
+              typeof datingIdeaTitle === 'string' && datingIdeaTitle.trim()
+                ? datingIdeaTitle.trim().slice(0, 200)
+                : undefined,
+            datingIdeaDescription:
+              typeof datingIdeaDescription === 'string' && datingIdeaDescription.trim()
+                ? datingIdeaDescription.trim().slice(0, 2000)
+                : undefined,
+          }
+        : {};
 
     if (!eventDate || !encryptedTitle?.ciphertext) {
       return res.status(400).json({ error: 'Требуются дата и зашифрованный заголовок события' });
@@ -252,6 +273,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
           isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
           isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
           isDatingIdeaEvent: isDatingIdeaEvent === true || isDatingIdeaEvent === 'true',
+          ...datingIdeaSnapshot,
           customDate: new Date(eventDate),
           createdBy: userId
         });
@@ -276,6 +298,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
         isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
         isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
         isDatingIdeaEvent: isDatingIdeaEvent === true || isDatingIdeaEvent === 'true',
+        ...datingIdeaSnapshot,
         customDate: new Date(eventDate),
         createdBy: userId
       });
@@ -625,6 +648,9 @@ router.get('/events/:id', async (req: any, res: Response) => {
       isBirthdayEvent: firstMedia.isBirthdayEvent,
       isAnniversaryEvent: firstMedia.isAnniversaryEvent,
       isDatingIdeaEvent: firstMedia.isDatingIdeaEvent,
+      datingIdeaEmoji: firstMedia.datingIdeaEmoji,
+      datingIdeaTitle: firstMedia.datingIdeaTitle,
+      datingIdeaDescription: firstMedia.datingIdeaDescription,
       readOnly: true,
       media: sharedMediaItems.map((item: any, index: number) => ({
         _id: item.id || `${id}-shared-media-${index}`,
@@ -676,6 +702,9 @@ const createTextOnlyEventContent = async (
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
     isDatingIdeaEvent?: boolean;
+    datingIdeaEmoji?: string;
+    datingIdeaTitle?: string;
+    datingIdeaDescription?: string;
   }
 ) => {
   const content = new Content({
@@ -701,6 +730,9 @@ const createTextOnlyEventContent = async (
     isBirthdayEvent: fields.isBirthdayEvent ?? baseMedia.isBirthdayEvent,
     isAnniversaryEvent: fields.isAnniversaryEvent ?? baseMedia.isAnniversaryEvent,
     isDatingIdeaEvent: fields.isDatingIdeaEvent ?? baseMedia.isDatingIdeaEvent,
+    datingIdeaEmoji: fields.datingIdeaEmoji ?? baseMedia.datingIdeaEmoji,
+    datingIdeaTitle: fields.datingIdeaTitle ?? baseMedia.datingIdeaTitle,
+    datingIdeaDescription: fields.datingIdeaDescription ?? baseMedia.datingIdeaDescription,
     customDate: fields.eventDate || baseMedia.eventDate,
     createdBy: baseMedia.createdBy,
     lastEditedBy: fields.metadataSenderId,
@@ -844,6 +876,9 @@ router.put('/events/:id', async (req: any, res: Response) => {
           isBirthdayEvent: updateData.isBirthdayEvent ?? baseMedia.isBirthdayEvent,
           isAnniversaryEvent: updateData.isAnniversaryEvent ?? baseMedia.isAnniversaryEvent,
           isDatingIdeaEvent: updateData.isDatingIdeaEvent ?? baseMedia.isDatingIdeaEvent,
+          datingIdeaEmoji: baseMedia.datingIdeaEmoji,
+          datingIdeaTitle: baseMedia.datingIdeaTitle,
+          datingIdeaDescription: baseMedia.datingIdeaDescription,
           customDate: updateData.eventDate || baseMedia.eventDate,
           createdBy: baseMedia.createdBy,
           lastEditedBy: userId,
@@ -900,7 +935,10 @@ router.put('/events/:id', async (req: any, res: Response) => {
         showInFeed: updateData.showInFeed,
         isBirthdayEvent: updateData.isBirthdayEvent,
         isAnniversaryEvent: updateData.isAnniversaryEvent,
-        isDatingIdeaEvent: updateData.isDatingIdeaEvent
+        isDatingIdeaEvent: updateData.isDatingIdeaEvent,
+        datingIdeaEmoji: baseMedia.datingIdeaEmoji,
+        datingIdeaTitle: baseMedia.datingIdeaTitle,
+        datingIdeaDescription: baseMedia.datingIdeaDescription,
       });
     }
 

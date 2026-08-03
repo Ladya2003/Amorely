@@ -266,7 +266,11 @@ const FeedPage: React.FC = () => {
         createdBy: item.createdBy,
         eventId: item.eventId,
         isBirthdayEvent: item.isBirthdayEvent,
-        isAnniversaryEvent: item.isAnniversaryEvent
+        isAnniversaryEvent: item.isAnniversaryEvent,
+        isDatingIdeaEvent: item.isDatingIdeaEvent,
+        datingIdeaEmoji: item.datingIdeaEmoji,
+        datingIdeaTitle: item.datingIdeaTitle,
+        datingIdeaDescription: item.datingIdeaDescription,
       }));
 
       if (localDeviceKeys) {
@@ -287,7 +291,11 @@ const FeedPage: React.FC = () => {
           mediaEnvelope: item.mediaEnvelope,
           eventId: item.eventId,
           isBirthdayEvent: item.isBirthdayEvent,
-          isAnniversaryEvent: item.isAnniversaryEvent
+          isAnniversaryEvent: item.isAnniversaryEvent,
+          isDatingIdeaEvent: item.isDatingIdeaEvent,
+          datingIdeaEmoji: item.datingIdeaEmoji,
+          datingIdeaTitle: item.datingIdeaTitle,
+          datingIdeaDescription: item.datingIdeaDescription,
         }));
       }
 

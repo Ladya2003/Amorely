@@ -60,6 +60,9 @@ const contentSchema = new mongoose.Schema({
   isBirthdayEvent: { type: Boolean, default: false }, // Событие дня рождения
   isAnniversaryEvent: { type: Boolean, default: false }, // Событие годовщины
   isDatingIdeaEvent: { type: Boolean, default: false }, // Создано через идеи для свиданий
+  datingIdeaEmoji: { type: String },
+  datingIdeaTitle: { type: String },
+  datingIdeaDescription: { type: String },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто создал событие
   lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто последним редактировал
   lastEditedAt: { type: Date }, // Когда последний раз редактировалось

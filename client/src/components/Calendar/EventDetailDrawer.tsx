@@ -31,6 +31,7 @@ import EncryptedIndicator from '../common/EncryptedIndicator';
 import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import ExpandableClampedTitle from '../UI/ExpandableClampedTitle';
+import { fetchDatingIdeaByEventId } from '../../services/datingIdeasService';
 import {
   getCalendarDrawerContentSx,
   getCalendarDrawerEncryptedIndicatorSx,
@@ -72,6 +73,9 @@ interface EventDetailDrawerProps {
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
     isDatingIdeaEvent?: boolean;
+    datingIdeaEmoji?: string;
+    datingIdeaTitle?: string;
+    datingIdeaDescription?: string;
     createdBy?: User;
     lastEditedBy?: User;
     lastEditedAt?: string;
@@ -97,6 +101,11 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [drawerMediaReady, setDrawerMediaReady] = useState(false);
+  const [resolvedDatingIdea, setResolvedDatingIdea] = useState<{
+    emoji?: string;
+    title?: string;
+    description?: string;
+  } | null>(null);
   const mediaFiles = (event?.media || []).filter((media) => media.url && media.url.trim().length > 0);
 
   useEffect(() => {
@@ -104,6 +113,60 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
       setCurrentMediaIndex(0);
     }
   }, [open, event?._id]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDatingIdea = async () => {
+      if (!open || !event?.isDatingIdeaEvent) {
+        setResolvedDatingIdea(null);
+        return;
+      }
+
+      if (event.datingIdeaTitle || event.datingIdeaDescription || event.datingIdeaEmoji) {
+        setResolvedDatingIdea({
+          emoji: event.datingIdeaEmoji,
+          title: event.datingIdeaTitle,
+          description: event.datingIdeaDescription,
+        });
+        return;
+      }
+
+      const eventId = event.eventId || event._id;
+      if (!eventId) {
+        setResolvedDatingIdea(null);
+        return;
+      }
+
+      try {
+        const { idea } = await fetchDatingIdeaByEventId(eventId);
+        if (!cancelled) {
+          setResolvedDatingIdea({
+            emoji: idea.emoji,
+            title: idea.title,
+            description: idea.description,
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setResolvedDatingIdea(null);
+        }
+      }
+    };
+
+    void loadDatingIdea();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    event?._id,
+    event?.eventId,
+    event?.isDatingIdeaEvent,
+    event?.datingIdeaEmoji,
+    event?.datingIdeaTitle,
+    event?.datingIdeaDescription,
+  ]);
 
   useEffect(() => {
     if (!open) {
@@ -432,6 +495,48 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
               </Box>
 
               <Divider sx={{ my: 2 }} />
+
+              {event.isDatingIdeaEvent &&
+                resolvedDatingIdea &&
+                (resolvedDatingIdea.title || resolvedDatingIdea.description) && (
+                <Box
+                  sx={{
+                    mb: 3,
+                    p: 2,
+                    borderRadius: 3,
+                    border: (theme) =>
+                      `1px solid ${theme.palette.mode === 'light' ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)'}`,
+                    bgcolor: (theme) =>
+                      theme.palette.mode === 'light' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.18)',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <AutoAwesomeIcon fontSize="small" color="secondary" />
+                    <Typography variant="body2" color="text.secondary">
+                      {t('datingIdeas.ideaInEventTitle')}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+                    {resolvedDatingIdea.emoji && (
+                      <Typography sx={{ fontSize: '2rem', lineHeight: 1 }}>
+                        {resolvedDatingIdea.emoji}
+                      </Typography>
+                    )}
+                    <Box sx={{ minWidth: 0 }}>
+                      {resolvedDatingIdea.title && (
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          {resolvedDatingIdea.title}
+                        </Typography>
+                      )}
+                      {resolvedDatingIdea.description && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          {resolvedDatingIdea.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+              )}
 
               {/* Заголовок */}
               <Box sx={{ mb: 3 }}>

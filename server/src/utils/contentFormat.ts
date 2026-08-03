@@ -58,6 +58,10 @@ export const formatContentForApi = (media: any) => ({
   eventId: media.eventId,
   isBirthdayEvent: media.isBirthdayEvent,
   isAnniversaryEvent: media.isAnniversaryEvent,
+  isDatingIdeaEvent: media.isDatingIdeaEvent,
+  datingIdeaEmoji: media.datingIdeaEmoji,
+  datingIdeaTitle: media.datingIdeaTitle,
+  datingIdeaDescription: media.datingIdeaDescription,
   publicId: media.publicId,
   fileSize: media.fileSize
 });
@@ -90,6 +94,10 @@ export const formatCalendarEventGroup = (media: any) => ({
   lastEditedAt: media.lastEditedAt,
   isBirthdayEvent: media.isBirthdayEvent,
   isAnniversaryEvent: media.isAnniversaryEvent,
+  isDatingIdeaEvent: media.isDatingIdeaEvent,
+  datingIdeaEmoji: media.datingIdeaEmoji,
+  datingIdeaTitle: media.datingIdeaTitle,
+  datingIdeaDescription: media.datingIdeaDescription,
   media: [] as any[]
 });
 

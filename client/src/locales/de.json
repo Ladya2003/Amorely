@@ -845,7 +845,8 @@
         "title": "Perlenhochzeit",
         "description": "30 Jahre – perlmuttstarke Liebe"
       }
-    }
+    },
+    "datingIdea": "Aus Date-Ideen"
   },
   "drawingTools": {
     "tool": "Werkzeug",
@@ -1553,6 +1554,8 @@
     "partnerRequired": "Date-Ideen sind nach der Partnerverknüpfung verfügbar",
     "loadError": "Ideen konnten nicht geladen werden",
     "generateError": "Idee konnte nicht generiert werden",
-    "insufficientBalance": "Nicht genug AmoreCoins. Benötigt: {{cost}}"
+    "insufficientBalance": "Nicht genug AmoreCoins. Benötigt: {{cost}}",
+    "eventPreviewMissing": "Das Event zu dieser Idee ist nicht verfügbar",
+    "ideaInEventTitle": "Date-Idee"
   }
 }
