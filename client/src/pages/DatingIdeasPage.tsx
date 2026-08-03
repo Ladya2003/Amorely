@@ -60,6 +60,43 @@ import { emitCurrencyUpdated } from '../utils/currencyEvents';
 
 type PagePhase = 'loading' | 'offer' | 'generating' | 'idea' | 'flipping';
 
+const toCompletedEventPreview = (
+  event: any,
+  fallbackEventId?: string | null
+): CompletedEventPreviewData => {
+  const mediaSource = Array.isArray(event?.media) ? event.media : [];
+  const media = mediaSource
+    .filter((item: { url?: string }) => item?.url && String(item.url).trim().length > 0)
+    .map(
+      (item: {
+        url: string;
+        resourceType?: 'image' | 'video';
+        encrypted?: boolean;
+        mediaEnvelope?: CompletedEventPreviewData['mediaEnvelope'];
+        _id?: string;
+      }) => ({
+        mediaUrl: item.url,
+        resourceType: item.resourceType === 'video' ? ('video' as const) : ('image' as const),
+        encrypted: item.encrypted,
+        mediaEnvelope: item.mediaEnvelope,
+        mediaId: item._id,
+      })
+    );
+  const firstMedia = media[0];
+
+  return {
+    title: event?.title,
+    description: event?.description,
+    mediaUrl: firstMedia?.mediaUrl,
+    resourceType: firstMedia?.resourceType,
+    encrypted: firstMedia?.encrypted,
+    mediaEnvelope: firstMedia?.mediaEnvelope,
+    mediaId: firstMedia?.mediaId,
+    media,
+    eventId: event?.eventId || fallbackEventId || undefined,
+  };
+};
+
 const DatingIdeasPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
@@ -84,6 +121,7 @@ const DatingIdeasPage: React.FC = () => {
   const [completedEventLoading, setCompletedEventLoading] = useState(false);
   const [completedEventError, setCompletedEventError] = useState<string | null>(null);
   const closingAfterSaveRef = useRef(false);
+  const seededPreviewEventIdRef = useRef<string | null>(null);
 
   const loadOverview = useCallback(async (options?: { preservePhase?: boolean }) => {
     try {
@@ -124,52 +162,31 @@ const DatingIdeasPage: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
 
-    const toPreview = (
-      event: any,
-      fallbackEventId?: string | null
-    ): CompletedEventPreviewData => {
-      const mediaSource = Array.isArray(event?.media) ? event.media : [];
-      const media = mediaSource
-        .filter(
-          (item: { url?: string }) => item?.url && String(item.url).trim().length > 0
-        )
-        .map(
-          (item: {
-            url: string;
-            resourceType?: 'image' | 'video';
-            encrypted?: boolean;
-            mediaEnvelope?: CompletedEventPreviewData['mediaEnvelope'];
-            _id?: string;
-          }) => ({
-            mediaUrl: item.url,
-            resourceType: item.resourceType === 'video' ? ('video' as const) : ('image' as const),
-            encrypted: item.encrypted,
-            mediaEnvelope: item.mediaEnvelope,
-            mediaId: item._id,
-          })
-        );
-      const firstMedia = media[0];
-
-      return {
-        title: event?.title,
-        description: event?.description,
-        mediaUrl: firstMedia?.mediaUrl,
-        resourceType: firstMedia?.resourceType,
-        encrypted: firstMedia?.encrypted,
-        mediaEnvelope: firstMedia?.mediaEnvelope,
-        mediaId: firstMedia?.mediaId,
-        media,
-        eventId: event?.eventId || fallbackEventId || undefined,
-      };
-    };
-
     const loadCompletedEvent = async () => {
       if (!selectedHistoryIdea || selectedHistoryIdea.status !== 'completed') {
+        seededPreviewEventIdRef.current = null;
         setCompletedEventPreview(null);
         setCompletedEventError(null);
         setCompletedEventLoading(false);
         return;
       }
+
+      const selectedEventId = selectedHistoryIdea.eventId
+        ? String(selectedHistoryIdea.eventId)
+        : null;
+
+      // Already seeded from save — keep preview, do not flash empty state.
+      if (
+        selectedEventId &&
+        seededPreviewEventIdRef.current === selectedEventId
+      ) {
+        setCompletedEventLoading(false);
+        setCompletedEventError(null);
+        return;
+      }
+
+      // Selecting another idea — drop the save seed.
+      seededPreviewEventIdRef.current = null;
 
       setCompletedEventLoading(true);
       setCompletedEventError(null);
@@ -244,7 +261,7 @@ const DatingIdeasPage: React.FC = () => {
         if (cancelled) return;
 
         if (event) {
-          const preview = toPreview(event, selectedHistoryIdea.eventId);
+          const preview = toCompletedEventPreview(event, selectedHistoryIdea.eventId);
           if (!preview.title && !preview.description) {
             preview.title = selectedHistoryIdea.title;
             preview.description = selectedHistoryIdea.description;
@@ -480,18 +497,51 @@ const DatingIdeasPage: React.FC = () => {
         } catch {
           // Server may already have linked the idea via datingIdeaId.
         }
+      }
 
-        // Wait until the created event is readable so history preview is ready.
-        for (let attempt = 0; attempt < 10; attempt += 1) {
+      // Fully load + decrypt the created event BEFORE leaving the editor,
+      // so the ideas page can show the preview immediately.
+      let readyPreview: CompletedEventPreviewData = {
+        title: eventData.title,
+        description: eventData.description,
+        eventId: eventId ? String(eventId) : undefined,
+      };
+
+      if (eventId) {
+        let loadedEvent: any = null;
+        for (let attempt = 0; attempt < 12; attempt += 1) {
           try {
-            await axios.get(
+            const eventResponse = await axios.get(
               `${API_URL}/api/calendar/events/${encodeURIComponent(String(eventId))}`,
               { headers: { Authorization: `Bearer ${token}` } }
             );
-            break;
+            loadedEvent = eventResponse.data;
+            if (loadedEvent) break;
           } catch {
-            await new Promise((resolve) => setTimeout(resolve, 200 + attempt * 120));
+            // retry until event becomes readable
           }
+          await new Promise((resolve) => setTimeout(resolve, 220 + attempt * 140));
+        }
+
+        if (!loadedEvent && Array.isArray(response.data?.content)) {
+          loadedEvent = response.data.content[0] || null;
+        }
+
+        if (loadedEvent) {
+          try {
+            const [decrypted] = await decryptCalendarEventsWithMedia(
+              keys,
+              [loadedEvent],
+              user?._id,
+              partnerId || undefined
+            );
+            loadedEvent = decrypted;
+          } catch (decryptError) {
+            console.error('Failed to decrypt dating idea event preview:', decryptError);
+          }
+          readyPreview = toCompletedEventPreview(loadedEvent, String(eventId));
+          if (!readyPreview.title) readyPreview.title = eventData.title;
+          if (!readyPreview.description) readyPreview.description = eventData.description;
         }
       }
 
@@ -510,18 +560,29 @@ const DatingIdeasPage: React.FC = () => {
             (eventId && item.eventId && String(item.eventId) === String(eventId))
         ) || null;
 
-      setSelectedHistoryIdea(
+      const completedIdea: DatingIdea =
         matched && matched.status === 'completed'
           ? matched
           : matched
-            ? { ...matched, status: 'completed', eventId: eventId ? String(eventId) : matched.eventId }
+            ? {
+                ...matched,
+                status: 'completed',
+                eventId: eventId ? String(eventId) : matched.eventId,
+              }
             : {
                 ...idea,
                 status: 'completed',
                 eventId: eventId ? String(eventId) : null,
                 completedAt: new Date().toISOString(),
-              }
-      );
+              };
+
+      if (completedIdea.eventId) {
+        seededPreviewEventIdRef.current = String(completedIdea.eventId);
+      }
+      setCompletedEventPreview(readyPreview);
+      setCompletedEventLoading(false);
+      setCompletedEventError(null);
+      setSelectedHistoryIdea(completedIdea);
       setPhase('idea');
       setFlipped(false);
       setCompletingIdea(null);
@@ -548,7 +609,18 @@ const DatingIdeasPage: React.FC = () => {
   const ideaForEditor = completingIdea || (canCompleteSelected ? displayedIdea : null);
 
   return (
-    <Container maxWidth="sm" sx={getDatingIdeasPageRootSx(theme)}>
+    <Container
+      maxWidth="sm"
+      sx={{
+        ...getDatingIdeasPageRootSx(theme),
+        ...(showCompletedPreview && {
+          pb: {
+            xs: 'calc(220px + max(16px, env(safe-area-inset-bottom, 0px)))',
+            sm: 4,
+          },
+        }),
+      }}
+    >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <IconButton onClick={() => navigate('/')} aria-label={t('common.back')}>
           <ArrowBackIcon />
@@ -636,7 +708,17 @@ const DatingIdeasPage: React.FC = () => {
       )}
 
       {(phase === 'idea' || phase === 'flipping') && displayedIdea && (
-        <Box sx={{ animation: `${cardReveal} 500ms ease both` }}>
+        <Box
+          sx={{
+            animation: `${cardReveal} 500ms ease both`,
+            mb: showCompletedPreview
+              ? {
+                  xs: 'calc(168px + max(16px, env(safe-area-inset-bottom, 0px)))',
+                  sm: 3,
+                }
+              : 0,
+          }}
+        >
           <Box sx={getIdeaCardSx(theme, flipped)}>
             <Box className="idea-card-inner">
               <Box className="idea-card-face">
