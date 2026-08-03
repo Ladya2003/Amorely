@@ -1,11 +1,9 @@
 import { alpha, Theme } from '@mui/material/styles';
 
-export const COUPLE_AVATAR_SIZE = 64;
-export const COUPLE_AVATAR_OVERLAP = 14;
-export const COUPLE_AVATAR_ROW_WIDTH = COUPLE_AVATAR_SIZE * 2 - COUPLE_AVATAR_OVERLAP;
+export const COUPLE_AVATAR_SIZE = 72;
 export const STATUS_BUBBLE_MAX_WIDTH = 148;
-/** Отступ сверху под стек из двух облачков */
-export const COUPLE_BUBBLES_TOP_INSET = 72;
+export const COUPLE_ROW_MAX_WIDTH = 360;
+export const COUPLE_BUBBLES_TOP_INSET = 56;
 
 const getBubbleSurface = (theme: Theme) => {
   const isLight = theme.palette.mode === 'light';
@@ -20,18 +18,20 @@ const getBubbleSurface = (theme: Theme) => {
   };
 };
 
-/** Корневой блок — только ширина/высота ряда аватаров; облачка не влияют на layout */
 export const getCoupleAvatarsRootSx = () => ({
   position: 'relative' as const,
-  flexShrink: 0,
-  width: COUPLE_AVATAR_ROW_WIDTH,
-  height: COUPLE_AVATAR_SIZE,
+  width: '100%',
+  maxWidth: COUPLE_ROW_MAX_WIDTH,
+  mx: 'auto',
+  pt: `${COUPLE_BUBBLES_TOP_INSET}px`,
   overflow: 'visible' as const,
 });
 
 export const getCoupleAvatarsLoaderSx = () => ({
-  width: COUPLE_AVATAR_ROW_WIDTH,
-  height: COUPLE_AVATAR_SIZE,
+  width: '100%',
+  maxWidth: COUPLE_ROW_MAX_WIDTH,
+  height: COUPLE_AVATAR_SIZE + COUPLE_BUBBLES_TOP_INSET,
+  mx: 'auto',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -40,33 +40,67 @@ export const getCoupleAvatarsLoaderSx = () => ({
 
 export const getCoupleAvatarsRowSx = () => ({
   display: 'flex',
-  alignItems: 'center',
-  height: '100%',
+  alignItems: 'flex-end',
+  justifyContent: 'space-between',
+  gap: 0.5,
+  position: 'relative' as const,
 });
 
-export const getCouplePartnerAvatarWrapSx = () => ({
-  ml: `-${COUPLE_AVATAR_OVERLAP}px`,
-});
-
-/** Стек облачков над аватарами — партнёр сверху, пользователь снизу, с gap */
-export const getCoupleBubblesStackSx = () => ({
-  position: 'absolute' as const,
-  right: 0,
-  bottom: '100%',
-  width: STATUS_BUBBLE_MAX_WIDTH,
-  mb: 0.5,
+export const getCoupleAvatarColumnSx = () => ({
   display: 'flex',
   flexDirection: 'column' as const,
-  gap: 1,
-  zIndex: 4,
+  alignItems: 'center',
+  flexShrink: 0,
+  position: 'relative' as const,
+  width: COUPLE_AVATAR_SIZE,
+});
+
+export const getCoupleBubbleAboveAvatarSx = () => ({
+  position: 'absolute' as const,
+  bottom: `calc(100% + 8px)`,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  width: 'max-content',
+  maxWidth: STATUS_BUBBLE_MAX_WIDTH,
+  zIndex: 2,
+});
+
+export const getCoupleConnectorSx = () => ({
+  flex: 1,
+  position: 'relative' as const,
+  alignSelf: 'center',
+  minWidth: 48,
+  height: 48,
+  mx: 0.5,
   pointerEvents: 'none' as const,
 });
 
-export const getCoupleBubbleItemSx = (align: 'left' | 'right') => ({
-  alignSelf: align === 'right' ? 'flex-end' : 'flex-start',
-  maxWidth: '100%',
-  pointerEvents: 'auto' as const,
-});
+export const getCoupleLockBadgeSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    position: 'absolute' as const,
+    top: -2,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 0.5,
+    px: 1.25,
+    py: 0.5,
+    borderRadius: 999,
+    bgcolor: isLight ? theme.palette.common.white : alpha(theme.palette.common.white, 0.12),
+    border: isLight ? 'none' : `1px solid ${alpha(theme.palette.common.white, 0.14)}`,
+    boxShadow: isLight
+      ? `0 2px 10px ${alpha(theme.palette.common.black, 0.1)}`
+      : `0 2px 12px ${alpha(theme.palette.common.black, 0.28)}`,
+    color: '#6b4c9a',
+    fontSize: '0.8125rem',
+    fontWeight: 700,
+    lineHeight: 1,
+    zIndex: 3,
+  };
+};
 
 export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
   const surface = getBubbleSurface(theme);
@@ -87,12 +121,24 @@ export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
     fontWeight: 600,
     lineHeight: 1.25,
     boxShadow: surface.shadow,
-    overflow: 'hidden',
+    overflow: 'visible',
     textAlign: 'left' as const,
     direction: 'ltr' as const,
     pointerEvents: editable ? ('auto' as const) : ('none' as const),
     cursor: editable ? 'pointer' : 'default',
     transition: 'transform 150ms ease, box-shadow 150ms ease',
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      bottom: -5,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: 0,
+      height: 0,
+      borderLeft: '6px solid transparent',
+      borderRight: '6px solid transparent',
+      borderTop: `6px solid ${surface.bgcolor}`,
+    },
     ...(editable && {
       '&:hover': {
         transform: 'translateY(-1px)',
@@ -104,16 +150,15 @@ export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
   };
 };
 
-export const getCoupleAvatarSx = (theme: Theme, zIndex: number) => ({
+export const getCoupleAvatarSx = (theme: Theme) => ({
   width: COUPLE_AVATAR_SIZE,
   height: COUPLE_AVATAR_SIZE,
-  fontSize: '1.125rem',
+  fontSize: '1.25rem',
   border: `3px solid ${theme.palette.background.default}`,
   boxShadow:
     theme.palette.mode === 'light'
       ? '0 4px 16px rgba(0, 0, 0, 0.1)'
       : '0 4px 16px rgba(0, 0, 0, 0.35)',
-  zIndex,
   position: 'relative' as const,
 });
 

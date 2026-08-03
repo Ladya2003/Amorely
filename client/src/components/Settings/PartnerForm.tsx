@@ -44,6 +44,8 @@ export interface Partner {
   firstName?: string;
   lastName?: string;
   avatar?: string;
+  displayBadgeGameId?: string | null;
+  showDisplayBadge?: boolean;
 }
 
 export interface BreakupContentOptions {

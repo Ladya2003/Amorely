@@ -26,7 +26,6 @@ import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getFeedHeaderGlowSx, getNotificationBellButtonAnimSx, getNotificationBellIconSx } from './feedBannerStyles';
 import FeedCoupleAvatars, { FeedCoupleAvatarsLoader } from './FeedCoupleAvatars';
-import { COUPLE_AVATAR_ROW_WIDTH, COUPLE_BUBBLES_TOP_INSET } from './feedCoupleAvatarsStyles';
 import { useRelationship } from '../../hooks/useRelationship';
 import { fetchAnnouncements, type AppAnnouncement, claimAnnouncementReadReward } from '../../services/announcementsService';
 import {
@@ -38,8 +37,74 @@ const AVATAR_SIZE_WITH_PHOTO = 92;
 const AVATAR_SIZE_WITHOUT_PHOTO = 56;
 const NOTIFICATION_SIZE_WITH_PHOTO = 38;
 const NOTIFICATION_SIZE_WITHOUT_PHOTO = 30;
+const COUPLE_NOTIFICATION_SIZE = 38;
+const COUPLE_NOTIFICATION_ICON_SIZE = 21;
 
 type NotificationsView = 'list' | 'detail';
+
+interface FeedNotificationButtonProps {
+  announcementsLoading: boolean;
+  unreadCount: number;
+  hasUnreadNotifications: boolean;
+  onOpenNotifications: () => void;
+  size?: number;
+  iconSize?: number;
+  ariaLabel: string;
+}
+
+const FeedNotificationButton: React.FC<FeedNotificationButtonProps> = ({
+  announcementsLoading,
+  unreadCount,
+  hasUnreadNotifications,
+  onOpenNotifications,
+  size = COUPLE_NOTIFICATION_SIZE,
+  iconSize = COUPLE_NOTIFICATION_ICON_SIZE,
+  ariaLabel,
+}) => (
+  <Badge
+    color="error"
+    variant="dot"
+    invisible={announcementsLoading || unreadCount === 0}
+    overlap="circular"
+    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+    sx={{
+      flexShrink: 0,
+      '& .MuiBadge-badge': {
+        top: 4,
+        right: 4,
+        boxShadow: '0 0 0 2px var(--mui-palette-background-default, #fff)',
+      },
+    }}
+  >
+    <IconButton
+      aria-label={ariaLabel}
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenNotifications();
+      }}
+      sx={(theme) => ({
+        width: size,
+        height: size,
+        bgcolor: theme.palette.mode === 'light' ? '#1a1a1a' : '#2a2a2a',
+        color: '#fff',
+        border: `3px solid ${theme.palette.background.default}`,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
+        '&:hover': {
+          bgcolor: theme.palette.mode === 'light' ? '#333' : '#3a3a3a',
+        },
+        ...getNotificationBellButtonAnimSx(hasUnreadNotifications),
+      })}
+    >
+      {announcementsLoading ? (
+        <CircularProgress size={16} sx={{ color: '#fff' }} />
+      ) : (
+        <NotificationsNoneOutlinedIcon
+          sx={getNotificationBellIconSx(iconSize, hasUnreadNotifications)}
+        />
+      )}
+    </IconButton>
+  </Badge>
+);
 
 const FeedHeader: React.FC = () => {
   const { t } = useTranslation();
@@ -145,7 +210,6 @@ const FeedHeader: React.FC = () => {
   const isPartnerAvatarLoading = mayHavePartner && isRelationshipLoading;
   const hasPartner = Boolean(partner);
   const useCoupleAvatarLayout = isPartnerAvatarLoading || hasPartner;
-  const avatarAreaWidth = useCoupleAvatarLayout ? COUPLE_AVATAR_ROW_WIDTH : avatarSize;
   const notificationSize = hasAvatar ? NOTIFICATION_SIZE_WITH_PHOTO : NOTIFICATION_SIZE_WITHOUT_PHOTO;
   const hasUnreadNotifications =
     !announcementsLoading && unreadCount > 0 && !notificationsOpen;
@@ -195,6 +259,14 @@ const FeedHeader: React.FC = () => {
     </Typography>
   );
 
+  const notificationButtonProps = {
+    announcementsLoading,
+    unreadCount,
+    hasUnreadNotifications,
+    onOpenNotifications: handleOpenNotifications,
+    ariaLabel: t('feed.notificationsAriaLabel'),
+  };
+
   return (
     <Box sx={{ mb: 2.5 }}>
       <Box
@@ -210,18 +282,14 @@ const FeedHeader: React.FC = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
               gap: 2,
-              mb: 2.5,
+              mb: useCoupleAvatarLayout ? 1.5 : 2.5,
               overflowX: 'clip',
-              ...(useCoupleAvatarLayout && {
-                pt: `${COUPLE_BUBBLES_TOP_INSET}px`,
-              }),
             }}
           >
             <Box
               sx={{
                 flex: 1,
                 minWidth: 0,
-                maxWidth: `calc(100% - ${avatarAreaWidth + 16}px)`,
                 display: 'flex',
                 alignItems: 'center',
               }}
@@ -249,16 +317,8 @@ const FeedHeader: React.FC = () => {
               )}
             </Box>
 
-            {isPartnerAvatarLoading ? (
-              <FeedCoupleAvatarsLoader />
-            ) : partner ? (
-              <FeedCoupleAvatars
-                partner={partner}
-                announcementsLoading={announcementsLoading}
-                unreadCount={unreadCount}
-                hasUnreadNotifications={hasUnreadNotifications}
-                onOpenNotifications={handleOpenNotifications}
-              />
+            {useCoupleAvatarLayout ? (
+              <FeedNotificationButton {...notificationButtonProps} />
             ) : (
               <Box
                 sx={{
@@ -341,6 +401,16 @@ const FeedHeader: React.FC = () => {
               </Box>
             )}
           </Box>
+
+          {useCoupleAvatarLayout && (
+            <Box sx={{ mb: 2.5 }}>
+              {isPartnerAvatarLoading ? (
+                <FeedCoupleAvatarsLoader />
+              ) : (
+                partner && <FeedCoupleAvatars partner={partner} />
+              )}
+            </Box>
+          )}
 
           <Typography variant="h2" component="h2" sx={{ fontSize: '1.35rem' }}>
             {t('feed.title')}

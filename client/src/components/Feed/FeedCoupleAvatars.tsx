@@ -2,18 +2,18 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Avatar,
-  Badge,
   Box,
   Button,
   CircularProgress,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   TextField,
+  Typography,
   useTheme,
 } from '@mui/material';
-import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
+import type { Theme } from '@mui/material/styles';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useStatusBubbles } from '../../hooks/useStatusBubbles';
@@ -25,24 +25,18 @@ import ContactProfileDialog from '../Chat/ContactProfileDialog';
 import type { Contact } from '../Chat/ChatList';
 import type { Partner } from '../Settings/PartnerForm';
 import {
-  getNotificationBellButtonAnimSx,
-  getNotificationBellIconSx,
-} from './feedBannerStyles';
-import {
   COUPLE_AVATAR_SIZE,
+  getCoupleAvatarColumnSx,
+  getCoupleAvatarSx,
   getCoupleAvatarsLoaderSx,
   getCoupleAvatarsRootSx,
   getCoupleAvatarsRowSx,
-  getCoupleAvatarSx,
-  getCoupleBubbleItemSx,
-  getCoupleBubblesStackSx,
-  getCouplePartnerAvatarWrapSx,
+  getCoupleBubbleAboveAvatarSx,
+  getCoupleConnectorSx,
+  getCoupleLockBadgeSx,
   getCoupleUserAvatarWrapSx,
   getThoughtBubbleBodySx,
 } from './feedCoupleAvatarsStyles';
-
-const NOTIFICATION_SIZE = 30;
-const NOTIFICATION_ICON_SIZE = 17;
 
 interface StatusThoughtBubbleProps {
   text: string;
@@ -87,6 +81,47 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
   );
 };
 
+interface CoupleConnectorProps {
+  theme: Theme;
+}
+
+const CoupleConnector: React.FC<CoupleConnectorProps> = ({ theme }) => {
+  const isLight = theme.palette.mode === 'light';
+  const strokeColor = isLight ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)';
+
+  return (
+    <Box sx={getCoupleConnectorSx()} aria-hidden>
+      <Box
+        component="svg"
+        viewBox="0 0 120 48"
+        preserveAspectRatio="none"
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          overflow: 'visible',
+        }}
+      >
+        <path
+          d="M 4 36 Q 60 0 116 36"
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="2"
+          strokeDasharray="5 5"
+          strokeLinecap="round"
+        />
+      </Box>
+      <Box sx={getCoupleLockBadgeSx(theme)}>
+        <LockOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
+        <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 'inherit', lineHeight: 1 }}>
+          km
+        </Typography>
+      </Box>
+    </Box>
+  );
+};
+
 export const FeedCoupleAvatarsLoader: React.FC = () => (
   <Box sx={getCoupleAvatarsLoaderSx()} aria-busy="true" aria-label="Loading">
     <CircularProgress size={28} />
@@ -95,19 +130,9 @@ export const FeedCoupleAvatarsLoader: React.FC = () => (
 
 interface FeedCoupleAvatarsProps {
   partner: Partner;
-  announcementsLoading: boolean;
-  unreadCount: number;
-  hasUnreadNotifications: boolean;
-  onOpenNotifications: () => void;
 }
 
-const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
-  partner,
-  announcementsLoading,
-  unreadCount,
-  hasUnreadNotifications,
-  onOpenNotifications,
-}) => {
+const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
@@ -165,108 +190,65 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({
   return (
     <>
       <Box sx={getCoupleAvatarsRootSx()}>
-        <Box sx={getCoupleBubblesStackSx()}>
-          <Box sx={getCoupleBubbleItemSx('right')}>
-            <StatusThoughtBubble
-              text={partnerDisplayText}
-              ariaLabel={partnerBubbleAriaLabel}
-            />
-          </Box>
-          <Box sx={getCoupleBubbleItemSx('left')}>
-            <StatusThoughtBubble
-              text={myDisplayText}
-              editable
-              ariaLabel={t('feed.statusBubble.editAriaLabel')}
-              onClick={handleOpenEdit}
-            />
-          </Box>
-        </Box>
-
         <Box sx={getCoupleAvatarsRowSx()}>
-          <Box sx={getCoupleUserAvatarWrapSx()}>
+          <Box sx={getCoupleAvatarColumnSx()}>
+            <Box sx={getCoupleBubbleAboveAvatarSx()}>
+              <StatusThoughtBubble
+                text={myDisplayText}
+                editable
+                ariaLabel={t('feed.statusBubble.editAriaLabel')}
+                onClick={handleOpenEdit}
+              />
+            </Box>
+            <Box sx={getCoupleUserAvatarWrapSx()}>
+              <AvatarGameRankMedal
+                badges={badges}
+                displayGameId={user.displayBadgeGameId}
+                showBadge={user.showDisplayBadge !== false}
+                avatarSize={COUPLE_AVATAR_SIZE}
+              >
+                <Avatar
+                  src={userHasAvatar ? user.avatar : undefined}
+                  alt={userDisplayName}
+                  onClick={() => navigate('/settings')}
+                  sx={{
+                    ...getCoupleAvatarSx(theme),
+                    cursor: 'pointer',
+                  }}
+                >
+                  {user.username.charAt(0).toUpperCase()}
+                </Avatar>
+              </AvatarGameRankMedal>
+            </Box>
+          </Box>
+
+          <CoupleConnector theme={theme} />
+
+          <Box sx={getCoupleAvatarColumnSx()}>
+            <Box sx={getCoupleBubbleAboveAvatarSx()}>
+              <StatusThoughtBubble
+                text={partnerDisplayText}
+                ariaLabel={partnerBubbleAriaLabel}
+              />
+            </Box>
             <AvatarGameRankMedal
               badges={badges}
-              displayGameId={user.displayBadgeGameId}
-              showBadge={user.showDisplayBadge !== false}
-              avatarSize={COUPLE_AVATAR_SIZE}
+              displayGameId={partner.displayBadgeGameId}
+              showBadge={partner.showDisplayBadge !== false}
+              avatarSize={72}
             >
               <Avatar
-                src={userHasAvatar ? user.avatar : undefined}
-                alt={userDisplayName}
-                onClick={() => navigate('/settings')}
+                src={partnerHasAvatar ? partner.avatar : undefined}
+                alt={partnerDisplayName}
+                onClick={() => setProfileDialogOpen(true)}
                 sx={{
-                  ...getCoupleAvatarSx(theme, 2),
+                  ...getCoupleAvatarSx(theme),
                   cursor: 'pointer',
                 }}
               >
-                {user.username.charAt(0).toUpperCase()}
+                {partner.username.charAt(0).toUpperCase()}
               </Avatar>
             </AvatarGameRankMedal>
-
-            <Badge
-              color="error"
-              variant="dot"
-              invisible={announcementsLoading || unreadCount === 0}
-              overlap="circular"
-              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-              sx={{
-                position: 'absolute',
-                top: -2,
-                right: -2,
-                zIndex: 5,
-                '& .MuiBadge-badge': {
-                  top: 4,
-                  right: 4,
-                  boxShadow: '0 0 0 2px var(--mui-palette-background-default, #fff)',
-                },
-              }}
-            >
-              <IconButton
-                aria-label={t('feed.notificationsAriaLabel')}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenNotifications();
-                }}
-                sx={(t) => ({
-                  position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  zIndex: 5,
-                  width: NOTIFICATION_SIZE,
-                  height: NOTIFICATION_SIZE,
-                  bgcolor: t.palette.mode === 'light' ? '#1a1a1a' : '#2a2a2a',
-                  color: '#fff',
-                  border: `3px solid ${t.palette.background.default}`,
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
-                  '&:hover': {
-                    bgcolor: t.palette.mode === 'light' ? '#333' : '#3a3a3a',
-                  },
-                  ...getNotificationBellButtonAnimSx(hasUnreadNotifications),
-                })}
-              >
-                {announcementsLoading ? (
-                  <CircularProgress size={14} sx={{ color: '#fff' }} />
-                ) : (
-                  <NotificationsNoneOutlinedIcon
-                    sx={getNotificationBellIconSx(NOTIFICATION_ICON_SIZE, hasUnreadNotifications)}
-                  />
-                )}
-              </IconButton>
-            </Badge>
-          </Box>
-
-          <Box sx={getCouplePartnerAvatarWrapSx()}>
-            <Avatar
-              src={partnerHasAvatar ? partner.avatar : undefined}
-              alt={partnerDisplayName}
-              onClick={() => setProfileDialogOpen(true)}
-              sx={{
-                ...getCoupleAvatarSx(theme, 1),
-                cursor: 'pointer',
-              }}
-            >
-              {partner.username.charAt(0).toUpperCase()}
-            </Avatar>
           </Box>
         </Box>
       </Box>
