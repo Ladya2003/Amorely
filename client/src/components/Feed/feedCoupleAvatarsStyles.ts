@@ -75,6 +75,8 @@ export const getCoupleConnectorSx = () => ({
 
 export const getCoupleLockBadgeSx = (theme: Theme, interactive = false) => {
   const isLight = theme.palette.mode === 'light';
+  // Непрозрачный фон: иначе сквозь бейдж видны концы пунктирных линий
+  const bgcolor = isLight ? theme.palette.common.white : theme.palette.background.paper;
 
   return {
     position: 'absolute' as const,
@@ -83,11 +85,14 @@ export const getCoupleLockBadgeSx = (theme: Theme, interactive = false) => {
     transform: 'translateX(-50%)',
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 0.5,
+    minWidth: 56,
+    minHeight: 28,
     px: 1.25,
     py: 0.5,
     borderRadius: 999,
-    bgcolor: isLight ? theme.palette.common.white : alpha(theme.palette.common.white, 0.12),
+    bgcolor,
     border: isLight ? 'none' : `1px solid ${alpha(theme.palette.common.white, 0.14)}`,
     boxShadow: isLight
       ? `0 2px 10px ${alpha(theme.palette.common.black, 0.1)}`
@@ -100,7 +105,7 @@ export const getCoupleLockBadgeSx = (theme: Theme, interactive = false) => {
     ...(interactive && {
       cursor: 'pointer',
       fontFamily: 'inherit',
-      border: 'none',
+      border: isLight ? 'none' : `1px solid ${alpha(theme.palette.common.white, 0.14)}`,
       outline: 'none',
       transition: 'transform 150ms ease, box-shadow 150ms ease',
       '&:hover': {

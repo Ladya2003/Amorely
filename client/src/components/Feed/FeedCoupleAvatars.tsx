@@ -89,6 +89,7 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
 interface CoupleConnectorProps {
   theme: Theme;
   distanceKm: number | null;
+  isLoading: boolean;
   onOpenDistance: () => void;
   lockAriaLabel: string;
 }
@@ -96,11 +97,13 @@ interface CoupleConnectorProps {
 const CoupleConnector: React.FC<CoupleConnectorProps> = ({
   theme,
   distanceKm,
+  isLoading,
   onOpenDistance,
   lockAriaLabel,
 }) => {
   const isLight = theme.palette.mode === 'light';
-  const strokeColor = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)';
+  // На светлой теме белые штрихи невидны — используем фирменный фиолетовый
+  const strokeColor = isLight ? 'rgba(107, 76, 154, 0.45)' : 'rgba(255, 255, 255, 0.5)';
   const distanceLabel =
     distanceKm != null ? `${formatDistanceKm(distanceKm)} km` : 'km';
 
@@ -120,8 +123,9 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
           pointerEvents: 'none',
         }}
       >
+        {/* Конец дуги в центре бейджа (~y=14), а не у нижнего края (~y=24) */}
         <path
-          d="M 0 50 Q 80 6 80 24"
+          d="M 0 50 Q 80 2 80 14"
           fill="none"
           stroke={strokeColor}
           strokeWidth="2.5"
@@ -129,7 +133,7 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
           strokeLinecap="round"
         />
         <path
-          d="M 160 50 Q 80 6 80 24"
+          d="M 160 50 Q 80 2 80 14"
           fill="none"
           stroke={strokeColor}
           strokeWidth="2.5"
@@ -142,12 +146,19 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
         type="button"
         onClick={onOpenDistance}
         aria-label={lockAriaLabel}
+        aria-busy={isLoading}
         sx={getCoupleLockBadgeSx(theme, true)}
       >
-        <LockOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
-        <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 'inherit', lineHeight: 1 }}>
-          {distanceLabel}
-        </Typography>
+        {isLoading ? (
+          <CircularProgress size={16} thickness={5} sx={{ color: '#6b4c9a' }} />
+        ) : (
+          <>
+            <LockOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
+            <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 'inherit', lineHeight: 1 }}>
+              {distanceLabel}
+            </Typography>
+          </>
+        )}
       </Box>
     </Box>
   );
@@ -176,6 +187,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [distanceDialogOpen, setDistanceDialogOpen] = useState(false);
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [isDistanceLoading, setIsDistanceLoading] = useState(true);
 
   const partnerContact: Contact = useMemo(() => {
     const partnerDisplayName = getUserDisplayName(partner);
@@ -197,6 +209,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
     let cancelled = false;
 
     const loadDistance = async () => {
+      setIsDistanceLoading(true);
       try {
         const status = await fetchCoupleDistanceStatus();
         if (!cancelled) {
@@ -205,6 +218,10 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
       } catch {
         if (!cancelled) {
           setDistanceKm(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsDistanceLoading(false);
         }
       }
     };
@@ -282,6 +299,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
           <CoupleConnector
             theme={theme}
             distanceKm={distanceKm}
+            isLoading={isDistanceLoading}
             onOpenDistance={() => setDistanceDialogOpen(true)}
             lockAriaLabel={t('feed.coupleDistance.lockAriaLabel')}
           />
