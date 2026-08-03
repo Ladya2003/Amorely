@@ -192,6 +192,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
       eventDate,
       isBirthdayEvent,
       isAnniversaryEvent,
+      isDatingIdeaEvent,
       encryptedTitle,
       encryptedDescription,
       encryptedTitlePartner,
@@ -250,6 +251,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
           showInFeed: true,
           isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
           isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
+          isDatingIdeaEvent: isDatingIdeaEvent === true || isDatingIdeaEvent === 'true',
           customDate: new Date(eventDate),
           createdBy: userId
         });
@@ -273,6 +275,7 @@ router.post('/events-encrypted', async (req: any, res: Response) => {
         showInFeed: false,
         isBirthdayEvent: isBirthdayEvent === true || isBirthdayEvent === 'true',
         isAnniversaryEvent: isAnniversaryEvent === true || isAnniversaryEvent === 'true',
+        isDatingIdeaEvent: isDatingIdeaEvent === true || isDatingIdeaEvent === 'true',
         customDate: new Date(eventDate),
         createdBy: userId
       });
@@ -306,7 +309,7 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
   try {
     const userId = req.userId as string;
     const files = req.files as Express.Multer.File[];
-    const { eventDate, title, description, isBirthdayEvent, isAnniversaryEvent } = req.body;
+    const { eventDate, title, description, isBirthdayEvent, isAnniversaryEvent, isDatingIdeaEvent } = req.body;
 
     if (!eventDate || !title) {
       return res.status(400).json({ error: 'Требуются дата и заголовок события' });
@@ -354,6 +357,7 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
           showInFeed: true,
           isBirthdayEvent: isBirthdayEvent === 'true' || isBirthdayEvent === true,
           isAnniversaryEvent: isAnniversaryEvent === 'true' || isAnniversaryEvent === true,
+          isDatingIdeaEvent: isDatingIdeaEvent === 'true' || isDatingIdeaEvent === true,
           customDate: new Date(eventDate),
           createdBy: userId // Кто создал событие
         });
@@ -377,6 +381,7 @@ router.post('/events', upload.array('media'), async (req: any, res: Response) =>
         showInFeed: false, // Текстовые события не показываем в ленте по умолчанию
         isBirthdayEvent: isBirthdayEvent === 'true' || isBirthdayEvent === true,
         isAnniversaryEvent: isAnniversaryEvent === 'true' || isAnniversaryEvent === true,
+        isDatingIdeaEvent: isDatingIdeaEvent === 'true' || isDatingIdeaEvent === true,
         customDate: new Date(eventDate),
         createdBy: userId // Кто создал событие
       });
@@ -619,6 +624,7 @@ router.get('/events/:id', async (req: any, res: Response) => {
         : undefined,
       isBirthdayEvent: firstMedia.isBirthdayEvent,
       isAnniversaryEvent: firstMedia.isAnniversaryEvent,
+      isDatingIdeaEvent: firstMedia.isDatingIdeaEvent,
       readOnly: true,
       media: sharedMediaItems.map((item: any, index: number) => ({
         _id: item.id || `${id}-shared-media-${index}`,
@@ -669,6 +675,7 @@ const createTextOnlyEventContent = async (
     showInFeed?: boolean;
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
+    isDatingIdeaEvent?: boolean;
   }
 ) => {
   const content = new Content({
@@ -693,6 +700,7 @@ const createTextOnlyEventContent = async (
     showInFeed: fields.showInFeed ?? false,
     isBirthdayEvent: fields.isBirthdayEvent ?? baseMedia.isBirthdayEvent,
     isAnniversaryEvent: fields.isAnniversaryEvent ?? baseMedia.isAnniversaryEvent,
+    isDatingIdeaEvent: fields.isDatingIdeaEvent ?? baseMedia.isDatingIdeaEvent,
     customDate: fields.eventDate || baseMedia.eventDate,
     createdBy: baseMedia.createdBy,
     lastEditedBy: fields.metadataSenderId,
@@ -719,6 +727,7 @@ router.put('/events/:id', async (req: any, res: Response) => {
       showInFeed,
       isBirthdayEvent,
       isAnniversaryEvent,
+      isDatingIdeaEvent,
       newMedia,
       removeMediaIds,
       mediaSequence
@@ -785,6 +794,7 @@ router.put('/events/:id', async (req: any, res: Response) => {
     if (showInFeed !== undefined) updateData.showInFeed = showInFeed;
     if (isBirthdayEvent !== undefined) updateData.isBirthdayEvent = isBirthdayEvent;
     if (isAnniversaryEvent !== undefined) updateData.isAnniversaryEvent = isAnniversaryEvent;
+    if (isDatingIdeaEvent !== undefined) updateData.isDatingIdeaEvent = isDatingIdeaEvent;
     updateData.lastEditedBy = userId;
     updateData.lastEditedAt = new Date();
 
@@ -833,6 +843,7 @@ router.put('/events/:id', async (req: any, res: Response) => {
           showInFeed: updateData.showInFeed ?? baseMedia.showInFeed ?? true,
           isBirthdayEvent: updateData.isBirthdayEvent ?? baseMedia.isBirthdayEvent,
           isAnniversaryEvent: updateData.isAnniversaryEvent ?? baseMedia.isAnniversaryEvent,
+          isDatingIdeaEvent: updateData.isDatingIdeaEvent ?? baseMedia.isDatingIdeaEvent,
           customDate: updateData.eventDate || baseMedia.eventDate,
           createdBy: baseMedia.createdBy,
           lastEditedBy: userId,
@@ -888,7 +899,8 @@ router.put('/events/:id', async (req: any, res: Response) => {
         metadataRecipientId: recipientId,
         showInFeed: updateData.showInFeed,
         isBirthdayEvent: updateData.isBirthdayEvent,
-        isAnniversaryEvent: updateData.isAnniversaryEvent
+        isAnniversaryEvent: updateData.isAnniversaryEvent,
+        isDatingIdeaEvent: updateData.isDatingIdeaEvent
       });
     }
 

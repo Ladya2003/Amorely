@@ -59,6 +59,7 @@ const contentSchema = new mongoose.Schema({
   showInFeed: { type: Boolean, default: true }, // Показывать ли в ленте
   isBirthdayEvent: { type: Boolean, default: false }, // Событие дня рождения
   isAnniversaryEvent: { type: Boolean, default: false }, // Событие годовщины
+  isDatingIdeaEvent: { type: Boolean, default: false }, // Создано через идеи для свиданий
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто создал событие
   lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Кто последним редактировал
   lastEditedAt: { type: Date }, // Когда последний раз редактировалось

@@ -1078,7 +1078,8 @@
       "created": "Creado",
       "author": "Autor: {{name}}",
       "lastEdit": "Última edición",
-      "editor": "Editor: {{name}}"
+      "editor": "Editor: {{name}}",
+      "datingIdea": "De ideas para citas"
     },
     "list": {
       "eventsOn": "Eventos del {{date}}"
@@ -1298,7 +1299,10 @@
       "clearPassphrase": "Borrar"
     }
   },
-  "common": { "back": "Atrás", "cancel": "Cancelar" },
+  "common": {
+    "back": "Atrás",
+    "cancel": "Cancelar"
+  },
   "pets": {
     "title": "Mis mascotas",
     "sectionTitle": "Mascotas",
@@ -1498,7 +1502,57 @@
         }
       }
     },
-    "species": { "kitten": "Gatito", "puppy": "Cachorro", "gecko": "Gecko", "bunny": "Conejito", "owlet": "Polluelo de búho" },
-    "variants": { "orange": "Naranja", "gray": "Gris", "black": "Negro", "golden": "Dorado", "brown": "Marrón", "spotted": "Manchado", "green": "Verde", "blue": "Azul", "yellow": "Amarillo", "white": "Blanco", "cream": "Crema" }
+    "species": {
+      "kitten": "Gatito",
+      "puppy": "Cachorro",
+      "gecko": "Gecko",
+      "bunny": "Conejito",
+      "owlet": "Polluelo de búho"
+    },
+    "variants": {
+      "orange": "Naranja",
+      "gray": "Gris",
+      "black": "Negro",
+      "golden": "Dorado",
+      "brown": "Marrón",
+      "spotted": "Manchado",
+      "green": "Verde",
+      "blue": "Azul",
+      "yellow": "Amarillo",
+      "white": "Blanco",
+      "cream": "Crema"
+    }
+  },
+  "datingIdeas": {
+    "title": "Ideas para citas",
+    "subtitle": "Inspiración para vuestros momentos especiales",
+    "sectionAria": "Abrir ideas para citas",
+    "sectionHint": "Generar una idea por {{cost}} AmoreCoin",
+    "sectionActiveHint": "Tienes una idea activa — ábrela para continuar",
+    "costLabel": "{{cost}} AmoreCoin",
+    "generateTitle": "Nueva idea para una cita",
+    "generateHint": "Toca el botón — elegiremos una idea solo para vosotros dos.",
+    "generateCta": "Generar por {{cost}}",
+    "generateAgain": "Nueva por {{cost}}",
+    "generating": "Eligiendo una idea…",
+    "generatingHint": "Un momento — tu sorpresa casi está lista",
+    "ideaBadge": "Idea para cita",
+    "completed": "Lo hicimos",
+    "flipTitle": "¿Añadir al calendario?",
+    "flipHint": "Guarda esta cita como evento de pareja",
+    "openEventEditor": "Añadir evento",
+    "eventBadge": "De ideas para citas",
+    "eventCreated": "Evento creado desde una idea para cita",
+    "historyTitle": "Vuestras ideas",
+    "historyListTitle": "Todas las ideas",
+    "historyEmpty": "Aún no hay ideas completadas o omitidas",
+    "openHistoryList": "Lista",
+    "statusCompleted": "Completada",
+    "statusSkipped": "Omitida",
+    "backToCurrent": "Volver a la idea actual",
+    "partnerRequired": "Las ideas para citas están disponibles tras vincular a tu pareja",
+    "loadError": "No se pudieron cargar las ideas",
+    "generateError": "No se pudo generar una idea",
+    "insufficientBalance": "AmoreCoins insuficientes. Se necesitan {{cost}}"
   }
 }

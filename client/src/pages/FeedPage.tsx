@@ -14,6 +14,7 @@ import ContentSlider, { ContentItem } from '../components/Feed/ContentSlider';
 import DaysTogether from '../components/Feed/DaysTogether';
 import PetSection from '../components/Pets/PetSection';
 import DailyQuestionsSection from '../components/Feed/DailyQuestions/DailyQuestionsSection';
+import DatingIdeasSection from '../components/Feed/DatingIdeas/DatingIdeasSection';
 import ContentManagementDialog from '../components/Feed/ContentManagement';
 import ContentViewer from '../components/Feed/ContentViewer';
 import { useCrypto } from '../contexts/CryptoContext';
@@ -477,7 +478,7 @@ const FeedPage: React.FC = () => {
 
       <PetSection />
 
-      <Box sx={{ pb: { xs: 10, sm: 0 } }}>
+      <Box sx={{ pb: 0 }}>
         <DaysTogether
           daysCount={daysCount}
           relationshipStartDate={relationshipStartDate}
@@ -489,6 +490,10 @@ const FeedPage: React.FC = () => {
           currentUserId={user?._id}
           relationshipOwnerId={relationshipOwnerId}
         />
+      </Box>
+
+      <Box sx={{ pb: { xs: 10, sm: 0 }, mt: 3 }}>
+        <DatingIdeasSection />
       </Box>
       
       {/* Временно закомментировано - контент теперь добавляется через Календарь */}

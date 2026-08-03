@@ -21,6 +21,7 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import {
   formatCalendarDate,
   formatCalendarDateTime
@@ -70,6 +71,7 @@ interface EventDetailDrawerProps {
     media?: MediaFile[];
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
+    isDatingIdeaEvent?: boolean;
     createdBy?: User;
     lastEditedBy?: User;
     lastEditedAt?: string;
@@ -417,6 +419,14 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                     color="error"
                     size="small"
                     // sx={{ ml: 1 }}
+                  />
+                )}
+                {event.isDatingIdeaEvent && (
+                  <Chip
+                    icon={<AutoAwesomeIcon />}
+                    label={t('datingIdeas.eventBadge')}
+                    color="secondary"
+                    size="small"
                   />
                 )}
               </Box>

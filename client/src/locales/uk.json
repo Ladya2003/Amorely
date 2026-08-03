@@ -1022,7 +1022,8 @@
       "created": "Створено",
       "author": "Автор: {{name}}",
       "lastEdit": "Остання зміна",
-      "editor": "Редактор: {{name}}"
+      "editor": "Редактор: {{name}}",
+      "datingIdea": "З ідей для побачень"
     },
     "list": {
       "eventsOn": "Події {{date}}"
@@ -1242,7 +1243,10 @@
       "clearPassphrase": "Очистити"
     }
   },
-  "common": { "back": "Назад", "cancel": "Скасувати" },
+  "common": {
+    "back": "Назад",
+    "cancel": "Скасувати"
+  },
   "pets": {
     "title": "Мої улюбленці",
     "sectionTitle": "Улюбленці",
@@ -1442,7 +1446,57 @@
         }
       }
     },
-    "species": { "kitten": "Кошеня", "puppy": "Цуценя", "gecko": "Гекон", "bunny": "Кролик", "owlet": "Совеня" },
-    "variants": { "orange": "Рудий", "gray": "Сірий", "black": "Чорний", "golden": "Золотистий", "brown": "Коричневий", "spotted": "Пятнистий", "green": "Зелений", "blue": "Блакитний", "yellow": "Жовтий", "white": "Білий", "cream": "Кремовий" }
+    "species": {
+      "kitten": "Кошеня",
+      "puppy": "Цуценя",
+      "gecko": "Гекон",
+      "bunny": "Кролик",
+      "owlet": "Совеня"
+    },
+    "variants": {
+      "orange": "Рудий",
+      "gray": "Сірий",
+      "black": "Чорний",
+      "golden": "Золотистий",
+      "brown": "Коричневий",
+      "spotted": "Пятнистий",
+      "green": "Зелений",
+      "blue": "Блакитний",
+      "yellow": "Жовтий",
+      "white": "Білий",
+      "cream": "Кремовий"
+    }
+  },
+  "datingIdeas": {
+    "title": "Ідеї для побачень",
+    "subtitle": "Натхнення для ваших особливих моментів",
+    "sectionAria": "Відкрити ідеї для побачень",
+    "sectionHint": "Згенерувати ідею за {{cost}} Аморку",
+    "sectionActiveHint": "У вас є активна ідея — відкрийте, щоб продовжити",
+    "costLabel": "{{cost}} Аморка",
+    "generateTitle": "Нова ідея для побачення",
+    "generateHint": "Натисніть кнопку — ми підберемо ідею саме для вас двох.",
+    "generateCta": "Згенерувати за {{cost}}",
+    "generateAgain": "Нова за {{cost}}",
+    "generating": "Добіраємо ідею…",
+    "generatingHint": "Ще мить — і сюрприз готовий",
+    "ideaBadge": "Ідея для побачення",
+    "completed": "Виконали",
+    "flipTitle": "Додамо в календар?",
+    "flipHint": "Зафіксуйте це побачення як подію пари",
+    "openEventEditor": "Додати подію",
+    "eventBadge": "З ідей для побачень",
+    "eventCreated": "Подію створено з ідеї для побачення",
+    "historyTitle": "Ваші ідеї",
+    "historyListTitle": "Усі ідеї",
+    "historyEmpty": "Поки немає виконаних або пропущених ідей",
+    "openHistoryList": "Списком",
+    "statusCompleted": "Виконано",
+    "statusSkipped": "Пропущено",
+    "backToCurrent": "До поточної ідеї",
+    "partnerRequired": "Ідеї для побачень доступні після прив’язки партнера",
+    "loadError": "Не вдалося завантажити ідеї",
+    "generateError": "Не вдалося згенерувати ідею",
+    "insufficientBalance": "Недостатньо Аморок. Потрібно {{cost}}"
   }
 }

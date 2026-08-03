@@ -35,6 +35,7 @@ export const CURRENCY_REASONS = [
   'pet_petting',
   'pet_feed',
   'pet_satiety_full',
+  'dating_idea_generate',
   'manual_claim',
 ] as const;
 

@@ -1173,7 +1173,8 @@
       "created": "Created",
       "author": "Author: {{name}}",
       "lastEdit": "Last edited",
-      "editor": "Editor: {{name}}"
+      "editor": "Editor: {{name}}",
+      "datingIdea": "From date ideas"
     },
     "list": {
       "eventsOn": "Events on {{date}}"
@@ -1621,5 +1622,37 @@
       "white": "White",
       "cream": "Cream"
     }
+  },
+  "datingIdeas": {
+    "title": "Date ideas",
+    "subtitle": "Inspiration for your special moments",
+    "sectionAria": "Open date ideas",
+    "sectionHint": "Generate an idea for {{cost}} AmoreCoin",
+    "sectionActiveHint": "You have an active idea — open to continue",
+    "costLabel": "{{cost}} AmoreCoin",
+    "generateTitle": "New date idea",
+    "generateHint": "Tap the button — we’ll pick an idea just for the two of you.",
+    "generateCta": "Generate for {{cost}}",
+    "generateAgain": "New for {{cost}}",
+    "generating": "Picking an idea…",
+    "generatingHint": "Just a moment — your surprise is almost ready",
+    "ideaBadge": "Date idea",
+    "completed": "We did it",
+    "flipTitle": "Add to calendar?",
+    "flipHint": "Save this date as a couple event",
+    "openEventEditor": "Add event",
+    "eventBadge": "From date ideas",
+    "eventCreated": "Event created from a date idea",
+    "historyTitle": "Your ideas",
+    "historyListTitle": "All ideas",
+    "historyEmpty": "No completed or skipped ideas yet",
+    "openHistoryList": "As list",
+    "statusCompleted": "Completed",
+    "statusSkipped": "Skipped",
+    "backToCurrent": "Back to current idea",
+    "partnerRequired": "Date ideas are available after linking a partner",
+    "loadError": "Failed to load ideas",
+    "generateError": "Failed to generate an idea",
+    "insufficientBalance": "Not enough AmoreCoins. Need {{cost}}"
   }
 }

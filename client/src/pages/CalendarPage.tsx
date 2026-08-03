@@ -69,6 +69,7 @@ interface ContentItem {
   lastEditedAt?: string;
   isBirthdayEvent?: boolean;
   isAnniversaryEvent?: boolean;
+  isDatingIdeaEvent?: boolean;
   readOnly?: boolean;
 }
 
@@ -364,7 +365,8 @@ const CalendarPage: React.FC = () => {
           eventDate: item.eventDate,
           createdAt: item.createdAt,
           isBirthdayEvent: item.isBirthdayEvent,
-          isAnniversaryEvent: item.isAnniversaryEvent
+          isAnniversaryEvent: item.isAnniversaryEvent,
+          isDatingIdeaEvent: item.isDatingIdeaEvent
         };
       });
       
@@ -430,6 +432,7 @@ const CalendarPage: React.FC = () => {
       eventDate: event.eventDate || event.createdAt,
       isBirthdayEvent: event.isBirthdayEvent || false,
       isAnniversaryEvent: event.isAnniversaryEvent || false,
+      isDatingIdeaEvent: event.isDatingIdeaEvent || false,
       media: (event.media || []).filter((item) => item.url && item.url.trim().length > 0)
     });
     setEventDetailOpen(false); // Закрываем детальный просмотр
@@ -574,6 +577,7 @@ const CalendarPage: React.FC = () => {
       files: File[];
       isBirthdayEvent?: boolean;
       isAnniversaryEvent?: boolean;
+      isDatingIdeaEvent?: boolean;
     },
     saveOptions?: {
       signal?: AbortSignal;
@@ -626,6 +630,7 @@ const CalendarPage: React.FC = () => {
           encryptionRecipientId: targetId,
           isBirthdayEvent: eventData.isBirthdayEvent,
           isAnniversaryEvent: eventData.isAnniversaryEvent,
+          isDatingIdeaEvent: eventData.isDatingIdeaEvent,
           media: uploaded.map((item) => ({
             url: item.url,
             publicId: item.publicId,
@@ -665,13 +670,14 @@ const CalendarPage: React.FC = () => {
     mediaSequence?: EventMediaSequenceSlot[];
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
-    },
-    saveOptions?: {
-      signal?: AbortSignal;
-      onFileUploaded?: (publicId: string) => void;
-      onPrepareStart?: (progress: PrepareMediaProgress) => void;
-    }
-  ) => {
+    isDatingIdeaEvent?: boolean;
+  },
+  saveOptions?: {
+    signal?: AbortSignal;
+    onFileUploaded?: (publicId: string) => void;
+    onPrepareStart?: (progress: PrepareMediaProgress) => void;
+  }
+) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -717,6 +723,7 @@ const CalendarPage: React.FC = () => {
           encryptionRecipientId: targetId,
           isBirthdayEvent: eventData.isBirthdayEvent,
           isAnniversaryEvent: eventData.isAnniversaryEvent,
+          isDatingIdeaEvent: eventData.isDatingIdeaEvent,
           newMedia: uploaded.map((item) => ({
             url: item.url,
             publicId: item.publicId,

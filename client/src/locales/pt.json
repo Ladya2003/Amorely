@@ -1078,7 +1078,8 @@
       "created": "Criado",
       "author": "Autor: {{name}}",
       "lastEdit": "Última edição",
-      "editor": "Editor: {{name}}"
+      "editor": "Editor: {{name}}",
+      "datingIdea": "Das ideias para encontros"
     },
     "list": {
       "eventsOn": "Eventos em {{date}}"
@@ -1298,7 +1299,10 @@
       "clearPassphrase": "Limpar"
     }
   },
-  "common": { "back": "Voltar", "cancel": "Cancelar" },
+  "common": {
+    "back": "Voltar",
+    "cancel": "Cancelar"
+  },
   "pets": {
     "title": "Meus pets",
     "sectionTitle": "Pets",
@@ -1498,7 +1502,57 @@
         }
       }
     },
-    "species": { "kitten": "Gatinho", "puppy": "Filhote", "gecko": "Gecko", "bunny": "Coelhinho", "owlet": "Filhote de coruja" },
-    "variants": { "orange": "Laranja", "gray": "Cinza", "black": "Preto", "golden": "Dourado", "brown": "Marrom", "spotted": "Malhado", "green": "Verde", "blue": "Azul", "yellow": "Amarelo", "white": "Branco", "cream": "Creme" }
+    "species": {
+      "kitten": "Gatinho",
+      "puppy": "Filhote",
+      "gecko": "Gecko",
+      "bunny": "Coelhinho",
+      "owlet": "Filhote de coruja"
+    },
+    "variants": {
+      "orange": "Laranja",
+      "gray": "Cinza",
+      "black": "Preto",
+      "golden": "Dourado",
+      "brown": "Marrom",
+      "spotted": "Malhado",
+      "green": "Verde",
+      "blue": "Azul",
+      "yellow": "Amarelo",
+      "white": "Branco",
+      "cream": "Creme"
+    }
+  },
+  "datingIdeas": {
+    "title": "Ideias para encontros",
+    "subtitle": "Inspiração para os vossos momentos especiais",
+    "sectionAria": "Abrir ideias para encontros",
+    "sectionHint": "Gerar uma ideia por {{cost}} AmoreCoin",
+    "sectionActiveHint": "Têm uma ideia ativa — abram para continuar",
+    "costLabel": "{{cost}} AmoreCoin",
+    "generateTitle": "Nova ideia para encontro",
+    "generateHint": "Toquem no botão — vamos escolher uma ideia só para vocês dois.",
+    "generateCta": "Gerar por {{cost}}",
+    "generateAgain": "Nova por {{cost}}",
+    "generating": "A escolher uma ideia…",
+    "generatingHint": "Só um momento — a surpresa está quase pronta",
+    "ideaBadge": "Ideia para encontro",
+    "completed": "Fizemos",
+    "flipTitle": "Adicionar ao calendário?",
+    "flipHint": "Guardem este encontro como evento do casal",
+    "openEventEditor": "Adicionar evento",
+    "eventBadge": "Das ideias para encontros",
+    "eventCreated": "Evento criado a partir de uma ideia para encontro",
+    "historyTitle": "As vossas ideias",
+    "historyListTitle": "Todas as ideias",
+    "historyEmpty": "Ainda não há ideias concluídas ou ignoradas",
+    "openHistoryList": "Em lista",
+    "statusCompleted": "Concluída",
+    "statusSkipped": "Ignorada",
+    "backToCurrent": "Voltar à ideia atual",
+    "partnerRequired": "As ideias para encontros ficam disponíveis após ligar um parceiro",
+    "loadError": "Falha ao carregar ideias",
+    "generateError": "Falha ao gerar uma ideia",
+    "insufficientBalance": "AmoreCoins insuficientes. É preciso {{cost}}"
   }
 }

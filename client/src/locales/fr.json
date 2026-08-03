@@ -1078,7 +1078,8 @@
       "created": "Créé",
       "author": "Auteur : {{name}}",
       "lastEdit": "Dernière modification",
-      "editor": "Éditeur : {{name}}"
+      "editor": "Éditeur : {{name}}",
+      "datingIdea": "Via idées de rendez-vous"
     },
     "list": {
       "eventsOn": "Événements du {{date}}"
@@ -1298,7 +1299,10 @@
       "clearPassphrase": "Effacer"
     }
   },
-  "common": { "back": "Retour", "cancel": "Annuler" },
+  "common": {
+    "back": "Retour",
+    "cancel": "Annuler"
+  },
   "pets": {
     "title": "Mes animaux",
     "sectionTitle": "Animaux",
@@ -1498,7 +1502,57 @@
         }
       }
     },
-    "species": { "kitten": "Chaton", "puppy": "Chiot", "gecko": "Gecko", "bunny": "Lapin", "owlet": "Chouette" },
-    "variants": { "orange": "Orange", "gray": "Gris", "black": "Noir", "golden": "Doré", "brown": "Marron", "spotted": "Tacheté", "green": "Vert", "blue": "Bleu", "yellow": "Jaune", "white": "Blanc", "cream": "Crème" }
+    "species": {
+      "kitten": "Chaton",
+      "puppy": "Chiot",
+      "gecko": "Gecko",
+      "bunny": "Lapin",
+      "owlet": "Chouette"
+    },
+    "variants": {
+      "orange": "Orange",
+      "gray": "Gris",
+      "black": "Noir",
+      "golden": "Doré",
+      "brown": "Marron",
+      "spotted": "Tacheté",
+      "green": "Vert",
+      "blue": "Bleu",
+      "yellow": "Jaune",
+      "white": "Blanc",
+      "cream": "Crème"
+    }
+  },
+  "datingIdeas": {
+    "title": "Idées de rendez-vous",
+    "subtitle": "De l’inspiration pour vos moments spéciaux",
+    "sectionAria": "Ouvrir les idées de rendez-vous",
+    "sectionHint": "Générer une idée pour {{cost}} AmoreCoin",
+    "sectionActiveHint": "Vous avez une idée active — ouvrez pour continuer",
+    "costLabel": "{{cost}} AmoreCoin",
+    "generateTitle": "Nouvelle idée de rendez-vous",
+    "generateHint": "Appuyez sur le bouton — nous choisirons une idée juste pour vous deux.",
+    "generateCta": "Générer pour {{cost}}",
+    "generateAgain": "Nouvelle pour {{cost}}",
+    "generating": "Choix d’une idée…",
+    "generatingHint": "Encore un instant — votre surprise arrive",
+    "ideaBadge": "Idée de rendez-vous",
+    "completed": "C’est fait",
+    "flipTitle": "Ajouter au calendrier ?",
+    "flipHint": "Enregistrez ce rendez-vous comme événement de couple",
+    "openEventEditor": "Ajouter un événement",
+    "eventBadge": "Via idées de rendez-vous",
+    "eventCreated": "Événement créé à partir d’une idée de rendez-vous",
+    "historyTitle": "Vos idées",
+    "historyListTitle": "Toutes les idées",
+    "historyEmpty": "Pas encore d’idées terminées ou ignorées",
+    "openHistoryList": "Liste",
+    "statusCompleted": "Terminée",
+    "statusSkipped": "Ignorée",
+    "backToCurrent": "Retour à l’idée actuelle",
+    "partnerRequired": "Les idées de rendez-vous sont disponibles après avoir lié un partenaire",
+    "loadError": "Échec du chargement des idées",
+    "generateError": "Échec de la génération d’une idée",
+    "insufficientBalance": "Pas assez d’AmoreCoins. Il en faut {{cost}}"
   }
 }

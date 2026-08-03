@@ -1078,7 +1078,8 @@
       "created": "Erstellt",
       "author": "Autor: {{name}}",
       "lastEdit": "Zuletzt bearbeitet",
-      "editor": "Bearbeiter: {{name}}"
+      "editor": "Bearbeiter: {{name}}",
+      "datingIdea": "Aus Date-Ideen"
     },
     "list": {
       "eventsOn": "Ereignisse am {{date}}"
@@ -1298,7 +1299,10 @@
       "clearPassphrase": "Löschen"
     }
   },
-  "common": { "back": "Zurück", "cancel": "Abbrechen" },
+  "common": {
+    "back": "Zurück",
+    "cancel": "Abbrechen"
+  },
   "pets": {
     "title": "Meine Haustiere",
     "sectionTitle": "Haustiere",
@@ -1498,7 +1502,57 @@
         }
       }
     },
-    "species": { "kitten": "Kätzchen", "puppy": "Welpe", "gecko": "Gecko", "bunny": "Häschen", "owlet": "Eulenküken" },
-    "variants": { "orange": "Orange", "gray": "Grau", "black": "Schwarz", "golden": "Golden", "brown": "Braun", "spotted": "Gefleckt", "green": "Grün", "blue": "Blau", "yellow": "Gelb", "white": "Weiß", "cream": "Creme" }
+    "species": {
+      "kitten": "Kätzchen",
+      "puppy": "Welpe",
+      "gecko": "Gecko",
+      "bunny": "Häschen",
+      "owlet": "Eulenküken"
+    },
+    "variants": {
+      "orange": "Orange",
+      "gray": "Grau",
+      "black": "Schwarz",
+      "golden": "Golden",
+      "brown": "Braun",
+      "spotted": "Gefleckt",
+      "green": "Grün",
+      "blue": "Blau",
+      "yellow": "Gelb",
+      "white": "Weiß",
+      "cream": "Creme"
+    }
+  },
+  "datingIdeas": {
+    "title": "Date-Ideen",
+    "subtitle": "Inspiration für eure besonderen Momente",
+    "sectionAria": "Date-Ideen öffnen",
+    "sectionHint": "Idee für {{cost}} AmoreCoin generieren",
+    "sectionActiveHint": "Ihr habt eine aktive Idee — öffnen zum Fortfahren",
+    "costLabel": "{{cost}} AmoreCoin",
+    "generateTitle": "Neue Date-Idee",
+    "generateHint": "Tippt den Button — wir wählen eine Idee nur für euch beide.",
+    "generateCta": "Für {{cost}} generieren",
+    "generateAgain": "Neu für {{cost}}",
+    "generating": "Idee wird gewählt…",
+    "generatingHint": "Einen Moment — eure Überraschung ist gleich fertig",
+    "ideaBadge": "Date-Idee",
+    "completed": "Erledigt",
+    "flipTitle": "Zum Kalender hinzufügen?",
+    "flipHint": "Speichert dieses Date als Paar-Event",
+    "openEventEditor": "Event hinzufügen",
+    "eventBadge": "Aus Date-Ideen",
+    "eventCreated": "Event aus einer Date-Idee erstellt",
+    "historyTitle": "Eure Ideen",
+    "historyListTitle": "Alle Ideen",
+    "historyEmpty": "Noch keine erledigten oder übersprungenen Ideen",
+    "openHistoryList": "Als Liste",
+    "statusCompleted": "Erledigt",
+    "statusSkipped": "Übersprungen",
+    "backToCurrent": "Zur aktuellen Idee",
+    "partnerRequired": "Date-Ideen sind nach der Partnerverknüpfung verfügbar",
+    "loadError": "Ideen konnten nicht geladen werden",
+    "generateError": "Idee konnte nicht generiert werden",
+    "insufficientBalance": "Nicht genug AmoreCoins. Benötigt: {{cost}}"
   }
 }

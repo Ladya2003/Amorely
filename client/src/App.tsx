@@ -20,6 +20,7 @@ import ChatRulesPage from './pages/ChatRulesPage';
 import AuthPage from './pages/AuthPage';
 import CryptoUnlockPage from './pages/CryptoUnlockPage';
 import PetDetailPage from './pages/PetDetailPage';
+import DatingIdeasPage from './pages/DatingIdeasPage';
 import AdminPage from './pages/AdminPage';
 import AdminRoute from './components/Auth/AdminRoute';
 import PartnerBreakupNotifier from './components/Settings/PartnerBreakupNotifier';
@@ -121,6 +122,7 @@ function App() {
                 >
                   <Route index element={<FeedPage />} />
                   <Route path="pets/:petId" element={<PetDetailPage />} />
+                  <Route path="dating-ideas" element={<DatingIdeasPage />} />
                   <Route path="chat" element={<ChatPage />} />
                   <Route path="chat/games/:gameId" element={<GamePage />} />
                   <Route path="chat/games/:gameId/play" element={<GamePlayPage />} />

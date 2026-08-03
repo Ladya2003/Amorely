@@ -26,6 +26,7 @@ import gamesRoutes from './routes/games';
 import petsRoutes from './routes/pets';
 import currencyRoutes from './routes/currency';
 import dailyQuestionsRoutes from './routes/dailyQuestions';
+import datingIdeasRoutes from './routes/datingIdeas';
 import adminRoutes from './routes/admin';
 import cronRoutes from './routes/cron';
 import { adminMiddleware } from './middleware/admin';
@@ -377,6 +378,7 @@ app.use('/api/games', authMiddleware, gamesRoutes);
 app.use('/api/pets', authMiddleware, petsRoutes);
 app.use('/api/currency', authMiddleware, currencyRoutes);
 app.use('/api/daily-questions', authMiddleware, dailyQuestionsRoutes);
+app.use('/api/dating-ideas', authMiddleware, datingIdeasRoutes);
 
 // Маршруты админ-панели
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);

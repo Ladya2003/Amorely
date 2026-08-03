@@ -84,6 +84,8 @@ interface EventItem {
   createdAt: string;
   media: MediaFile[];
   isBirthdayEvent?: boolean;
+  isAnniversaryEvent?: boolean;
+  isDatingIdeaEvent?: boolean;
 }
 
 interface CalendarProps {
@@ -95,6 +97,8 @@ interface CalendarProps {
     description?: string;
     _id?: string;
     isBirthdayEvent?: boolean;
+    isAnniversaryEvent?: boolean;
+    isDatingIdeaEvent?: boolean;
   }>;
   allEvents?: EventItem[]; // Полные данные событий для grid view
   onAddContent: (date: Date) => void;

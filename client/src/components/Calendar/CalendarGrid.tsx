@@ -6,6 +6,7 @@ import { formatCalendarDate, formatCalendarMonthYear } from '../../localization/
 import DescriptionIcon from '@mui/icons-material/Description';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import {
@@ -33,6 +34,7 @@ interface EventItem {
   media: MediaFile[];
   isBirthdayEvent?: boolean;
   isAnniversaryEvent?: boolean;
+  isDatingIdeaEvent?: boolean;
 }
 
 interface CalendarGridProps {
@@ -206,6 +208,25 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                           <FavoriteIcon sx={{ fontSize: 16, color: 'white' }} />
                         </Box>
                       )}
+
+                      {event.isDatingIdeaEvent && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            bottom: 4,
+                            right: 4,
+                            bgcolor: 'secondary.main',
+                            borderRadius: '50%',
+                            p: 0.5,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: 1
+                          }}
+                        >
+                          <AutoAwesomeIcon sx={{ fontSize: 16, color: 'white' }} />
+                        </Box>
+                      )}
                       
                       {/* Заголовок для текстового события */}
                       {event.title && (
@@ -297,6 +318,24 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                         }}
                       >
                         <FavoriteIcon sx={{ fontSize: 16, color: 'white' }} />
+                      </Box>
+                    )}
+                    {event.isDatingIdeaEvent && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          bottom: 4,
+                          right: 4,
+                          bgcolor: 'secondary.main',
+                          borderRadius: '50%',
+                          p: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: 1
+                        }}
+                      >
+                        <AutoAwesomeIcon sx={{ fontSize: 16, color: 'white' }} />
                       </Box>
                     )}
                     {/* Показываем заголовок только на первом медиа */}

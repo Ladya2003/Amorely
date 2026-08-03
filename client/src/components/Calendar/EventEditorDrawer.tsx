@@ -13,6 +13,7 @@ import {
   Alert,
   FormControlLabel,
   Checkbox,
+  Chip,
   DialogTitle,
   DialogContent,
   DialogContentText,
@@ -42,6 +43,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import { deleteUploadedEncryptedFiles } from '../../crypto/encryptedUploadService';
 import { isSaveAborted } from '../../utils/saveAbort';
@@ -80,6 +82,10 @@ interface EventEditorDrawerProps {
   open: boolean;
   onClose: () => void;
   initialDate?: Date | null;
+  initialTitle?: string;
+  initialDescription?: string;
+  isDatingIdeaEvent?: boolean;
+  preferPresetOverDraft?: boolean;
   editEvent?: {
     eventId: string;
     title: string;
@@ -87,6 +93,7 @@ interface EventEditorDrawerProps {
     eventDate: string;
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
+    isDatingIdeaEvent?: boolean;
     media?: EventMediaItem[];
   } | null;
   onSave: (
@@ -97,6 +104,7 @@ interface EventEditorDrawerProps {
       files: File[];
       isBirthdayEvent?: boolean;
       isAnniversaryEvent?: boolean;
+      isDatingIdeaEvent?: boolean;
     },
     saveOptions?: {
       signal?: AbortSignal;
@@ -115,6 +123,7 @@ interface EventEditorDrawerProps {
       mediaSequence?: EventMediaSequenceSlot[];
       isBirthdayEvent?: boolean;
       isAnniversaryEvent?: boolean;
+      isDatingIdeaEvent?: boolean;
     },
     saveOptions?: {
       signal?: AbortSignal;
@@ -148,6 +157,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   open,
   onClose,
   initialDate,
+  initialTitle,
+  initialDescription,
+  isDatingIdeaEvent: isDatingIdeaEventProp = false,
+  preferPresetOverDraft = false,
   editEvent,
   onSave,
   onUpdate
@@ -169,6 +182,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [isBirthdayEvent, setIsBirthdayEvent] = useState(false);
   const [isAnniversaryEvent, setIsAnniversaryEvent] = useState(false);
+  const [isDatingIdeaEvent, setIsDatingIdeaEvent] = useState(false);
   const [removedMediaIds, setRemovedMediaIds] = useState<string[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerContent, setViewerContent] = useState<{
@@ -266,23 +280,34 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setRemovedMediaIds([]);
       setIsBirthdayEvent(editEvent.isBirthdayEvent || false);
       setIsAnniversaryEvent(editEvent.isAnniversaryEvent || false);
+      setIsDatingIdeaEvent(editEvent.isDatingIdeaEvent || false);
     } else {
       // Режим создания — дата с клика по календарю важнее черновика
-      setSelectedDate(initialDate || draft.date || new Date());
-      setTitle(hasDraft ? draft.title || '' : '');
-      setDescription(hasDraft ? draft.description || '' : '');
-      const draftFiles = hasDraft ? draft.files : [];
+      const usePreset = preferPresetOverDraft || Boolean(initialTitle);
+      setSelectedDate(initialDate || (!usePreset ? draft.date : null) || new Date());
+      setTitle(usePreset ? (initialTitle || '') : (hasDraft ? draft.title || '' : ''));
+      setDescription(
+        usePreset
+          ? (initialDescription || '')
+          : (hasDraft ? draft.description || '' : '')
+      );
+      const draftFiles = !usePreset && hasDraft ? draft.files : [];
       setMediaItems((prev) => {
         revokeNewMediaPreviews(prev);
         return draftFiles.map((file) => createNewMediaItem(file));
       });
       setRemovedMediaIds([]);
+      setIsDatingIdeaEvent(isDatingIdeaEventProp);
     }
 
     setIsInitialized(true);
   }, [
     open,
     initialDate?.getTime(),
+    initialTitle,
+    initialDescription,
+    isDatingIdeaEventProp,
+    preferPresetOverDraft,
     editEvent?.eventId,
     isEditMode,
     hasDraft,
@@ -295,7 +320,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
   // Автосохранение изменений (только если не в режиме редактирования и не идёт сохранение)
   useEffect(() => {
-    if (!open || !isInitialized || isEditMode || isSaving) return;
+    if (!open || !isInitialized || isEditMode || isSaving || preferPresetOverDraft) return;
 
     const timer = setTimeout(() => {
       updateDraft({
@@ -308,7 +333,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [selectedDate?.getTime(), title, description, mediaItems, open, isInitialized, isEditMode, isSaving, updateDraft]);
+  }, [selectedDate?.getTime(), title, description, mediaItems, open, isInitialized, isEditMode, isSaving, preferPresetOverDraft, updateDraft]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (isSaving) {
@@ -460,7 +485,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             removeMediaIds: removedMediaIds,
             mediaSequence: buildMediaSequence(mediaItems),
             isBirthdayEvent,
-            isAnniversaryEvent
+            isAnniversaryEvent,
+            isDatingIdeaEvent
           },
           saveOptions
         );
@@ -472,7 +498,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             description: description.trim(),
             files: newFiles,
             isBirthdayEvent,
-            isAnniversaryEvent
+            isAnniversaryEvent,
+            isDatingIdeaEvent
           },
           saveOptions
         );
@@ -645,6 +672,16 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
               {error}
             </Alert>
+          )}
+
+          {isDatingIdeaEvent && (
+            <Chip
+              icon={<AutoAwesomeIcon />}
+              label={t('datingIdeas.eventBadge')}
+              color="secondary"
+              size="small"
+              sx={{ mb: 2, fontWeight: 600, alignSelf: 'flex-start' }}
+            />
           )}
 
           {/* Выбор даты */}

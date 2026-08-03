@@ -1177,7 +1177,8 @@
       "created": "Создано",
       "author": "Автор: {{name}}",
       "lastEdit": "Последнее изменение",
-      "editor": "Редактор: {{name}}"
+      "editor": "Редактор: {{name}}",
+      "datingIdea": "Из идей для свиданий"
     },
     "list": {
       "eventsOn": "События {{date}}"
@@ -1625,5 +1626,37 @@
       "white": "Белый",
       "cream": "Кремовый"
     }
+  },
+  "datingIdeas": {
+    "title": "Идеи для свиданий",
+    "subtitle": "Вдохновение для ваших особенных моментов",
+    "sectionAria": "Открыть идеи для свиданий",
+    "sectionHint": "Сгенерировать идею за {{cost}} Аморку",
+    "sectionActiveHint": "У вас есть активная идея — откройте, чтобы продолжить",
+    "costLabel": "{{cost}} Аморка",
+    "generateTitle": "Новая идея для свидания",
+    "generateHint": "Нажмите кнопку — мы подберём идею специально для вас двоих.",
+    "generateCta": "Сгенерировать за {{cost}}",
+    "generateAgain": "Новая за {{cost}}",
+    "generating": "Подбираем идею…",
+    "generatingHint": "Ещё мгновение — и сюрприз готов",
+    "ideaBadge": "Идея для свидания",
+    "completed": "Выполнили",
+    "flipTitle": "Добавим в календарь?",
+    "flipHint": "Зафиксируйте это свидание как событие пары",
+    "openEventEditor": "Добавить событие",
+    "eventBadge": "Из идей для свиданий",
+    "eventCreated": "Событие создано из идеи для свидания",
+    "historyTitle": "Ваши идеи",
+    "historyListTitle": "Все идеи",
+    "historyEmpty": "Пока нет выполненных или пропущенных идей",
+    "openHistoryList": "Списком",
+    "statusCompleted": "Выполнено",
+    "statusSkipped": "Пропущено",
+    "backToCurrent": "К текущей идее",
+    "partnerRequired": "Идеи для свиданий доступны после привязки партнёра",
+    "loadError": "Не удалось загрузить идеи",
+    "generateError": "Не удалось сгенерировать идею",
+    "insufficientBalance": "Недостаточно Аморок. Нужно {{cost}}"
   }
 }

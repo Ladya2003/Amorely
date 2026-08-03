@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CakeIcon from '@mui/icons-material/Cake';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import {
@@ -24,6 +25,7 @@ interface CalendarDayProps {
     mediaEnvelope?: ContentMediaEnvelope;
     isBirthdayEvent?: boolean;
     isAnniversaryEvent?: boolean;
+    isDatingIdeaEvent?: boolean;
   } | null;
   onContentClick?: (eventId: string) => void;
   onAddContent?: (date: Date) => void;
@@ -41,6 +43,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
   const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
   const isBirthdayEvent = content && content.isBirthdayEvent;
   const isAnniversaryEvent = content && content.isAnniversaryEvent;
+  const isDatingIdeaEvent = content && content.isDatingIdeaEvent;
 
   const handleClick = () => {
     if (isOutsideMonth) {
@@ -145,6 +148,28 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
             }}
           >
             <FavoriteIcon sx={{ fontSize: 12, color: 'white' }} />
+          </Box>
+        )}
+
+        {isDatingIdeaEvent && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: -4,
+              right: -4,
+              bgcolor: 'secondary.main',
+              borderRadius: '50%',
+              width: 20,
+              height: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 2,
+              zIndex: 100,
+              border: '1px solid white',
+            }}
+          >
+            <AutoAwesomeIcon sx={{ fontSize: 12, color: 'white' }} />
           </Box>
         )}
       </Box>
