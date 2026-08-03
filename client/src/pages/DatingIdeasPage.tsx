@@ -97,6 +97,9 @@ const toCompletedEventPreview = (
   };
 };
 
+const PENDING_COMPLETED_IDEA_KEY = 'amorely:dating-ideas:pending-completed';
+const PENDING_COMPLETED_IDEA_EVENT = 'amorely:dating-ideas-pending';
+
 const DatingIdeasPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
@@ -112,6 +115,7 @@ const DatingIdeasPage: React.FC = () => {
   const [history, setHistory] = useState<DatingIdea[]>([]);
   const [flipped, setFlipped] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [saveInProgress, setSaveInProgress] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -120,24 +124,129 @@ const DatingIdeasPage: React.FC = () => {
   const [completedEventPreview, setCompletedEventPreview] = useState<CompletedEventPreviewData | null>(null);
   const [completedEventLoading, setCompletedEventLoading] = useState(false);
   const [completedEventError, setCompletedEventError] = useState<string | null>(null);
-  const closingAfterSaveRef = useRef(false);
+  const [editorInitialDate] = useState(() => new Date());
+  const completingIdeaRef = useRef<DatingIdea | null>(null);
+  const saveInProgressRef = useRef(false);
+  // Intentionally NOT synced from state on every render — early writes during
+  // save must win over stale state until React commits the completed view.
+  const selectedHistoryIdeaRef = useRef<DatingIdea | null>(null);
+  const editorOpenRef = useRef(false);
   const seededPreviewEventIdRef = useRef<string | null>(null);
+  const pageTopRef = useRef<HTMLDivElement | null>(null);
+  const language = i18n.language;
+
+  editorOpenRef.current = editorOpen || saveInProgress;
+
+  const scrollToPageTop = useCallback(() => {
+    const start = pageTopRef.current;
+    if (!start) return;
+    let parent: HTMLElement | null = start.parentElement;
+    while (parent) {
+      const { overflowY } = window.getComputedStyle(parent);
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        parent.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      parent = parent.parentElement;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const selectHistoryIdea = useCallback((idea: DatingIdea | null, options?: { persist?: boolean }) => {
+    selectedHistoryIdeaRef.current = idea;
+    setSelectedHistoryIdea(idea);
+    if (options?.persist) {
+      if (idea?.status === 'completed' && idea.id) {
+        try {
+          sessionStorage.setItem(
+            PENDING_COMPLETED_IDEA_KEY,
+            JSON.stringify({
+              id: idea.id,
+              eventId: idea.eventId || null,
+              title: idea.title,
+              description: idea.description,
+              emoji: idea.emoji,
+            })
+          );
+          window.dispatchEvent(new Event(PENDING_COMPLETED_IDEA_EVENT));
+        } catch {
+          // ignore quota / private mode
+        }
+      }
+    } else if (idea === null) {
+      try {
+        sessionStorage.removeItem(PENDING_COMPLETED_IDEA_KEY);
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
 
   const loadOverview = useCallback(async (options?: { preservePhase?: boolean }) => {
     try {
-      const data = await fetchDatingIdeas(i18n.language);
+      const data = await fetchDatingIdeas(language);
+      let pendingCompleted: {
+        id: string;
+        eventId?: string | null;
+        title?: string;
+        description?: string;
+        emoji?: string;
+      } | null = null;
+      try {
+        const raw = sessionStorage.getItem(PENDING_COMPLETED_IDEA_KEY);
+        pendingCompleted = raw ? JSON.parse(raw) : null;
+      } catch {
+        pendingCompleted = null;
+      }
+
+      // Do not clobber the post-save completed view (or an in-flight save)
+      // just because there is no longer an active idea.
+      const shouldPreservePhase =
+        Boolean(options?.preservePhase) ||
+        saveInProgressRef.current ||
+        editorOpenRef.current ||
+        Boolean(selectedHistoryIdeaRef.current) ||
+        Boolean(pendingCompleted?.id);
+
       if (!data.hasPartner) {
-        if (!options?.preservePhase) {
+        if (!shouldPreservePhase) {
           setPhase('offer');
         }
-        setError(t('datingIdeas.partnerRequired'));
+        setError(i18n.t('datingIdeas.partnerRequired'));
         return;
       }
       setBalance(data.balance ?? 0);
       setCost(data.cost ?? 1);
       setHistory(data.history ?? []);
       setActiveIdea(data.active ?? null);
-      if (!options?.preservePhase) {
+
+      const selectedId = selectedHistoryIdeaRef.current?.id || pendingCompleted?.id || null;
+      if (selectedId) {
+        const refreshed =
+          (data.history ?? []).find((item) => item.id === selectedId) ||
+          (pendingCompleted?.id === selectedId
+            ? ({
+                id: pendingCompleted.id,
+                ideaKey: '',
+                emoji: pendingCompleted.emoji || '💕',
+                title: pendingCompleted.title || '',
+                description: pendingCompleted.description || '',
+                status: 'completed' as const,
+                eventId: pendingCompleted.eventId || null,
+                createdBy: '',
+                createdAt: new Date().toISOString(),
+                completedAt: new Date().toISOString(),
+                skippedAt: null,
+              } satisfies DatingIdea)
+            : null);
+        if (refreshed) {
+          selectHistoryIdea(refreshed, { persist: Boolean(pendingCompleted?.id) });
+          setPhase('idea');
+          setFlipped(false);
+        }
+      }
+
+      if (!shouldPreservePhase) {
         if (data.active) {
           setPhase('idea');
           setFlipped(false);
@@ -148,15 +257,30 @@ const DatingIdeasPage: React.FC = () => {
       }
       setError(null);
     } catch {
-      setError(t('datingIdeas.loadError'));
-      if (!options?.preservePhase) {
+      setError(i18n.t('datingIdeas.loadError'));
+      if (
+        !options?.preservePhase &&
+        !saveInProgressRef.current &&
+        !editorOpenRef.current &&
+        !selectedHistoryIdeaRef.current
+      ) {
         setPhase('offer');
       }
     }
-  }, [i18n.language, t]);
+  }, [i18n, language, selectHistoryIdea]);
 
   useEffect(() => {
     void loadOverview();
+  }, [loadOverview]);
+
+  useEffect(() => {
+    const handlePendingCompleted = () => {
+      void loadOverview({ preservePhase: true });
+    };
+    window.addEventListener(PENDING_COMPLETED_IDEA_EVENT, handlePendingCompleted);
+    return () => {
+      window.removeEventListener(PENDING_COMPLETED_IDEA_EVENT, handlePendingCompleted);
+    };
   }, [loadOverview]);
 
   useEffect(() => {
@@ -321,6 +445,9 @@ const DatingIdeasPage: React.FC = () => {
   };
 
   const resolveKeysForEncrypt = async (): Promise<LocalDeviceKeys> => {
+    if (localDeviceKeys) {
+      return localDeviceKeys;
+    }
     await ensureLocalKeys();
     if (!user?._id) {
       throw new Error(t('calendar.errors.notAuthorizedShort'));
@@ -336,7 +463,7 @@ const DatingIdeasPage: React.FC = () => {
     setError(null);
     setPhase('generating');
     setFlipped(false);
-    setSelectedHistoryIdea(null);
+    selectHistoryIdea(null);
     setCompletingIdea(null);
 
     const startedAt = Date.now();
@@ -374,6 +501,7 @@ const DatingIdeasPage: React.FC = () => {
   const handleCompletedClick = (idea?: DatingIdea | null) => {
     const target = idea || activeIdea;
     if (!target) return;
+    completingIdeaRef.current = target;
     setCompletingIdea(target);
     setPhase('flipping');
     setFlipped(true);
@@ -383,14 +511,16 @@ const DatingIdeasPage: React.FC = () => {
   };
 
   const handleEditorClose = () => {
-    setEditorOpen(false);
-    setFlipped(false);
-    setCompletingIdea(null);
-    if (closingAfterSaveRef.current) {
-      closingAfterSaveRef.current = false;
+    // Never dismiss the editor while a dating-idea save is in flight.
+    // open={editorOpen || saveInProgress} also keeps the drawer mounted.
+    if (saveInProgressRef.current) {
       return;
     }
-    if (selectedHistoryIdea) {
+    setEditorOpen(false);
+    setFlipped(false);
+    completingIdeaRef.current = null;
+    setCompletingIdea(null);
+    if (selectedHistoryIdeaRef.current) {
       setPhase('idea');
       return;
     }
@@ -413,10 +543,14 @@ const DatingIdeasPage: React.FC = () => {
       onPrepareStart?: (progress: PrepareMediaProgress) => void;
     }
   ) => {
-    const idea = completingIdea || activeIdea;
+    const idea = completingIdeaRef.current || completingIdea || activeIdea;
     if (!idea) {
       throw new Error(t('datingIdeas.generateError'));
     }
+
+    saveInProgressRef.current = true;
+    setSaveInProgress(true);
+    setEditorOpen(true);
 
     try {
       const token = localStorage.getItem('token');
@@ -491,109 +625,150 @@ const DatingIdeasPage: React.FC = () => {
         response.data?.content?.[0]?.eventId ||
         null;
 
-      if (eventId) {
-        try {
-          await completeDatingIdea(idea.id, String(eventId));
-        } catch {
-          // Server may already have linked the idea via datingIdeaId.
-        }
+      if (!eventId) {
+        throw new Error(t('calendar.errors.saveEventFailed'));
       }
 
-      // Fully load + decrypt the created event BEFORE leaving the editor,
-      // so the ideas page can show the preview immediately.
+      try {
+        await completeDatingIdea(idea.id, String(eventId));
+      } catch {
+        // Server may already have linked the idea via datingIdeaId.
+      }
+
+      // Pin the completed view immediately after the event exists so a slow
+      // preview/overview fetch (or a concurrent loadOverview) cannot dump the
+      // user back onto the generate-offer screen.
+      const completedIdea: DatingIdea = {
+        ...idea,
+        status: 'completed',
+        eventId: String(eventId),
+        completedAt: new Date().toISOString(),
+      };
       let readyPreview: CompletedEventPreviewData = {
         title: eventData.title,
         description: eventData.description,
-        eventId: eventId ? String(eventId) : undefined,
+        eventId: String(eventId),
       };
 
-      if (eventId) {
-        let loadedEvent: any = null;
-        for (let attempt = 0; attempt < 12; attempt += 1) {
-          try {
-            const eventResponse = await axios.get(
-              `${API_URL}/api/calendar/events/${encodeURIComponent(String(eventId))}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            loadedEvent = eventResponse.data;
-            if (loadedEvent) break;
-          } catch {
-            // retry until event becomes readable
-          }
-          await new Promise((resolve) => setTimeout(resolve, 220 + attempt * 140));
-        }
+      seededPreviewEventIdRef.current = String(eventId);
+      selectHistoryIdea(completedIdea, { persist: true });
+      setHistory((prev) =>
+        prev.some((item) => item.id === completedIdea.id)
+          ? prev.map((item) => (item.id === completedIdea.id ? completedIdea : item))
+          : [completedIdea, ...prev]
+      );
+      setActiveIdea((prev) => (prev && prev.id !== completedIdea.id ? prev : null));
+      setCompletedEventPreview(readyPreview);
+      setCompletedEventLoading(false);
+      setCompletedEventError(null);
+      setPhase('idea');
+      setFlipped(false);
+      completingIdeaRef.current = null;
+      setCompletingIdea(null);
 
-        if (!loadedEvent && Array.isArray(response.data?.content)) {
-          loadedEvent = response.data.content[0] || null;
+      // Enrich preview + history while the editor still shows "Saving..."
+      let loadedEvent: any = null;
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        try {
+          const eventResponse = await axios.get(
+            `${API_URL}/api/calendar/events/${encodeURIComponent(String(eventId))}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          loadedEvent = eventResponse.data;
+          if (loadedEvent) break;
+        } catch {
+          // retry until event becomes readable
         }
+        await new Promise((resolve) => setTimeout(resolve, 220 + attempt * 140));
+      }
 
-        if (loadedEvent) {
-          try {
-            const [decrypted] = await decryptCalendarEventsWithMedia(
-              keys,
-              [loadedEvent],
-              user?._id,
-              partnerId || undefined
-            );
-            loadedEvent = decrypted;
-          } catch (decryptError) {
-            console.error('Failed to decrypt dating idea event preview:', decryptError);
-          }
-          readyPreview = toCompletedEventPreview(loadedEvent, String(eventId));
-          if (!readyPreview.title) readyPreview.title = eventData.title;
-          if (!readyPreview.description) readyPreview.description = eventData.description;
+      if (!loadedEvent && Array.isArray(response.data?.content)) {
+        loadedEvent = response.data.content[0] || null;
+      }
+
+      if (loadedEvent) {
+        try {
+          const [decrypted] = await decryptCalendarEventsWithMedia(
+            keys,
+            [loadedEvent],
+            user?._id,
+            partnerId || undefined
+          );
+          loadedEvent = decrypted;
+        } catch (decryptError) {
+          console.error('Failed to decrypt dating idea event preview:', decryptError);
         }
+        readyPreview = toCompletedEventPreview(loadedEvent, String(eventId));
+        if (!readyPreview.title) readyPreview.title = eventData.title;
+        if (!readyPreview.description) readyPreview.description = eventData.description;
+        setCompletedEventPreview(readyPreview);
       }
 
       notifyCalendarEventsChanged();
 
-      const overview = await fetchDatingIdeas(i18n.language);
-      setBalance(overview.balance ?? 0);
-      setCost(overview.cost ?? 1);
-      setHistory(overview.history ?? []);
-      setActiveIdea(overview.active ?? null);
+      try {
+        let overview = await fetchDatingIdeas(language);
+        let matched =
+          (overview.history ?? []).find(
+            (item) =>
+              item.id === idea.id ||
+              (item.eventId && String(item.eventId) === String(eventId))
+          ) || null;
 
-      const matched =
-        (overview.history ?? []).find(
-          (item) =>
-            item.id === idea.id ||
-            (eventId && item.eventId && String(item.eventId) === String(eventId))
-        ) || null;
+        for (
+          let attempt = 0;
+          attempt < 10 &&
+          !(matched?.status === 'completed' && matched.eventId && String(matched.eventId) === String(eventId));
+          attempt += 1
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 200 + attempt * 120));
+          overview = await fetchDatingIdeas(language);
+          matched =
+            (overview.history ?? []).find(
+              (item) =>
+                item.id === idea.id ||
+                (item.eventId && String(item.eventId) === String(eventId))
+            ) || null;
+        }
 
-      const completedIdea: DatingIdea =
-        matched && matched.status === 'completed'
-          ? matched
-          : matched
-            ? {
-                ...matched,
-                status: 'completed',
-                eventId: eventId ? String(eventId) : matched.eventId,
-              }
-            : {
-                ...idea,
-                status: 'completed',
-                eventId: eventId ? String(eventId) : null,
-                completedAt: new Date().toISOString(),
-              };
+        const resolvedIdea =
+          matched?.status === 'completed' &&
+          matched.eventId &&
+          String(matched.eventId) === String(eventId)
+            ? matched
+            : completedIdea;
 
-      if (completedIdea.eventId) {
-        seededPreviewEventIdRef.current = String(completedIdea.eventId);
+        selectHistoryIdea(resolvedIdea, { persist: true });
+        setBalance(overview.balance ?? 0);
+        setCost(overview.cost ?? cost);
+        setHistory(
+          (overview.history ?? []).some((item) => item.id === resolvedIdea.id)
+            ? (overview.history ?? []).map((item) =>
+                item.id === resolvedIdea.id ? resolvedIdea : item
+              )
+            : [resolvedIdea, ...(overview.history ?? [])]
+        );
+        setActiveIdea(
+          overview.active && overview.active.id !== resolvedIdea.id ? overview.active : null
+        );
+      } catch (overviewError) {
+        console.error('Failed to refresh dating ideas after save:', overviewError);
       }
-      setCompletedEventPreview(readyPreview);
-      setCompletedEventLoading(false);
-      setCompletedEventError(null);
-      setSelectedHistoryIdea(completedIdea);
+
       setPhase('idea');
-      setFlipped(false);
-      setCompletingIdea(null);
-      closingAfterSaveRef.current = true;
-      setEditorOpen(false);
       setToast(t('datingIdeas.eventCreated'));
+      // Close only after overview + preview work finishes. EventEditorDrawer has
+      // closeOnSave={false}, so it will not close earlier on its own.
+      saveInProgressRef.current = false;
+      setSaveInProgress(false);
+      setEditorOpen(false);
     } catch (error) {
       console.error('Dating idea event save error:', error);
       if (isVideoCompressionError(error)) {
         console.error('Детали сжатия видео:', error.details);
       }
+      saveInProgressRef.current = false;
+      setSaveInProgress(false);
       throw error;
     }
   };
@@ -610,17 +785,42 @@ const DatingIdeasPage: React.FC = () => {
 
   return (
     <Container
+      ref={pageTopRef}
       maxWidth="sm"
-      sx={{
-        ...getDatingIdeasPageRootSx(theme),
-        ...(showCompletedPreview && {
-          pb: {
-            xs: 'calc(220px + max(16px, env(safe-area-inset-bottom, 0px)))',
-            sm: 4,
-          },
-        }),
-      }}
+      sx={getDatingIdeasPageRootSx(theme)}
     >
+      {saveInProgress && (
+        <Box
+          sx={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: (theme) => theme.zIndex.modal + 2,
+            display: 'grid',
+            placeItems: 'center',
+            bgcolor: 'rgba(0,0,0,0.45)',
+            pointerEvents: 'all',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 1.5,
+              placeItems: 'center',
+              px: 3,
+              py: 2.5,
+              borderRadius: 3,
+              bgcolor: 'background.paper',
+              boxShadow: 8,
+              minWidth: 220,
+            }}
+          >
+            <CircularProgress size={32} />
+            <Typography variant="body1" fontWeight={700}>
+              {t('calendar.common.saving')}
+            </Typography>
+          </Box>
+        </Box>
+      )}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <IconButton onClick={() => navigate('/')} aria-label={t('common.back')}>
           <ArrowBackIcon />
@@ -655,7 +855,8 @@ const DatingIdeasPage: React.FC = () => {
         </Box>
       )}
 
-      {(phase === 'offer' || (phase === 'idea' && !activeIdea && !selectedHistoryIdea)) && (
+      {!selectedHistoryIdea &&
+        (phase === 'offer' || (phase === 'idea' && !activeIdea)) && (
         <Box sx={getGenerateOfferSx(theme)}>
           <Box
             sx={{
@@ -707,16 +908,11 @@ const DatingIdeasPage: React.FC = () => {
         </Box>
       )}
 
-      {(phase === 'idea' || phase === 'flipping') && displayedIdea && (
+      {displayedIdea &&
+        (phase === 'idea' || phase === 'flipping' || Boolean(selectedHistoryIdea)) && (
         <Box
           sx={{
             animation: `${cardReveal} 500ms ease both`,
-            mb: showCompletedPreview
-              ? {
-                  xs: 'calc(168px + max(16px, env(safe-area-inset-bottom, 0px)))',
-                  sm: 3,
-                }
-              : 0,
           }}
         >
           <Box sx={getIdeaCardSx(theme, flipped)}>
@@ -775,7 +971,7 @@ const DatingIdeasPage: React.FC = () => {
                       variant="outlined"
                       sx={{ flex: 1, minWidth: 140, borderRadius: 2.5, fontWeight: 700 }}
                       onClick={() => {
-                        setSelectedHistoryIdea(null);
+                        selectHistoryIdea(null);
                         setFlipped(false);
                         setPhase(activeIdea ? 'idea' : 'offer');
                       }}
@@ -833,12 +1029,9 @@ const DatingIdeasPage: React.FC = () => {
           </Box>
           <Box
             sx={{
-              display: 'flex',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
               gap: 1.5,
-              overflowX: 'auto',
-              pb: 1,
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
             }}
           >
             {historyItems.map((idea) => (
@@ -846,9 +1039,10 @@ const DatingIdeasPage: React.FC = () => {
                 key={idea.id}
                 sx={getHistoryCardSx(theme, idea.status === 'completed' ? 'completed' : 'skipped')}
                 onClick={() => {
-                  setSelectedHistoryIdea(idea);
+                  selectHistoryIdea(idea);
                   setFlipped(false);
                   setPhase('idea');
+                  scrollToPageTop();
                 }}
                 role="button"
                 tabIndex={0}
@@ -889,13 +1083,14 @@ const DatingIdeasPage: React.FC = () => {
       )}
 
       <EventEditorDrawer
-        open={editorOpen}
+        open={editorOpen || saveInProgress}
         onClose={handleEditorClose}
-        initialDate={new Date()}
+        initialDate={editorInitialDate}
         initialTitle={ideaForEditor?.title}
         initialDescription={ideaForEditor?.description}
         isDatingIdeaEvent
         preferPresetOverDraft
+        closeOnSave={false}
         onSave={handleSaveEvent}
       />
 
@@ -904,10 +1099,11 @@ const DatingIdeasPage: React.FC = () => {
         onClose={() => setListOpen(false)}
         ideas={historyItems}
         onSelect={(idea) => {
-          setSelectedHistoryIdea(idea);
+          selectHistoryIdea(idea);
           setFlipped(false);
           setPhase('idea');
           setListOpen(false);
+          scrollToPageTop();
         }}
       />
 

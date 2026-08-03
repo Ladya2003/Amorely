@@ -108,12 +108,13 @@ export const getCompletedEventPreviewSx = (theme: Theme) => ({
 });
 
 export const getHistoryCardSx = (theme: Theme, status: 'completed' | 'skipped') => ({
-  minWidth: 220,
-  maxWidth: 260,
+  width: '100%',
+  minWidth: 0,
   p: 2,
   borderRadius: `${DATING_IDEAS_INNER_RADIUS}px`,
   border: getSurfaceBorder(theme),
-  scrollSnapAlign: 'start' as const,
+  cursor: 'pointer',
+  boxSizing: 'border-box' as const,
   ...getPrimaryTintSurface(theme, {
     tint: {
       light: status === 'completed' ? 0.16 : 0.08,

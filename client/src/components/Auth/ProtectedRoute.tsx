@@ -12,9 +12,12 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, bypassCryptoCheck = false }) => {
   const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
-  const { isCryptoReady, isChecking, isCryptoBootstrapComplete } = useCrypto();
-  
-  if (isLoading || isChecking || !isCryptoBootstrapComplete) {
+  const { isCryptoReady, isCryptoBootstrapComplete } = useCrypto();
+
+  // Do not gate on crypto `isChecking`: ensureLocalKeys() toggles it during saves
+  // (calendar / dating ideas) and would unmount the whole protected tree mid-action.
+  // Initial key bootstrap is already covered by `isCryptoBootstrapComplete`.
+  if (isLoading || !isCryptoBootstrapComplete) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />

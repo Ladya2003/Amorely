@@ -191,6 +191,11 @@ const Layout: React.FC = () => {
 
     if (path === '/settings') return 4;
 
+    // Sub-pages outside bottom-nav tabs: keep a stable unique key via pathname.
+    if (path.startsWith('/dating-ideas')) return false;
+
+    if (path.startsWith('/pets')) return false;
+
     if (path.startsWith('/legal/')) return false;
 
     if (path.startsWith('/admin')) return false;
@@ -202,6 +207,7 @@ const Layout: React.FC = () => {
 
 
   const currentTab = getCurrentTab();
+  const isMainTabPage = typeof currentTab === 'number';
 
   const chatTabIcon = (
 
@@ -389,7 +395,17 @@ const Layout: React.FC = () => {
 
       }}>
 
-        <Box key={tabContentKey} sx={getTabPageEnterSx(tabSlideDirection)}>
+        <Box
+          key={tabContentKey}
+          sx={{
+            ...getTabPageEnterSx(tabSlideDirection),
+            ...(!isMainTabPage && {
+              flex: '0 0 auto',
+              minHeight: 'auto',
+              width: '100%',
+            }),
+          }}
+        >
 
           <Outlet />
 

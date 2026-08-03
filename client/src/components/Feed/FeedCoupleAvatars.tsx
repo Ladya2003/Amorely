@@ -39,6 +39,8 @@ import {
   getCoupleLockBadgeSx,
   getCoupleUserAvatarWrapSx,
   getThoughtBubbleBodySx,
+  getThoughtBubbleRootSx,
+  getThoughtBubbleTailSx,
 } from './feedCoupleAvatarsStyles';
 
 interface StatusThoughtBubbleProps {
@@ -66,21 +68,24 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
       aria-label={ariaLabel}
       title={text}
       sx={{
-        ...getThoughtBubbleBodySx(theme, editable, tailAlign),
+        ...getThoughtBubbleRootSx(theme, editable),
         ...(editable && { fontFamily: 'inherit' }),
       }}
     >
-      <Box
-        component="span"
-        sx={{
-          display: 'block',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          maxWidth: '100%',
-        }}
-      >
-        {text}
+      <Box aria-hidden component="span" sx={getThoughtBubbleTailSx(theme, tailAlign)} />
+      <Box component="span" data-thought-bubble-body sx={getThoughtBubbleBodySx(theme)}>
+        <Box
+          component="span"
+          sx={{
+            display: 'block',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: '100%',
+          }}
+        >
+          {text}
+        </Box>
       </Box>
     </Box>
   );

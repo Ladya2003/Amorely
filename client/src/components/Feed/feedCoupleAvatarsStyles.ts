@@ -9,7 +9,8 @@ const getBubbleSurface = (theme: Theme) => {
   const isLight = theme.palette.mode === 'light';
 
   return {
-    bgcolor: isLight ? theme.palette.common.white : alpha(theme.palette.common.white, 0.1),
+    // Непрозрачная заливка: иначе сквозь облако и хвостик просвечивает фон
+    bgcolor: isLight ? theme.palette.common.white : theme.palette.background.paper,
     border: isLight ? 'none' : `1px solid ${alpha(theme.palette.common.white, 0.14)}`,
     color: isLight ? '#3d2c5c' : theme.palette.text.primary,
     shadow: isLight
@@ -121,23 +122,74 @@ export const getCoupleLockBadgeSx = (theme: Theme, interactive = false) => {
   };
 };
 
-const BUBBLE_TAIL_HALF_WIDTH = 6;
+const BUBBLE_TAIL_HALF_WIDTH = 7;
 /** Отступ хвостика от края облака — чтобы не упирался в скругление */
-const BUBBLE_TAIL_EDGE_INSET = 12;
+const BUBBLE_TAIL_EDGE_INSET = 14;
+/** Насколько хвостик заходит под тело облака */
+const BUBBLE_TAIL_OVERLAP = 3;
 
-export const getThoughtBubbleBodySx = (
+export const getThoughtBubbleRootSx = (theme: Theme, editable: boolean) => {
+  const hoverShadow =
+    theme.palette.mode === 'light'
+      ? `0 4px 14px ${alpha(theme.palette.common.black, 0.14)}`
+      : `0 4px 16px ${alpha(theme.palette.common.black, 0.36)}`;
+
+  return {
+    position: 'relative' as const,
+    display: 'inline-block',
+    maxWidth: STATUS_BUBBLE_MAX_WIDTH,
+    verticalAlign: 'top',
+    overflow: 'visible' as const,
+    p: 0,
+    m: 0,
+    border: 'none',
+    background: 'none',
+    appearance: 'none' as const,
+    pointerEvents: editable ? ('auto' as const) : ('none' as const),
+    cursor: editable ? 'pointer' : 'default',
+    transition: 'transform 150ms ease',
+    ...(editable && {
+      '&:hover': {
+        transform: 'translateY(-1px)',
+        '& [data-thought-bubble-body]': {
+          boxShadow: hoverShadow,
+        },
+      },
+    }),
+  };
+};
+
+export const getThoughtBubbleTailSx = (
   theme: Theme,
-  editable: boolean,
   tailAlign: 'left' | 'right' = 'left'
 ) => {
   const surface = getBubbleSurface(theme);
 
   return {
+    position: 'absolute' as const,
+    zIndex: 0,
+    bottom: -(BUBBLE_TAIL_HALF_WIDTH - BUBBLE_TAIL_OVERLAP),
+    width: 0,
+    height: 0,
+    borderLeft: `${BUBBLE_TAIL_HALF_WIDTH}px solid transparent`,
+    borderRight: `${BUBBLE_TAIL_HALF_WIDTH}px solid transparent`,
+    borderTop: `${BUBBLE_TAIL_HALF_WIDTH}px solid ${surface.bgcolor}`,
+    pointerEvents: 'none' as const,
+    ...(tailAlign === 'left'
+      ? { left: BUBBLE_TAIL_EDGE_INSET }
+      : { right: BUBBLE_TAIL_EDGE_INSET, left: 'auto' }),
+  };
+};
+
+export const getThoughtBubbleBodySx = (theme: Theme) => {
+  const surface = getBubbleSurface(theme);
+
+  return {
     position: 'relative' as const,
-    display: 'inline-block',
+    zIndex: 1,
+    display: 'block',
     boxSizing: 'border-box' as const,
     maxWidth: STATUS_BUBBLE_MAX_WIDTH,
-    verticalAlign: 'top',
     px: 1.5,
     py: 0.75,
     borderRadius: '16px',
@@ -148,33 +200,10 @@ export const getThoughtBubbleBodySx = (
     fontWeight: 600,
     lineHeight: 1.25,
     boxShadow: surface.shadow,
-    overflow: 'visible',
+    overflow: 'hidden',
     textAlign: 'left' as const,
     direction: 'ltr' as const,
-    pointerEvents: editable ? ('auto' as const) : ('none' as const),
-    cursor: editable ? 'pointer' : 'default',
-    transition: 'transform 150ms ease, box-shadow 150ms ease',
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      bottom: -5,
-      width: 0,
-      height: 0,
-      borderLeft: `${BUBBLE_TAIL_HALF_WIDTH}px solid transparent`,
-      borderRight: `${BUBBLE_TAIL_HALF_WIDTH}px solid transparent`,
-      borderTop: `${BUBBLE_TAIL_HALF_WIDTH}px solid ${surface.bgcolor}`,
-      ...(tailAlign === 'left'
-        ? { left: BUBBLE_TAIL_EDGE_INSET, transform: 'none' }
-        : { right: BUBBLE_TAIL_EDGE_INSET, left: 'auto', transform: 'none' }),
-    },
-    ...(editable && {
-      '&:hover': {
-        transform: 'translateY(-1px)',
-        boxShadow: theme.palette.mode === 'light'
-          ? `0 4px 14px ${alpha(theme.palette.common.black, 0.14)}`
-          : `0 4px 16px ${alpha(theme.palette.common.black, 0.36)}`,
-      },
-    }),
+    transition: 'box-shadow 150ms ease',
   };
 };
 

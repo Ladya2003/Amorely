@@ -86,6 +86,8 @@ interface EventEditorDrawerProps {
   initialDescription?: string;
   isDatingIdeaEvent?: boolean;
   preferPresetOverDraft?: boolean;
+  /** When false, parent closes the drawer after onSave resolves (e.g. dating ideas). */
+  closeOnSave?: boolean;
   editEvent?: {
     eventId: string;
     title: string;
@@ -161,6 +163,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   initialDescription,
   isDatingIdeaEvent: isDatingIdeaEventProp = false,
   preferPresetOverDraft = false,
+  closeOnSave = true,
   editEvent,
   onSave,
   onUpdate
@@ -196,9 +199,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   const saveAbortRef = useRef<AbortController | null>(null);
   const saveSnapshotRef = useRef<SaveSnapshot | null>(null);
   const uploadedPublicIdsRef = useRef<string[]>([]);
+  const isSavingRef = useRef(false);
 
   const showLockedToast = useCallback(() => {
-    if (isSaving) {
+    if (isSavingRef.current || isSaving) {
       setLockedToastOpen(true);
     }
   }, [isSaving]);
@@ -254,6 +258,15 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setIsAnniversaryEvent(isDateNearAnniversary(selectedDate));
     }
   }, [selectedDate, user?.birthday, user?.relationshipStartDate, isEditMode]);
+
+  // Parent-controlled close (closeOnSave=false): release saving lock when drawer closes.
+  useEffect(() => {
+    if (!open && (isSaving || isSavingRef.current)) {
+      isSavingRef.current = false;
+      setIsSaving(false);
+      setCompressProgress(null);
+    }
+  }, [open, isSaving]);
 
   // Инициализация при открытии drawer
   useEffect(() => {
@@ -422,7 +435,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSavingRef.current || isSaving) return;
 
     if (!selectedDate) {
       setError(t('calendar.errors.selectDate'));
@@ -436,9 +449,17 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
 
     const newFiles = getNewFilesFromMediaItems(mediaItems);
 
+    // Lock immediately (before any await) so Drawer onClose cannot dismiss mid-save.
+    isSavingRef.current = true;
+    setIsSaving(true);
+    setCompressProgress(null);
+    setError(null);
+
     try {
       await assertFilesReadable(newFiles);
     } catch {
+      isSavingRef.current = false;
+      setIsSaving(false);
       setError(t('calendar.errors.unreadableMedia'));
       return;
     }
@@ -469,10 +490,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       }
     };
 
+    let saveSucceeded = false;
     try {
-      setIsSaving(true);
-      setCompressProgress(null);
-      setError(null);
       
       if (isEditMode && editEvent && onUpdate) {
         await onUpdate(
@@ -516,8 +535,13 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setMediaItems([]);
       setRemovedMediaIds([]);
       setSelectedDate(new Date());
-      
-      onClose();
+      saveSucceeded = true;
+
+      // Parent may keep the drawer open until post-save work finishes
+      // (e.g. dating ideas linking). Only auto-close for normal calendar saves.
+      if (closeOnSave) {
+        onClose();
+      }
     } catch (error) {
       if (isSaveAborted(error)) {
         return;
@@ -530,7 +554,12 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       setError(message);
     } finally {
       if (!abortController.signal.aborted) {
-        setIsSaving(false);
+        // Parent-controlled close: keep the saving lock after success until
+        // `open` becomes false. Always unlock on failure so the user can retry.
+        if (closeOnSave || !saveSucceeded) {
+          isSavingRef.current = false;
+          setIsSaving(false);
+        }
         setCompressProgress(null);
         saveAbortRef.current = null;
         saveSnapshotRef.current = null;
@@ -540,7 +569,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleCancelSave = async () => {
-    if (!isSaving) return;
+    if (!isSavingRef.current && !isSaving) return;
 
     saveAbortRef.current?.abort();
 
@@ -559,6 +588,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
     }
 
     setError(null);
+    isSavingRef.current = false;
     setIsSaving(false);
     setCompressProgress(null);
     saveAbortRef.current = null;
@@ -567,6 +597,10 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
   };
 
   const handleClose = () => {
+    if (isSavingRef.current || isSaving) {
+      showLockedToast();
+      return;
+    }
     setViewerOpen(false);
     if (!isEditMode && isInitialized) {
       void flushDraft({
@@ -622,13 +656,16 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
       anchor="right"
       open={open}
       onClose={(_event, reason) => {
-        if (isSaving) {
+        if (isSavingRef.current || isSaving) {
           if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
             showLockedToast();
           }
           return;
         }
         handleClose();
+      }}
+      ModalProps={{
+        disableEscapeKeyDown: isSaving || isDatingIdeaEventProp,
       }}
       PaperProps={{
         sx: getCalendarDrawerPaperSx(theme, isMobile),
@@ -640,7 +677,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
             <IconButton
               edge="start"
               onClick={() => {
-                if (isSaving) {
+                if (isSavingRef.current || isSaving) {
                   showLockedToast();
                   return;
                 }

@@ -104,16 +104,23 @@ export const CryptoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    setIsChecking(true);
+    // Avoid flipping global isChecking when keys are already resolved — callers
+    // (calendar/dating-idea save) must not trigger app-wide loading gates.
+    const alreadyResolved = cryptoResolvedUserId === userId && Boolean(localDeviceKeys);
+    if (!alreadyResolved) {
+      setIsChecking(true);
+    }
     try {
       await reloadKeysForUser(userId);
     } catch {
       setLocalDeviceKeys(null);
     } finally {
-      setIsChecking(false);
+      if (!alreadyResolved) {
+        setIsChecking(false);
+      }
       setCryptoResolvedUserId(userId);
     }
-  }, [isAuthenticated, reloadKeysForUser, userId]);
+  }, [cryptoResolvedUserId, isAuthenticated, localDeviceKeys, reloadKeysForUser, userId]);
 
   const isCryptoBootstrapComplete =
     !isAuthenticated || !userId || cryptoResolvedUserId === userId;
