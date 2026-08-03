@@ -1,6 +1,7 @@
 {
   "short_name": "Amorely",
-  "name": "Amorely",
+  "name": "Amorely — app for couples",
+  "description": "Private space for couples: encrypted chat, shared calendar, photo feed, games, and daily questions.",
   "icons": [
     {
       "src": "favicon-32.png",

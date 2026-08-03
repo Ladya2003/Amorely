@@ -1248,6 +1248,88 @@
     "email": "Email",
     "password": "Contraseña",
     "togglePasswordVisibility": "Mostrar u ocultar contraseña",
+    "landing": {
+      "documentTitle": "Amorely — app para parejas | chat, calendario, recuerdos",
+      "ariaLabel": "Resumen de Amorely",
+      "heroTitle": "Un espacio privado solo para los dos",
+      "heroLead": "Feed compartido, preguntas del día, mascotas, ideas de citas, chat cifrado, juegos en pareja y un calendario con fotos — cerca o a distancia.",
+      "ctaLogin": "Iniciar sesión",
+      "ctaRegister": "Registrarse",
+      "featuresTitle": "Qué pueden hacer juntos",
+      "features": {
+        "feed": {
+          "title": "Véanse — y sus momentos",
+          "body": "Los avatares muestran qué tan lejos están, mientras el feed trae de vuelta fotos y notas del día a día.",
+          "imageAlt": "Pantalla de inicio de Amorely con avatares, distancia y feed compartido"
+        },
+        "questions": {
+          "title": "Preguntas del día",
+          "body": "Respondan prompts divertidos juntos: comparen respuestas, vean el historial y conózcanse mejor.",
+          "imageAlt": "Pregunta del día en Amorely"
+        },
+        "pets": {
+          "title": "Una mascota en común",
+          "body": "Cuiden juntos a un compañero: aliméntarlo, subir el cariño y hacerlo crecer como un pequeño ritual.",
+          "imageAlt": "Pantalla de mascota con saciedad y afecto"
+        },
+        "dateIdeas": {
+          "title": "Ideas de citas para dos",
+          "body": "Inspírense con ideas listas, marquen lo completado y planeen la siguiente aventura.",
+          "imageAlt": "Tarjeta de idea de cita: taller creativo para dos"
+        },
+        "daysTogether": {
+          "title": "Cuenten sus días juntos",
+          "body": "Vean cuánto llevan de pareja, persigan hitos, desbloqueen logros y mantengan su historia a la vista.",
+          "imageAlt": "Contador de días juntos con progreso al hito y logros"
+        },
+        "chat": {
+          "title": "Chat cifrado para dos",
+          "body": "Envíen textos, fotos y mensajes cortos en un chat privado: solo ustedes dos pueden leerlo.",
+          "imageAlt": "Chat cifrado de pareja con foto y mensajes"
+        },
+        "guessLocation": {
+          "title": "Adivina la ubicación",
+          "body": "Miren la foto de un lugar, pongan su pin en el mapa y jueguen rondas juntos contra el reloj.",
+          "imageAlt": "Juego de adivinar ubicación con foto y mapa mundial"
+        },
+        "guessLocationResult": {
+          "title": "Comparen aciertos y sumen puntos",
+          "body": "Vean quién quedó más cerca, sumen el puntaje en pareja y suban el reto del día juntos.",
+          "imageAlt": "Resultados del juego de ubicación con pines de ambos y puntajes"
+        },
+        "guessDrawing": {
+          "title": "Dibuja y adivina",
+          "body": "Dibujen una consigna mientras la otra persona adivina: pinceles, colores y risas incluidas.",
+          "imageAlt": "Juego de dibujar y adivinar con lienzo y herramientas"
+        },
+        "calendar": {
+          "title": "Un calendario lleno de recuerdos",
+          "body": "Conviertan fechas en un diario visual: creen eventos, marquen días especiales y recorran los meses como una galería.",
+          "imageAlt": "Calendario compartido con miniaturas de fotos por día"
+        }
+      },
+      "closing": {
+        "ariaLabel": "Por qué las parejas eligen Amorely",
+        "title": "Hecho para la cercanía — y la privacidad",
+        "lead": "Sus chats, calendario y recuerdos quedan entre ustedes dos. Empiecen gratis, inviten a su pareja y mantengan los pequeños rituales.",
+        "values": {
+          "private": {
+            "title": "Privado por diseño",
+            "body": "Chat cifrado y momentos personales para su pareja, no para un feed público."
+          },
+          "forTwo": {
+            "title": "Hecho para dos",
+            "body": "Juegos, preguntas, mascotas y planes compartidos que solo tienen sentido juntos."
+          },
+          "anywhere": {
+            "title": "Cerca o lejos",
+            "body": "Manténganse en sintonía aunque compartan ciudad o vivan en husos distintos."
+          }
+        },
+        "footerBrand": "Amorely",
+        "footerNote": "Un espacio privado para parejas: unirse, jugar y recordar."
+      }
+    },
     "login": {
       "title": "Iniciar sesión",
       "registrationSuccess": "¡Registro exitoso! Inicia sesión en tu cuenta.",

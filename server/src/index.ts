@@ -34,6 +34,7 @@ import { getAllowedOrigins } from './utils/corsOrigins';
 import { migrateLegacyTapGameStates } from './games/tapGameService';
 import { ensureSystemUser } from './services/systemUserService';
 import { ensureDailyQuestionImagesUploaded } from './services/dailyQuestionsImageService';
+import { ensureFeatureNews } from './services/ensureFeatureNews';
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ mongoose.connect(mongoUri)
     await migrateLegacyTapGameStates();
     await ensureSystemUser();
     await ensureDailyQuestionImagesUploaded();
+    await ensureFeatureNews();
   })
   .catch((err: any) => {
     console.error('Ошибка подключения к MongoDB:', err);

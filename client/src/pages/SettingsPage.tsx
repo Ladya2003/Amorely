@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
+  Badge,
   Box,
   Typography,
   CircularProgress,
@@ -29,6 +30,7 @@ import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
 import { useAuth } from '../contexts/AuthContext';
+import { usePendingPartnerRequests } from '../contexts/PendingPartnerRequestsContext';
 import { useTabSlideDirection } from '../hooks/useTabSlideDirection';
 import {
   checkPushSubscriptionStatus,
@@ -68,6 +70,7 @@ const getSettingsTabIndex = (tab?: string | null) => {
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user: authUser, updateUser } = useAuth();
+  const { pendingIncomingCount: pendingPartnerRequestsCount } = usePendingPartnerRequests();
   const [searchParams] = useSearchParams();
   const [tabValue, setTabValue] = useState(() => getSettingsTabIndex(searchParams.get('tab')));
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -87,13 +90,13 @@ const SettingsPage: React.FC = () => {
 
   const settingsTabs = useMemo(
     () => [
-      { icon: PersonIcon, label: t('settings.tabs.profile') },
-      { icon: PeopleIcon, label: t('settings.tabs.partner') },
-      { icon: PaletteIcon, label: t('settings.tabs.theme') },
-      { icon: NotificationsIcon, label: t('settings.tabs.notifications') },
-      { icon: SecurityIcon, label: t('settings.tabs.security') },
+      { icon: PersonIcon, label: t('settings.tabs.profile'), badgeCount: 0 },
+      { icon: PeopleIcon, label: t('settings.tabs.partner'), badgeCount: pendingPartnerRequestsCount },
+      { icon: PaletteIcon, label: t('settings.tabs.theme'), badgeCount: 0 },
+      { icon: NotificationsIcon, label: t('settings.tabs.notifications'), badgeCount: 0 },
+      { icon: SecurityIcon, label: t('settings.tabs.security'), badgeCount: 0 },
     ],
-    [t]
+    [t, pendingPartnerRequestsCount]
   );
 
   useEffect(() => {
@@ -533,19 +536,36 @@ const SettingsPage: React.FC = () => {
               {settingsTabs.map((tab, index) => {
                 const Icon = tab.icon;
                 const selected = tabValue === index;
+                const badgeCount = tab.badgeCount;
                 return (
-                  <Box
+                  <Badge
                     key={SETTINGS_TAB_KEYS[index]}
-                    component="button"
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    onClick={() => handleTabChange(index)}
-                    sx={getSettingsNavTabSx(muiTheme, { selected, isMobile })}
+                    badgeContent={badgeCount}
+                    color="error"
+                    max={99}
+                    invisible={badgeCount === 0}
+                    overlap="rectangular"
+                    sx={{
+                      width: isMobile ? 'auto' : '100%',
+                      flexShrink: isMobile ? 0 : undefined,
+                      '& .MuiBadge-badge': {
+                        right: 4,
+                        top: 4,
+                      },
+                    }}
                   >
-                    <Icon />
-                    {tab.label}
-                  </Box>
+                    <Box
+                      component="button"
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => handleTabChange(index)}
+                      sx={getSettingsNavTabSx(muiTheme, { selected, isMobile })}
+                    >
+                      <Icon />
+                      {tab.label}
+                    </Box>
+                  </Badge>
                 );
               })}
             </Box>

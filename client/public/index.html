@@ -11,32 +11,39 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Amorely" />
+    <title>Amorely — app for couples: chat, shared calendar &amp; memories</title>
     <meta
       name="description"
-      content="Amorely — an app for couples: chat, feed, calendar, and shared moments"
+      content="Amorely is a private space for couples: encrypted chat, shared calendar, photo feed, games, and daily questions — made for long-distance and everyday love."
     />
+    <meta
+      name="keywords"
+      content="couples app, relationship app, long distance relationship, LDR app, shared calendar for couples, couple chat, private couple journal, Amorely"
+    />
+    <meta name="author" content="Amorely" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://ladya2003.github.io/Amorely/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Amorely" />
-    <meta property="og:title" content="Amorely" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="ru_RU" />
+    <meta property="og:title" content="Amorely — a private app for couples" />
     <meta
       property="og:description"
-      content="Amorely — an app for couples: chat, feed, calendar, and shared moments"
+      content="Chat, shared calendar, photo feed, games, and daily questions in one private space for you and your partner."
     />
     <meta property="og:url" content="https://ladya2003.github.io/Amorely/" />
     <meta property="og:image" content="https://ladya2003.github.io/Amorely/logo512.png" />
+    <meta property="og:image:alt" content="Amorely logo" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Amorely" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Amorely — a private app for couples" />
     <meta
       name="twitter:description"
-      content="Amorely — an app for couples: chat, feed, calendar, and shared moments"
+      content="Chat, shared calendar, photo feed, games, and daily questions in one private space for you and your partner."
     />
     <meta name="twitter:image" content="https://ladya2003.github.io/Amorely/logo512.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -44,16 +51,23 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>Amorely</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Amorely",
+        "url": "https://ladya2003.github.io/Amorely/",
+        "description": "A private app for couples with encrypted chat, shared calendar, photo feed, games, and daily questions.",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "image": "https://ladya2003.github.io/Amorely/logo512.png"
+      }
+    </script>
     <script type="text/javascript">
       // GitHub Pages: восстановление маршрута после 404.html
       (function (l) {
@@ -75,17 +89,16 @@
     </script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div style="max-width:40rem;margin:2rem auto;padding:0 1rem;font-family:system-ui,sans-serif;line-height:1.5">
+        <h1>Amorely</h1>
+        <p>
+          Amorely is a private web app for couples: encrypted chat, shared calendar,
+          photo feed, games, and daily questions — for long-distance and everyday love.
+        </p>
+        <p>Please enable JavaScript to use Amorely.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>

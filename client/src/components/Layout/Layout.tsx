@@ -48,6 +48,8 @@ import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 
 import { useUnreadNews } from '../../contexts/UnreadNewsContext';
 
+import { usePendingPartnerRequests } from '../../contexts/PendingPartnerRequestsContext';
+
 import { useTabSlideDirection } from '../../hooks/useTabSlideDirection';
 
 import AnimatedBottomNav from './AnimatedBottomNav';
@@ -94,6 +96,8 @@ const Layout: React.FC = () => {
   const { totalUnreadCount } = useUnreadMessages();
 
   const { unreadCount: unreadNewsCount } = useUnreadNews();
+
+  const { pendingIncomingCount: pendingPartnerRequestsCount } = usePendingPartnerRequests();
 
 
 
@@ -229,6 +233,26 @@ const Layout: React.FC = () => {
 
   );
 
+  const settingsTabIcon = (
+
+    <Badge
+
+      badgeContent={pendingPartnerRequestsCount}
+
+      color="error"
+
+      max={99}
+
+      invisible={pendingPartnerRequestsCount === 0}
+
+    >
+
+      <AppSettingsFilledIcon />
+
+    </Badge>
+
+  );
+
   const tabSlideDirection = useTabSlideDirection(currentTab);
 
   const tabContentKey =
@@ -262,7 +286,7 @@ const Layout: React.FC = () => {
     <BottomNavTab key="chat" value={1} label={t('nav.chat')} icon={chatTabIcon} />,
     <BottomNavTab key="calendar" value={2} label={t('nav.calendar')} icon={<AppCalendarFilledIcon />} />,
     <BottomNavTab key="news" value={3} label={t('nav.news')} icon={newsTabIcon} />,
-    <BottomNavTab key="settings" value={4} label={t('nav.settings')} icon={<AppSettingsFilledIcon />} />,
+    <BottomNavTab key="settings" value={4} label={t('nav.settings')} icon={settingsTabIcon} />,
   ];
 
   

@@ -6,6 +6,7 @@ import AppThemeProvider from './contexts/AppThemeProvider';
 import { NavigationProvider } from './contexts/NavigationContext';
 import { UnreadMessagesProvider } from './contexts/UnreadMessagesContext';
 import { UnreadNewsProvider } from './contexts/UnreadNewsContext';
+import { PendingPartnerRequestsProvider } from './contexts/PendingPartnerRequestsContext';
 import { CryptoProvider } from './contexts/CryptoContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
@@ -97,6 +98,7 @@ function App() {
               <PushNavigationListener />
               <UnreadMessagesProvider>
               <UnreadNewsProvider>
+              <PendingPartnerRequestsProvider>
               <Routes>
                 {/* Публичный маршрут для аутентификации */}
                 <Route path="/auth" element={<AuthPage />} />
@@ -143,6 +145,7 @@ function App() {
                 {/* Перенаправление на главную страницу для неизвестных маршрутов */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </PendingPartnerRequestsProvider>
               </UnreadNewsProvider>
               </UnreadMessagesProvider>
             </Router>

@@ -1298,6 +1298,88 @@
     "email": "Email",
     "password": "Password",
     "togglePasswordVisibility": "Toggle password visibility",
+    "landing": {
+      "documentTitle": "Amorely — private app for couples | chat, calendar, memories",
+      "ariaLabel": "Amorely product overview",
+      "heroTitle": "A private space just for the two of you",
+      "heroLead": "Stay close with a shared feed, daily questions, pets, date ideas, encrypted chat, couple games, and a photo calendar — wherever you are.",
+      "ctaLogin": "Sign in",
+      "ctaRegister": "Sign up",
+      "featuresTitle": "What you can do together",
+      "features": {
+        "feed": {
+          "title": "See each other — and your moments",
+          "body": "Avatars show how far you are, while the feed brings back shared photos and notes from everyday life.",
+          "imageAlt": "Amorely home screen with partner avatars, distance, and shared feed"
+        },
+        "questions": {
+          "title": "Questions of the day",
+          "body": "Answer playful prompts together — compare answers, revisit history, and learn something new about each other.",
+          "imageAlt": "Questions of the day prompt in Amorely"
+        },
+        "pets": {
+          "title": "Grow a pet together",
+          "body": "Care for a shared companion: feed it, raise affection, and watch it level up as your little ritual.",
+          "imageAlt": "Shared pet screen with satiety and affection stats"
+        },
+        "dateIdeas": {
+          "title": "Date ideas for two",
+          "body": "Get inspired with ready-made date ideas, mark what you completed, and keep planning the next adventure.",
+          "imageAlt": "Date idea card for a creative workshop for two"
+        },
+        "daysTogether": {
+          "title": "Count your days together",
+          "body": "Track how long you’ve been a couple, chase milestones, unlock achievements, and keep your story visible.",
+          "imageAlt": "Days together counter with milestone progress and achievements"
+        },
+        "chat": {
+          "title": "Encrypted chat for two",
+          "body": "Send texts, photos, and little check-ins in a private chat — only the two of you can read it.",
+          "imageAlt": "Encrypted couple chat with photo and messages"
+        },
+        "guessLocation": {
+          "title": "Guess the location",
+          "body": "Look at a place photo, drop your pin on the map, and play rounds side by side against the clock.",
+          "imageAlt": "Guess the location game with photo and world map"
+        },
+        "guessLocationResult": {
+          "title": "Compare guesses, share the score",
+          "body": "See how close each of you got, add up the pair score, and climb today’s challenge together.",
+          "imageAlt": "Guess the location results with both partners’ pins and scores"
+        },
+        "guessDrawing": {
+          "title": "Draw & guess",
+          "body": "Sketch a prompt while your partner guesses — brushes, colors, and laughs included.",
+          "imageAlt": "Draw and guess game canvas with drawing tools"
+        },
+        "calendar": {
+          "title": "A calendar full of memories",
+          "body": "Turn dates into a photo diary: create events, spot special days, and browse your months as a gallery.",
+          "imageAlt": "Shared calendar filled with photo thumbnails for each day"
+        }
+      },
+      "closing": {
+        "ariaLabel": "Why couples choose Amorely",
+        "title": "Built for closeness — and privacy",
+        "lead": "Your chats, calendar, and memories stay between the two of you. Start free, invite your partner, and keep the little rituals going.",
+        "values": {
+          "private": {
+            "title": "Private by design",
+            "body": "Encrypted chat and personal moments meant for your pair, not a public feed."
+          },
+          "forTwo": {
+            "title": "Made for two",
+            "body": "Games, questions, pets, and shared plans that only make sense together."
+          },
+          "anywhere": {
+            "title": "Near or far",
+            "body": "Stay in sync whether you share a city or live across time zones."
+          }
+        },
+        "footerBrand": "Amorely",
+        "footerNote": "A private space for couples to bond, play, and remember."
+      }
+    },
     "login": {
       "title": "Sign in",
       "registrationSuccess": "Registration successful! Please sign in.",

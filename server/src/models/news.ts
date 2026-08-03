@@ -17,6 +17,11 @@ const translationsSchema = new mongoose.Schema(
 );
 
 const newsSchema = new mongoose.Schema({
+  /**
+   * Stable id for seeded/auto-created articles.
+   * Used to insert on server start only when the article is missing.
+   */
+  seedKey: { type: String, unique: true, sparse: true, index: true },
   /** Legacy fields synced from translations.ru for backward compatibility */
   title: { type: String, default: '' },
   content: { type: String, default: '' },
