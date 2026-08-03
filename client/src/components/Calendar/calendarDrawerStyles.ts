@@ -187,23 +187,37 @@ export const getEventDetailMediaCarouselSx = (theme: Theme) => ({
       : `0 8px 22px ${alpha(theme.palette.common.black, 0.24)}`,
 });
 
-export const getEventMediaDeleteButtonSx = (theme: Theme) => ({
-  position: 'absolute',
-  top: 6,
-  right: 6,
-  width: 28,
-  height: 28,
-  bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === 'light' ? 0.92 : 0.78),
-  border: getSurfaceBorder(theme, 'soft'),
-  backdropFilter: 'blur(8px)',
-  WebkitBackdropFilter: 'blur(8px)',
-  color: 'text.secondary',
-  '&:hover': {
-    bgcolor: alpha(theme.palette.error.main, theme.palette.mode === 'light' ? 0.14 : 0.22),
-    color: 'error.main',
-    borderColor: alpha(theme.palette.error.main, 0.45),
-  },
-});
+export const getEventMediaDeleteButtonSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+  // Glass drawer forces IconButtons to white text; on the near-white delete chip
+  // that makes the trash icon invisible — pin an explicit dark color instead.
+  const iconColor = isLight ? 'rgba(0, 0, 0, 0.72)' : theme.palette.text.secondary;
+  const hoverIconColor = theme.palette.error.main;
+
+  return {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 28,
+    height: 28,
+    bgcolor: alpha(theme.palette.background.paper, isLight ? 0.92 : 0.78),
+    border: getSurfaceBorder(theme, 'soft'),
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    color: `${iconColor} !important`,
+    '& .MuiSvgIcon-root': {
+      color: `${iconColor} !important`,
+    },
+    '&:hover': {
+      bgcolor: alpha(theme.palette.error.main, isLight ? 0.14 : 0.22),
+      color: `${hoverIconColor} !important`,
+      borderColor: alpha(theme.palette.error.main, 0.45),
+      '& .MuiSvgIcon-root': {
+        color: `${hoverIconColor} !important`,
+      },
+    },
+  };
+};
 
 export const getEventMediaNavButtonSx = (theme: Theme) => ({
   position: 'absolute' as const,
