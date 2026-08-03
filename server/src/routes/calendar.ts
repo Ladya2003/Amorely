@@ -890,9 +890,9 @@ router.put('/events/:id', async (req: any, res: Response) => {
           isBirthdayEvent: updateData.isBirthdayEvent ?? baseMedia.isBirthdayEvent,
           isAnniversaryEvent: updateData.isAnniversaryEvent ?? baseMedia.isAnniversaryEvent,
           isDatingIdeaEvent: updateData.isDatingIdeaEvent ?? baseMedia.isDatingIdeaEvent,
-          datingIdeaEmoji: baseMedia.datingIdeaEmoji,
-          datingIdeaTitle: baseMedia.datingIdeaTitle,
-          datingIdeaDescription: baseMedia.datingIdeaDescription,
+          datingIdeaEmoji: baseMedia.datingIdeaEmoji ?? undefined,
+          datingIdeaTitle: baseMedia.datingIdeaTitle ?? undefined,
+          datingIdeaDescription: baseMedia.datingIdeaDescription ?? undefined,
           customDate: updateData.eventDate || baseMedia.eventDate,
           createdBy: baseMedia.createdBy,
           lastEditedBy: userId,
@@ -950,9 +950,9 @@ router.put('/events/:id', async (req: any, res: Response) => {
         isBirthdayEvent: updateData.isBirthdayEvent,
         isAnniversaryEvent: updateData.isAnniversaryEvent,
         isDatingIdeaEvent: updateData.isDatingIdeaEvent,
-        datingIdeaEmoji: baseMedia.datingIdeaEmoji,
-        datingIdeaTitle: baseMedia.datingIdeaTitle,
-        datingIdeaDescription: baseMedia.datingIdeaDescription,
+        datingIdeaEmoji: baseMedia.datingIdeaEmoji ?? undefined,
+        datingIdeaTitle: baseMedia.datingIdeaTitle ?? undefined,
+        datingIdeaDescription: baseMedia.datingIdeaDescription ?? undefined,
       });
     }
 
