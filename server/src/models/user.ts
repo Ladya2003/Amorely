@@ -43,6 +43,11 @@ export interface UserDocument extends mongoose.Document {
   adminAlertsClearedAt?: Date;
   adminUsersTabClearedAt?: Date;
   adminModerationTabClearedAt?: Date;
+  sharedLocation?: {
+    lat: number;
+    lng: number;
+    updatedAt: Date;
+  };
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -100,6 +105,11 @@ const userSchema = new mongoose.Schema({
   adminAlertsClearedAt: { type: Date },
   adminUsersTabClearedAt: { type: Date },
   adminModerationTabClearedAt: { type: Date },
+  sharedLocation: {
+    lat: { type: Number },
+    lng: { type: Number },
+    updatedAt: { type: Date },
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

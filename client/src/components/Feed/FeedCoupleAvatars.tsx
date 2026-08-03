@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Avatar,
@@ -22,8 +22,11 @@ import { getUserDisplayName } from '../UI/UserProfileChip';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import ContactProfileDialog from '../Chat/ContactProfileDialog';
+import CoupleDistanceDialog from './CoupleDistanceDialog';
 import type { Contact } from '../Chat/ChatList';
 import type { Partner } from '../Settings/PartnerForm';
+import { fetchCoupleDistanceStatus } from '../../services/coupleDistanceService';
+import { formatDistanceKm } from '../../utils/geoDistance';
 import {
   COUPLE_AVATAR_SIZE,
   getCoupleAvatarColumnSx,
@@ -85,39 +88,65 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
 
 interface CoupleConnectorProps {
   theme: Theme;
+  distanceKm: number | null;
+  onOpenDistance: () => void;
+  lockAriaLabel: string;
 }
 
-const CoupleConnector: React.FC<CoupleConnectorProps> = ({ theme }) => {
+const CoupleConnector: React.FC<CoupleConnectorProps> = ({
+  theme,
+  distanceKm,
+  onOpenDistance,
+  lockAriaLabel,
+}) => {
   const isLight = theme.palette.mode === 'light';
-  const strokeColor = isLight ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.45)';
+  const strokeColor = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.5)';
+  const distanceLabel =
+    distanceKm != null ? `${formatDistanceKm(distanceKm)} km` : 'km';
 
   return (
-    <Box sx={getCoupleConnectorSx()} aria-hidden>
+    <Box sx={getCoupleConnectorSx()} aria-hidden={false}>
       <Box
         component="svg"
-        viewBox="0 0 120 48"
+        viewBox="0 0 160 56"
         preserveAspectRatio="none"
+        aria-hidden
         sx={{
           position: 'absolute',
           inset: 0,
           width: '100%',
           height: '100%',
           overflow: 'visible',
+          pointerEvents: 'none',
         }}
       >
         <path
-          d="M 4 36 Q 60 0 116 36"
+          d="M 0 50 Q 80 6 80 24"
           fill="none"
           stroke={strokeColor}
-          strokeWidth="2"
-          strokeDasharray="5 5"
+          strokeWidth="2.5"
+          strokeDasharray="6 6"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 160 50 Q 80 6 80 24"
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="2.5"
+          strokeDasharray="6 6"
           strokeLinecap="round"
         />
       </Box>
-      <Box sx={getCoupleLockBadgeSx(theme)}>
+      <Box
+        component="button"
+        type="button"
+        onClick={onOpenDistance}
+        aria-label={lockAriaLabel}
+        sx={getCoupleLockBadgeSx(theme, true)}
+      >
         <LockOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
         <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 'inherit', lineHeight: 1 }}>
-          km
+          {distanceLabel}
         </Typography>
       </Box>
     </Box>
@@ -145,6 +174,8 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [distanceDialogOpen, setDistanceDialogOpen] = useState(false);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
 
   const partnerContact: Contact = useMemo(() => {
     const partnerDisplayName = getUserDisplayName(partner);
@@ -161,6 +192,29 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
       lastMessage: { text: '', timestamp: '', isRead: true },
     };
   }, [partner]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDistance = async () => {
+      try {
+        const status = await fetchCoupleDistanceStatus();
+        if (!cancelled) {
+          setDistanceKm(status.distanceKm);
+        }
+      } catch {
+        if (!cancelled) {
+          setDistanceKm(null);
+        }
+      }
+    };
+
+    void loadDistance();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [partner._id]);
 
   if (!user) {
     return null;
@@ -225,7 +279,12 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
             </Box>
           </Box>
 
-          <CoupleConnector theme={theme} />
+          <CoupleConnector
+            theme={theme}
+            distanceKm={distanceKm}
+            onOpenDistance={() => setDistanceDialogOpen(true)}
+            lockAriaLabel={t('feed.coupleDistance.lockAriaLabel')}
+          />
 
           <Box sx={getCoupleAvatarColumnSx('right')}>
             <Box sx={getCoupleBubbleAboveAvatarSx('right')}>
@@ -256,6 +315,13 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
           </Box>
         </Box>
       </Box>
+
+      <CoupleDistanceDialog
+        open={distanceDialogOpen}
+        onClose={() => setDistanceDialogOpen(false)}
+        partnerName={partnerDisplayName}
+        onDistanceUpdated={setDistanceKm}
+      />
 
       <ResponsiveDialog
         open={editDialogOpen}

@@ -68,18 +68,17 @@ export const getCoupleConnectorSx = () => ({
   flex: 1,
   position: 'relative' as const,
   alignSelf: 'center',
-  minWidth: 48,
-  height: 48,
+  minWidth: 72,
+  height: 56,
   mx: 0.5,
-  pointerEvents: 'none' as const,
 });
 
-export const getCoupleLockBadgeSx = (theme: Theme) => {
+export const getCoupleLockBadgeSx = (theme: Theme, interactive = false) => {
   const isLight = theme.palette.mode === 'light';
 
   return {
     position: 'absolute' as const,
-    top: -2,
+    top: 0,
     left: '50%',
     transform: 'translateX(-50%)',
     display: 'inline-flex',
@@ -98,6 +97,22 @@ export const getCoupleLockBadgeSx = (theme: Theme) => {
     fontWeight: 700,
     lineHeight: 1,
     zIndex: 3,
+    ...(interactive && {
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      border: 'none',
+      outline: 'none',
+      transition: 'transform 150ms ease, box-shadow 150ms ease',
+      '&:hover': {
+        transform: 'translateX(-50%) translateY(-1px)',
+        boxShadow: isLight
+          ? `0 4px 14px ${alpha(theme.palette.common.black, 0.14)}`
+          : `0 4px 16px ${alpha(theme.palette.common.black, 0.36)}`,
+      },
+      '&:active': {
+        transform: 'translateX(-50%) translateY(0)',
+      },
+    }),
   };
 };
 

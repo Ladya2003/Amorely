@@ -29,8 +29,32 @@ import {
   supersedePendingRequestsForUsers
 } from '../utils/partnerRequestHelpers';
 import { notifySocketUser } from '../socket';
+import { formatDistanceKm, haversineDistanceKm } from '../utils/geoDistance';
 
 const router = Router();
+
+const isValidCoordinate = (value: unknown, min: number, max: number): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+
+const getSharedLocationPayload = (user: {
+  sharedLocation?: { lat?: number; lng?: number; updatedAt?: Date };
+}) => {
+  const location = user.sharedLocation;
+  if (
+    !location ||
+    !isValidCoordinate(location.lat, -90, 90) ||
+    !isValidCoordinate(location.lng, -180, 180) ||
+    !location.updatedAt
+  ) {
+    return null;
+  }
+
+  return {
+    lat: location.lat,
+    lng: location.lng,
+    updatedAt: location.updatedAt,
+  };
+};
 
 const formatUserPreview = (user: {
   _id: { toString(): string };
@@ -111,6 +135,92 @@ router.get('/', authMiddleware, async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при получении информации об отношениях:', error);
     res.status(500).json({ error: 'Ошибка при получении информации об отношениях' });
+  }
+});
+
+router.get('/location', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const relationship = await findActiveRelationshipForUser(userId);
+
+    if (!relationship) {
+      return res.status(404).json({ error: 'Отношения не найдены' });
+    }
+
+    const partnerId = getPartnerIdFromRelationship(relationship, userId);
+    if (!partnerId) {
+      return res.status(404).json({ error: 'Партнер не найден' });
+    }
+
+    const [currentUser, partner] = await Promise.all([
+      User.findById(userId).select('sharedLocation'),
+      User.findById(partnerId).select('sharedLocation'),
+    ]);
+
+    if (!currentUser || !partner) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    const myLocation = getSharedLocationPayload(currentUser);
+    const partnerLocation = getSharedLocationPayload(partner);
+
+    let distanceKm: number | null = null;
+    if (myLocation && partnerLocation) {
+      distanceKm = formatDistanceKm(
+        haversineDistanceKm(
+          myLocation.lat,
+          myLocation.lng,
+          partnerLocation.lat,
+          partnerLocation.lng
+        )
+      );
+    }
+
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      myLocationShared: Boolean(myLocation),
+      partnerLocationShared: Boolean(partnerLocation),
+      distanceKm,
+      myLocationUpdatedAt: myLocation?.updatedAt ?? null,
+      partnerLocationUpdatedAt: partnerLocation?.updatedAt ?? null,
+    });
+  } catch (error) {
+    console.error('Ошибка при получении расстояния до партнёра:', error);
+    res.status(500).json({ error: 'Ошибка при получении расстояния до партнёра' });
+  }
+});
+
+router.post('/location', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const { lat, lng } = req.body as { lat?: unknown; lng?: unknown };
+
+    if (!isValidCoordinate(lat, -90, 90) || !isValidCoordinate(lng, -180, 180)) {
+      return res.status(400).json({ error: 'Некорректные координаты' });
+    }
+
+    const relationship = await findActiveRelationshipForUser(userId);
+    if (!relationship) {
+      return res.status(404).json({ error: 'Отношения не найдены' });
+    }
+
+    const updatedAt = new Date();
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { sharedLocation: { lat, lng, updatedAt } },
+      { new: true }
+    ).select('sharedLocation');
+
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    res.json({
+      sharedLocation: getSharedLocationPayload(user),
+    });
+  } catch (error) {
+    console.error('Ошибка при сохранении местоположения:', error);
+    res.status(500).json({ error: 'Ошибка при сохранении местоположения' });
   }
 });
 

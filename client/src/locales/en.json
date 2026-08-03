@@ -563,6 +563,20 @@
       "save": "Save",
       "cancel": "Cancel"
     },
+    "coupleDistance": {
+      "title": "Distance to partner",
+      "intro": "To see the distance between you, allow location access on this device. {{partnerName}} must also allow access on their device — only then the distance will be shown.",
+      "enableButton": "Allow access",
+      "refreshButton": "Refresh",
+      "close": "Got it",
+      "result": "{{distance}} km",
+      "distanceHint": "Distance is calculated from the latest location shared by your devices.",
+      "partnerPending": "Your location is saved. Ask {{partnerName}} to open the home screen and allow location access on their device.",
+      "permissionDenied": "Without location access, distance is unavailable. Allow access in your browser settings and try again.",
+      "unsupported": "In the browser this feature is limited: it needs a secure HTTPS site and location permission from both partners while the home screen is open. It will work more reliably in the mobile app we are preparing.",
+      "error": "Could not get the distance. Please try again later.",
+      "lockAriaLabel": "Show distance to partner"
+    },
     "openEventAriaLabel": "Open event",
     "title": "Feed",
     "contentOfDay": "Content of the day",

@@ -561,6 +561,20 @@
       "save": "Enregistrer",
       "cancel": "Annuler"
     },
+    "coupleDistance": {
+      "title": "Distance avec le partenaire",
+      "intro": "Pour voir la distance entre vous, autorisez l'accès à la localisation sur cet appareil. {{partnerName}} doit aussi autoriser l'accès sur le sien.",
+      "enableButton": "Autoriser l'accès",
+      "refreshButton": "Actualiser",
+      "close": "Compris",
+      "result": "{{distance}} km",
+      "distanceHint": "La distance est calculée à partir du dernier emplacement partagé.",
+      "partnerPending": "Votre position est enregistrée. Demandez à {{partnerName}} d'ouvrir l'accueil et d'autoriser la localisation.",
+      "permissionDenied": "Sans accès à la localisation, la distance n'est pas disponible.",
+      "unsupported": "Dans le navigateur, cette fonctionnalité est limitée. Elle sera plus fiable dans l'application mobile.",
+      "error": "Impossible d'obtenir la distance. Réessayez plus tard.",
+      "lockAriaLabel": "Afficher la distance avec le partenaire"
+    },
     "openEventAriaLabel": "Ouvrir l'événement",
     "title": "Fil",
     "contentOfDay": "Contenu du jour",

@@ -561,6 +561,20 @@
       "save": "Speichern",
       "cancel": "Abbrechen"
     },
+    "coupleDistance": {
+      "title": "Entfernung zum Partner",
+      "intro": "Um die Entfernung zwischen euch zu sehen, erlaube den Standortzugriff auf diesem Gerät. {{partnerName}} muss den Zugriff ebenfalls auf dem eigenen Gerät erlauben.",
+      "enableButton": "Zugriff erlauben",
+      "refreshButton": "Aktualisieren",
+      "close": "Verstanden",
+      "result": "{{distance}} km",
+      "distanceHint": "Die Entfernung wird anhand des zuletzt geteilten Standorts berechnet.",
+      "partnerPending": "Dein Standort ist gespeichert. Bitte {{partnerName}}, die Startseite zu öffnen und den Standortzugriff zu erlauben.",
+      "permissionDenied": "Ohne Standortzugriff ist die Entfernung nicht verfügbar. Erlaube den Zugriff in den Browser-Einstellungen.",
+      "unsupported": "Im Browser funktioniert diese Funktion nur eingeschränkt. In der mobilen App wird sie zuverlässiger sein.",
+      "error": "Entfernung konnte nicht abgerufen werden. Bitte später erneut versuchen.",
+      "lockAriaLabel": "Entfernung zum Partner anzeigen"
+    },
     "openEventAriaLabel": "Ereignis öffnen",
     "title": "Feed",
     "contentOfDay": "Inhalt des Tages",

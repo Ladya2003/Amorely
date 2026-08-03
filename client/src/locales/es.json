@@ -561,6 +561,20 @@
       "save": "Guardar",
       "cancel": "Cancelar"
     },
+    "coupleDistance": {
+      "title": "Distancia con la pareja",
+      "intro": "Para ver la distancia entre ustedes, permite el acceso a la ubicación en este dispositivo. {{partnerName}} también debe permitirlo en el suyo.",
+      "enableButton": "Permitir acceso",
+      "refreshButton": "Actualizar",
+      "close": "Entendido",
+      "result": "{{distance}} km",
+      "distanceHint": "La distancia se calcula según la última ubicación compartida.",
+      "partnerPending": "Tu ubicación está guardada. Pide a {{partnerName}} que abra inicio y permita la geolocalización.",
+      "permissionDenied": "Sin acceso a la ubicación, la distancia no está disponible.",
+      "unsupported": "En el navegador esta función es limitada. Funcionará mejor en la app móvil.",
+      "error": "No se pudo obtener la distancia. Inténtalo más tarde.",
+      "lockAriaLabel": "Mostrar distancia con la pareja"
+    },
     "openEventAriaLabel": "Abrir evento",
     "title": "Feed",
     "contentOfDay": "Contenido del día",

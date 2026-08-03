@@ -561,6 +561,20 @@
       "save": "Salvar",
       "cancel": "Cancelar"
     },
+    "coupleDistance": {
+      "title": "Distância até o parceiro",
+      "intro": "Para ver a distância entre vocês, permita o acesso à localização neste dispositivo. {{partnerName}} também precisa permitir no dispositivo dele(a).",
+      "enableButton": "Permitir acesso",
+      "refreshButton": "Atualizar",
+      "close": "Entendi",
+      "result": "{{distance}} km",
+      "distanceHint": "A distância é calculada com base na última localização compartilhada.",
+      "partnerPending": "Sua localização foi salva. Peça para {{partnerName}} abrir a página inicial e permitir a geolocalização.",
+      "permissionDenied": "Sem acesso à localização, a distância não fica disponível.",
+      "unsupported": "No navegador este recurso é limitado. Funcionará melhor no app móvel.",
+      "error": "Não foi possível obter a distância. Tente novamente mais tarde.",
+      "lockAriaLabel": "Mostrar distância até o parceiro"
+    },
     "openEventAriaLabel": "Abrir evento",
     "title": "Feed",
     "contentOfDay": "Conteúdo do dia",
