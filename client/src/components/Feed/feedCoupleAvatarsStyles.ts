@@ -41,25 +41,24 @@ export const getCoupleAvatarsLoaderSx = () => ({
 export const getCoupleAvatarsRowSx = () => ({
   display: 'flex',
   alignItems: 'flex-end',
-  justifyContent: 'space-between',
-  gap: 0.5,
+  justifyContent: 'center',
+  gap: 2,
   position: 'relative' as const,
 });
 
-export const getCoupleAvatarColumnSx = () => ({
+export const getCoupleAvatarColumnSx = (align: 'left' | 'right') => ({
   display: 'flex',
   flexDirection: 'column' as const,
-  alignItems: 'center',
+  alignItems: align === 'left' ? ('flex-start' as const) : ('flex-end' as const),
   flexShrink: 0,
   position: 'relative' as const,
   width: COUPLE_AVATAR_SIZE,
 });
 
-export const getCoupleBubbleAboveAvatarSx = () => ({
+export const getCoupleBubbleAboveAvatarSx = (align: 'left' | 'right') => ({
   position: 'absolute' as const,
   bottom: `calc(100% + 8px)`,
-  left: '50%',
-  transform: 'translateX(-50%)',
+  ...(align === 'left' ? { left: 0 } : { right: 0 }),
   width: 'max-content',
   maxWidth: STATUS_BUBBLE_MAX_WIDTH,
   zIndex: 2,
@@ -102,7 +101,13 @@ export const getCoupleLockBadgeSx = (theme: Theme) => {
   };
 };
 
-export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
+const BUBBLE_TAIL_HALF_WIDTH = 6;
+
+export const getThoughtBubbleBodySx = (
+  theme: Theme,
+  editable: boolean,
+  tailAlign: 'left' | 'right' = 'left'
+) => {
   const surface = getBubbleSurface(theme);
 
   return {
@@ -131,13 +136,14 @@ export const getThoughtBubbleBodySx = (theme: Theme, editable: boolean) => {
       content: '""',
       position: 'absolute',
       bottom: -5,
-      left: '50%',
-      transform: 'translateX(-50%)',
       width: 0,
       height: 0,
-      borderLeft: '6px solid transparent',
-      borderRight: '6px solid transparent',
-      borderTop: `6px solid ${surface.bgcolor}`,
+      borderLeft: `${BUBBLE_TAIL_HALF_WIDTH}px solid transparent`,
+      borderRight: `${BUBBLE_TAIL_HALF_WIDTH}px solid transparent`,
+      borderTop: `${BUBBLE_TAIL_HALF_WIDTH}px solid ${surface.bgcolor}`,
+      ...(tailAlign === 'left'
+        ? { left: 0, transform: 'none' }
+        : { right: 0, left: 'auto', transform: 'none' }),
     },
     ...(editable && {
       '&:hover': {

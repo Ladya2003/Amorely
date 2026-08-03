@@ -41,6 +41,7 @@ import {
 interface StatusThoughtBubbleProps {
   text: string;
   editable?: boolean;
+  tailAlign?: 'left' | 'right';
   ariaLabel?: string;
   onClick?: () => void;
 }
@@ -48,6 +49,7 @@ interface StatusThoughtBubbleProps {
 const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
   text,
   editable = false,
+  tailAlign = 'left',
   ariaLabel,
   onClick,
 }) => {
@@ -61,7 +63,7 @@ const StatusThoughtBubble: React.FC<StatusThoughtBubbleProps> = ({
       aria-label={ariaLabel}
       title={text}
       sx={{
-        ...getThoughtBubbleBodySx(theme, editable),
+        ...getThoughtBubbleBodySx(theme, editable, tailAlign),
         ...(editable && { fontFamily: 'inherit' }),
       }}
     >
@@ -191,11 +193,12 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
     <>
       <Box sx={getCoupleAvatarsRootSx()}>
         <Box sx={getCoupleAvatarsRowSx()}>
-          <Box sx={getCoupleAvatarColumnSx()}>
-            <Box sx={getCoupleBubbleAboveAvatarSx()}>
+          <Box sx={getCoupleAvatarColumnSx('left')}>
+            <Box sx={getCoupleBubbleAboveAvatarSx('left')}>
               <StatusThoughtBubble
                 text={myDisplayText}
                 editable
+                tailAlign="left"
                 ariaLabel={t('feed.statusBubble.editAriaLabel')}
                 onClick={handleOpenEdit}
               />
@@ -224,10 +227,11 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
 
           <CoupleConnector theme={theme} />
 
-          <Box sx={getCoupleAvatarColumnSx()}>
-            <Box sx={getCoupleBubbleAboveAvatarSx()}>
+          <Box sx={getCoupleAvatarColumnSx('right')}>
+            <Box sx={getCoupleBubbleAboveAvatarSx('right')}>
               <StatusThoughtBubble
                 text={partnerDisplayText}
+                tailAlign="right"
                 ariaLabel={partnerBubbleAriaLabel}
               />
             </Box>
@@ -235,7 +239,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
               badges={badges}
               displayGameId={partner.displayBadgeGameId}
               showBadge={partner.showDisplayBadge !== false}
-              avatarSize={72}
+              avatarSize={COUPLE_AVATAR_SIZE}
             >
               <Avatar
                 src={partnerHasAvatar ? partner.avatar : undefined}
