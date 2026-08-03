@@ -1,10 +1,20 @@
-import React from 'react';
-import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import DecryptedMedia from '../../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../../crypto/contentCryptoService';
 import { getCompletedEventPreviewSx } from './datingIdeasStyles';
+
+export interface CompletedEventMediaItem {
+  mediaUrl: string;
+  resourceType?: 'image' | 'video';
+  encrypted?: boolean;
+  mediaEnvelope?: ContentMediaEnvelope;
+  mediaId?: string;
+}
 
 export interface CompletedEventPreviewData {
   title?: string;
@@ -15,6 +25,7 @@ export interface CompletedEventPreviewData {
   mediaEnvelope?: ContentMediaEnvelope;
   mediaId?: string;
   eventId?: string;
+  media?: CompletedEventMediaItem[];
 }
 
 interface CompletedEventPreviewProps {
@@ -45,12 +56,48 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
-  const hasMedia = Boolean(event?.mediaUrl && event.mediaUrl.trim() && event.mediaUrl !== 'placeholder');
+  const [mediaIndex, setMediaIndex] = useState(0);
+
+  const mediaItems: CompletedEventMediaItem[] = React.useMemo(() => {
+    if (event?.media && event.media.length > 0) {
+      return event.media.filter((item) => item.mediaUrl?.trim() && item.mediaUrl !== 'placeholder');
+    }
+    if (event?.mediaUrl && event.mediaUrl.trim() && event.mediaUrl !== 'placeholder') {
+      return [
+        {
+          mediaUrl: event.mediaUrl,
+          resourceType: event.resourceType,
+          encrypted: event.encrypted,
+          mediaEnvelope: event.mediaEnvelope,
+          mediaId: event.mediaId,
+        },
+      ];
+    }
+    return [];
+  }, [event]);
+
+  useEffect(() => {
+    setMediaIndex(0);
+  }, [event?.eventId, mediaItems.length]);
+
+  const hasMedia = mediaItems.length > 0;
+  const showSlider = mediaItems.length > 1;
+  const currentMedia = mediaItems[Math.min(mediaIndex, Math.max(mediaItems.length - 1, 0))];
   const canOpenEvent = Boolean(event?.eventId);
 
   const handleOpenEvent = () => {
     if (!event?.eventId) return;
     navigate(`/calendar?event=${encodeURIComponent(event.eventId)}`);
+  };
+
+  const handlePrev = (clickEvent: React.MouseEvent) => {
+    clickEvent.stopPropagation();
+    setMediaIndex((prev) => (prev > 0 ? prev - 1 : mediaItems.length - 1));
+  };
+
+  const handleNext = (clickEvent: React.MouseEvent) => {
+    clickEvent.stopPropagation();
+    setMediaIndex((prev) => (prev < mediaItems.length - 1 ? prev + 1 : 0));
   };
 
   return (
@@ -94,15 +141,15 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
           <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
             <CircularProgress size={28} />
           </Box>
-        ) : hasMedia && event ? (
+        ) : hasMedia && currentMedia ? (
           <Box sx={{ position: 'absolute', inset: 0, '& > *': { width: '100%', height: '100%' } }}>
             <DecryptedMedia
-              cacheKey={`dating-idea-event-${event.eventId || 'x'}-${event.mediaId || '0'}`}
-              url={event.mediaUrl!}
-              resourceType={event.resourceType || 'image'}
-              encrypted={event.encrypted}
-              mediaEnvelope={event.mediaEnvelope}
-              videoPreview={event.resourceType === 'video'}
+              cacheKey={`dating-idea-event-${event?.eventId || 'x'}-${currentMedia.mediaId || mediaIndex}`}
+              url={currentMedia.mediaUrl}
+              resourceType={currentMedia.resourceType || 'image'}
+              encrypted={currentMedia.encrypted}
+              mediaEnvelope={currentMedia.mediaEnvelope}
+              videoPreview={currentMedia.resourceType === 'video'}
               imageStyle={MEDIA_FILL_STYLE}
               videoStyle={MEDIA_FILL_STYLE}
               loadingMinHeight={0}
@@ -121,6 +168,45 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
           >
             <Typography sx={{ fontSize: '4.5rem', lineHeight: 1 }}>{fallbackEmoji}</Typography>
           </Box>
+        )}
+
+        {showSlider && (
+          <>
+            <IconButton
+              size="small"
+              onClick={handlePrev}
+              aria-label={t('datingIdeas.mediaPrevAria')}
+              sx={{
+                position: 'absolute',
+                left: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                bgcolor: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.7)' },
+              }}
+            >
+              <ArrowBackIosNewIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={handleNext}
+              aria-label={t('datingIdeas.mediaNextAria')}
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 2,
+                bgcolor: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.7)' },
+              }}
+            >
+              <ArrowForwardIosIcon fontSize="small" />
+            </IconButton>
+          </>
         )}
 
         {!loading && event && (event.title || event.description) && (

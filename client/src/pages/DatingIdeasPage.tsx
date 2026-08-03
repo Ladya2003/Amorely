@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -83,6 +83,7 @@ const DatingIdeasPage: React.FC = () => {
   const [completedEventPreview, setCompletedEventPreview] = useState<CompletedEventPreviewData | null>(null);
   const [completedEventLoading, setCompletedEventLoading] = useState(false);
   const [completedEventError, setCompletedEventError] = useState<string | null>(null);
+  const closingAfterSaveRef = useRef(false);
 
   const loadOverview = useCallback(async (options?: { preservePhase?: boolean }) => {
     try {
@@ -127,19 +128,37 @@ const DatingIdeasPage: React.FC = () => {
       event: any,
       fallbackEventId?: string | null
     ): CompletedEventPreviewData => {
-      const media = Array.isArray(event?.media) ? event.media : [];
-      const firstMedia = media.find(
-        (item: { url?: string }) => item.url && String(item.url).trim().length > 0
-      );
+      const mediaSource = Array.isArray(event?.media) ? event.media : [];
+      const media = mediaSource
+        .filter(
+          (item: { url?: string }) => item?.url && String(item.url).trim().length > 0
+        )
+        .map(
+          (item: {
+            url: string;
+            resourceType?: 'image' | 'video';
+            encrypted?: boolean;
+            mediaEnvelope?: CompletedEventPreviewData['mediaEnvelope'];
+            _id?: string;
+          }) => ({
+            mediaUrl: item.url,
+            resourceType: item.resourceType === 'video' ? ('video' as const) : ('image' as const),
+            encrypted: item.encrypted,
+            mediaEnvelope: item.mediaEnvelope,
+            mediaId: item._id,
+          })
+        );
+      const firstMedia = media[0];
 
       return {
         title: event?.title,
         description: event?.description,
-        mediaUrl: firstMedia?.url,
+        mediaUrl: firstMedia?.mediaUrl,
         resourceType: firstMedia?.resourceType,
         encrypted: firstMedia?.encrypted,
         mediaEnvelope: firstMedia?.mediaEnvelope,
-        mediaId: firstMedia?._id,
+        mediaId: firstMedia?.mediaId,
+        media,
         eventId: event?.eventId || fallbackEventId || undefined,
       };
     };
@@ -350,6 +369,10 @@ const DatingIdeasPage: React.FC = () => {
     setEditorOpen(false);
     setFlipped(false);
     setCompletingIdea(null);
+    if (closingAfterSaveRef.current) {
+      closingAfterSaveRef.current = false;
+      return;
+    }
     if (selectedHistoryIdea) {
       setPhase('idea');
       return;
@@ -453,22 +476,58 @@ const DatingIdeasPage: React.FC = () => {
 
       if (eventId) {
         try {
-          await completeDatingIdea(idea.id, eventId);
+          await completeDatingIdea(idea.id, String(eventId));
         } catch {
           // Server may already have linked the idea via datingIdeaId.
+        }
+
+        // Wait until the created event is readable so history preview is ready.
+        for (let attempt = 0; attempt < 10; attempt += 1) {
+          try {
+            await axios.get(
+              `${API_URL}/api/calendar/events/${encodeURIComponent(String(eventId))}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            break;
+          } catch {
+            await new Promise((resolve) => setTimeout(resolve, 200 + attempt * 120));
+          }
         }
       }
 
       notifyCalendarEventsChanged();
-      setEditorOpen(false);
+
+      const overview = await fetchDatingIdeas(i18n.language);
+      setBalance(overview.balance ?? 0);
+      setCost(overview.cost ?? 1);
+      setHistory(overview.history ?? []);
+      setActiveIdea(overview.active ?? null);
+
+      const matched =
+        (overview.history ?? []).find(
+          (item) =>
+            item.id === idea.id ||
+            (eventId && item.eventId && String(item.eventId) === String(eventId))
+        ) || null;
+
+      setSelectedHistoryIdea(
+        matched && matched.status === 'completed'
+          ? matched
+          : matched
+            ? { ...matched, status: 'completed', eventId: eventId ? String(eventId) : matched.eventId }
+            : {
+                ...idea,
+                status: 'completed',
+                eventId: eventId ? String(eventId) : null,
+                completedAt: new Date().toISOString(),
+              }
+      );
+      setPhase('idea');
       setFlipped(false);
       setCompletingIdea(null);
-      setSelectedHistoryIdea(null);
-      if (activeIdea?.id === idea.id) {
-        setActiveIdea(null);
-      }
+      closingAfterSaveRef.current = true;
+      setEditorOpen(false);
       setToast(t('datingIdeas.eventCreated'));
-      await loadOverview();
     } catch (error) {
       console.error('Dating idea event save error:', error);
       if (isVideoCompressionError(error)) {
@@ -677,7 +736,7 @@ const DatingIdeasPage: React.FC = () => {
       )}
 
       {historyItems.length > 0 && (
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ mt: 4, mb: { xs: 2, sm: 0 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
             <Typography variant="subtitle1" fontWeight={700}>
               {t('datingIdeas.historyTitle')}

@@ -13,7 +13,7 @@ const BOTTOM_NAV_INDICATOR_PILL_INSET_Y = 6;
 
 /** Отступ контента над плавающей нижней навигацией */
 export const MOBILE_BOTTOM_NAV_FLOAT_OFFSET =
-  'calc(102px + max(12px, env(safe-area-inset-bottom, 0px)))';
+  'calc(156px + max(16px, env(safe-area-inset-bottom, 0px)))';
 
 const getSelectedNavColor = (theme: Theme) =>
   theme.palette.mode === 'light' ? theme.palette.primary.dark : theme.palette.common.white;

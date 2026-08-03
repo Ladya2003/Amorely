@@ -1571,6 +1571,8 @@
     "insufficientBalance": "AmoreCoins insuficientes. Se necesitan {{cost}}",
     "eventPreviewMissing": "El evento de esta idea no está disponible",
     "ideaInEventTitle": "Idea para cita",
-    "openEventAria": "Abrir evento"
+    "openEventAria": "Abrir evento",
+    "mediaPrevAria": "Medio anterior",
+    "mediaNextAria": "Medio siguiente"
   }
 }
