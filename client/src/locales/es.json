@@ -845,7 +845,8 @@
         "title": "Bodas de perla",
         "description": "30 años: fuerza de perla"
       }
-    }
+    },
+    "datingIdea": "De ideas para citas"
   },
   "drawingTools": {
     "tool": "Herramienta",
@@ -1553,6 +1554,8 @@
     "partnerRequired": "Las ideas para citas están disponibles tras vincular a tu pareja",
     "loadError": "No se pudieron cargar las ideas",
     "generateError": "No se pudo generar una idea",
-    "insufficientBalance": "AmoreCoins insuficientes. Se necesitan {{cost}}"
+    "insufficientBalance": "AmoreCoins insuficientes. Se necesitan {{cost}}",
+    "eventPreviewMissing": "El evento de esta idea no está disponible",
+    "ideaInEventTitle": "Idea para cita"
   }
 }

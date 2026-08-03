@@ -24,13 +24,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePartnerId } from '../hooks/usePartnerId';
 import { useCrypto } from '../contexts/CryptoContext';
 import { loadLocalKeys, type LocalDeviceKeys } from '../crypto/cryptoService';
-import { encryptDualTextForContent } from '../crypto/contentCryptoService';
+import {
+  decryptCalendarEventsWithMedia,
+  encryptDualTextForContent,
+} from '../crypto/contentCryptoService';
 import { encryptAndUploadCalendarContentFiles } from '../crypto/encryptedUploadService';
 import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 import { isVideoCompressionError } from '../utils/compressVideo';
 import type { PrepareMediaProgress } from '../utils/parallelMediaPrepare';
 import EventEditorDrawer from '../components/Calendar/EventEditorDrawer';
 import HistoryListDialog from '../components/Feed/DatingIdeas/HistoryListDialog';
+import CompletedEventPreview, {
+  type CompletedEventPreviewData,
+} from '../components/Feed/DatingIdeas/CompletedEventPreview';
 import CurrencyBadge from '../components/Pets/CurrencyBadge';
 import CurrencyCoinIcon from '../components/Pets/CurrencyCoinIcon';
 import {
@@ -60,7 +66,7 @@ const DatingIdeasPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const partnerId = usePartnerId();
-  const { ensureLocalKeys } = useCrypto();
+  const { localDeviceKeys, ensureLocalKeys } = useCrypto();
 
   const [phase, setPhase] = useState<PagePhase>('loading');
   const [balance, setBalance] = useState(0);
@@ -73,37 +79,119 @@ const DatingIdeasPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [selectedHistoryIdea, setSelectedHistoryIdea] = useState<DatingIdea | null>(null);
+  const [completingIdea, setCompletingIdea] = useState<DatingIdea | null>(null);
+  const [completedEventPreview, setCompletedEventPreview] = useState<CompletedEventPreviewData | null>(null);
+  const [completedEventLoading, setCompletedEventLoading] = useState(false);
+  const [completedEventError, setCompletedEventError] = useState<string | null>(null);
 
-  const loadOverview = useCallback(async () => {
+  const loadOverview = useCallback(async (options?: { preservePhase?: boolean }) => {
     try {
       const data = await fetchDatingIdeas(i18n.language);
       if (!data.hasPartner) {
-        setPhase('offer');
+        if (!options?.preservePhase) {
+          setPhase('offer');
+        }
         setError(t('datingIdeas.partnerRequired'));
         return;
       }
       setBalance(data.balance ?? 0);
       setCost(data.cost ?? 1);
       setHistory(data.history ?? []);
-      if (data.active) {
-        setActiveIdea(data.active);
-        setPhase('idea');
-        setFlipped(false);
-      } else {
-        setActiveIdea(null);
-        setPhase('offer');
-        setFlipped(false);
+      setActiveIdea(data.active ?? null);
+      if (!options?.preservePhase) {
+        if (data.active) {
+          setPhase('idea');
+          setFlipped(false);
+        } else {
+          setPhase('offer');
+          setFlipped(false);
+        }
       }
       setError(null);
     } catch {
       setError(t('datingIdeas.loadError'));
-      setPhase('offer');
+      if (!options?.preservePhase) {
+        setPhase('offer');
+      }
     }
   }, [i18n.language, t]);
 
   useEffect(() => {
     void loadOverview();
   }, [loadOverview]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCompletedEvent = async () => {
+      if (!selectedHistoryIdea || selectedHistoryIdea.status !== 'completed' || !selectedHistoryIdea.eventId) {
+        setCompletedEventPreview(null);
+        setCompletedEventError(null);
+        setCompletedEventLoading(false);
+        return;
+      }
+
+      setCompletedEventLoading(true);
+      setCompletedEventError(null);
+      setCompletedEventPreview(null);
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error(t('calendar.errors.notAuthorized'));
+        }
+
+        const response = await axios.get(
+          `${API_URL}/api/calendar/events/${encodeURIComponent(selectedHistoryIdea.eventId)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        let event = response.data;
+        const keys = localDeviceKeys || (user?._id ? await loadLocalKeys(user._id) : null);
+        if (keys) {
+          const [decrypted] = await decryptCalendarEventsWithMedia(
+            keys,
+            [event],
+            user?._id,
+            partnerId || undefined
+          );
+          event = decrypted;
+        }
+
+        if (cancelled) return;
+
+        const media = Array.isArray(event.media) ? event.media : [];
+        const firstMedia = media.find(
+          (item: { url?: string }) => item.url && String(item.url).trim().length > 0
+        );
+
+        setCompletedEventPreview({
+          title: event.title,
+          description: event.description,
+          mediaUrl: firstMedia?.url,
+          resourceType: firstMedia?.resourceType,
+          encrypted: firstMedia?.encrypted,
+          mediaEnvelope: firstMedia?.mediaEnvelope,
+          mediaId: firstMedia?._id,
+          eventId: event.eventId || selectedHistoryIdea.eventId,
+        });
+      } catch {
+        if (!cancelled) {
+          setCompletedEventError(t('datingIdeas.eventPreviewMissing'));
+          setCompletedEventPreview(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setCompletedEventLoading(false);
+        }
+      }
+    };
+
+    void loadCompletedEvent();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedHistoryIdea, localDeviceKeys, user?._id, partnerId, t]);
 
   const getCalendarEncryptionTargets = async () => {
     if (!user?._id) return null;
@@ -151,6 +239,7 @@ const DatingIdeasPage: React.FC = () => {
     setPhase('generating');
     setFlipped(false);
     setSelectedHistoryIdea(null);
+    setCompletingIdea(null);
 
     const startedAt = Date.now();
     try {
@@ -172,7 +261,7 @@ const DatingIdeasPage: React.FC = () => {
       setCost(result.cost ?? cost);
       emitCurrencyUpdated(result.balance, 0);
       setPhase('idea');
-      void loadOverview();
+      void loadOverview({ preservePhase: true });
     } catch (err) {
       const status = axios.isAxiosError(err) ? err.response?.status : undefined;
       if (status === 402) {
@@ -184,8 +273,10 @@ const DatingIdeasPage: React.FC = () => {
     }
   };
 
-  const handleCompletedClick = () => {
-    if (!activeIdea) return;
+  const handleCompletedClick = (idea?: DatingIdea | null) => {
+    const target = idea || activeIdea;
+    if (!target) return;
+    setCompletingIdea(target);
     setPhase('flipping');
     setFlipped(true);
     window.setTimeout(() => {
@@ -196,6 +287,11 @@ const DatingIdeasPage: React.FC = () => {
   const handleEditorClose = () => {
     setEditorOpen(false);
     setFlipped(false);
+    setCompletingIdea(null);
+    if (selectedHistoryIdea) {
+      setPhase('idea');
+      return;
+    }
     setPhase(activeIdea ? 'idea' : 'offer');
   };
 
@@ -215,7 +311,8 @@ const DatingIdeasPage: React.FC = () => {
       onPrepareStart?: (progress: PrepareMediaProgress) => void;
     }
   ) => {
-    if (!activeIdea) {
+    const idea = completingIdea || activeIdea;
+    if (!idea) {
       throw new Error(t('datingIdeas.generateError'));
     }
 
@@ -265,6 +362,9 @@ const DatingIdeasPage: React.FC = () => {
           isBirthdayEvent: eventData.isBirthdayEvent,
           isAnniversaryEvent: eventData.isAnniversaryEvent,
           isDatingIdeaEvent: true,
+          datingIdeaEmoji: idea.emoji,
+          datingIdeaTitle: idea.title,
+          datingIdeaDescription: idea.description,
           media: uploaded.map((item) => ({
             url: item.url,
             publicId: item.publicId,
@@ -289,17 +389,19 @@ const DatingIdeasPage: React.FC = () => {
         null;
 
       if (eventId) {
-        await completeDatingIdea(activeIdea.id, eventId);
+        await completeDatingIdea(idea.id, eventId);
       }
 
       notifyCalendarEventsChanged();
       setEditorOpen(false);
       setFlipped(false);
-      setActiveIdea(null);
+      setCompletingIdea(null);
       setSelectedHistoryIdea(null);
+      if (activeIdea?.id === idea.id) {
+        setActiveIdea(null);
+      }
       setToast(t('datingIdeas.eventCreated'));
       await loadOverview();
-      setPhase('offer');
     } catch (error) {
       console.error('Dating idea event save error:', error);
       if (isVideoCompressionError(error)) {
@@ -314,6 +416,10 @@ const DatingIdeasPage: React.FC = () => {
     () => history.filter((idea) => idea.status === 'completed' || idea.status === 'skipped'),
     [history]
   );
+  const showCompletedPreview = selectedHistoryIdea?.status === 'completed';
+  const canCompleteSelected =
+    !selectedHistoryIdea || selectedHistoryIdea.status === 'skipped';
+  const ideaForEditor = completingIdea || (canCompleteSelected ? displayedIdea : null);
 
   return (
     <Container maxWidth="sm" sx={getDatingIdeasPageRootSx(theme)}>
@@ -420,19 +526,32 @@ const DatingIdeasPage: React.FC = () => {
                 <Typography variant="h5" fontWeight={800} gutterBottom>
                   {displayedIdea.title}
                 </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ flex: 1 }}>
+                <Typography variant="body1" color="text.secondary" sx={{ flex: 1, mb: 2 }}>
                   {displayedIdea.description}
                 </Typography>
-                {!selectedHistoryIdea && (
-                  <Box sx={{ display: 'flex', gap: 1, mt: 3, flexWrap: 'wrap' }}>
+                {selectedHistoryIdea && (
+                  <Chip
+                    sx={{ alignSelf: 'flex-start', mb: 2 }}
+                    label={
+                      selectedHistoryIdea.status === 'completed'
+                        ? t('datingIdeas.statusCompleted')
+                        : t('datingIdeas.statusSkipped')
+                    }
+                    color={selectedHistoryIdea.status === 'completed' ? 'success' : 'default'}
+                  />
+                )}
+                <Box sx={{ display: 'flex', gap: 1, mt: 'auto', flexWrap: 'wrap' }}>
+                  {canCompleteSelected && (
                     <Button
                       variant="contained"
                       startIcon={<CheckCircleIcon />}
-                      onClick={handleCompletedClick}
+                      onClick={() => handleCompletedClick(displayedIdea)}
                       sx={{ flex: 1, minWidth: 140, borderRadius: 2.5, fontWeight: 700 }}
                     >
                       {t('datingIdeas.completed')}
                     </Button>
+                  )}
+                  {!selectedHistoryIdea && (
                     <Button
                       variant="outlined"
                       startIcon={<ReplayIcon />}
@@ -441,31 +560,22 @@ const DatingIdeasPage: React.FC = () => {
                     >
                       {t('datingIdeas.generateAgain', { cost })}
                     </Button>
-                  </Box>
-                )}
-                {selectedHistoryIdea && (
-                  <Box sx={{ mt: 3 }}>
-                    <Chip
-                      label={
-                        selectedHistoryIdea.status === 'completed'
-                          ? t('datingIdeas.statusCompleted')
-                          : t('datingIdeas.statusSkipped')
-                      }
-                      color={selectedHistoryIdea.status === 'completed' ? 'success' : 'default'}
-                    />
+                  )}
+                  {selectedHistoryIdea && (
                     <Button
-                      fullWidth
-                      sx={{ mt: 2, borderRadius: 2.5 }}
+                      fullWidth={!canCompleteSelected}
                       variant="outlined"
+                      sx={{ flex: 1, minWidth: 140, borderRadius: 2.5, fontWeight: 700 }}
                       onClick={() => {
                         setSelectedHistoryIdea(null);
+                        setFlipped(false);
                         setPhase(activeIdea ? 'idea' : 'offer');
                       }}
                     >
                       {t('datingIdeas.backToCurrent')}
                     </Button>
-                  </Box>
-                )}
+                  )}
+                </Box>
               </Box>
               <Box className="idea-card-face idea-card-back">
                 <Box sx={{ display: 'grid', placeItems: 'center', height: '100%', textAlign: 'center', gap: 1.5 }}>
@@ -487,6 +597,15 @@ const DatingIdeasPage: React.FC = () => {
               </Box>
             </Box>
           </Box>
+
+          {showCompletedPreview && (
+            <CompletedEventPreview
+              loading={completedEventLoading}
+              error={completedEventError}
+              event={completedEventPreview}
+              fallbackEmoji={selectedHistoryIdea?.emoji || displayedIdea.emoji}
+            />
+          )}
         </Box>
       )}
 
@@ -565,8 +684,8 @@ const DatingIdeasPage: React.FC = () => {
         open={editorOpen}
         onClose={handleEditorClose}
         initialDate={new Date()}
-        initialTitle={activeIdea?.title}
-        initialDescription={activeIdea?.description}
+        initialTitle={ideaForEditor?.title}
+        initialDescription={ideaForEditor?.description}
         isDatingIdeaEvent
         preferPresetOverDraft
         onSave={handleSaveEvent}

@@ -153,6 +153,24 @@ export const skipDatingIdea = async (userId: string, ideaId: string) => {
   return { idea: formatIdea(idea) };
 };
 
+export const getDatingIdeaByEventId = async (userId: string, eventId: string) => {
+  const relationship = await findActiveRelationshipForUser(userId);
+  if (!relationship) {
+    return { error: 'NO_PARTNER' as const };
+  }
+
+  const idea = await DatingIdea.findOne({
+    relationshipId: relationship._id,
+    eventId,
+  }).lean();
+
+  if (!idea) {
+    return { error: 'NOT_FOUND' as const };
+  }
+
+  return { idea: formatIdea(idea as DatingIdeaLike) };
+};
+
 export const completeDatingIdea = async (
   userId: string,
   ideaId: string,
