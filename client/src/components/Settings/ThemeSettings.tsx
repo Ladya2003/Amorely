@@ -9,9 +9,6 @@ import {
   Radio,
   useTheme,
   Tooltip,
-  MenuItem,
-  Select,
-  InputLabel,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -19,7 +16,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
 import CheckIcon from '@mui/icons-material/Check';
 import { ThemePreference, PrimaryColorPreference, primaryColorOptions } from '../../theme/appTheme';
-import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/locale';
+import LanguageSelector from '../UI/LanguageSelector';
 import {
   getSettingsHintSx,
   getSettingsPrimaryColorSwatchSx,
@@ -33,8 +30,6 @@ interface ThemeSettingsProps {
   onThemeChange: (theme: ThemePreference) => void;
   currentPrimaryColor: PrimaryColorPreference;
   onPrimaryColorChange: (color: PrimaryColorPreference) => void;
-  currentLocale: AppLocale;
-  onLocaleChange: (locale: AppLocale) => void;
 }
 
 const ThemeSettings: React.FC<ThemeSettingsProps> = ({
@@ -42,8 +37,6 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
   onThemeChange,
   currentPrimaryColor,
   onPrimaryColorChange,
-  currentLocale,
-  onLocaleChange,
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -59,22 +52,13 @@ const ThemeSettings: React.FC<ThemeSettingsProps> = ({
       </Typography>
       <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
 
-      <FormControl fullWidth sx={{ mb: 1 }}>
-        <InputLabel id="locale-select-label">{t('settings.language')}</InputLabel>
-        <Select
-          labelId="locale-select-label"
-          value={currentLocale}
-          label={t('settings.language')}
-          onChange={(event) => onLocaleChange(event.target.value as AppLocale)}
-        >
-          {SUPPORTED_LOCALES.map((locale) => (
-            <MenuItem key={locale} value={locale}>
-              {LOCALE_LABELS[locale]}
-            </MenuItem>
-          ))}
-        </Select>
+      <Box sx={{ mb: 1 }}>
+        <FormLabel component="legend" sx={getSettingsSubsectionTitleSx()}>
+          {t('settings.language')}
+        </FormLabel>
+        <LanguageSelector size="medium" />
         <Typography sx={getSettingsHintSx()}>{t('settings.languageHint')}</Typography>
-      </FormControl>
+      </Box>
 
       <Box component="hr" sx={getSettingsSectionDividerSx(theme)} />
 

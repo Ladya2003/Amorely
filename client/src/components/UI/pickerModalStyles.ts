@@ -43,6 +43,23 @@ const getPickerPaperSx = (theme: Theme): SxProps<Theme> => ({
         '& .MuiPickersYear-yearButton, & .MuiPickersMonth-monthButton': {
           color: theme.palette.text.primary,
         },
+        // ActionBar рендерит DialogActions → наследуют white-текст glass-модалок; сбрасываем на светлом paper
+        '& .MuiPickersLayout-actionBar .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+          border: `1px solid ${theme.palette.primary.main} !important`,
+          color: `${theme.palette.primary.main} !important`,
+          '&:hover': {
+            borderColor: `${theme.palette.primary.dark} !important`,
+            bgcolor: 'transparent',
+          },
+        },
+        '& .MuiPickersLayout-actionBar .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+          borderColor: `${theme.palette.primary.main} !important`,
+          color: `${theme.palette.primary.main} !important`,
+          '&:hover': {
+            borderColor: `${theme.palette.primary.dark} !important`,
+            bgcolor: 'transparent',
+          },
+        },
       }
     : {}),
 });

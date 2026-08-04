@@ -24,8 +24,6 @@ import { notifyPartnerRequestsChanged } from '../hooks/usePartnerRequests';
 import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 import ThemeSettings from '../components/Settings/ThemeSettings';
 import { PrimaryColorPreference } from '../theme/appTheme';
-import { AppLocale, resolveAppLocale } from '../localization/locale';
-import { setAppLocale } from '../localization';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
@@ -76,7 +74,6 @@ const SettingsPage: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [primaryColor, setPrimaryColor] = useState<PrimaryColorPreference>('pink');
-  const [locale, setLocale] = useState<AppLocale>('ru');
   const [notificationSettings, setNotificationSettings] = useState<any>(null);
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
@@ -137,7 +134,6 @@ const SettingsPage: React.FC = () => {
       setUser(loadedUser);
       setTheme(loadedUser.theme || 'system');
       setPrimaryColor(loadedUser.primaryColor || 'pink');
-      setLocale(resolveAppLocale(loadedUser.locale));
       const loadedNotificationSettings = {
         email: {
           newContent: true,
@@ -296,42 +292,6 @@ const SettingsPage: React.FC = () => {
       setTheme(previousTheme);
       if (authUser) {
         updateUser({ ...authUser, theme: previousTheme });
-      }
-    }
-  };
-
-  const handleLocaleChange = async (newLocale: AppLocale) => {
-    const previousLocale = locale;
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error(t('settings.errors.notAuthorizedShort'));
-      }
-
-      setLocale(newLocale);
-      setAppLocale(newLocale);
-      if (authUser) {
-        updateUser({ ...authUser, locale: newLocale });
-      }
-
-      await axios.put(
-        `${API_URL}/api/settings/theme`,
-        {
-          userId: user?._id,
-          locale: newLocale,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    } catch (localeError) {
-      console.error('Ошибка при изменении языка:', localeError);
-      setLocale(previousLocale);
-      setAppLocale(previousLocale);
-      if (authUser) {
-        updateUser({ ...authUser, locale: previousLocale });
       }
     }
   };
@@ -596,8 +556,6 @@ const SettingsPage: React.FC = () => {
                   onThemeChange={handleThemeChange}
                   currentPrimaryColor={primaryColor}
                   onPrimaryColorChange={handlePrimaryColorChange}
-                  currentLocale={locale}
-                  onLocaleChange={handleLocaleChange}
                 />
               )}
 

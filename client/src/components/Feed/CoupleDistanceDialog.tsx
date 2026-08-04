@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogTitle,
   Typography,
+  useTheme,
 } from '@mui/material';
 import MyLocationOutlinedIcon from '@mui/icons-material/MyLocationOutlined';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
@@ -17,6 +18,7 @@ import {
   type CoupleDistanceStatus,
 } from '../../services/coupleDistanceService';
 import { formatDistanceKm, mapGeolocationError, requestCurrentPosition } from '../../utils/geoDistance';
+import { getCoupleDistanceAccentColor } from './feedCoupleAvatarsStyles';
 
 type DialogView =
   | 'intro'
@@ -41,6 +43,7 @@ const CoupleDistanceDialog: React.FC<CoupleDistanceDialogProps> = ({
   onDistanceUpdated,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [view, setView] = useState<DialogView>('intro');
   const [status, setStatus] = useState<CoupleDistanceStatus | null>(null);
 
@@ -150,7 +153,11 @@ const CoupleDistanceDialog: React.FC<CoupleDistanceDialogProps> = ({
 
         {view === 'distance' && distanceLabel && (
           <Box sx={{ textAlign: 'center', py: 1 }}>
-            <Typography variant="h4" component="p" sx={{ fontWeight: 800, color: '#6b4c9a', mb: 1 }}>
+            <Typography
+              variant="h4"
+              component="p"
+              sx={{ fontWeight: 800, color: getCoupleDistanceAccentColor(theme), mb: 1 }}
+            >
               {distanceLabel}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>

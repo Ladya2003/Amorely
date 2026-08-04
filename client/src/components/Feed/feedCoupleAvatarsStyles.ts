@@ -1,9 +1,19 @@
-import { alpha, Theme } from '@mui/material/styles';
+import { alpha, lighten, Theme } from '@mui/material/styles';
 
 export const COUPLE_AVATAR_SIZE = 72;
 export const STATUS_BUBBLE_MAX_WIDTH = 148;
 export const COUPLE_ROW_MAX_WIDTH = 360;
 export const COUPLE_BUBBLES_TOP_INSET = 56;
+
+/** Акцент для бейджа расстояния: читаемый на белом и тёмном paper. */
+export const getCoupleDistanceAccentColor = (theme: Theme) => {
+  if (theme.palette.mode === 'light') {
+    // primary.dark даёт лучший контраст ярких акцентов (pink/orange) на белом
+    return theme.palette.primary.dark;
+  }
+  // В тёмной теме primary.main приглушён — слегка осветляем для мелкого текста
+  return lighten(theme.palette.primary.main, 0.42);
+};
 
 const getBubbleSurface = (theme: Theme) => {
   const isLight = theme.palette.mode === 'light';
@@ -78,6 +88,7 @@ export const getCoupleLockBadgeSx = (theme: Theme, interactive = false) => {
   const isLight = theme.palette.mode === 'light';
   // Непрозрачный фон: иначе сквозь бейдж видны концы пунктирных линий
   const bgcolor = isLight ? theme.palette.common.white : theme.palette.background.paper;
+  const accentColor = getCoupleDistanceAccentColor(theme);
 
   return {
     position: 'absolute' as const,
@@ -98,7 +109,7 @@ export const getCoupleLockBadgeSx = (theme: Theme, interactive = false) => {
     boxShadow: isLight
       ? `0 2px 10px ${alpha(theme.palette.common.black, 0.1)}`
       : `0 2px 12px ${alpha(theme.palette.common.black, 0.28)}`,
-    color: '#6b4c9a',
+    color: accentColor,
     fontSize: '0.8125rem',
     fontWeight: 700,
     lineHeight: 1,

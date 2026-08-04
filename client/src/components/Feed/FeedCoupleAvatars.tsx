@@ -12,7 +12,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import type { Theme } from '@mui/material/styles';
+import { alpha, type Theme } from '@mui/material/styles';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import MyLocationOutlinedIcon from '@mui/icons-material/MyLocationOutlined';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +40,7 @@ import {
   getCoupleAvatarsRowSx,
   getCoupleBubbleAboveAvatarSx,
   getCoupleConnectorSx,
+  getCoupleDistanceAccentColor,
   getCoupleLockBadgeSx,
   getCoupleUserAvatarWrapSx,
   getThoughtBubbleBodySx,
@@ -111,8 +112,9 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
   lockAriaLabel,
 }) => {
   const isLight = theme.palette.mode === 'light';
-  // На светлой теме белые штрихи невидны — используем фирменный фиолетовый
-  const strokeColor = isLight ? 'rgba(107, 76, 154, 0.45)' : 'rgba(255, 255, 255, 0.5)';
+  const accentColor = getCoupleDistanceAccentColor(theme);
+  // На светлой теме белые штрихи невидны — берём акцент темы
+  const strokeColor = isLight ? alpha(accentColor, 0.45) : 'rgba(255, 255, 255, 0.5)';
   const distanceLabel =
     distanceKm != null ? `${formatDistanceKm(distanceKm)} km` : 'km';
 
@@ -159,13 +161,13 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
         sx={getCoupleLockBadgeSx(theme, true)}
       >
         {isLoading ? (
-          <CircularProgress size={16} thickness={5} sx={{ color: '#6b4c9a' }} />
+          <CircularProgress size={16} thickness={5} sx={{ color: 'inherit' }} />
         ) : (
           <>
             {distanceKm != null ? (
-              <MyLocationOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
+              <MyLocationOutlinedIcon sx={{ fontSize: 16, color: 'inherit' }} />
             ) : (
-              <LockOutlinedIcon sx={{ fontSize: 16, color: '#6b4c9a' }} />
+              <LockOutlinedIcon sx={{ fontSize: 16, color: 'inherit' }} />
             )}
             <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 'inherit', lineHeight: 1 }}>
               {distanceLabel}
