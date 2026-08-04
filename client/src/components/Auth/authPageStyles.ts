@@ -1,4 +1,4 @@
-import { alpha, Theme } from '@mui/material/styles';
+import { alpha, lighten, Theme } from '@mui/material/styles';
 import {
   SURFACE_BORDER_RADIUS,
   getChatDialogBackdropSx,
@@ -395,23 +395,26 @@ export const getAuthBackButtonSx = (theme: Theme) => ({
   },
 });
 
-export const getAuthOutlinedButtonSx = (theme: Theme) => ({
-  borderRadius: `${AUTH_ACTION_RADIUS}px`,
-  textTransform: 'none' as const,
-  fontWeight: 600,
-  fontSize: '0.8125rem',
-  borderColor: alpha(
-    theme.palette.primary.main,
-    theme.palette.mode === 'light' ? 0.28 : 0.38
-  ),
-  '&:hover': {
-    borderColor: alpha(
-      theme.palette.primary.main,
-      theme.palette.mode === 'light' ? 0.42 : 0.52
-    ),
-    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.16),
-  },
-});
+export const getAuthOutlinedButtonSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+  // Dark primary is muted for filled buttons; outlined text/border needs a brighter accent.
+  const accent = isLight
+    ? theme.palette.primary.main
+    : lighten(theme.palette.primary.main, 0.45);
+
+  return {
+    borderRadius: `${AUTH_ACTION_RADIUS}px`,
+    textTransform: 'none' as const,
+    fontWeight: 600,
+    fontSize: '0.8125rem',
+    color: accent,
+    borderColor: alpha(accent, isLight ? 0.28 : 0.55),
+    '&:hover': {
+      borderColor: alpha(accent, isLight ? 0.42 : 0.75),
+      bgcolor: alpha(accent, isLight ? 0.08 : 0.14),
+    },
+  };
+};
 
 export const getAuthCryptoDescriptionSx = () => ({
   mb: 2.5,

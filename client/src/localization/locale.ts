@@ -12,6 +12,16 @@ export const LOCALE_LABELS: Record<AppLocale, string> = {
   uk: 'Українська',
 };
 
+export const LOCALE_SHORT_LABELS: Record<AppLocale, string> = {
+  ru: 'RU',
+  en: 'EN',
+  es: 'ES',
+  de: 'DE',
+  fr: 'FR',
+  pt: 'PT',
+  uk: 'UK',
+};
+
 const LOCALE_ALIASES: Record<string, AppLocale> = {
   ru: 'ru',
   en: 'en',
