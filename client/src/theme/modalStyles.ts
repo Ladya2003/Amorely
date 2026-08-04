@@ -32,7 +32,7 @@ export const getAppGlassSurfaceLightTextSx = (
   }
 
   const surfaceTint = options?.surfaceTint ?? 0.12;
-  const labelNotchBg = alpha(theme.palette.primary.main, surfaceTint);
+  const labelNotchBg = `color-mix(in srgb, ${theme.palette.primary.main} ${Math.round(surfaceTint * 100)}%, ${theme.palette.background.default})`;
   const glassField = getModalGlassFieldSx(theme);
 
   return {
@@ -64,8 +64,13 @@ export const getAppGlassSurfaceLightTextSx = (
     '& .MuiInputLabel-root.MuiInputLabel-shrink, & .MuiFormLabel-root.MuiInputLabel-shrink': {
       bgcolor: `${labelNotchBg} !important`,
       px: 0.75,
+      ml: -0.75,
       zIndex: 1,
     },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiInputLabel-root.MuiInputLabel-shrink, & .${APP_OPAQUE_SURFACE_CLASS} .MuiFormLabel-root.MuiInputLabel-shrink`]:
+      {
+        bgcolor: `${theme.palette.mode === 'light' ? theme.palette.common.white : '#242424'} !important`,
+      },
     '& .MuiInputLabel-root.MuiInputLabel-shrink + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend, & .MuiInputLabel-root.MuiInputLabel-shrink + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
       {
         maxWidth: '100% !important',

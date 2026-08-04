@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ladya2003.github.io/Amorely/sitemap.xml
+Sitemap: https://amorely.love/sitemap.xml

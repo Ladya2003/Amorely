@@ -6,7 +6,8 @@
     <title>Amorely</title>
     <script type="text/javascript">
       // GitHub Pages: перенаправление deep-link на index.html (SPA)
-      var pathSegmentsToKeep = 1;
+      // 0 = custom domain / user site at domain root (not /Amorely project path)
+      var pathSegmentsToKeep = 0;
       var l = window.location;
       l.replace(
         l.protocol +

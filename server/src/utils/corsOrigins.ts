@@ -1,17 +1,23 @@
 /**
  * Разрешённые Origin для CORS / Socket.io.
  * Браузер в Origin не передаёт путь — только scheme + host (+ port).
- * CLIENT_URL может быть с путём (GitHub Pages: …/Amorely) — используем origin.
+ * CLIENT_URL может быть с путём или списком через запятую — используем origin каждого.
  */
 export const getAllowedOrigins = (): string[] => {
   const origins = new Set<string>();
 
   const clientUrl = process.env.CLIENT_URL?.trim();
   if (clientUrl) {
-    try {
-      origins.add(new URL(clientUrl).origin);
-    } catch {
-      origins.add(clientUrl.replace(/\/$/, ''));
+    for (const raw of clientUrl.split(',')) {
+      const entry = raw.trim();
+      if (!entry) {
+        continue;
+      }
+      try {
+        origins.add(new URL(entry).origin);
+      } catch {
+        origins.add(entry.replace(/\/$/, ''));
+      }
     }
   }
 

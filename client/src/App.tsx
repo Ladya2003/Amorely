@@ -72,7 +72,7 @@ const getRouterBasename = (): string | undefined => {
     return undefined;
   }
 
-  // Локально CRA часто открывается с /, а homepage задаёт /Amorely только для GitHub Pages.
+  // Локально CRA открывается с /, а PUBLIC_URL из homepage может отличаться в проде.
   if (process.env.NODE_ENV === 'development' && !window.location.pathname.startsWith(publicUrl)) {
     return undefined;
   }

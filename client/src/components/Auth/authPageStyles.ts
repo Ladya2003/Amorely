@@ -276,21 +276,33 @@ export const getAuthPageLogoTitleSx = () => ({
   lineHeight: 1.1,
 });
 
-export const getAuthPageCardSx = (theme: Theme) => ({
-  p: { xs: 3, sm: 4 },
-  width: '100%',
-  borderRadius: `${SURFACE_BORDER_RADIUS}px`,
-  border: getSurfaceBorder(theme),
-  boxShadow:
-    theme.palette.mode === 'light'
-      ? `0 16px 48px ${alpha(theme.palette.common.black, 0.08)}`
-      : `0 20px 56px ${alpha(theme.palette.common.black, 0.34)}`,
-  ...getPrimaryTintSurface(theme, {
-    tint: { light: 0.12, dark: 0.22 },
-  }),
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-});
+export const getAuthPageCardSx = (theme: Theme) => {
+  const surfaceTintPct = theme.palette.mode === 'light' ? 12 : 22;
+  // Непрозрачный аналог tint-поверхности — полупрозрачный bgcolor не перекрывает обводку
+  const labelNotchBg = `color-mix(in srgb, ${theme.palette.primary.main} ${surfaceTintPct}%, ${theme.palette.background.default})`;
+
+  return {
+    p: { xs: 3, sm: 4 },
+    width: '100%',
+    borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+    border: getSurfaceBorder(theme),
+    boxShadow:
+      theme.palette.mode === 'light'
+        ? `0 16px 48px ${alpha(theme.palette.common.black, 0.08)}`
+        : `0 20px 56px ${alpha(theme.palette.common.black, 0.34)}`,
+    ...getPrimaryTintSurface(theme, {
+      tint: { light: 0.12, dark: 0.22 },
+    }),
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    '& .MuiInputLabel-root.MuiInputLabel-shrink, & .MuiFormLabel-root.MuiInputLabel-shrink': {
+      bgcolor: `${labelNotchBg} !important`,
+      px: 0.75,
+      ml: -0.75,
+      zIndex: 1,
+    },
+  };
+};
 
 export const getAuthFormTitleSx = () => ({
   fontWeight: 700,

@@ -15,18 +15,43 @@ export { SURFACE_BORDER_RADIUS } from './surfaceStyles';
 /** Скругление полей ввода — чуть меньше карточек, в той же шкале */
 export const INPUT_BORDER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 
+/** Горизонтальный padding текста в medium/small outlined-полях */
+const INPUT_PADDING_X = 20;
+const INPUT_PADDING_X_SMALL = 16;
+
+/**
+ * Shrink-лейбл должен сидеть правее дуги border-radius, иначе верхняя обводка
+ * проходит через начало текста (MUI по умолчанию translateX=14px).
+ */
+const INPUT_LABEL_SHRINK_X = INPUT_BORDER_RADIUS + 2;
+
+/**
+ * Padding fieldset оставляем компактным (как у MUI), чтобы notch начинался раньше
+ * и вырезал верхнюю обводку до дуги; лейбл при этом сидит правее (INPUT_LABEL_SHRINK_X).
+ */
+const NOTCHED_OUTLINE_PADDING_X = 8;
+const NOTCH_LEGEND_SPAN_PADDING_X = 10;
+
+const notchedOutlineLegendStyles = {
+  transition: 'none',
+  '& > span': {
+    paddingLeft: NOTCH_LEGEND_SPAN_PADDING_X,
+    paddingRight: NOTCH_LEGEND_SPAN_PADDING_X,
+  },
+} as const;
+
 const outlinedInputRootStyles = {
   borderRadius: INPUT_BORDER_RADIUS,
   '& .MuiOutlinedInput-notchedOutline': {
     borderRadius: `${INPUT_BORDER_RADIUS}px`,
   },
   '& .MuiInputBase-input:not(.MuiInputBase-inputMultiline)': {
-    paddingLeft: 20,
-    paddingRight: 20,
+    paddingLeft: INPUT_PADDING_X,
+    paddingRight: INPUT_PADDING_X,
   },
   '& .MuiInputBase-inputSizeSmall:not(.MuiInputBase-inputMultiline)': {
-    paddingLeft: 16,
-    paddingRight: 16,
+    paddingLeft: INPUT_PADDING_X_SMALL,
+    paddingRight: INPUT_PADDING_X_SMALL,
   },
   '&.MuiOutlinedInput-multiline': {
     paddingLeft: '16px',
@@ -95,14 +120,14 @@ const getAutocompleteInputRootStyles = (ownerState: {
 /** MUI X date/time pickers — отдельные компоненты, дублируем скругление и отступы */
 const pickersOutlinedInputRootStyles = {
   borderRadius: INPUT_BORDER_RADIUS,
-  paddingLeft: '20px',
-  paddingRight: '20px',
+  paddingLeft: `${INPUT_PADDING_X}px`,
+  paddingRight: `${INPUT_PADDING_X}px`,
   '& .MuiPickersOutlinedInput-notchedOutline': {
     borderRadius: `${INPUT_BORDER_RADIUS}px`,
   },
   '&.MuiPickersInputBase-sizeSmall': {
-    paddingLeft: '16px',
-    paddingRight: '16px',
+    paddingLeft: `${INPUT_PADDING_X_SMALL}px`,
+    paddingRight: `${INPUT_PADDING_X_SMALL}px`,
   },
   '&.MuiPickersInputBase-adornedStart': {
     paddingLeft: '14px',
@@ -309,9 +334,10 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
             },
           },
           notchedOutline: {
-            legend: {
-              transition: 'none',
-            },
+            // overflow:hidden + большой radius ломает вырез legend в Chromium
+            overflow: 'visible',
+            padding: `0 ${NOTCHED_OUTLINE_PADDING_X}px`,
+            legend: notchedOutlineLegendStyles,
           },
         },
       },
@@ -339,9 +365,9 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
         styleOverrides: {
           root: pickersOutlinedInputRootStyles,
           notchedOutline: {
-            legend: {
-              transition: 'none',
-            },
+            overflow: 'visible',
+            padding: `0 ${NOTCHED_OUTLINE_PADDING_X}px`,
+            legend: notchedOutlineLegendStyles,
           },
         },
       },
@@ -370,6 +396,21 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
       MuiInputLabel: {
         styleOverrides: {
           outlined: ({ theme }) => ({
+            // Совмещаем с padding инпута; shrink — правее дуги скругления
+            transform: `translate(${INPUT_PADDING_X}px, 16px) scale(1)`,
+            '&.MuiInputLabel-sizeSmall': {
+              transform: `translate(${INPUT_PADDING_X_SMALL}px, 9px) scale(1)`,
+            },
+            '&.MuiInputLabel-shrink': {
+              transform: `translate(${INPUT_LABEL_SHRINK_X}px, -9px) scale(0.75)`,
+              // Чуть шире запас под длинные лейблы при увеличенном translateX
+              maxWidth: `calc(133% - ${INPUT_LABEL_SHRINK_X + NOTCH_LEGEND_SPAN_PADDING_X * 2}px)`,
+              // Непрозрачная маска: при большом radius fieldset-notch часто не убирает обводку под текстом
+              paddingLeft: 6,
+              paddingRight: 6,
+              marginLeft: -6,
+              backgroundColor: theme.palette.background.default,
+            },
             '&.Mui-focused': {
               color: theme.palette.primary.main,
             },
