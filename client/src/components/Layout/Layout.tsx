@@ -14,7 +14,7 @@ import {
 
   AppBar,
 
-  Toolbar,
+  Container,
 
   Typography,
 
@@ -58,8 +58,6 @@ import BottomNavTab from './BottomNavTab';
 import {
 
   BOTTOM_NAV_TAB_COUNT,
-
-  getDesktopBottomNavSx,
 
   getMobileBottomNavOuterSx,
 
@@ -297,103 +295,117 @@ const Layout: React.FC = () => {
 
       {!isMobile && (
 
-        <AppBar position="static" color="default" elevation={1}>
+        <AppBar
+          position="static"
+          color="transparent"
+          elevation={0}
+          sx={{ bgcolor: 'transparent', backgroundImage: 'none' }}
+        >
 
-          <Toolbar>
+          <Box sx={{ px: 2, pt: 1, pb: 0 }}>
 
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Container maxWidth="md">
 
-              <FavoriteIcon sx={{ color: 'primary.main', mr: 1 }} />
-
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-
-                Amorely
-
-              </Typography>
-
-            </Box>
-
-            
-
-            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', minWidth: 0 }}>
-
-              <AnimatedBottomNav
-
-                value={currentTab}
-
-                onChange={handleTabChange}
-
-                tabCount={BOTTOM_NAV_TAB_COUNT}
-
-                sx={getDesktopBottomNavSx(theme)}
-
+              <Box
+                sx={(muiTheme) => ({
+                  ...getMobileBottomNavShellSx(muiTheme),
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                })}
               >
 
-                {bottomNavActions}
+                <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
 
-              </AnimatedBottomNav>
+                  <FavoriteIcon sx={{ color: 'primary.main', mr: 1 }} />
 
-            </Box>
+                  <Typography variant="h6" component="div">
 
-            
+                    Amorely
 
-            <IconButton onClick={handleMenuOpen}>
+                  </Typography>
 
-              <Avatar 
+                </Box>
 
-                src={user?.avatar} 
+                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', minWidth: 0 }}>
 
-                alt={user?.username}
+                  <AnimatedBottomNav
 
-                sx={{ width: 32, height: 32 }}
+                    value={currentTab}
 
-              >
+                    onChange={handleTabChange}
 
-                {user?.username?.charAt(0).toUpperCase()}
+                    tabCount={BOTTOM_NAV_TAB_COUNT}
 
-              </Avatar>
+                    sx={getMobileBottomNavSx(theme)}
 
-            </IconButton>
+                  >
 
-            
+                    {bottomNavActions}
 
-            <Menu
+                  </AnimatedBottomNav>
 
-              anchorEl={anchorEl}
+                </Box>
 
-              open={Boolean(anchorEl)}
+                <IconButton onClick={handleMenuOpen} sx={{ flexShrink: 0, p: 0.5 }}>
 
-              onClose={handleMenuClose}
+                  <Avatar 
 
-              anchorOrigin={{
+                    src={user?.avatar} 
 
-                vertical: 'bottom',
+                    alt={user?.username}
 
-                horizontal: 'right',
+                    sx={{ width: 32, height: 32 }}
 
-              }}
+                  >
 
-              transformOrigin={{
+                    {user?.username?.charAt(0).toUpperCase()}
 
-                vertical: 'top',
+                  </Avatar>
 
-                horizontal: 'right',
+                </IconButton>
 
-              }}
+              </Box>
 
-            >
+            </Container>
 
-              <MenuItem onClick={() => handleNavigate('/settings')}>
+          </Box>
 
-                <AppSettingsFilledIcon fontSize="small" sx={{ mr: 1 }} />
+          <Menu
 
-                {t('nav.settings')}
+            anchorEl={anchorEl}
 
-              </MenuItem>
+            open={Boolean(anchorEl)}
 
-            </Menu>
+            onClose={handleMenuClose}
 
-          </Toolbar>
+            anchorOrigin={{
+
+              vertical: 'bottom',
+
+              horizontal: 'right',
+
+            }}
+
+            transformOrigin={{
+
+              vertical: 'top',
+
+              horizontal: 'right',
+
+            }}
+
+          >
+
+            <MenuItem onClick={() => handleNavigate('/settings')}>
+
+              <AppSettingsFilledIcon fontSize="small" sx={{ mr: 1 }} />
+
+              {t('nav.settings')}
+
+            </MenuItem>
+
+          </Menu>
 
         </AppBar>
 

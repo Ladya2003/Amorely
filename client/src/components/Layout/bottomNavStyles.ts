@@ -158,12 +158,3 @@ export const getMobileBottomNavShellSx = (theme: Theme) => ({
 export const getMobileBottomNavSx = (theme: Theme) => ({
   '& .MuiBottomNavigationAction-root': getAnimatedBottomNavActionStyles(theme),
 });
-
-export const getDesktopBottomNavSx = (theme: Theme) => ({
-  '& .MuiBottomNavigationAction-root': {
-    ...getAnimatedBottomNavActionStyles(theme),
-    padding: `${theme.spacing(0.75)} ${theme.spacing(1)}`,
-    mx: 0.25,
-    maxWidth: 'none',
-  },
-});
