@@ -1,5 +1,9 @@
 import { alpha, Theme } from '@mui/material/styles';
-import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from './surfaceStyles';
+import {
+  SURFACE_BORDER_RADIUS,
+  getPrimaryTintLabelNotchBg,
+  getPrimaryTintSurface,
+} from './surfaceStyles';
 
 export const MODAL_INNER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 export const MODAL_ACTION_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.5);
@@ -32,7 +36,7 @@ export const getAppGlassSurfaceLightTextSx = (
   }
 
   const surfaceTint = options?.surfaceTint ?? 0.12;
-  const labelNotchBg = `color-mix(in srgb, ${theme.palette.primary.main} ${Math.round(surfaceTint * 100)}%, ${theme.palette.background.default})`;
+  const labelNotchBg = getPrimaryTintLabelNotchBg(theme, surfaceTint);
   const glassField = getModalGlassFieldSx(theme);
 
   return {

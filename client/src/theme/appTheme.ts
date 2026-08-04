@@ -405,11 +405,6 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
               transform: `translate(${INPUT_LABEL_SHRINK_X}px, -9px) scale(0.75)`,
               // Чуть шире запас под длинные лейблы при увеличенном translateX
               maxWidth: `calc(133% - ${INPUT_LABEL_SHRINK_X + NOTCH_LEGEND_SPAN_PADDING_X * 2}px)`,
-              // Непрозрачная маска: при большом radius fieldset-notch часто не убирает обводку под текстом
-              paddingLeft: 6,
-              paddingRight: 6,
-              marginLeft: -6,
-              backgroundColor: theme.palette.background.default,
             },
             '&.Mui-focused': {
               color: theme.palette.primary.main,
