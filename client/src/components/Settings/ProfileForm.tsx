@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { 
-  Box, 
-  TextField, 
-  Avatar, 
-  Typography, 
-  IconButton, 
+import {
+  Box,
+  Avatar,
+  Typography,
+  IconButton,
   Alert,
   Grid,
   useTheme,
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import AppDatePicker from '../UI/AppDatePicker';
+import FieldCaption from '../UI/FieldCaption';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
@@ -260,7 +261,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
           <Grid size={{ xs: 12, md: 8 }}>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12 }}>
-                <TextField
+                <FieldCaption>Email</FieldCaption>
+                <AppTextField
                   fullWidth
                   label="Email"
                   value={user.email}
@@ -270,7 +272,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <TextField
+                <FieldCaption required>{t('settings.profile.username')}</FieldCaption>
+                <AppTextField
                   fullWidth
                   label={t('settings.profile.username')}
                   value={username}
@@ -280,7 +283,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
+                <FieldCaption>{t('settings.profile.firstName')}</FieldCaption>
+                <AppTextField
                   fullWidth
                   label={t('settings.profile.firstName')}
                   value={firstName}
@@ -289,7 +293,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
+                <FieldCaption>{t('settings.profile.lastName')}</FieldCaption>
+                <AppTextField
                   fullWidth
                   label={t('settings.profile.lastName')}
                   value={lastName}
@@ -298,22 +303,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                  <AppDatePicker
-                    label={t('settings.profile.birthday')}
-                    value={birthday}
-                    onChange={(newValue) => setBirthday(newValue)}
-                    format={DATE_INPUT_FORMAT}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        variant: 'outlined',
-                        helperText: t('settings.profile.birthdayHelper'),
-                      },
-                    }}
-                  />
+                <FieldCaption>{t('settings.profile.birthday')}</FieldCaption>
+                <AppDatePicker
+                  label={t('settings.profile.birthday')}
+                  value={birthday}
+                  onChange={(newValue) => setBirthday(newValue)}
+                  format={DATE_INPUT_FORMAT}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      variant: 'outlined',
+                      helperText: t('settings.profile.birthdayHelper'),
+                    },
+                  }}
+                />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <TextField
+                <FieldCaption>{t('settings.profile.bio')}</FieldCaption>
+                <AppTextField
                   fullWidth
                   label={t('settings.profile.bio')}
                   value={bio}

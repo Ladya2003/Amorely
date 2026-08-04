@@ -5,7 +5,6 @@ import {
   IconButton,
   Typography,
   Box,
-  TextField,
   Button,
   useTheme,
   useMediaQuery,
@@ -19,6 +18,8 @@ import {
   DialogContentText,
   DialogActions
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
+import FieldCaption from '../UI/FieldCaption';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getModalFooterActionsSx } from '../../theme/appTheme';
 import {
@@ -722,6 +723,7 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           )}
 
           {/* Выбор даты */}
+          <FieldCaption>{t('calendar.event.date')}</FieldCaption>
           <AppDatePicker
             label={t('calendar.event.date')}
             value={selectedDate}
@@ -740,7 +742,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           />
 
           {/* Заголовок */}
-          <TextField
+          <FieldCaption required>{t('calendar.event.title')}</FieldCaption>
+          <AppTextField
             fullWidth
             label={t('calendar.event.title')}
             value={title}
@@ -754,7 +757,8 @@ const EventEditorDrawer: React.FC<EventEditorDrawerProps> = ({
           />
 
           {/* Описание */}
-          <TextField
+          <FieldCaption>{t('calendar.event.description')}</FieldCaption>
+          <AppTextField
             fullWidth
             multiline
             minRows={4}

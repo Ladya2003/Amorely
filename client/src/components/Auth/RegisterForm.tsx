@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
-  TextField,
   Button,
   Typography,
   Alert,
@@ -10,6 +9,7 @@ import {
   IconButton,
   useTheme,
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { translateAuthServerError } from '../../localization/authHelpers';
@@ -95,7 +95,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         </Alert>
       )}
 
-      <TextField
+      <AppTextField
         margin="normal"
         required
         fullWidth
@@ -109,7 +109,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         disabled={isLoading}
       />
 
-      <TextField
+      <AppTextField
         margin="normal"
         required
         fullWidth
@@ -122,7 +122,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         disabled={isLoading}
       />
 
-      <TextField
+      <AppTextField
         margin="normal"
         required
         fullWidth
@@ -150,7 +150,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         helperText={t('auth.register.passwordMinHint')}
       />
 
-      <TextField
+      <AppTextField
         margin="normal"
         required
         fullWidth
@@ -181,7 +181,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         type="submit"
         fullWidth
         variant="contained"
-        sx={getAuthPrimaryButtonSx()}
+        sx={getAuthPrimaryButtonSx(theme)}
         disabled={isLoading}
       >
         {isLoading ? t('auth.register.submitting') : t('auth.register.submit')}

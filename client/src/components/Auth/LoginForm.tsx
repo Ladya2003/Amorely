@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
-  TextField,
   Button,
   Typography,
   Alert,
@@ -10,6 +9,7 @@ import {
   IconButton,
   useTheme,
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { translateAuthServerError } from '../../localization/authHelpers';
@@ -94,7 +94,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </Alert>
       )}
 
-      <TextField
+      <AppTextField
         margin="normal"
         required
         fullWidth
@@ -108,7 +108,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         disabled={isLoading}
       />
 
-      <TextField
+      <AppTextField
         margin="normal"
         required
         fullWidth
@@ -139,7 +139,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         type="submit"
         fullWidth
         variant="contained"
-        sx={getAuthPrimaryButtonSx()}
+        sx={getAuthPrimaryButtonSx(theme)}
         disabled={isLoading}
       >
         {isLoading ? t('auth.login.submitting') : t('auth.login.submit')}

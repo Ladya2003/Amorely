@@ -5,13 +5,25 @@ interface RevealOnScrollProps {
   children: React.ReactNode;
   delayMs?: number;
   sx?: SxProps<Theme>;
+  /** Показать сразу, без анимации появления при скролле */
+  eager?: boolean;
 }
 
-const RevealOnScroll: React.FC<RevealOnScrollProps> = ({ children, delayMs = 0, sx }) => {
+const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
+  children,
+  delayMs = 0,
+  sx,
+  eager = false,
+}) => {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(eager);
 
   useEffect(() => {
+    if (eager) {
+      setVisible(true);
+      return undefined;
+    }
+
     const node = ref.current;
     if (!node) {
       return undefined;
@@ -34,7 +46,7 @@ const RevealOnScroll: React.FC<RevealOnScrollProps> = ({ children, delayMs = 0, 
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [eager]);
 
   return (
     <Box
@@ -42,9 +54,11 @@ const RevealOnScroll: React.FC<RevealOnScrollProps> = ({ children, delayMs = 0, 
       sx={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(28px)',
-        transition: 'opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
-        transitionDelay: visible ? `${delayMs}ms` : '0ms',
-        willChange: 'opacity, transform',
+        transition: eager
+          ? 'none'
+          : 'opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+        transitionDelay: !eager && visible ? `${delayMs}ms` : '0ms',
+        willChange: eager ? 'auto' : 'opacity, transform',
         ...((sx as object) || {}),
       }}
     >

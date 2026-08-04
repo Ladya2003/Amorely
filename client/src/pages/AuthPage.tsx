@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Container, Box, Typography, Button, useTheme } from '@mui/material';
+import { Container, Box, Typography, Button, Fab, Fade, useTheme } from '@mui/material';
 import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
 import AuthLanding, { AuthLandingMode } from '../components/Auth/AuthLanding';
@@ -8,9 +8,10 @@ import AuthLandingClosing from '../components/Auth/AuthLandingClosing';
 import RevealOnScroll from '../components/Auth/RevealOnScroll';
 import LanguageSelector from '../components/UI/LanguageSelector';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { shouldUseBilingualLanguageLabelOnLogin } from '../localization/locale';
 import {
-  getAuthOutlinedButtonSx,
+  getAuthLandingCtaButtonSx,
   getAuthPageCardSx,
   getAuthPageContainerSx,
   getAuthPageLogoIconSx,
@@ -20,11 +21,13 @@ import {
   getAuthLandingTopBarSx,
   getAuthLandingTopBarInnerSx,
   getAuthPageTopBarActionsSx,
+  getAuthScrollTopFabSx,
   getAuthSectionSx,
   getAuthTaglineSx,
 } from '../components/Auth/authPageStyles';
 
 const AUTH_SECTION_ID = 'auth-section';
+const SCROLL_TOP_SHOW_OFFSET = 480;
 
 const AuthPage: React.FC = () => {
   const { t } = useTranslation();
@@ -32,6 +35,7 @@ const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [loginPrefill, setLoginPrefill] = useState<{ email: string; password: string } | null>(null);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -40,6 +44,16 @@ const AuthPage: React.FC = () => {
       document.title = previousTitle;
     };
   }, [t]);
+
+  useEffect(() => {
+    const updateVisibility = () => {
+      setShowScrollTop(window.scrollY > SCROLL_TOP_SHOW_OFFSET);
+    };
+
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    return () => window.removeEventListener('scroll', updateVisibility);
+  }, []);
 
   const handleSwitchToRegister = () => {
     setLoginPrefill(null);
@@ -64,9 +78,19 @@ const AuthPage: React.FC = () => {
       setLoginPrefill(null);
       setRegistrationSuccess(false);
     }
-    window.requestAnimationFrame(() => {
+
+    const scrollToSection = () => {
       document.getElementById(AUTH_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    // Двойной rAF — после commit layout с зарезервированными высотами картинок
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(scrollToSection);
     });
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   return (
@@ -82,11 +106,17 @@ const AuthPage: React.FC = () => {
           <Box sx={getAuthPageTopBarActionsSx()}>
             <LanguageSelector bilingualLabel={shouldUseBilingualLanguageLabelOnLogin()} />
             <Button
-              variant="outlined"
+              variant="contained"
               color="primary"
               size="small"
               onClick={() => scrollToAuth('login')}
-              sx={{ ...getAuthOutlinedButtonSx(theme), display: { xs: 'none', sm: 'inline-flex' } }}
+              sx={{
+                ...getAuthLandingCtaButtonSx(theme),
+                py: 0.75,
+                fontSize: '0.8125rem',
+                minWidth: { xs: 92, sm: 104 },
+                px: { xs: 1.75, sm: 2.25 },
+              }}
             >
               {t('auth.landing.ctaLogin')}
             </Button>
@@ -115,8 +145,20 @@ const AuthPage: React.FC = () => {
           </Box>
         </RevealOnScroll>
 
-        <AuthLandingClosing onScrollToAuth={scrollToAuth} />
+        <AuthLandingClosing />
       </Container>
+
+      <Fade in={showScrollTop} unmountOnExit>
+        <Fab
+          size="medium"
+          color="primary"
+          aria-label={t('auth.landing.scrollToTopAria')}
+          onClick={scrollToTop}
+          sx={getAuthScrollTopFabSx(theme)}
+        >
+          <KeyboardArrowUpIcon />
+        </Fab>
+      </Fade>
     </Box>
   );
 };

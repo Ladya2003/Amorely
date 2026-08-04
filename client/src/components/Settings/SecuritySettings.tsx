@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
-  TextField,
   Button,
   Alert,
   Grid,
   useTheme,
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import LockIcon from '@mui/icons-material/Lock';
 import {
   getSettingsSectionDividerSx,
@@ -84,7 +84,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12 }}>
-            <TextField
+            <AppTextField
               fullWidth
               type="password"
               label={t('settings.security.currentPassword')}
@@ -95,7 +95,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <TextField
+            <AppTextField
               fullWidth
               type="password"
               label={t('settings.security.newPassword')}
@@ -107,7 +107,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ onChangePassword, i
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <TextField
+            <AppTextField
               fullWidth
               type="password"
               label={t('settings.security.confirmPassword')}

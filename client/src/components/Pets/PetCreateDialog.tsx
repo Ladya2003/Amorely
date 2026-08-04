@@ -8,13 +8,13 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
   Stepper,
   Step,
   StepButton,
   CircularProgress,
-  Slide,
+  Slide
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import { alpha, type Theme } from '@mui/material/styles';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import {
@@ -383,7 +383,7 @@ const PetCreateDialog: React.FC<PetCreateDialogProps> = ({
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             {t('pets.nameHint')}
           </Typography>
-          <TextField
+          <AppTextField
             fullWidth
             label={t('pets.nameLabel')}
             value={name}

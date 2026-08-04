@@ -4,7 +4,7 @@ import {
   getChatDialogBackdropSx,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
-
+import { getWebkitAutofillInputSx } from '../../theme/surfaceStyles';
 export const AUTH_INNER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 export const AUTH_ACTION_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.5);
 
@@ -97,8 +97,8 @@ export const getAuthLandingHeroSx = () => ({
   textAlign: 'center' as const,
   maxWidth: 560,
   mx: 'auto',
-  mb: { xs: 6, sm: 8 },
-  pt: { xs: 4, sm: 6 },
+  mb: { xs: 22, sm: 28 },
+  pt: { xs: 22, sm: 28 },
 });
 
 export const getAuthLandingHeroTitleSx = () => ({
@@ -121,14 +121,24 @@ export const getAuthLandingCtaRowSx = () => ({
   flexWrap: 'wrap' as const,
   justifyContent: 'center',
   gap: 1.25,
+  '& > .MuiButton-root': {
+    minWidth: { xs: 160, sm: 180 },
+    px: { xs: 3.5, sm: 4.5 },
+    borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+  },
 });
 
 export const getAuthLandingFeaturesSx = () => ({
   display: 'flex',
   flexDirection: 'column' as const,
-  gap: { xs: 7, sm: 9 },
-  mb: { xs: 8, sm: 10 },
+  mb: { xs: 14, sm: 18 },
   pt: { xs: 2, sm: 3 },
+});
+
+export const getAuthLandingFeaturesListSx = () => ({
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: { xs: 14, sm: 18 },
 });
 
 export const getAuthLandingSectionTitleSx = () => ({
@@ -136,7 +146,7 @@ export const getAuthLandingSectionTitleSx = () => ({
   fontSize: { xs: '1.25rem', sm: '1.5rem' },
   letterSpacing: '-0.02em',
   textAlign: 'center' as const,
-  mb: { xs: 1, sm: 1.5 },
+  mb: { xs: 4, sm: 2.5 },
   pt: { xs: 2, sm: 3 },
 });
 
@@ -168,8 +178,9 @@ export const getAuthLandingFeatureBodySx = () => ({
   lineHeight: 1.55,
 });
 
-export const getAuthLandingImageFrameSx = (theme: Theme) => ({
+export const getAuthLandingImageFrameSx = (theme: Theme, width: number, height: number) => ({
   width: '100%',
+  aspectRatio: `${width} / ${height}`,
   borderRadius: `${SURFACE_BORDER_RADIUS}px`,
   overflow: 'hidden',
   border: `1px solid ${alpha(
@@ -186,7 +197,8 @@ export const getAuthLandingImageFrameSx = (theme: Theme) => ({
 export const getAuthLandingImageSx = () => ({
   display: 'block',
   width: '100%',
-  height: 'auto',
+  height: '100%',
+  objectFit: 'cover' as const,
   verticalAlign: 'middle' as const,
 });
 
@@ -195,7 +207,7 @@ export const getAuthSectionSx = () => ({
   maxWidth: 420,
   mx: 'auto',
   scrollMarginTop: 88,
-  mb: { xs: 6, sm: 8 },
+  mb: { xs: 14, sm: 18 },
 });
 
 export const getAuthLandingClosingSx = (theme: Theme) => ({
@@ -243,13 +255,6 @@ export const getAuthLandingValueItemSx = () => ({
   px: { sm: 1 },
 });
 
-export const getAuthLandingClosingCtaSx = () => ({
-  display: 'flex',
-  flexWrap: 'wrap' as const,
-  justifyContent: 'center',
-  gap: 1.25,
-});
-
 export const getAuthLandingFooterSx = () => ({
   mt: { xs: 5, sm: 6 },
   pt: { xs: 2, sm: 2.5 },
@@ -261,6 +266,22 @@ export const getAuthLandingFooterMetaSx = () => ({
   fontSize: '0.8125rem',
   color: 'text.secondary',
   lineHeight: 1.45,
+});
+
+export const getAuthScrollTopFabSx = (theme: Theme) => ({
+  position: 'fixed' as const,
+  right: { xs: 16, sm: 24 },
+  bottom: { xs: 20, sm: 56, md: 72 },
+  zIndex: 20,
+  bgcolor: 'primary.main',
+  color: 'primary.contrastText',
+  boxShadow:
+    theme.palette.mode === 'light'
+      ? `0 10px 28px ${alpha(theme.palette.primary.main, 0.35)}`
+      : `0 12px 32px ${alpha(theme.palette.common.black, 0.4)}`,
+  '&:hover': {
+    bgcolor: 'primary.dark',
+  },
 });
 
 export const getAuthPageLogoIconSx = (theme: Theme) => ({
@@ -290,6 +311,12 @@ export const getAuthPageCardSx = (theme: Theme) => ({
   }),
   backdropFilter: 'blur(20px)',
   WebkitBackdropFilter: 'blur(20px)',
+  // Chrome autofill: прозрачный фон + тот же размер шрифта, что после фокуса
+  '& .MuiOutlinedInput-root:has(.MuiInputBase-input:-webkit-autofill)': {
+    bgcolor: 'transparent',
+  },
+  '& .MuiInputBase-input:-webkit-autofill, & .MuiInputBase-input:-webkit-autofill:hover, & .MuiInputBase-input:-webkit-autofill:focus, & .MuiInputBase-input:-webkit-autofill:active':
+    getWebkitAutofillInputSx(theme),
 });
 
 export const getAuthFormTitleSx = () => ({
@@ -310,13 +337,64 @@ export const getAuthAlertSx = (theme: Theme) => ({
   },
 });
 
-export const getAuthPrimaryButtonSx = () => ({
+/** Переливающийся градиент для главных CTA (Sign in / Create account) */
+export const getAuthGradientCtaSx = (theme: Theme) => {
+  const { main, dark, light, contrastText } = theme.palette.primary;
+  const gradient = `linear-gradient(120deg, ${dark}, ${main}, ${light}, ${main}, ${dark})`;
+
+  return {
+    py: 1.125,
+    fontWeight: 600,
+    fontSize: '0.9375rem',
+    borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+    color: `${contrastText} !important`,
+    border: 'none',
+    backgroundColor: 'transparent',
+    backgroundImage: gradient,
+    backgroundSize: '220% 220%',
+    backgroundPosition: '0% 50%',
+    boxShadow: `0 10px 28px ${alpha(main, theme.palette.mode === 'light' ? 0.38 : 0.45)}`,
+    animation: 'authCtaGradientShift 7.5s ease infinite',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease',
+    '@keyframes authCtaGradientShift': {
+      '0%': { backgroundPosition: '0% 50%' },
+      '50%': { backgroundPosition: '100% 50%' },
+      '100%': { backgroundPosition: '0% 50%' },
+    },
+    '&:hover': {
+      backgroundColor: 'transparent',
+      backgroundImage: gradient,
+      filter: 'brightness(1.07)',
+      boxShadow: `0 14px 36px ${alpha(main, theme.palette.mode === 'light' ? 0.48 : 0.55)}`,
+    },
+    '&:active': {
+      transform: 'translateY(1px)',
+    },
+    '&.Mui-disabled': {
+      animation: 'none',
+      filter: 'none',
+      backgroundImage: 'none',
+      backgroundColor: theme.palette.action.disabledBackground,
+      color: theme.palette.action.disabled,
+      boxShadow: 'none',
+    },
+    '@media (prefers-reduced-motion: reduce)': {
+      animation: 'none',
+      backgroundPosition: '50% 50%',
+    },
+  };
+};
+
+export const getAuthPrimaryButtonSx = (theme: Theme) => ({
   mt: 3,
   mb: 2,
-  py: 1.125,
-  fontWeight: 600,
-  fontSize: '0.9375rem',
-  boxShadow: 'none',
+  ...getAuthGradientCtaSx(theme),
+});
+
+export const getAuthLandingCtaButtonSx = (theme: Theme) => ({
+  ...getAuthGradientCtaSx(theme),
+  mt: 0,
+  mb: 0,
 });
 
 export const getAuthLinkButtonSx = () => ({
@@ -411,6 +489,26 @@ export const getAuthOutlinedButtonSx = (theme: Theme) => {
     borderColor: alpha(accent, isLight ? 0.28 : 0.55),
     '&:hover': {
       borderColor: alpha(accent, isLight ? 0.42 : 0.75),
+      bgcolor: alpha(accent, isLight ? 0.08 : 0.14),
+    },
+  };
+};
+
+/** Hero Sign in: slightly stronger outline than default outlined CTA */
+export const getAuthLandingOutlinedCtaSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+  const accent = isLight
+    ? theme.palette.primary.main
+    : lighten(theme.palette.primary.main, 0.45);
+
+  return {
+    ...getAuthOutlinedButtonSx(theme),
+    py: 1.125,
+    fontSize: '0.9375rem',
+    borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+    borderColor: alpha(accent, isLight ? 0.48 : 0.78),
+    '&:hover': {
+      borderColor: alpha(accent, isLight ? 0.62 : 0.9),
       bgcolor: alpha(accent, isLight ? 0.08 : 0.14),
     },
   };

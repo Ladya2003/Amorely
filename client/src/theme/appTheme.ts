@@ -8,7 +8,7 @@ import {
   getAppModalTitleSx,
   MODAL_TEXT_PRIMARY_LIGHT,
 } from './modalStyles';
-import { SURFACE_BORDER_RADIUS } from './surfaceStyles';
+import { getWebkitAutofillInputSx, HIDE_INPUT_LABELS, SURFACE_BORDER_RADIUS } from './surfaceStyles';
 
 export { SURFACE_BORDER_RADIUS } from './surfaceStyles';
 
@@ -39,6 +39,28 @@ const notchedOutlineLegendStyles = {
     paddingRight: NOTCH_LEGEND_SPAN_PADDING_X,
   },
 } as const;
+
+/** Закрытый notch: убираем padding у legend/span — иначе Safari вырезает дыру в верхней границе */
+const closedNotchedOutlineLegendStyles = {
+  transition: 'none',
+  maxWidth: '0.01px !important',
+  padding: 0,
+  '& > span': {
+    paddingLeft: 0,
+    paddingRight: 0,
+  },
+} as const;
+
+const getNotchedOutlineSlotStyles = (notched?: boolean) => ({
+  // overflow:hidden + большой radius ломает вырез legend в Chromium
+  overflow: 'visible' as const,
+  padding: `0 ${NOTCHED_OUTLINE_PADDING_X}px`,
+  // Без видимого label notch всегда закрыт — иначе дыра в верхней границе
+  legend:
+    HIDE_INPUT_LABELS || !notched
+      ? closedNotchedOutlineLegendStyles
+      : notchedOutlineLegendStyles,
+});
 
 const outlinedInputRootStyles = {
   borderRadius: INPUT_BORDER_RADIUS,
@@ -323,22 +345,36 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
           },
         },
       },
+      MuiInputBase: {
+        styleOverrides: {
+          root: ({ theme }) =>
+            HIDE_INPUT_LABELS
+              ? {
+                  // MUI прячет placeholder при наличии label до фокуса — при скрытых лейблах оставляем видимым
+                  '& .MuiInputBase-input::placeholder, & .MuiInputBase-inputMultiline::placeholder': {
+                    opacity: `${theme.palette.mode === 'light' ? 0.55 : 0.65} !important`,
+                  },
+                }
+              : undefined,
+        },
+      },
       MuiOutlinedInput: {
         styleOverrides: {
-          root: {
+          root: ({ theme }) => ({
             ...outlinedInputRootStyles,
             '@supports (-webkit-touch-callout: none)': {
               '& .MuiOutlinedInput-notchedOutline legend': {
                 visibility: 'visible',
               },
             },
-          },
-          notchedOutline: {
-            // overflow:hidden + большой radius ломает вырез legend в Chromium
-            overflow: 'visible',
-            padding: `0 ${NOTCHED_OUTLINE_PADDING_X}px`,
-            legend: notchedOutlineLegendStyles,
-          },
+            // Chrome autofill: прозрачный фон + фиксированный размер шрифта (иначе до фокуса меньше)
+            '&.MuiOutlinedInput-root:has(.MuiInputBase-input:-webkit-autofill)': {
+              bgcolor: 'transparent',
+            },
+            '& .MuiInputBase-input:-webkit-autofill, & .MuiInputBase-input:-webkit-autofill:hover, & .MuiInputBase-input:-webkit-autofill:focus, & .MuiInputBase-input:-webkit-autofill:active':
+              getWebkitAutofillInputSx(theme),
+          }),
+          notchedOutline: ({ ownerState }) => getNotchedOutlineSlotStyles(ownerState.notched),
         },
       },
       MuiAutocomplete: {
@@ -364,11 +400,7 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
       MuiPickersOutlinedInput: {
         styleOverrides: {
           root: pickersOutlinedInputRootStyles,
-          notchedOutline: {
-            overflow: 'visible',
-            padding: `0 ${NOTCHED_OUTLINE_PADDING_X}px`,
-            legend: notchedOutlineLegendStyles,
-          },
+          notchedOutline: ({ ownerState }) => getNotchedOutlineSlotStyles(ownerState.notched),
         },
       },
       MuiPickersLayout: {
@@ -395,41 +427,74 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
       },
       MuiInputLabel: {
         styleOverrides: {
+          root: HIDE_INPUT_LABELS
+            ? {
+                display: 'none',
+              }
+            : undefined,
           outlined: ({ theme }) => ({
-            // Совмещаем с padding инпута; shrink — правее дуги скругления
-            transform: `translate(${INPUT_PADDING_X}px, 16px) scale(1)`,
-            '&.MuiInputLabel-sizeSmall': {
-              transform: `translate(${INPUT_PADDING_X_SMALL}px, 9px) scale(1)`,
-            },
-            '&.MuiInputLabel-shrink': {
-              transform: `translate(${INPUT_LABEL_SHRINK_X}px, -9px) scale(0.75)`,
-              // Чуть шире запас под длинные лейблы при увеличенном translateX
-              maxWidth: `calc(133% - ${INPUT_LABEL_SHRINK_X + NOTCH_LEGEND_SPAN_PADDING_X * 2}px)`,
-            },
-            '&.Mui-focused': {
-              color: theme.palette.primary.main,
-            },
-            '&.MuiInputLabel-shrink + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend, &.MuiInputLabel-shrink + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
-              {
-                maxWidth: '100% !important',
-              },
-            '&:not(.MuiInputLabel-shrink) + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend': {
-              maxWidth: '0.01px !important',
-              padding: 0,
-            },
-            '&:not(.MuiInputLabel-shrink) + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend': {
-              maxWidth: '0.01px !important',
-              padding: 0,
-            },
+            ...(HIDE_INPUT_LABELS
+              ? {
+                  display: 'none',
+                  // shrink-класс остаётся в DOM — не открываем notch под невидимый label
+                  '&.MuiInputLabel-shrink + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend, &.MuiInputLabel-shrink + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
+                    closedNotchedOutlineLegendStyles,
+                }
+              : {
+                  // Совмещаем с padding инпута; shrink — правее дуги скругления
+                  transform: `translate(${INPUT_PADDING_X}px, 16px) scale(1)`,
+                  '&.MuiInputLabel-sizeSmall': {
+                    transform: `translate(${INPUT_PADDING_X_SMALL}px, 9px) scale(1)`,
+                  },
+                  '&.MuiInputLabel-shrink': {
+                    transform: `translate(${INPUT_LABEL_SHRINK_X}px, -9px) scale(0.75)`,
+                    // Чуть шире запас под длинные лейблы при увеличенном translateX
+                    maxWidth: `calc(133% - ${INPUT_LABEL_SHRINK_X + NOTCH_LEGEND_SPAN_PADDING_X * 2}px)`,
+                  },
+                  '&.Mui-focused': {
+                    color: theme.palette.primary.main,
+                  },
+                  '&.MuiInputLabel-shrink + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend, &.MuiInputLabel-shrink + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
+                    {
+                      maxWidth: '100% !important',
+                    },
+                }),
+            '&:not(.MuiInputLabel-shrink) + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend':
+              closedNotchedOutlineLegendStyles,
+            '&:not(.MuiInputLabel-shrink) + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
+              closedNotchedOutlineLegendStyles,
           }),
         },
       },
       MuiCssBaseline: {
-        styleOverrides: {
-          body: {
-            fontFamily: APP_FONT_FAMILY,
-          },
-        },
+        styleOverrides: `
+          body {
+            font-family: ${APP_FONT_FAMILY};
+          }
+
+          /* Chrome autofill до фокуса уменьшает шрифт — чиним через ::first-line */
+          input:-webkit-autofill::first-line,
+          textarea:-webkit-autofill::first-line {
+            font-size: 1rem !important;
+            line-height: 1.4375em !important;
+            font-family: ${APP_FONT_FAMILY} !important;
+            letter-spacing: -0.01em !important;
+          }
+
+          input:-webkit-autofill,
+          input:-webkit-autofill:hover,
+          input:-webkit-autofill:focus,
+          input:-webkit-autofill:active,
+          textarea:-webkit-autofill,
+          textarea:-webkit-autofill:hover,
+          textarea:-webkit-autofill:focus,
+          textarea:-webkit-autofill:active {
+            font-size: 1rem !important;
+            line-height: 1.4375em !important;
+            font-family: ${APP_FONT_FAMILY} !important;
+            letter-spacing: -0.01em !important;
+          }
+        `,
       },
     },
   });

@@ -19,9 +19,9 @@ import {
   TablePagination,
   TableRow,
   Tabs,
-  TextField,
-  Typography,
+  Typography
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
@@ -193,7 +193,7 @@ const AdminUsers: React.FC = () => {
   return (
     <Box>
       <Box component="form" onSubmit={handleSearchSubmit} sx={{ mb: 2 }}>
-        <TextField
+        <AppTextField
           fullWidth
           size="small"
           label="Поиск по email, логину или имени"
@@ -378,7 +378,7 @@ const AdminUsers: React.FC = () => {
                       <Tab key={locale} value={locale} label={LOCALE_LABELS[locale]} />
                     ))}
                   </Tabs>
-                  <TextField
+                  <AppTextField
                     fullWidth
                     multiline
                     minRows={3}

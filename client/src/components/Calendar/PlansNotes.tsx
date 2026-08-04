@@ -13,11 +13,12 @@ import {
   DialogTitle,
   FormControlLabel,
   IconButton,
-  TextField,
   Typography,
   useTheme,
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import AppDateTimePicker from '../UI/AppDateTimePicker';
+import FieldCaption from '../UI/FieldCaption';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
@@ -982,40 +983,49 @@ const PlansNotes: React.FC<{
         <DialogContent sx={{ overflow: 'visible', p: 0 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, px: 3, pt: 2.5, pb: 2 }}>
           {formError && <Alert severity="error">{formError}</Alert>}
-          <TextField
-            label={t('calendar.plans.title')}
-            value={form.title}
-            onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-            fullWidth
-            autoFocus
-            inputProps={{ maxLength: 200 }}
-          />
-          <Autocomplete
-            freeSolo
-            fullWidth
-            options={categories}
-            value={form.category}
-            onChange={(_, value) => setForm((prev) => ({ ...prev, category: value || '' }))}
-            onInputChange={(_, value) => setForm((prev) => ({ ...prev, category: value }))}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label={t('calendar.plans.category')}
-                placeholder={t('calendar.plans.categoryPlaceholder')}
-                inputProps={{ ...params.inputProps, maxLength: 100 }}
-              />
-            )}
-          />
-          <TextField
-            label={t('calendar.plans.content')}
-            value={form.content}
-            onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
-            fullWidth
-            multiline
-            minRows={5}
-            placeholder={t('calendar.plans.contentPlaceholder')}
-            inputProps={{ maxLength: 10000 }}
-          />
+          <Box>
+            <FieldCaption required>{t('calendar.plans.title')}</FieldCaption>
+            <AppTextField
+              label={t('calendar.plans.title')}
+              value={form.title}
+              onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+              fullWidth
+              autoFocus
+              inputProps={{ maxLength: 200 }}
+            />
+          </Box>
+          <Box>
+            <FieldCaption>{t('calendar.plans.category')}</FieldCaption>
+            <Autocomplete
+              freeSolo
+              fullWidth
+              options={categories}
+              value={form.category}
+              onChange={(_, value) => setForm((prev) => ({ ...prev, category: value || '' }))}
+              onInputChange={(_, value) => setForm((prev) => ({ ...prev, category: value }))}
+              renderInput={(params) => (
+                <AppTextField
+                  {...params}
+                  label={t('calendar.plans.category')}
+                  placeholder={t('calendar.plans.categoryPlaceholder')}
+                  inputProps={{ ...params.inputProps, maxLength: 100 }}
+                />
+              )}
+            />
+          </Box>
+          <Box>
+            <FieldCaption>{t('calendar.plans.content')}</FieldCaption>
+            <AppTextField
+              label={t('calendar.plans.content')}
+              value={form.content}
+              onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
+              fullWidth
+              multiline
+              minRows={5}
+              placeholder={t('calendar.plans.contentPlaceholder')}
+              inputProps={{ maxLength: 10000 }}
+            />
+          </Box>
 
           <FormControlLabel
             control={
@@ -1037,6 +1047,8 @@ const PlansNotes: React.FC<{
           />
 
           {hasDeadline && (
+            <Box>
+              <FieldCaption>{t('calendar.plans.deadlineAt')}</FieldCaption>
               <AppDateTimePicker
                 label={t('calendar.plans.deadlineAt')}
                 value={deadlineAt}
@@ -1050,6 +1062,7 @@ const PlansNotes: React.FC<{
                   }
                 }}
               />
+            </Box>
           )}
 
           {hasDeadline && (
@@ -1075,24 +1088,27 @@ const PlansNotes: React.FC<{
           )}
 
           {hasDeadline && notifyOnDeadline && deadlineNotifyOptions.length > 0 && (
-            <Autocomplete
-              multiple
-              fullWidth
-              options={deadlineNotifyOptions}
-              value={deadlineNotifyOptions.filter((option) => notifyUserIds.includes(option.id))}
-              onChange={(_, value) => setNotifyUserIds(value.map((item) => item.id))}
-              getOptionLabel={(option) => option.label}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              disableCloseOnSelect
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={t('calendar.plans.deadlineNotifyUsers')}
-                  placeholder={t('calendar.plans.deadlineNotifyUsers')}
-                />
-              )}
-              disabled={isSaving}
-            />
+            <Box>
+              <FieldCaption>{t('calendar.plans.deadlineNotifyUsers')}</FieldCaption>
+              <Autocomplete
+                multiple
+                fullWidth
+                options={deadlineNotifyOptions}
+                value={deadlineNotifyOptions.filter((option) => notifyUserIds.includes(option.id))}
+                onChange={(_, value) => setNotifyUserIds(value.map((item) => item.id))}
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                disableCloseOnSelect
+                renderInput={(params) => (
+                  <AppTextField
+                    {...params}
+                    label={t('calendar.plans.deadlineNotifyUsers')}
+                    placeholder={t('calendar.plans.deadlineNotifyUsers')}
+                  />
+                )}
+                disabled={isSaving}
+              />
+            </Box>
           )}
 
           <Box>

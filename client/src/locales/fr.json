@@ -1255,6 +1255,7 @@
       "heroLead": "Fil partagé, questions du jour, animaux, idées de rendez-vous, chat chiffré, jeux à deux et calendrier photo — proches ou à distance.",
       "ctaLogin": "Se connecter",
       "ctaRegister": "S'inscrire",
+      "scrollToTopAria": "Haut de page",
       "featuresTitle": "Ce que vous pouvez faire ensemble",
       "features": {
         "feed": {

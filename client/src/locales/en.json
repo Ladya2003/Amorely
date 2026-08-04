@@ -1305,6 +1305,7 @@
       "heroLead": "Stay close with a shared feed, daily questions, pets, date ideas, encrypted chat, couple games, and a photo calendar — wherever you are.",
       "ctaLogin": "Sign in",
       "ctaRegister": "Sign up",
+      "scrollToTopAria": "Back to top",
       "featuresTitle": "What you can do together",
       "features": {
         "feed": {

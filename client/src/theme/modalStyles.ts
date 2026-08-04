@@ -1,5 +1,6 @@
 import { alpha, Theme } from '@mui/material/styles';
 import {
+  HIDE_INPUT_LABELS,
   SURFACE_BORDER_RADIUS,
   getPrimaryTintLabelNotchBg,
   getPrimaryTintSurface,
@@ -36,7 +37,9 @@ export const getAppGlassSurfaceLightTextSx = (
   }
 
   const surfaceTint = options?.surfaceTint ?? 0.12;
-  const labelNotchBg = getPrimaryTintLabelNotchBg(theme, surfaceTint);
+  const labelNotchBg = HIDE_INPUT_LABELS
+    ? null
+    : getPrimaryTintLabelNotchBg(theme, surfaceTint);
   const glassField = getModalGlassFieldSx(theme);
 
   return {
@@ -59,30 +62,34 @@ export const getAppGlassSurfaceLightTextSx = (
     '& .MuiDialogContentText-root': {
       color: MODAL_TEXT_SECONDARY_LIGHT,
     },
-    '& .MuiInputLabel-root, & .MuiFormLabel-root': {
-      color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
-    },
-    '& .MuiInputLabel-root.Mui-focused, & .MuiFormLabel-root.Mui-focused': {
-      color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
-    },
-    '& .MuiInputLabel-root.MuiInputLabel-shrink, & .MuiFormLabel-root.MuiInputLabel-shrink': {
-      bgcolor: `${labelNotchBg} !important`,
-      px: 0.75,
-      ml: -0.75,
-      zIndex: 1,
-    },
-    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiInputLabel-root.MuiInputLabel-shrink, & .${APP_OPAQUE_SURFACE_CLASS} .MuiFormLabel-root.MuiInputLabel-shrink`]:
-      {
-        bgcolor: `${theme.palette.mode === 'light' ? theme.palette.common.white : '#242424'} !important`,
-      },
-    '& .MuiInputLabel-root.MuiInputLabel-shrink + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend, & .MuiInputLabel-root.MuiInputLabel-shrink + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
-      {
-        maxWidth: '100% !important',
-      },
-    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline legend, & .MuiPickersOutlinedInput-root.Mui-focused .MuiPickersOutlinedInput-notchedOutline legend':
-      {
-        maxWidth: '100% !important',
-      },
+    ...(HIDE_INPUT_LABELS
+      ? {}
+      : {
+          '& .MuiInputLabel-root, & .MuiFormLabel-root': {
+            color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
+          },
+          '& .MuiInputLabel-root.Mui-focused, & .MuiFormLabel-root.Mui-focused': {
+            color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+          },
+          '& .MuiInputLabel-root.MuiInputLabel-shrink, & .MuiFormLabel-root.MuiInputLabel-shrink': {
+            bgcolor: `${labelNotchBg} !important`,
+            px: 0.75,
+            ml: -0.75,
+            zIndex: 1,
+          },
+          [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiInputLabel-root.MuiInputLabel-shrink, & .${APP_OPAQUE_SURFACE_CLASS} .MuiFormLabel-root.MuiInputLabel-shrink`]:
+            {
+              bgcolor: `${theme.palette.mode === 'light' ? theme.palette.common.white : '#242424'} !important`,
+            },
+          '& .MuiInputLabel-root.MuiInputLabel-shrink + .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline legend, & .MuiInputLabel-root.MuiInputLabel-shrink + .MuiPickersOutlinedInput-root .MuiPickersOutlinedInput-notchedOutline legend':
+            {
+              maxWidth: '100% !important',
+            },
+          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline legend, & .MuiPickersOutlinedInput-root.Mui-focused .MuiPickersOutlinedInput-notchedOutline legend':
+            {
+              maxWidth: '100% !important',
+            },
+        }),
     '& .MuiOutlinedInput-root': glassField,
     '& .MuiTextField-root .MuiOutlinedInput-root': glassField,
     '& .MuiAutocomplete-root .MuiOutlinedInput-root': glassField,
@@ -168,9 +175,10 @@ const getModalGlassFieldSx = (theme: Theme) => ({
   '& .MuiInputBase-input::placeholder, & .MuiInputBase-inputMultiline::placeholder': {
     color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
   },
+  // Без floating label placeholder должен быть виден и в blur
   '&:not(.Mui-focused) .MuiInputBase-input::placeholder, &:not(.Mui-focused) .MuiInputBase-inputMultiline::placeholder':
     {
-      opacity: '0 !important',
+      opacity: HIDE_INPUT_LABELS ? '0.72 !important' : '0 !important',
     },
   '&.Mui-focused .MuiInputBase-input::placeholder, &.Mui-focused .MuiInputBase-inputMultiline::placeholder': {
     opacity: '1 !important',

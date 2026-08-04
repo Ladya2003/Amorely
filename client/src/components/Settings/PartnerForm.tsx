@@ -21,6 +21,7 @@ import {
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import BreakupContentDialog from './BreakupContentDialog';
 import AppDatePicker from '../UI/AppDatePicker';
+import FieldCaption from '../UI/FieldCaption';
 import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -251,20 +252,21 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             </Box>
           </Box>
           
+          <FieldCaption>{t('settings.partner.relationshipStartDate')}</FieldCaption>
           <AppDatePicker
-              label={t('settings.partner.relationshipStartDate')}
-              value={startDate}
-              onChange={(newValue) => setStartDate(newValue)}
-              format={DATE_INPUT_FORMAT}
-              disabled
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  variant: 'outlined',
-                  helperText: t('settings.partner.relationshipStartDateLockedHelper')
-                }
-              }}
-            />
+            label={t('settings.partner.relationshipStartDate')}
+            value={startDate}
+            onChange={(newValue) => setStartDate(newValue)}
+            format={DATE_INPUT_FORMAT}
+            disabled
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                variant: 'outlined',
+                helperText: t('settings.partner.relationshipStartDateLockedHelper')
+              }
+            }}
+          />
         </Box>
       ) : (
         <Box sx={getSettingsEmptyStateSx(theme)}>
@@ -286,6 +288,7 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
             </Alert>
           )}
           
+          <FieldCaption>{t('settings.partner.searchLabel')}</FieldCaption>
           <TextField
             fullWidth
             size="small"
@@ -373,22 +376,23 @@ const PartnerForm: React.FC<PartnerFormProps> = ({
                 </Box>
               </Box>
               
+              <FieldCaption required>{t('settings.partner.relationshipStartDate')}</FieldCaption>
               <AppDatePicker
-                  label={t('settings.partner.relationshipStartDate')}
-                  value={startDate}
-                  onChange={(newValue) => setStartDate(newValue)}
-                  format={DATE_INPUT_FORMAT}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      margin: 'normal',
-                      variant: 'outlined',
-                      required: true,
-                      helperText: t('settings.partner.relationshipStartDateHelper')
-                    }
-                  }}
-                  disableFuture
-                />
+                label={t('settings.partner.relationshipStartDate')}
+                value={startDate}
+                onChange={(newValue) => setStartDate(newValue)}
+                format={DATE_INPUT_FORMAT}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    margin: 'normal',
+                    variant: 'outlined',
+                    required: true,
+                    helperText: t('settings.partner.relationshipStartDateHelper')
+                  }
+                }}
+                disableFuture
+              />
             </Box>
           )}
         </DialogContent>

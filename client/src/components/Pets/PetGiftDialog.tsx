@@ -5,15 +5,15 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  TextField,
   List,
   ListItemButton,
   ListItemAvatar,
   ListItemText,
   Avatar,
   CircularProgress,
-  Typography,
+  Typography
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { searchUsers } from '../../services/petsService';
 
@@ -82,7 +82,7 @@ const PetGiftDialog: React.FC<PetGiftDialogProps> = ({ open, onClose, onGift }) 
     <ResponsiveDialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ pb: 1 }}>{t('pets.giftTitle')}</DialogTitle>
       <DialogContent sx={{ pt: 2.5, overflow: 'visible' }}>
-        <TextField
+        <AppTextField
           fullWidth
           label={t('pets.giftSearch')}
           value={query}

@@ -25,9 +25,9 @@ import {
   TableHead,
   TableRow,
   Tabs,
-  TextField,
-  Typography,
+  Typography
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -380,14 +380,14 @@ const AdminNews: React.FC = () => {
             })}
           </Tabs>
 
-          <TextField
+          <AppTextField
             label={`Заголовок (${LOCALE_LABELS[activeLocale]})`}
             value={activeTranslation.title}
             onChange={(event) => updateLocaleField(activeLocale, 'title', event.target.value)}
             fullWidth
             required={activeLocale === 'ru'}
           />
-          <TextField
+          <AppTextField
             label={`Текст (${LOCALE_LABELS[activeLocale]})`}
             value={activeTranslation.content}
             onChange={(event) => updateLocaleField(activeLocale, 'content', event.target.value)}

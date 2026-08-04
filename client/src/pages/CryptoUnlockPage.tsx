@@ -267,7 +267,7 @@ const CryptoUnlockPage: React.FC = () => {
                 variant="contained"
                 fullWidth
                 onClick={handleSaveClick}
-                sx={getAuthPrimaryButtonSx()}
+                sx={getAuthPrimaryButtonSx(theme)}
               >
                 {t('crypto.unlock.saveAndContinue')}
               </Button>
@@ -290,7 +290,7 @@ const CryptoUnlockPage: React.FC = () => {
                 variant="contained"
                 fullWidth
                 onClick={handleRestore}
-                sx={getAuthPrimaryButtonSx()}
+                sx={getAuthPrimaryButtonSx(theme)}
               >
                 {t('crypto.unlock.connectDevice')}
               </Button>

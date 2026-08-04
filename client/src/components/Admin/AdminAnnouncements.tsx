@@ -21,9 +21,9 @@ import {
   TableHead,
   TableRow,
   Tabs,
-  TextField,
-  Typography,
+  Typography
 } from '@mui/material';
+import AppTextField from '../UI/AppTextField';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -391,7 +391,7 @@ const AdminAnnouncements: React.FC = () => {
         <DialogTitle>{editingItem ? 'Редактировать уведомление' : 'Новое уведомление'}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           {!editingItem && (
-            <TextField
+            <AppTextField
               label="Ключ (необязательно)"
               value={form.key}
               onChange={(event) => setForm((prev) => ({ ...prev, key: event.target.value }))}
@@ -400,7 +400,7 @@ const AdminAnnouncements: React.FC = () => {
             />
           )}
           {editingItem && (
-            <TextField label="Ключ" value={form.key} fullWidth disabled />
+            <AppTextField label="Ключ" value={form.key} fullWidth disabled />
           )}
 
           <Tabs
@@ -431,14 +431,14 @@ const AdminAnnouncements: React.FC = () => {
             })}
           </Tabs>
 
-          <TextField
+          <AppTextField
             label={`Заголовок (${LOCALE_LABELS[activeLocale]})`}
             value={activeTranslation.title}
             onChange={(event) => updateLocaleField(activeLocale, 'title', event.target.value)}
             fullWidth
             required={activeLocale === 'ru'}
           />
-          <TextField
+          <AppTextField
             label={`Краткий текст для списка (${LOCALE_LABELS[activeLocale]})`}
             value={activeTranslation.preview}
             onChange={(event) => updateLocaleField(activeLocale, 'preview', event.target.value)}
@@ -447,7 +447,7 @@ const AdminAnnouncements: React.FC = () => {
             minRows={2}
             required={activeLocale === 'ru'}
           />
-          <TextField
+          <AppTextField
             label={`Полный текст (${LOCALE_LABELS[activeLocale]})`}
             value={activeTranslation.content}
             onChange={(event) => updateLocaleField(activeLocale, 'content', event.target.value)}
@@ -463,13 +463,13 @@ const AdminAnnouncements: React.FC = () => {
             </Typography>
           )}
 
-          <TextField
+          <AppTextField
             label="Заголовок push"
             value={form.pushTitle}
             onChange={(event) => setForm((prev) => ({ ...prev, pushTitle: event.target.value }))}
             fullWidth
           />
-          <TextField
+          <AppTextField
             label="Текст push (RU)"
             value={form.pushBody}
             onChange={(event) => setForm((prev) => ({ ...prev, pushBody: event.target.value }))}

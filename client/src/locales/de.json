@@ -1255,6 +1255,7 @@
       "heroLead": "Gemeinsamer Feed, Tagesfragen, Haustiere, Date-Ideen, verschlüsselter Chat, Paarspiele und ein Foto-Kalender — nah oder fern.",
       "ctaLogin": "Anmelden",
       "ctaRegister": "Registrieren",
+      "scrollToTopAria": "Nach oben",
       "featuresTitle": "Was ihr gemeinsam tun könnt",
       "features": {
         "feed": {

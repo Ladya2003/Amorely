@@ -1255,6 +1255,7 @@
       "heroLead": "Feed partilhado, perguntas do dia, pets, ideias de encontros, chat encriptado, jogos a dois e calendário com fotos — perto ou à distância.",
       "ctaLogin": "Entrar",
       "ctaRegister": "Registar",
+      "scrollToTopAria": "Voltar ao topo",
       "featuresTitle": "O que podem fazer juntos",
       "features": {
         "feed": {

@@ -1,7 +1,36 @@
 import { alpha, Theme } from '@mui/material/styles';
+import { APP_FONT_FAMILY } from './fonts';
 
 /** Скругление поверхностей ленты, модалок и primary-кнопок */
 export const SURFACE_BORDER_RADIUS = 32;
+
+/**
+ * TEMP: скрыть floating label у TextField / Textarea / DatePicker,
+ * чтобы оценить вид без лейбла и «прямоугольника» на обводке.
+ * Вернуть false, когда закончите смотреть.
+ */
+export const HIDE_INPUT_LABELS = true;
+
+const AUTOFILL_FONT = {
+  fontSize: '1rem !important',
+  lineHeight: '1.4375em !important',
+  fontFamily: `${APP_FONT_FAMILY} !important`,
+  letterSpacing: '-0.01em !important',
+} as const;
+
+/** Chrome autofill: прозрачный фон; шрифт через ::first-line — иначе до фокуса меньше */
+export const getWebkitAutofillInputSx = (theme: Theme) => ({
+  WebkitBoxShadow: '0 0 0px 1000px transparent inset !important',
+  WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+  caretColor: theme.palette.text.primary,
+  backgroundColor: 'transparent !important',
+  ...AUTOFILL_FONT,
+  transition: 'background-color 99999s ease-out 0s',
+  // Chrome рисует текст autofill через first-line — без этого font-size игнорируется
+  '&::first-line': {
+    ...AUTOFILL_FONT,
+  },
+});
 
 /** Непрозрачный аналог tint-фона — для маски floating-лейбла на обводке инпута */
 export const getPrimaryTintLabelNotchBg = (theme: Theme, tintAlpha: number) =>
