@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DialogTitle,
@@ -8,12 +8,35 @@ import {
   Typography,
   CircularProgress,
   Box,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { alpha } from '@mui/material/styles';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 
 export const PET_FEED_COST = 2;
+export const PET_FEED_SKIP_CONFIRM_STORAGE_KEY = 'amorely_pet_feed_skip_confirm';
+
+export const shouldSkipPetFeedConfirm = (): boolean => {
+  try {
+    return localStorage.getItem(PET_FEED_SKIP_CONFIRM_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+export const setSkipPetFeedConfirm = (skip: boolean): void => {
+  try {
+    if (skip) {
+      localStorage.setItem(PET_FEED_SKIP_CONFIRM_STORAGE_KEY, '1');
+    } else {
+      localStorage.removeItem(PET_FEED_SKIP_CONFIRM_STORAGE_KEY);
+    }
+  } catch {
+    // ignore storage errors (private mode, quota, etc.)
+  }
+};
 
 interface PetFeedDialogProps {
   open: boolean;
@@ -25,7 +48,15 @@ interface PetFeedDialogProps {
 const PetFeedDialog: React.FC<PetFeedDialogProps> = ({ open, onClose, onFeed, balance }) => {
   const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const canAfford = balance >= PET_FEED_COST;
+
+  useEffect(() => {
+    if (open) {
+      setDontShowAgain(false);
+      setSubmitting(false);
+    }
+  }, [open]);
 
   const handleFeed = async () => {
     if (!canAfford || submitting) {
@@ -33,6 +64,9 @@ const PetFeedDialog: React.FC<PetFeedDialogProps> = ({ open, onClose, onFeed, ba
     }
     setSubmitting(true);
     try {
+      if (dontShowAgain) {
+        setSkipPetFeedConfirm(true);
+      }
       await onFeed();
       onClose();
     } finally {
@@ -71,6 +105,30 @@ const PetFeedDialog: React.FC<PetFeedDialogProps> = ({ open, onClose, onFeed, ba
             {t('pets.feedInsufficientBalance', { cost: PET_FEED_COST })}
           </Typography>
         )}
+        <FormControlLabel
+          sx={{
+            mt: 2.5,
+            mx: 0,
+            alignItems: 'center',
+            '& .MuiFormControlLabel-label': {
+              lineHeight: 1.4,
+            },
+          }}
+          control={
+            <Checkbox
+              checked={dontShowAgain}
+              onChange={(event) => setDontShowAgain(event.target.checked)}
+              size="small"
+              disabled={submitting}
+              sx={{ py: 0 }}
+            />
+          }
+          label={
+            <Typography variant="body2" color="text.secondary">
+              {t('pets.feedDontShowAgain')}
+            </Typography>
+          }
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>{t('common.cancel')}</Button>

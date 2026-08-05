@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AlertColor, Box, Fade, Portal, SxProps, Theme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { SURFACE_BORDER_RADIUS } from '../../theme/appTheme';
@@ -144,6 +144,11 @@ const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
 }) => {
   const [progressRunKey, setProgressRunKey] = useState(0);
   const showProgress = autoHideDuration > 0;
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (open && showProgress) {
@@ -156,9 +161,12 @@ const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
       return undefined;
     }
 
-    const timerId = window.setTimeout(onClose, autoHideDuration);
+    // onClose через ref — иначе инлайн-колбэк родителя сбрасывает таймер на каждом ре-рендере
+    const timerId = window.setTimeout(() => {
+      onCloseRef.current();
+    }, autoHideDuration);
     return () => window.clearTimeout(timerId);
-  }, [open, showProgress, autoHideDuration, onClose, message, progressRunKey]);
+  }, [open, showProgress, autoHideDuration, message, progressRunKey]);
 
   if (!message) {
     return null;

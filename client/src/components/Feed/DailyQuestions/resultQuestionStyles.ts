@@ -28,10 +28,18 @@ export const getResultQuestionCardSx = (theme: Theme) => {
       ? `0 8px 28px ${alpha(theme.palette.common.black, 0.08)}`
       : `0 10px 32px ${alpha(theme.palette.common.black, 0.35)}`,
     '& .MuiOutlinedInput-root': {
-      color: isLight ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)',
-      bgcolor: isLight ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.1),
+      color: `${isLight ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)'} !important`,
+      bgcolor: `${isLight ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.1)} !important`,
+      '& .MuiInputBase-input, & .MuiInputBase-inputMultiline': {
+        color: `${isLight ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)'} !important`,
+        WebkitTextFillColor: `${isLight ? 'rgba(0, 0, 0, 0.87)' : 'rgba(255, 255, 255, 0.95)'} !important`,
+      },
+      '& .MuiInputBase-input::placeholder, & .MuiInputBase-inputMultiline::placeholder': {
+        color: `${isLight ? 'rgba(0, 0, 0, 0.55)' : 'rgba(255, 255, 255, 0.55)'} !important`,
+        opacity: '1 !important',
+      },
       '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: `${alpha(theme.palette.common.black, isLight ? 0.14 : 0.22)} !important`,
+        borderColor: `${alpha(theme.palette.common.black, isLight ? 0.16 : 0.28)} !important`,
       },
     },
     '& .MuiInputLabel-root': {

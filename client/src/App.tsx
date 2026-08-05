@@ -18,7 +18,6 @@ import CalendarPage from './pages/CalendarPage';
 import NewsPage from './pages/NewsPage';
 import SettingsPage from './pages/SettingsPage';
 import ChatRulesPage from './pages/ChatRulesPage';
-import AuthPage from './pages/AuthPage';
 import CryptoUnlockPage from './pages/CryptoUnlockPage';
 import PetDetailPage from './pages/PetDetailPage';
 import DatingIdeasPage from './pages/DatingIdeasPage';
@@ -100,8 +99,8 @@ function App() {
               <UnreadNewsProvider>
               <PendingPartnerRequestsProvider>
               <Routes>
-                {/* Публичный маршрут для аутентификации */}
-                <Route path="/auth" element={<AuthPage />} />
+                {/* Старый URL лендинга → `/` (на GitHub Pages `/auth` отдаёт 404.html) */}
+                <Route path="/auth" element={<Navigate to="/" replace />} />
 
                 {/* Защищенный маршрут восстановления ключей */}
                 <Route
@@ -113,7 +112,7 @@ function App() {
                   }
                 />
 
-                {/* Защищенные маршруты */}
+                {/* `/` — лендинг для гостей, приложение для авторизованных */}
                 <Route
                   path="/"
                   element={

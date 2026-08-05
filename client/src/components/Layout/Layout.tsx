@@ -337,7 +337,30 @@ const Layout: React.FC = () => {
                 }}
               >
 
-                <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                <Box
+                  onClick={() => handleNavigate('/')}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      handleNavigate('/');
+                    }
+                  }}
+                  aria-label="Amorely"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexShrink: 0,
+                    cursor: 'pointer',
+                    borderRadius: 1,
+                    userSelect: 'none',
+                    '&:hover': { opacity: 0.85 },
+                    '& .MuiSvgIcon-root, & .MuiTypography-root': {
+                      cursor: 'pointer',
+                    },
+                  }}
+                >
 
                   <FavoriteIcon sx={{ color: 'primary.main', mr: 1 }} />
 

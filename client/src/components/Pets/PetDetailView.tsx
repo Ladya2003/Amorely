@@ -18,11 +18,11 @@ import { alpha } from '@mui/material/styles';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import CurrencyBadge from './CurrencyBadge';
 import PetGiftDialog from './PetGiftDialog';
-import PetFeedDialog from './PetFeedDialog';
+import PetFeedDialog, { shouldSkipPetFeedConfirm } from './PetFeedDialog';
 import PetLevelProgress from './PetLevelProgress';
 import PetHatchOverlay from './PetHatchOverlay';
 import PetOwnerBlock from './PetOwnerBlock';
-import { unlockPetRevealAudio, playPetHeartsSound } from '../../utils/petRevealSound';
+import { unlockPetRevealAudio, playPetHeartsSound, playPetFeedSound } from '../../utils/petRevealSound';
 import { fetchPet, fetchUserPet, levelUpPet, giftPet, petPet, feedPet } from '../../services/petsService';
 import type { Pet } from '../../services/petsService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -361,6 +361,8 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
 
     setFeedingPending(true);
     setIsFeeding(true);
+    unlockPetRevealAudio();
+    void playPetFeedSound();
     try {
       const result = await feedPet(petId);
       setPet(result.pet);
@@ -390,6 +392,17 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
     } finally {
       setFeedingPending(false);
     }
+  };
+
+  const handleFeedClick = () => {
+    if (feedingPending || isFeeding) {
+      return;
+    }
+    if (shouldSkipPetFeedConfirm()) {
+      void handleFeed();
+      return;
+    }
+    setFeedOpen(true);
   };
 
   const handlePetting = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -596,7 +609,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             {canFeed && (
               <IconButton
                 aria-label={t('pets.feedAction')}
-                onClick={() => setFeedOpen(true)}
+                onClick={handleFeedClick}
                 disabled={feedingPending || isFeeding}
                 sx={(theme) => ({
                   width: 48,

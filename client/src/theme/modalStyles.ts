@@ -1,4 +1,4 @@
-import { alpha, Theme } from '@mui/material/styles';
+import { alpha, lighten, Theme } from '@mui/material/styles';
 import {
   HIDE_INPUT_LABELS,
   SURFACE_BORDER_RADIUS,
@@ -41,6 +41,7 @@ export const getAppGlassSurfaceLightTextSx = (
     ? null
     : getPrimaryTintLabelNotchBg(theme, surfaceTint);
   const glassField = getModalGlassFieldSx(theme);
+  const successOnGlass = lighten(theme.palette.success.light, 0.28);
 
   return {
     color: MODAL_TEXT_PRIMARY_LIGHT,
@@ -96,8 +97,25 @@ export const getAppGlassSurfaceLightTextSx = (
     '& .MuiPickersTextField-root .MuiPickersOutlinedInput-root': glassField,
     '& .MuiFormControl-root .MuiPickersOutlinedInput-root': glassField,
     '& .MuiPickersOutlinedInput-root': glassField,
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiOutlinedInput-root`]: getOpaqueSurfaceFieldSx(theme),
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiTextField-root .MuiOutlinedInput-root`]:
+      getOpaqueSurfaceFieldSx(theme),
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiInputLabel-root, & .${APP_OPAQUE_SURFACE_CLASS} .MuiFormLabel-root`]:
+      {
+        color: `${theme.palette.text.secondary} !important`,
+      },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiInputLabel-root.Mui-focused, & .${APP_OPAQUE_SURFACE_CLASS} .MuiFormLabel-root.Mui-focused`]:
+      {
+        color: `${theme.palette.primary.main} !important`,
+      },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiFormHelperText-root`]: {
+      color: `${theme.palette.text.secondary} !important`,
+    },
     '& .MuiInputAdornment-root .MuiSvgIcon-root': {
       color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
+    },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiInputAdornment-root .MuiSvgIcon-root`]: {
+      color: `${theme.palette.text.secondary} !important`,
     },
     '& .MuiFormHelperText-root': {
       color: `${MODAL_TEXT_SECONDARY_LIGHT} !important`,
@@ -126,6 +144,18 @@ export const getAppGlassSurfaceLightTextSx = (
           },
         },
       },
+    /** Success на розовом glass — тёмный success.main почти не читается */
+    '& .MuiChip-colorSuccess': {
+      color: `${successOnGlass} !important`,
+      borderColor: `${alpha(successOnGlass, 0.92)} !important`,
+      bgcolor: `${alpha(theme.palette.success.light, 0.22)} !important`,
+      '& .MuiChip-label': {
+        color: `${successOnGlass} !important`,
+      },
+      '& .MuiChip-icon': {
+        color: `${successOnGlass} !important`,
+      },
+    },
     '& .MuiDivider-root': {
       borderColor: alpha(theme.palette.common.white, 0.24),
     },
@@ -164,9 +194,9 @@ export const getAppGlassSurfaceLightTextSx = (
     },
     [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiButton-contained.Mui-disabled:not(.MuiButton-colorError):not(.MuiButton-colorWarning)`]:
       {
-        bgcolor: `${alpha(theme.palette.primary.main, 0.22)} !important`,
-        color: `${alpha(theme.palette.text.primary, 0.42)} !important`,
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)} !important`,
+        bgcolor: `${alpha(theme.palette.primary.main, 0.16)} !important`,
+        color: `${alpha(theme.palette.text.primary, 0.55)} !important`,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.28)} !important`,
       },
     '& .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
       border: `1px solid ${alpha(theme.palette.common.white, 0.55)} !important`,
@@ -238,6 +268,51 @@ const getModalGlassFieldSx = (theme: Theme) => ({
     borderColor: `${alpha(theme.palette.common.white, 0.72)} !important`,
   },
 });
+
+/** Поля внутри белой/opaque карточки — тёмный текст, без glass white */
+const getOpaqueSurfaceFieldSx = (theme: Theme) => {
+  const textPrimary = theme.palette.text.primary;
+  const textSecondary = theme.palette.text.secondary;
+  const fieldBg =
+    theme.palette.mode === 'light' ? theme.palette.grey[100] : alpha(theme.palette.common.white, 0.1);
+  const border = alpha(
+    theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white,
+    theme.palette.mode === 'light' ? 0.16 : 0.28
+  );
+  const borderHover = alpha(
+    theme.palette.mode === 'light' ? theme.palette.common.black : theme.palette.common.white,
+    theme.palette.mode === 'light' ? 0.28 : 0.42
+  );
+
+  return {
+    color: `${textPrimary} !important`,
+    bgcolor: `${fieldBg} !important`,
+    '& .MuiInputBase-input, & .MuiInputBase-inputMultiline': {
+      color: `${textPrimary} !important`,
+      WebkitTextFillColor: `${textPrimary} !important`,
+    },
+    '& .MuiInputBase-input::placeholder, & .MuiInputBase-inputMultiline::placeholder': {
+      color: `${textSecondary} !important`,
+      opacity: '0.8 !important',
+    },
+    '&:not(.Mui-focused) .MuiInputBase-input::placeholder, &:not(.Mui-focused) .MuiInputBase-inputMultiline::placeholder':
+      {
+        opacity: '0.8 !important',
+      },
+    '&.Mui-focused .MuiInputBase-input::placeholder, &.Mui-focused .MuiInputBase-inputMultiline::placeholder': {
+      opacity: '0.8 !important',
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: `${border} !important`,
+    },
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+      borderColor: `${borderHover} !important`,
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: `${theme.palette.primary.main} !important`,
+    },
+  };
+};
 
 const MODAL_PAPER_TINT = { light: 0.26, dark: 0.42 } as const;
 

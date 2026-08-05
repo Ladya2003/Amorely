@@ -50,7 +50,11 @@ export const getDatingIdeasPageRootSx = (theme: Theme) => ({
     sm: 4,
   },
   minHeight: '70vh',
-  background: `radial-gradient(120% 80% at 50% -10%, ${alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.16 : 0.28)} 0%, transparent 55%)`,
+  /** На desktop градиент рисует Layout; локальный bg только на mobile */
+  background: {
+    xs: `radial-gradient(120% 80% at 50% -10%, ${alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.16 : 0.28)} 0%, transparent 55%)`,
+    sm: 'transparent',
+  },
 });
 
 export const getIdeaCardSx = (theme: Theme, flipped: boolean) => ({

@@ -102,13 +102,13 @@ const CryptoUnlockPage: React.FC = () => {
 
   const handleBack = () => {
     logout();
-    navigate('/auth');
+    navigate('/');
   };
 
   if (isCryptoReady) {
     const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
     const to =
-      fromPath && fromPath !== '/crypto/unlock' && fromPath !== '/auth'
+      fromPath && fromPath !== '/crypto/unlock' && fromPath !== '/auth' && fromPath !== '/'
         ? fromPath
         : '/';
     return <Navigate to={to} replace />;

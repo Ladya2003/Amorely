@@ -165,13 +165,13 @@ export const getDesktopLayoutTopGlowSx = (theme: Theme) => {
   };
 };
 
-/** Фон страницы питомца — мягкое свечение primary сверху */
+/** Фон страницы питомца — на mobile свой glow; на desktop прозрачный, виден Layout-градиент */
 export const getPetPageBackdropSx = (theme: Theme) => ({
   flex: 1,
   minHeight: '100%',
   width: '100%',
   position: 'relative' as const,
-  bgcolor: theme.palette.background.default,
+  bgcolor: { xs: theme.palette.background.default, sm: 'transparent' },
   '&::before': getFullBleedTopGlowBeforeSx(theme, 'default', { hideOnDesktop: true }),
 });
 

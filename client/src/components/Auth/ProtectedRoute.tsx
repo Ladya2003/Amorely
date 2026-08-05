@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
 import { Box, CircularProgress } from '@mui/material';
+import AuthPage from '../../pages/AuthPage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -24,16 +25,21 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, bypassCryptoC
       </Box>
     );
   }
-  
+
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    // Landing must stay on `/` so GitHub Pages serves index.html (200) for Ctrl+U / SEO.
+    // `/auth` used to 404 at the CDN layer because it is not a real static file.
+    if (location.pathname !== '/') {
+      return <Navigate to="/" replace />;
+    }
+    return <AuthPage />;
   }
 
   if (!bypassCryptoCheck && !isCryptoReady) {
     return <Navigate to="/crypto/unlock" replace state={{ from: location }} />;
   }
-  
+
   return <>{children}</>;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;

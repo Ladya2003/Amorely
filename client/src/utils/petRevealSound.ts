@@ -250,3 +250,81 @@ export const playPetHeartsSound = async (): Promise<void> => {
     }
   });
 };
+
+/** Короткий «хруст/ням» при кормлении — синхронизирован с появлением еды. */
+const PET_FEED_CRUNCH_OFFSETS_SEC = [0, 0.12, 0.24, 0.38] as const;
+const PET_FEED_CRUNCH_FREQUENCIES = [220, 196, 247, 185] as const;
+
+const scheduleFeedCrunch = (
+  ctx: AudioContext,
+  startTime: number,
+  frequency: number,
+  volume: number,
+  destination: AudioNode
+) => {
+  const length = Math.floor(ctx.sampleRate * 0.09);
+  const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+  const samples = buffer.getChannelData(0);
+
+  for (let i = 0; i < length; i += 1) {
+    const envelope = 1 - i / length;
+    samples[i] = (Math.random() * 2 - 1) * envelope * envelope;
+  }
+
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(frequency * 3.2, startTime);
+  filter.frequency.exponentialRampToValueAtTime(frequency * 1.4, startTime + 0.08);
+  filter.Q.value = 1.4;
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(volume, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.09);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(destination);
+
+  source.start(startTime);
+  source.stop(startTime + 0.12);
+
+  scheduleTone(ctx, startTime, frequency, 0.1, volume * 0.55, destination, 'triangle');
+};
+
+/** Мягкий хруст и тёплый «ням» при анимации кормления. */
+export const playPetFeedSound = async (): Promise<void> => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+  } catch {
+    return;
+  }
+
+  const start = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.88, start);
+  master.connect(ctx.destination);
+
+  scheduleTone(ctx, start, 392, 0.28, 0.04, master, 'sine');
+  scheduleTone(ctx, start + 0.05, 523.25, 0.32, 0.03, master, 'triangle');
+
+  PET_FEED_CRUNCH_OFFSETS_SEC.forEach((offset, index) => {
+    scheduleFeedCrunch(
+      ctx,
+      start + offset,
+      PET_FEED_CRUNCH_FREQUENCIES[index],
+      0.12 - index * 0.012,
+      master
+    );
+  });
+
+  scheduleTone(ctx, start + 0.55, 659.25, 0.4, 0.045, master, 'sine');
+  scheduleTone(ctx, start + 0.62, 783.99, 0.5, 0.03, master, 'triangle');
+};

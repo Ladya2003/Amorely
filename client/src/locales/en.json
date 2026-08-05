@@ -1539,6 +1539,7 @@
     "feedTitle": "Feed this pet",
     "feedDescription": "Food costs {{cost}} AmoreCoins and can restore 10–20 satiety points.",
     "feedSatietyHint": "Satiety decreases by 2 points every hour.",
+    "feedDontShowAgain": "Don't show this again",
     "feedConfirm": "Feed",
     "feedFailed": "Could not feed this pet",
     "feedInsufficientBalance": "Not enough AmoreCoins (need {{cost}})",
