@@ -23,6 +23,9 @@
     <meta name="author" content="Amorely" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href="https://amorely.love/" />
+    <link rel="alternate" hreflang="en" href="https://amorely.love/" />
+    <link rel="alternate" hreflang="ru" href="https://amorely.love/" />
+    <link rel="alternate" hreflang="x-default" href="https://amorely.love/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Amorely" />
     <meta property="og:locale" content="en_US" />
@@ -60,12 +63,39 @@
         "description": "A private app for couples with encrypted chat, shared calendar, photo feed, games, and daily questions.",
         "applicationCategory": "LifestyleApplication",
         "operatingSystem": "Web",
+        "inLanguage": ["en", "ru"],
+        "featureList": [
+          "Encrypted couple chat",
+          "Shared photo feed",
+          "Questions of the day",
+          "Shared pet",
+          "Date ideas",
+          "Days together counter",
+          "Couple games",
+          "Photo calendar"
+        ],
         "offers": {
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "USD"
         },
         "image": "https://amorely.love/logo512.png"
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Amorely",
+        "url": "https://amorely.love/",
+        "description": "A private app for couples: chat, shared calendar, photo feed, games, and daily questions.",
+        "inLanguage": ["en", "ru"],
+        "publisher": {
+          "@type": "Organization",
+          "name": "Amorely",
+          "url": "https://amorely.love/",
+          "logo": "https://amorely.love/logo512.png"
+        }
       }
     </script>
     <script type="text/javascript">
@@ -99,6 +129,96 @@
         <p>Please enable JavaScript to use Amorely.</p>
       </div>
     </noscript>
-    <div id="root"></div>
+    <!--
+      Crawlable landing markup for SEO (Ctrl+U / non-JS crawlers).
+      React createRoot replaces this content when the app boots.
+    -->
+    <div id="root">
+      <main>
+        <header>
+          <p>Amorely</p>
+          <h1>A private space just for the two of you</h1>
+          <p>
+            Stay close with a shared feed, daily questions, pets, date ideas, encrypted chat,
+            couple games, and a photo calendar — wherever you are.
+          </p>
+          <p>
+            <a href="/auth">Sign in</a>
+            ·
+            <a href="/auth">Sign up</a>
+          </p>
+        </header>
+
+        <section aria-label="Amorely product overview">
+          <h2>What you can do together</h2>
+          <article>
+            <h3>See each other — and your moments</h3>
+            <p>Avatars show how far you are, while the feed brings back shared photos and notes from everyday life.</p>
+          </article>
+          <article>
+            <h3>Questions of the day</h3>
+            <p>Answer playful prompts together — compare answers, revisit history, and learn something new about each other.</p>
+          </article>
+          <article>
+            <h3>Grow a pet together</h3>
+            <p>Care for a shared companion: feed it, raise affection, and watch it level up as your little ritual.</p>
+          </article>
+          <article>
+            <h3>Date ideas for two</h3>
+            <p>Get inspired with ready-made date ideas, mark what you completed, and keep planning the next adventure.</p>
+          </article>
+          <article>
+            <h3>Count your days together</h3>
+            <p>Track how long you’ve been a couple, chase milestones, unlock achievements, and keep your story visible.</p>
+          </article>
+          <article>
+            <h3>Encrypted chat for two</h3>
+            <p>Send texts, photos, and little check-ins in a private chat — only the two of you can read it.</p>
+          </article>
+          <article>
+            <h3>Guess the location</h3>
+            <p>Look at a place photo, drop your pin on the map, and play rounds side by side against the clock.</p>
+          </article>
+          <article>
+            <h3>Draw &amp; guess</h3>
+            <p>Sketch a prompt while your partner guesses — brushes, colors, and laughs included.</p>
+          </article>
+          <article>
+            <h3>A calendar full of memories</h3>
+            <p>Turn dates into a photo diary: create events, spot special days, and browse your months as a gallery.</p>
+          </article>
+        </section>
+
+        <section aria-label="Why couples choose Amorely" lang="en">
+          <h2>Built for closeness — and privacy</h2>
+          <p>
+            Your chats, calendar, and memories stay between the two of you. Start free, invite your partner,
+            and keep the little rituals going.
+          </p>
+          <ul>
+            <li>
+              <strong>Private by design</strong> —
+              Encrypted chat and personal moments meant for your pair, not a public feed.
+            </li>
+            <li>
+              <strong>Made for two</strong> —
+              Games, questions, pets, and shared plans that only make sense together.
+            </li>
+            <li>
+              <strong>Near or far</strong> —
+              Stay on the same wavelength — in one city or across time zones.
+            </li>
+          </ul>
+        </section>
+
+        <section lang="ru" aria-label="Обзор приложения Amorely">
+          <h2>Amorely — личное пространство только для двоих</h2>
+          <p>
+            Общая лента, вопросы дня, питомцы, идеи для свиданий, зашифрованный чат, игры для двоих
+            и календарь с фото — рядом или на расстоянии.
+          </p>
+        </section>
+      </main>
+    </div>
   </body>
 </html>

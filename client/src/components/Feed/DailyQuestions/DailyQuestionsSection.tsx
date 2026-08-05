@@ -2,11 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   CircularProgress,
+  DialogContent,
+  DialogTitle,
   IconButton,
   Paper,
   Typography,
   useTheme,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import { useTranslation } from 'react-i18next';
 import CategoryCard from './CategoryCard';
@@ -15,7 +18,6 @@ import CategoryResultsView from './CategoryResultsView';
 import HistoryDialog from './HistoryDialog';
 import CountdownTimer from './CountdownTimer';
 import ResponsiveDialog from '../../UI/ResponsiveDialog';
-import { DialogContent, DialogTitle } from '@mui/material';
 import type { CategoryResults, CategoryStatus, DailyQuestionsState } from './types';
 import {
   fetchDailyQuestions,
@@ -204,8 +206,29 @@ const DailyQuestionsSection: React.FC = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>
-          {results ? `${results.emoji} ${results.title}` : t('dailyQuestions.results')}
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1,
+            pr: 1,
+          }}
+        >
+          <Box component="span" sx={{ minWidth: 0 }}>
+            {results ? `${results.emoji} ${results.title}` : t('dailyQuestions.results')}
+          </Box>
+          <IconButton
+            onClick={() => {
+              setResultsCategoryId(null);
+              setResultsRoundKey(null);
+              setResults(null);
+            }}
+            size="small"
+            aria-label={t('common.close')}
+          >
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
         <DialogContent>
           {resultsLoading && (

@@ -111,17 +111,82 @@ export const getPageTopGlowBackground = (
   return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.main, 0.38)} 0%, ${alpha(primary.dark, 0.24)} 42%, ${fadeTo} 74%)`;
 };
 
+type FullBleedTopGlowOptions = {
+  top?: { xs: number; sm: number };
+  /** На desktop glow рисует Layout от верха страницы — локальный ::before скрываем. */
+  hideOnDesktop?: boolean;
+};
+
+/** На sm+ растягивает top-glow на всю ширину viewport — без видимых боковых границ у md-колонки. */
+const getFullBleedTopGlowBeforeSx = (
+  theme: Theme,
+  intensity: PageTopGlowIntensity,
+  options: FullBleedTopGlowOptions = {}
+) => {
+  const { top = { xs: 0, sm: 0 }, hideOnDesktop = false } = options;
+
+  return {
+    content: '""',
+    position: 'absolute' as const,
+    top,
+    left: { xs: 0, sm: '50%' },
+    right: { xs: 0, sm: 'auto' },
+    width: { xs: 'auto', sm: '100vw' },
+    transform: { xs: 'none', sm: 'translateX(-50%)' },
+    height: { xs: 300, sm: 320 },
+    background: getPageTopGlowBackground(theme, 'transparent', intensity),
+    pointerEvents: 'none' as const,
+    ...(hideOnDesktop ? { display: { xs: 'block', sm: 'none' } } : {}),
+  };
+};
+
+/** Desktop Layout: мягкий glow от верха страницы, растянутый ниже по контенту. */
+export const getDesktopLayoutTopGlowSx = (theme: Theme) => {
+  const { primary } = theme.palette;
+  const isLight = theme.palette.mode === 'light';
+  const glow = isLight
+    ? `radial-gradient(160% 110% at 50% -2%, ${alpha(primary.light, 0.28)} 0%, ${alpha(primary.main, 0.08)} 38%, transparent 82%)`
+    : `radial-gradient(160% 110% at 50% -2%, ${alpha(primary.main, 0.22)} 0%, ${alpha(primary.dark, 0.12)} 38%, transparent 82%)`;
+
+  return {
+    position: 'relative' as const,
+    bgcolor: theme.palette.background.default,
+    '&::before': {
+      content: '""',
+      position: 'absolute' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 920,
+      background: glow,
+      pointerEvents: 'none' as const,
+      zIndex: 0,
+    },
+  };
+};
+
 /** Фон страницы питомца — мягкое свечение primary сверху */
 export const getPetPageBackdropSx = (theme: Theme) => ({
   flex: 1,
   minHeight: '100%',
   width: '100%',
-  background: getPageTopGlowBackground(theme, theme.palette.background.default),
+  position: 'relative' as const,
+  bgcolor: theme.palette.background.default,
+  '&::before': getFullBleedTopGlowBeforeSx(theme, 'default', { hideOnDesktop: true }),
 });
 
+type ChatDialogBackdropOptions = {
+  /** Локальный glow на desktop (auth, диалог чата). Иначе на sm+ рисует Layout. */
+  containGlow?: boolean;
+};
+
 /** Фон диалога чата и вкладок (чат, календарь, новости, настройки) */
-export const getChatDialogBackdropSx = (theme: Theme) => ({
-  background: getPageTopGlowBackground(theme, theme.palette.background.default, 'soft'),
+export const getChatDialogBackdropSx = (theme: Theme, options?: ChatDialogBackdropOptions) => ({
+  position: 'relative' as const,
+  bgcolor: theme.palette.background.default,
+  '&::before': getFullBleedTopGlowBeforeSx(theme, 'soft', {
+    hideOnDesktop: !options?.containGlow,
+  }),
 });
 
 type FeedHeaderGlowOptions = {
@@ -146,17 +211,10 @@ export const getFeedHeaderGlowSx = (theme: Theme, options: FeedHeaderGlowOptions
     pt: { xs: 0.5, sm: 0 },
     mt: { xs: -1, sm: -0.5 },
     pb: 0.5,
-    '&::before': {
-      content: '""',
-      position: 'absolute',
+    '&::before': getFullBleedTopGlowBeforeSx(theme, intensity, {
       top: { xs: -24, sm: -32 },
-      left: 0,
-      right: 0,
-      height: { xs: 300, sm: 320 },
-      background: getPageTopGlowBackground(theme, 'transparent', intensity),
-      pointerEvents: 'none',
-      zIndex: 0,
-    },
+      hideOnDesktop: true,
+    }),
   };
 };
 

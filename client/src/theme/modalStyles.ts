@@ -137,6 +137,17 @@ export const getAppGlassSurfaceLightTextSx = (
         bgcolor: `${alpha(theme.palette.common.white, 0.12)} !important`,
       },
     },
+    /** Белая карточка внутри glass — кнопки в цветах opaque-поверхности, не glass/white */
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)`]:
+      {
+        borderColor: `${alpha(theme.palette.primary.main, 0.45)} !important`,
+        color: `${theme.palette.text.primary} !important`,
+        bgcolor: `${alpha(theme.palette.primary.main, 0.08)} !important`,
+        '&:hover': {
+          borderColor: `${theme.palette.primary.main} !important`,
+          bgcolor: `${alpha(theme.palette.primary.main, 0.14)} !important`,
+        },
+      },
     '& .MuiButton-contained:not(.MuiButton-colorError):not(.MuiButton-colorWarning):not(.Mui-disabled)': {
       bgcolor: `${theme.palette.primary.main} !important`,
       color: `${theme.palette.primary.contrastText} !important`,
@@ -151,6 +162,12 @@ export const getAppGlassSurfaceLightTextSx = (
       color: `${alpha(theme.palette.common.white, 0.55)} !important`,
       border: `1px solid ${alpha(theme.palette.common.white, 0.35)} !important`,
     },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiButton-contained.Mui-disabled:not(.MuiButton-colorError):not(.MuiButton-colorWarning)`]:
+      {
+        bgcolor: `${alpha(theme.palette.primary.main, 0.22)} !important`,
+        color: `${alpha(theme.palette.text.primary, 0.42)} !important`,
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)} !important`,
+      },
     '& .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
       border: `1px solid ${alpha(theme.palette.common.white, 0.55)} !important`,
       color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
@@ -159,8 +176,21 @@ export const getAppGlassSurfaceLightTextSx = (
         bgcolor: `${alpha(theme.palette.common.white, 0.12)} !important`,
       },
     },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)`]:
+      {
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.45)} !important`,
+        color: `${theme.palette.primary.main} !important`,
+        bgcolor: 'transparent !important',
+        '&:hover': {
+          borderColor: `${theme.palette.primary.main} !important`,
+          bgcolor: `${alpha(theme.palette.primary.main, 0.08)} !important`,
+        },
+      },
     '& .MuiIconButton-root': {
       color: MODAL_TEXT_PRIMARY_LIGHT,
+    },
+    [`& .${APP_OPAQUE_SURFACE_CLASS} .MuiIconButton-root`]: {
+      color: theme.palette.text.secondary,
     },
   };
 };
@@ -209,20 +239,30 @@ const getModalGlassFieldSx = (theme: Theme) => ({
   },
 });
 
+const MODAL_PAPER_TINT = { light: 0.26, dark: 0.42 } as const;
+
 /** Общая glass-поверхность модалки */
 const getAppModalPaperBase = (theme: Theme) => ({
-  border: getModalSurfaceBorder(theme),
+  border: getModalSurfaceBorder(theme, 'medium'),
   ...getPrimaryTintSurface(theme, {
-    tint: { light: 0.12, dark: 0.24 },
+    tint: MODAL_PAPER_TINT,
   }),
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
+  backdropFilter: 'blur(24px)',
+  WebkitBackdropFilter: 'blur(24px)',
   backgroundImage: 'none',
   boxShadow:
     theme.palette.mode === 'light'
-      ? `0 16px 48px ${alpha(theme.palette.common.black, 0.14)}`
-      : `0 20px 56px ${alpha(theme.palette.common.black, 0.48)}`,
-  ...getAppGlassSurfaceLightTextSx(theme),
+      ? `0 20px 56px ${alpha(theme.palette.common.black, 0.28)}`
+      : `0 24px 64px ${alpha(theme.palette.common.black, 0.62)}`,
+  ...getAppGlassSurfaceLightTextSx(theme, { surfaceTint: MODAL_PAPER_TINT.light }),
+});
+
+/** Backdrop модалки на desktop — страница чуть темнее (MUI default ≈ 0.5). */
+export const getAppModalBackdropSx = (theme: Theme) => ({
+  backgroundColor: alpha(
+    theme.palette.common.black,
+    theme.palette.mode === 'light' ? 0.58 : 0.72
+  ),
 });
 
 /** Центрированный Dialog — скругление со всех сторон */

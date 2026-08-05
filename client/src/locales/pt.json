@@ -1,4 +1,4 @@
-{
+﻿{
   "settings": {
     "title": "Configurações",
     "tabs": {
@@ -1399,7 +1399,8 @@
   },
   "common": {
     "back": "Voltar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "close": "Fechar"
   },
   "pets": {
     "title": "Meus pets",

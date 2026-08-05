@@ -3,6 +3,7 @@ import '@mui/x-date-pickers/themeAugmentation';
 import { APP_FONT_FAMILY, typographyScale } from './fonts';
 import {
   getAppModalActionsSx,
+  getAppModalBackdropSx,
   getAppModalContentSx,
   getAppModalDialogPaperSx,
   getAppModalTitleSx,
@@ -317,6 +318,13 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
       MuiDialog: {
         styleOverrides: {
           paper: ({ theme }) => getAppModalDialogPaperSx(theme) as Record<string, unknown>,
+        },
+      },
+      MuiBackdrop: {
+        styleOverrides: {
+          root: ({ theme }) => ({
+            [theme.breakpoints.up('sm')]: getAppModalBackdropSx(theme),
+          }),
         },
       },
       MuiDialogTitle: {

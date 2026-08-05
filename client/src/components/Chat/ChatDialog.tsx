@@ -1518,13 +1518,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
 
   return (
     <Box sx={(theme) => ({
+      ...getChatDialogBackdropSx(theme, { containGlow: true }),
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      position: 'relative',
       overflow: 'hidden',
       fontFamily: CHAT_FONT_FAMILY,
-      ...getChatDialogBackdropSx(theme),
       '& .MuiTypography-root': { fontFamily: CHAT_FONT_FAMILY },
       '& .MuiInputBase-root': { fontFamily: CHAT_FONT_FAMILY },
       '& .MuiMenuItem-root': { fontFamily: CHAT_FONT_FAMILY },

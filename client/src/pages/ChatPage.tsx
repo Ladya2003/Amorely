@@ -2543,6 +2543,7 @@ const ChatPage: React.FC = () => {
       display: 'flex',
       flexDirection: 'column',
       ...(isMobileChatOpen ? {
+        ...getChatDialogBackdropSx(muiTheme, { containGlow: true }),
         position: 'fixed',
         top: visualViewportLayout.offsetTop,
         left: 0,
@@ -2551,7 +2552,6 @@ const ChatPage: React.FC = () => {
         height: visualViewportLayout.height,
         maxHeight: visualViewportLayout.height,
         overflow: 'hidden',
-        ...getChatDialogBackdropSx(muiTheme),
         zIndex: muiTheme.zIndex.appBar,
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: visualViewportLayout.keyboardOpen

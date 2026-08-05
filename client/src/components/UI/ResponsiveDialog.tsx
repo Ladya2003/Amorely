@@ -10,7 +10,11 @@ import {
 import type { Breakpoint } from '@mui/material/styles';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
-import { getAppModalDialogPaperSx, getAppModalPaperSx } from '../../theme/modalStyles';
+import {
+  getAppModalBackdropSx,
+  getAppModalDialogPaperSx,
+  getAppModalPaperSx,
+} from '../../theme/modalStyles';
 
 export interface ResponsiveDialogProps extends DialogProps {
   /** Keep centered Dialog on mobile (e.g. fullscreen media viewers). */
@@ -113,6 +117,12 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
     );
   }
 
+  const slotBackdropProps = slotProps?.backdrop;
+  const slotBackdropSx =
+    slotBackdropProps && typeof slotBackdropProps === 'object' && 'sx' in slotBackdropProps
+      ? slotBackdropProps.sx
+      : undefined;
+
   return (
     <Dialog
       open={open}
@@ -125,7 +135,14 @@ const ResponsiveDialog: React.FC<ResponsiveDialogProps> = ({
         paper: {
           ...(typeof slotPaperProps === 'object' ? slotPaperProps : {}),
           sx: mergedPaperSx
-        }
+        },
+        backdrop: {
+          ...(typeof slotBackdropProps === 'object' ? slotBackdropProps : {}),
+          sx: [
+            (muiTheme: Theme) => getAppModalBackdropSx(muiTheme),
+            ...(slotBackdropSx ? (Array.isArray(slotBackdropSx) ? slotBackdropSx : [slotBackdropSx]) : []),
+          ],
+        },
       }}
       PaperProps={PaperProps}
       sx={sx}

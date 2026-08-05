@@ -168,6 +168,7 @@ const CategoryResultsView: React.FC<CategoryResultsViewProps> = ({
               <Box sx={{ display: 'flex', gap: 1, mt: 1.5, justifyContent: 'flex-end' }}>
                 <Button
                   size="small"
+                  variant="outlined"
                   onClick={() => setEditingQuestionId(null)}
                   disabled={saving}
                   sx={{ textTransform: 'none' }}

@@ -69,6 +69,8 @@ import {
 
 } from './bottomNavStyles';
 
+import { getDesktopLayoutTopGlowSx } from '../Feed/feedBannerStyles';
+
 
 
 const NAV_TAB_ROUTES = ['/', '/chat', '/calendar', '/news', '/settings'] as const;
@@ -291,28 +293,48 @@ const Layout: React.FC = () => {
 
   return (
 
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
+    <Box
+      sx={[
+        {
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100dvh',
+          overflow: 'hidden',
+        },
+        !isMobile && ((muiTheme) => getDesktopLayoutTopGlowSx(muiTheme)),
+      ]}
+    >
 
       {!isMobile && (
 
         <AppBar
-          position="static"
+          position="relative"
           color="transparent"
           elevation={0}
-          sx={{ bgcolor: 'transparent', backgroundImage: 'none' }}
+          sx={{
+            zIndex: 1,
+            bgcolor: 'transparent',
+            backgroundImage: 'none',
+          }}
         >
 
           <Box sx={{ px: 2, pt: 1, pb: 0 }}>
 
-            <Container maxWidth="md">
+            <Box
+              sx={(muiTheme) => ({
+                ...getMobileBottomNavShellSx(muiTheme),
+                width: '100%',
+                px: 0,
+              })}
+            >
 
-              <Box
-                sx={(muiTheme) => ({
-                  ...getMobileBottomNavShellSx(muiTheme),
+              <Container
+                maxWidth="md"
+                sx={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1,
-                })}
+                }}
               >
 
                 <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
@@ -365,9 +387,9 @@ const Layout: React.FC = () => {
 
                 </IconButton>
 
-              </Box>
+              </Container>
 
-            </Container>
+            </Box>
 
           </Box>
 
@@ -415,11 +437,17 @@ const Layout: React.FC = () => {
 
       <Box sx={{ 
 
+        position: 'relative',
+
+        zIndex: 1,
+
         flexGrow: 1,
 
         minHeight: 0,
 
-        overflow: 'auto',
+        overflowX: 'hidden',
+
+        overflowY: 'auto',
 
         display: 'flex',
 

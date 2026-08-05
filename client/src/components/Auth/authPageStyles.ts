@@ -27,7 +27,7 @@ export const getAuthPageRootSx = (theme: Theme) => ({
   width: '100%',
   display: 'flex',
   flexDirection: 'column' as const,
-  ...getChatDialogBackdropSx(theme),
+  ...getChatDialogBackdropSx(theme, { containGlow: true }),
 });
 
 export const getAuthPageContainerSx = () => ({
