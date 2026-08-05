@@ -47,6 +47,7 @@ import {
   getGamePlayTimerTextSx,
   getGamePlayTurnBannerSx,
 } from '../components/Games/gamePlayPageStyles';
+import GameFrame from '../components/Games/GameFrame';
 import socketService from '../services/socketService';
 import {
   fetchQuizGameState,
@@ -375,15 +376,18 @@ const QuizGamePlayPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={getGamePlayLoadingWrapSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayLoadingWrapSx()}>
         <CircularProgress />
       </Box>
+    </GameFrame>
     );
   }
 
   if (blockedReason) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayBlockedPanelSx()}>
         <Box sx={getGamePlayBlockedCardSx(theme)}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             {t('games.common.needPartner')}
@@ -396,12 +400,14 @@ const QuizGamePlayPage: React.FC = () => {
           </Button>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
   if (!state) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayBlockedPanelSx()}>
         <Box sx={getGamePlayBlockedCardSx(theme)}>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
             {t('games.common.loadFailed')}
@@ -409,12 +415,14 @@ const QuizGamePlayPage: React.FC = () => {
           <Button onClick={() => navigate(QUIZ_GAME_INFO_PATH)}>{t('games.common.back')}</Button>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
   if (state.onCooldown) {
     return (
-      <Box sx={getGamePlayRootSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayRootSx()}>
         <Box sx={getGamePlayHeaderSx(theme)}>
           <IconButton
             sx={getGamePlayHeaderIconButtonSx(theme)}
@@ -441,6 +449,7 @@ const QuizGamePlayPage: React.FC = () => {
           </Box>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
@@ -451,7 +460,8 @@ const QuizGamePlayPage: React.FC = () => {
     const isCountdownActive = lobbySecondsLeft > 0;
 
     return (
-      <Box sx={getGamePlayRootSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayRootSx()}>
         <Box sx={getGamePlayHeaderSx(theme)}>
           <IconButton
             sx={getGamePlayHeaderIconButtonSx(theme)}
@@ -528,6 +538,7 @@ const QuizGamePlayPage: React.FC = () => {
           onClose={() => setToast((prev) => ({ ...prev, open: false }))}
         />
       </Box>
+    </GameFrame>
     );
   }
 
@@ -545,7 +556,8 @@ const QuizGamePlayPage: React.FC = () => {
     : 0;
 
   return (
-    <Box sx={getGamePlayRootSx(theme)}>
+    <GameFrame>
+    <Box sx={getGamePlayRootSx()}>
       <Box
         sx={question ? getGamePlayBoardHiddenSx() : undefined}
         aria-hidden={Boolean(question)}
@@ -752,6 +764,7 @@ const QuizGamePlayPage: React.FC = () => {
         onClose={() => setToast((prev) => ({ ...prev, open: false }))}
       />
     </Box>
+  </GameFrame>
   );
 };
 

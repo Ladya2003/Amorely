@@ -1,13 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, startTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Box,
   useMediaQuery,
   useTheme,
-  TextField,
-  InputAdornment,
-  IconButton,
   Typography,
   ListItemButton,
   ListItemAvatar,
@@ -23,9 +20,8 @@ import {
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
 import ChatList, { Contact } from '../components/Chat/ChatList';
+import ChatGlobalSearchField from '../components/Chat/ChatGlobalSearchField';
 import ChatDialog, {
   ForwardSourceContext,
   MessageForwardRef,
@@ -37,6 +33,7 @@ import ChatDialog, {
 import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import Games from '../components/Chat/Games';
 import {
+  CHAT_LIST_DESKTOP_WIDTH,
   getChatListEmptyStateSx,
   getChatListHeaderGlowWrapSx,
   getChatListHeaderShellSx,
@@ -44,7 +41,6 @@ import {
   getChatListPageBackdropSx,
   getChatListPanelSx,
   getChatListScrollSx,
-  getChatListSearchFieldSx,
   getChatListSearchWrapSx,
   getChatListSectionLabelSx,
   getChatListStackSx,
@@ -331,6 +327,7 @@ const ChatPage: React.FC = () => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [socket, setSocket] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResetToken, setSearchResetToken] = useState(0);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [globalSearchResults, setGlobalSearchResults] = useState<SearchUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -1703,6 +1700,25 @@ const ChatPage: React.FC = () => {
     setSearchParams(nextParams, { replace: true });
   };
 
+  const resetSearchResults = useCallback(() => {
+    setDebouncedSearchQuery('');
+    setGlobalSearchResults([]);
+    setGlobalSearchPage(1);
+    setHasMoreGlobalSearch(false);
+    setIsSearching(false);
+    setIsLoadingMoreGlobalSearch(false);
+  }, []);
+
+  const handleSearchValueChange = useCallback((value: string) => {
+    // Список/API обновляем в transition — инпут остаётся отзывчивым
+    startTransition(() => {
+      setSearchQuery(value);
+    });
+    if (!value.trim()) {
+      resetSearchResults();
+    }
+  }, [resetSearchResults]);
+
   const handleSelectContact = (contactId: string) => {
     const contact = contacts.find((item) => item.id === contactId);
     if (contact && CURRENT_USER_ID) {
@@ -1729,19 +1745,11 @@ const ChatPage: React.FC = () => {
       });
     }
     openContact(user.id);
-    setSearchQuery('');
-    setDebouncedSearchQuery('');
-    setGlobalSearchResults([]);
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    setDebouncedSearchQuery('');
-    setGlobalSearchResults([]);
-    setGlobalSearchPage(1);
-    setHasMoreGlobalSearch(false);
-    setIsSearching(false);
-    setIsLoadingMoreGlobalSearch(false);
+    setSearchResetToken((token) => token + 1);
+    startTransition(() => {
+      setSearchQuery('');
+    });
+    resetSearchResults();
   };
 
   const clearPendingForwardDraft = useCallback(() => {
@@ -1749,6 +1757,14 @@ const ChatPage: React.FC = () => {
     setPendingForwardSharedEvent(null);
     setPendingForwardSharedNote(null);
     setPendingForwardSource(null);
+  }, []);
+
+  const handlePendingSharedEventApplied = useCallback(() => {
+    setPendingSharedEvent(null);
+  }, []);
+
+  const handlePendingSharedNoteApplied = useCallback(() => {
+    setPendingSharedNote(null);
   }, []);
 
   const handleStartForwardMessage = (message: MessageType) => {
@@ -2539,6 +2555,9 @@ const ChatPage: React.FC = () => {
         ...getChatListPageBackdropSx(muiTheme),
         ...getTabPageDesktopShellSx(),
         ...getTabPageBottomPaddingSx(),
+        flex: 1,
+        minHeight: 0,
+        height: '100%',
       } : {}),
       display: 'flex',
       flexDirection: 'column',
@@ -2602,37 +2621,10 @@ const ChatPage: React.FC = () => {
               </Box>
               {tabValue === 0 && (!isMobile || !selectedContactId) && (
                 <Box sx={getChatListSearchWrapSx()}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    placeholder={t('chat.globalSearch')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    sx={(muiTheme) => getChatListSearchFieldSx(muiTheme)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon fontSize="small" color="action" />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          {isSearching ? (
-                            <CircularProgress size={18} />
-                          ) : (
-                            searchQuery && (
-                              <IconButton
-                                size="small"
-                                onClick={handleClearSearch}
-                                aria-label={t('chat.clearSearch')}
-                              >
-                                <CloseIcon fontSize="small" />
-                              </IconButton>
-                            )
-                          )}
-                        </InputAdornment>
-                      ),
-                    }}
+                  <ChatGlobalSearchField
+                    isSearching={isSearching}
+                    resetToken={searchResetToken}
+                    onValueChange={handleSearchValueChange}
                   />
                 </Box>
               )}
@@ -2641,7 +2633,15 @@ const ChatPage: React.FC = () => {
         </Box>
       )}
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', position: 'relative', ...(isMobileChatOpen ? { flexGrow: 1, overflow: 'hidden' } : {}) }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+        ...(isMobileChatOpen ? { flexGrow: 1 } : {}),
+      }}>
         {showChatListLoadingOverlay && (
           <Box
             sx={{
@@ -2713,7 +2713,11 @@ const ChatPage: React.FC = () => {
             sx={{
               ...getChatTabPanelEnterSx(chatTabSlideDirection),
               display: 'flex',
-              ...(isMobileChatOpen ? { flexGrow: 1, overflow: 'hidden' } : {}),
+              // Desktop: список и диалог рядом; mobile: колонка (показывается один из них)
+              flexDirection: isMobile ? 'column' : 'row',
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
             }}
           >
             {/* На мобильных устройствах показываем либо список, либо диалог */}
@@ -2722,11 +2726,14 @@ const ChatPage: React.FC = () => {
                 key={isMobile ? `chat-list-${selectedContactId ?? 'none'}` : 'chat-list-desktop'}
                 sx={(muiTheme) => ({
                   ...getChatListPanelSx(muiTheme, {
-                    withSideBorder: Boolean(selectedContactId && !isMobile),
+                    withSideBorder: !isMobile,
                   }),
                   ...(isMobile && !selectedContactId ? getChatListPanelEnterSx() : {}),
-                  width: isMobile || selectedContactId ? '100%' : '30%',
+                  width: isMobile ? '100%' : CHAT_LIST_DESKTOP_WIDTH,
+                  flexShrink: 0,
                   display: isMobile && selectedContactId ? 'none' : 'flex',
+                  height: '100%',
+                  minHeight: 0,
                 })}
               >
                 <Box sx={getChatListScrollSx()} onScroll={handleSearchListScroll}>
@@ -2813,12 +2820,14 @@ const ChatPage: React.FC = () => {
             {(!isMobile || selectedContactId) && (
               <Box
                 sx={{
-                  width: isMobile || !selectedContactId ? '100%' : '70%',
+                  width: isMobile ? '100%' : 'auto',
+                  flex: 1,
+                  minWidth: 0,
                   display: isMobile && !selectedContactId ? 'none' : 'flex',
                   flexDirection: 'column',
-                  flexGrow: 1,
                   overflow: 'hidden',
                   height: '100%',
+                  minHeight: 0,
                 }}
               >
                 {selectedContactId && CURRENT_USER_ID ? (
@@ -2849,20 +2858,15 @@ const ChatPage: React.FC = () => {
                       onReachMessagesEnd={handleReachMessagesEnd}
                       onAtBottomChange={handleChatAtBottomChange}
                       pendingForwardMessage={pendingForwardMessage}
-                      onPendingForwardApplied={() => {
-                        setPendingForwardMessage(null);
-                        setPendingForwardSharedEvent(null);
-                        setPendingForwardSharedNote(null);
-                        setPendingForwardSource(null);
-                      }}
+                      onPendingForwardApplied={clearPendingForwardDraft}
                       onCancelPendingForward={clearPendingForwardDraft}
                       pendingForwardSource={pendingForwardSource}
                       pendingForwardSharedEvent={pendingForwardSharedEvent}
                       pendingForwardSharedNote={pendingForwardSharedNote}
                       pendingSharedEvent={pendingSharedEvent}
-                      onPendingSharedEventApplied={() => setPendingSharedEvent(null)}
+                      onPendingSharedEventApplied={handlePendingSharedEventApplied}
                       pendingSharedNote={pendingSharedNote}
-                      onPendingSharedNoteApplied={() => setPendingSharedNote(null)}
+                      onPendingSharedNoteApplied={handlePendingSharedNoteApplied}
                       onSharedEventClick={handleSharedEventClick}
                       onSharedNoteClick={handleSharedNoteClick}
                       onSharedGameClick={handleSharedGameClick}

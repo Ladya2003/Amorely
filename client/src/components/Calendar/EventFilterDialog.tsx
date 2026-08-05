@@ -8,10 +8,10 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
-  TextField
 } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import AppDatePicker from '../UI/AppDatePicker';
+import AppTextField from '../UI/AppTextField';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
 import { EMPTY_EVENT_FILTER, type EventFilter } from './eventFilterUtils';
@@ -100,7 +100,7 @@ const EventFilterDialog: React.FC<EventFilterDialogProps> = ({
               draft.dateTo !== null
             )}
           </Box>
-        <TextField
+        <AppTextField
           fullWidth
           label={t('calendar.filter.titleLabel')}
           placeholder={t('calendar.filter.titlePlaceholder')}

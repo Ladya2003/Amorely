@@ -1,7 +1,6 @@
 import { alpha, Theme } from '@mui/material/styles';
 import {
   SURFACE_BORDER_RADIUS,
-  getChatDialogBackdropSx,
   getPageTopGlowBackground,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
@@ -23,23 +22,25 @@ export const gamePlayEnterSx = {
   animation: 'gamePlayEnter 0.34s cubic-bezier(0.22, 1, 0.36, 1)',
 } as const;
 
-export const getGamePlayRootSx = (theme: Theme) => ({
-  height: '100%',
+/** Внутренний layout play-экрана; ширину/карточку даёт GameFrame. */
+export const getGamePlayRootSx = () => ({
   display: 'flex',
   flexDirection: 'column' as const,
   overflow: 'hidden' as const,
-  ...getChatDialogBackdropSx(theme),
+  minHeight: 0,
+  flex: 1,
+  height: '100%',
   ...gamePlayEnterSx,
 });
 
-export const getGamePlayLoadingWrapSx = (theme: Theme) => ({
-  ...getGamePlayRootSx(theme),
+export const getGamePlayLoadingWrapSx = () => ({
+  ...getGamePlayRootSx(),
   alignItems: 'center',
   justifyContent: 'center',
 });
 
-export const getGamePlayBlockedPanelSx = (theme: Theme) => ({
-  ...getGamePlayRootSx(theme),
+export const getGamePlayBlockedPanelSx = () => ({
+  ...getGamePlayRootSx(),
   alignItems: 'center',
   justifyContent: 'center',
   p: 3,
@@ -147,7 +148,10 @@ export const getGamePlayContentSx = () => ({
 
 export const getGamePlayFooterSx = (theme: Theme) => ({
   p: 2,
-  pb: 'max(16px, env(safe-area-inset-bottom, 0px))',
+  pb: {
+    xs: 'max(16px, env(safe-area-inset-bottom, 0px))',
+    sm: 2,
+  },
   flexShrink: 0,
   borderTop: getSurfaceBorder(theme, 'soft'),
   ...getPrimaryTintSurface(theme, {
@@ -155,6 +159,12 @@ export const getGamePlayFooterSx = (theme: Theme) => ({
   }),
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
+  [theme.breakpoints.up('sm')]: {
+    bgcolor: 'transparent',
+    backgroundImage: 'none',
+    backdropFilter: 'none',
+    WebkitBackdropFilter: 'none',
+  },
 });
 
 export const getGamePlayCenterPanelSx = (theme: Theme) => ({

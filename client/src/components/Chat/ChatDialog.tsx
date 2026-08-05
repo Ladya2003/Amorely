@@ -311,7 +311,7 @@ const isMessageEditable = (message: MessageType, currentUserId: string) => {
   return Boolean(message.text?.trim() || message.encryptedPayload);
 };
 
-const ChatDialog: React.FC<ChatDialogProps> = ({ 
+const ChatDialogComponent: React.FC<ChatDialogProps> = ({ 
   contact, 
   contactIsTyping = false,
   messages, 
@@ -359,8 +359,12 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     decrease: decreaseMessageFontSize,
     increase: increaseMessageFontSize,
   } = useChatMessageFontSize();
-  const [messageText, setMessageText] = useState('');
+  const [composerSeed, setComposerSeed] = useState({ key: 0, value: '' });
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetComposer = useCallback((value = '') => {
+    setComposerSeed((prev) => ({ key: prev.key + 1, value }));
+  }, []);
   const isTypingActiveRef = useRef(false);
   const lastTypingEmitRef = useRef(0);
   const showTypingStatus = Boolean(contactIsTyping && contact?.isOnline);
@@ -867,13 +871,13 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     };
   }, [attachments]);
 
-  const cancelForwardDraft = () => {
+  const cancelForwardDraft = useCallback(() => {
     setForwardingMessage(null);
     setForwardingSharedEvent(null);
     setForwardingSharedNote(null);
     setForwardingSource(null);
     onCancelPendingForward?.();
-  };
+  }, [onCancelPendingForward]);
 
   useEffect(() => {
     return () => {
@@ -940,14 +944,14 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     container.scrollTo({ top: nextTop, behavior });
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback((rawText: string) => {
     stopTypingForContact(contact?.id);
 
-    const trimmedText = messageText.trim();
+    const trimmedText = rawText.trim();
     if (editingMessage) {
       if (!trimmedText) return;
       onEditMessage(editingMessage.id, trimmedText);
-      setMessageText('');
+      resetComposer('');
       setEditingMessage(null);
       setAttachments([]);
       return;
@@ -968,7 +972,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         forwardingSource,
         forwardingSharedNote
       );
-      setMessageText('');
+      resetComposer('');
       setAttachments([]);
       setReplyingTo(null);
       cancelForwardDraft();
@@ -982,7 +986,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         onSendMessage(trimmedText, [], null, null, null);
       }
       onSendMessage('', [], null, null, sharingEvent);
-      setMessageText('');
+      resetComposer('');
       setAttachments([]);
       setReplyingTo(null);
       setSharingEvent(null);
@@ -996,7 +1000,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         onSendMessage(trimmedText, [], null, null, null);
       }
       onSendMessage('', [], null, null, null, null, sharingNote);
-      setMessageText('');
+      resetComposer('');
       setAttachments([]);
       setReplyingTo(null);
       setSharingNote(null);
@@ -1007,11 +1011,35 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
       unlockChatAudio();
       void playChatSendSound();
       onSendMessage(trimmedText, attachments, replyingTo, null);
-      setMessageText('');
+      resetComposer('');
       setAttachments([]);
       setReplyingTo(null);
     }
-  };
+  }, [
+    attachments,
+    cancelForwardDraft,
+    contact?.id,
+    editingMessage,
+    forwardingMessage,
+    forwardingSharedEvent,
+    forwardingSharedNote,
+    forwardingSource,
+    onEditMessage,
+    onSendMessage,
+    replyingTo,
+    resetComposer,
+    sharingEvent,
+    sharingNote,
+    stopTypingForContact,
+    t,
+  ]);
+
+  const handleTypingActivity = useCallback(
+    (text: string) => {
+      notifyTypingActivity(text, contact?.id);
+    },
+    [contact?.id, notifyTypingActivity]
+  );
 
   const processSelectedFiles = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) {
@@ -1247,7 +1275,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setReplyingTo(null);
     setAttachments([]);
     setEditingMessage(contextMenu.message);
-    setMessageText(contextMenu.message.text || '');
+    resetComposer(contextMenu.message.text || '');
     setContextMenu(null);
   };
 
@@ -1268,71 +1296,74 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     setContextMenu(null);
   };
 
-  const renderReactionPicker = () => (
-    <>
-      <Divider sx={{ my: 0.5 }} />
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          gap: 0.25,
-          px: 1,
-          py: 0.75,
-        }}
-      >
-        {POPULAR_MESSAGE_REACTIONS.map((emoji) => (
-          <IconButton
-            key={emoji}
-            size="small"
-            onClick={() => handleReactionFromContextMenu(emoji)}
-            aria-label={t('chat.dialog.react', { emoji })}
-            sx={{
-              fontSize: '20px',
-              width: 36,
-              height: 36,
-              borderRadius: `${CHAT_DIALOG_ACTION_RADIUS}px`,
-              lineHeight: 1,
-            }}
-          >
-            {emoji}
-          </IconButton>
-        ))}
-      </Box>
-    </>
-  );
+  const renderReactionPicker = (): React.ReactNode[] => [
+    <Divider key="chat-reaction-divider" sx={{ my: 0.5 }} />,
+    <Box
+      key="chat-reaction-picker"
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        flexWrap: 'wrap',
+        gap: 0.25,
+        px: 1,
+        py: 0.75,
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
+      {POPULAR_MESSAGE_REACTIONS.map((emoji) => (
+        <IconButton
+          key={emoji}
+          size="small"
+          onClick={() => handleReactionFromContextMenu(emoji)}
+          aria-label={t('chat.dialog.react', { emoji })}
+          sx={{
+            fontSize: '20px',
+            width: 36,
+            height: 36,
+            borderRadius: `${CHAT_DIALOG_ACTION_RADIUS}px`,
+            lineHeight: 1,
+          }}
+        >
+          {emoji}
+        </IconButton>
+      ))}
+    </Box>,
+  ];
 
-  const renderMessageActionItems = () => (
-    <>
-      <MenuItem onClick={handleReplyFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
-        <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-          <ForwardOutlinedIcon sx={{ fontSize: 18 }} />
-        </ListItemIcon>
-        {t('chat.dialog.reply')}
-      </MenuItem>
-      {contextMenu && isMessageEditable(contextMenu.message, currentUserId) && (
-        <MenuItem onClick={handleEditFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
-          <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-            <EditOutlinedIcon sx={{ fontSize: 18 }} />
-          </ListItemIcon>
-          {t('chat.dialog.edit')}
-        </MenuItem>
-      )}
-      <MenuItem onClick={handleForwardFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
-        <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-          <ReplyOutlinedIcon sx={{ fontSize: 18 }} />
-        </ListItemIcon>
-        {t('chat.dialog.forward')}
-      </MenuItem>
-      <MenuItem onClick={handleDeleteFromContextMenu} sx={getChatContextMenuItemSx(theme, { danger: true })}>
-        <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-          <DeleteOutlineIcon sx={{ fontSize: 18 }} />
-        </ListItemIcon>
-        {t('chat.dialog.delete')}
-      </MenuItem>
-      {renderReactionPicker()}
-    </>
-  );
+  // Menu на desktop не принимает Fragment — только массив/элементы
+  const renderMessageActionItems = (): React.ReactNode[] => [
+    <MenuItem key="chat-action-reply" onClick={handleReplyFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+      <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+        <ForwardOutlinedIcon sx={{ fontSize: 18 }} />
+      </ListItemIcon>
+      {t('chat.dialog.reply')}
+    </MenuItem>,
+    ...(contextMenu && isMessageEditable(contextMenu.message, currentUserId)
+      ? [
+          <MenuItem key="chat-action-edit" onClick={handleEditFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+            <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+              <EditOutlinedIcon sx={{ fontSize: 18 }} />
+            </ListItemIcon>
+            {t('chat.dialog.edit')}
+          </MenuItem>,
+        ]
+      : []),
+    <MenuItem key="chat-action-forward" onClick={handleForwardFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+      <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+        <ReplyOutlinedIcon sx={{ fontSize: 18 }} />
+      </ListItemIcon>
+      {t('chat.dialog.forward')}
+    </MenuItem>,
+    <MenuItem key="chat-action-delete" onClick={handleDeleteFromContextMenu} sx={getChatContextMenuItemSx(theme, { danger: true })}>
+      <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+        <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+      </ListItemIcon>
+      {t('chat.dialog.delete')}
+    </MenuItem>,
+    ...renderReactionPicker(),
+  ];
 
   const handleDeleteModalClose = () => {
     setDeleteModalOpen(false);
@@ -1976,7 +2007,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
               size="small"
               onClick={() => {
                 setEditingMessage(null);
-                setMessageText('');
+                resetComposer('');
               }}
               aria-label={t('chat.dialog.cancelEdit')}
             >
@@ -1986,22 +2017,18 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
         )}
 
         <ChatMessageInput
-          value={messageText}
-          onChange={(nextText) => {
-            setMessageText(nextText);
-            notifyTypingActivity(nextText, contact?.id);
-          }}
+          externalValue={composerSeed.value}
+          externalValueKey={composerSeed.key}
           onSend={handleSendMessage}
+          onTypingActivity={handleTypingActivity}
           onFocus={handleMessageInputFocus}
           useIOSAccessoryFix={useIOSAccessoryFix}
           onAttachmentClick={handleAttachmentClick}
           attachmentDisabled={isPickingAttachments}
           placeholder={t('chat.input.placeholder')}
-          sendDisabled={
-            editingMessage
-              ? !messageText.trim()
-              : !forwardingMessage && !sharingEvent && !sharingNote && !messageText.trim() && attachments.length === 0
-          }
+          requireText={Boolean(editingMessage)}
+          allowEmptySend={Boolean(forwardingMessage || sharingEvent || sharingNote)}
+          hasAttachments={attachments.length > 0}
         />
           </>
         )}
@@ -2012,6 +2039,8 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
           open={contextMenu !== null}
           onClose={handleContextMenuClose}
           mobileMaxHeight="auto"
+          maxWidth="xs"
+          fullWidth
         >
           <Box sx={{ py: 0.5 }}>
             {renderMessageActionItems()}
@@ -2350,5 +2379,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({
     </Box>
   );
 };
+
+const ChatDialog = React.memo(ChatDialogComponent);
 
 export default ChatDialog; 

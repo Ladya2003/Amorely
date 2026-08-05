@@ -9,6 +9,9 @@ import {
 export const MODAL_INNER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 export const MODAL_ACTION_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.5);
 
+/** Ширина action-sheet / контекстного меню на desktop (эмодзи иначе раздувают Menu). */
+export const APP_CONTEXT_MENU_MAX_WIDTH = 280;
+
 /** Текст на glass-поверхности модалки в светлой теме */
 export const MODAL_TEXT_PRIMARY_LIGHT = 'rgba(255, 255, 255, 0.95)';
 export const MODAL_TEXT_SECONDARY_LIGHT = 'rgba(255, 255, 255, 0.72)';
@@ -158,6 +161,25 @@ export const getAppGlassSurfaceLightTextSx = (
     },
     '& .MuiDivider-root': {
       borderColor: alpha(theme.palette.common.white, 0.24),
+    },
+    '& .MuiToggleButton-root': {
+      color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+      '& .MuiSvgIcon-root': {
+        color: `${MODAL_TEXT_PRIMARY_LIGHT} !important`,
+      },
+      '&:hover': {
+        bgcolor: `${alpha(theme.palette.common.white, 0.12)} !important`,
+      },
+      '&.Mui-selected': {
+        color: `${theme.palette.primary.contrastText} !important`,
+        bgcolor: `${theme.palette.primary.main} !important`,
+        '& .MuiSvgIcon-root': {
+          color: `${theme.palette.primary.contrastText} !important`,
+        },
+        '&:hover': {
+          bgcolor: `${theme.palette.primary.dark} !important`,
+        },
+      },
     },
     '& .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
       borderColor: `${alpha(theme.palette.common.white, 0.75)} !important`,
@@ -450,6 +472,8 @@ export const getAppContextMenuPaperSx = (theme: Theme) => ({
   mt: 0.5,
   ml: 0.5,
   minWidth: 176,
+  maxWidth: APP_CONTEXT_MENU_MAX_WIDTH,
+  width: 'max-content',
   overflow: 'hidden',
   borderRadius: `${MODAL_INNER_RADIUS}px`,
   border: getModalSurfaceBorder(theme),
@@ -465,6 +489,8 @@ export const getAppContextMenuPaperSx = (theme: Theme) => ({
       : `0 16px 44px ${alpha(theme.palette.common.black, 0.42)}`,
   '& .MuiList-root': {
     p: 0.75,
+    width: '100%',
+    boxSizing: 'border-box',
   },
   ...getAppGlassSurfaceLightTextSx(theme),
 });

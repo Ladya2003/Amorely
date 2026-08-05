@@ -8,9 +8,9 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
-  TextField
 } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
+import AppTextField from '../UI/AppTextField';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { EMPTY_PLAN_FILTER, type PlanFilter } from './planFilterUtils';
 
@@ -63,7 +63,7 @@ const PlanFilterDialog: React.FC<PlanFilterDialogProps> = ({
     <ResponsiveDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{t('calendar.plans.filter.title')}</DialogTitle>
       <DialogContent>
-        <TextField
+        <AppTextField
           fullWidth
           label={t('calendar.filter.titleLabel')}
           placeholder={t('calendar.filter.titlePlaceholder')}
@@ -77,7 +77,7 @@ const PlanFilterDialog: React.FC<PlanFilterDialogProps> = ({
             )
           }}
         />
-        <TextField
+        <AppTextField
           fullWidth
           label={t('calendar.plans.filter.descriptionLabel')}
           placeholder={t('calendar.plans.filter.descriptionPlaceholder')}

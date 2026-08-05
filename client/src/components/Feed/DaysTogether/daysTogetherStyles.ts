@@ -1,4 +1,9 @@
 import { alpha, Theme } from '@mui/material/styles';
+import {
+  getAppGlassSurfaceLightTextSx,
+  MODAL_TEXT_PRIMARY_LIGHT,
+  MODAL_TEXT_SECONDARY_LIGHT,
+} from '../../../theme/modalStyles';
 import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from '../feedBannerStyles';
 import { ColorTheme } from './components/ColorPicker';
 
@@ -63,19 +68,62 @@ export const getDaysTogetherBackgroundGradientSx = (theme: Theme, colorTheme: Co
   zIndex: 1,
 });
 
-export const getDaysTogetherHeroPanelSx = (theme: Theme) => ({
-  mb: 2,
-  px: { xs: 2, sm: 2.5 },
-  py: { xs: 2.25, sm: 2.5 },
-  borderRadius: `${DAYS_TOGETHER_INNER_RADIUS}px`,
-  border: getSurfaceBorder(theme, 'soft'),
-  textAlign: 'center' as const,
-  ...getPrimaryTintSurface(theme, {
-    tint: { light: 0.15, dark: 0.28 },
-  }),
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-});
+/**
+ * Hero «дней вместе»:
+ * light — плотная светлая панель + тёмный/brand текст (в тон блокам ниже);
+ * dark — tinted glass + светлый текст.
+ */
+export const getDaysTogetherHeroPanelSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    mb: 2,
+    px: { xs: 2, sm: 2.5 },
+    py: { xs: 2.25, sm: 2.5 },
+    borderRadius: `${DAYS_TOGETHER_INNER_RADIUS}px`,
+    border: getSurfaceBorder(theme, isLight ? 'medium' : 'soft'),
+    textAlign: 'center' as const,
+    ...(isLight
+      ? {
+          bgcolor: alpha(theme.palette.common.white, 0.82),
+          boxShadow: `0 8px 28px ${alpha(theme.palette.common.black, 0.08)}`,
+        }
+      : getPrimaryTintSurface(theme, {
+          tint: { light: 0.15, dark: 0.28 },
+        })),
+    backdropFilter: 'blur(22px)',
+    WebkitBackdropFilter: 'blur(22px)',
+  };
+};
+
+export const getDaysTogetherHeroTitleSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    fontWeight: 800,
+    fontSize: { xs: '1.75rem', sm: '2rem' },
+    lineHeight: 1.15,
+    letterSpacing: '-0.02em',
+    color: isLight ? theme.palette.primary.dark : 'rgba(255, 255, 255, 0.95)',
+  };
+};
+
+export const getDaysTogetherHeroSubtitleSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    fontWeight: 600,
+    color: isLight ? theme.palette.text.primary : 'rgba(255, 255, 255, 0.92)',
+  };
+};
+
+export const getDaysTogetherHeroSinceSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    color: isLight ? theme.palette.text.secondary : 'rgba(255, 255, 255, 0.72)',
+  };
+};
 
 export const getDaysTogetherInnerSurfaceSx = (theme: Theme) => ({
   p: 2,
@@ -165,13 +213,15 @@ export const getColorPickerPopoverPaperSx = (theme: Theme) => ({
   }),
   backdropFilter: 'blur(20px)',
   WebkitBackdropFilter: 'blur(20px)',
+  ...getAppGlassSurfaceLightTextSx(theme, { surfaceTint: 0.14 }),
 });
 
-export const getColorPickerTitleSx = () => ({
+export const getColorPickerTitleSx = (theme: Theme) => ({
   fontWeight: 700,
   fontSize: '0.9375rem',
   letterSpacing: '-0.01em',
   mb: 0.25,
+  color: theme.palette.mode === 'light' ? MODAL_TEXT_PRIMARY_LIGHT : 'text.primary',
 });
 
 export const getColorPickerGridSx = () => ({
@@ -227,22 +277,30 @@ export const getColorPickerCustomSwatchSx = (theme: Theme, selected: boolean) =>
   borderColor: selected ? theme.palette.primary.main : alpha(theme.palette.text.primary, 0.28),
 });
 
-export const getColorPickerBackButtonSx = (theme: Theme) => ({
-  mb: 1.25,
-  borderRadius: 999,
-  textTransform: 'none' as const,
-  fontWeight: 600,
-  fontSize: '0.8125rem',
-  px: 1.5,
-  py: 0.625,
-  color: 'text.primary',
-  border: getSurfaceBorder(theme, 'soft'),
-  bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.16),
-  '&:hover': {
-    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.24),
-    borderColor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.22 : 0.32),
-  },
-});
+export const getColorPickerBackButtonSx = (theme: Theme) => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    mb: 1.25,
+    borderRadius: 999,
+    textTransform: 'none' as const,
+    fontWeight: 600,
+    fontSize: '0.8125rem',
+    px: 1.5,
+    py: 0.625,
+    color: isLight ? MODAL_TEXT_PRIMARY_LIGHT : 'text.primary',
+    border: isLight
+      ? `1px solid ${alpha(theme.palette.common.white, 0.55)}`
+      : getSurfaceBorder(theme, 'soft'),
+    bgcolor: alpha(theme.palette.primary.main, isLight ? 0.08 : 0.16),
+    '&:hover': {
+      bgcolor: alpha(theme.palette.primary.main, isLight ? 0.14 : 0.24),
+      borderColor: isLight
+        ? alpha(theme.palette.common.white, 0.85)
+        : alpha(theme.palette.primary.main, 0.32),
+    },
+  };
+};
 
 export const getColorPickerHexWrapSx = (theme: Theme) => ({
   p: 1.25,
@@ -256,12 +314,12 @@ export const getColorPickerHexWrapSx = (theme: Theme) => ({
   },
 });
 
-export const getColorPickerHexCaptionSx = () => ({
+export const getColorPickerHexCaptionSx = (theme: Theme) => ({
   mt: 1.25,
   display: 'block',
   textAlign: 'center' as const,
   fontSize: '0.8125rem',
   fontWeight: 600,
   letterSpacing: '0.04em',
-  color: 'text.secondary',
+  color: theme.palette.mode === 'light' ? MODAL_TEXT_SECONDARY_LIGHT : 'text.secondary',
 });

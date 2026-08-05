@@ -1,7 +1,6 @@
 import { alpha, Theme } from '@mui/material/styles';
 import {
   SURFACE_BORDER_RADIUS,
-  getChatDialogBackdropSx,
   getFeedHeaderGlowSx,
   getPrimaryTintSurface,
 } from '../Feed/feedBannerStyles';
@@ -69,12 +68,22 @@ export const gameLeaderboardRowEnterSx = (index: number) => ({
   animation: `gameLeaderboardRowIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) ${Math.min(index * 0.05, 0.35)}s both`,
 });
 
-export const getGamePageRootSx = (theme: Theme) => ({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column' as const,
-  overflow: 'hidden' as const,
-  ...getChatDialogBackdropSx(theme),
+/** Desktop-карточка вокруг игры: контент + нижняя кнопка в одном контейнере. */
+export const getGameDesktopPanelSx = (theme: Theme) => ({
+  [theme.breakpoints.up('sm')]: {
+    borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+    border: getSurfaceBorder(theme),
+    ...getPrimaryTintSurface(theme, {
+      tint: { light: 0.07, dark: 0.16 },
+    }),
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    boxShadow:
+      theme.palette.mode === 'light'
+        ? `0 16px 48px ${alpha(theme.palette.common.black, 0.1)}`
+        : `0 20px 56px ${alpha(theme.palette.common.black, 0.36)}`,
+    overflow: 'hidden',
+  },
 });
 
 export const getGamePageHeaderGlowWrapSx = (theme: Theme) => ({
@@ -140,7 +149,8 @@ export const getGamePageTabsWrapSx = () => ({
 });
 
 export const getGamePageScrollSx = () => ({
-  flex: 1,
+  flex: { xs: 1, sm: '1 1 auto' },
+  minHeight: 0,
   overflow: 'auto',
   px: 2,
   py: 2,
@@ -204,13 +214,23 @@ export const getGamePageFooterSx = (theme: Theme) => ({
   flexShrink: 0,
   px: 2,
   pt: 1.5,
-  pb: 'max(16px, env(safe-area-inset-bottom, 0px))',
+  pb: {
+    xs: 'max(16px, env(safe-area-inset-bottom, 0px))',
+    sm: 2,
+  },
   borderTop: getSurfaceBorder(theme, 'soft'),
   ...getPrimaryTintSurface(theme, {
     tint: { light: 0.08, dark: 0.14 },
   }),
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
+  // Внутри desktop-панели футер — часть карточки, без отдельной «плашки».
+  [theme.breakpoints.up('sm')]: {
+    bgcolor: 'transparent',
+    backgroundImage: 'none',
+    backdropFilter: 'none',
+    WebkitBackdropFilter: 'none',
+  },
 });
 
 export const getGamePageBlockedBannerSx = (theme: Theme) => ({

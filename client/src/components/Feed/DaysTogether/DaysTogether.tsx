@@ -19,6 +19,9 @@ import {
   getDaysTogetherCardSx,
   getDaysTogetherEmptySx,
   getDaysTogetherHeroPanelSx,
+  getDaysTogetherHeroSinceSx,
+  getDaysTogetherHeroSubtitleSx,
+  getDaysTogetherHeroTitleSx,
   getDaysTogetherSignatureImageSx,
 } from './daysTogetherStyles';
 
@@ -81,12 +84,7 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
             variant="h4"
             component="h2"
             gutterBottom
-            sx={{
-              fontWeight: 800,
-              fontSize: { xs: '1.75rem', sm: '2rem' },
-              lineHeight: 1.15,
-              color: 'text.primary',
-            }}
+            sx={getDaysTogetherHeroTitleSx(theme)}
           >
             {t('feed.daysTogether', {
               count: daysCount,
@@ -97,15 +95,12 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
           <Typography
             variant="subtitle1"
             gutterBottom
-            sx={{
-              fontWeight: 600,
-              color: 'text.primary',
-            }}
+            sx={getDaysTogetherHeroSubtitleSx(theme)}
           >
             {getRelationshipStatus(daysCount, t)}
           </Typography>
 
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={getDaysTogetherHeroSinceSx(theme)}>
             {t('feed.since', { date: formatDate(relationshipStartDate, i18n.language) })}
           </Typography>
         </Box>

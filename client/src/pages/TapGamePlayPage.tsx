@@ -40,6 +40,7 @@ import {
   getGamePlayTimerProgressSx,
 } from '../components/Games/gamePlayPageStyles';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
+import GameFrame from '../components/Games/GameFrame';
 import { fireRoundConfetti } from '../utils/roundConfetti';
 import { playRoundSuccessSound, playTapSound, unlockGameAudio } from '../utils/gameSounds';
 
@@ -347,43 +348,49 @@ const TapGamePlayPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={getGamePlayLoadingWrapSx(theme)}>
-        <CircularProgress />
-      </Box>
+      <GameFrame>
+        <Box sx={getGamePlayLoadingWrapSx()}>
+          <CircularProgress />
+        </Box>
+      </GameFrame>
     );
   }
 
   if (blockedReason) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
-        <Box sx={getGamePlayBlockedCardSx(theme)}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            {t('games.common.needPartner')}
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
-            {blockedReason}
-          </Typography>
-          <Stack direction="row" spacing={1} justifyContent="center">
-            <Button variant="contained" sx={getGamePlayPrimaryButtonSx()} onClick={() => navigate('/settings')}>
-              {t('games.common.goToSettings')}
-            </Button>
-            <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
-          </Stack>
+      <GameFrame>
+        <Box sx={getGamePlayBlockedPanelSx()}>
+          <Box sx={getGamePlayBlockedCardSx(theme)}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              {t('games.common.needPartner')}
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
+              {blockedReason}
+            </Typography>
+            <Stack direction="row" spacing={1} justifyContent="center">
+              <Button variant="contained" sx={getGamePlayPrimaryButtonSx()} onClick={() => navigate('/settings')}>
+                {t('games.common.goToSettings')}
+              </Button>
+              <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
+            </Stack>
+          </Box>
         </Box>
-      </Box>
+      </GameFrame>
     );
   }
 
   if (!state) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
-        <Box sx={getGamePlayBlockedCardSx(theme)}>
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
-            {t('games.common.loadFailed')}
-          </Typography>
-          <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
+      <GameFrame>
+        <Box sx={getGamePlayBlockedPanelSx()}>
+          <Box sx={getGamePlayBlockedCardSx(theme)}>
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              {t('games.common.loadFailed')}
+            </Typography>
+            <Button onClick={() => navigate('/chat/games/tap')}>{t('games.common.back')}</Button>
+          </Box>
         </Box>
-      </Box>
+      </GameFrame>
     );
   }
 
@@ -391,7 +398,8 @@ const TapGamePlayPage: React.FC = () => {
   const partnerProgress = Math.min(100, (state.partnerProgressThisRound / state.targetTaps) * 100);
 
   return (
-    <Box sx={getGamePlayRootSx(theme)}>
+    <GameFrame>
+    <Box sx={getGamePlayRootSx()}>
       <Box sx={getGamePlayHeaderSx(theme)}>
         <IconButton
           sx={getGamePlayHeaderIconButtonSx(theme)}
@@ -608,6 +616,7 @@ const TapGamePlayPage: React.FC = () => {
         onClose={() => setToast((prev) => ({ ...prev, open: false }))}
       />
     </Box>
+    </GameFrame>
   );
 };
 

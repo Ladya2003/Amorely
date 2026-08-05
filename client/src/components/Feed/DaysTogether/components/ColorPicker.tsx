@@ -293,7 +293,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
         }}
       >
         <Box sx={{ p: 2, width: 320, maxWidth: 'calc(100vw - 32px)' }}>
-          <Typography variant="subtitle2" sx={getColorPickerTitleSx()}>
+          <Typography variant="subtitle2" sx={getColorPickerTitleSx(theme)}>
             {t('feed.colorPicker.selectTheme')}
           </Typography>
 
@@ -378,7 +378,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ selectedTheme, onThemeChange 
                   }}
                 />
               </Box>
-              <Typography variant="caption" sx={getColorPickerHexCaptionSx()}>
+              <Typography variant="caption" sx={getColorPickerHexCaptionSx(theme)}>
                 {t('feed.colorPicker.currentColor', { color: draftCustomColor.toUpperCase() })}
               </Typography>
             </Box>

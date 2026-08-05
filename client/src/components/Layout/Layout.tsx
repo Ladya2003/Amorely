@@ -486,10 +486,10 @@ const Layout: React.FC = () => {
           key={tabContentKey}
           sx={{
             ...getTabPageEnterSx(tabSlideDirection),
+            width: '100%',
             ...(!isMainTabPage && {
               flex: '0 0 auto',
               minHeight: 'auto',
-              width: '100%',
             }),
           }}
         >

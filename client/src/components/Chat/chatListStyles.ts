@@ -108,7 +108,13 @@ export const getChatListPanelSx = (theme: Theme, options?: { withSideBorder?: bo
 export const getChatListScrollSx = () => ({
   px: 2,
   py: 2,
+  flex: 1,
+  minHeight: 0,
+  overflowY: 'auto' as const,
 });
+
+/** Ширина сайдбара списка чатов на desktop (split-view). */
+export const CHAT_LIST_DESKTOP_WIDTH = 320;
 
 export const getChatListStackSx = () => ({
   display: 'flex',
@@ -116,30 +122,54 @@ export const getChatListStackSx = () => ({
   gap: 1.25,
 });
 
-export const getChatListItemButtonSx = (theme: Theme, selected = false) => ({
-  alignItems: 'flex-start',
-  width: '100%',
-  p: 1.5,
-  borderRadius: `${CHAT_LIST_ITEM_RADIUS}px`,
-  border: getSurfaceBorder(theme, selected ? 'medium' : 'soft'),
-  ...getPrimaryTintSurface(theme, {
-    tint: {
-      light: selected ? 0.17 : 0.1,
-      dark: selected ? 0.28 : 0.18,
+export const getChatListItemButtonSx = (theme: Theme, selected = false) => {
+  const tintAlpha =
+    theme.palette.mode === 'light'
+      ? selected ? 0.26 : 0.1
+      : selected ? 0.4 : 0.18;
+  const hoverAlpha =
+    theme.palette.mode === 'light'
+      ? selected ? 0.3 : 0.15
+      : selected ? 0.46 : 0.24;
+  const selectedBg = alpha(theme.palette.primary.main, tintAlpha);
+  const selectedHoverBg = alpha(theme.palette.primary.main, hoverAlpha);
+
+  return {
+    alignItems: 'flex-start',
+    width: '100%',
+    p: 1.5,
+    borderRadius: `${CHAT_LIST_ITEM_RADIUS}px`,
+    border: getSurfaceBorder(theme, selected ? 'medium' : 'soft'),
+    ...getPrimaryTintSurface(theme, {
+      tint: {
+        light: selected ? 0.26 : 0.1,
+        dark: selected ? 0.4 : 0.18,
+      },
+      hover: {
+        light: selected ? 0.3 : 0.15,
+        dark: selected ? 0.46 : 0.24,
+      },
+    }),
+    transition:
+      'background-color 220ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1), border-color 220ms ease, box-shadow 220ms ease',
+    '&:hover': {
+      transform: 'translateY(-1px)',
     },
-    hover: {
-      light: selected ? 0.2 : 0.15,
-      dark: selected ? 0.32 : 0.24,
+    '&.Mui-selected': {
+      bgcolor: selectedBg,
     },
-  }),
-  transition: 'background-color 220ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1), border-color 220ms ease',
-  '&:hover': {
-    transform: 'translateY(-1px)',
-  },
-  ...(selected && {
-    borderColor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.32 : 0.42),
-  }),
-});
+    '&.Mui-selected:hover': {
+      bgcolor: selectedHoverBg,
+    },
+    ...(selected && {
+      borderColor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.45 : 0.55),
+      boxShadow:
+        theme.palette.mode === 'light'
+          ? `0 6px 18px ${alpha(theme.palette.primary.main, 0.16)}`
+          : `0 8px 22px ${alpha(theme.palette.common.black, 0.35)}`,
+    }),
+  };
+};
 
 export const getChatListSectionLabelSx = () => ({
   px: 0.5,

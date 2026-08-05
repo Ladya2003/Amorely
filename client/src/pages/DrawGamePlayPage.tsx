@@ -44,6 +44,7 @@ import {
   getGamePlayTimerProgressSx,
   getGamePlayTimerTextSx,
 } from '../components/Games/gamePlayPageStyles';
+import GameFrame from '../components/Games/GameFrame';
 import DrawGuessChat from '../components/Games/DrawGuessChat';
 import DrawingToolsToolbar, { type DrawingTool } from '../components/Games/DrawingToolsToolbar';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
@@ -574,15 +575,18 @@ const DrawGamePlayPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={getGamePlayLoadingWrapSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayLoadingWrapSx()}>
         <CircularProgress />
       </Box>
+    </GameFrame>
     );
   }
 
   if (blockedReason) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayBlockedPanelSx()}>
         <Box sx={getGamePlayBlockedCardSx(theme)}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             {t('games.common.needPartner')}
@@ -598,12 +602,14 @@ const DrawGamePlayPage: React.FC = () => {
           </Stack>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
   if (!state) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayBlockedPanelSx()}>
         <Box sx={getGamePlayBlockedCardSx(theme)}>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
             {t('games.common.loadFailed')}
@@ -611,6 +617,7 @@ const DrawGamePlayPage: React.FC = () => {
           <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>{t('games.common.back')}</Button>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
@@ -622,7 +629,8 @@ const DrawGamePlayPage: React.FC = () => {
 
     if (state.inLobby) {
       return (
-        <Box sx={getGamePlayRootSx(theme)}>
+        <GameFrame>
+        <Box sx={getGamePlayRootSx()}>
           <Box sx={getGamePlayHeaderSx(theme)}>
             <IconButton
               sx={getGamePlayHeaderIconButtonSx(theme)}
@@ -725,11 +733,13 @@ const DrawGamePlayPage: React.FC = () => {
             onClose={() => setToast((prev) => ({ ...prev, open: false }))}
           />
         </Box>
+      </GameFrame>
       );
     }
 
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayBlockedPanelSx()}>
         <Box sx={getGamePlayBlockedCardSx(theme)}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             {state.dailyScoredLimitReached
@@ -747,6 +757,7 @@ const DrawGamePlayPage: React.FC = () => {
           <Button onClick={() => navigate(DRAW_GAME_INFO_PATH)}>{t('games.common.backToGame')}</Button>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
@@ -770,9 +781,10 @@ const DrawGamePlayPage: React.FC = () => {
   const isTimeLow = activeSeconds <= 10 && isRoundActive;
 
   return (
+    <GameFrame>
     <Box
       sx={{
-        ...getGamePlayRootSx(theme),
+        ...getGamePlayRootSx(),
         ...drawPageNoSelectSx,
       }}
     >
@@ -1007,6 +1019,7 @@ const DrawGamePlayPage: React.FC = () => {
         onClose={() => setToast((prev) => ({ ...prev, open: false }))}
       />
     </Box>
+  </GameFrame>
   );
 };
 

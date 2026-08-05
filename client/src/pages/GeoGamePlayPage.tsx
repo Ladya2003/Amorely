@@ -49,6 +49,7 @@ import {
   getGamePlayTimerProgressSx,
   getGamePlayTimerTextSx,
 } from '../components/Games/gamePlayPageStyles';
+import GameFrame from '../components/Games/GameFrame';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import ContentViewer from '../components/Calendar/ContentViewer';
 import ResponsiveDialog from '../components/UI/ResponsiveDialog';
@@ -387,15 +388,18 @@ const GeoGamePlayPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={getGamePlayLoadingWrapSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayLoadingWrapSx()}>
         <CircularProgress />
       </Box>
+    </GameFrame>
     );
   }
 
   if (blockedReason) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayBlockedPanelSx()}>
         <Box sx={getGamePlayBlockedCardSx(theme)}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             {t('games.common.needPartner')}
@@ -411,12 +415,14 @@ const GeoGamePlayPage: React.FC = () => {
           </Stack>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
   if (!state) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayBlockedPanelSx()}>
         <Box sx={getGamePlayBlockedCardSx(theme)}>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
             {t('games.common.loadFailed')}
@@ -424,6 +430,7 @@ const GeoGamePlayPage: React.FC = () => {
           <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.back')}</Button>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
@@ -435,7 +442,8 @@ const GeoGamePlayPage: React.FC = () => {
 
     if (state.inLobby) {
       return (
-        <Box sx={getGamePlayRootSx(theme)}>
+        <GameFrame>
+        <Box sx={getGamePlayRootSx()}>
           <Box sx={getGamePlayHeaderSx(theme)}>
             <IconButton
               sx={getGamePlayHeaderIconButtonSx(theme)}
@@ -527,11 +535,13 @@ const GeoGamePlayPage: React.FC = () => {
             </Box>
           </Box>
         </Box>
+      </GameFrame>
       );
     }
 
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
+      <GameFrame>
+      <Box sx={getGamePlayBlockedPanelSx()}>
         <Box sx={getGamePlayBlockedCardSx(theme)}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             {state.dailyLimitReached ? t('games.geo.play.dailyAllDone') : t('games.common.roundNotActive')}
@@ -544,6 +554,7 @@ const GeoGamePlayPage: React.FC = () => {
           <Button onClick={() => navigate('/chat/games/geo')}>{t('games.common.backToGame')}</Button>
         </Box>
       </Box>
+    </GameFrame>
     );
   }
 
@@ -616,7 +627,8 @@ const GeoGamePlayPage: React.FC = () => {
   ) : null;
 
   return (
-    <Box sx={getGamePlayRootSx(theme)}>
+    <GameFrame>
+    <Box sx={getGamePlayRootSx()}>
       {roundTimerBar}
 
       <Box sx={getGamePlayHeaderSx(theme)}>
@@ -894,6 +906,7 @@ const GeoGamePlayPage: React.FC = () => {
         </Box>
       </ResponsiveDialog>
     </Box>
+  </GameFrame>
   );
 };
 

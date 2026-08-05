@@ -183,7 +183,11 @@ type ChatDialogBackdropOptions = {
 /** Фон диалога чата и вкладок (чат, календарь, новости, настройки) */
 export const getChatDialogBackdropSx = (theme: Theme, options?: ChatDialogBackdropOptions) => ({
   position: 'relative' as const,
-  bgcolor: theme.palette.background.default,
+  // На desktop градиент рисует Layout — сплошной фон контейнера его перекрывает.
+  // containGlow: полноэкранные оверлеи (открытый чат, auth) оставляют свой фон.
+  bgcolor: options?.containGlow
+    ? theme.palette.background.default
+    : { xs: theme.palette.background.default, sm: 'transparent' },
   '&::before': getFullBleedTopGlowBeforeSx(theme, 'soft', {
     hideOnDesktop: !options?.containGlow,
   }),

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, IconButton, InputAdornment, TextField, useTheme } from '@mui/material';
 import { AppPaperClipIcon, AppSendMessageIcon } from '../UI/AppIcons';
 import {
@@ -10,11 +10,18 @@ import {
 } from './chatInputStyles';
 
 type ChatMessageInputProps = {
-  value: string;
-  onChange: (value: string) => void;
-  onSend: () => void;
+  /** Значение, которое подставляется при смене `externalValueKey` (edit / clear). */
+  externalValue?: string;
+  externalValueKey?: number;
+  onSend: (text: string) => void;
+  /** Только для typing-индикатора — не должен вызывать setState в родителе. */
+  onTypingActivity?: (text: string) => void;
   placeholder?: string;
-  sendDisabled?: boolean;
+  /** Режим редактирования: отправка только с непустым текстом. */
+  requireText?: boolean;
+  /** Forward/share: можно отправить без текста. */
+  allowEmptySend?: boolean;
+  hasAttachments?: boolean;
   onAttachmentClick: () => void;
   attachmentDisabled?: boolean;
   /** iOS Safari: unlock textarea on touch before focus to suppress the form accessory bar. */
@@ -52,20 +59,36 @@ const inputAdornment = (
   </InputAdornment>
 );
 
+/**
+ * Локальный draft text: набор символов не перерисовывает ChatDialog / список сообщений.
+ */
 const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
-  value,
-  onChange,
+  externalValue = '',
+  externalValueKey = 0,
   onSend,
+  onTypingActivity,
   placeholder = '',
-  sendDisabled = false,
+  requireText = false,
+  allowEmptySend = false,
+  hasAttachments = false,
   onAttachmentClick,
   attachmentDisabled = false,
   useIOSAccessoryFix = false,
   onFocus,
 }) => {
   const theme = useTheme();
+  const [value, setValue] = useState(externalValue);
   const [iosInputLocked, setIosInputLocked] = useState(useIOSAccessoryFix);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setValue(externalValue);
+  }, [externalValueKey, externalValue]);
+
+  const trimmed = value.trim();
+  const sendDisabled = requireText
+    ? !trimmed
+    : !allowEmptySend && !trimmed && !hasAttachments;
 
   const unlockIOSInput = useCallback(() => {
     if (!useIOSAccessoryFix) {
@@ -103,6 +126,16 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
     [unlockIOSInput]
   );
 
+  const handleChange = (next: string) => {
+    setValue(next);
+    onTypingActivity?.(next);
+  };
+
+  const handleSend = () => {
+    if (sendDisabled) return;
+    onSend(value);
+  };
+
   return (
     <Box
       data-chat-composer=""
@@ -116,11 +149,11 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
         maxRows={8}
         placeholder={placeholder}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => handleChange(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
-            onSend();
+            handleSend();
           }
         }}
         onBlur={lockIOSInput}
@@ -129,7 +162,7 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
         InputProps={{
           endAdornment: inputAdornment(
             onAttachmentClick,
-            onSend,
+            handleSend,
             attachmentDisabled,
             sendDisabled
           ),
@@ -148,4 +181,4 @@ const ChatMessageInput: React.FC<ChatMessageInputProps> = ({
   );
 };
 
-export default ChatMessageInput;
+export default React.memo(ChatMessageInput);

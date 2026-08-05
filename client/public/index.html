@@ -117,6 +117,12 @@
         }
       })(window.location);
     </script>
+    <style>
+      /* SEO bootstrap in #root stays in HTML source, but must not flash before React mounts */
+      #root > .seo-bootstrap {
+        display: none !important;
+      }
+    </style>
   </head>
   <body>
     <noscript>
@@ -131,10 +137,10 @@
     </noscript>
     <!--
       Crawlable landing markup for SEO (Ctrl+U / non-JS crawlers).
-      React createRoot replaces this content when the app boots.
+      Hidden visually; React createRoot replaces #root when the app boots.
     -->
     <div id="root">
-      <main>
+      <main class="seo-bootstrap">
         <header>
           <p>Amorely</p>
           <h1>A private space just for the two of you</h1>

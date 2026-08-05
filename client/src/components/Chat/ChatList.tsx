@@ -192,7 +192,8 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                       component="span"
                       noWrap
                       sx={{
-                        fontWeight: hasUnreadIncoming ? 700 : 600,
+                        fontWeight: isSelected || hasUnreadIncoming ? 700 : 600,
+                        color: isSelected ? 'primary.main' : 'text.primary',
                         minWidth: 0,
                         flexShrink: 1,
                         overflow: 'hidden',

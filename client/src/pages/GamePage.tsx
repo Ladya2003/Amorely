@@ -38,7 +38,6 @@ import {
   getGamePageHeaderTitleSx,
   getGamePageHeroImageSx,
   getGamePageLoadingSx,
-  getGamePageRootSx,
   getGamePageRulesCardSx,
   getGamePageRulesTitleSx,
   getGamePageScrollSx,
@@ -50,6 +49,7 @@ import {
   getGamePlayBlockedPanelSx,
   getGamePlayPrimaryButtonSx,
 } from '../components/Games/gamePlayPageStyles';
+import GameFrame from '../components/Games/GameFrame';
 import {
   fetchGameDetails,
   fetchGameLeaderboard,
@@ -178,18 +178,20 @@ const GamePage: React.FC = () => {
 
   if (!staticGame) {
     return (
-      <Box sx={getGamePlayBlockedPanelSx(theme)}>
-        <Box sx={getGamePlayBlockedCardSx(theme)}>
-          <Typography sx={{ mb: 2, fontWeight: 700 }}>{t('games.page.notFound')}</Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate('/chat?tab=games')}
-            sx={getGamePlayPrimaryButtonSx()}
-          >
-            {t('games.page.backToList')}
-          </Button>
+      <GameFrame>
+        <Box sx={getGamePlayBlockedPanelSx()}>
+          <Box sx={getGamePlayBlockedCardSx(theme)}>
+            <Typography sx={{ mb: 2, fontWeight: 700 }}>{t('games.page.notFound')}</Typography>
+            <Button
+              variant="contained"
+              onClick={() => navigate('/chat?tab=games')}
+              sx={getGamePlayPrimaryButtonSx()}
+            >
+              {t('games.page.backToList')}
+            </Button>
+          </Box>
         </Box>
-      </Box>
+      </GameFrame>
     );
   }
 
@@ -246,7 +248,7 @@ const GamePage: React.FC = () => {
   };
 
   return (
-    <Box key={gameId} sx={getGamePageRootSx(theme)}>
+    <GameFrame key={gameId} hugContent>
       <Box sx={(muiTheme) => getGamePageHeaderGlowWrapSx(muiTheme)}>
         <Box sx={{ position: 'relative', zIndex: 1, ...gamePageEnterSx }}>
           <Box sx={getGamePageHeaderSx(theme)}>
@@ -402,7 +404,7 @@ const GamePage: React.FC = () => {
         onClose={() => setDailyResetInfoOpen(false)}
         gameName={gameName}
       />
-    </Box>
+    </GameFrame>
   );
 };
 
