@@ -222,24 +222,6 @@ export const getChatListAvatarSx = () => ({
   boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
 });
 
-export const getChatRulesConsentPaperSx = (theme: Theme) => ({
-  display: 'flex',
-  flexDirection: 'column' as const,
-  justifyContent: 'center',
-  p: { xs: 2.5, sm: 3 },
-  borderRadius: `${SURFACE_BORDER_RADIUS}px`,
-  border: getSurfaceBorder(theme),
-  boxShadow:
-    theme.palette.mode === 'light'
-      ? `0 16px 48px ${alpha(theme.palette.common.black, 0.12)}`
-      : `0 20px 56px ${alpha(theme.palette.common.black, 0.45)}`,
-  ...getPrimaryTintSurface(theme, {
-    tint: { light: 0.12, dark: 0.24 },
-  }),
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-});
-
 /** Переключение вкладок «Чат» ↔ «Игры» */
 export const getChatTabPanelEnterSx = (direction: number) => ({
   flex: 1,

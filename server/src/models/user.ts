@@ -18,6 +18,12 @@ export interface UserDocument extends mongoose.Document {
   primaryColor: 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
   displayBadgeGameId?: string | null;
   showDisplayBadge?: boolean;
+  localeBannerDismissedAt?: Date | null;
+  installBannerDismissed?: boolean;
+  chatRulesConsent?: {
+    version: number;
+    acceptedAt: Date;
+  } | null;
   notificationSettings?: {
     email: {
       newContent: boolean;
@@ -72,6 +78,12 @@ const userSchema = new mongoose.Schema({
   primaryColor: { type: String, enum: ['pink', 'purple', 'blue', 'orange', 'dark-red', 'dark-green'], default: 'pink' },
   displayBadgeGameId: { type: String, default: null },
   showDisplayBadge: { type: Boolean, default: true },
+  localeBannerDismissedAt: { type: Date, default: null },
+  installBannerDismissed: { type: Boolean, default: false },
+  chatRulesConsent: {
+    version: { type: Number },
+    acceptedAt: { type: Date },
+  },
   notificationSettings: {
     email: {
       newContent: { type: Boolean, default: true },

@@ -13,8 +13,9 @@ import {
   CircularProgress,
   Button,
   Link,
-  Paper,
-  Stack,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   ToggleButtonGroup,
   ToggleButton,
 } from '@mui/material';
@@ -45,7 +46,6 @@ import {
   getChatListSectionLabelSx,
   getChatListStackSx,
   getChatTabToggleGroupSx,
-  getChatRulesConsentPaperSx,
   getChatTabPanelEnterSx,
   getChatDialogPanelEnterSx,
   getChatListPanelEnterSx,
@@ -70,11 +70,18 @@ import {
   type EncryptedChatPayload
 } from '../crypto/cryptoService';
 import { encryptAndUploadChatFiles, type StoredChatAttachment } from '../crypto/chatMediaService';
-import { readChatRulesConsent, writeChatRulesConsent } from '../legal/chatRulesConsent';
+import { CHAT_RULES_DOCUMENT_VERSION, hasAcceptedChatRules } from '../legal/chatRulesConsent';
+import { updateUiPreferences } from '../services/uiPreferencesService';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
 import { getChatMessagePreview } from '../localization/chatHelpers';
 import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
+import ResponsiveDialog from '../components/UI/ResponsiveDialog';
+import {
+  getAppModalActionsSx,
+  getAppModalContentSx,
+  getAppModalTitleSx,
+} from '../theme/modalStyles';
 import { submitChatReport } from '../services/reportService';
 import {
   clearOpenChatTarget,
@@ -366,7 +373,7 @@ const ChatPage: React.FC = () => {
     avatar: string;
   } | null>(null);
 
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { setShowBottomNav } = useNavigation();
   const { syncUnreadFromContacts, setActiveContactId } = useUnreadMessages();
   const { localDeviceKeys } = useCrypto();
@@ -378,14 +385,23 @@ const ChatPage: React.FC = () => {
       setIsChatRulesChecked(false);
       return;
     }
-    setChatRulesAccepted(Boolean(readChatRulesConsent(CURRENT_USER_ID)));
+    setChatRulesAccepted(hasAcceptedChatRules(user?.chatRulesConsent));
     setIsChatRulesChecked(true);
-  }, [CURRENT_USER_ID]);
+  }, [CURRENT_USER_ID, user?.chatRulesConsent?.version, user?.chatRulesConsent?.acceptedAt]);
 
   const handleChatRulesAccept = () => {
-    if (!CURRENT_USER_ID) return;
-    writeChatRulesConsent(CURRENT_USER_ID);
+    if (!CURRENT_USER_ID || !user) return;
     setChatRulesAccepted(true);
+    updateUser({
+      ...user,
+      chatRulesConsent: {
+        version: CHAT_RULES_DOCUMENT_VERSION,
+        acceptedAt: new Date().toISOString(),
+      },
+    });
+    void updateUiPreferences({ acceptChatRules: true }).catch((error) => {
+      console.error('Не удалось сохранить согласие с правилами чата:', error);
+    });
   };
 
   const handleChatRulesDecline = () => {
@@ -2548,6 +2564,8 @@ const ChatPage: React.FC = () => {
   useDisableForeignFormFields(isMobileChatOpen && isIOSDevice());
   const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
   const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady && !selectedContactId;
+  const showChatRulesConsent =
+    tabValue === 0 && isChatRulesChecked && !chatRulesAccepted && Boolean(CURRENT_USER_ID);
 
   return (
     <Box sx={(muiTheme) => ({
@@ -2655,56 +2673,6 @@ const ChatPage: React.FC = () => {
             }}
           >
             <CircularProgress color="primary" />
-          </Box>
-        )}
-        {tabValue === 0 && isChatRulesChecked && !chatRulesAccepted && CURRENT_USER_ID && (
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 20,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: 2,
-              bgcolor: (muiTheme) =>
-                muiTheme.palette.mode === 'light'
-                  ? 'rgba(0,0,0,0.28)'
-                  : 'rgba(0,0,0,0.48)',
-              backdropFilter: 'blur(6px)',
-            }}
-          >
-          <Paper
-            elevation={0}
-            sx={(muiTheme) => ({
-              ...getChatRulesConsentPaperSx(muiTheme),
-              position: 'relative',
-              inset: 'auto',
-              width: '100%',
-              maxWidth: 480,
-            })}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="chat-rules-consent-title"
-          >
-            <Typography id="chat-rules-consent-title" variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              {t('chat.rules.title')}
-            </Typography>
-            <Typography variant="body2" color="text.primary" sx={{ mb: 2, lineHeight: 1.6 }}>
-              {t('chat.rules.summary')}
-            </Typography>
-            <Link component={RouterLink} to="/legal/chat-rules" variant="body2" sx={{ mb: 2 }}>
-              {t('chat.rules.readMore')}
-            </Link>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 1 }}>
-              <Button variant="contained" color="primary" onClick={handleChatRulesAccept} fullWidth>
-                {t('chat.rules.accept')}
-              </Button>
-              <Button variant="outlined" color="inherit" onClick={handleChatRulesDecline} fullWidth>
-                {t('chat.rules.decline')}
-              </Button>
-            </Stack>
-          </Paper>
           </Box>
         )}
         {tabValue === 0 ? (
@@ -2935,6 +2903,58 @@ const ChatPage: React.FC = () => {
           contacts={contacts}
         />
       )}
+      <ResponsiveDialog
+        open={showChatRulesConsent}
+        onClose={() => {
+          // Согласие обязательно — закрытие только через Agree / Disagree.
+        }}
+        disableEscapeKeyDown
+        disableMobileDrawer
+        maxWidth="sm"
+        fullWidth
+        aria-labelledby="chat-rules-consent-title"
+      >
+        <DialogTitle id="chat-rules-consent-title" sx={(muiTheme) => getAppModalTitleSx(muiTheme)}>
+          {t('chat.rules.title')}
+        </DialogTitle>
+        <DialogContent sx={(muiTheme) => getAppModalContentSx(muiTheme)}>
+          <Typography variant="body2" sx={{ mb: 2, lineHeight: 1.6 }}>
+            {t('chat.rules.summary')}
+          </Typography>
+          <Link
+            component={RouterLink}
+            to="/legal/chat-rules"
+            variant="body2"
+            sx={{
+              display: 'inline-block',
+              fontWeight: 600,
+              color: (muiTheme) =>
+                muiTheme.palette.mode === 'light'
+                  ? `${muiTheme.palette.common.white} !important`
+                  : 'primary.main',
+              textDecorationColor: 'currentColor',
+            }}
+          >
+            {t('chat.rules.readMore')}
+          </Link>
+        </DialogContent>
+        <DialogActions
+          sx={(muiTheme) => ({
+            ...getAppModalActionsSx(muiTheme),
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'stretch',
+            gap: 1.5,
+            '& > :not(style) ~ :not(style)': { ml: 0 },
+          })}
+        >
+          <Button variant="contained" color="primary" onClick={handleChatRulesAccept} fullWidth>
+            {t('chat.rules.accept')}
+          </Button>
+          <Button variant="outlined" color="inherit" onClick={handleChatRulesDecline} fullWidth>
+            {t('chat.rules.decline')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
       <CustomSnackbar
         open={deleteToast.open}
         message={deleteToast.message}

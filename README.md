@@ -1,100 +1,114 @@
 # Amorely
-A love app for beloved couples to bond together
+
+A private space for couples to stay close — shared memories, chat, calendar, games, and a little life together online.
+
+**Live:** [amorely.love](https://amorely.love)
 
 ## Features
-- Chat
-- Voice call
-- Video call
-- Shared calendar
 
-### How to run
-- Clone the repository
-- Run `npm i` for root, client and server
-- Create a `.env` file at server and fill in the port number (PORT=8000)
-- Run `npm run dev` at root
+- **Feed** — rotating shared photos and memories (birthdays, anniversaries, everyday moments)
+- **Chat** — real-time messaging with end-to-end encryption (passphrase unlock)
+- **Calendar** — shared events and media from your relationship timeline
+- **Games** — quizzes, draw, geo guess, tap games and more for couples
+- **Pets** — care for shared virtual pets together
+- **Dating ideas** — inspiration for dates and time together
+- **News** — product updates and announcements
+- **PWA** — installable app with web push notifications
+- **i18n** — multi-language UI
 
-### How to run server with debugger
-- At root folder Open new JavaScript Debugger Terminal
-- Run `npm run server` or `npm run dev:local` for local development
+## Tech stack
 
-### What to improve?
-#### Tech issues
-- Create Toaster Notifications
-- Don't reset email on validation error
-- Make header sticky?
-- Add Calendar Page, Chat Page
-- Can't upload content on Feed
-- Settings/Theme doesn't work
-- Test notifications
-- Crop image on pasting (Settings and Feed)
-- Settings/Profile can't see sign out button in the bottom
+| Layer | Stack |
+|--------|--------|
+| Client | React, TypeScript, MUI, Socket.IO, i18next |
+| Server | Node.js, Express, TypeScript, Socket.IO |
+| Database | MongoDB (Mongoose) |
+| Media | Cloudinary |
+| Auth | JWT |
+| Deploy | Client on GitHub Pages · API typically on Render |
 
-#### Ideas
-- Create questions for couples. And ability to create own quiz and share with community. When it hits certain point (ex. 100 complitions), it'll be shown to me and i can accept it so other ppl can see it too
+## Project structure
 
-#### Customization 
-- Custom Font
-- Change Design
+```
+Amorely/
+├── client/          # React frontend
+├── server/          # Express API
+├── scripts/         # Utility scripts (pets assets, etc.)
+├── docker-compose.dev.yml
+└── package.json     # Root scripts to run both apps
+```
 
-#### Other improvment
-- Gather feedback
+## Prerequisites
 
-##### Last improving tasks
-отлично! теперь давай переработаем работу показа медиа в ленте.
-частота: будем менять медиа в 2 часа ночи и 5 часов вечера каждый день (часовой пояс бери от пользователя, если это возможно. если невозможно - сделай статично +3 к таймзоне). нужно написать какое-то ненавязчивое сообщение, чтобы пользователь понял что медиа будет меняться один раз в 2 часа ночи и второй раз в 5 часов вечера каждый день
-кол-во: если было загружено меньше 10 медиа, то отображаем 1 медиа в день (для каждого кол-ва добавляем ненавязчивую подсказку что при добавлении десятого события откроется возможность отображать следующее кол-во медиа).
-если было загружено меньше 20, то показываем 2 медиа в день.
-если меньше 40, то показываем 3 медиа в день.
-если меньше 100, то показываем 4 медиа в день.
-и дальше показываем максимум 5 медиа в день (и добавляем подсказку что вы молодцы добавили целых 100 событий).
+- Node.js 18+
+- MongoDB (local install or Docker)
+- Cloudinary account (for media uploads)
+- npm
 
-правила: 
-1) показываем случайное медиа события, но только одно.
-2) нужно показывать медиа в случайном порядке. для того чтобы хранить какие медиа уже показывались, а какие еще нет, предлагаю создать новую коллекцию, которая будет хранить связь пользователей-партнеров, которым нужно отображать (когда будешь получать партнера добавь проверку что их отношения все еще есть в коллекции relationship. если они расстались изображения стоит показывать только те, что они сами добавили), и медиа, которое уже показывалось. то есть алгоритм будет следующим ты рандомно выбираешь, например, 3 медиа из всех добавленные двумя партнерами как есть сейчас, и показываешь их в 2 ночи. ты создаешь запись в новой колекции userId, targetId (партнер), shownImages - массив json где image это id медиа, и count (кол-во показов) при создании ставишь 1. для трех медиа получится 3 json-объекта в массиве с кол-вом 1.
-при следующим изменении медиа для показа, например в 5 вечера, ты также рандомишь три медиа и смотришь есть ли для таких пользователей запись в новой коллекции. те медиа что совпадают с массивом json-объектов, ты убираешь из выбора и рандомишь новые. если все медиа уже были показаны, например всего 9 медиа и все они по count 1, то берешь рандомные три и увеличиваешь им счетчик до 2. далее при выборе сначала смотришь на медиа с наименьшим count.
-3) если сейчас день рождения одного из партнеров (за три дня до него и )
+## Getting started
 
-давай будем отображать 3 случайных медиа со дня рождения партнера, который добавил свой др в профиле настроек и если сегодня его день рождения. если в этот день было загружено меньше 3 медиа, то показывай сколько есть. если вообще не было загружено, пропускай этот этап. далее по приоритету идет контент загруженный в годовщину если он есть (давай тоже три медиа)
+### 1. Clone and install
 
----
+```bash
+git clone https://github.com/<your-org>/Amorely.git
+cd Amorely
+npm run install-all
+```
 
-### TODO
-1. можно добавить медиа при редактировании
-2. в новости добавить топ пар с самым высоким постингом событий
-3. в игры добавить что-то связанное с пятью языками любви
-4. добавить вопросы парам на главной
-5. добавить репост контента из ленты в личные сообщения
-6. обработать кейсы когда пара брейк ап
-7. сделать логику при расставании. для ленты, мы дублируем весь контент для двух пользователей. кто захочет - тот удалит.
-8. если тебя добавлют в партнеры, тебе нужно принять или отклонить.
-9. календарь отображается не по дням неделям.
-10. при ссылке на добавление партнера, открывается настройка, но не вкладка партнера.
-11. фото в ленте снизу текста сделать черным или вообще не показывать.
-12. убирать флаги дня рождения если дата дня рождения поменялась
-13. сделать гайд для новых пользователей. мол добавь первое событие, теперь оно отобразится в ленте.
-14. сделать так, что если добавлено меньше 10 медиа в календаре, показываем только 1 случайное медиа в ротацию (не трогаем день рождения и годовщину). если меньше 20, то 2 и дальше по 3
-15. далее нужно сделать работу планов как notes с маркдауном скорее всего tinymce
-16. добавить достижение: 100 событий
-17. как запускать кроном ротации для ленты?
+### 2. Environment
 
-Чат
-1. переслать добавить возможность еще и выбрать, чтобы можно было переслать несколько сообщений
-2. сделать сообщения закешированными
-- удаление сообщений
-- реакции на сообщения
-3. сообщение отправляется с небольшой задержкой
-- при ответе или переслать изза кнопки возврата в самый низ чата, не виден крестик удаления сообщения
+**Server** — copy `server/.env.example` to `server/.env` and fill in:
 
-Настройки
-1. При сохрании нужно выводить тостер. При ошибки уникальности логина - ошибка
-2. Добавить чекбокс, нужно ли сначала получать у вас подтверждение на отправку вам сообщений или нет
+| Variable | Description |
+|----------|-------------|
+| `PORT` | API port (e.g. `8000`) |
+| `JWT_SECRET` | Secret for JWT signing |
+| `CLIENT_URL` | Frontend origin(s) for CORS (comma-separated) |
+| `MONGODB_URI` | MongoDB connection string |
+| `CLOUDINARY_*` | Cloudinary credentials |
+| `VAPID_*` | Optional — web push (`npm run generate-vapid-keys` in `server`) |
+| `CRON_SECRET` | Optional — secret for external cron jobs |
 
-Глобальные
-1. Изменить шрифт на Roboto и Oswald
+**Client** — copy `client/.env.example` to `client/.env`:
 
-логика показа контента в ленте:
-1) 1 фото со флагом дня рождения за 5 дней до дня рождения пользователя и его партнера и 3 дня после
-2) 1 фото со флагом годовщины за 5 дней до годовщины и 3 дня после
-4) 3 случайные. чтобы выбрать случайные создаем новую сущность где кладем id текущего пользователя и id партера. также храним массив json объектов из всех ссылок на контент пользователя и его партнера отсортированных в случайном порядке и счетчика показов. сначала счетчик будет 0, когда контент будет показываться будет +1. следующий 
-ротация создается каждые 2 часа ночи и 5 часов вечера каждый день.
-чтобы проверить ротацию вручную, очищаем { "lastGeneratedSlot": "2026-05-05-0200" }
+```env
+REACT_APP_API_URL=http://localhost:8000
+```
+
+### 3. Start MongoDB
+
+With Docker:
+
+```bash
+cd server
+npm run db:start
+```
+
+Or use a local MongoDB instance and point `MONGODB_URI` at it.
+
+### 4. Run the app
+
+From the repo root:
+
+```bash
+npm run dev
+```
+
+This starts the API and the React client together.
+
+- Client: usually `http://localhost:3000`
+- Server: `http://localhost:8000` (or your `PORT`)
+
+### Useful scripts
+
+| Command | Where | What it does |
+|---------|--------|----------------|
+| `npm run dev` | root | Client + server |
+| `npm run client` / `npm run server` | root | Run one side only |
+| `npm run db:start` / `db:stop` | server | MongoDB via Docker |
+| `npm run generate-vapid-keys` | server | Create VAPID keys for push |
+| `npm run fetch:geo-locations` | server | Refresh geo-game locations |
+
+## License
+
+ISC

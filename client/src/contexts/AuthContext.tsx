@@ -19,6 +19,7 @@ import socketService from '../services/socketService';
 import { notifyPartnerChanged, notifyPartnerUnlinked } from '../hooks/useRelationship';
 import { notifyPartnerRequestsChanged } from '../hooks/usePartnerRequests';
 import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
+import { migrateLocalUiPreferencesToAccount } from '../utils/migrateUiPreferences';
 
 interface User {
   _id: string;
@@ -38,6 +39,12 @@ interface User {
   role?: 'user' | 'admin';
   locale?: string;
   hasCryptoBackup?: boolean;
+  localeBannerDismissedAt?: string | null;
+  installBannerDismissed?: boolean;
+  chatRulesConsent?: {
+    version: number;
+    acceptedAt: string;
+  } | null;
 }
 
 interface AuthContextType {
@@ -139,7 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             userId: response.data?._id,
             token,
           });
-          setUser({ ...response.data, locale: preferredLocale });
+          const migrated = await migrateLocalUiPreferencesToAccount(response.data);
+          setUser({ ...response.data, locale: preferredLocale, ...migrated });
           setIsAuthenticated(true);
 
           if (
@@ -251,7 +259,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userId: userData?._id,
         token: newToken,
       });
-      setUser({ ...userData, locale: preferredLocale });
+      const migrated = await migrateLocalUiPreferencesToAccount(userData);
+      setUser({ ...userData, locale: preferredLocale, ...migrated });
       setIsAuthenticated(true);
       return response;
     } catch (error: any) {

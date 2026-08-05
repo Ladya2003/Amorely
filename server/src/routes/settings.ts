@@ -10,6 +10,7 @@ import { isSupportedLocale, resolveLocale } from '../i18n/locales';
 
 import { awardProfileField, awardSettingsField } from '../utils/currencyRewards';
 import { bootstrapDaysAchievementsForRelationship } from '../services/daysAchievementService';
+import { CHAT_RULES_DOCUMENT_VERSION } from '../constants/chatRules';
 
 // Настройка хранилища Cloudinary для multer
 const storage = new CloudinaryStorage({
@@ -406,6 +407,70 @@ router.put('/notifications', async (req: ExtendedRequest, res: Response) => {
   } catch (error) {
     console.error('Ошибка при обновлении настроек уведомлений:', error);
     res.status(500).json({ error: 'Ошибка при обновлении настроек уведомлений' });
+  }
+});
+
+// UI-предпочтения аккаунта: баннеры ленты и согласие с правилами чата
+router.put('/ui-preferences', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+    const {
+      dismissLocaleBanner,
+      dismissInstallBanner,
+      acceptChatRules,
+      localeBannerDismissedAt,
+    } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Не авторизован' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    if (dismissLocaleBanner === true || localeBannerDismissedAt !== undefined) {
+      if (typeof localeBannerDismissedAt === 'string' || typeof localeBannerDismissedAt === 'number') {
+        const parsed = new Date(localeBannerDismissedAt);
+        if (Number.isNaN(parsed.getTime())) {
+          return res.status(400).json({ error: 'Некорректная дата скрытия баннера языка' });
+        }
+        if (!user.localeBannerDismissedAt) {
+          user.localeBannerDismissedAt = parsed;
+        }
+      } else if (!user.localeBannerDismissedAt) {
+        user.localeBannerDismissedAt = new Date();
+      }
+    }
+
+    if (dismissInstallBanner === true) {
+      user.installBannerDismissed = true;
+    }
+
+    if (acceptChatRules === true) {
+      const alreadyAccepted =
+        user.chatRulesConsent?.version === CHAT_RULES_DOCUMENT_VERSION &&
+        Boolean(user.chatRulesConsent?.acceptedAt);
+      if (!alreadyAccepted) {
+        user.chatRulesConsent = {
+          version: CHAT_RULES_DOCUMENT_VERSION,
+          acceptedAt: new Date(),
+        };
+      }
+    }
+
+    await user.save();
+
+    res.json({
+      message: 'UI-предпочтения обновлены',
+      localeBannerDismissedAt: user.localeBannerDismissedAt ?? null,
+      installBannerDismissed: Boolean(user.installBannerDismissed),
+      chatRulesConsent: user.chatRulesConsent ?? null,
+    });
+  } catch (error) {
+    console.error('Ошибка при обновлении UI-предпочтений:', error);
+    res.status(500).json({ error: 'Ошибка при обновлении UI-предпочтений' });
   }
 });
 

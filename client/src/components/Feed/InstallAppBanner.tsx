@@ -4,20 +4,32 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import { getHomeScreenNewsPath } from '../../constants/homeScreenNews';
-import {
-  canShowInstallBanner,
-  markInstallBannerDismissed,
-} from './feedBannerStorage';
+import { useAuth } from '../../contexts/AuthContext';
+import { updateUiPreferences } from '../../services/uiPreferencesService';
+import { canShowInstallBanner } from './feedBannerStorage';
 import FeedDismissibleBanner from './FeedDismissibleBanner';
 
 const InstallAppBanner: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user, isLoading, updateUser } = useAuth();
+
+  if (isLoading || !user) {
+    return null;
+  }
+
+  const handleDismissPersist = () => {
+    updateUser({ ...user, installBannerDismissed: true });
+    void updateUiPreferences({ dismissInstallBanner: true }).catch((error) => {
+      console.error('Не удалось сохранить скрытие баннера установки:', error);
+    });
+  };
 
   return (
     <FeedDismissibleBanner
-      initiallyVisible={canShowInstallBanner()}
-      onDismissPersist={markInstallBannerDismissed}
+      key={`install-banner-${user._id}-${user.installBannerDismissed ? 'hidden' : user.localeBannerDismissedAt ?? 'pending'}`}
+      initiallyVisible={canShowInstallBanner(user)}
+      onDismissPersist={handleDismissPersist}
       onBannerClick={() => navigate(getHomeScreenNewsPath())}
       closeAriaLabel={t('feed.installBanner.closeAriaLabel')}
     >

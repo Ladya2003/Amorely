@@ -3,21 +3,37 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import LanguageIcon from '@mui/icons-material/Language';
+import { useAuth } from '../../contexts/AuthContext';
 import { LOCALE_LABELS, resolveAppLocale } from '../../localization/locale';
-import { isLocaleBannerDismissed, markLocaleBannerDismissed } from './feedBannerStorage';
+import { updateUiPreferences } from '../../services/uiPreferencesService';
+import { isLocaleBannerDismissedOnAccount } from './feedBannerStorage';
 import FeedDismissibleBanner from './FeedDismissibleBanner';
 
 const LocaleBanner: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user, isLoading, updateUser } = useAuth();
 
   const currentLocale = resolveAppLocale(i18n.language);
   const languageLabel = LOCALE_LABELS[currentLocale];
 
+  if (isLoading || !user) {
+    return null;
+  }
+
+  const handleDismissPersist = () => {
+    const dismissedAt = new Date().toISOString();
+    updateUser({ ...user, localeBannerDismissedAt: dismissedAt });
+    void updateUiPreferences({ dismissLocaleBanner: true }).catch((error) => {
+      console.error('Не удалось сохранить скрытие баннера языка:', error);
+    });
+  };
+
   return (
     <FeedDismissibleBanner
-      initiallyVisible={!isLocaleBannerDismissed()}
-      onDismissPersist={markLocaleBannerDismissed}
+      key={`locale-banner-${user._id}-${user.localeBannerDismissedAt ?? 'visible'}`}
+      initiallyVisible={!isLocaleBannerDismissedOnAccount(user)}
+      onDismissPersist={handleDismissPersist}
       onBannerClick={() => navigate('/settings?tab=theme')}
       closeAriaLabel={t('feed.localeBanner.closeAriaLabel')}
     >
