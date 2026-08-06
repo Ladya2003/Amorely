@@ -8,27 +8,48 @@ import {
   InputAdornment,
   IconButton,
   useTheme,
+  Divider,
 } from '@mui/material';
 import AppTextField from '../UI/AppTextField';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { USE_PASSWORD_LOGIN_CODE, useAuth } from '../../contexts/AuthContext';
 import { translateAuthServerError } from '../../localization/authHelpers';
 import {
   getAuthAlertSx,
+  getAuthDividerSx,
   getAuthFormTitleSx,
   getAuthLinkButtonSx,
   getAuthPrimaryButtonSx,
   getAuthSwitchTextSx,
 } from './authPageStyles';
+import GoogleSignInButton from './GoogleSignInButton';
+import { useNavigate } from 'react-router-dom';
 
 interface RegisterFormProps {
   onSwitchToLogin: (credentials?: { email: string; password: string }) => void;
+  onGoogleNeedsUsername: (payload: {
+    pendingToken: string;
+    email: string;
+    suggestedUsername: string;
+  }) => void;
+  onNeedsEmailVerification: (email: string, resendAvailableInSeconds: number) => void;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({
+  onSwitchToLogin,
+  onGoogleNeedsUsername,
+  onNeedsEmailVerification,
+}) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { register, logout, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
+  const {
+    register,
+    loginWithGoogle,
+    isLoading,
+    error,
+    clearError,
+  } = useAuth();
 
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
@@ -36,12 +57,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [usePasswordNotice, setUsePasswordNotice] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setValidationError(null);
     clearError();
+    setUsePasswordNotice(null);
 
     if (!email || !username || !password || !confirmPassword) {
       setValidationError(t('auth.register.errors.fillAllFields'));
@@ -60,8 +83,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
     try {
       const response = await register(email, username, password);
+      if (response?.data?.needsEmailVerification) {
+        const verifiedEmail = response.data.email || email.trim().toLowerCase();
+        const seconds =
+          Number(response.data.resendAvailableInSeconds) ||
+          (response.data.emailSendFailed ? 0 : 60);
+        onNeedsEmailVerification(verifiedEmail, seconds);
+        return;
+      }
       if (response?.status === 201) {
-        logout();
         onSwitchToLogin({ email, password });
       }
     } catch {
@@ -69,18 +99,45 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     }
   };
 
+  const handleGoogle = async (idToken: string) => {
+    setUsePasswordNotice(null);
+    clearError();
+    const result = await loginWithGoogle(idToken);
+    if (result.kind === 'authenticated') {
+      navigate('/');
+      return;
+    }
+    if (result.kind === 'needs_username') {
+      onGoogleNeedsUsername(result);
+      return;
+    }
+    if (result.kind === 'use_password') {
+      setUsePasswordNotice(result.message);
+    }
+  };
+
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
-  const translatedError = error ? translateAuthServerError(error, t) : null;
+  const translatedError =
+    error && error !== USE_PASSWORD_LOGIN_CODE ? translateAuthServerError(error, t) : null;
   const displayError = validationError || translatedError;
+  const passwordConflictMessage =
+    usePasswordNotice ||
+    (error === USE_PASSWORD_LOGIN_CODE ? t('auth.errors.usePasswordLogin') : null);
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
       <Typography component="h1" sx={getAuthFormTitleSx()}>
         {t('auth.register.title')}
       </Typography>
+
+      {passwordConflictMessage && (
+        <Alert severity="info" sx={getAuthAlertSx(theme)} onClose={() => setUsePasswordNotice(null)}>
+          {passwordConflictMessage}
+        </Alert>
+      )}
 
       {displayError && (
         <Alert
@@ -187,7 +244,24 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         {isLoading ? t('auth.register.submitting') : t('auth.register.submit')}
       </Button>
 
-      <Box sx={getAuthSwitchTextSx()}>
+      <Divider sx={getAuthDividerSx(theme)}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.secondary',
+            fontWeight: 600,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            fontSize: '0.6875rem',
+          }}
+        >
+          {t('auth.or')}
+        </Typography>
+      </Divider>
+
+      <GoogleSignInButton onCredential={handleGoogle} disabled={isLoading} />
+
+      <Box sx={{ ...getAuthSwitchTextSx(), mt: 2.5 }}>
         {t('auth.register.hasAccount')}{' '}
         <Button
           onClick={() => onSwitchToLogin()}

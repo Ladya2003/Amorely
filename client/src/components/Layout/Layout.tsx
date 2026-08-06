@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 
 import { useTranslation } from 'react-i18next';
 
@@ -21,10 +21,6 @@ import {
   IconButton,
 
   Avatar,
-
-  Menu,
-
-  MenuItem,
 
   Badge
 
@@ -151,31 +147,9 @@ const Layout: React.FC = () => {
 
   
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-
-    setAnchorEl(event.currentTarget);
-
-  };
-
-  
-
-  const handleMenuClose = () => {
-
-    setAnchorEl(null);
-
-  };
-
-  
-
   const handleNavigate = (path: string) => {
 
     navigate(path);
-
-    handleMenuClose();
 
   };
 
@@ -392,7 +366,11 @@ const Layout: React.FC = () => {
 
                 </Box>
 
-                <IconButton onClick={handleMenuOpen} sx={{ flexShrink: 0, p: 0.5 }}>
+                <IconButton
+                  onClick={() => handleNavigate('/settings?tab=profile')}
+                  sx={{ flexShrink: 0, p: 0.5 }}
+                  aria-label={t('nav.settings')}
+                >
 
                   <Avatar 
 
@@ -415,42 +393,6 @@ const Layout: React.FC = () => {
             </Box>
 
           </Box>
-
-          <Menu
-
-            anchorEl={anchorEl}
-
-            open={Boolean(anchorEl)}
-
-            onClose={handleMenuClose}
-
-            anchorOrigin={{
-
-              vertical: 'bottom',
-
-              horizontal: 'right',
-
-            }}
-
-            transformOrigin={{
-
-              vertical: 'top',
-
-              horizontal: 'right',
-
-            }}
-
-          >
-
-            <MenuItem onClick={() => handleNavigate('/settings')}>
-
-              <AppSettingsFilledIcon fontSize="small" sx={{ mr: 1 }} />
-
-              {t('nav.settings')}
-
-            </MenuItem>
-
-          </Menu>
 
         </AppBar>
 

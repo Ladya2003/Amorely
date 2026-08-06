@@ -1376,6 +1376,7 @@
         }
       }
     },
+    "or": "ou",
     "login": {
       "title": "Connexion",
       "registrationSuccess": "Inscription réussie ! Connectez-vous à votre compte.",
@@ -1399,13 +1400,47 @@
         "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères"
       }
     },
+    "verify": {
+      "pageTitle": "Confirmez votre e-mail",
+      "checkTitle": "Vérifiez votre e-mail",
+      "checkBody": "Nous avons envoyé un lien de confirmation à {{email}}. Ouvrez-le pour terminer la création du compte.",
+      "resend": "Renvoyer l'e-mail",
+      "resending": "Envoi...",
+      "resendIn": "Renvoyer dans {{time}}",
+      "resendCooldown": "Veuillez patienter avant une nouvelle demande",
+      "resendSuccess": "Si une confirmation est requise, l'e-mail a été envoyé.",
+      "resendFailed": "Impossible d'envoyer l'e-mail de confirmation",
+      "backToLogin": "Retour à la connexion",
+      "missingToken": "Le lien de confirmation est incomplet",
+      "invalidToken": "Ce lien de confirmation est invalide ou a expiré",
+      "failed": "Impossible de confirmer l'e-mail",
+      "notVerified": "Veuillez confirmer votre e-mail avant de vous connecter"
+    },
+    "google": {
+      "hint": "La connexion Google est gratuite et sécurisée",
+      "loadFailed": "Impossible de charger la connexion Google",
+      "continue": "Continuer avec Google",
+      "continuing": "Connexion...",
+      "chooseUsernameTitle": "Choisissez un nom d'utilisateur",
+      "chooseUsernameHint": "Connecté en tant que {{email}}. Choisissez un identifiant pour Amorely.",
+      "usernameChangeLater": "Vous pourrez modifier l'identifiant plus tard dans les Paramètres.",
+      "usernameTooShort": "Le nom d'utilisateur doit contenir au moins 3 caractères",
+      "complete": "Continuer",
+      "completing": "Enregistrement...",
+      "cancel": "Annuler",
+      "sessionExpired": "La session d'inscription Google a expiré. Réessayez.",
+      "notConfigured": "Google Sign-In n'est pas configuré sur le serveur"
+    },
     "errors": {
       "loginFailed": "Échec de la connexion",
       "registerFailed": "Échec de l'inscription",
       "invalidCredentials": "E-mail ou mot de passe incorrect",
       "emailExists": "Un utilisateur avec cet e-mail existe déjà",
+      "usernameExists": "Un utilisateur avec ce nom existe déjà",
       "serverLoginFailed": "Erreur de connexion",
-      "serverRegisterFailed": "Erreur d'inscription"
+      "serverRegisterFailed": "Erreur d'inscription",
+      "usePasswordLogin": "Un compte avec cet e-mail existe déjà. Connectez-vous avec votre mot de passe.",
+      "googleFailed": "Échec de la connexion Google"
     }
   },
   "crypto": {

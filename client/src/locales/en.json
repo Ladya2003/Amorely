@@ -1426,6 +1426,7 @@
         }
       }
     },
+    "or": "or",
     "login": {
       "title": "Sign in",
       "registrationSuccess": "Registration successful! Please sign in.",
@@ -1449,13 +1450,47 @@
         "passwordTooShort": "Password must be at least 8 characters"
       }
     },
+    "verify": {
+      "pageTitle": "Confirm your email",
+      "checkTitle": "Check your email",
+      "checkBody": "We sent a confirmation link to {{email}}. Open it to finish creating your account.",
+      "resend": "Resend email",
+      "resending": "Sending...",
+      "resendIn": "Resend in {{time}}",
+      "resendCooldown": "Please wait before requesting another email",
+      "resendSuccess": "If confirmation is required, the email was sent.",
+      "resendFailed": "Could not send the confirmation email",
+      "backToLogin": "Back to sign in",
+      "missingToken": "Confirmation link is incomplete",
+      "invalidToken": "This confirmation link is invalid or has expired",
+      "failed": "Could not confirm email",
+      "notVerified": "Please confirm your email before signing in"
+    },
+    "google": {
+      "hint": "Google sign-in is free and secure",
+      "loadFailed": "Could not load Google Sign-In",
+      "continue": "Continue with Google",
+      "continuing": "Connecting...",
+      "chooseUsernameTitle": "Choose a username",
+      "chooseUsernameHint": "Signed in as {{email}}. Pick a username for Amorely.",
+      "usernameChangeLater": "You can change your username later in Settings.",
+      "usernameTooShort": "Username must be at least 3 characters",
+      "complete": "Continue",
+      "completing": "Saving...",
+      "cancel": "Cancel",
+      "sessionExpired": "Google sign-up session expired. Please try again.",
+      "notConfigured": "Google Sign-In is not configured on the server"
+    },
     "errors": {
       "loginFailed": "Sign-in failed",
       "registerFailed": "Registration failed",
       "invalidCredentials": "Invalid email or password",
       "emailExists": "A user with this email already exists",
+      "usernameExists": "A user with this username already exists",
       "serverLoginFailed": "Sign-in error",
-      "serverRegisterFailed": "Registration error"
+      "serverRegisterFailed": "Registration error",
+      "usePasswordLogin": "An account with this email already exists. Please sign in with your password.",
+      "googleFailed": "Google sign-in failed"
     }
   },
   "crypto": {

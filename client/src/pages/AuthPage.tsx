@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Container, Box, Typography, Button, Fab, Fade, useTheme } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
+import GoogleUsernameStep from '../components/Auth/GoogleUsernameStep';
+import CheckEmailPanel from '../components/Auth/CheckEmailPanel';
 import AuthLanding, { AuthLandingMode } from '../components/Auth/AuthLanding';
 import AuthLandingClosing from '../components/Auth/AuthLandingClosing';
 import AuthLandingFree from '../components/Auth/AuthLandingFree';
@@ -12,6 +15,14 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { shouldUseBilingualLanguageLabelOnLogin } from '../localization/locale';
 import { applyLandingDocumentSeo } from '../localization/landingSeo';
+import { translateAuthServerError } from '../localization/authHelpers';
+import { useAuth } from '../contexts/AuthContext';
+import {
+  getPendingResendSecondsLeft,
+  readPendingEmailVerification,
+  savePendingEmailVerification,
+  type PendingEmailVerification,
+} from '../utils/pendingEmailVerification';
 import {
   getAuthLandingCtaButtonSx,
   getAuthPageCardSx,
@@ -31,13 +42,27 @@ import {
 const AUTH_SECTION_ID = 'auth-section';
 const SCROLL_TOP_SHOW_OFFSET = 480;
 
+type GooglePendingSignup = {
+  pendingToken: string;
+  email: string;
+  suggestedUsername: string;
+};
+
 const AuthPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
+  const navigate = useNavigate();
+  const { completeGoogleSignup, resendVerification, isLoading, error, clearError } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loginPrefill, setLoginPrefill] = useState<{ email: string; password: string } | null>(null);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [googlePending, setGooglePending] = useState<GooglePendingSignup | null>(null);
+  const [pendingEmailVerification, setPendingEmailVerification] = useState<PendingEmailVerification | null>(
+    () => readPendingEmailVerification()
+  );
+  /** Session-only hide after "Back to sign in"; F5 restores panel from localStorage. */
+  const [pendingEmailDismissed, setPendingEmailDismissed] = useState(false);
 
   useEffect(() => {
     return applyLandingDocumentSeo({
@@ -59,6 +84,42 @@ const AuthPage: React.FC = () => {
     window.addEventListener('scroll', updateVisibility, { passive: true });
     return () => window.removeEventListener('scroll', updateVisibility);
   }, []);
+
+  const showCheckEmail =
+    Boolean(pendingEmailVerification) && !pendingEmailDismissed && !googlePending;
+
+  useEffect(() => {
+    if (!googlePending && !showCheckEmail) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      document.getElementById(AUTH_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [googlePending, showCheckEmail]);
+
+  const handleNeedsEmailVerification = useCallback((email: string, resendAvailableInSeconds: number) => {
+    const pending = savePendingEmailVerification(email, resendAvailableInSeconds);
+    setPendingEmailVerification(pending);
+    setPendingEmailDismissed(false);
+    setGooglePending(null);
+    setIsLogin(true);
+    setRegistrationSuccess(false);
+  }, []);
+
+  const handleResendVerification = useCallback(
+    async (email: string) => {
+      const result = await resendVerification(email);
+      if (result.ok) {
+        const pending = savePendingEmailVerification(email, result.resendAvailableInSeconds);
+        setPendingEmailVerification(pending);
+      } else if (result.cooldown && result.resendAvailableInSeconds != null) {
+        const pending = savePendingEmailVerification(email, result.resendAvailableInSeconds);
+        setPendingEmailVerification(pending);
+      }
+      return result;
+    },
+    [resendVerification]
+  );
 
   const handleSwitchToRegister = () => {
     setLoginPrefill(null);
@@ -88,7 +149,6 @@ const AuthPage: React.FC = () => {
       document.getElementById(AUTH_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
-    // Двойной rAF — после commit layout с зарезервированными высотами картинок
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(scrollToSection);
     });
@@ -140,15 +200,52 @@ const AuthPage: React.FC = () => {
         <RevealOnScroll>
           <Box id={AUTH_SECTION_ID} sx={getAuthSectionSx()}>
             <Box sx={getAuthPageCardSx(theme)}>
-              {isLogin ? (
+              {googlePending ? (
+                <GoogleUsernameStep
+                  email={googlePending.email}
+                  suggestedUsername={googlePending.suggestedUsername}
+                  isLoading={isLoading}
+                  error={error ? translateAuthServerError(error, t) : null}
+                  onClearError={clearError}
+                  onCancel={() => {
+                    setGooglePending(null);
+                    clearError();
+                  }}
+                  onSubmit={async (username) => {
+                    const ok = await completeGoogleSignup(googlePending.pendingToken, username);
+                    if (ok) {
+                      setGooglePending(null);
+                      navigate('/');
+                    }
+                  }}
+                />
+              ) : showCheckEmail && pendingEmailVerification ? (
+                <CheckEmailPanel
+                  email={pendingEmailVerification.email}
+                  onResend={handleResendVerification}
+                  onBack={() => {
+                    setPendingEmailDismissed(true);
+                    clearError();
+                    setIsLogin(true);
+                  }}
+                  isLoading={isLoading}
+                  initialResendAvailableInSeconds={getPendingResendSecondsLeft(pendingEmailVerification)}
+                />
+              ) : isLogin ? (
                 <LoginForm
                   onSwitchToRegister={handleSwitchToRegister}
                   initialEmail={loginPrefill?.email}
                   initialPassword={loginPrefill?.password}
                   showRegistrationSuccess={registrationSuccess}
+                  onGoogleNeedsUsername={setGooglePending}
+                  onNeedsEmailVerification={handleNeedsEmailVerification}
                 />
               ) : (
-                <RegisterForm onSwitchToLogin={handleSwitchToLogin} />
+                <RegisterForm
+                  onSwitchToLogin={handleSwitchToLogin}
+                  onGoogleNeedsUsername={setGooglePending}
+                  onNeedsEmailVerification={handleNeedsEmailVerification}
+                />
               )}
             </Box>
             <Typography sx={getAuthTaglineSx()}>{t('auth.tagline')}</Typography>

@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/user';
-import Relationship from '../models/relationship';
+import { OAuth2Client } from 'google-auth-library';
+import User, { UserDocument } from '../models/user';
 import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 import { body, validationResult } from 'express-validator';
 import { authMiddleware } from '../middleware/auth';
@@ -11,71 +11,168 @@ import { hasCryptoBackup } from '../utils/hasCryptoBackup';
 import { ACCOUNT_BLOCKED_ERROR, buildBlockReasons, getLocalizedBlockReason } from '../utils/userBlock';
 import { awardRegistrationBonus } from '../utils/currencyRewards';
 import { getBalance } from '../services/currencyService';
+import { sendVerificationEmail } from '../services/emailService';
+import {
+  createEmailVerificationToken,
+  getVerificationResendCooldownMs,
+  getVerificationResendRetryAfterSeconds,
+  hashEmailVerificationToken,
+} from '../utils/emailVerification';
+import {
+  signAccessToken,
+  signGoogleSignupPendingToken,
+  verifyGoogleSignupPendingToken,
+} from '../utils/authTokens';
 
 const router = express.Router();
+
+export const EMAIL_NOT_VERIFIED_ERROR = 'EMAIL_NOT_VERIFIED';
+export const USE_PASSWORD_LOGIN_ERROR = 'USE_PASSWORD_LOGIN';
+export const RESEND_COOLDOWN_ERROR = 'RESEND_COOLDOWN';
+
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
+const googleClient = new OAuth2Client();
+
+const issueAuthSuccess = async (user: UserDocument) => {
+  const token = signAccessToken(user._id.toString());
+  const { password: _, emailVerificationTokenHash: __, emailVerificationExpires: ___, ...userWithoutSensitive } =
+    user.toObject();
+  const userHasCryptoBackup = await hasCryptoBackup(user._id);
+  return {
+    token,
+    user: { ...userWithoutSensitive, hasCryptoBackup: userHasCryptoBackup },
+  };
+};
+
+const nextResendAvailableInSeconds = (sendCountAfterThisSend: number): number =>
+  Math.ceil(getVerificationResendCooldownMs(sendCountAfterThisSend) / 1000);
+
+const assignVerificationToken = async (user: UserDocument): Promise<string> => {
+  const { token, tokenHash, expiresAt } = createEmailVerificationToken();
+  user.emailVerificationTokenHash = tokenHash;
+  user.emailVerificationExpires = expiresAt;
+  await user.save();
+  return token;
+};
+
+/** Send verification email and bump send counters. Caller must ensure cooldown already passed. */
+const sendVerificationAndTrack = async (
+  user: UserDocument,
+  email: string
+): Promise<{ resendAvailableInSeconds: number }> => {
+  const verificationToken = await assignVerificationToken(user);
+  await sendVerificationEmail(email, verificationToken);
+  const sendCount = (user.emailVerificationSendCount ?? 0) + 1;
+  user.emailVerificationSendCount = sendCount;
+  user.emailVerificationSentAt = new Date();
+  await user.save();
+  return { resendAvailableInSeconds: nextResendAvailableInSeconds(sendCount) };
+};
 
 // Регистрация нового пользователя
 router.post(
   '/register',
   [
-    // Валидация входных данных
     body('email').isEmail().withMessage('Введите корректный email'),
     body('username').isLength({ min: 3 }).withMessage('Логин должен содержать минимум 3 символа'),
     body('password').isLength({ min: 8 }).withMessage('Пароль должен содержать минимум 8 символов')
   ],
   async (req: Request, res: Response) => {
     try {
-      // Проверяем результаты валидации
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { email, username, password } = req.body;
+      const email = normalizeEmail(req.body.email);
+      const username = String(req.body.username || '').trim();
+      const { password } = req.body;
 
-      // Проверяем, существует ли пользователь с таким email или username
-      const existingUser = await User.findOne({
-        $or: [{ email }, { username }]
-      });
+      const existingByEmail = await User.findOne({ email });
 
-      if (existingUser) {
-        if (existingUser.email === email) {
-          return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
-        } else {
-          return res.status(400).json({ error: 'Пользователь с таким логином уже существует' });
+      // Unverified local account: treat re-register as "resend + refresh credentials"
+      // so a page reload doesn't trap the user on "email already exists".
+      if (existingByEmail && !existingByEmail.emailVerified && existingByEmail.authProvider === 'local') {
+        existingByEmail.password = password;
+        if (username !== existingByEmail.username) {
+          const usernameTaken = await User.findOne({
+            username,
+            _id: { $ne: existingByEmail._id },
+          });
+          if (!usernameTaken) {
+            existingByEmail.username = username;
+          }
+        }
+        await existingByEmail.save();
+
+        const retryAfterSeconds = getVerificationResendRetryAfterSeconds(existingByEmail);
+        if (retryAfterSeconds > 0) {
+          return res.status(200).json({
+            message: 'Проверьте почту для подтверждения email',
+            needsEmailVerification: true,
+            email,
+            resendAvailableInSeconds: retryAfterSeconds,
+          });
+        }
+
+        try {
+          const { resendAvailableInSeconds } = await sendVerificationAndTrack(existingByEmail, email);
+          return res.status(200).json({
+            message: 'Проверьте почту для подтверждения email',
+            needsEmailVerification: true,
+            email,
+            resendAvailableInSeconds,
+          });
+        } catch (emailError) {
+          console.error('Ошибка отправки письма подтверждения:', emailError);
+          return res.status(200).json({
+            message: 'Аккаунт ожидает подтверждения, но не удалось отправить письмо. Запросите повторную отправку.',
+            needsEmailVerification: true,
+            email,
+            emailSendFailed: true,
+            resendAvailableInSeconds: 0,
+          });
         }
       }
 
-      // Создаем нового пользователя
+      if (existingByEmail) {
+        return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+      }
+
+      const existingByUsername = await User.findOne({ username });
+      if (existingByUsername) {
+        return res.status(400).json({ error: 'Пользователь с таким логином уже существует' });
+      }
+
       const newUser = new User({
         email,
         username,
-        password
+        password,
+        authProvider: 'local',
+        emailVerified: false,
       });
 
       await newUser.save();
 
-      const currencyAward = await awardRegistrationBonus(newUser._id.toString());
-      const wallet = await getBalance(newUser._id.toString());
-
-      // Генерируем JWT токен
-      const token = jwt.sign(
-        { userId: newUser._id },
-        process.env.JWT_SECRET || 'amorely',
-        { expiresIn: '7d' }
-      );
-
-      // Отправляем ответ с токеном и данными пользователя (без пароля)
-      const { password: _, ...userWithoutPassword } = newUser.toObject();
-
-      res.status(201).json({
-        message: 'Пользователь успешно зарегистрирован',
-        token,
-        user: { ...userWithoutPassword, hasCryptoBackup: false },
-        balance: wallet.balance,
-        canAffordFirstPet: wallet.canAffordFirstPet,
-        awardedAmount: currencyAward.awarded ? currencyAward.amount : 0,
-      });
+      try {
+        const { resendAvailableInSeconds } = await sendVerificationAndTrack(newUser, email);
+        res.status(201).json({
+          message: 'Проверьте почту для подтверждения email',
+          needsEmailVerification: true,
+          email,
+          resendAvailableInSeconds,
+        });
+      } catch (emailError) {
+        console.error('Ошибка отправки письма подтверждения:', emailError);
+        return res.status(201).json({
+          message: 'Аккаунт создан, но не удалось отправить письмо. Запросите повторную отправку.',
+          needsEmailVerification: true,
+          email,
+          emailSendFailed: true,
+          resendAvailableInSeconds: 0,
+        });
+      }
     } catch (error) {
       console.error('Ошибка при регистрации пользователя:', error);
       res.status(500).json({ error: 'Ошибка при регистрации пользователя' });
@@ -83,19 +180,111 @@ router.post(
   }
 );
 
+router.post(
+  '/resend-verification',
+  [body('email').isEmail().withMessage('Введите корректный email')],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const email = normalizeEmail(req.body.email);
+      const user = await User.findOne({ email });
+
+      // Avoid account enumeration for unknown / verified / non-local accounts
+      if (!user || user.emailVerified || user.authProvider !== 'local') {
+        return res.json({
+          message: 'Если аккаунт требует подтверждения, письмо отправлено',
+          resendAvailableInSeconds: Math.ceil(getVerificationResendCooldownMs(1) / 1000),
+        });
+      }
+
+      const retryAfterSeconds = getVerificationResendRetryAfterSeconds(user);
+      if (retryAfterSeconds > 0) {
+        return res.status(429).json({
+          error: RESEND_COOLDOWN_ERROR,
+          code: RESEND_COOLDOWN_ERROR,
+          message: 'Подождите перед повторной отправкой письма',
+          resendAvailableInSeconds: retryAfterSeconds,
+        });
+      }
+
+      const { resendAvailableInSeconds } = await sendVerificationAndTrack(user, email);
+
+      res.json({
+        message: 'Если аккаунт требует подтверждения, письмо отправлено',
+        resendAvailableInSeconds,
+      });
+    } catch (error) {
+      console.error('Ошибка повторной отправки подтверждения:', error);
+      res.status(500).json({ error: 'Не удалось отправить письмо подтверждения' });
+    }
+  }
+);
+
+router.post(
+  '/verify-email',
+  [body('token').isString().isLength({ min: 20 }).withMessage('Некорректный токен')],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const rawToken = String(req.body.token);
+      const tokenHash = hashEmailVerificationToken(rawToken);
+
+      const user = await User.findOne({
+        emailVerificationTokenHash: tokenHash,
+        emailVerificationExpires: { $gt: new Date() },
+      });
+
+      if (!user) {
+        return res.status(400).json({ error: 'Ссылка подтверждения недействительна или устарела' });
+      }
+
+      // Keep token hash until expiry so Strict Mode / double-submit can verify idempotently.
+      const newlyVerified = !user.emailVerified;
+      if (newlyVerified) {
+        user.emailVerified = true;
+        await user.save();
+      }
+
+      const currencyAward = newlyVerified
+        ? await awardRegistrationBonus(user._id.toString())
+        : { awarded: false, amount: 0 };
+      const wallet = await getBalance(user._id.toString());
+      const auth = await issueAuthSuccess(user);
+
+      res.json({
+        message: 'Email подтверждён',
+        ...auth,
+        balance: wallet.balance,
+        canAffordFirstPet: wallet.canAffordFirstPet,
+        awardedAmount: currencyAward.awarded ? currencyAward.amount : 0,
+      });
+    } catch (error) {
+      console.error('Ошибка подтверждения email:', error);
+      res.status(500).json({ error: 'Ошибка подтверждения email' });
+    }
+  }
+);
+
 // Вход пользователя
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body.email || '');
+    const { password } = req.body;
 
-    // Находим пользователя по email
     const user = await User.findOne({ email });
 
-    if (!user) {
+    if (!user || !user.password) {
       return res.status(401).json({ error: 'Неверный email или пароль' });
     }
 
-    // Проверяем пароль
     const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
@@ -110,21 +299,19 @@ router.post('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Генерируем JWT токен
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || 'amorely',
-      { expiresIn: '7d' }
-    );
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        error: EMAIL_NOT_VERIFIED_ERROR,
+        code: EMAIL_NOT_VERIFIED_ERROR,
+        email: user.email,
+      });
+    }
 
-    // Отправляем ответ с токеном и данными пользователя (без пароля)
-    const { password: _, ...userWithoutPassword } = user.toObject();
-    const userHasCryptoBackup = await hasCryptoBackup(user._id);
+    const auth = await issueAuthSuccess(user);
 
     res.json({
       message: 'Вход выполнен успешно',
-      token,
-      user: { ...userWithoutPassword, hasCryptoBackup: userHasCryptoBackup }
+      ...auth,
     });
   } catch (error) {
     console.error('Ошибка при входе пользователя:', error);
@@ -132,10 +319,160 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/google', async (req: Request, res: Response) => {
+  try {
+    const idToken = req.body.idToken as string | undefined;
+    const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+
+    if (!idToken) {
+      return res.status(400).json({ error: 'Не передан Google idToken' });
+    }
+    if (!clientId) {
+      return res.status(500).json({ error: 'Google Sign-In не настроен на сервере' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: clientId,
+    });
+    const payload = ticket.getPayload();
+    if (!payload?.sub || !payload.email) {
+      return res.status(401).json({ error: 'Не удалось проверить Google аккаунт' });
+    }
+
+    const googleId = payload.sub;
+    const email = normalizeEmail(payload.email);
+    const firstName = payload.given_name;
+    const lastName = payload.family_name;
+    const avatar = payload.picture;
+
+    const byGoogleId = await User.findOne({ googleId });
+    if (byGoogleId) {
+      if (byGoogleId.isBlocked) {
+        return res.status(403).json({
+          error: ACCOUNT_BLOCKED_ERROR,
+          blockReason: getLocalizedBlockReason(byGoogleId),
+          blockedReasons: buildBlockReasons(byGoogleId.blockedReasons),
+        });
+      }
+      const auth = await issueAuthSuccess(byGoogleId);
+      return res.json({ message: 'Вход выполнен успешно', ...auth });
+    }
+
+    const byEmail = await User.findOne({ email });
+    if (byEmail) {
+      if (byEmail.authProvider === 'local' || byEmail.password) {
+        return res.status(409).json({
+          error: USE_PASSWORD_LOGIN_ERROR,
+          code: USE_PASSWORD_LOGIN_ERROR,
+          message: 'Аккаунт с этим email уже зарегистрирован. Войдите паролем.',
+        });
+      }
+      return res.status(409).json({
+        error: USE_PASSWORD_LOGIN_ERROR,
+        code: USE_PASSWORD_LOGIN_ERROR,
+        message: 'Аккаунт с этим email уже зарегистрирован. Войдите паролем.',
+      });
+    }
+
+    const suggestedUsername = email.split('@')[0]?.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24) || '';
+    const pendingToken = signGoogleSignupPendingToken({
+      googleId,
+      email,
+      firstName,
+      lastName,
+      avatar,
+    });
+
+    res.json({
+      needsUsername: true,
+      pendingToken,
+      email,
+      suggestedUsername: suggestedUsername.length >= 3 ? suggestedUsername : '',
+    });
+  } catch (error) {
+    console.error('Ошибка Google Sign-In:', error);
+    res.status(401).json({ error: 'Не удалось выполнить вход через Google' });
+  }
+});
+
+router.post(
+  '/google/complete',
+  [
+    body('pendingToken').isString().withMessage('Некорректный токен'),
+    body('username').isLength({ min: 3 }).withMessage('Логин должен содержать минимум 3 символа'),
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      let pending;
+      try {
+        pending = verifyGoogleSignupPendingToken(String(req.body.pendingToken));
+      } catch {
+        return res.status(400).json({ error: 'Сессия регистрации Google истекла. Попробуйте снова.' });
+      }
+
+      const username = String(req.body.username || '').trim();
+      const email = normalizeEmail(pending.email);
+
+      const existingGoogle = await User.findOne({ googleId: pending.googleId });
+      if (existingGoogle) {
+        const auth = await issueAuthSuccess(existingGoogle);
+        return res.json({ message: 'Вход выполнен успешно', ...auth });
+      }
+
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) {
+        return res.status(409).json({
+          error: USE_PASSWORD_LOGIN_ERROR,
+          code: USE_PASSWORD_LOGIN_ERROR,
+          message: 'Аккаунт с этим email уже зарегистрирован. Войдите паролем.',
+        });
+      }
+
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        return res.status(400).json({ error: 'Пользователь с таким логином уже существует' });
+      }
+
+      const newUser = new User({
+        email,
+        username,
+        authProvider: 'google',
+        googleId: pending.googleId,
+        emailVerified: true,
+        firstName: pending.firstName,
+        lastName: pending.lastName,
+        avatar: pending.avatar,
+      });
+
+      await newUser.save();
+
+      const currencyAward = await awardRegistrationBonus(newUser._id.toString());
+      const wallet = await getBalance(newUser._id.toString());
+      const auth = await issueAuthSuccess(newUser);
+
+      res.status(201).json({
+        message: 'Регистрация через Google завершена',
+        ...auth,
+        balance: wallet.balance,
+        canAffordFirstPet: wallet.canAffordFirstPet,
+        awardedAmount: currencyAward.awarded ? currencyAward.amount : 0,
+      });
+    } catch (error) {
+      console.error('Ошибка завершения Google Sign-In:', error);
+      res.status(500).json({ error: 'Ошибка регистрации через Google' });
+    }
+  }
+);
+
 // Получение данных текущего пользователя
 router.get('/me', async (req: Request, res: Response) => {
   try {
-    // Получаем токен из заголовка
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -144,11 +481,9 @@ router.get('/me', async (req: Request, res: Response) => {
     
     const token = authHeader.split(' ')[1];
     
-    // Верифицируем токен
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'amorely') as { userId: string };
     
-    // Находим пользователя по ID
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await User.findById(decoded.userId).select('-password -emailVerificationTokenHash');
     
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
@@ -161,12 +496,19 @@ router.get('/me', async (req: Request, res: Response) => {
         blockedReasons: buildBlockReasons(user.blockedReasons),
       });
     }
+
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        error: EMAIL_NOT_VERIFIED_ERROR,
+        code: EMAIL_NOT_VERIFIED_ERROR,
+        email: user.email,
+      });
+    }
     
     const { partnerId: resolvedPartnerId, hasPartner } = await resolvePartnerContext(
       user._id.toString()
     );
 
-    // Получаем дату начала отношений из коллекции Relationship
     let relationshipStartDate = null;
     if (hasPartner) {
       const relationship = await findActiveRelationshipForUser(user._id.toString());
@@ -209,21 +551,22 @@ router.post('/change-password', authMiddleware, async (req: any, res: Response) 
       return res.status(400).json({ error: 'Не указаны обязательные поля' });
     }
     
-    // Находим пользователя по ID
     const user = await User.findById(userId);
     
     if (!user) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
+
+    if (!user.password) {
+      return res.status(400).json({ error: 'Для аккаунта Google смена пароля недоступна' });
+    }
     
-    // Проверяем старый пароль
     const isPasswordValid = await user.comparePassword(oldPassword);
     
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Неверный текущий пароль' });
     }
     
-    // Обновляем пароль
     user.password = newPassword;
     await user.save();
     
@@ -234,4 +577,4 @@ router.post('/change-password', authMiddleware, async (req: any, res: Response) 
   }
 });
 
-export default router; 
+export default router;

@@ -29,6 +29,7 @@ import BlockNoticeSnackbar from './components/Auth/BlockNoticeSnackbar';
 import CalendarPartnerMigrationRunner from './components/Calendar/CalendarPartnerMigrationRunner';
 import CurrencyAwardOverlay from './components/Pets/CurrencyAwardOverlay';
 import AppDateLocalizationProvider from './components/UI/AppDateLocalizationProvider';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import {
   LANDING_LOCALES,
   getLandingPath,
@@ -112,6 +113,8 @@ function App() {
                     <Navigate to={getLandingPath(resolvePreferredLandingLocale())} replace />
                   }
                 />
+
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
 
                 {/* Защищенный маршрут восстановления ключей */}
                 <Route

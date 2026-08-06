@@ -498,6 +498,69 @@ export const getAuthLandingCtaButtonSx = (theme: Theme) => ({
   mb: 0,
 });
 
+/** Outlined secondary CTA — matches auth card surfaces (Google sign-in, etc.) */
+export const getAuthGoogleButtonSx = (theme: Theme) => ({
+  width: '100%',
+  py: 1.125,
+  px: 2,
+  minHeight: 48,
+  fontWeight: 600,
+  fontSize: '0.9375rem',
+  letterSpacing: '-0.01em',
+  textTransform: 'none' as const,
+  borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+  color: theme.palette.text.primary,
+  border: getSurfaceBorder(theme),
+  bgcolor: alpha(
+    theme.palette.background.paper,
+    theme.palette.mode === 'light' ? 0.72 : 0.28
+  ),
+  boxShadow:
+    theme.palette.mode === 'light'
+      ? `0 6px 18px ${alpha(theme.palette.common.black, 0.05)}`
+      : `0 8px 22px ${alpha(theme.palette.common.black, 0.22)}`,
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  transition: 'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease',
+  '&:hover': {
+    border: `1px solid ${alpha(
+      theme.palette.primary.main,
+      theme.palette.mode === 'light' ? 0.28 : 0.4
+    )}`,
+    bgcolor: alpha(
+      theme.palette.primary.main,
+      theme.palette.mode === 'light' ? 0.06 : 0.14
+    ),
+    boxShadow:
+      theme.palette.mode === 'light'
+        ? `0 10px 26px ${alpha(theme.palette.common.black, 0.08)}`
+        : `0 12px 30px ${alpha(theme.palette.common.black, 0.3)}`,
+  },
+  '&:active': {
+    transform: 'translateY(1px)',
+  },
+  '&.Mui-disabled': {
+    border: getSurfaceBorder(theme, 'soft'),
+    bgcolor: theme.palette.action.disabledBackground,
+    color: theme.palette.action.disabled,
+    boxShadow: 'none',
+  },
+});
+
+export const getAuthDividerSx = (theme: Theme) => ({
+  my: 2.25,
+  width: '100%',
+  '&::before, &::after': {
+    borderColor: alpha(
+      theme.palette.primary.main,
+      theme.palette.mode === 'light' ? 0.12 : 0.22
+    ),
+  },
+  '& .MuiDivider-wrapper': {
+    px: 1.5,
+  },
+});
+
 export const getAuthLinkButtonSx = () => ({
   p: 0,
   minWidth: 'auto',

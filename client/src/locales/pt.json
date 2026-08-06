@@ -1376,6 +1376,7 @@
         }
       }
     },
+    "or": "ou",
     "login": {
       "title": "Entrar",
       "registrationSuccess": "Registo concluído! Entre na sua conta.",
@@ -1399,13 +1400,47 @@
         "passwordTooShort": "A palavra-passe deve ter pelo menos 8 caracteres"
       }
     },
+    "verify": {
+      "pageTitle": "Confirme o seu e-mail",
+      "checkTitle": "Verifique o seu e-mail",
+      "checkBody": "Enviámos um link de confirmação para {{email}}. Abra-o para concluir a criação da conta.",
+      "resend": "Reenviar e-mail",
+      "resending": "A enviar...",
+      "resendIn": "Reenviar em {{time}}",
+      "resendCooldown": "Aguarde antes de pedir outro e-mail",
+      "resendSuccess": "Se for necessária confirmação, o e-mail foi enviado.",
+      "resendFailed": "Não foi possível enviar o e-mail de confirmação",
+      "backToLogin": "Voltar ao início de sessão",
+      "missingToken": "O link de confirmação está incompleto",
+      "invalidToken": "Este link de confirmação é inválido ou expirou",
+      "failed": "Não foi possível confirmar o e-mail",
+      "notVerified": "Confirme o e-mail antes de iniciar sessão"
+    },
+    "google": {
+      "hint": "O início de sessão com Google é gratuito e seguro",
+      "loadFailed": "Não foi possível carregar o Google Sign-In",
+      "continue": "Continuar com o Google",
+      "continuing": "A ligar...",
+      "chooseUsernameTitle": "Escolha um nome de utilizador",
+      "chooseUsernameHint": "Sessão iniciada como {{email}}. Escolha um utilizador para o Amorely.",
+      "usernameChangeLater": "Pode alterar o utilizador mais tarde nas Definições.",
+      "usernameTooShort": "O nome de utilizador deve ter pelo menos 3 caracteres",
+      "complete": "Continuar",
+      "completing": "A guardar...",
+      "cancel": "Cancelar",
+      "sessionExpired": "A sessão de registo Google expirou. Tente novamente.",
+      "notConfigured": "O Google Sign-In não está configurado no servidor"
+    },
     "errors": {
       "loginFailed": "Falha ao entrar",
       "registerFailed": "Falha no registo",
       "invalidCredentials": "E-mail ou palavra-passe incorretos",
       "emailExists": "Já existe um utilizador com este e-mail",
+      "usernameExists": "Já existe um utilizador com este nome",
       "serverLoginFailed": "Erro ao entrar",
-      "serverRegisterFailed": "Erro ao registar"
+      "serverRegisterFailed": "Erro ao registar",
+      "usePasswordLogin": "Já existe uma conta com este e-mail. Entre com a palavra-passe.",
+      "googleFailed": "Falha no início de sessão com Google"
     }
   },
   "crypto": {

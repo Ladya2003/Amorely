@@ -63,10 +63,16 @@ const getNotchedOutlineSlotStyles = (notched?: boolean) => ({
       : notchedOutlineLegendStyles,
 });
 
+/** Smooth hover/focus outline — MUI snaps border-color by default */
+const OUTLINED_INPUT_OUTLINE_TRANSITION =
+  'border-color 220ms cubic-bezier(0.4, 0, 0.2, 1), border-width 180ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1)';
+
 const outlinedInputRootStyles = {
   borderRadius: INPUT_BORDER_RADIUS,
+  transition: 'background-color 220ms cubic-bezier(0.4, 0, 0.2, 1)',
   '& .MuiOutlinedInput-notchedOutline': {
     borderRadius: `${INPUT_BORDER_RADIUS}px`,
+    transition: OUTLINED_INPUT_OUTLINE_TRANSITION,
   },
   '& .MuiInputBase-input:not(.MuiInputBase-inputMultiline)': {
     paddingLeft: INPUT_PADDING_X,
@@ -114,8 +120,10 @@ const getAutocompleteInputRootStyles = (ownerState: {
 
   return {
     borderRadius: INPUT_BORDER_RADIUS,
+    transition: 'background-color 220ms cubic-bezier(0.4, 0, 0.2, 1)',
     '& .MuiOutlinedInput-notchedOutline': {
       borderRadius: `${INPUT_BORDER_RADIUS}px`,
+      transition: OUTLINED_INPUT_OUTLINE_TRANSITION,
     },
     padding: '0 !important',
     ...(iconPadding > 0 ? { paddingRight: `${iconPadding}px !important` } : {}),
@@ -145,8 +153,10 @@ const pickersOutlinedInputRootStyles = {
   borderRadius: INPUT_BORDER_RADIUS,
   paddingLeft: `${INPUT_PADDING_X}px`,
   paddingRight: `${INPUT_PADDING_X}px`,
+  transition: 'background-color 220ms cubic-bezier(0.4, 0, 0.2, 1)',
   '& .MuiPickersOutlinedInput-notchedOutline': {
     borderRadius: `${INPUT_BORDER_RADIUS}px`,
+    transition: OUTLINED_INPUT_OUTLINE_TRANSITION,
   },
   '&.MuiPickersInputBase-sizeSmall': {
     paddingLeft: `${INPUT_PADDING_X_SMALL}px`,

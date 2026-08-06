@@ -1320,6 +1320,7 @@
         }
       }
     },
+    "or": "або",
     "login": {
       "title": "Вхід до облікового запису",
       "registrationSuccess": "Реєстрація пройшла успішно! Увійдіть до облікового запису.",
@@ -1343,13 +1344,47 @@
         "passwordTooShort": "Пароль має містити щонайменше 8 символів"
       }
     },
+    "verify": {
+      "pageTitle": "Підтвердження email",
+      "checkTitle": "Перевірте пошту",
+      "checkBody": "Ми надіслали посилання для підтвердження на {{email}}. Відкрийте його, щоб завершити реєстрацію.",
+      "resend": "Надіслати лист знову",
+      "resending": "Надсилання...",
+      "resendIn": "Повтор через {{time}}",
+      "resendCooldown": "Зачекайте перед повторним надсиланням листа",
+      "resendSuccess": "Якщо потрібне підтвердження, лист надіслано.",
+      "resendFailed": "Не вдалося надіслати лист підтвердження",
+      "backToLogin": "Повернутися до входу",
+      "missingToken": "Посилання підтвердження неповне",
+      "invalidToken": "Посилання підтвердження недійсне або застаріло",
+      "failed": "Не вдалося підтвердити email",
+      "notVerified": "Підтвердіть email, перш ніж увійти"
+    },
+    "google": {
+      "hint": "Вхід через Google — безкоштовно й безпечно",
+      "loadFailed": "Не вдалося завантажити вхід через Google",
+      "continue": "Продовжити з Google",
+      "continuing": "Підключення...",
+      "chooseUsernameTitle": "Оберіть логін",
+      "chooseUsernameHint": "Ви увійшли як {{email}}. Вкажіть логін для Amorely.",
+      "usernameChangeLater": "Логін можна змінити пізніше в налаштуваннях.",
+      "usernameTooShort": "Логін має містити щонайменше 3 символи",
+      "complete": "Продовжити",
+      "completing": "Збереження...",
+      "cancel": "Скасувати",
+      "sessionExpired": "Сесію реєстрації Google завершено. Спробуйте знову.",
+      "notConfigured": "Google Sign-In не налаштовано на сервері"
+    },
     "errors": {
       "loginFailed": "Помилка входу",
       "registerFailed": "Помилка реєстрації",
       "invalidCredentials": "Невірний email або пароль",
       "emailExists": "Користувач з таким email уже існує",
+      "usernameExists": "Користувач з таким логіном уже існує",
       "serverLoginFailed": "Помилка входу користувача",
-      "serverRegisterFailed": "Помилка реєстрації користувача"
+      "serverRegisterFailed": "Помилка реєстрації користувача",
+      "usePasswordLogin": "Обліковий запис з цим email уже зареєстровано. Увійдіть паролем.",
+      "googleFailed": "Не вдалося увійти через Google"
     }
   },
   "crypto": {

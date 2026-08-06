@@ -20,6 +20,10 @@ import { notifyPartnerChanged, notifyPartnerUnlinked } from '../hooks/useRelatio
 import { notifyPartnerRequestsChanged } from '../hooks/usePartnerRequests';
 import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 import { migrateLocalUiPreferencesToAccount } from '../utils/migrateUiPreferences';
+import { clearPendingEmailVerification } from '../utils/pendingEmailVerification';
+
+export const EMAIL_NOT_VERIFIED_CODE = 'EMAIL_NOT_VERIFIED';
+export const USE_PASSWORD_LOGIN_CODE = 'USE_PASSWORD_LOGIN';
 
 interface User {
   _id: string;
@@ -41,11 +45,23 @@ interface User {
   hasCryptoBackup?: boolean;
   localeBannerDismissedAt?: string | null;
   installBannerDismissed?: boolean;
+  emailVerified?: boolean;
+  authProvider?: 'local' | 'google';
   chatRulesConsent?: {
     version: number;
     acceptedAt: string;
   } | null;
 }
+
+export type GoogleAuthResult =
+  | { kind: 'authenticated'; response: AxiosResponse }
+  | { kind: 'needs_username'; pendingToken: string; email: string; suggestedUsername: string }
+  | { kind: 'use_password'; message: string }
+  | { kind: 'error' };
+
+export type ResendVerificationResult =
+  | { ok: true; resendAvailableInSeconds: number }
+  | { ok: false; resendAvailableInSeconds?: number; cooldown?: boolean };
 
 interface AuthContextType {
   user: User | null;
@@ -55,6 +71,10 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<AxiosResponse<any, any> | undefined>;
   register: (email: string, username: string, password: string) => Promise<AxiosResponse<any, any> | undefined>;
+  loginWithGoogle: (idToken: string) => Promise<GoogleAuthResult>;
+  completeGoogleSignup: (pendingToken: string, username: string) => Promise<boolean>;
+  verifyEmail: (token: string) => Promise<boolean>;
+  resendVerification: (email: string) => Promise<ResendVerificationResult>;
   logout: () => void;
   clearError: () => void;
   updateUser: (userData: User) => void;
@@ -71,6 +91,10 @@ const AuthContext = createContext<AuthContextType>({
   error: null,
   login: async () => undefined,
   register: async () => undefined,
+  loginWithGoogle: async () => ({ kind: 'error' }),
+  completeGoogleSignup: async () => false,
+  verifyEmail: async () => false,
+  resendVerification: async () => ({ ok: false }),
   logout: () => {},
   clearError: () => {},
   updateUser: () => {},
@@ -118,6 +142,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setBlockReasonFallback(null);
   }, []);
 
+  const applyAuthSession = useCallback(async (newToken: string, userData: User) => {
+    localStorage.setItem('token', newToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    setToken(newToken);
+    const preferredLocale = await applyPreferredLocale(userData?.locale, {
+      userId: userData?._id,
+      token: newToken,
+    });
+    const migrated = await migrateLocalUiPreferencesToAccount(userData);
+    setUser({ ...userData, locale: preferredLocale, ...migrated });
+    setIsAuthenticated(true);
+    clearPendingEmailVerification();
+  }, []);
+
   useEffect(() => {
     const interceptorId = axios.interceptors.response.use(
       (response) => response,
@@ -157,11 +195,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ) {
             void registerServiceWorker().then(() => subscribeToPush(token));
           }
-        } catch (authError) {
+        } catch (authError: any) {
           console.error('Ошибка аутентификации:', authError);
           const blockedPayload = getAccountBlockedPayload(authError);
           if (blockedPayload) {
             handleBlockedResponse(blockedPayload);
+          } else if (authError?.response?.data?.code === EMAIL_NOT_VERIFIED_CODE) {
+            performLogout();
           } else {
             performLogout();
           }
@@ -235,7 +275,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [user?._id, token, handleBlockedResponse]);
 
-  // Функция для входа
   const login = async (email: string, password: string): Promise<AxiosResponse<any, any> | undefined> => {
     try {
       setIsLoading(true);
@@ -247,21 +286,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       const { token: newToken, user: userData } = response.data;
-      
-      // Сохраняем токен в localStorage
-      localStorage.setItem('token', newToken);
-      
-      // Настраиваем axios с новым токеном
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      
-      setToken(newToken);
-      const preferredLocale = await applyPreferredLocale(userData?.locale, {
-        userId: userData?._id,
-        token: newToken,
-      });
-      const migrated = await migrateLocalUiPreferencesToAccount(userData);
-      setUser({ ...userData, locale: preferredLocale, ...migrated });
-      setIsAuthenticated(true);
+      await applyAuthSession(newToken, userData);
       return response;
     } catch (error: any) {
       console.error('Ошибка входа:', error);
@@ -276,6 +301,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             blockedPayload.blockReason
           ) || blockedPayload.blockReason || null
         );
+      } else if (error.response?.data?.code === EMAIL_NOT_VERIFIED_CODE) {
+        setError(EMAIL_NOT_VERIFIED_CODE);
       } else {
         setError(error.response?.data?.error || i18next.t('auth.errors.loginFailed'));
       }
@@ -285,7 +312,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Функция для регистрации
   const register = async (email: string, username: string, password: string): Promise<AxiosResponse<any, any> | undefined> => {
     try {
       setIsLoading(true);
@@ -296,18 +322,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         username,
         password
       });
-      
+
+      if (response.data?.needsEmailVerification) {
+        return response;
+      }
+
       const { token: newToken, user: userData } = response.data;
-      
-      // Сохраняем токен в localStorage
-      localStorage.setItem('token', newToken);
-      
-      // Настраиваем axios с новым токеном
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      
-      setToken(newToken);
-      setUser(userData);
-      setIsAuthenticated(true);
+      if (newToken && userData) {
+        await applyAuthSession(newToken, userData);
+      }
       return response;
     } catch (error: any) {
       console.error('Ошибка регистрации:', error);
@@ -318,17 +341,127 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Функция для выхода
+  const loginWithGoogle = async (idToken: string): Promise<GoogleAuthResult> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await axios.post(`${API_URL}/api/auth/google`, { idToken });
+
+      if (response.data?.needsUsername && response.data?.pendingToken) {
+        return {
+          kind: 'needs_username',
+          pendingToken: response.data.pendingToken,
+          email: response.data.email || '',
+          suggestedUsername: response.data.suggestedUsername || '',
+        };
+      }
+
+      const { token: newToken, user: userData } = response.data;
+      await applyAuthSession(newToken, userData);
+      return { kind: 'authenticated', response };
+    } catch (error: any) {
+      console.error('Ошибка Google Sign-In:', error);
+      const blockedPayload = getAccountBlockedPayload(error);
+      if (blockedPayload) {
+        setBlockReasons(blockedPayload.blockedReasons ?? null);
+        setBlockReasonFallback(blockedPayload.blockReason ?? null);
+        setError(
+          resolveBlockReasonForLocale(
+            blockedPayload.blockedReasons,
+            resolveAppLocale(i18next.language),
+            blockedPayload.blockReason
+          ) || blockedPayload.blockReason || null
+        );
+        return { kind: 'error' };
+      }
+      if (error.response?.data?.code === USE_PASSWORD_LOGIN_CODE) {
+        const message =
+          error.response?.data?.message || i18next.t('auth.errors.usePasswordLogin');
+        setError(USE_PASSWORD_LOGIN_CODE);
+        return { kind: 'use_password', message };
+      }
+      setError(error.response?.data?.error || i18next.t('auth.errors.googleFailed'));
+      return { kind: 'error' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const completeGoogleSignup = async (pendingToken: string, username: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await axios.post(`${API_URL}/api/auth/google/complete`, {
+        pendingToken,
+        username,
+      });
+      const { token: newToken, user: userData } = response.data;
+      await applyAuthSession(newToken, userData);
+      return true;
+    } catch (error: any) {
+      console.error('Ошибка завершения Google Sign-In:', error);
+      if (error.response?.data?.code === USE_PASSWORD_LOGIN_CODE) {
+        setError(USE_PASSWORD_LOGIN_CODE);
+      } else {
+        setError(error.response?.data?.error || i18next.t('auth.errors.googleFailed'));
+      }
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyEmail = useCallback(async (rawToken: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await axios.post(`${API_URL}/api/auth/verify-email`, { token: rawToken });
+      const { token: newToken, user: userData } = response.data;
+      await applyAuthSession(newToken, userData);
+      return true;
+    } catch (error: any) {
+      console.error('Ошибка подтверждения email:', error);
+      setError(error.response?.data?.error || i18next.t('auth.verify.failed'));
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [applyAuthSession]);
+
+  const resendVerification = async (email: string): Promise<ResendVerificationResult> => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(`${API_URL}/api/auth/resend-verification`, { email });
+      return {
+        ok: true,
+        resendAvailableInSeconds: Number(response.data?.resendAvailableInSeconds) || 60,
+      };
+    } catch (error: any) {
+      console.error('Ошибка повторной отправки подтверждения:', error);
+      const retryAfter = Number(error.response?.data?.resendAvailableInSeconds);
+      if (error.response?.status === 429 || error.response?.data?.code === 'RESEND_COOLDOWN') {
+        return {
+          ok: false,
+          cooldown: true,
+          resendAvailableInSeconds: Number.isFinite(retryAfter) ? retryAfter : 60,
+        };
+      }
+      setError(error.response?.data?.error || i18next.t('auth.verify.resendFailed'));
+      return { ok: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     performLogout();
   };
 
-  // Функция для очистки ошибок
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, []);
 
-  // Функция для обновления данных пользователя
   const updateUser = (userData: User) => {
     setUser(userData);
   };
@@ -343,6 +476,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error,
         login,
         register,
+        loginWithGoogle,
+        completeGoogleSignup,
+        verifyEmail,
+        resendVerification,
         logout,
         clearError,
         updateUser,
@@ -354,4 +491,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-}; 
+};

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
@@ -8,27 +8,36 @@ import {
   InputAdornment,
   IconButton,
   useTheme,
+  Divider,
 } from '@mui/material';
 import AppTextField from '../UI/AppTextField';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { EMAIL_NOT_VERIFIED_CODE, USE_PASSWORD_LOGIN_CODE, useAuth } from '../../contexts/AuthContext';
 import { translateAuthServerError } from '../../localization/authHelpers';
 import { resolveAppLocale } from '../../localization/locale';
 import { resolveBlockReasonForLocale } from '../../utils/handleAccountBlocked';
 import { useNavigate } from 'react-router-dom';
 import {
   getAuthAlertSx,
+  getAuthDividerSx,
   getAuthFormTitleSx,
   getAuthLinkButtonSx,
   getAuthPrimaryButtonSx,
   getAuthSwitchTextSx,
 } from './authPageStyles';
+import GoogleSignInButton from './GoogleSignInButton';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
   initialEmail?: string;
   initialPassword?: string;
   showRegistrationSuccess?: boolean;
+  onGoogleNeedsUsername: (payload: {
+    pendingToken: string;
+    email: string;
+    suggestedUsername: string;
+  }) => void;
+  onNeedsEmailVerification: (email: string, resendAvailableInSeconds: number) => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({
@@ -36,15 +45,27 @@ const LoginForm: React.FC<LoginFormProps> = ({
   initialEmail = '',
   initialPassword = '',
   showRegistrationSuccess = false,
+  onGoogleNeedsUsername,
+  onNeedsEmailVerification,
 }) => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
-  const { login, isLoading, error, clearError, blockReasons, blockReasonFallback, clearBlockNotice } = useAuth();
+  const {
+    login,
+    loginWithGoogle,
+    isLoading,
+    error,
+    clearError,
+    blockReasons,
+    blockReasonFallback,
+    clearBlockNotice,
+  } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState(initialPassword);
   const [showPassword, setShowPassword] = useState(false);
+  const [usePasswordNotice, setUsePasswordNotice] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +74,35 @@ const LoginForm: React.FC<LoginFormProps> = ({
       return;
     }
 
+    setUsePasswordNotice(null);
     const response = await login(email, password);
     if (response) {
       navigate('/');
+    }
+  };
+
+  useEffect(() => {
+    if (error === EMAIL_NOT_VERIFIED_CODE) {
+      // Prefer remaining server cooldown when known; otherwise start a 1-minute UI wait.
+      onNeedsEmailVerification(email.trim().toLowerCase(), 60);
+      clearError();
+    }
+  }, [error, email, onNeedsEmailVerification, clearError]);
+
+  const handleGoogle = async (idToken: string) => {
+    setUsePasswordNotice(null);
+    clearError();
+    const result = await loginWithGoogle(idToken);
+    if (result.kind === 'authenticated') {
+      navigate('/');
+      return;
+    }
+    if (result.kind === 'needs_username') {
+      onGoogleNeedsUsername(result);
+      return;
+    }
+    if (result.kind === 'use_password') {
+      setUsePasswordNotice(result.message);
     }
   };
 
@@ -68,7 +115,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
     resolveAppLocale(i18n.language),
     blockReasonFallback
   );
-  const translatedError = !blockMessage && error ? translateAuthServerError(error, t) : null;
+  const translatedError =
+    !blockMessage && error && error !== EMAIL_NOT_VERIFIED_CODE && error !== USE_PASSWORD_LOGIN_CODE
+      ? translateAuthServerError(error, t)
+      : null;
+  const passwordConflictMessage =
+    usePasswordNotice ||
+    (error === USE_PASSWORD_LOGIN_CODE ? t('auth.errors.usePasswordLogin') : null);
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
@@ -85,6 +138,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
       {blockMessage && (
         <Alert severity="error" sx={getAuthAlertSx(theme)} onClose={clearBlockNotice}>
           {blockMessage}
+        </Alert>
+      )}
+
+      {passwordConflictMessage && (
+        <Alert severity="info" sx={getAuthAlertSx(theme)} onClose={() => setUsePasswordNotice(null)}>
+          {passwordConflictMessage}
         </Alert>
       )}
 
@@ -145,7 +204,24 @@ const LoginForm: React.FC<LoginFormProps> = ({
         {isLoading ? t('auth.login.submitting') : t('auth.login.submit')}
       </Button>
 
-      <Box sx={getAuthSwitchTextSx()}>
+      <Divider sx={getAuthDividerSx(theme)}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.secondary',
+            fontWeight: 600,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            fontSize: '0.6875rem',
+          }}
+        >
+          {t('auth.or')}
+        </Typography>
+      </Divider>
+
+      <GoogleSignInButton onCredential={handleGoogle} disabled={isLoading} />
+
+      <Box sx={{ ...getAuthSwitchTextSx(), mt: 2.5 }}>
         {t('auth.login.noAccount')}{' '}
         <Button
           onClick={onSwitchToRegister}

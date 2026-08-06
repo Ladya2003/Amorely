@@ -67,6 +67,8 @@ export const ensureSystemUser = async (): Promise<string> => {
       email: SYSTEM_USER_EMAIL,
       username: SYSTEM_USER_USERNAME,
       password: `system-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      authProvider: 'local',
+      emailVerified: true,
       firstName: 'System',
       lastName: 'Messages',
       role: 'system',

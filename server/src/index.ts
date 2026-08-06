@@ -35,6 +35,7 @@ import { migrateLegacyTapGameStates } from './games/tapGameService';
 import { ensureSystemUser } from './services/systemUserService';
 import { ensureDailyQuestionImagesUploaded } from './services/dailyQuestionsImageService';
 import { ensureFeatureNews } from './services/ensureFeatureNews';
+import { migrateLegacyUsersEmailVerified } from './utils/migrateEmailVerified';
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ mongoose.connect(mongoUri)
     console.log(`MongoDB подключена: ${isLocalDev ? 'локальная' : 'облачная'}`);
     console.log(`URI: ${mongoUri.replace(/\/\/.*@/, '//***@')}`); // Скрываем пароль в логах
     await migrateLegacyTapGameStates();
+    await migrateLegacyUsersEmailVerified();
     await ensureSystemUser();
     await ensureDailyQuestionImagesUploaded();
     await ensureFeatureNews();

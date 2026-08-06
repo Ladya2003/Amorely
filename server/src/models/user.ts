@@ -1,12 +1,21 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+export type AuthProvider = 'local' | 'google';
+
 // Определяем интерфейс для документа пользователя
 export interface UserDocument extends mongoose.Document {
   _id: mongoose.Types.ObjectId;
   email: string;
   username: string;
-  password: string;
+  password?: string;
+  authProvider: AuthProvider;
+  googleId?: string;
+  emailVerified: boolean;
+  emailVerificationTokenHash?: string | null;
+  emailVerificationExpires?: Date | null;
+  emailVerificationSentAt?: Date | null;
+  emailVerificationSendCount?: number;
   firstName?: string;
   lastName?: string;
   avatar?: string;
@@ -66,7 +75,14 @@ interface UserModel extends mongoose.Model<UserDocument> {
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String, required: false },
+  authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+  googleId: { type: String, unique: true, sparse: true },
+  emailVerified: { type: Boolean, default: false },
+  emailVerificationTokenHash: { type: String, default: null },
+  emailVerificationExpires: { type: Date, default: null },
+  emailVerificationSentAt: { type: Date, default: null },
+  emailVerificationSendCount: { type: Number, default: 0 },
   firstName: { type: String },
   lastName: { type: String },
   avatar: { type: String },
@@ -127,15 +143,19 @@ const userSchema = new mongoose.Schema({
 
 // Метод для сравнения паролей
 userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  if (!this.password) {
+    return false;
+  }
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Хеширование пароля перед сохранением
 userSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
+  if (!this.isModified('password') || !this.password) {
+    return next();
   }
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-export default mongoose.model<UserDocument, UserModel>('User', userSchema); 
+export default mongoose.model<UserDocument, UserModel>('User', userSchema);

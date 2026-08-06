@@ -1376,6 +1376,7 @@
         }
       }
     },
+    "or": "o",
     "login": {
       "title": "Iniciar sesión",
       "registrationSuccess": "¡Registro exitoso! Inicia sesión en tu cuenta.",
@@ -1399,13 +1400,47 @@
         "passwordTooShort": "La contraseña debe tener al menos 8 caracteres"
       }
     },
+    "verify": {
+      "pageTitle": "Confirma tu correo",
+      "checkTitle": "Revisa tu correo",
+      "checkBody": "Enviamos un enlace de confirmación a {{email}}. Ábrelo para terminar de crear tu cuenta.",
+      "resend": "Reenviar correo",
+      "resending": "Enviando...",
+      "resendIn": "Reenviar en {{time}}",
+      "resendCooldown": "Espera antes de solicitar otro correo",
+      "resendSuccess": "Si se requiere confirmación, el correo fue enviado.",
+      "resendFailed": "No se pudo enviar el correo de confirmación",
+      "backToLogin": "Volver a iniciar sesión",
+      "missingToken": "El enlace de confirmación está incompleto",
+      "invalidToken": "Este enlace de confirmación no es válido o ha caducado",
+      "failed": "No se pudo confirmar el correo",
+      "notVerified": "Confirma tu correo antes de iniciar sesión"
+    },
+    "google": {
+      "hint": "El acceso con Google es gratuito y seguro",
+      "loadFailed": "No se pudo cargar el acceso con Google",
+      "continue": "Continuar con Google",
+      "continuing": "Conectando...",
+      "chooseUsernameTitle": "Elige un nombre de usuario",
+      "chooseUsernameHint": "Sesión iniciada como {{email}}. Elige un usuario para Amorely.",
+      "usernameChangeLater": "Puedes cambiar el usuario más tarde en Ajustes.",
+      "usernameTooShort": "El usuario debe tener al menos 3 caracteres",
+      "complete": "Continuar",
+      "completing": "Guardando...",
+      "cancel": "Cancelar",
+      "sessionExpired": "La sesión de registro con Google expiró. Inténtalo de nuevo.",
+      "notConfigured": "Google Sign-In no está configurado en el servidor"
+    },
     "errors": {
       "loginFailed": "Error al iniciar sesión",
       "registerFailed": "Error al registrarse",
       "invalidCredentials": "Correo o contraseña incorrectos",
       "emailExists": "Ya existe un usuario con este correo",
+      "usernameExists": "Ya existe un usuario con este nombre",
       "serverLoginFailed": "Error al iniciar sesión",
-      "serverRegisterFailed": "Error al registrarse"
+      "serverRegisterFailed": "Error al registrarse",
+      "usePasswordLogin": "Ya existe una cuenta con este correo. Inicia sesión con tu contraseña.",
+      "googleFailed": "Error al iniciar sesión con Google"
     }
   },
   "crypto": {

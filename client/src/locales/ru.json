@@ -1430,6 +1430,7 @@
         }
       }
     },
+    "or": "или",
     "login": {
       "title": "Вход в аккаунт",
       "registrationSuccess": "Регистрация прошла успешно! Войдите в аккаунт.",
@@ -1453,13 +1454,47 @@
         "passwordTooShort": "Пароль должен содержать минимум 8 символов"
       }
     },
+    "verify": {
+      "pageTitle": "Подтверждение email",
+      "checkTitle": "Проверьте почту",
+      "checkBody": "Мы отправили ссылку для подтверждения на {{email}}. Откройте её, чтобы завершить регистрацию.",
+      "resend": "Отправить письмо снова",
+      "resending": "Отправка...",
+      "resendIn": "Повтор через {{time}}",
+      "resendCooldown": "Подождите перед повторной отправкой письма",
+      "resendSuccess": "Если нужно подтверждение, письмо отправлено.",
+      "resendFailed": "Не удалось отправить письмо подтверждения",
+      "backToLogin": "Вернуться ко входу",
+      "missingToken": "Ссылка подтверждения неполная",
+      "invalidToken": "Ссылка подтверждения недействительна или устарела",
+      "failed": "Не удалось подтвердить email",
+      "notVerified": "Подтвердите email, прежде чем войти"
+    },
+    "google": {
+      "hint": "Вход через Google — бесплатно и безопасно",
+      "loadFailed": "Не удалось загрузить вход через Google",
+      "continue": "Продолжить с Google",
+      "continuing": "Подключение...",
+      "chooseUsernameTitle": "Выберите логин",
+      "chooseUsernameHint": "Вы вошли как {{email}}. Укажите логин для Amorely.",
+      "usernameChangeLater": "Логин можно сменить позже в настройках.",
+      "usernameTooShort": "Логин должен содержать минимум 3 символа",
+      "complete": "Продолжить",
+      "completing": "Сохранение...",
+      "cancel": "Отмена",
+      "sessionExpired": "Сессия регистрации Google истекла. Попробуйте снова.",
+      "notConfigured": "Google Sign-In не настроен на сервере"
+    },
     "errors": {
       "loginFailed": "Ошибка при входе",
       "registerFailed": "Ошибка при регистрации",
       "invalidCredentials": "Неверный email или пароль",
       "emailExists": "Пользователь с таким email уже существует",
+      "usernameExists": "Пользователь с таким логином уже существует",
       "serverLoginFailed": "Ошибка при входе пользователя",
-      "serverRegisterFailed": "Ошибка при регистрации пользователя"
+      "serverRegisterFailed": "Ошибка при регистрации пользователя",
+      "usePasswordLogin": "Аккаунт с этим email уже зарегистрирован. Войдите паролем.",
+      "googleFailed": "Не удалось войти через Google"
     }
   },
   "crypto": {
