@@ -16,6 +16,10 @@ export interface UserDocument extends mongoose.Document {
   emailVerificationExpires?: Date | null;
   emailVerificationSentAt?: Date | null;
   emailVerificationSendCount?: number;
+  passwordResetTokenHash?: string | null;
+  passwordResetExpires?: Date | null;
+  passwordResetSentAt?: Date | null;
+  passwordResetSendCount?: number;
   firstName?: string;
   lastName?: string;
   avatar?: string;
@@ -83,6 +87,10 @@ const userSchema = new mongoose.Schema({
   emailVerificationExpires: { type: Date, default: null },
   emailVerificationSentAt: { type: Date, default: null },
   emailVerificationSendCount: { type: Number, default: 0 },
+  passwordResetTokenHash: { type: String, default: null },
+  passwordResetExpires: { type: Date, default: null },
+  passwordResetSentAt: { type: Date, default: null },
+  passwordResetSendCount: { type: Number, default: 0 },
   firstName: { type: String },
   lastName: { type: String },
   avatar: { type: String },

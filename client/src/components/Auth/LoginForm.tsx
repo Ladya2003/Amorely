@@ -29,6 +29,7 @@ import GoogleSignInButton from './GoogleSignInButton';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
+  onForgotPassword: (email: string) => void;
   initialEmail?: string;
   initialPassword?: string;
   showRegistrationSuccess?: boolean;
@@ -42,6 +43,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({
   onSwitchToRegister,
+  onForgotPassword,
   initialEmail = '',
   initialPassword = '',
   showRegistrationSuccess = false,
@@ -193,6 +195,17 @@ const LoginForm: React.FC<LoginFormProps> = ({
           ),
         }}
       />
+
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5, mb: 0.5 }}>
+        <Button
+          type="button"
+          onClick={() => onForgotPassword(email.trim().toLowerCase())}
+          sx={{ ...getAuthLinkButtonSx(), py: 0.5, minWidth: 0 }}
+          disabled={isLoading}
+        >
+          {t('auth.login.forgotPassword')}
+        </Button>
+      </Box>
 
       <Button
         type="submit"

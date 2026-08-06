@@ -30,6 +30,7 @@ import CalendarPartnerMigrationRunner from './components/Calendar/CalendarPartne
 import CurrencyAwardOverlay from './components/Pets/CurrencyAwardOverlay';
 import AppDateLocalizationProvider from './components/UI/AppDateLocalizationProvider';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import {
   LANDING_LOCALES,
   getLandingPath,
@@ -115,6 +116,7 @@ function App() {
                 />
 
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 {/* Защищенный маршрут восстановления ключей */}
                 <Route

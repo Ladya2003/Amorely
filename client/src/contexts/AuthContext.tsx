@@ -21,6 +21,7 @@ import { notifyPartnerRequestsChanged } from '../hooks/usePartnerRequests';
 import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 import { migrateLocalUiPreferencesToAccount } from '../utils/migrateUiPreferences';
 import { clearPendingEmailVerification } from '../utils/pendingEmailVerification';
+import { getAuthApiErrorMessage } from '../localization/authHelpers';
 
 export const EMAIL_NOT_VERIFIED_CODE = 'EMAIL_NOT_VERIFIED';
 export const USE_PASSWORD_LOGIN_CODE = 'USE_PASSWORD_LOGIN';
@@ -63,6 +64,15 @@ export type ResendVerificationResult =
   | { ok: true; resendAvailableInSeconds: number }
   | { ok: false; resendAvailableInSeconds?: number; cooldown?: boolean };
 
+export type ForgotPasswordResult =
+  | { ok: true; resendAvailableInSeconds: number }
+  | { ok: false; resendAvailableInSeconds?: number; cooldown?: boolean; message?: string };
+
+export type ResetPasswordResult =
+  | { ok: true; authenticated: true }
+  | { ok: true; authenticated: false; needsEmailVerification: true; email: string }
+  | { ok: false };
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -75,6 +85,8 @@ interface AuthContextType {
   completeGoogleSignup: (pendingToken: string, username: string) => Promise<boolean>;
   verifyEmail: (token: string) => Promise<boolean>;
   resendVerification: (email: string) => Promise<ResendVerificationResult>;
+  requestPasswordReset: (email: string) => Promise<ForgotPasswordResult>;
+  resetPassword: (token: string, password: string) => Promise<ResetPasswordResult>;
   logout: () => void;
   clearError: () => void;
   updateUser: (userData: User) => void;
@@ -95,6 +107,8 @@ const AuthContext = createContext<AuthContextType>({
   completeGoogleSignup: async () => false,
   verifyEmail: async () => false,
   resendVerification: async () => ({ ok: false }),
+  requestPasswordReset: async () => ({ ok: false }),
+  resetPassword: async () => ({ ok: false }),
   logout: () => {},
   clearError: () => {},
   updateUser: () => {},
@@ -454,6 +468,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const requestPasswordReset = async (email: string): Promise<ForgotPasswordResult> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
+      return {
+        ok: true,
+        resendAvailableInSeconds: Number(response.data?.resendAvailableInSeconds) || 60,
+      };
+    } catch (error: any) {
+      console.error('Ошибка запроса сброса пароля:', error);
+      const retryAfter = Number(error.response?.data?.resendAvailableInSeconds);
+      if (error.response?.status === 429 || error.response?.data?.code === 'RESEND_COOLDOWN') {
+        return {
+          ok: false,
+          cooldown: true,
+          resendAvailableInSeconds: Number.isFinite(retryAfter) ? retryAfter : 60,
+        };
+      }
+      const message = getAuthApiErrorMessage(
+        error.response?.data,
+        i18next.t('auth.forgotPassword.requestFailed')
+      );
+      setError(message);
+      return { ok: false, message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = useCallback(async (rawToken: string, password: string): Promise<ResetPasswordResult> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await axios.post(`${API_URL}/api/auth/reset-password`, {
+        token: rawToken,
+        password,
+      });
+
+      if (response.data?.needsEmailVerification) {
+        return {
+          ok: true,
+          authenticated: false,
+          needsEmailVerification: true,
+          email: String(response.data.email || ''),
+        };
+      }
+
+      const { token: newToken, user: userData } = response.data;
+      if (!newToken || !userData) {
+        setError(i18next.t('auth.forgotPassword.resetFailed'));
+        return { ok: false };
+      }
+
+      await applyAuthSession(newToken, userData);
+      return { ok: true, authenticated: true };
+    } catch (error: any) {
+      console.error('Ошибка сброса пароля:', error);
+      const blockedPayload = getAccountBlockedPayload(error);
+      if (blockedPayload) {
+        handleBlockedResponse(blockedPayload);
+        return { ok: false };
+      }
+      setError(
+        getAuthApiErrorMessage(
+          error.response?.data,
+          i18next.t('auth.forgotPassword.resetFailed')
+        )
+      );
+      return { ok: false };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [applyAuthSession, handleBlockedResponse]);
+
   const logout = () => {
     performLogout();
   };
@@ -480,6 +569,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         completeGoogleSignup,
         verifyEmail,
         resendVerification,
+        requestPasswordReset,
+        resetPassword,
         logout,
         clearError,
         updateUser,

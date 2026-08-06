@@ -6,6 +6,7 @@ import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
 import GoogleUsernameStep from '../components/Auth/GoogleUsernameStep';
 import CheckEmailPanel from '../components/Auth/CheckEmailPanel';
+import ForgotPasswordForm from '../components/Auth/ForgotPasswordForm';
 import AuthLanding, { AuthLandingMode } from '../components/Auth/AuthLanding';
 import AuthLandingClosing from '../components/Auth/AuthLandingClosing';
 import AuthLandingFree from '../components/Auth/AuthLandingFree';
@@ -58,6 +59,7 @@ const AuthPage: React.FC = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [googlePending, setGooglePending] = useState<GooglePendingSignup | null>(null);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState<string | null>(null);
   const [pendingEmailVerification, setPendingEmailVerification] = useState<PendingEmailVerification | null>(
     () => readPendingEmailVerification()
   );
@@ -86,25 +88,38 @@ const AuthPage: React.FC = () => {
   }, []);
 
   const showCheckEmail =
-    Boolean(pendingEmailVerification) && !pendingEmailDismissed && !googlePending;
+    Boolean(pendingEmailVerification) &&
+    !pendingEmailDismissed &&
+    !googlePending &&
+    forgotPasswordEmail === null;
+  const showForgotPassword = forgotPasswordEmail !== null && !googlePending;
 
   useEffect(() => {
-    if (!googlePending && !showCheckEmail) {
+    if (!googlePending && !showCheckEmail && !showForgotPassword) {
       return;
     }
     window.requestAnimationFrame(() => {
       document.getElementById(AUTH_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
-  }, [googlePending, showCheckEmail]);
+  }, [googlePending, showCheckEmail, showForgotPassword]);
 
   const handleNeedsEmailVerification = useCallback((email: string, resendAvailableInSeconds: number) => {
     const pending = savePendingEmailVerification(email, resendAvailableInSeconds);
     setPendingEmailVerification(pending);
     setPendingEmailDismissed(false);
     setGooglePending(null);
+    setForgotPasswordEmail(null);
     setIsLogin(true);
     setRegistrationSuccess(false);
   }, []);
+
+  const handleForgotPassword = useCallback((email: string) => {
+    setForgotPasswordEmail(email);
+    setGooglePending(null);
+    setPendingEmailDismissed(true);
+    setRegistrationSuccess(false);
+    clearError();
+  }, [clearError]);
 
   const handleResendVerification = useCallback(
     async (email: string) => {
@@ -124,6 +139,7 @@ const AuthPage: React.FC = () => {
   const handleSwitchToRegister = () => {
     setLoginPrefill(null);
     setRegistrationSuccess(false);
+    setForgotPasswordEmail(null);
     setIsLogin(false);
   };
 
@@ -135,11 +151,13 @@ const AuthPage: React.FC = () => {
       setLoginPrefill(null);
       setRegistrationSuccess(false);
     }
+    setForgotPasswordEmail(null);
     setIsLogin(true);
   };
 
   const scrollToAuth = useCallback((mode: AuthLandingMode) => {
     setIsLogin(mode === 'login');
+    setForgotPasswordEmail(null);
     if (mode === 'register') {
       setLoginPrefill(null);
       setRegistrationSuccess(false);
@@ -219,6 +237,15 @@ const AuthPage: React.FC = () => {
                     }
                   }}
                 />
+              ) : showForgotPassword ? (
+                <ForgotPasswordForm
+                  initialEmail={forgotPasswordEmail || ''}
+                  onBack={() => {
+                    setForgotPasswordEmail(null);
+                    clearError();
+                    setIsLogin(true);
+                  }}
+                />
               ) : showCheckEmail && pendingEmailVerification ? (
                 <CheckEmailPanel
                   email={pendingEmailVerification.email}
@@ -234,6 +261,7 @@ const AuthPage: React.FC = () => {
               ) : isLogin ? (
                 <LoginForm
                   onSwitchToRegister={handleSwitchToRegister}
+                  onForgotPassword={handleForgotPassword}
                   initialEmail={loginPrefill?.email}
                   initialPassword={loginPrefill?.password}
                   showRegistrationSuccess={registrationSuccess}

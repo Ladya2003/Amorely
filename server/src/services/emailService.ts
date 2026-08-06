@@ -1,6 +1,11 @@
 import { Resend } from 'resend';
 import { getPrimaryClientBaseUrl } from '../utils/clientBaseUrl';
 import {
+  buildPasswordResetEmailHtml,
+  buildPasswordResetEmailSubject,
+  buildPasswordResetEmailText,
+} from './emailTemplates/passwordResetEmail';
+import {
   buildVerificationEmailHtml,
   buildVerificationEmailSubject,
   buildVerificationEmailText,
@@ -64,5 +69,35 @@ export async function sendVerificationEmail(email: string, token: string): Promi
   if (error) {
     console.error('[email] Failed to send verification email:', error);
     throw new Error('Failed to send verification email');
+  }
+}
+
+export const buildPasswordResetUrl = (token: string): string => {
+  const base = getPrimaryClientBaseUrl();
+  return `${base}/reset-password?token=${encodeURIComponent(token)}`;
+};
+
+export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  const resetUrl = buildPasswordResetUrl(token);
+  const resend = getResendClient();
+
+  if (!resend) {
+    console.warn('[email] RESEND_API_KEY is not set. Password reset link:', resetUrl);
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: getFromAddress(),
+    to: email,
+    subject: buildPasswordResetEmailSubject(),
+    html: buildPasswordResetEmailHtml(resetUrl),
+    text: buildPasswordResetEmailText(resetUrl),
+  });
+
+  if (error) {
+    // Log the link so local/dev can still complete the flow when Resend rejects the send
+    // (e.g. free tier only delivers to the Resend account email).
+    console.error('[email] Failed to send password reset email:', error, 'Reset link:', resetUrl);
+    throw new Error('Failed to send password reset email');
   }
 }
