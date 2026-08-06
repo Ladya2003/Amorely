@@ -45,6 +45,8 @@ jobs:
           # CRA в CI падает на eslint warnings — локально они только в консоли
           CI: false
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+          # Same Web OAuth client ID as server GOOGLE_CLIENT_ID (not a secret, but keep in Secrets)
+          REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
         run: npm run build
 
       - name: Upload Pages artifact

@@ -325,7 +325,7 @@ const buildRootIndexHtml = (byLocale) => {
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Amorely" />
-    <!-- SEO_META_START -->
+    <!--! SEO_META_START -->
     <title>${e(en.documentTitle)}</title>
     <meta
       name="description"
@@ -360,7 +360,7 @@ ${ogAlternates}
       content="${e(en.ogDescription)}"
     />
     <meta name="twitter:image" content="${SITE_ORIGIN}/logo512.png" />
-    <!-- SEO_META_END -->
+    <!--! SEO_META_END -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -368,9 +368,9 @@ ${ogAlternates}
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <!-- SEO_JSONLD_START -->
+    <!--! SEO_JSONLD_START -->
 ${enJsonLd}
-    <!-- SEO_JSONLD_END -->
+    <!--! SEO_JSONLD_END -->
     <script type="text/javascript">
       // GitHub Pages: восстановление маршрута после 404.html
       (function (l) {
@@ -413,7 +413,7 @@ ${languageLinks}
       Per-locale pages: public/{lang}/index.html (dev) and build/{lang}/ (postbuild).
     -->
     <div id="root">
-      <!-- SEO_BOOTSTRAP_START -->
+      <!--! SEO_BOOTSTRAP_START -->
       <main class="seo-bootstrap">
 ${enLandingBlock}
         <nav aria-label="Amorely languages">
@@ -422,7 +422,7 @@ ${languageLinks}
           </ul>
         </nav>
       </main>
-      <!-- SEO_BOOTSTRAP_END -->
+      <!--! SEO_BOOTSTRAP_END -->
     </div>
   </body>
 </html>
@@ -448,9 +448,9 @@ const buildPublicLocaleIndexHtml = (lang, landing, byLocale) => {
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Amorely" />
-    <!-- SEO_META_START -->
+    <!--! SEO_META_START -->
 ${metaHtml}
-    <!-- SEO_META_END -->
+    <!--! SEO_META_END -->
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -458,9 +458,9 @@ ${metaHtml}
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <!-- SEO_JSONLD_START -->
+    <!--! SEO_JSONLD_START -->
 ${jsonLdHtml}
-    <!-- SEO_JSONLD_END -->
+    <!--! SEO_JSONLD_END -->
     <script type="text/javascript">
       // GitHub Pages: восстановление маршрута после 404.html
       (function (l) {
@@ -500,11 +500,11 @@ ${jsonLdHtml}
       Locale landing HTML for Ctrl+U / crawlers (dev: public/{lang}/; prod: postbuild).
     -->
     <div id="root">
-      <!-- SEO_BOOTSTRAP_START -->
+      <!--! SEO_BOOTSTRAP_START -->
       <main class="seo-bootstrap">
 ${bootstrapHtml}
       </main>
-      <!-- SEO_BOOTSTRAP_END -->
+      <!--! SEO_BOOTSTRAP_END -->
     </div>
   </body>
 </html>

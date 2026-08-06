@@ -41,17 +41,18 @@ const payloads = JSON.parse(fs.readFileSync(payloadsPath, 'utf8'));
 for (const [lang, payload] of Object.entries(payloads)) {
   let html = rootHtml;
   html = html.replace(/<html\s+lang="[^"]*"/i, `<html lang="${payload.htmlLang}"`);
-  html = replaceBetween(html, '<!-- SEO_META_START -->', '<!-- SEO_META_END -->', payload.metaHtml);
+  // <!--! ... --> survives CRA html-minifier (removeComments keeps /^!/ comments)
+  html = replaceBetween(html, '<!--! SEO_META_START -->', '<!--! SEO_META_END -->', payload.metaHtml);
   html = replaceBetween(
     html,
-    '<!-- SEO_JSONLD_START -->',
-    '<!-- SEO_JSONLD_END -->',
+    '<!--! SEO_JSONLD_START -->',
+    '<!--! SEO_JSONLD_END -->',
     payload.jsonLdHtml
   );
   html = replaceBetween(
     html,
-    '<!-- SEO_BOOTSTRAP_START -->',
-    '<!-- SEO_BOOTSTRAP_END -->',
+    '<!--! SEO_BOOTSTRAP_START -->',
+    '<!--! SEO_BOOTSTRAP_END -->',
     payload.bootstrapHtml
   );
 
