@@ -91,7 +91,7 @@ export const getPetHintSurfaceSx = (theme: Theme) => ({
   }),
 });
 
-export type PageTopGlowIntensity = 'default' | 'soft';
+export type PageTopGlowIntensity = 'default' | 'soft' | 'muted';
 
 export const getPageTopGlowBackground = (
   theme: Theme,
@@ -102,17 +102,36 @@ export const getPageTopGlowBackground = (
   const isLight = theme.palette.mode === 'light';
 
   if (isLight) {
-    if (intensity === 'soft') {
-      return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.26)} 0%, ${alpha(primary.main, 0.07)} 44%, ${fadeTo} 74%)`;
+    switch (intensity) {
+      case 'muted':
+        return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.17)} 0%, ${alpha(primary.main, 0.045)} 44%, ${fadeTo} 74%)`;
+      case 'soft':
+        return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.26)} 0%, ${alpha(primary.main, 0.07)} 44%, ${fadeTo} 74%)`;
+      case 'default':
+        return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.58)} 0%, ${alpha(primary.main, 0.16)} 44%, ${fadeTo} 74%)`;
+      default: {
+        const _exhaustive: never = intensity;
+        return _exhaustive;
+      }
     }
-    return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.light, 0.58)} 0%, ${alpha(primary.main, 0.16)} 44%, ${fadeTo} 74%)`;
   }
 
-  return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.main, 0.38)} 0%, ${alpha(primary.dark, 0.24)} 42%, ${fadeTo} 74%)`;
+  switch (intensity) {
+    case 'muted':
+      return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.main, 0.24)} 0%, ${alpha(primary.dark, 0.14)} 42%, ${fadeTo} 74%)`;
+    case 'soft':
+    case 'default':
+      return `radial-gradient(120% 72% at 50% -6%, ${alpha(primary.main, 0.38)} 0%, ${alpha(primary.dark, 0.24)} 42%, ${fadeTo} 74%)`;
+    default: {
+      const _exhaustive: never = intensity;
+      return _exhaustive;
+    }
+  }
 };
 
 type FullBleedTopGlowOptions = {
   top?: { xs: number; sm: number };
+  height?: { xs: number; sm: number };
   /** На desktop glow рисует Layout от верха страницы — локальный ::before скрываем. */
   hideOnDesktop?: boolean;
 };
@@ -123,7 +142,11 @@ const getFullBleedTopGlowBeforeSx = (
   intensity: PageTopGlowIntensity,
   options: FullBleedTopGlowOptions = {}
 ) => {
-  const { top = { xs: 0, sm: 0 }, hideOnDesktop = false } = options;
+  const {
+    top = { xs: 0, sm: 0 },
+    height = { xs: 300, sm: 320 },
+    hideOnDesktop = false,
+  } = options;
 
   return {
     content: '""',
@@ -133,7 +156,7 @@ const getFullBleedTopGlowBeforeSx = (
     right: { xs: 0, sm: 'auto' },
     width: { xs: 'auto', sm: '100vw' },
     transform: { xs: 'none', sm: 'translateX(-50%)' },
-    height: { xs: 300, sm: 320 },
+    height,
     background: getPageTopGlowBackground(theme, 'transparent', intensity),
     pointerEvents: 'none' as const,
     ...(hideOnDesktop ? { display: { xs: 'block', sm: 'none' } } : {}),
@@ -178,6 +201,10 @@ export const getPetPageBackdropSx = (theme: Theme) => ({
 type ChatDialogBackdropOptions = {
   /** Локальный glow на desktop (auth, диалог чата). Иначе на sm+ рисует Layout. */
   containGlow?: boolean;
+  /** Высота top-glow; по умолчанию { xs: 300, sm: 320 }. */
+  glowHeight?: { xs: number; sm: number };
+  /** Интенсивность top-glow; по умолчанию soft. */
+  glowIntensity?: PageTopGlowIntensity;
 };
 
 /** Фон диалога чата и вкладок (чат, календарь, новости, настройки) */
@@ -188,8 +215,9 @@ export const getChatDialogBackdropSx = (theme: Theme, options?: ChatDialogBackdr
   bgcolor: options?.containGlow
     ? theme.palette.background.default
     : { xs: theme.palette.background.default, sm: 'transparent' },
-  '&::before': getFullBleedTopGlowBeforeSx(theme, 'soft', {
+  '&::before': getFullBleedTopGlowBeforeSx(theme, options?.glowIntensity ?? 'soft', {
     hideOnDesktop: !options?.containGlow,
+    height: options?.glowHeight,
   }),
 });
 
