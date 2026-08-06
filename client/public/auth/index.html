@@ -5,12 +5,29 @@
     <title>Amorely</title>
     <link rel="canonical" href="https://amorely.love/" />
     <meta name="robots" content="noindex" />
-    <meta http-equiv="refresh" content="0;url=/" />
+    <meta http-equiv="refresh" content="0;url=/en" />
     <script type="text/javascript">
-      location.replace('/');
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem('locale');
+        } catch (e) {}
+        var browser = (navigator.language || '').toLowerCase();
+        var supported = ['ru', 'en', 'es', 'de', 'fr', 'pt', 'uk'];
+        var pick = 'ru';
+        if (stored && supported.indexOf(stored) !== -1) {
+          pick = stored;
+        } else {
+          var base = browser.split('-')[0];
+          if (supported.indexOf(base) !== -1) {
+            pick = base;
+          }
+        }
+        location.replace('/' + pick);
+      })();
     </script>
   </head>
   <body>
-    <p><a href="/">Continue to Amorely</a></p>
+    <p><a href="/en">Continue to Amorely</a></p>
   </body>
 </html>

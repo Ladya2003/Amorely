@@ -1249,7 +1249,11 @@
     "password": "Contraseña",
     "togglePasswordVisibility": "Mostrar u ocultar contraseña",
     "landing": {
-      "documentTitle": "Amorely — app para parejas | chat, calendario, recuerdos",
+      "documentTitle": "Amorely — app gratis para parejas | chat, calendario, recuerdos",
+      "documentDescription": "Amorely es un espacio privado completamente gratis para parejas: chat cifrado, calendario compartido, feed de fotos, juegos y preguntas del día — para la distancia y el día a día.",
+      "documentKeywords": "app para parejas, app gratis para parejas, relación a distancia, calendario compartido, chat de pareja, Amorely",
+      "ogTitle": "Amorely — app privada gratis para parejas",
+      "ogDescription": "Completamente gratis: chat, calendario compartido, feed de fotos, juegos y preguntas del día en un espacio privado para los dos.",
       "ariaLabel": "Resumen de Amorely",
       "heroTitle": "Un espacio privado solo para los dos",
       "heroLead": "Feed compartido, preguntas del día, mascotas, ideas de citas, chat cifrado, juegos en pareja y un calendario con fotos — cerca o a distancia.",
@@ -1309,9 +1313,20 @@
           "imageAlt": "Calendario compartido con miniaturas de fotos por día"
         }
       },
+      "free": {
+        "ariaLabel": "Amorely es completamente gratis",
+        "title": "Completamente gratis para parejas",
+        "lead": "Sin suscripciones, sin funciones de pago ni cargos ocultos. Crea una cuenta, invita a tu pareja y usen todo juntos.",
+        "points": {
+          "noPaywall": "Chat, calendario, feed, juegos y más — todo gratis, sin paywall",
+          "fullAccess": "Acceso completo desde el primer día para ambos",
+          "invitePartner": "Invita a tu pareja y abrid vuestro espacio privado en minutos"
+        },
+        "cta": "Crear cuenta gratis"
+      },
       "closing": {
         "ariaLabel": "Por qué las parejas eligen Amorely",
-        "title": "Hecho para la cercanía — y la privacidad",
+        "title": "Por qué nos eligen",
         "lead": "Sus chats, calendario y recuerdos quedan entre ustedes dos. Empiecen gratis, inviten a su pareja y mantengan los pequeños rituales.",
         "values": {
           "private": {
@@ -1329,6 +1344,36 @@
         },
         "footerBrand": "Amorely",
         "footerNote": "Un espacio privado para parejas: unirse, jugar y recordar."
+      },
+      "faq": {
+        "ariaLabel": "Preguntas frecuentes",
+        "title": "Preguntas frecuentes",
+        "items": {
+          "free": {
+            "question": "¿Amorely es completamente gratis?",
+            "answer": "Sí. Amorely es completamente gratis: crea una cuenta, invita a tu pareja y disfruta del chat, calendario, feed, juegos y más sin paywall."
+          },
+          "private": {
+            "question": "¿El chat es privado?",
+            "answer": "Sí. El chat de pareja usa cifrado de extremo a extremo: solo ustedes dos pueden leer los mensajes, ni siquiera Amorely."
+          },
+          "partner": {
+            "question": "¿Ambos necesitan una cuenta?",
+            "answer": "Sí. Cada uno crea una cuenta gratis y luego uno envía una solicitud de pareja para compartir un espacio privado."
+          },
+          "distance": {
+            "question": "¿Sirve para parejas a distancia?",
+            "answer": "Sí. Amorely está pensado para parejas cerca o lejos: mantened la cercanía con chat, feed compartido, preguntas del día, juegos y calendario fotográfico entre husos horarios."
+          },
+          "features": {
+            "question": "¿Qué se puede hacer en Amorely?",
+            "answer": "Chat cifrado, feed de fotos compartido, preguntas del día, mascota compartida, ideas de citas, hitos de días juntos, juegos en pareja y un calendario con fotos."
+          },
+          "devices": {
+            "question": "¿Hay que instalar una app?",
+            "answer": "No. Amorely funciona en el navegador en móvil y escritorio, y puedes añadirlo a la pantalla de inicio como PWA."
+          }
+        }
       }
     },
     "login": {

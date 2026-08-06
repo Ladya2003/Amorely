@@ -268,6 +268,103 @@ export const getAuthLandingFooterMetaSx = () => ({
   lineHeight: 1.45,
 });
 
+export const getAuthLandingFreeSx = (theme: Theme) => ({
+  textAlign: 'center' as const,
+  maxWidth: 640,
+  mx: 'auto',
+  mb: { xs: 14, sm: 18 },
+  px: { xs: 2, sm: 3 },
+  py: { xs: 4.5, sm: 5.5 },
+  borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+  border: getSurfaceBorder(theme, 'soft'),
+  ...getPrimaryTintSurface(theme, {
+    tint: { light: 0.1, dark: 0.18 },
+  }),
+});
+
+export const getAuthLandingFreeTitleSx = () => ({
+  fontWeight: 700,
+  fontSize: { xs: '1.5rem', sm: '1.85rem' },
+  letterSpacing: '-0.03em',
+  lineHeight: 1.15,
+  mb: 1.5,
+});
+
+export const getAuthLandingFreeLeadSx = () => ({
+  fontSize: { xs: '1rem', sm: '1.0625rem' },
+  color: 'text.secondary',
+  lineHeight: 1.55,
+  maxWidth: 480,
+  mx: 'auto',
+  mb: { xs: 2.5, sm: 3 },
+});
+
+export const getAuthLandingFreePointsSx = () => ({
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: 1.25,
+  textAlign: 'left' as const,
+  maxWidth: 420,
+  mx: 'auto',
+});
+
+export const getAuthLandingFreePointSx = () => ({
+  fontSize: '0.9375rem',
+  color: 'text.secondary',
+  lineHeight: 1.5,
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 1,
+});
+
+export const getAuthLandingFaqSx = () => ({
+  maxWidth: 640,
+  mx: 'auto',
+  mb: { xs: 2, sm: 3 },
+  mt: { xs: 10, sm: 12 },
+});
+
+export const getAuthLandingFaqTitleSx = () => ({
+  fontWeight: 700,
+  fontSize: { xs: '1.35rem', sm: '1.65rem' },
+  letterSpacing: '-0.03em',
+  lineHeight: 1.2,
+  textAlign: 'center' as const,
+  mb: { xs: 2.5, sm: 3 },
+});
+
+export const getAuthLandingFaqAccordionSx = (theme: Theme) => ({
+  bgcolor: 'transparent',
+  backgroundImage: 'none',
+  boxShadow: 'none',
+  borderBottom: getSurfaceBorder(theme, 'soft'),
+  '&:before': { display: 'none' },
+  '&.Mui-expanded': { margin: 0 },
+});
+
+export const getAuthLandingFaqSummarySx = () => ({
+  px: 0,
+  minHeight: 52,
+  '& .MuiAccordionSummary-content': {
+    my: 1.25,
+  },
+});
+
+export const getAuthLandingFaqQuestionSx = () => ({
+  fontWeight: 600,
+  fontSize: '0.9375rem',
+  letterSpacing: '-0.01em',
+  lineHeight: 1.4,
+  pr: 1,
+});
+
+export const getAuthLandingFaqAnswerSx = () => ({
+  fontSize: '0.875rem',
+  color: 'text.secondary',
+  lineHeight: 1.55,
+  pb: 1.5,
+});
+
 export const getAuthScrollTopFabSx = (theme: Theme) => ({
   position: 'fixed' as const,
   right: { xs: 16, sm: 24 },

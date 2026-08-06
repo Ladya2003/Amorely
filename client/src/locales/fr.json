@@ -1249,7 +1249,11 @@
     "password": "Mot de passe",
     "togglePasswordVisibility": "Afficher ou masquer le mot de passe",
     "landing": {
-      "documentTitle": "Amorely — appli pour couples | chat, calendrier, souvenirs",
+      "documentTitle": "Amorely — appli gratuite pour couples | chat, calendrier, souvenirs",
+      "documentDescription": "Amorely est un espace privé entièrement gratuit pour les couples : chat chiffré, calendrier partagé, fil photo, jeux et questions du jour — à distance ou au quotidien.",
+      "documentKeywords": "appli pour couples, appli gratuite couple, relation à distance, calendrier partagé, chat de couple, Amorely",
+      "ogTitle": "Amorely — appli privée gratuite pour couples",
+      "ogDescription": "Entièrement gratuit : chat, calendrier partagé, fil photo, jeux et questions du jour dans un espace privé pour vous deux.",
       "ariaLabel": "Présentation d'Amorely",
       "heroTitle": "Un espace privé rien que pour vous deux",
       "heroLead": "Fil partagé, questions du jour, animaux, idées de rendez-vous, chat chiffré, jeux à deux et calendrier photo — proches ou à distance.",
@@ -1309,9 +1313,20 @@
           "imageAlt": "Calendrier partagé rempli de miniatures photo pour chaque jour"
         }
       },
+      "free": {
+        "ariaLabel": "Amorely est entièrement gratuit",
+        "title": "Entièrement gratuit pour les couples",
+        "lead": "Pas d'abonnements, pas de fonctions payantes ni de frais cachés. Créez un compte, invitez votre partenaire et utilisez tout ensemble.",
+        "points": {
+          "noPaywall": "Chat, calendrier, fil, jeux et plus — tout gratuit, sans paywall",
+          "fullAccess": "Accès complet dès le premier jour pour vous deux",
+          "invitePartner": "Invitez votre partenaire et lancez votre espace privé en quelques minutes"
+        },
+        "cta": "Créer un compte gratuit"
+      },
       "closing": {
         "ariaLabel": "Pourquoi les couples choisissent Amorely",
-        "title": "Pensé pour la proximité — et la vie privée",
+        "title": "Pourquoi on nous choisit",
         "lead": "Vos chats, calendrier et souvenirs restent entre vous deux. Commencez gratuitement, invitez votre partenaire et gardez vos petits rituels.",
         "values": {
           "private": {
@@ -1329,6 +1344,36 @@
         },
         "footerBrand": "Amorely",
         "footerNote": "Un espace privé pour les couples — se rapprocher, jouer et se souvenir."
+      },
+      "faq": {
+        "ariaLabel": "Questions fréquentes",
+        "title": "Questions fréquentes",
+        "items": {
+          "free": {
+            "question": "Amorely est-il entièrement gratuit ?",
+            "answer": "Oui. Amorely est entièrement gratuit — créez un compte, invitez votre partenaire et profitez du chat, du calendrier, du fil, des jeux et plus sans paywall."
+          },
+          "private": {
+            "question": "Le chat est-il privé ?",
+            "answer": "Oui. Le chat de couple utilise le chiffrement de bout en bout : seuls vous deux pouvez lire les messages, pas même Amorely."
+          },
+          "partner": {
+            "question": "Les deux partenaires doivent-ils avoir un compte ?",
+            "answer": "Oui. Chacun crée un compte gratuit, puis l'un envoie une demande de partenaire pour partager un espace privé."
+          },
+          "distance": {
+            "question": "Amorely convient-il aux couples à distance ?",
+            "answer": "Oui. Amorely est conçu pour les couples proches ou loin — restez proches via le chat, un fil partagé, des questions du jour, des jeux et un calendrier photo entre fuseaux horaires."
+          },
+          "features": {
+            "question": "Que peut-on faire dans Amorely ?",
+            "answer": "Chat chiffré, fil photo partagé, questions du jour, animal partagé, idées de rendez-vous, jalons des jours ensemble, jeux à deux et calendrier photo."
+          },
+          "devices": {
+            "question": "Faut-il installer une application ?",
+            "answer": "Non. Amorely fonctionne dans le navigateur sur mobile et ordinateur, et vous pouvez l'ajouter à l'écran d'accueil en PWA."
+          }
+        }
       }
     },
     "login": {

@@ -5,11 +5,13 @@ import LoginForm from '../components/Auth/LoginForm';
 import RegisterForm from '../components/Auth/RegisterForm';
 import AuthLanding, { AuthLandingMode } from '../components/Auth/AuthLanding';
 import AuthLandingClosing from '../components/Auth/AuthLandingClosing';
+import AuthLandingFree from '../components/Auth/AuthLandingFree';
 import RevealOnScroll from '../components/Auth/RevealOnScroll';
 import LanguageSelector from '../components/UI/LanguageSelector';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { shouldUseBilingualLanguageLabelOnLogin } from '../localization/locale';
+import { applyLandingDocumentSeo } from '../localization/landingSeo';
 import {
   getAuthLandingCtaButtonSx,
   getAuthPageCardSx,
@@ -30,7 +32,7 @@ const AUTH_SECTION_ID = 'auth-section';
 const SCROLL_TOP_SHOW_OFFSET = 480;
 
 const AuthPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const [isLogin, setIsLogin] = useState(true);
   const [loginPrefill, setLoginPrefill] = useState<{ email: string; password: string } | null>(null);
@@ -38,12 +40,15 @@ const AuthPage: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    const previousTitle = document.title;
-    document.title = t('auth.landing.documentTitle');
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [t]);
+    return applyLandingDocumentSeo({
+      language: i18n.language,
+      title: t('auth.landing.documentTitle'),
+      description: t('auth.landing.documentDescription'),
+      keywords: t('auth.landing.documentKeywords'),
+      ogTitle: t('auth.landing.ogTitle'),
+      ogDescription: t('auth.landing.ogDescription'),
+    });
+  }, [t, i18n.language]);
 
   useEffect(() => {
     const updateVisibility = () => {
@@ -104,7 +109,10 @@ const AuthPage: React.FC = () => {
             </Typography>
           </Box>
           <Box sx={getAuthPageTopBarActionsSx()}>
-            <LanguageSelector bilingualLabel={shouldUseBilingualLanguageLabelOnLogin()} />
+            <LanguageSelector
+              bilingualLabel={shouldUseBilingualLanguageLabelOnLogin()}
+              syncLandingPath
+            />
             <Button
               variant="contained"
               color="primary"
@@ -126,6 +134,8 @@ const AuthPage: React.FC = () => {
 
       <Container maxWidth="md" sx={getAuthPageContainerSx()}>
         <AuthLanding onScrollToAuth={scrollToAuth} />
+
+        <AuthLandingFree onScrollToAuth={scrollToAuth} />
 
         <RevealOnScroll>
           <Box id={AUTH_SECTION_ID} sx={getAuthSectionSx()}>

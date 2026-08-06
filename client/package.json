@@ -41,8 +41,13 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "seo:landing": "node scripts/generate-landing-seo.mjs",
+    "seo:inject-locales": "node scripts/inject-locale-landings.mjs",
+    "prestart": "npm run seo:landing",
+    "prebuild": "npm run seo:landing",
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "postbuild": "npm run seo:inject-locales",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

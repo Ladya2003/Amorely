@@ -1249,7 +1249,11 @@
     "password": "Passwort",
     "togglePasswordVisibility": "Passwort anzeigen oder ausblenden",
     "landing": {
-      "documentTitle": "Amorely — App für Paare | Chat, Kalender, Erinnerungen",
+      "documentTitle": "Amorely — kostenlose App für Paare | Chat, Kalender, Erinnerungen",
+      "documentDescription": "Amorely ist ein völlig kostenloser privater Raum für Paare: verschlüsselter Chat, gemeinsamer Kalender, Foto-Feed, Spiele und Tagesfragen — für Fernbeziehungen und den Alltag.",
+      "documentKeywords": "App für Paare, kostenlose Paar-App, Fernbeziehung, gemeinsamer Kalender, Paar-Chat, Amorely",
+      "ogTitle": "Amorely — kostenlose private App für Paare",
+      "ogDescription": "Völlig kostenlos: Chat, gemeinsamer Kalender, Foto-Feed, Spiele und Tagesfragen in einem privaten Raum für euch beide.",
       "ariaLabel": "Amorely Produktübersicht",
       "heroTitle": "Ein privater Raum nur für euch beide",
       "heroLead": "Gemeinsamer Feed, Tagesfragen, Haustiere, Date-Ideen, verschlüsselter Chat, Paarspiele und ein Foto-Kalender — nah oder fern.",
@@ -1309,9 +1313,20 @@
           "imageAlt": "Gemeinsamer Kalender mit Foto-Miniaturen für jeden Tag"
         }
       },
+      "free": {
+        "ariaLabel": "Amorely ist völlig kostenlos",
+        "title": "Völlig kostenlos für Paare",
+        "lead": "Keine Abos, keine bezahlten Features, keine versteckten Kosten. Konto erstellen, Partner einladen und alles gemeinsam nutzen.",
+        "points": {
+          "noPaywall": "Chat, Kalender, Feed, Spiele und mehr — alles kostenlos, ohne Paywall",
+          "fullAccess": "Voller Zugang ab Tag eins für euch beide",
+          "invitePartner": "Partner einladen und in Minuten euren privaten Raum starten"
+        },
+        "cta": "Kostenloses Konto erstellen"
+      },
       "closing": {
         "ariaLabel": "Warum Paare Amorely wählen",
-        "title": "Für Nähe — und für Privatsphäre",
+        "title": "Warum Paare uns wählen",
         "lead": "Chats, Kalender und Erinnerungen bleiben zwischen euch beiden. Startet kostenlos, ladet euren Partner ein und pflegt eure kleinen Rituale.",
         "values": {
           "private": {
@@ -1329,6 +1344,36 @@
         },
         "footerBrand": "Amorely",
         "footerNote": "Ein privater Raum für Paare — zum Verbinden, Spielen und Erinnern."
+      },
+      "faq": {
+        "ariaLabel": "Häufige Fragen",
+        "title": "Häufige Fragen",
+        "items": {
+          "free": {
+            "question": "Ist Amorely völlig kostenlos?",
+            "answer": "Ja. Amorely ist völlig kostenlos — Konto erstellen, Partner einladen und Chat, Kalender, Feed, Spiele und mehr ohne Paywall nutzen."
+          },
+          "private": {
+            "question": "Ist der Chat privat?",
+            "answer": "Ja. Der Paar-Chat nutzt Ende-zu-Ende-Verschlüsselung — nur ihr beide könnt die Nachrichten lesen, nicht einmal Amorely."
+          },
+          "partner": {
+            "question": "Brauchen beide Partner ein Konto?",
+            "answer": "Ja. Jeder erstellt ein kostenloses Konto, dann sendet einer eine Partneranfrage — und ihr teilt einen privaten Raum."
+          },
+          "distance": {
+            "question": "Funktioniert Amorely für Fernbeziehungen?",
+            "answer": "Ja. Amorely ist für Paare nah und fern gemacht — bleibt nah mit Chat, gemeinsamen Feed, Tagesfragen, Spielen und Fotokalender über Zeitzonen hinweg."
+          },
+          "features": {
+            "question": "Was können wir in Amorely tun?",
+            "answer": "Verschlüsselter Chat, gemeinsamer Foto-Feed, Tagesfragen, gemeinsames Haustier, Date-Ideen, Meilensteine eurer gemeinsamen Tage, Paarspiele und ein Fotokalender."
+          },
+          "devices": {
+            "question": "Muss ich eine App installieren?",
+            "answer": "Nein. Amorely läuft im Browser auf Handy und Desktop und lässt sich als PWA zum Startbildschirm hinzufügen."
+          }
+        }
       }
     },
     "login": {

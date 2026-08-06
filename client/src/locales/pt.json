@@ -1249,7 +1249,11 @@
     "password": "Palavra-passe",
     "togglePasswordVisibility": "Mostrar ou ocultar palavra-passe",
     "landing": {
-      "documentTitle": "Amorely — app para casais | chat, calendário, memórias",
+      "documentTitle": "Amorely — app grátis para casais | chat, calendário, memórias",
+      "documentDescription": "Amorely é um espaço privado completamente gratuito para casais: chat encriptado, calendário partilhado, feed de fotos, jogos e perguntas do dia — perto ou à distância.",
+      "documentKeywords": "app para casais, app grátis para casais, relacionamento à distância, calendário partilhado, chat de casal, Amorely",
+      "ogTitle": "Amorely — app privada grátis para casais",
+      "ogDescription": "Completamente grátis: chat, calendário partilhado, feed de fotos, jogos e perguntas do dia num espaço privado para vocês dois.",
       "ariaLabel": "Visão geral do Amorely",
       "heroTitle": "Um espaço privado só para vocês dois",
       "heroLead": "Feed partilhado, perguntas do dia, pets, ideias de encontros, chat encriptado, jogos a dois e calendário com fotos — perto ou à distância.",
@@ -1309,9 +1313,20 @@
           "imageAlt": "Calendário partilhado com miniaturas de fotos em cada dia"
         }
       },
+      "free": {
+        "ariaLabel": "O Amorely é completamente gratuito",
+        "title": "Completamente gratuito para casais",
+        "lead": "Sem subscrições, sem funcionalidades pagas nem taxas escondidas. Criem uma conta, convidem o parceiro e usem tudo juntos.",
+        "points": {
+          "noPaywall": "Chat, calendário, feed, jogos e mais — tudo grátis, sem paywall",
+          "fullAccess": "Acesso total desde o primeiro dia para os dois",
+          "invitePartner": "Convidem o parceiro e abram o vosso espaço privado em minutos"
+        },
+        "cta": "Criar conta grátis"
+      },
       "closing": {
         "ariaLabel": "Porque os casais escolhem o Amorely",
-        "title": "Feito para a proximidade — e para a privacidade",
+        "title": "Porque nos escolhem",
         "lead": "Os vossos chats, calendário e memórias ficam entre vocês dois. Começem grátis, convidem o parceiro e mantenham os pequenos rituais.",
         "values": {
           "private": {
@@ -1329,6 +1344,36 @@
         },
         "footerBrand": "Amorely",
         "footerNote": "Um espaço privado para casais — aproximar, jogar e lembrar."
+      },
+      "faq": {
+        "ariaLabel": "Perguntas frequentes",
+        "title": "Perguntas frequentes",
+        "items": {
+          "free": {
+            "question": "O Amorely é completamente gratuito?",
+            "answer": "Sim. O Amorely é completamente gratuito — criem uma conta, convidem o parceiro e usem chat, calendário, feed, jogos e mais sem paywall."
+          },
+          "private": {
+            "question": "O chat é privado?",
+            "answer": "Sim. O chat do casal usa encriptação ponta a ponta: só vocês dois podem ler as mensagens — nem o Amorely."
+          },
+          "partner": {
+            "question": "Os dois precisam de conta?",
+            "answer": "Sim. Cada um cria uma conta grátis e depois um envia um pedido de parceiro para partilharem um espaço privado."
+          },
+          "distance": {
+            "question": "Serve para casais à distância?",
+            "answer": "Sim. O Amorely foi feito para casais perto ou longe — fiquem próximos com chat, feed partilhado, perguntas do dia, jogos e calendário de fotos entre fusos horários."
+          },
+          "features": {
+            "question": "O que se pode fazer no Amorely?",
+            "answer": "Chat encriptado, feed de fotos partilhado, perguntas do dia, pet partilhado, ideias de encontros, marcos dos dias juntos, jogos a dois e calendário com fotos."
+          },
+          "devices": {
+            "question": "É preciso instalar uma app?",
+            "answer": "Não. O Amorely funciona no browser no telemóvel e no computador, e podem adicioná-lo ao ecrã inicial como PWA."
+          }
+        }
       }
     },
     "login": {

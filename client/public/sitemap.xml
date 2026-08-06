@@ -1,8 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://amorely.love/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://amorely.love/en</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://amorely.love/en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amorely.love/ru" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amorely.love/uk" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amorely.love/de" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amorely.love/es" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amorely.love/fr" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://amorely.love/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amorely.love/" />
+  </url>
+  <url>
+    <loc>https://amorely.love/ru</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://amorely.love/en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amorely.love/ru" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amorely.love/uk" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amorely.love/de" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amorely.love/es" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amorely.love/fr" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://amorely.love/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amorely.love/" />
+  </url>
+  <url>
+    <loc>https://amorely.love/uk</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://amorely.love/en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amorely.love/ru" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amorely.love/uk" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amorely.love/de" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amorely.love/es" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amorely.love/fr" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://amorely.love/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amorely.love/" />
+  </url>
+  <url>
+    <loc>https://amorely.love/de</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://amorely.love/en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amorely.love/ru" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amorely.love/uk" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amorely.love/de" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amorely.love/es" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amorely.love/fr" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://amorely.love/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amorely.love/" />
+  </url>
+  <url>
+    <loc>https://amorely.love/es</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://amorely.love/en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amorely.love/ru" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amorely.love/uk" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amorely.love/de" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amorely.love/es" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amorely.love/fr" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://amorely.love/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amorely.love/" />
+  </url>
+  <url>
+    <loc>https://amorely.love/fr</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://amorely.love/en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amorely.love/ru" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amorely.love/uk" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amorely.love/de" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amorely.love/es" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amorely.love/fr" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://amorely.love/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amorely.love/" />
+  </url>
+  <url>
+    <loc>https://amorely.love/pt</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://amorely.love/en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amorely.love/ru" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amorely.love/uk" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amorely.love/de" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amorely.love/es" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amorely.love/fr" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://amorely.love/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amorely.love/" />
   </url>
 </urlset>

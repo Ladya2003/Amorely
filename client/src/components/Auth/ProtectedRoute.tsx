@@ -3,7 +3,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
 import { Box, CircularProgress } from '@mui/material';
-import AuthPage from '../../pages/AuthPage';
+import {
+  getLandingPath,
+  resolvePreferredLandingLocale,
+} from '../../localization/landingLocale';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -27,12 +30,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, bypassCryptoC
   }
 
   if (!isAuthenticated) {
-    // Landing must stay on `/` so GitHub Pages serves index.html (200) for Ctrl+U / SEO.
-    // `/auth` used to 404 at the CDN layer because it is not a real static file.
-    if (location.pathname !== '/') {
-      return <Navigate to="/" replace />;
-    }
-    return <AuthPage />;
+    // Guests land on localized marketing pages (`/ru`, `/es`, …), not the app shell.
+    const landingPath = getLandingPath(resolvePreferredLandingLocale());
+    return <Navigate to={landingPath} replace state={{ from: location }} />;
   }
 
   if (!bypassCryptoCheck && !isCryptoReady) {

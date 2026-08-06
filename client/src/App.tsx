@@ -23,11 +23,17 @@ import PetDetailPage from './pages/PetDetailPage';
 import DatingIdeasPage from './pages/DatingIdeasPage';
 import AdminPage from './pages/AdminPage';
 import AdminRoute from './components/Auth/AdminRoute';
+import LandingRoute from './components/Auth/LandingRoute';
 import PartnerBreakupNotifier from './components/Settings/PartnerBreakupNotifier';
 import BlockNoticeSnackbar from './components/Auth/BlockNoticeSnackbar';
 import CalendarPartnerMigrationRunner from './components/Calendar/CalendarPartnerMigrationRunner';
 import CurrencyAwardOverlay from './components/Pets/CurrencyAwardOverlay';
 import AppDateLocalizationProvider from './components/UI/AppDateLocalizationProvider';
+import {
+  LANDING_LOCALES,
+  getLandingPath,
+  resolvePreferredLandingLocale,
+} from './localization/landingLocale';
 
 const PushNavigationListener: React.FC = () => {
   const navigate = useNavigate();
@@ -99,8 +105,13 @@ function App() {
               <UnreadNewsProvider>
               <PendingPartnerRequestsProvider>
               <Routes>
-                {/* Старый URL лендинга → `/` (на GitHub Pages `/auth` отдаёт 404.html) */}
-                <Route path="/auth" element={<Navigate to="/" replace />} />
+                {/* Старый URL лендинга → preferred locale (GH Pages: `/auth` goes via 404.html) */}
+                <Route
+                  path="/auth"
+                  element={
+                    <Navigate to={getLandingPath(resolvePreferredLandingLocale())} replace />
+                  }
+                />
 
                 {/* Защищенный маршрут восстановления ключей */}
                 <Route
@@ -112,7 +123,13 @@ function App() {
                   }
                 />
 
-                {/* `/` — лендинг для гостей, приложение для авторизованных */}
+                {/* Localized marketing landings for guests (`/en`, `/ru`, `/es`, …).
+                    Explicit paths — do not use `/:lang` or it can steal `/chat` etc. */}
+                {LANDING_LOCALES.map((lang) => (
+                  <Route key={lang} path={`/${lang}`} element={<LandingRoute />} />
+                ))}
+
+                {/* `/` and app routes — authenticated shell; guests redirect to `/{locale}` */}
                 <Route
                   path="/"
                   element={
@@ -141,8 +158,12 @@ function App() {
                   />
                 </Route>
 
-                {/* Перенаправление на главную страницу для неизвестных маршрутов */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route
+                  path="*"
+                  element={
+                    <Navigate to={getLandingPath(resolvePreferredLandingLocale())} replace />
+                  }
+                />
               </Routes>
               </PendingPartnerRequestsProvider>
               </UnreadNewsProvider>

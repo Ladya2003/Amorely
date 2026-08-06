@@ -15,6 +15,7 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import TranslateRoundedIcon from '@mui/icons-material/TranslateRounded';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   AppLocale,
@@ -24,6 +25,7 @@ import {
   SUPPORTED_LOCALES,
   resolveAppLocale,
 } from '../../localization/locale';
+import { getLandingPath, isLandingLocaleSegment } from '../../localization/landingLocale';
 import { persistAppLocale } from '../../localization/localeSync';
 import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from '../../theme/surfaceStyles';
 
@@ -34,15 +36,19 @@ interface LanguageSelectorProps {
   size?: 'small' | 'medium';
   fullWidth?: boolean;
   bilingualLabel?: boolean;
+  /** When on `/{lang}` landing, change language by navigating to the sibling path. */
+  syncLandingPath?: boolean;
 }
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   size = 'small',
   fullWidth = false,
   bilingualLabel = false,
+  syncLandingPath = false,
 }) => {
   const theme = useTheme();
   const menuId = useId();
+  const location = useLocation();
   const { t, i18n } = useTranslation();
   const { user, token, updateUser } = useAuth();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -60,12 +66,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       return;
     }
 
+    const pathSegment = location.pathname.split('/').filter(Boolean)[0];
+    const onLandingPath = syncLandingPath && isLandingLocaleSegment(pathSegment);
+
     void persistAppLocale(locale, {
       userId: user?._id,
       token: token ?? undefined,
     }).then((savedLocale) => {
       if (user) {
         updateUser({ ...user, locale: savedLocale });
+      }
+      if (onLandingPath) {
+        // Full reload so Ctrl+U / document source match the locale HTML
+        // (client-side navigate keeps the previously loaded index.html).
+        window.location.assign(
+          `${getLandingPath(savedLocale)}${location.search}${location.hash}`
+        );
+        return;
       }
     });
   };

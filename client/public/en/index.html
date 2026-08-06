@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual" />
     <meta name="theme-color" content="#ff4b8d" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -23,7 +23,7 @@
     />
     <meta name="author" content="Amorely" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <link rel="canonical" href="https://amorely.love/" />
+    <link rel="canonical" href="https://amorely.love/en" />
     <link rel="alternate" hreflang="en" href="https://amorely.love/en" />
     <link rel="alternate" hreflang="ru" href="https://amorely.love/ru" />
     <link rel="alternate" hreflang="uk" href="https://amorely.love/uk" />
@@ -46,7 +46,7 @@
       property="og:description"
       content="Completely free: chat, shared calendar, photo feed, games, and daily questions in one private space for you and your partner."
     />
-    <meta property="og:url" content="https://amorely.love/" />
+    <meta property="og:url" content="https://amorely.love/en" />
     <meta property="og:image" content="https://amorely.love/logo512.png" />
     <meta property="og:image:alt" content="Amorely logo" />
     <meta property="og:image:width" content="512" />
@@ -59,7 +59,7 @@
     />
     <meta name="twitter:image" content="https://amorely.love/logo512.png" />
     <!-- SEO_META_END -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -114,7 +114,7 @@
           "inLanguage": "en",
           "target": {
             "@type": "EntryPoint",
-            "urlTemplate": "https://amorely.love/#auth-section",
+            "urlTemplate": "https://amorely.love/en#auth-section",
             "actionPlatform": [
               "https://schema.org/DesktopWebPlatform",
               "https://schema.org/MobileWebPlatform"
@@ -128,7 +128,7 @@
         "@context": "https://schema.org",
         "@type": "WebApplication",
         "name": "Amorely",
-        "url": "https://amorely.love/",
+        "url": "https://amorely.love/en",
         "description": "Amorely is a completely free private space for couples: encrypted chat, shared calendar, photo feed, games, and daily questions — for long-distance and everyday love.",
         "applicationCategory": "LifestyleApplication",
         "operatingSystem": "Web",
@@ -241,152 +241,19 @@
         display: none !important;
       }
     </style>
+    <!-- CRA dev bundle; production postbuild replaces this file with hashed assets -->
+    <script defer src="/static/js/bundle.js"></script>
   </head>
   <body>
     <noscript>
       <div style="max-width:40rem;margin:2rem auto;padding:0 1rem;font-family:system-ui,sans-serif;line-height:1.5">
-        <div lang="en">
-          <header>
-            <p>Amorely</p>
-            <h2>A private space just for the two of you</h2>
-            <p>Stay close with a shared feed, daily questions, pets, date ideas, encrypted chat, couple games, and a photo calendar — wherever you are.</p>
-            <p>
-              <a href="/en#auth-section">Sign in</a>
-              ·
-              <a href="/en#auth-section">Sign up</a>
-            </p>
-          </header>
-
-          <section aria-label="Amorely product overview">
-            <h2>What you can do together</h2>
-            <article>
-              <h3>See each other — and your moments</h3>
-              <p>Avatars show how far you are, while the feed brings back shared photos and notes from everyday life.</p>
-            </article>
-            <article>
-              <h3>Questions of the day</h3>
-              <p>Answer playful prompts together — compare answers, revisit history, and learn something new about each other.</p>
-            </article>
-            <article>
-              <h3>Grow a pet together</h3>
-              <p>Care for a shared companion: feed it, raise affection, and watch it level up as your little ritual.</p>
-            </article>
-            <article>
-              <h3>Date ideas for two</h3>
-              <p>Get inspired with ready-made date ideas, mark what you completed, and keep planning the next adventure.</p>
-            </article>
-            <article>
-              <h3>Count your days together</h3>
-              <p>Track how long you’ve been a couple, chase milestones, unlock achievements, and keep your story visible.</p>
-            </article>
-            <article>
-              <h3>Encrypted chat for two</h3>
-              <p>Send texts, photos, and little check-ins in a private chat — only the two of you can read it.</p>
-            </article>
-            <article>
-              <h3>Guess the location</h3>
-              <p>Look at a place photo, drop your pin on the map, and play rounds side by side against the clock.</p>
-            </article>
-            <article>
-              <h3>Compare guesses, share the score</h3>
-              <p>See how close each of you got, add up the pair score, and climb today’s challenge together.</p>
-            </article>
-            <article>
-              <h3>Draw &amp; guess</h3>
-              <p>Sketch a prompt while your partner guesses — brushes, colors, and laughs included.</p>
-            </article>
-            <article>
-              <h3>A calendar full of memories</h3>
-              <p>Turn dates into a photo diary: create events, spot special days, and browse your months as a gallery.</p>
-            </article>
-          </section>
-
-          <section aria-label="Amorely is completely free">
-            <h2>Completely free for couples</h2>
-            <p>No subscriptions, no paywalled features, no hidden fees. Create an account, invite your partner, and use everything together.</p>
-            <ul>
-              <li>Chat, calendar, feed, games, and more — all free, with no paywall</li>
-              <li>Full access from day one for both of you</li>
-              <li>Invite your partner and start your private space in minutes</li>
-            </ul>
-          </section>
-
-          <section aria-label="Why couples choose Amorely">
-            <h1>Why couples choose us</h1>
-            <p>Your chats, calendar, and memories stay between the two of you. Start free, invite your partner, and keep the little rituals going.</p>
-            <ul>
-              <li>
-                <strong>Private by design</strong> —
-                Encrypted chat and personal moments meant for your pair, not a public feed.
-              </li>
-              <li>
-                <strong>Made for two</strong> —
-                Games, questions, pets, and shared plans that only make sense together.
-              </li>
-              <li>
-                <strong>Near or far</strong> —
-                Stay in sync whether you share a city or live across time zones.
-              </li>
-            </ul>
-          </section>
-
-          <section aria-label="Frequently asked questions" itemscope itemtype="https://schema.org/FAQPage">
-            <h2>Frequently asked questions</h2>
-            <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-              <h3 itemprop="name">Is Amorely completely free?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text">Yes. Amorely is completely free to use — create an account, invite your partner, and enjoy chat, calendar, feed, games, and more with no paywall.</p>
-              </div>
-            </div>
-            <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-              <h3 itemprop="name">Is chat private?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text">Yes. Couple chat uses end-to-end encryption so only the two of you can read your messages — not even Amorely.</p>
-              </div>
-            </div>
-            <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-              <h3 itemprop="name">Do both partners need an account?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text">Yes. Each partner creates a free account, then one sends a partner request so you can share a private space together.</p>
-              </div>
-            </div>
-            <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-              <h3 itemprop="name">Does Amorely work for long-distance couples?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text">Yes. Amorely is built for couples near or far — stay close with chat, a shared feed, daily questions, games, and a photo calendar across time zones.</p>
-              </div>
-            </div>
-            <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-              <h3 itemprop="name">What can we do in Amorely?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text">You get encrypted chat, a shared photo feed, questions of the day, a shared pet, date ideas, days-together milestones, couple games, and a photo calendar.</p>
-              </div>
-            </div>
-            <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-              <h3 itemprop="name">Do I need to install an app?</h3>
-              <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-                <p itemprop="text">No install required. Amorely works in the browser on phone and desktop, and you can add it to your home screen as a PWA.</p>
-              </div>
-            </div>
-          </section>
-        </div>
-        <nav aria-label="Amorely languages">
-          <ul>
-            <li lang="en"><a href="/en">Amorely — free private app for couples | chat, calendar, memories</a></li>
-            <li lang="ru"><a href="/ru">Amorely — бесплатное приложение для пар | чат, календарь, воспоминания</a></li>
-            <li lang="uk"><a href="/uk">Amorely — безкоштовний застосунок для пар | чат, календар, спогади</a></li>
-            <li lang="de"><a href="/de">Amorely — kostenlose App für Paare | Chat, Kalender, Erinnerungen</a></li>
-            <li lang="es"><a href="/es">Amorely — app gratis para parejas | chat, calendario, recuerdos</a></li>
-            <li lang="fr"><a href="/fr">Amorely — appli gratuite pour couples | chat, calendrier, souvenirs</a></li>
-            <li lang="pt"><a href="/pt">Amorely — app grátis para casais | chat, calendário, memórias</a></li>
-          </ul>
-        </nav>
+        <h1>Amorely</h1>
+        <p lang="en">Amorely is a completely free private space for couples: encrypted chat, shared calendar, photo feed, games, and daily questions — for long-distance and everyday love.</p>
+        <p><a href="/en#auth-section">Sign up</a></p>
       </div>
     </noscript>
     <!--
-      Root = English x-default landing + language switcher.
-      Guests are redirected by React to /{locale}; crawlers still see full EN SEO here.
-      Per-locale pages: public/{lang}/index.html (dev) and build/{lang}/ (postbuild).
+      Locale landing HTML for Ctrl+U / crawlers (dev: public/{lang}/; prod: postbuild).
     -->
     <div id="root">
       <!-- SEO_BOOTSTRAP_START -->
@@ -516,17 +383,6 @@
             </div>
           </section>
         </div>
-        <nav aria-label="Amorely languages">
-          <ul>
-            <li lang="en"><a href="/en">Amorely — free private app for couples | chat, calendar, memories</a></li>
-            <li lang="ru"><a href="/ru">Amorely — бесплатное приложение для пар | чат, календарь, воспоминания</a></li>
-            <li lang="uk"><a href="/uk">Amorely — безкоштовний застосунок для пар | чат, календар, спогади</a></li>
-            <li lang="de"><a href="/de">Amorely — kostenlose App für Paare | Chat, Kalender, Erinnerungen</a></li>
-            <li lang="es"><a href="/es">Amorely — app gratis para parejas | chat, calendario, recuerdos</a></li>
-            <li lang="fr"><a href="/fr">Amorely — appli gratuite pour couples | chat, calendrier, souvenirs</a></li>
-            <li lang="pt"><a href="/pt">Amorely — app grátis para casais | chat, calendário, memórias</a></li>
-          </ul>
-        </nav>
       </main>
       <!-- SEO_BOOTSTRAP_END -->
     </div>
