@@ -1,9 +1,18 @@
-type SupportedLocale = 'ru' | 'en' | 'es' | 'de' | 'fr' | 'pt' | 'uk';
+type SupportedLocale = 'ru' | 'en' | 'es' | 'de' | 'fr' | 'pt' | 'uk' | 'by';
 
 const normalizeLocale = (locale?: string): SupportedLocale => {
   const code = (locale || 'ru').slice(0, 2).toLowerCase();
-  if (code === 'en' || code === 'es' || code === 'de' || code === 'fr' || code === 'pt' || code === 'uk') {
-    return code;
+  if (
+    code === 'en' ||
+    code === 'es' ||
+    code === 'de' ||
+    code === 'fr' ||
+    code === 'pt' ||
+    code === 'uk' ||
+    code === 'by' ||
+    code === 'be'
+  ) {
+    return code === 'be' ? 'by' : code;
   }
   return 'ru';
 };
@@ -25,6 +34,9 @@ const pluralize = (value: number, forms: [string, string, string]): string => {
   return forms[2];
 };
 
+const isSlavicLocale = (loc: SupportedLocale): loc is 'ru' | 'uk' | 'by' =>
+  loc === 'ru' || loc === 'uk' || loc === 'by';
+
 export const formatTimeRemaining = (msRemaining: number, locale?: string): string => {
   const loc = normalizeLocale(locale);
   const totalMinutes = Math.max(0, Math.ceil(msRemaining / (60 * 1000)));
@@ -35,7 +47,9 @@ export const formatTimeRemaining = (msRemaining: number, locale?: string): strin
   const parts: string[] = [];
 
   if (days > 0) {
-    if (loc === 'ru' || loc === 'uk') {
+    if (loc === 'by') {
+      parts.push(`${days} ${pluralize(days, ['дзень', 'дні', 'дзён'])}`);
+    } else if (isSlavicLocale(loc)) {
       parts.push(`${days} ${pluralize(days, ['день', 'дня', 'дней'])}`);
     } else if (loc === 'en') {
       parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
@@ -51,7 +65,9 @@ export const formatTimeRemaining = (msRemaining: number, locale?: string): strin
   }
 
   if (hours > 0) {
-    if (loc === 'ru' || loc === 'uk') {
+    if (loc === 'by') {
+      parts.push(`${hours} ${pluralize(hours, ['гадзіна', 'гадзіны', 'гадзін'])}`);
+    } else if (isSlavicLocale(loc)) {
       parts.push(`${hours} ${pluralize(hours, ['час', 'часа', 'часов'])}`);
     } else if (loc === 'en') {
       parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
@@ -67,7 +83,9 @@ export const formatTimeRemaining = (msRemaining: number, locale?: string): strin
   }
 
   if (parts.length === 0 && minutes > 0) {
-    if (loc === 'ru' || loc === 'uk') {
+    if (loc === 'by') {
+      parts.push(`${minutes} ${pluralize(minutes, ['хвіліна', 'хвіліны', 'хвілін'])}`);
+    } else if (isSlavicLocale(loc)) {
       parts.push(`${minutes} ${pluralize(minutes, ['минута', 'минуты', 'минут'])}`);
     } else if (loc === 'en') {
       parts.push(`${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`);
@@ -86,18 +104,16 @@ export const formatTimeRemaining = (msRemaining: number, locale?: string): strin
     const labels: Record<SupportedLocale, string> = {
       ru: 'менее минуты',
       uk: 'менше хвилини',
+      by: 'менш за хвіліну',
       en: 'less than a minute',
       es: 'menos de un minuto',
       de: 'weniger als eine Minute',
       fr: "moins d'une minute",
-      pt: 'menos de um minuto'
+      pt: 'menos de um minuto',
     };
     return labels[loc];
   }
 
-  if (loc === 'ru' || loc === 'uk') {
-    return parts.join(' ');
-  }
   return parts.join(' ');
 };
 
@@ -112,32 +128,36 @@ export const buildDeadlineReminderText = (
   const templates: Record<SupportedLocale, { initial: string; reminder: string }> = {
     ru: {
       initial: `⏰ Напоминание о дедлайне заметки. Осталось: ${remaining}`,
-      reminder: `⏰ До дедлайна заметки осталось: ${remaining}`
+      reminder: `⏰ До дедлайна заметки осталось: ${remaining}`,
     },
     uk: {
       initial: `⏰ Нагадування про дедлайн нотатки. Залишилось: ${remaining}`,
-      reminder: `⏰ До дедлайну нотатки залишилось: ${remaining}`
+      reminder: `⏰ До дедлайну нотатки залишилось: ${remaining}`,
+    },
+    by: {
+      initial: `⏰ Нагадванне пра дэдлайн нататкі. Засталося: ${remaining}`,
+      reminder: `⏰ Да дэдлайну нататкі засталося: ${remaining}`,
     },
     en: {
       initial: `⏰ Note deadline reminder. Time left: ${remaining}`,
-      reminder: `⏰ Time left until the note deadline: ${remaining}`
+      reminder: `⏰ Time left until the note deadline: ${remaining}`,
     },
     es: {
       initial: `⏰ Recordatorio del plazo de la nota. Queda: ${remaining}`,
-      reminder: `⏰ Queda hasta el plazo de la nota: ${remaining}`
+      reminder: `⏰ Queda hasta el plazo de la nota: ${remaining}`,
     },
     de: {
       initial: `⏰ Erinnerung an die Notiz-Frist. Verbleibend: ${remaining}`,
-      reminder: `⏰ Bis zur Notiz-Frist verbleiben: ${remaining}`
+      reminder: `⏰ Bis zur Notiz-Frist verbleiben: ${remaining}`,
     },
     fr: {
       initial: `⏰ Rappel de l'échéance de la note. Reste : ${remaining}`,
-      reminder: `⏰ Temps restant avant l'échéance de la note : ${remaining}`
+      reminder: `⏰ Temps restant avant l'échéance de la note : ${remaining}`,
     },
     pt: {
       initial: `⏰ Lembrete do prazo da nota. Restam: ${remaining}`,
-      reminder: `⏰ Tempo restante até o prazo da nota: ${remaining}`
-    }
+      reminder: `⏰ Tempo restante até o prazo da nota: ${remaining}`,
+    },
   };
 
   const template = templates[loc];

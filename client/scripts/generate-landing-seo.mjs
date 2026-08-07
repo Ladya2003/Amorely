@@ -17,7 +17,7 @@ const localesDir = path.join(clientRoot, 'src', 'locales');
 const indexPath = path.join(clientRoot, 'public', 'index.html');
 const payloadsPath = path.join(__dirname, 'seo-locale-payloads.json');
 
-const LOCALES = ['en', 'ru', 'uk', 'de', 'es', 'fr', 'pt'];
+const LOCALES = ['en', 'ru', 'uk', 'by', 'de', 'es', 'fr', 'pt'];
 const SITE_ORIGIN = 'https://amorely.love';
 const FEATURE_IDS = [
   'feed',
@@ -39,6 +39,7 @@ const OG_LOCALES = {
   en: 'en_US',
   ru: 'ru_RU',
   uk: 'uk_UA',
+  by: 'be_BY',
   de: 'de_DE',
   es: 'es_ES',
   fr: 'fr_FR',

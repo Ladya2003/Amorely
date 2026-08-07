@@ -8,6 +8,7 @@ import de from '../locales/de.json';
 import fr from '../locales/fr.json';
 import pt from '../locales/pt.json';
 import uk from '../locales/uk.json';
+import by from '../locales/by.json';
 import { resolveAppLocale } from './locale';
 
 const resources = {
@@ -18,6 +19,7 @@ const resources = {
   fr: { translation: fr },
   pt: { translation: pt },
   uk: { translation: uk },
+  by: { translation: by },
 };
 
 const storedLocale = localStorage.getItem('locale');
@@ -29,12 +31,13 @@ i18next
     resources,
     lng: storedLocale ? resolveAppLocale(storedLocale) : undefined,
     fallbackLng: 'ru',
-    supportedLngs: ['ru', 'en', 'es', 'de', 'fr', 'pt', 'uk'],
+    supportedLngs: ['ru', 'en', 'es', 'de', 'fr', 'pt', 'uk', 'by'],
     interpolation: { escapeValue: false },
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'locale',
       caches: ['localStorage'],
+      convertDetectedLanguage: (lng) => resolveAppLocale(lng),
     },
   });
 

@@ -5,6 +5,7 @@ const OG_LOCALES: Record<AppLocale, string> = {
   en: 'en_US',
   ru: 'ru_RU',
   uk: 'uk_UA',
+  by: 'be_BY',
   de: 'de_DE',
   es: 'es_ES',
   fr: 'fr_FR',

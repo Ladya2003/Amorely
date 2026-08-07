@@ -8,6 +8,7 @@ export const DEFAULT_BLOCK_REASONS: Record<AppLocale, string> = {
   fr: 'Votre compte a été bloqué pour violation des règles de la communauté.',
   pt: 'Sua conta foi bloqueada por violar as regras da comunidade.',
   uk: 'Ваш обліковий запис заблоковано за порушення правил спільноти.',
+  by: 'Ваш акаўнт заблакаваны за парушэнне правілаў супольнасці.',
 };
 
 export type BlockReasonsMap = Partial<Record<AppLocale, string>>;

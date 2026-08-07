@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { de, enUS, es, fr, ptBR, ru, uk } from 'date-fns/locale';
+import { be as beDateFns, de, enUS, es, fr, ptBR, ru, uk } from 'date-fns/locale';
 import type { TFunction } from 'i18next';
 import type { Locale } from 'date-fns';
 import { AppLocale, resolveAppLocale } from './locale';
@@ -18,6 +18,7 @@ const DATE_FNS_LOCALES: Record<AppLocale, Locale> = {
   fr,
   pt: ptBR,
   uk,
+  by: beDateFns,
 };
 
 /** ISO-style week: Monday first, Sunday last (matches calendar grid). */

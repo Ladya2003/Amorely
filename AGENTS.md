@@ -42,7 +42,7 @@ Env templates: `server/.env.example`, `client/.env.example`. Never invent or com
 | Calendar | `routes/calendar.ts` | Events + media; feeds content into shared memories |
 | Games | `routes/games.ts`, game state models, `client/src/pages/*Game*` | Quiz, draw, geo, tap, etc. |
 | Pets / currency | `routes/pets.ts`, `currency.ts`, pet models | In-app currency: AmoreCoins |
-| i18n | `client/src/locales/{en,ru,uk,de,es,fr,pt}.json` | User-facing strings go in locale files, not hardcoded |
+| i18n | `client/src/locales/{en,ru,uk,by,de,es,fr,pt}.json` | User-facing strings go in locale files, not hardcoded |
 
 ## Coding conventions
 

@@ -1,4 +1,5 @@
 import {
+  beBY,
   deDE,
   enUS,
   esES,
@@ -17,6 +18,7 @@ const PICKERS_LOCALES: Record<AppLocale, (typeof ruRU)> = {
   fr: frFR,
   pt: ptBR,
   uk: ukUA,
+  by: beBY,
 };
 
 export const getPickersLocaleText = (locale?: string | null) => {

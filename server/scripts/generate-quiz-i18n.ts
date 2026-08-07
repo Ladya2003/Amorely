@@ -23,6 +23,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Amour',
     pt: 'Amor',
     uk: 'Любов',
+    by: 'Каханне',
   },
   cinema: {
     ru: 'Кино',
@@ -32,6 +33,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Cinéma',
     pt: 'Cinema',
     uk: 'Кіно',
+    by: 'Кіно',
   },
   travel: {
     ru: 'Путешествия',
@@ -41,6 +43,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Voyages',
     pt: 'Viagens',
     uk: 'Подорожі',
+    by: 'Падарожжы',
   },
   general: {
     ru: 'Общее',
@@ -50,6 +53,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Général',
     pt: 'Geral',
     uk: 'Загальне',
+    by: 'Агульнае',
   },
   music: {
     ru: 'Музыка',
@@ -59,6 +63,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Musique',
     pt: 'Música',
     uk: 'Музика',
+    by: 'Музыка',
   },
   food: {
     ru: 'Еда и кухня',
@@ -68,6 +73,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Cuisine',
     pt: 'Comida e culinária',
     uk: 'Їжа та кухня',
+    by: 'Ежа і кухня',
   },
   nature: {
     ru: 'Природа и животные',
@@ -77,6 +83,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Nature et animaux',
     pt: 'Natureza e animais',
     uk: 'Природа та тварини',
+    by: 'Прырода і жывёлы',
   },
   holidays: {
     ru: 'Праздники и традиции',
@@ -86,6 +93,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Fêtes et traditions',
     pt: 'Festas e tradições',
     uk: 'Свята та традиції',
+    by: 'Святы і традыцыі',
   },
   loveLanguages: {
     ru: 'Языки любви',
@@ -95,6 +103,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: "Langages de l'amour",
     pt: 'Linguagens do amor',
     uk: 'Мови кохання',
+    by: 'Мовы кахання',
   },
   tech: {
     ru: 'Технологии и интернет',
@@ -104,6 +113,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Technologie et internet',
     pt: 'Tecnologia e internet',
     uk: 'Технології та інтернет',
+    by: 'Тэхналогіі і інтэрнэт',
   },
   sport: {
     ru: 'Спорт',
@@ -113,6 +123,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Sports',
     pt: 'Esportes',
     uk: 'Спорт',
+    by: 'Спорт',
   },
   art: {
     ru: 'Искусство и литература',
@@ -122,6 +133,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Art et littérature',
     pt: 'Arte e literatura',
     uk: 'Мистецтво та література',
+    by: 'Мастацтва і літаратура',
   },
   home: {
     ru: 'Дом и быт',
@@ -131,6 +143,7 @@ const CATEGORY_I18N: Record<string, Record<AppLocale, string>> = {
     fr: 'Maison et quotidien',
     pt: 'Casa e vida diária',
     uk: 'Дім та побут',
+    by: 'Дом і побыт',
   },
 };
 

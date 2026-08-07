@@ -56,7 +56,7 @@ export interface UserDocument extends mongoose.Document {
   role: 'user' | 'admin' | 'system';
   isBlocked?: boolean;
   blockedAt?: Date;
-  blockedReasons?: Partial<Record<'ru' | 'en' | 'es' | 'de' | 'fr' | 'pt' | 'uk', string>>;
+  blockedReasons?: Partial<Record<'ru' | 'en' | 'es' | 'de' | 'fr' | 'pt' | 'uk' | 'by', string>>;
   blockedBy?: mongoose.Types.ObjectId;
   isNewForAdmin?: boolean | null;
   adminAlertsClearedAt?: Date;
@@ -135,6 +135,7 @@ const userSchema = new mongoose.Schema({
     fr: { type: String },
     pt: { type: String },
     uk: { type: String },
+    by: { type: String },
   },
   blockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   isNewForAdmin: { type: Boolean, default: null },

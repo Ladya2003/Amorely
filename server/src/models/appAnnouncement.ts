@@ -32,6 +32,7 @@ const translationsSchema = new mongoose.Schema(
     fr: { type: localeContentSchema, default: undefined },
     pt: { type: localeContentSchema, default: undefined },
     uk: { type: localeContentSchema, default: undefined },
+    by: { type: localeContentSchema, default: undefined },
   },
   { _id: false }
 );

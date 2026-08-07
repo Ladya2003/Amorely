@@ -10,6 +10,7 @@ export const LOCALE_BCP47: Record<AppLocale, string> = {
   fr: 'fr-FR',
   pt: 'pt-BR',
   uk: 'uk-UA',
+  by: 'be-BY',
 };
 
 export const formatLocalizedDate = (

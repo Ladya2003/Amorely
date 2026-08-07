@@ -1,4 +1,4 @@
-export const SUPPORTED_LOCALES = ['ru', 'en', 'es', 'de', 'fr', 'pt', 'uk'] as const;
+export const SUPPORTED_LOCALES = ['ru', 'en', 'es', 'de', 'fr', 'pt', 'uk', 'by'] as const;
 
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
 
@@ -19,6 +19,10 @@ const LOCALE_ALIASES: Record<string, AppLocale> = {
   'pt-br': 'pt',
   uk: 'uk',
   ua: 'uk',
+  by: 'by',
+  // Browser / BCP-47 codes for Belarusian language → app locale `by`
+  be: 'by',
+  'be-by': 'by',
 };
 
 export const resolveLocale = (value: string | null | undefined): AppLocale => {
