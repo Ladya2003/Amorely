@@ -1,6 +1,5 @@
 import { alpha, Theme, keyframes } from '@mui/material/styles';
 import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from '../../../theme/surfaceStyles';
-import { MOBILE_BOTTOM_NAV_FLOAT_OFFSET } from '../../Layout/bottomNavStyles';
 
 export const DATING_IDEAS_INNER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.85);
 
@@ -43,10 +42,14 @@ export const shuffleGlow = keyframes`
   100% { background-position: 0% 50%; }
 `;
 
+/** Чуть больше базового отступа, чтобы карточки не упирались в floating nav */
+const DATING_IDEAS_MOBILE_BOTTOM_OFFSET =
+  'calc(156px + max(16px, env(safe-area-inset-bottom, 0px)))';
+
 export const getDatingIdeasPageRootSx = (theme: Theme) => ({
   py: 2,
   pb: {
-    xs: MOBILE_BOTTOM_NAV_FLOAT_OFFSET,
+    xs: DATING_IDEAS_MOBILE_BOTTOM_OFFSET,
     sm: 4,
   },
   minHeight: '70vh',
