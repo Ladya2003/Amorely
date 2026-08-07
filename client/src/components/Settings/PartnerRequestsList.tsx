@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -26,6 +25,7 @@ import { API_URL } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import BreakupContentDialog from './BreakupContentDialog';
+import { PartnerRequestsSkeleton } from './SettingsSkeletons';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import {
   notifyBreakupInitiated,
@@ -356,9 +356,7 @@ const PartnerRequestsList: React.FC<PartnerRequestsListProps> = ({
       )}
 
       {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress size={32} />
-        </Box>
+        <PartnerRequestsSkeleton />
       ) : error ? (
         <Alert severity="error">{t('settings.partner.requests.errors.loadFailed')}</Alert>
       ) : filter === 'incoming' ? (

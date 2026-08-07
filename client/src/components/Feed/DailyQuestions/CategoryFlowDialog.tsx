@@ -7,6 +7,7 @@ import {
   DialogTitle,
   Typography,
   LinearProgress,
+  Skeleton,
   useTheme,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +15,7 @@ import ResponsiveDialog from '../../UI/ResponsiveDialog';
 import { getAppModalActionsSx } from '../../../theme/modalStyles';
 import type { CategoryDetail, DailyQuestion } from './types';
 import AnswerInput from './AnswerInput';
+import { CategoryFlowSkeleton } from './DailyQuestionsDialogSkeletons';
 import {
   fetchCategoryDetail,
   submitDailyAnswer,
@@ -37,12 +39,14 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [loading, setLoading] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [detail, setDetail] = useState<CategoryDetail | null>(null);
   const [step, setStep] = useState(0);
   const [textValue, setTextValue] = useState('');
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
+  // Скелетон с первого кадра открытия и до появления данных (без мигания пустого диалога)
+  const showSkeleton = Boolean(open && categoryId) && !detail && !loadFailed;
 
   const redirectToResults = useCallback(
     (id: string) => {
@@ -69,13 +73,19 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
       setStep(0);
       setTextValue('');
       setSelectedValue(null);
+      setLoadFailed(false);
       return undefined;
     }
 
     let cancelled = false;
 
     const loadCategory = async () => {
-      setLoading(true);
+      setLoadFailed(false);
+      setDetail(null);
+      setStep(0);
+      setTextValue('');
+      setSelectedValue(null);
+
       try {
         const data = await fetchCategoryDetail(categoryId);
         if (cancelled) return;
@@ -97,10 +107,7 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
       } catch {
         if (!cancelled) {
           setDetail(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
+          setLoadFailed(true);
         }
       }
     };
@@ -195,23 +202,32 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
   return (
     <ResponsiveDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {detail ? `${detail.emoji} ${detail.title}` : t('dailyQuestions.title')}
+        {detail ? (
+          `${detail.emoji} ${detail.title}`
+        ) : showSkeleton ? (
+          <Skeleton variant="text" animation="wave" width="55%" height={28} />
+        ) : (
+          t('dailyQuestions.title')
+        )}
       </DialogTitle>
       <DialogContent>
-        {loading && <LinearProgress sx={{ mb: 2 }} />}
-        {!loading && currentQuestion && (
-          <>
-            <Box sx={getQuestionProgressSx(theme)}>
-              <LinearProgress variant="determinate" value={progress} sx={{ height: 4 }} />
-            </Box>
-            <Typography variant="body2" color="text.secondary" mb={2}>
-              {t('dailyQuestions.questionOf', { current: step + 1, total: questions.length })}
-            </Typography>
-            <Typography variant="h6" fontWeight={600} mb={2.5} color="text.primary">
-              {currentQuestion.text}
-            </Typography>
-            {renderQuestionInput()}
-          </>
+        {showSkeleton ? (
+          <CategoryFlowSkeleton />
+        ) : (
+          currentQuestion && (
+            <>
+              <Box sx={getQuestionProgressSx(theme)}>
+                <LinearProgress variant="determinate" value={progress} sx={{ height: 4 }} />
+              </Box>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                {t('dailyQuestions.questionOf', { current: step + 1, total: questions.length })}
+              </Typography>
+              <Typography variant="h6" fontWeight={600} mb={2.5} color="text.primary">
+                {currentQuestion.text}
+              </Typography>
+              {renderQuestionInput()}
+            </>
+          )
         )}
       </DialogContent>
       <DialogActions sx={getAppModalActionsSx(theme)}>
@@ -222,6 +238,7 @@ const CategoryFlowDialog: React.FC<CategoryFlowDialogProps> = ({
           variant="contained"
           onClick={() => void handleSubmit()}
           disabled={
+            showSkeleton ||
             submitting ||
             !currentQuestion ||
             (currentQuestion.type === 'text' ? !textValue.trim() : !selectedValue)

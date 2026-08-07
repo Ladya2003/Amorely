@@ -3,6 +3,7 @@
 export interface DaysTogetherProps {
   daysCount: number | null;
   relationshipStartDate: string | null;
+  isLoading?: boolean;
   onAddPhoto: (file: File) => void;
   onAddSignature: (signatureDataUrl: string) => void;
   photo?: string;

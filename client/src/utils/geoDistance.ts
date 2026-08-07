@@ -29,29 +29,6 @@ export const isGeolocationSupported = (): boolean =>
   'geolocation' in navigator &&
   window.isSecureContext;
 
-export type GeolocationPermissionState = 'granted' | 'denied' | 'prompt' | 'unknown';
-
-/** Состояние permission без показа диалога. `unknown` — Permissions API недоступен (часто Safari). */
-export const getGeolocationPermissionState = async (): Promise<GeolocationPermissionState> => {
-  if (!isGeolocationSupported()) {
-    return 'denied';
-  }
-
-  if (!navigator.permissions?.query) {
-    return 'unknown';
-  }
-
-  try {
-    const result = await navigator.permissions.query({ name: 'geolocation' });
-    if (result.state === 'granted' || result.state === 'denied' || result.state === 'prompt') {
-      return result.state;
-    }
-    return 'unknown';
-  } catch {
-    return 'unknown';
-  }
-};
-
 export const requestCurrentPosition = (): Promise<GeolocationPosition> =>
   new Promise((resolve, reject) => {
     if (!isGeolocationSupported()) {

@@ -7,7 +7,6 @@ import {
   Button,
   Checkbox,
   Chip,
-  CircularProgress,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -70,6 +69,7 @@ import {
   getCalendarPlansSubtitleSx,
   getCalendarPlansToolbarSx,
 } from './calendarPageStyles';
+import { PlansNotesSkeleton } from './CalendarSkeletons';
 import { getEventMediaPreviewSx } from './calendarDrawerStyles';
 import { EMPTY_PLAN_FILTER, isPlanFilterActive, planNoteMatchesFilter, type PlanFilter } from './planFilterUtils';
 
@@ -871,12 +871,9 @@ const PlansNotes: React.FC<{
       )}
 
       <Box sx={{ flexGrow: 1, overflow: 'auto', position: 'relative' }}>
-        {(isInitialLoading || isRefreshingNotes) && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-            <CircularProgress />
-          </Box>
-        )}
-        {!isInitialLoading && !isRefreshingNotes && notes.length === 0 && (
+        {isInitialLoading || (isRefreshingNotes && notes.length === 0) ? (
+          <PlansNotesSkeleton />
+        ) : notes.length === 0 ? (
           <Box sx={getCalendarPlanEmptySx(theme)}>
             <Typography color="text.secondary">
               {isPlanFilterActive(planFilter)
@@ -888,8 +885,7 @@ const PlansNotes: React.FC<{
                   : t('calendar.plans.empty')}
             </Typography>
           </Box>
-        )}
-        {!isInitialLoading && !isRefreshingNotes && notes.length > 0 && (
+        ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {notes.map((note) => {
               const isCompleted = Boolean(note.completedAt);

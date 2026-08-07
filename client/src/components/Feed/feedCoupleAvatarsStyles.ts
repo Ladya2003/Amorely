@@ -38,17 +38,6 @@ export const getCoupleAvatarsRootSx = () => ({
   overflow: 'visible' as const,
 });
 
-export const getCoupleAvatarsLoaderSx = () => ({
-  width: '100%',
-  maxWidth: COUPLE_ROW_MAX_WIDTH,
-  height: COUPLE_AVATAR_SIZE + COUPLE_BUBBLES_TOP_INSET,
-  mx: 'auto',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-});
-
 export const getCoupleAvatarsRowSx = () => ({
   display: 'flex',
   alignItems: 'flex-end',

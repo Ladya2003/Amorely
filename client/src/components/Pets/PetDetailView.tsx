@@ -8,6 +8,7 @@ import {
   LinearProgress,
   Paper,
   CircularProgress,
+  Skeleton,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
@@ -450,9 +451,92 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   };
 
   if (loading) {
+    const imageMinHeight = embedded ? '36vh' : '50vh';
+
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: embedded ? 4 : 8 }}>
-        <CircularProgress />
+      <Box
+        sx={{
+          py: embedded ? 0 : 2,
+          pb: embedded ? 1 : { xs: MOBILE_BOTTOM_NAV_OFFSET, sm: 2 },
+          ...(glassSurface ? (theme) => getAppGlassSurfaceLightTextSx(theme) : {}),
+        }}
+        aria-busy="true"
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5, gap: 1.5 }}>
+          {onBack && (
+            <IconButton
+              onClick={onBack}
+              aria-label={t('common.back')}
+              size="small"
+              sx={(theme) => ({
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.18),
+                },
+              })}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          )}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Skeleton variant="text" animation="wave" width="48%" height={32} />
+          </Box>
+          {!visitOnly && (
+            <Skeleton variant="rounded" animation="wave" width={72} height={32} sx={{ borderRadius: '16px' }} />
+          )}
+        </Box>
+
+        <Skeleton
+          variant="rounded"
+          animation="wave"
+          sx={{
+            mb: 2.5,
+            minHeight: imageMinHeight,
+            borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+            transform: 'none',
+          }}
+        />
+
+        <Paper
+          elevation={0}
+          sx={(theme) => ({
+            ...getPetSectionPaperSx(theme),
+            p: 2.5,
+            mb: visitOnly ? 0 : 2.5,
+            ...(glassSurface ? getAppGlassSurfaceLightTextSx(theme) : {}),
+          })}
+        >
+          <Skeleton variant="text" animation="wave" width={96} height={28} sx={{ mb: 2 }} />
+          {[0, 1, 2, 3].map((key) => (
+            <Box key={key} sx={{ mb: 1.75 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+                <Skeleton variant="text" animation="wave" width={88} height={20} />
+                <Skeleton variant="text" animation="wave" width={48} height={20} />
+              </Box>
+              <Skeleton variant="rounded" animation="wave" height={10} sx={{ borderRadius: 999 }} />
+            </Box>
+          ))}
+          <Box sx={{ mt: 2 }}>
+            <Skeleton variant="rounded" animation="wave" height={56} sx={{ borderRadius: `${INPUT_BORDER_RADIUS}px` }} />
+          </Box>
+        </Paper>
+
+        {!visitOnly && (
+          <>
+            <Skeleton
+              variant="rounded"
+              animation="wave"
+              height={48}
+              sx={{ mb: 1.5, borderRadius: `${INPUT_BORDER_RADIUS}px` }}
+            />
+            <Skeleton
+              variant="rounded"
+              animation="wave"
+              height={42}
+              sx={{ borderRadius: `${INPUT_BORDER_RADIUS}px` }}
+            />
+          </>
+        )}
       </Box>
     );
   }

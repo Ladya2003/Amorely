@@ -23,6 +23,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import ChatList, { Contact } from '../components/Chat/ChatList';
 import ChatGlobalSearchField from '../components/Chat/ChatGlobalSearchField';
+import { ChatDialogLoadingSkeleton, ChatListSkeleton } from '../components/Chat/ChatSkeletons';
 import ChatDialog, {
   ForwardSourceContext,
   MessageForwardRef,
@@ -2563,7 +2564,7 @@ const ChatPage: React.FC = () => {
   const visualViewportLayout = useVisualViewportLayout(isMobileChatOpen);
   useDisableForeignFormFields(isMobileChatOpen && isIOSDevice());
   const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
-  const showChatListLoadingOverlay = tabValue === 0 && !isChatListReady && !selectedContactId;
+  const showChatListSkeleton = tabValue === 0 && !isChatListReady && !selectedContactId;
   const showChatRulesConsent =
     tabValue === 0 && isChatRulesChecked && !chatRulesAccepted && Boolean(CURRENT_USER_ID);
 
@@ -2660,21 +2661,6 @@ const ChatPage: React.FC = () => {
         overflow: 'hidden',
         ...(isMobileChatOpen ? { flexGrow: 1 } : {}),
       }}>
-        {showChatListLoadingOverlay && (
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: 'background.default',
-              zIndex: (theme) => theme.zIndex.modal + 1
-            }}
-          >
-            <CircularProgress color="primary" />
-          </Box>
-        )}
         {tabValue === 0 ? (
           <Box
             key="chat-tab-panel"
@@ -2705,7 +2691,9 @@ const ChatPage: React.FC = () => {
                 })}
               >
                 <Box sx={getChatListScrollSx()} onScroll={handleSearchListScroll}>
-                {hasSearch ? (
+                {showChatListSkeleton ? (
+                  <ChatListSkeleton />
+                ) : hasSearch ? (
                   <Box>
                     {filteredExistingContacts.length > 0 && (
                       <Box sx={{ mb: 2 }}>
@@ -2844,17 +2832,7 @@ const ChatPage: React.FC = () => {
                     />
                     </Box>
                   ) : isLoadingContacts ? (
-                    <Box
-                      sx={{
-                        height: '100%',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        bgcolor: 'background.default',
-                      }}
-                    >
-                      <CircularProgress color="primary" />
-                    </Box>
+                    <ChatDialogLoadingSkeleton onBack={handleBackToList} />
                   ) : null
                 ) : (
                   <Box

@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, CircularProgress, Paper, Typography, useTheme } from '@mui/material';
+import { Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { fetchDatingIdeas } from '../../../services/datingIdeasService';
 import { PARTNER_CHANGED_EVENT } from '../../../hooks/useRelationship';
+import { usePartnerId } from '../../../hooks/usePartnerId';
 import { getDatingIdeasSectionSx } from './datingIdeasStyles';
 import CurrencyCoinIcon from '../../Pets/CurrencyCoinIcon';
 
@@ -13,6 +14,7 @@ const DatingIdeasSection: React.FC = () => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
+  const partnerId = usePartnerId();
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [cost, setCost] = useState(100);
@@ -49,10 +51,28 @@ const DatingIdeasSection: React.FC = () => {
   }, [load]);
 
   if (loading) {
+    // Без партнёра секция скрыта — не резервируем место, чтобы не прыгала вёрстка
+    if (!partnerId) {
+      return null;
+    }
+
     return (
-      <Paper elevation={0} sx={getDatingIdeasSectionSx(theme)}>
-        <Box display="flex" justifyContent="center" py={2.5}>
-          <CircularProgress size={28} />
+      <Paper
+        elevation={0}
+        sx={{
+          ...getDatingIdeasSectionSx(theme),
+          cursor: 'default',
+          '&:hover': { transform: 'none' },
+        }}
+        aria-busy="true"
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
+          <Skeleton variant="rounded" width={48} height={48} animation="wave" sx={{ borderRadius: '16px', flexShrink: 0 }} />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Skeleton variant="text" width="45%" height={28} animation="wave" />
+            <Skeleton variant="text" width="70%" height={20} animation="wave" sx={{ mt: 0.35 }} />
+          </Box>
+          <Skeleton variant="rounded" width={24} height={24} animation="wave" sx={{ flexShrink: 0 }} />
         </Box>
       </Paper>
     );

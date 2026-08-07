@@ -25,6 +25,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ReportOutlinedIcon from '@mui/icons-material/ReportOutlined';
 import ChatReportModal from './ChatReportModal';
+import { ChatMessagesSkeleton } from './ChatSkeletons';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
@@ -1686,9 +1687,7 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
       onScroll={handleMessagesScroll}
       >
         {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-            <CircularProgress color="primary" />
-          </Box>
+          <ChatMessagesSkeleton />
         ) : (
           <Box
             ref={messagesContentRef}

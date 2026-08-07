@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, IconButton, Typography, CircularProgress, Chip } from '@mui/material';
+import { Box, IconButton, Typography, Skeleton, Chip } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
@@ -122,16 +122,17 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
 
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: 400,
-          ...carouselShellSx,
-        }}
-      >
-        <CircularProgress color="primary" />
+      <Box sx={{ position: 'relative', mb: 3 }}>
+        <Skeleton
+          variant="rounded"
+          animation="wave"
+          height={400}
+          sx={{
+            ...carouselShellSx,
+            bgcolor: 'action.hover',
+            transform: 'none',
+          }}
+        />
       </Box>
     );
   }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { DaysTogetherProps } from './types';
 import { useDaysTogether } from './hooks/useDaysTogether';
@@ -13,6 +13,8 @@ import ExportButton from './components/ExportButton';
 import ColorPicker, { getThemeById } from './components/ColorPicker';
 import SignaturesHistoryDialog from './components/SignaturesHistoryDialog';
 import {
+  DAYS_TOGETHER_ACTION_RADIUS,
+  DAYS_TOGETHER_INNER_RADIUS,
   getDaysTogetherActionsRowSx,
   getDaysTogetherBackgroundGradientSx,
   getDaysTogetherBackgroundPhotoSx,
@@ -31,6 +33,7 @@ const DEFAULT_ROMANTIC_BG =
 const DaysTogether: React.FC<DaysTogetherProps> = ({
   daysCount,
   relationshipStartDate,
+  isLoading = false,
   onAddPhoto,
   onAddSignature,
   photo,
@@ -59,6 +62,38 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
 
   const currentTheme = getThemeById(selectedTheme, t);
   const backgroundPhoto = photo || DEFAULT_ROMANTIC_BG;
+
+  if (isLoading) {
+    return (
+      <Box sx={getDaysTogetherCardSx(theme)} id="days-together" aria-busy="true">
+        <Box sx={{ position: 'relative', zIndex: 2 }}>
+          <Box sx={getDaysTogetherHeroPanelSx(theme)}>
+            <Skeleton variant="text" width="70%" height={44} animation="wave" />
+            <Skeleton variant="text" width="45%" height={28} animation="wave" sx={{ mt: 0.5 }} />
+            <Skeleton variant="text" width="35%" height={22} animation="wave" sx={{ mt: 0.5 }} />
+          </Box>
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            height={72}
+            sx={{ borderRadius: `${DAYS_TOGETHER_INNER_RADIUS}px`, mb: 2 }}
+          />
+          <Box sx={getDaysTogetherActionsRowSx(theme)}>
+            {[0, 1, 2, 3, 4].map((key) => (
+              <Skeleton
+                key={key}
+                variant="rounded"
+                width={44}
+                height={44}
+                animation="wave"
+                sx={{ borderRadius: `${DAYS_TOGETHER_ACTION_RADIUS}px` }}
+              />
+            ))}
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
 
   if (!daysCount || !relationshipStartDate) {
     return (

@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
+  Skeleton,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -26,16 +27,13 @@ import ContactProfileDialog from '../Chat/ContactProfileDialog';
 import CoupleDistanceDialog from './CoupleDistanceDialog';
 import type { Contact } from '../Chat/ChatList';
 import type { Partner } from '../Settings/PartnerForm';
-import {
-  fetchCoupleDistanceStatus,
-  shareLocationSilentlyIfPermitted,
-} from '../../services/coupleDistanceService';
+import { fetchCoupleDistanceStatus } from '../../services/coupleDistanceService';
 import { formatDistanceKm } from '../../utils/geoDistance';
 import {
   COUPLE_AVATAR_SIZE,
+  STATUS_BUBBLE_MAX_WIDTH,
   getCoupleAvatarColumnSx,
   getCoupleAvatarSx,
-  getCoupleAvatarsLoaderSx,
   getCoupleAvatarsRootSx,
   getCoupleAvatarsRowSx,
   getCoupleBubbleAboveAvatarSx,
@@ -161,7 +159,13 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
         sx={getCoupleLockBadgeSx(theme, true)}
       >
         {isLoading ? (
-          <CircularProgress size={16} thickness={5} sx={{ color: 'inherit' }} />
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            width={40}
+            height={14}
+            sx={{ bgcolor: 'action.hover', borderRadius: 1, transform: 'none' }}
+          />
         ) : (
           <>
             {distanceKm != null ? (
@@ -180,8 +184,50 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
 };
 
 export const FeedCoupleAvatarsLoader: React.FC = () => (
-  <Box sx={getCoupleAvatarsLoaderSx()} aria-busy="true" aria-label="Loading">
-    <CircularProgress size={28} />
+  <Box sx={getCoupleAvatarsRootSx()} aria-busy="true">
+    <Box sx={getCoupleAvatarsRowSx()}>
+      <Box sx={getCoupleAvatarColumnSx('left')}>
+        <Box sx={getCoupleBubbleAboveAvatarSx('left')}>
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            width={Math.round(STATUS_BUBBLE_MAX_WIDTH * 0.72)}
+            height={32}
+            sx={{ borderRadius: '16px' }}
+          />
+        </Box>
+        <Skeleton variant="circular" animation="wave" width={COUPLE_AVATAR_SIZE} height={COUPLE_AVATAR_SIZE} />
+      </Box>
+
+      <Box sx={getCoupleConnectorSx()}>
+        <Skeleton
+          variant="rounded"
+          animation="wave"
+          width={56}
+          height={28}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            borderRadius: 999,
+          }}
+        />
+      </Box>
+
+      <Box sx={getCoupleAvatarColumnSx('right')}>
+        <Box sx={getCoupleBubbleAboveAvatarSx('right')}>
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            width={Math.round(STATUS_BUBBLE_MAX_WIDTH * 0.64)}
+            height={32}
+            sx={{ borderRadius: '16px' }}
+          />
+        </Box>
+        <Skeleton variant="circular" animation="wave" width={COUPLE_AVATAR_SIZE} height={COUPLE_AVATAR_SIZE} />
+      </Box>
+    </Box>
   </Box>
 );
 
@@ -195,7 +241,13 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { badges } = useRelationshipBadges();
-  const { myBubbleText, partnerBubbleText, isSaving, updateStatusBubble } = useStatusBubbles();
+  const {
+    myBubbleText,
+    partnerBubbleText,
+    isLoading: isBubblesLoading,
+    isSaving,
+    updateStatusBubble,
+  } = useStatusBubbles();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editText, setEditText] = useState('');
@@ -225,13 +277,11 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
 
     const loadDistance = async () => {
       setIsDistanceLoading(true);
-      let myLocationShared = false;
 
       try {
         const status = await fetchCoupleDistanceStatus();
         if (!cancelled) {
           setDistanceKm(status.distanceKm);
-          myLocationShared = status.myLocationShared;
         }
       } catch {
         if (!cancelled) {
@@ -241,27 +291,6 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
         if (!cancelled) {
           setIsDistanceLoading(false);
         }
-      }
-
-      if (cancelled) {
-        return;
-      }
-
-      // Фоново обновляем координаты без блокировки UI; при ошибке оставляем последние данные
-      const shared = await shareLocationSilentlyIfPermitted({
-        previouslyShared: myLocationShared,
-      });
-      if (cancelled || !shared) {
-        return;
-      }
-
-      try {
-        const nextStatus = await fetchCoupleDistanceStatus();
-        if (!cancelled) {
-          setDistanceKm(nextStatus.distanceKm);
-        }
-      } catch {
-        // оставляем уже показанное расстояние
       }
     };
 
@@ -305,13 +334,23 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
         <Box sx={getCoupleAvatarsRowSx()}>
           <Box sx={getCoupleAvatarColumnSx('left')}>
             <Box sx={getCoupleBubbleAboveAvatarSx('left')}>
-              <StatusThoughtBubble
-                text={myDisplayText}
-                editable
-                tailAlign="left"
-                ariaLabel={t('feed.statusBubble.editAriaLabel')}
-                onClick={handleOpenEdit}
-              />
+              {isBubblesLoading ? (
+                <Skeleton
+                  variant="rounded"
+                  animation="wave"
+                  width={Math.round(STATUS_BUBBLE_MAX_WIDTH * 0.72)}
+                  height={32}
+                  sx={{ borderRadius: '16px' }}
+                />
+              ) : (
+                <StatusThoughtBubble
+                  text={myDisplayText}
+                  editable
+                  tailAlign="left"
+                  ariaLabel={t('feed.statusBubble.editAriaLabel')}
+                  onClick={handleOpenEdit}
+                />
+              )}
             </Box>
             <Box sx={getCoupleUserAvatarWrapSx()}>
               <AvatarGameRankMedal
@@ -345,11 +384,21 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
 
           <Box sx={getCoupleAvatarColumnSx('right')}>
             <Box sx={getCoupleBubbleAboveAvatarSx('right')}>
-              <StatusThoughtBubble
-                text={partnerDisplayText}
-                tailAlign="right"
-                ariaLabel={partnerBubbleAriaLabel}
-              />
+              {isBubblesLoading ? (
+                <Skeleton
+                  variant="rounded"
+                  animation="wave"
+                  width={Math.round(STATUS_BUBBLE_MAX_WIDTH * 0.64)}
+                  height={32}
+                  sx={{ borderRadius: '16px' }}
+                />
+              ) : (
+                <StatusThoughtBubble
+                  text={partnerDisplayText}
+                  tailAlign="right"
+                  ariaLabel={partnerBubbleAriaLabel}
+                />
+              )}
             </Box>
             <AvatarGameRankMedal
               badges={badges}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { Box, Container, Fab, Badge, CircularProgress, Typography, Tooltip, IconButton, useTheme } from '@mui/material';
+import { Box, Container, Fab, Badge, Typography, Tooltip, IconButton, useTheme } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import axios from 'axios';
@@ -64,6 +64,7 @@ const FeedPage: React.FC = () => {
   const [relationshipSignature, setRelationshipSignature] = useState<string | undefined>();
   const [relationshipSignatures, setRelationshipSignatures] = useState<{ user?: string; partner?: string }>({});
   const [relationshipOwnerId, setRelationshipOwnerId] = useState<string | null>(null); // ID владельца отношений
+  const [isRelationshipLoading, setIsRelationshipLoading] = useState(true);
   
   // Состояние для диалогов
   const [addContentDialogOpen, setAddContentDialogOpen] = useState(false);
@@ -153,6 +154,7 @@ const FeedPage: React.FC = () => {
   // Функция для загрузки данных об отношениях
   const fetchUserData = async () => {
     try {
+      setIsRelationshipLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/api/feed/relationship`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -168,6 +170,8 @@ const FeedPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Ошибка при загрузке данных об отношениях:', error);
+    } finally {
+      setIsRelationshipLoading(false);
     }
   };
   
@@ -494,6 +498,7 @@ const FeedPage: React.FC = () => {
         <DaysTogether
           daysCount={daysCount}
           relationshipStartDate={relationshipStartDate}
+          isLoading={isRelationshipLoading}
           onAddPhoto={handleAddPhoto}
           onAddSignature={handleAddSignature}
           photo={relationshipPhoto}

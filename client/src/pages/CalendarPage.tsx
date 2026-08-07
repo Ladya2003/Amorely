@@ -289,8 +289,6 @@ const CalendarPage: React.FC = () => {
     setEventDetailOpen(true);
   };
 
-  const showEventLoadingOverlay = Boolean(eventIdFromUrl) && !eventFromUrlHandled;
-
   const fetchContent = async () => {
     try {
       setIsLoading(true);
@@ -762,22 +760,6 @@ const CalendarPage: React.FC = () => {
 
   return (
     <Box sx={getCalendarPageRootSx(theme)}>
-      {showEventLoadingOverlay && (
-        <Box
-          sx={{
-            position: 'fixed',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'background.default',
-            zIndex: (theme) => theme.zIndex.modal + 1
-          }}
-        >
-          <CircularProgress color="primary" />
-        </Box>
-      )}
-
       <Calendar
         content={content}
         allEvents={allEvents}
@@ -787,7 +769,7 @@ const CalendarPage: React.FC = () => {
         plansRefreshKey={plansRefreshKey}
         noteIdFromUrl={noteIdFromUrl}
         forcePlansTab={Boolean(noteIdFromUrl)}
-        eventsLoading={isLoading}
+        eventsLoading={isLoading || (Boolean(eventIdFromUrl) && !eventFromUrlHandled)}
       />
       
       <EventListDialog

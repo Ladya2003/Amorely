@@ -221,14 +221,6 @@ export const getNewsEmptySx = (theme: Theme) => ({
   ...getPrimaryTintSurface(theme, { tint: { light: 0.08, dark: 0.14 } }),
 });
 
-export const getNewsLoadingWrapSx = () => ({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  flex: 1,
-  minHeight: 240,
-});
-
 export const getNewsDetailRootSx = (theme: Theme) => {
   const base = theme.palette.background.default;
   const glow = getPageTopGlowBackground(theme, base, 'soft');

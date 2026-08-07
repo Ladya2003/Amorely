@@ -7,6 +7,7 @@ import {
   CircularProgress,
   Container,
   IconButton,
+  Skeleton,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -833,11 +834,15 @@ const DatingIdeasPage: React.FC = () => {
             {t('datingIdeas.subtitle')}
           </Typography>
         </Box>
-        <CurrencyBadge balance={balance} size="small" variant="tinted" />
+        {phase === 'loading' ? (
+          <Skeleton variant="rounded" animation="wave" width={72} height={32} sx={{ borderRadius: '16px' }} />
+        ) : (
+          <CurrencyBadge balance={balance} size="small" variant="tinted" />
+        )}
         <IconButton
           onClick={() => setListOpen(true)}
           aria-label={t('datingIdeas.openHistoryList')}
-          disabled={historyItems.length === 0}
+          disabled={phase === 'loading' || historyItems.length === 0}
         >
           <ViewListIcon />
         </IconButton>
@@ -850,8 +855,34 @@ const DatingIdeasPage: React.FC = () => {
       )}
 
       {phase === 'loading' && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
+        <Box
+          aria-busy="true"
+          sx={{
+            ...getGenerateOfferSx(theme),
+            animation: 'none',
+            minHeight: 320,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            width={72}
+            height={72}
+            sx={{ borderRadius: '24px', mb: 2 }}
+          />
+          <Skeleton variant="text" animation="wave" width="55%" height={32} sx={{ mb: 1 }} />
+          <Skeleton variant="text" animation="wave" width="78%" height={20} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" animation="wave" width="62%" height={20} sx={{ mb: 2.5 }} />
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            width={200}
+            height={48}
+            sx={{ borderRadius: 3 }}
+          />
         </Box>
       )}
 

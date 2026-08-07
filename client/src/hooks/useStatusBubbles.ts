@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,17 +14,29 @@ export const useStatusBubbles = () => {
   const { user, token } = useAuth();
   const [statusBubbles, setStatusBubbles] = useState<StatusBubbles | null>(null);
   const [ownerId, setOwnerId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => Boolean(token && user?.partnerId));
   const [isSaving, setIsSaving] = useState(false);
+  /** Скелетон только до первой загрузки; фоновые refresh не мигают плейсхолдером */
+  const hasLoadedOnceRef = useRef(false);
+
+  useEffect(() => {
+    hasLoadedOnceRef.current = false;
+    setIsLoading(Boolean(token && user?.partnerId));
+  }, [token, user?.partnerId]);
 
   const refresh = useCallback(async () => {
     if (!token || !user?.partnerId) {
       setStatusBubbles(null);
       setOwnerId(null);
+      setIsLoading(false);
+      hasLoadedOnceRef.current = false;
       return;
     }
 
-    setIsLoading(true);
+    if (!hasLoadedOnceRef.current) {
+      setIsLoading(true);
+    }
+
     try {
       const response = await axios.get(`${API_URL}/api/feed/relationship/status-bubbles`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -37,10 +49,12 @@ export const useStatusBubbles = () => {
         setStatusBubbles(null);
         setOwnerId(null);
       }
+      hasLoadedOnceRef.current = true;
     } catch (error) {
       console.error('Failed to load status bubbles:', error);
       setStatusBubbles(null);
       setOwnerId(null);
+      hasLoadedOnceRef.current = true;
     } finally {
       setIsLoading(false);
     }

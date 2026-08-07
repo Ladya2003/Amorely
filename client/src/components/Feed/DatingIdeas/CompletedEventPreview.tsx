@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Skeleton, Typography, useTheme } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
@@ -125,9 +125,18 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
         {...swipeHandlers}
       >
         {loading ? (
-          <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-            <CircularProgress size={28} />
-          </Box>
+          <Skeleton
+            variant="rectangular"
+            animation="wave"
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              bgcolor: 'action.hover',
+              transform: 'none',
+            }}
+          />
         ) : hasMedia ? (
           <Box
             sx={{

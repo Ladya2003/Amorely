@@ -4,7 +4,7 @@ import {
   Box,
   Typography,
   Paper,
-  CircularProgress,
+  Skeleton,
   ToggleButtonGroup,
   ToggleButton,
   Fade,
@@ -24,6 +24,7 @@ import { PARTNER_CHANGED_EVENT } from '../../hooks/useRelationship';
 import {
   getPetHintSurfaceSx,
   getPetSectionPaperSx,
+  PET_SCROLL_CARD_WIDTH,
   petCardEnterAnimation,
   petHorizontalScrollSx,
   petScrollItemSx,
@@ -420,7 +421,12 @@ const PetSection: React.FC<PetSectionProps> = ({
           >
             {t('pets.sectionTitle')}
           </Typography>
-          {!isReadonly && <CurrencyBadge balance={balance} variant="tinted" size="small" />}
+          {!isReadonly &&
+            (loading && pets.length === 0 ? (
+              <Skeleton variant="rounded" width={72} height={32} animation="wave" sx={{ borderRadius: '16px' }} />
+            ) : (
+              <CurrencyBadge balance={balance} variant="tinted" size="small" />
+            ))}
         </Box>
 
         {showPartnerTab && (
@@ -441,8 +447,21 @@ const PetSection: React.FC<PetSectionProps> = ({
         )}
 
         {loading && pets.length === 0 && partnerPets.length === 0 ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 220, py: 3 }}>
-            <CircularProgress size={32} />
+          <Box sx={{ ...petHorizontalScrollSx, minHeight: 220 }} aria-busy="true">
+            {[0, 1, 2].map((key) => (
+              <Skeleton
+                key={key}
+                variant="rounded"
+                animation="wave"
+                width={PET_SCROLL_CARD_WIDTH}
+                height={220}
+                sx={{
+                  ...petScrollItemSx,
+                  borderRadius: `${Math.round(SURFACE_BORDER_RADIUS * 0.85)}px`,
+                  flexShrink: 0,
+                }}
+              />
+            ))}
           </Box>
         ) : (
           <Fade in key={view} timeout={320} appear>

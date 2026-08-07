@@ -5,7 +5,7 @@ import {
   Typography,
   Box,
   Chip,
-  CircularProgress,
+  Skeleton,
   useTheme,
 } from '@mui/material';
 import axios from 'axios';
@@ -31,15 +31,55 @@ import {
   getNewsEmptySx,
   getNewsListScrollSx,
   getNewsListStackSx,
-  getNewsLoadingWrapSx,
   getNewsNewBadgeSx,
   getNewsPageHeaderGlowWrapSx,
   getNewsPageHeaderRowSx,
   getNewsPageRootSx,
   getNewsPageTitleSx,
+  NEWS_CHIP_RADIUS,
   newsListRevealSx,
   newsPageEnterSx,
 } from '../components/News/newsPageStyles';
+
+const NewsListSkeleton: React.FC = () => {
+  const theme = useTheme();
+
+  return (
+    <Box sx={getNewsListScrollSx()} aria-busy="true">
+      <Box sx={getNewsListStackSx()}>
+        {[0, 1, 2, 3].map((key) => (
+          <Box
+            key={key}
+            sx={{
+              ...getNewsCardSx(theme),
+              cursor: 'default',
+              pointerEvents: 'none',
+              '&:hover': { transform: 'none' },
+            }}
+          >
+            <Box sx={getNewsCardContentSx()}>
+              <Skeleton variant="text" animation="wave" width="72%" height={26} sx={{ mb: 1 }} />
+              <Box sx={getNewsCardMetaSx()}>
+                <Skeleton variant="text" animation="wave" width={88} height={18} />
+                <Skeleton
+                  variant="rounded"
+                  animation="wave"
+                  width={72}
+                  height={24}
+                  sx={{ borderRadius: `${NEWS_CHIP_RADIUS}px` }}
+                />
+              </Box>
+              <Skeleton variant="text" animation="wave" width="100%" height={18} />
+              <Skeleton variant="text" animation="wave" width="94%" height={18} />
+              <Skeleton variant="text" animation="wave" width="58%" height={18} sx={{ mb: 1 }} />
+              <Skeleton variant="text" animation="wave" width={96} height={18} />
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
 
 const NewsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -205,9 +245,7 @@ const NewsPage: React.FC = () => {
           </Box>
 
           {isLoading ? (
-            <Box sx={getNewsLoadingWrapSx()}>
-              <CircularProgress size={32} />
-            </Box>
+            <NewsListSkeleton />
           ) : news.length === 0 ? (
             <Box sx={{ ...getNewsListScrollSx(), display: 'flex', alignItems: 'center' }}>
               <Box sx={getNewsEmptySx(theme)}>

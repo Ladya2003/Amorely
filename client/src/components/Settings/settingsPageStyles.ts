@@ -313,14 +313,6 @@ export const getSettingsLogoutButtonSx = (theme: Theme) => ({
   },
 });
 
-export const getSettingsLoadingWrapSx = () => ({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  height: '100%',
-  minHeight: 240,
-});
-
 export const getSettingsToggleGroupSx = {
   p: 0.5,
   borderRadius: '20px',

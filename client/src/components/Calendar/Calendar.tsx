@@ -37,6 +37,7 @@ import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterv
 import { formatCalendarMonthYear, getCalendarWeekdays } from '../../localization/calendarHelpers';
 import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
+import { CalendarGridSkeleton, CalendarMonthSkeleton } from './CalendarSkeletons';
 import PlansNotes from './PlansNotes';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -465,9 +466,7 @@ const Calendar: React.FC<CalendarProps> = ({
         {tabValue === 0 ? (
           <Box>
             {eventsLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                <CircularProgress />
-              </Box>
+              view === 'circles' ? <CalendarMonthSkeleton /> : <CalendarGridSkeleton />
             ) : view === 'circles' ? (
               <Box key={monthKey} sx={getCalendarMonthPanelEnterSx(monthDirection)}>
                 <Grid container spacing={1} sx={{ mb: 1 }}>

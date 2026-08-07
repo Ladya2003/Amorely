@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
-  CircularProgress,
   DialogContent,
   DialogTitle,
   IconButton,
   Paper,
+  Skeleton,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import CategoryCard from './CategoryCard';
 import CategoryFlowDialog from './CategoryFlowDialog';
 import CategoryResultsView from './CategoryResultsView';
+import { CategoryResultsSkeleton } from './DailyQuestionsDialogSkeletons';
 import HistoryDialog from './HistoryDialog';
 import CountdownTimer from './CountdownTimer';
 import ResponsiveDialog from '../../UI/ResponsiveDialog';
@@ -27,6 +28,8 @@ import {
   submitDailyAnswer,
 } from '../../../services/dailyQuestionsService';
 import { PARTNER_CHANGED_EVENT } from '../../../hooks/useRelationship';
+import { usePartnerId } from '../../../hooks/usePartnerId';
+import { SURFACE_BORDER_RADIUS } from '../../../theme/surfaceStyles';
 import {
   getDailyQuestionsPaperSx,
   getDailyQuestionsHeaderSx,
@@ -37,6 +40,7 @@ import {
 const DailyQuestionsSection: React.FC = () => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
+  const partnerId = usePartnerId();
   const [state, setState] = useState<DailyQuestionsState | null>(null);
   const [loading, setLoading] = useState(true);
   const [flowCategoryId, setFlowCategoryId] = useState<string | null>(null);
@@ -74,6 +78,7 @@ const DailyQuestionsSection: React.FC = () => {
   const openResults = useCallback(async (categoryId: string, roundKey?: string | null) => {
     setResultsCategoryId(categoryId);
     setResultsRoundKey(roundKey ?? null);
+    setResults(null);
     setResultsLoading(true);
     setNotifySent(false);
     try {
@@ -122,10 +127,31 @@ const DailyQuestionsSection: React.FC = () => {
   };
 
   if (loading) {
+    // Без партнёра секция скрыта — не резервируем место, чтобы не прыгала вёрстка
+    if (!partnerId) {
+      return null;
+    }
+
     return (
-      <Paper elevation={0} sx={getDailyQuestionsPaperSx(theme)}>
-        <Box display="flex" justifyContent="center" py={3}>
-          <CircularProgress size={28} />
+      <Paper elevation={0} sx={getDailyQuestionsPaperSx(theme)} aria-busy="true">
+        <Box sx={getDailyQuestionsHeaderSx()}>
+          <Skeleton variant="text" width={180} height={32} animation="wave" />
+          <Skeleton variant="circular" width={32} height={32} animation="wave" />
+        </Box>
+        <Box sx={getDailyQuestionsCardsRowSx()}>
+          {[0, 1, 2].map((key) => (
+            <Skeleton
+              key={key}
+              variant="rounded"
+              animation="wave"
+              sx={{
+                flex: '1 1 0',
+                minWidth: 0,
+                minHeight: 140,
+                borderRadius: `${Math.round(SURFACE_BORDER_RADIUS * 0.85)}px`,
+              }}
+            />
+          ))}
         </Box>
       </Paper>
     );
@@ -215,8 +241,14 @@ const DailyQuestionsSection: React.FC = () => {
             pr: 1,
           }}
         >
-          <Box component="span" sx={{ minWidth: 0 }}>
-            {results ? `${results.emoji} ${results.title}` : t('dailyQuestions.results')}
+          <Box component="span" sx={{ minWidth: 0, flex: 1 }}>
+            {results ? (
+              `${results.emoji} ${results.title}`
+            ) : resultsLoading ? (
+              <Skeleton variant="text" animation="wave" width="50%" height={28} />
+            ) : (
+              t('dailyQuestions.results')
+            )}
           </Box>
           <IconButton
             onClick={() => {
@@ -231,11 +263,7 @@ const DailyQuestionsSection: React.FC = () => {
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          {resultsLoading && (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress size={32} />
-            </Box>
-          )}
+          {resultsLoading && <CategoryResultsSkeleton />}
           {!resultsLoading && results && (
             <CategoryResultsView
               results={results}

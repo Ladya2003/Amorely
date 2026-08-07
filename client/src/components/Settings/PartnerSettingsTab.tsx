@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import PartnerForm, { type BreakupContentOptions } from './PartnerForm';
 import PartnerRequestsList from './PartnerRequestsList';
+import { PartnerFormSkeleton } from './SettingsSkeletons';
 import { useRelationship } from '../../hooks/useRelationship';
 import { usePartnerRequests } from '../../hooks/usePartnerRequests';
 
@@ -43,9 +44,7 @@ const PartnerSettingsTab: React.FC<PartnerSettingsTabProps> = ({
   return (
     <Box>
       {isRelationshipLoading && !partner && !relationshipStartDate ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress size={32} />
-        </Box>
+        <PartnerFormSkeleton />
       ) : (
         <PartnerForm
           userId={userId}

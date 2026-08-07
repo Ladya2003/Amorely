@@ -5,7 +5,6 @@ import {
   Badge,
   Box,
   Typography,
-  CircularProgress,
   Alert,
   useMediaQuery,
   useTheme,
@@ -27,6 +26,14 @@ import { PrimaryColorPreference } from '../theme/appTheme';
 import SecuritySettings from '../components/Settings/SecuritySettings';
 import NotificationSettings from '../components/Settings/NotificationSettings';
 import LogoutButton from '../components/Settings/LogoutButton';
+import {
+  NotificationSettingsSkeleton,
+  PartnerFormSkeleton,
+  PartnerRequestsSkeleton,
+  ProfileSettingsSkeleton,
+  SecuritySettingsSkeleton,
+  ThemeSettingsSkeleton,
+} from '../components/Settings/SettingsSkeletons';
 import { useAuth } from '../contexts/AuthContext';
 import { usePendingPartnerRequests } from '../contexts/PendingPartnerRequestsContext';
 import { useTabSlideDirection } from '../hooks/useTabSlideDirection';
@@ -43,7 +50,6 @@ import {
   getSettingsBodySx,
   getSettingsContentPanelSx,
   getSettingsContentScrollSx,
-  getSettingsLoadingWrapSx,
   getSettingsNavPanelSx,
   getSettingsNavTabSx,
   getSettingsNavWrapSx,
@@ -450,16 +456,6 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  if (isLoading && !user) {
-    return (
-      <Box sx={getSettingsPageRootSx(muiTheme)}>
-        <Box sx={getSettingsLoadingWrapSx()}>
-          <CircularProgress size={32} />
-        </Box>
-      </Box>
-    );
-  }
-
   if (error) {
     return (
       <Box sx={getSettingsPageRootSx(muiTheme)}>
@@ -469,6 +465,72 @@ const SettingsPage: React.FC = () => {
       </Box>
     );
   }
+
+  const renderTabContent = () => {
+    switch (tabValue) {
+      case 0:
+        return user ? (
+          <ProfileForm
+            user={user}
+            onSave={handleSaveProfile}
+            onBadgePreferenceSaved={handleBadgePreferenceSaved}
+          />
+        ) : (
+          <ProfileSettingsSkeleton />
+        );
+      case 1:
+        return user ? (
+          <PartnerSettingsTab
+            userId={user._id}
+            onAddPartner={handleAddPartner}
+            onRemovePartner={handleRemovePartner}
+            isActionLoading={isLoading}
+          />
+        ) : (
+          <Box>
+            <PartnerFormSkeleton />
+            <PartnerRequestsSkeleton />
+          </Box>
+        );
+      case 2:
+        return isLoading && !user ? (
+          <ThemeSettingsSkeleton />
+        ) : (
+          <ThemeSettings
+            currentTheme={theme}
+            onThemeChange={handleThemeChange}
+            currentPrimaryColor={primaryColor}
+            onPrimaryColorChange={handlePrimaryColorChange}
+          />
+        );
+      case 3:
+        return notificationSettings ? (
+          <NotificationSettings
+            settings={notificationSettings}
+            isAdmin={user?.role === 'admin'}
+            onSettingChange={handleNotificationSettingChange}
+            pushSupported={isPushSupported()}
+            pushPermission={pushPermission}
+            pushSubscribed={pushSubscribed}
+            onPushMasterToggle={handlePushMasterToggle}
+            isEnablingPush={isEnablingPush}
+          />
+        ) : (
+          <NotificationSettingsSkeleton />
+        );
+      case 4:
+        return isLoading && !user ? (
+          <SecuritySettingsSkeleton />
+        ) : (
+          <SecuritySettings
+            onChangePassword={handleChangePassword}
+            isLoading={isLoading}
+          />
+        );
+      default:
+        return <ProfileSettingsSkeleton />;
+    }
+  };
 
   return (
     <Box sx={getSettingsPageRootSx(muiTheme)}>
@@ -533,51 +595,7 @@ const SettingsPage: React.FC = () => {
 
           <Box sx={getSettingsContentPanelSx(muiTheme)}>
             <Box key={tabValue} sx={{ ...getSettingsContentScrollSx(), ...getSettingsTabPanelEnterSx(tabSlideDirection) }}>
-              {tabValue === 0 && user && (
-                <ProfileForm
-                  user={user}
-                  onSave={handleSaveProfile}
-                  onBadgePreferenceSaved={handleBadgePreferenceSaved}
-                />
-              )}
-
-              {tabValue === 1 && user && (
-                <PartnerSettingsTab
-                  userId={user._id}
-                  onAddPartner={handleAddPartner}
-                  onRemovePartner={handleRemovePartner}
-                  isActionLoading={isLoading}
-                />
-              )}
-
-              {tabValue === 2 && (
-                <ThemeSettings
-                  currentTheme={theme}
-                  onThemeChange={handleThemeChange}
-                  currentPrimaryColor={primaryColor}
-                  onPrimaryColorChange={handlePrimaryColorChange}
-                />
-              )}
-
-              {tabValue === 3 && notificationSettings && (
-                <NotificationSettings
-                  settings={notificationSettings}
-                  isAdmin={user?.role === 'admin'}
-                  onSettingChange={handleNotificationSettingChange}
-                  pushSupported={isPushSupported()}
-                  pushPermission={pushPermission}
-                  pushSubscribed={pushSubscribed}
-                  onPushMasterToggle={handlePushMasterToggle}
-                  isEnablingPush={isEnablingPush}
-                />
-              )}
-
-              {tabValue === 4 && (
-                <SecuritySettings
-                  onChangePassword={handleChangePassword}
-                  isLoading={isLoading}
-                />
-              )}
+              {renderTabContent()}
             </Box>
           </Box>
         </Box>
