@@ -2,8 +2,13 @@ import express, { Response } from 'express';
 import mongoose from 'mongoose';
 import CryptoDevice from '../models/cryptoDevice';
 import EncryptedKeyBackup from '../models/encryptedKeyBackup';
+import CryptoRecoveryRequest from '../models/cryptoRecoveryRequest';
 import PairingSession from '../models/pairingSession';
 import { authMiddleware } from '../middleware/auth';
+
+const YES_NO_UNSURE = new Set(['yes', 'no', 'unsure']);
+const REMEMBER_OPTIONS = new Set(['yes', 'partial', 'no']);
+const RECOVERY_CONTEXTS = new Set(['calendar', 'feed', 'chat', 'plans', 'other']);
 
 const router = express.Router();
 
@@ -296,6 +301,97 @@ router.post('/pairing/:pairingId/consume', async (req: any, res: Response) => {
   } catch (error) {
     console.error('Ошибка при завершении pairing:', error);
     return res.status(500).json({ error: 'Ошибка при завершении pairing' });
+  }
+});
+
+router.post('/recovery-requests', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(401).json({ error: 'Не авторизован' });
+    }
+
+    const multiplePassphrases = String(req.body?.multiplePassphrases || '').trim();
+    const hasOldDeviceAccess = String(req.body?.hasOldDeviceAccess || '').trim();
+    const rememberOldPassphrase = String(req.body?.rememberOldPassphrase || '').trim();
+    const contextRaw = String(req.body?.context || 'other').trim();
+    const description = String(req.body?.description || '').trim();
+    const currentDeviceId = String(req.body?.currentDeviceId || '').trim().slice(0, 200);
+
+    if (!YES_NO_UNSURE.has(multiplePassphrases)) {
+      return res.status(400).json({ error: 'Укажите, создавали ли вы больше одной секретной фразы' });
+    }
+    if (!YES_NO_UNSURE.has(hasOldDeviceAccess)) {
+      return res.status(400).json({ error: 'Укажите, есть ли доступ к старому устройству' });
+    }
+    if (!REMEMBER_OPTIONS.has(rememberOldPassphrase)) {
+      return res.status(400).json({ error: 'Укажите, помните ли вы старую секретную фразу' });
+    }
+    if (description.length > 5000) {
+      return res.status(400).json({ error: 'Описание слишком длинное' });
+    }
+
+    const context = RECOVERY_CONTEXTS.has(contextRaw) ? contextRaw : 'other';
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const existingOpen = await CryptoRecoveryRequest.findOne({
+      userId: userObjectId,
+      status: 'open'
+    })
+      .sort({ createdAt: -1 })
+      .select('_id createdAt');
+
+    if (existingOpen) {
+      return res.status(409).json({
+        error: 'У вас уже есть открытая заявка на восстановление',
+        id: existingOpen._id.toString(),
+        createdAt: existingOpen.createdAt
+      });
+    }
+
+    const [backups, devices] = await Promise.all([
+      EncryptedKeyBackup.find({ userId: userObjectId })
+        .sort({ updatedAt: -1 })
+        .select('deviceId createdAt updatedAt')
+        .lean(),
+      CryptoDevice.find({ userId: userObjectId })
+        .sort({ updatedAt: -1 })
+        .select('deviceId createdAt updatedAt lastSeen')
+        .lean()
+    ]);
+
+    const request = await CryptoRecoveryRequest.create({
+      userId: userObjectId,
+      multiplePassphrases,
+      hasOldDeviceAccess,
+      rememberOldPassphrase,
+      context,
+      description,
+      currentDeviceId,
+      userAgent: String(req.get('user-agent') || '').slice(0, 500),
+      backupCount: backups.length,
+      backups: backups.map((backup) => ({
+        deviceId: backup.deviceId,
+        createdAt: backup.createdAt,
+        updatedAt: backup.updatedAt
+      })),
+      deviceCount: devices.length,
+      devices: devices.map((device) => ({
+        deviceId: device.deviceId,
+        createdAt: device.createdAt,
+        updatedAt: device.updatedAt,
+        lastSeen: device.lastSeen
+      }))
+    });
+
+    return res.status(201).json({
+      id: request._id.toString(),
+      status: request.status,
+      createdAt: request.createdAt
+    });
+  } catch (error) {
+    console.error('Ошибка при создании заявки на восстановление crypto:', error);
+    return res.status(500).json({ error: 'Ошибка при отправке заявки' });
   }
 });
 

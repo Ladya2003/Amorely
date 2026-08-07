@@ -276,6 +276,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ months, currentMonth, onMon
                         resourceType={media.resourceType}
                         encrypted={media.encrypted}
                         mediaEnvelope={media.mediaEnvelope}
+                        recoveryContext="calendar"
+                        decryptFailedVariant="compact"
                         videoPreview={media.resourceType === 'video'}
                         imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}

@@ -23,6 +23,7 @@ const EncryptedAttachment: React.FC<EncryptedAttachmentProps> = ({
     resourceType={envelope?.displayType || 'image'}
     encrypted
     mediaEnvelope={envelope}
+    recoveryContext="chat"
     onImageClick={onImageClick}
     imageStyle={imageStyle}
   />

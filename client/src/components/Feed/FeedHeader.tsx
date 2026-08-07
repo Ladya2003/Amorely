@@ -283,7 +283,7 @@ const FeedHeader: React.FC = () => {
               alignItems: 'center',
               gap: 2,
               mb: useCoupleAvatarLayout ? 1.5 : 2.5,
-              overflowX: 'clip',
+              overflow: 'visible',
             }}
           >
             <Box
@@ -292,6 +292,8 @@ const FeedHeader: React.FC = () => {
                 minWidth: 0,
                 display: 'flex',
                 alignItems: 'center',
+                overflow: 'visible',
+                pr: isAdmin && feedDot ? 1 : 0,
               }}
             >
               {isAdmin ? (
@@ -305,8 +307,8 @@ const FeedHeader: React.FC = () => {
                     display: 'block',
                     maxWidth: '100%',
                     '& .MuiBadge-badge': {
-                      top: 6,
-                      right: -4,
+                      top: 8,
+                      right: 2,
                     },
                   }}
                 >

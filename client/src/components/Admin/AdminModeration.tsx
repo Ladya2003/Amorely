@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
+  Badge,
   Box,
   Button,
   Chip,
@@ -35,28 +36,86 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import MediaViewerDialog, { MediaViewerContent } from '../common/MediaViewerDialog';
 import {
+  AdminCryptoRecoveryRequestItem,
   AdminReportItem,
   AdminReportUser,
   blockAdminUser,
+  fetchAdminCryptoRecoveryRequests,
   fetchAdminReports,
   unblockAdminUser,
+  updateAdminCryptoRecoveryRequestStatus,
   updateAdminReportStatus,
 } from '../../services/adminService';
 import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
 import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/locale';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAdminAlerts } from '../../contexts/AdminAlertsContext';
 import { saveOpenChatTarget, type StoredOpenChatTarget } from '../../utils/openChatTargetStorage';
 
 const emptyBlockReasons = (): Partial<Record<AppLocale, string>> => ({});
 
+const YES_NO_UNSURE_LABELS: Record<string, string> = {
+  yes: 'Да',
+  no: 'Нет',
+  unsure: 'Не уверен(а)',
+};
+
+const REMEMBER_LABELS: Record<string, string> = {
+  yes: 'Да, помнит',
+  partial: 'Частично',
+  no: 'Нет',
+};
+
+const CONTEXT_LABELS: Record<string, string> = {
+  calendar: 'Календарь',
+  feed: 'Лента',
+  chat: 'Чат',
+  plans: 'Планы',
+  other: 'Другое',
+};
+
+const formatOptionalDate = (value?: string) => {
+  if (!value) return '—';
+  return format(new Date(value), 'dd.MM.yyyy HH:mm', { locale: ru });
+};
+
+const renderSectionDot = (label: string, showDot: boolean) => (
+  <Badge
+    color="error"
+    variant="dot"
+    invisible={!showDot}
+    overlap="rectangular"
+    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+    sx={{
+      '& .MuiBadge-badge': {
+        top: 4,
+        right: -6,
+      },
+    }}
+  >
+    <Box component="span" sx={{ pr: showDot ? 0.75 : 0 }}>
+      {label}
+    </Box>
+  </Badge>
+);
+
 const AdminModeration: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const {
+    newReportsCount,
+    newRecoveryRequestsCount,
+    clearModerationTabBadge,
+  } = useAdminAlerts();
+  const [section, setSection] = useState<'reports' | 'recovery'>('reports');
   const [reports, setReports] = useState<AdminReportItem[]>([]);
+  const [recoveryRequests, setRecoveryRequests] = useState<AdminCryptoRecoveryRequestItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'open' | 'resolved' | ''>('open');
   const [selectedReport, setSelectedReport] = useState<AdminReportItem | null>(null);
+  const [selectedRecovery, setSelectedRecovery] = useState<AdminCryptoRecoveryRequestItem | null>(null);
+  const [recoveryAdminNote, setRecoveryAdminNote] = useState('');
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [mediaViewerIndex, setMediaViewerIndex] = useState(0);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
@@ -85,9 +144,32 @@ const AdminModeration: React.FC = () => {
     }
   }, [statusFilter]);
 
+  const loadRecoveryRequests = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await fetchAdminCryptoRecoveryRequests({
+        limit: 100,
+        status: statusFilter,
+      });
+      setRecoveryRequests(data.requests);
+    } catch (loadError) {
+      console.error('Ошибка загрузки заявок на восстановление:', loadError);
+      setError('Не удалось загрузить заявки на восстановление');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [statusFilter]);
+
   useEffect(() => {
-    void loadReports();
-  }, [loadReports]);
+    if (section === 'reports') {
+      void loadReports();
+      void clearModerationTabBadge('reports');
+      return;
+    }
+    void loadRecoveryRequests();
+    void clearModerationTabBadge('recovery');
+  }, [section, loadReports, loadRecoveryRequests, clearModerationTabBadge]);
 
   const openChatWithUser = (targetUser: AdminReportUser | null) => {
     if (!targetUser?._id) return;
@@ -105,6 +187,7 @@ const AdminModeration: React.FC = () => {
     }
     setPendingChatNavigation(target);
     setSelectedReport(null);
+    setSelectedRecovery(null);
   };
 
   const handleReportDialogExited = () => {
@@ -115,6 +198,10 @@ const AdminModeration: React.FC = () => {
     const target = pendingChatNavigation;
     setPendingChatNavigation(null);
     navigate(`/chat?contact=${encodeURIComponent(target.id)}`);
+  };
+
+  const handleRecoveryDialogExited = () => {
+    handleReportDialogExited();
   };
 
   const handleBlockUser = async () => {
@@ -184,6 +271,29 @@ const AdminModeration: React.FC = () => {
     }
   };
 
+  const handleToggleRecoveryStatus = async (request: AdminCryptoRecoveryRequestItem) => {
+    const nextStatus = request.status === 'open' ? 'resolved' : 'open';
+    try {
+      await updateAdminCryptoRecoveryRequestStatus(request._id, {
+        status: nextStatus,
+        adminNote: recoveryAdminNote,
+      });
+      await loadRecoveryRequests();
+      if (selectedRecovery?._id === request._id) {
+        setSelectedRecovery({ ...request, status: nextStatus, adminNote: recoveryAdminNote });
+      }
+      setActionSuccess(nextStatus === 'resolved' ? 'Заявка закрыта' : 'Заявка открыта снова');
+    } catch (statusError) {
+      console.error('Ошибка обновления заявки на восстановление:', statusError);
+      setError('Не удалось обновить статус заявки');
+    }
+  };
+
+  const openRecoveryDetails = (request: AdminCryptoRecoveryRequestItem) => {
+    setSelectedRecovery(request);
+    setRecoveryAdminNote(request.adminNote || '');
+  };
+
   const mediaGallery: MediaViewerContent[] =
     selectedReport?.media.map((item, index) => ({
       url: item.url,
@@ -209,6 +319,18 @@ const AdminModeration: React.FC = () => {
         </FormControl>
       </Box>
 
+      <Tabs
+        value={section}
+        onChange={(_event, value: 'reports' | 'recovery') => setSection(value)}
+        sx={{ mb: 2 }}
+      >
+        <Tab value="reports" label={renderSectionDot('Жалобы', newReportsCount > 0)} />
+        <Tab
+          value="recovery"
+          label={renderSectionDot('Восстановление медиа', newRecoveryRequestsCount > 0)}
+        />
+      </Tabs>
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
@@ -225,45 +347,106 @@ const AdminModeration: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
-      ) : reports.length === 0 ? (
-        <Alert severity="info">Жалоб пока нет</Alert>
+      ) : section === 'reports' ? (
+        reports.length === 0 ? (
+          <Alert severity="info">Жалоб пока нет</Alert>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Дата</TableCell>
+                  <TableCell>От кого</TableCell>
+                  <TableCell>На кого</TableCell>
+                  <TableCell>Текст</TableCell>
+                  <TableCell>Медиа</TableCell>
+                  <TableCell>Статус</TableCell>
+                  <TableCell align="right">Действия</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {reports.map((report) => (
+                  <TableRow key={report._id} hover>
+                    <TableCell>
+                      {format(new Date(report.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}
+                    </TableCell>
+                    <TableCell>{report.reporter?.displayName || '—'}</TableCell>
+                    <TableCell>{report.reportedUser?.displayName || '—'}</TableCell>
+                    <TableCell sx={{ maxWidth: 240 }}>
+                      <Typography variant="body2" noWrap title={report.text}>
+                        {report.text}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{report.media.length}</TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={report.status === 'open' ? 'Открыта' : 'Закрыта'}
+                        color={report.status === 'open' ? 'warning' : 'default'}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" onClick={() => setSelectedReport(report)} aria-label="Открыть">
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )
+      ) : recoveryRequests.length === 0 ? (
+        <Alert severity="info">Заявок на восстановление пока нет</Alert>
       ) : (
         <TableContainer component={Paper}>
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Дата</TableCell>
-                <TableCell>От кого</TableCell>
-                <TableCell>На кого</TableCell>
-                <TableCell>Текст</TableCell>
-                <TableCell>Медиа</TableCell>
+                <TableCell>Пользователь</TableCell>
+                <TableCell>Несколько фраз</TableCell>
+                <TableCell>Старый браузер</TableCell>
+                <TableCell>Backup'ов</TableCell>
+                <TableCell>Контекст</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell align="right">Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {reports.map((report) => (
-                <TableRow key={report._id} hover>
+              {recoveryRequests.map((request) => (
+                <TableRow key={request._id} hover>
                   <TableCell>
-                    {format(new Date(report.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}
+                    {format(new Date(request.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}
                   </TableCell>
-                  <TableCell>{report.reporter?.displayName || '—'}</TableCell>
-                  <TableCell>{report.reportedUser?.displayName || '—'}</TableCell>
-                  <TableCell sx={{ maxWidth: 240 }}>
-                    <Typography variant="body2" noWrap title={report.text}>
-                      {report.text}
+                  <TableCell>
+                    <Typography variant="body2">{request.user?.displayName || '—'}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {request.user?.email || ''}
                     </Typography>
                   </TableCell>
-                  <TableCell>{report.media.length}</TableCell>
+                  <TableCell>{YES_NO_UNSURE_LABELS[request.multiplePassphrases] || request.multiplePassphrases}</TableCell>
+                  <TableCell>{YES_NO_UNSURE_LABELS[request.hasOldDeviceAccess] || request.hasOldDeviceAccess}</TableCell>
+                  <TableCell>
+                    {request.backupCount}
+                    {request.liveBackupCount !== request.backupCount
+                      ? ` (сейчас ${request.liveBackupCount})`
+                      : ''}
+                  </TableCell>
+                  <TableCell>{CONTEXT_LABELS[request.context] || request.context}</TableCell>
                   <TableCell>
                     <Chip
                       size="small"
-                      label={report.status === 'open' ? 'Открыта' : 'Закрыта'}
-                      color={report.status === 'open' ? 'warning' : 'default'}
+                      label={request.status === 'open' ? 'Открыта' : 'Закрыта'}
+                      color={request.status === 'open' ? 'warning' : 'default'}
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => setSelectedReport(report)} aria-label="Открыть">
+                    <IconButton
+                      size="small"
+                      onClick={() => openRecoveryDetails(request)}
+                      aria-label="Открыть"
+                    >
                       <VisibilityIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
@@ -471,6 +654,165 @@ const AdminModeration: React.FC = () => {
             Заблокировать
           </Button>
         </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(selectedRecovery)}
+        onClose={() => setSelectedRecovery(null)}
+        fullWidth
+        maxWidth="md"
+        disableRestoreFocus
+        TransitionProps={{ onExited: handleRecoveryDialogExited }}
+        PaperProps={{ sx: getAppPlainDialogPaperSx }}
+      >
+        {selectedRecovery && (
+          <>
+            <DialogTitle>Заявка на восстановление медиа</DialogTitle>
+            <DialogContent dividers>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Дата: {format(new Date(selectedRecovery.createdAt), 'dd MMMM yyyy HH:mm', { locale: ru })}
+              </Typography>
+
+              <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Пользователь
+                </Typography>
+                <Typography variant="body1">{selectedRecovery.user?.displayName || '—'}</Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  {selectedRecovery.user?.email}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  userId: {selectedRecovery.user?._id || '—'}
+                </Typography>
+                {selectedRecovery.user?.isBlocked && (
+                  <Chip size="small" color="error" label="Заблокирован" sx={{ mt: 1 }} />
+                )}
+              </Paper>
+
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2 }}>
+                <Paper variant="outlined" sx={{ p: 1.5 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Создавал(а) больше одной фразы
+                  </Typography>
+                  <Typography variant="body2">
+                    {YES_NO_UNSURE_LABELS[selectedRecovery.multiplePassphrases] ||
+                      selectedRecovery.multiplePassphrases}
+                  </Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 1.5 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Есть доступ к старому браузеру/устройству
+                  </Typography>
+                  <Typography variant="body2">
+                    {YES_NO_UNSURE_LABELS[selectedRecovery.hasOldDeviceAccess] ||
+                      selectedRecovery.hasOldDeviceAccess}
+                  </Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 1.5 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Помнит старую фразу
+                  </Typography>
+                  <Typography variant="body2">
+                    {REMEMBER_LABELS[selectedRecovery.rememberOldPassphrase] ||
+                      selectedRecovery.rememberOldPassphrase}
+                  </Typography>
+                </Paper>
+                <Paper variant="outlined" sx={{ p: 1.5 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Где увидел(а) ошибку
+                  </Typography>
+                  <Typography variant="body2">
+                    {CONTEXT_LABELS[selectedRecovery.context] || selectedRecovery.context}
+                  </Typography>
+                </Paper>
+              </Box>
+
+              {selectedRecovery.description && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Комментарий пользователя
+                  </Typography>
+                  <Paper variant="outlined" sx={{ p: 1.5 }}>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {selectedRecovery.description}
+                    </Typography>
+                  </Paper>
+                </Box>
+              )}
+
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Crypto snapshot (на момент заявки)
+                </Typography>
+                <Paper variant="outlined" sx={{ p: 1.5, mb: 1 }}>
+                  <Typography variant="body2">
+                    Backup'ов: {selectedRecovery.backupCount} (сейчас в БД: {selectedRecovery.liveBackupCount})
+                  </Typography>
+                  <Typography variant="body2">Устройств: {selectedRecovery.deviceCount}</Typography>
+                  <Typography variant="body2">
+                    Текущий deviceId клиента: {selectedRecovery.currentDeviceId || '—'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                    UA: {selectedRecovery.userAgent || '—'}
+                  </Typography>
+                </Paper>
+
+                {selectedRecovery.backups.length > 0 && (
+                  <Paper variant="outlined" sx={{ p: 1.5, mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                      EncryptedKeyBackup
+                    </Typography>
+                    {selectedRecovery.backups.map((backup) => (
+                      <Typography key={`${backup.deviceId}-${backup.updatedAt}`} variant="body2" sx={{ mb: 0.5 }}>
+                        {backup.deviceId} · updated {formatOptionalDate(backup.updatedAt)} · created{' '}
+                        {formatOptionalDate(backup.createdAt)}
+                      </Typography>
+                    ))}
+                  </Paper>
+                )}
+
+                {selectedRecovery.devices.length > 0 && (
+                  <Paper variant="outlined" sx={{ p: 1.5 }}>
+                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                      CryptoDevice
+                    </Typography>
+                    {selectedRecovery.devices.map((device) => (
+                      <Typography key={`${device.deviceId}-${device.updatedAt}`} variant="body2" sx={{ mb: 0.5 }}>
+                        {device.deviceId} · lastSeen {formatOptionalDate(device.lastSeen)} · updated{' '}
+                        {formatOptionalDate(device.updatedAt)}
+                      </Typography>
+                    ))}
+                  </Paper>
+                )}
+              </Box>
+
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                label="Заметка админа"
+                value={recoveryAdminNote}
+                onChange={(event) => setRecoveryAdminNote(event.target.value)}
+                helperText="Например: какой backup оставить, что уже проверили"
+              />
+            </DialogContent>
+            <DialogActions sx={{ flexWrap: 'wrap', gap: 1, px: 3, py: 2 }}>
+              {selectedRecovery.user?._id !== user?._id && (
+                <Button
+                  startIcon={<ChatIcon />}
+                  onClick={() => openChatWithUser(selectedRecovery.user)}
+                  disabled={!selectedRecovery.user?._id}
+                >
+                  Чат с пользователем
+                </Button>
+              )}
+              <Button onClick={() => void handleToggleRecoveryStatus(selectedRecovery)}>
+                {selectedRecovery.status === 'open' ? 'Закрыть заявку' : 'Открыть снова'}
+              </Button>
+              <Button onClick={() => setSelectedRecovery(null)}>Закрыть</Button>
+            </DialogActions>
+          </>
+        )}
       </Dialog>
 
       <MediaViewerDialog

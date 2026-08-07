@@ -13,19 +13,21 @@ import {
   clearAdminUsersTabAlerts,
   fetchAdminAlerts,
   type AdminAlertsState,
+  type AdminModerationAlertScope,
 } from '../services/adminService';
 
 type AdminAlertsContextValue = AdminAlertsState & {
   refreshAdminAlerts: () => Promise<void>;
   clearFeedDot: () => Promise<void>;
   clearUsersTabBadge: () => Promise<void>;
-  clearModerationTabBadge: () => Promise<void>;
+  clearModerationTabBadge: (scope?: AdminModerationAlertScope) => Promise<void>;
 };
 
 const defaultState: AdminAlertsState = {
   feedDot: false,
   newUsersCount: 0,
   newReportsCount: 0,
+  newRecoveryRequestsCount: 0,
 };
 
 const AdminAlertsContext = createContext<AdminAlertsContextValue>({
@@ -51,7 +53,19 @@ export const AdminAlertsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     try {
       const data = await fetchAdminAlerts();
-      setAlerts(data);
+      const newUsersCount = Number(data.newUsersCount) || 0;
+      const newReportsCount = Number(data.newReportsCount) || 0;
+      const newRecoveryRequestsCount = Number(data.newRecoveryRequestsCount) || 0;
+      setAlerts({
+        // Prefer server feedDot; fall back to tab badges so greeting stays consistent.
+        feedDot:
+          typeof data.feedDot === 'boolean'
+            ? data.feedDot
+            : Boolean(newUsersCount > 0 || newReportsCount > 0 || newRecoveryRequestsCount > 0),
+        newUsersCount,
+        newReportsCount,
+        newRecoveryRequestsCount,
+      });
     } catch (error) {
       console.error('Ошибка загрузки админ-индикаторов:', error);
     }
@@ -77,20 +91,40 @@ export const AdminAlertsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     try {
       await clearAdminUsersTabAlerts();
-      setAlerts((prev) => ({ ...prev, newUsersCount: 0 }));
+      setAlerts((prev) => {
+        const newUsersCount = 0;
+        return {
+          ...prev,
+          newUsersCount,
+          feedDot: Boolean(
+            newUsersCount > 0 || prev.newReportsCount > 0 || prev.newRecoveryRequestsCount > 0
+          ),
+        };
+      });
     } catch (error) {
       console.error('Ошибка сброса индикатора пользователей:', error);
     }
   }, [isAdmin]);
 
-  const clearModerationTabBadge = useCallback(async () => {
+  const clearModerationTabBadge = useCallback(async (scope: AdminModerationAlertScope = 'all') => {
     if (!isAdmin) {
       return;
     }
 
     try {
-      await clearAdminModerationTabAlerts();
-      setAlerts((prev) => ({ ...prev, newReportsCount: 0 }));
+      await clearAdminModerationTabAlerts(scope);
+      setAlerts((prev) => {
+        const newReportsCount = scope === 'recovery' ? prev.newReportsCount : 0;
+        const newRecoveryRequestsCount = scope === 'reports' ? prev.newRecoveryRequestsCount : 0;
+        return {
+          ...prev,
+          newReportsCount,
+          newRecoveryRequestsCount,
+          feedDot: Boolean(
+            prev.newUsersCount > 0 || newReportsCount > 0 || newRecoveryRequestsCount > 0
+          ),
+        };
+      });
     } catch (error) {
       console.error('Ошибка сброса индикатора модерации:', error);
     }

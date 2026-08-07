@@ -164,6 +164,8 @@ const CompletedEventPreview: React.FC<CompletedEventPreviewProps> = ({
                     resourceType={item.resourceType || 'image'}
                     encrypted={item.encrypted}
                     mediaEnvelope={item.mediaEnvelope}
+                    recoveryContext="calendar"
+                    decryptFailedVariant="compact"
                     videoPreview={item.resourceType === 'video'}
                     imageStyle={MEDIA_FILL_STYLE}
                     videoStyle={MEDIA_FILL_STYLE}

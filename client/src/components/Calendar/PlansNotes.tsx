@@ -771,6 +771,8 @@ const PlansNotes: React.FC<{
         resourceType={media.resourceType}
         encrypted={media.encrypted}
         mediaEnvelope={media.mediaEnvelope}
+        recoveryContext="plans"
+        decryptFailedVariant="compact"
         videoPreview
         imageStyle={planNoteMediaPreviewStyle}
         videoStyle={planNoteMediaPreviewStyle}
@@ -804,6 +806,8 @@ const PlansNotes: React.FC<{
             resourceType={media.resourceType}
             encrypted={media.encrypted}
             mediaEnvelope={media.mediaEnvelope}
+            recoveryContext="plans"
+            decryptFailedVariant="compact"
             videoPreview={media.resourceType === 'video'}
             imageStyle={planNoteMediaPreviewStyle}
             videoStyle={planNoteMediaPreviewStyle}

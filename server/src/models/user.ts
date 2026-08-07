@@ -62,6 +62,7 @@ export interface UserDocument extends mongoose.Document {
   adminAlertsClearedAt?: Date;
   adminUsersTabClearedAt?: Date;
   adminModerationTabClearedAt?: Date;
+  adminModerationRecoveryClearedAt?: Date;
   sharedLocation?: {
     lat: number;
     lng: number;
@@ -142,6 +143,7 @@ const userSchema = new mongoose.Schema({
   adminAlertsClearedAt: { type: Date },
   adminUsersTabClearedAt: { type: Date },
   adminModerationTabClearedAt: { type: Date },
+  adminModerationRecoveryClearedAt: { type: Date },
   sharedLocation: {
     lat: { type: Number },
     lng: { type: Number },

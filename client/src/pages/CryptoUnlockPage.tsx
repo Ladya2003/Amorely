@@ -69,6 +69,7 @@ const CryptoUnlockPage: React.FC = () => {
   const [copyToastOpen, setCopyToastOpen] = useState(false);
   const [copyToastMessage, setCopyToastMessage] = useState('');
   const [copyToastSeverity, setCopyToastSeverity] = useState<AlertColor>('success');
+  const [overwriteWarningOpen, setOverwriteWarningOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   const showCopyToast = (message: string, severity: AlertColor) => {
@@ -141,6 +142,15 @@ const CryptoUnlockPage: React.FC = () => {
       return;
     }
     setError(null);
+    if (user?.hasCryptoBackup) {
+      setOverwriteWarningOpen(true);
+      return;
+    }
+    setConfirmDialogOpen(true);
+  };
+
+  const handleOverwriteWarningContinue = () => {
+    setOverwriteWarningOpen(false);
     setConfirmDialogOpen(true);
   };
 
@@ -298,6 +308,28 @@ const CryptoUnlockPage: React.FC = () => {
           )}
         </Box>
       </Container>
+
+      <ResponsiveDialog
+        open={overwriteWarningOpen}
+        onClose={() => setOverwriteWarningOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{t('crypto.unlock.overwriteWarningTitle')}</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ whiteSpace: 'pre-line' }}>
+            {t('crypto.unlock.overwriteWarningBody')}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOverwriteWarningOpen(false)}>
+            {t('crypto.unlock.cancel')}
+          </Button>
+          <Button variant="contained" color="warning" onClick={handleOverwriteWarningContinue}>
+            {t('crypto.unlock.overwriteWarningContinue')}
+          </Button>
+        </DialogActions>
+      </ResponsiveDialog>
 
       <ResponsiveDialog
         open={confirmDialogOpen}

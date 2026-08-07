@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Box, CircularProgress } from '@mui/material';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { fetchDecryptedBlobUrl, getCachedBlobUrl } from '../../crypto/decryptedMediaCache';
 import { captureVideoPosterFromUrl } from '../../utils/videoPoster';
+import type { CryptoRecoveryContext } from '../../services/cryptoRecoveryService';
 import ChatVideoPlayer from './ChatVideoPlayer';
+import DecryptFailedState from './DecryptFailedState';
 
 interface DecryptedMediaProps {
   cacheKey: string;
@@ -18,6 +19,10 @@ interface DecryptedMediaProps {
   imageStyle?: React.CSSProperties;
   videoStyle?: React.CSSProperties;
   loadingMinHeight?: number;
+  /** compact — миниатюры; full — крупные превью с кнопкой заявки */
+  decryptFailedVariant?: 'compact' | 'full' | 'auto';
+  recoveryContext?: CryptoRecoveryContext;
+  onDecryptFailedChange?: (failed: boolean) => void;
 }
 
 const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
@@ -30,9 +35,11 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   onImageClick,
   imageStyle,
   videoStyle,
-  loadingMinHeight = 80
+  loadingMinHeight = 80,
+  decryptFailedVariant = 'auto',
+  recoveryContext = 'other',
+  onDecryptFailedChange,
 }) => {
-  const { t } = useTranslation();
   const needsDecrypt = Boolean(mediaEnvelope?.mediaKey && mediaEnvelope?.iv);
   const awaitingDecryption = Boolean(encrypted && !needsDecrypt);
 
@@ -122,6 +129,17 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
     };
   }, [blobUrl, resourceType, videoPreview]);
 
+  const decryptFailed = !loading && (error || !blobUrl);
+  const onDecryptFailedChangeRef = useRef(onDecryptFailedChange);
+  onDecryptFailedChangeRef.current = onDecryptFailedChange;
+
+  useEffect(() => {
+    onDecryptFailedChangeRef.current?.(decryptFailed);
+    return () => {
+      onDecryptFailedChangeRef.current?.(false);
+    };
+  }, [decryptFailed]);
+
   if (loading || (videoPreview && resourceType === 'video' && posterLoading)) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 2, minHeight: loadingMinHeight }}>
@@ -131,10 +149,19 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   }
 
   if (error || !blobUrl) {
+    const resolvedVariant =
+      decryptFailedVariant === 'auto'
+        ? loadingMinHeight > 0 && loadingMinHeight < 100
+          ? 'compact'
+          : 'full'
+        : decryptFailedVariant;
+
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-        {t('crypto.decryptMediaFailed')}
-      </Typography>
+      <DecryptFailedState
+        variant={resolvedVariant}
+        context={recoveryContext}
+        minHeight={loadingMinHeight || undefined}
+      />
     );
   }
 

@@ -150,6 +150,8 @@ const SharedEventCard: React.FC<SharedEventCardProps> = ({
               resourceType={previewMedia!.resourceType || 'image'}
               encrypted={Boolean(previewEnvelope?.mediaKey) || Boolean(previewMedia!.encrypted)}
               mediaEnvelope={previewEnvelope}
+              recoveryContext="chat"
+              decryptFailedVariant="compact"
               videoPreview={previewMedia!.resourceType === 'video'}
               imageStyle={{
                 width: '100%',

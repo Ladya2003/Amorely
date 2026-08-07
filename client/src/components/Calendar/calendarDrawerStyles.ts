@@ -178,7 +178,10 @@ export const getEventDetailMediaCarouselSx = (theme: Theme) => ({
   width: '100%',
   aspectRatio: '1 / 1',
   position: 'relative' as const,
-  bgcolor: 'grey.100',
+  bgcolor:
+    theme.palette.mode === 'light'
+      ? 'grey.100'
+      : alpha(theme.palette.common.white, 0.06),
   borderRadius: `${CALENDAR_DRAWER_INNER_RADIUS}px`,
   overflow: 'hidden',
   boxShadow:

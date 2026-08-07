@@ -10,8 +10,10 @@ import {
   MODAL_TEXT_PRIMARY_LIGHT,
 } from './modalStyles';
 import { getWebkitAutofillInputSx, HIDE_INPUT_LABELS, SURFACE_BORDER_RADIUS } from './surfaceStyles';
+import { getAppAlertStyles } from './alertStyles';
 
 export { SURFACE_BORDER_RADIUS } from './surfaceStyles';
+export { getAppAlertSx, getAppAlertStyles } from './alertStyles';
 
 /** Скругление полей ввода — чуть меньше карточек, в той же шкале */
 export const INPUT_BORDER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
@@ -361,6 +363,19 @@ export const createAppTheme = (mode: PaletteMode, primaryColor: PrimaryColorPref
             borderRadius: SURFACE_BORDER_RADIUS,
             textTransform: 'none',
           },
+        },
+      },
+      MuiAlert: {
+        styleOverrides: {
+          // Apply glass tint to every severity so MUI's standardError/Success slots don't win.
+          standardSuccess: ({ theme }) => getAppAlertStyles(theme, 'success') as Record<string, unknown>,
+          standardInfo: ({ theme }) => getAppAlertStyles(theme, 'info') as Record<string, unknown>,
+          standardWarning: ({ theme }) => getAppAlertStyles(theme, 'warning') as Record<string, unknown>,
+          standardError: ({ theme }) => getAppAlertStyles(theme, 'error') as Record<string, unknown>,
+          outlinedSuccess: ({ theme }) => getAppAlertStyles(theme, 'success') as Record<string, unknown>,
+          outlinedInfo: ({ theme }) => getAppAlertStyles(theme, 'info') as Record<string, unknown>,
+          outlinedWarning: ({ theme }) => getAppAlertStyles(theme, 'warning') as Record<string, unknown>,
+          outlinedError: ({ theme }) => getAppAlertStyles(theme, 'error') as Record<string, unknown>,
         },
       },
       MuiInputBase: {

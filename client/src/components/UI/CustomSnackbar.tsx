@@ -1,69 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AlertColor, Box, Fade, Portal, SxProps, Theme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { SURFACE_BORDER_RADIUS } from '../../theme/appTheme';
-
-type SeverityPaletteKey = 'success' | 'error' | 'warning' | 'info';
+import { getAppAlertSx } from '../../theme/alertStyles';
 
 const TOAST_PROGRESS_HEIGHT = 3;
 
-const resolveSeverityPalette = (theme: Theme, severity: AlertColor) => {
-  const key: SeverityPaletteKey =
-    severity === 'success' || severity === 'error' || severity === 'warning' || severity === 'info'
-      ? severity
-      : 'info';
-
-  return theme.palette[key];
-};
-
-export const getToastAlertSx =
-  (severity: AlertColor): SxProps<Theme> =>
-  (theme) => {
-    const palette = resolveSeverityPalette(theme, severity);
-    const isLight = theme.palette.mode === 'light';
-    const textColor = isLight ? palette.dark : theme.palette.common.white;
-
-    return {
-      width: '100%',
-      position: 'relative',
-      overflow: 'hidden',
-      borderRadius: `${SURFACE_BORDER_RADIUS}px`,
-      px: 2,
-      py: 1.25,
-      alignItems: 'center',
-      fontWeight: 500,
-      fontSize: '0.9375rem',
-      lineHeight: 1.45,
-      color: textColor,
-      bgcolor: alpha(palette.main, isLight ? 0.14 : 0.32),
-      border: `1px solid ${alpha(palette.main, isLight ? 0.26 : 0.48)}`,
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      boxShadow:
-        theme.palette.mode === 'light'
-          ? `0 10px 32px ${alpha(theme.palette.common.black, 0.12)}`
-          : `0 12px 36px ${alpha(theme.palette.common.black, 0.5)}`,
-      '& .MuiAlert-icon': {
-        color: textColor,
-        opacity: isLight ? 0.92 : 1,
-        mr: 1.25,
-      },
-      '& .MuiAlert-message': {
-        padding: '2px 0',
-      },
-      '& .MuiAlert-action': {
-        alignItems: 'center',
-        pt: 0,
-        mr: -0.5,
-        '& .MuiIconButton-root': {
-          color: isLight ? alpha(palette.dark, 0.72) : alpha(theme.palette.common.white, 0.88),
-          '&:hover': {
-            bgcolor: alpha(isLight ? palette.main : theme.palette.common.white, 0.12),
-          },
-        },
-      },
-    };
-  };
+/** @deprecated prefer getAppAlertSx — same glass alert surface */
+export const getToastAlertSx = getAppAlertSx;
 
 const ToastCountdownBar: React.FC<{
   duration: number;
@@ -73,7 +16,11 @@ const ToastCountdownBar: React.FC<{
   <Box
     aria-hidden
     sx={(theme) => {
-      const palette = resolveSeverityPalette(theme, severity);
+      const paletteKey =
+        severity === 'success' || severity === 'error' || severity === 'warning' || severity === 'info'
+          ? severity
+          : 'info';
+      const palette = theme.palette[paletteKey];
       const isLight = theme.palette.mode === 'light';
       const barColor = isLight ? palette.main : theme.palette.common.white;
 

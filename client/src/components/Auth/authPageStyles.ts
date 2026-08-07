@@ -428,14 +428,8 @@ export const getAuthFormTitleSx = () => ({
   mb: 2.5,
 });
 
-export const getAuthAlertSx = (theme: Theme) => ({
+export const getAuthAlertSx = (_theme: Theme) => ({
   mb: 2,
-  borderRadius: `${AUTH_INNER_RADIUS}px`,
-  border: getSurfaceBorder(theme, 'soft'),
-  '& .MuiAlert-message': {
-    fontSize: '0.875rem',
-    lineHeight: 1.45,
-  },
 });
 
 /** Переливающийся градиент для главных CTA (Sign in / Create account) */

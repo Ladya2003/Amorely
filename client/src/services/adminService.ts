@@ -187,6 +187,66 @@ export const updateAdminReportStatus = async (
   return response.data;
 };
 
+export type AdminCryptoRecoveryYesNoUnsure = 'yes' | 'no' | 'unsure';
+export type AdminCryptoRecoveryRememberOption = 'yes' | 'partial' | 'no';
+export type AdminCryptoRecoveryContext = 'calendar' | 'feed' | 'chat' | 'plans' | 'other';
+
+export interface AdminCryptoRecoveryBackupSnapshot {
+  deviceId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AdminCryptoRecoveryDeviceSnapshot {
+  deviceId: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastSeen?: string;
+}
+
+export interface AdminCryptoRecoveryRequestItem {
+  _id: string;
+  user: AdminReportUser | null;
+  multiplePassphrases: AdminCryptoRecoveryYesNoUnsure;
+  hasOldDeviceAccess: AdminCryptoRecoveryYesNoUnsure;
+  rememberOldPassphrase: AdminCryptoRecoveryRememberOption;
+  context: AdminCryptoRecoveryContext;
+  description: string;
+  currentDeviceId: string;
+  userAgent: string;
+  backupCount: number;
+  liveBackupCount: number;
+  backups: AdminCryptoRecoveryBackupSnapshot[];
+  deviceCount: number;
+  devices: AdminCryptoRecoveryDeviceSnapshot[];
+  status: 'open' | 'resolved';
+  adminNote: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const fetchAdminCryptoRecoveryRequests = async (params?: {
+  limit?: number;
+  status?: 'open' | 'resolved' | '';
+}) => {
+  const response = await axios.get<{
+    requests: AdminCryptoRecoveryRequestItem[];
+    total: number;
+  }>(`${API_URL}/api/admin/crypto-recovery-requests`, { params });
+  return response.data;
+};
+
+export const updateAdminCryptoRecoveryRequestStatus = async (
+  requestId: string,
+  payload: { status: 'open' | 'resolved'; adminNote?: string }
+) => {
+  const response = await axios.patch(
+    `${API_URL}/api/admin/crypto-recovery-requests/${requestId}/status`,
+    payload
+  );
+  return response.data;
+};
+
 export const blockAdminUser = async (
   userId: string,
   reasons?: Partial<Record<AppLocale, string>>
@@ -204,7 +264,10 @@ export interface AdminAlertsState {
   feedDot: boolean;
   newUsersCount: number;
   newReportsCount: number;
+  newRecoveryRequestsCount: number;
 }
+
+export type AdminModerationAlertScope = 'reports' | 'recovery' | 'all';
 
 export const fetchAdminAlerts = async (): Promise<AdminAlertsState> => {
   const response = await axios.get<AdminAlertsState>(`${API_URL}/api/admin/alerts`);
@@ -221,8 +284,8 @@ export const clearAdminUsersTabAlerts = async () => {
   return response.data;
 };
 
-export const clearAdminModerationTabAlerts = async () => {
-  const response = await axios.post(`${API_URL}/api/admin/alerts/clear-moderation-tab`);
+export const clearAdminModerationTabAlerts = async (scope: AdminModerationAlertScope = 'all') => {
+  const response = await axios.post(`${API_URL}/api/admin/alerts/clear-moderation-tab`, { scope });
   return response.data;
 };
 

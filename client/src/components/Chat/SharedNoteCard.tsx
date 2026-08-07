@@ -144,6 +144,8 @@ const SharedNoteCard: React.FC<SharedNoteCardProps> = ({
               resourceType={previewMedia!.resourceType || 'image'}
               encrypted={Boolean(previewEnvelope?.mediaKey) || Boolean(previewMedia!.encrypted)}
               mediaEnvelope={previewEnvelope}
+              recoveryContext="chat"
+              decryptFailedVariant="compact"
               videoPreview={previewMedia!.resourceType === 'video'}
               imageStyle={{
                 width: '100%',

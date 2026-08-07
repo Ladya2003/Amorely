@@ -195,6 +195,28 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
     onNext: handleNextMedia
   });
 
+  const [failedMediaIds, setFailedMediaIds] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setFailedMediaIds(new Set());
+  }, [event?._id, event?.eventId]);
+
+  const handleDecryptFailedChange = useCallback((mediaId: string, failed: boolean) => {
+    setFailedMediaIds((prev) => {
+      const hasId = prev.has(mediaId);
+      if (failed === hasId) {
+        return prev;
+      }
+      const next = new Set(prev);
+      if (failed) {
+        next.add(mediaId);
+      } else {
+        next.delete(mediaId);
+      }
+      return next;
+    });
+  }, []);
+
   if (!event) return null;
 
   const eventDate = new Date(event.eventDate || event.createdAt);
@@ -203,6 +225,10 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
 
   const handleOpenMediaViewer = () => {
     if (consumeSwipeClick()) {
+      return;
+    }
+
+    if (!currentMedia || failedMediaIds.has(currentMedia._id)) {
       return;
     }
 
@@ -325,15 +351,22 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                   {mediaFiles.map((media) => (
                     <Box
                       key={media._id}
+                      onClick={
+                        media.resourceType === 'video' || failedMediaIds.has(media._id)
+                          ? undefined
+                          : handleOpenMediaViewer
+                      }
                       sx={{
                         minWidth: '100%',
                         height: '100%',
-                        cursor: media.resourceType === 'video' ? 'default' : 'pointer',
+                        cursor:
+                          media.resourceType === 'video' || failedMediaIds.has(media._id)
+                            ? 'default'
+                            : 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
                       }}
-                      onClick={media.resourceType === 'video' ? undefined : handleOpenMediaViewer}
                     >
                       <DecryptedMedia
                         cacheKey={`calendar-${event.eventId || event._id}-${media._id}`}
@@ -341,6 +374,11 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                         resourceType={media.resourceType}
                         encrypted={media.encrypted}
                         mediaEnvelope={media.mediaEnvelope}
+                        recoveryContext="calendar"
+                        decryptFailedVariant="full"
+                        onDecryptFailedChange={(failed) =>
+                          handleDecryptFailedChange(media._id, failed)
+                        }
                         imageStyle={{
                           width: '100%',
                           height: '100%',

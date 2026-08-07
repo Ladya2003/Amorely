@@ -92,6 +92,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
                 resourceType={content.type}
                 encrypted={content.encrypted}
                 mediaEnvelope={content.mediaEnvelope}
+                recoveryContext="calendar"
+                decryptFailedVariant="compact"
                 videoPreview={content.type === 'video'}
                 imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}

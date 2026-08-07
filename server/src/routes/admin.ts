@@ -18,6 +18,8 @@ import { getGeoLeaderboard } from '../games/geoGameService';
 import { getDrawLeaderboard } from '../games/drawGameService';
 import { getQuizLeaderboard } from '../games/quizGameService';
 import ChatReport from '../models/chatReport';
+import CryptoRecoveryRequest from '../models/cryptoRecoveryRequest';
+import EncryptedKeyBackup from '../models/encryptedKeyBackup';
 import { sendPushToUser } from '../services/pushService';
 import { buildBlockReasons } from '../utils/userBlock';
 import { getEffectiveIsNewForAdmin } from '../utils/adminUserFlags';
@@ -892,6 +894,106 @@ router.post('/reports/:id/message', async (req: ExtendedRequest, res: Response) 
   }
 });
 
+router.get('/crypto-recovery-requests', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
+    const status = String(req.query.status || '').trim();
+    const filter: Record<string, unknown> = {};
+    if (status === 'open' || status === 'resolved') {
+      filter.status = status;
+    }
+
+    const [requests, total] = await Promise.all([
+      CryptoRecoveryRequest.find(filter)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .populate('userId', 'username email firstName lastName isBlocked')
+        .lean(),
+      CryptoRecoveryRequest.countDocuments(filter),
+    ]);
+
+    const userIds = requests
+      .map((item) => {
+        const user = item.userId as { _id?: mongoose.Types.ObjectId } | null;
+        return user?._id?.toString();
+      })
+      .filter((id): id is string => Boolean(id));
+
+    const liveBackupCounts =
+      userIds.length > 0
+        ? await EncryptedKeyBackup.aggregate<{ _id: mongoose.Types.ObjectId; count: number }>([
+            { $match: { userId: { $in: userIds.map((id) => new mongoose.Types.ObjectId(id)) } } },
+            { $group: { _id: '$userId', count: { $sum: 1 } } },
+          ])
+        : [];
+
+    const liveBackupCountByUser = new Map(
+      liveBackupCounts.map((row) => [row._id.toString(), row.count])
+    );
+
+    res.json({
+      total,
+      requests: requests.map((item) => {
+        const user = formatReportUser(item.userId);
+        return {
+          _id: item._id.toString(),
+          user,
+          multiplePassphrases: item.multiplePassphrases,
+          hasOldDeviceAccess: item.hasOldDeviceAccess,
+          rememberOldPassphrase: item.rememberOldPassphrase,
+          context: item.context,
+          description: item.description,
+          currentDeviceId: item.currentDeviceId,
+          userAgent: item.userAgent,
+          backupCount: item.backupCount,
+          liveBackupCount: user?._id ? liveBackupCountByUser.get(user._id) ?? 0 : 0,
+          backups: item.backups ?? [],
+          deviceCount: item.deviceCount,
+          devices: item.devices ?? [],
+          status: item.status,
+          adminNote: item.adminNote ?? '',
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        };
+      }),
+    });
+  } catch (error) {
+    console.error('Ошибка получения заявок на восстановление crypto:', error);
+    res.status(500).json({ error: 'Ошибка получения заявок на восстановление' });
+  }
+});
+
+router.patch('/crypto-recovery-requests/:id/status', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const status = String(req.body?.status || '').trim();
+    const adminNote = req.body?.adminNote !== undefined ? String(req.body.adminNote).trim() : undefined;
+
+    if (!['open', 'resolved'].includes(status)) {
+      return res.status(400).json({ error: 'Некорректный статус' });
+    }
+
+    const update: Record<string, unknown> = { status };
+    if (adminNote !== undefined) {
+      update.adminNote = adminNote.slice(0, 5000);
+    }
+
+    const request = await CryptoRecoveryRequest.findByIdAndUpdate(id, update, { new: true });
+    if (!request) {
+      return res.status(404).json({ error: 'Заявка не найдена' });
+    }
+
+    res.json({
+      id: request._id.toString(),
+      status: request.status,
+      adminNote: request.adminNote,
+    });
+  } catch (error) {
+    console.error('Ошибка обновления заявки на восстановление crypto:', error);
+    res.status(500).json({ error: 'Ошибка обновления заявки' });
+  }
+});
+
 router.patch('/reports/:id/status', async (req: ExtendedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -990,24 +1092,18 @@ router.post('/users/:id/unblock', async (req: ExtendedRequest, res: Response) =>
 router.get('/alerts', async (req: ExtendedRequest, res: Response) => {
   try {
     const admin = await User.findById(req.userId).select(
-      'adminAlertsClearedAt adminUsersTabClearedAt adminModerationTabClearedAt'
+      'adminUsersTabClearedAt adminModerationTabClearedAt adminModerationRecoveryClearedAt'
     );
     if (!admin) {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    const alertsClearedAt = admin.adminAlertsClearedAt ?? new Date(0);
     const usersTabClearedAt = admin.adminUsersTabClearedAt ?? new Date(0);
     const moderationTabClearedAt = admin.adminModerationTabClearedAt ?? new Date(0);
+    const moderationRecoveryClearedAt = admin.adminModerationRecoveryClearedAt ?? new Date(0);
 
-    const [hasNewUser, hasNewReport, recentUsers, newReportsCount] = await Promise.all([
-      User.exists({
-        role: { $ne: 'admin' },
-        createdAt: { $gt: alertsClearedAt },
-      }),
-      ChatReport.exists({
-        createdAt: { $gt: alertsClearedAt },
-      }),
+    // Greeting dot stays in sync with admin tab badges (not cleared just by opening /admin).
+    const [recentUsers, newReportsCount, newRecoveryRequestsCount] = await Promise.all([
       User.find({
         role: { $ne: 'admin' },
         createdAt: { $gt: usersTabClearedAt },
@@ -1017,6 +1113,9 @@ router.get('/alerts', async (req: ExtendedRequest, res: Response) => {
       ChatReport.countDocuments({
         createdAt: { $gt: moderationTabClearedAt },
       }),
+      CryptoRecoveryRequest.countDocuments({
+        createdAt: { $gt: moderationRecoveryClearedAt },
+      }),
     ]);
 
     const newUsersCount = recentUsers.filter((user) =>
@@ -1024,9 +1123,10 @@ router.get('/alerts', async (req: ExtendedRequest, res: Response) => {
     ).length;
 
     res.json({
-      feedDot: Boolean(hasNewUser || hasNewReport),
+      feedDot: Boolean(newUsersCount > 0 || newReportsCount > 0 || newRecoveryRequestsCount > 0),
       newUsersCount,
       newReportsCount,
+      newRecoveryRequestsCount,
     });
   } catch (error) {
     console.error('Ошибка получения админ-уведомлений:', error);
@@ -1075,7 +1175,16 @@ router.post('/alerts/clear-moderation-tab', async (req: ExtendedRequest, res: Re
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    admin.adminModerationTabClearedAt = new Date();
+    const scope = String(req.body?.scope || 'all').trim();
+    const now = new Date();
+
+    if (scope === 'reports' || scope === 'all') {
+      admin.adminModerationTabClearedAt = now;
+    }
+    if (scope === 'recovery' || scope === 'all') {
+      admin.adminModerationRecoveryClearedAt = now;
+    }
+
     await admin.save();
 
     res.json({ message: 'OK' });

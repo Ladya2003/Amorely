@@ -57,11 +57,11 @@ const AdminPage: React.FC = () => {
   const {
     newUsersCount,
     newReportsCount,
-    clearFeedDot,
+    newRecoveryRequestsCount,
     clearUsersTabBadge,
-    clearModerationTabBadge,
   } = useAdminAlerts();
   const [tabIndex, setTabIndex] = useState(0);
+  const moderationBadgeCount = newReportsCount + newRecoveryRequestsCount;
 
   useEffect(() => {
     setShowBottomNav(false);
@@ -69,20 +69,10 @@ const AdminPage: React.FC = () => {
   }, [setShowBottomNav]);
 
   useEffect(() => {
-    void clearFeedDot();
-  }, [clearFeedDot]);
-
-  useEffect(() => {
     if (tabIndex === USERS_TAB_INDEX) {
       void clearUsersTabBadge();
     }
   }, [tabIndex, clearUsersTabBadge]);
-
-  useEffect(() => {
-    if (tabIndex === MODERATION_TAB_INDEX) {
-      void clearModerationTabBadge();
-    }
-  }, [tabIndex, clearModerationTabBadge]);
 
   const renderTab = () => {
     switch (ADMIN_TABS[tabIndex].key) {
@@ -128,7 +118,7 @@ const AdminPage: React.FC = () => {
                 index === USERS_TAB_INDEX
                   ? renderTabBadge(tab.label, newUsersCount)
                   : index === MODERATION_TAB_INDEX
-                    ? renderTabBadge(tab.label, newReportsCount)
+                    ? renderTabBadge(tab.label, moderationBadgeCount)
                     : tab.label
               }
             />

@@ -100,6 +100,8 @@ const EventListDialog: React.FC<EventListDialogProps> = ({
                         resourceType={firstMedia.resourceType}
                         encrypted={firstMedia.encrypted}
                         mediaEnvelope={firstMedia.mediaEnvelope}
+                        recoveryContext="calendar"
+                        decryptFailedVariant="compact"
                         videoPreview={firstMedia.resourceType === 'video'}
                         imageStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         videoStyle={{ width: '100%', height: '100%', objectFit: 'cover' }}
