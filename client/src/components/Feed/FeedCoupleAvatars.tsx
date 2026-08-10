@@ -14,6 +14,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { alpha, type Theme } from '@mui/material/styles';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import MyLocationOutlinedIcon from '@mui/icons-material/MyLocationOutlined';
 import { useNavigate } from 'react-router-dom';
@@ -28,7 +29,7 @@ import CoupleDistanceDialog from './CoupleDistanceDialog';
 import type { Contact } from '../Chat/ChatList';
 import type { Partner } from '../Settings/PartnerForm';
 import { fetchCoupleDistanceStatus } from '../../services/coupleDistanceService';
-import { formatDistanceKm } from '../../utils/geoDistance';
+import { formatDistanceKm, isCoupleDistanceNearby } from '../../utils/geoDistance';
 import {
   COUPLE_AVATAR_SIZE,
   STATUS_BUBBLE_MAX_WIDTH,
@@ -100,6 +101,7 @@ interface CoupleConnectorProps {
   isLoading: boolean;
   onOpenDistance: () => void;
   lockAriaLabel: string;
+  nearbyAriaLabel: string;
 }
 
 const CoupleConnector: React.FC<CoupleConnectorProps> = ({
@@ -108,13 +110,16 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
   isLoading,
   onOpenDistance,
   lockAriaLabel,
+  nearbyAriaLabel,
 }) => {
   const isLight = theme.palette.mode === 'light';
   const accentColor = getCoupleDistanceAccentColor(theme);
   // На светлой теме белые штрихи невидны — берём акцент темы
   const strokeColor = isLight ? alpha(accentColor, 0.45) : 'rgba(255, 255, 255, 0.5)';
+  const isNearby = distanceKm != null && isCoupleDistanceNearby(distanceKm);
   const distanceLabel =
     distanceKm != null ? `${formatDistanceKm(distanceKm)} km` : 'km';
+  const badgeAriaLabel = isNearby ? nearbyAriaLabel : lockAriaLabel;
 
   return (
     <Box sx={getCoupleConnectorSx()} aria-hidden={false}>
@@ -154,7 +159,7 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
         component="button"
         type="button"
         onClick={onOpenDistance}
-        aria-label={lockAriaLabel}
+        aria-label={badgeAriaLabel}
         aria-busy={isLoading}
         sx={getCoupleLockBadgeSx(theme, true)}
       >
@@ -166,6 +171,21 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
             height={14}
             sx={{ bgcolor: 'action.hover', borderRadius: 1, transform: 'none' }}
           />
+        ) : isNearby ? (
+          <Box
+            component="span"
+            aria-hidden
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.25,
+              color: 'inherit',
+              lineHeight: 0,
+            }}
+          >
+            <FavoriteIcon sx={{ fontSize: 15, color: 'inherit' }} />
+            <FavoriteIcon sx={{ fontSize: 15, color: 'inherit' }} />
+          </Box>
         ) : (
           <>
             {distanceKm != null ? (
@@ -380,6 +400,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
             isLoading={isDistanceLoading}
             onOpenDistance={() => setDistanceDialogOpen(true)}
             lockAriaLabel={t('feed.coupleDistance.lockAriaLabel')}
+            nearbyAriaLabel={t('feed.coupleDistance.nearbyAriaLabel')}
           />
 
           <Box sx={getCoupleAvatarColumnSx('right')}>

@@ -575,7 +575,10 @@
       "permissionDenied": "Without location access, distance is unavailable. Allow access in your browser settings and try again.",
       "unsupported": "In the browser this feature is limited: it needs a secure HTTPS site and location permission from both partners while the home screen is open. It will work more reliably in the mobile app we are preparing.",
       "error": "Could not get the distance. Please try again later.",
-      "lockAriaLabel": "Show distance to partner"
+      "lockAriaLabel": "Show distance to partner",
+      "nearbyResult": "You're close!",
+      "nearbyHint": "You and your partner are nearby — enjoy being together.",
+      "nearbyAriaLabel": "You are nearby your partner"
     },
     "openEventAriaLabel": "Open event",
     "title": "Feed",

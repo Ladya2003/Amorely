@@ -573,7 +573,10 @@
       "permissionDenied": "Sin acceso a la ubicación, la distancia no está disponible.",
       "unsupported": "En el navegador esta función es limitada. Funcionará mejor en la app móvil.",
       "error": "No se pudo obtener la distancia. Inténtalo más tarde.",
-      "lockAriaLabel": "Mostrar distancia con la pareja"
+      "lockAriaLabel": "Mostrar distancia con la pareja",
+      "nearbyResult": "¡Estáis cerca!",
+      "nearbyHint": "Tú y tu pareja estáis cerca — disfrutad el momento juntos.",
+      "nearbyAriaLabel": "Estás cerca de tu pareja"
     },
     "openEventAriaLabel": "Abrir evento",
     "title": "Feed",

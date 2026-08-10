@@ -10,6 +10,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import MyLocationOutlinedIcon from '@mui/icons-material/MyLocationOutlined';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import {
@@ -17,7 +18,12 @@ import {
   shareCurrentLocation,
   type CoupleDistanceStatus,
 } from '../../services/coupleDistanceService';
-import { formatDistanceKm, mapGeolocationError, requestCurrentPosition } from '../../utils/geoDistance';
+import {
+  formatDistanceKm,
+  isCoupleDistanceNearby,
+  mapGeolocationError,
+  requestCurrentPosition,
+} from '../../utils/geoDistance';
 import { getCoupleDistanceAccentColor } from './feedCoupleAvatarsStyles';
 
 type DialogView =
@@ -127,6 +133,8 @@ const CoupleDistanceDialog: React.FC<CoupleDistanceDialogProps> = ({
     onClose();
   };
 
+  const isNearby =
+    status?.distanceKm != null && isCoupleDistanceNearby(status.distanceKm);
   const distanceLabel =
     status?.distanceKm != null
       ? t('feed.coupleDistance.result', { distance: formatDistanceKm(status.distanceKm) })
@@ -151,17 +159,45 @@ const CoupleDistanceDialog: React.FC<CoupleDistanceDialogProps> = ({
           </Typography>
         )}
 
-        {view === 'distance' && distanceLabel && (
+        {view === 'distance' && (isNearby || distanceLabel) && (
           <Box sx={{ textAlign: 'center', py: 1 }}>
-            <Typography
-              variant="h4"
-              component="p"
-              sx={{ fontWeight: 800, color: getCoupleDistanceAccentColor(theme), mb: 1 }}
-            >
-              {distanceLabel}
-            </Typography>
+            {isNearby ? (
+              <>
+                <Box
+                  aria-hidden
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 0.75,
+                    color: getCoupleDistanceAccentColor(theme),
+                    mb: 1,
+                  }}
+                >
+                  <FavoriteIcon sx={{ fontSize: 36 }} />
+                  <FavoriteIcon sx={{ fontSize: 36 }} />
+                </Box>
+                <Typography
+                  variant="h5"
+                  component="p"
+                  sx={{ fontWeight: 800, color: getCoupleDistanceAccentColor(theme), mb: 1 }}
+                >
+                  {t('feed.coupleDistance.nearbyResult')}
+                </Typography>
+              </>
+            ) : (
+              <Typography
+                variant="h4"
+                component="p"
+                sx={{ fontWeight: 800, color: getCoupleDistanceAccentColor(theme), mb: 1 }}
+              >
+                {distanceLabel}
+              </Typography>
+            )}
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-              {t('feed.coupleDistance.distanceHint')}
+              {isNearby
+                ? t('feed.coupleDistance.nearbyHint')
+                : t('feed.coupleDistance.distanceHint')}
             </Typography>
           </Box>
         )}
