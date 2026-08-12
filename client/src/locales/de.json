@@ -1508,8 +1508,8 @@
     },
     "unlock": {
       "back": "Zurück",
-      "title": "Geheime Passphrase hinzufügen",
-      "description": "Als Betreiber von Amorely kann ich deine Nachrichten nicht lesen und deine Ereignisse nicht einsehen.\n\nDas ist beabsichtigt, damit du sicher sein kannst, dass deine Inhalte privat bleiben.\n\nDamit es funktioniert, musst du eine geheime Passphrase erstellen und sie in einem anderen Messenger oder Notizbuch speichern.\n\nWichtig: Wenn du sie verlierst, können wir deine Daten nicht wiederherstellen — Chatnachrichten, Text und Medien im Kalender.",
+      "title": "Schütze deine Erinnerungen 🔐",
+      "description": "In Amorely sind deine Nachrichten und Erinnerungen so verschlüsselt, dass selbst wir sie nicht lesen können.\n\nDafür erstelle eine geheime Passphrase. Du brauchst sie, wenn du dich bei Amorely auf einem neuen Gerät oder in einem neuen Browser anmeldest.\n\nWichtig: Wir speichern deine Phrase nicht und können sie nicht wiederherstellen. Bewahre sie an einem sicheren Ort auf.",
       "tabCreate": "Neue erstellen",
       "tabRestore": "Ich habe bereits eine",
       "passphrasePlaceholder": "Geheime Passphrase",
@@ -1525,6 +1525,7 @@
       "deviceConnected": "Gerät verbunden. Speichere die Passphrase an einem sicheren Ort — du brauchst sie auf anderen Geräten.",
       "accessRestored": "Zugriff wiederhergestellt. Du kannst die App jetzt nutzen.",
       "confirmTitle": "Bist du sicher, dass du deine Passphrase gespeichert hast?",
+      "confirmHint": "Speichere diese Phrase in einem Passwortmanager, Notizbuch oder an einem anderen sicheren Ort. Du brauchst sie, um auf verschlüsselte Daten auf einem neuen Gerät oder in einem neuen Browser zuzugreifen.",
       "overwriteWarningTitle": "Wichtig",
       "overwriteWarningBody": "Wenn du deine vorherige geheime Passphrase vergessen hast und fortfährst, kannst du den gesamten Chatverlauf sowie alle Ereignisse und Pläne nicht wiederherstellen.",
       "overwriteWarningContinue": "Trotzdem fortfahren",

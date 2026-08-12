@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import ClearIcon from '@mui/icons-material/Clear';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import {
   AlertColor,
   Alert,
@@ -195,12 +194,9 @@ const CryptoUnlockPage: React.FC = () => {
         </Box>
 
         <Box sx={getAuthPageCardSx(theme)}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.25 }}>
-            <LockOutlinedIcon sx={{ color: 'primary.main', fontSize: 28 }} />
-            <Typography component="h1" sx={getAuthCryptoTitleSx()}>
-              {t('crypto.unlock.title')}
-            </Typography>
-          </Box>
+          <Typography component="h1" sx={getAuthCryptoTitleSx()}>
+            {t('crypto.unlock.title')}
+          </Typography>
 
           <Typography sx={getAuthCryptoDescriptionSx()}>
             {t('crypto.unlock.description')}
@@ -339,13 +335,15 @@ const CryptoUnlockPage: React.FC = () => {
       >
         <DialogTitle>{t('crypto.unlock.confirmTitle')}</DialogTitle>
         <DialogContent>
+          <Typography sx={{ whiteSpace: 'pre-line', color: 'text.secondary', mb: 1.5 }}>
+            {t('crypto.unlock.confirmHint')}
+          </Typography>
           <TextField
             fullWidth
             multiline
             minRows={3}
             value={passphrase}
             InputProps={{ readOnly: true }}
-            sx={{ mt: 1 }}
           />
           <Button
             variant="outlined"

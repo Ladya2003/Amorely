@@ -1508,8 +1508,8 @@
     },
     "unlock": {
       "back": "Retour",
-      "title": "Ajouter une phrase secrète",
-      "description": "En tant que propriétaire d'Amorely, je ne peux pas lire vos messages ni consulter vos événements.\n\nC'est voulu pour que vous soyez sûr de la confidentialité de votre contenu.\n\nPour que cela fonctionne, vous devez créer une phrase secrète et la enregistrer dans un autre messager ou un carnet.\n\nImportant : si vous la perdez, nous ne pourrons pas récupérer vos données — messages du chat, texte et médias du calendrier.",
+      "title": "Protégez vos souvenirs 🔐",
+      "description": "Dans Amorely, vos messages et souvenirs sont chiffrés de telle sorte que même nous ne pouvons pas les lire.\n\nPour cela, créez une phrase secrète. Vous en aurez besoin si vous vous connectez à Amorely depuis un nouvel appareil ou navigateur.\n\nImportant : nous ne stockons pas votre phrase et ne pouvons pas la récupérer. Conservez-la en lieu sûr.",
       "tabCreate": "En créer une nouvelle",
       "tabRestore": "Je l'ai déjà",
       "passphrasePlaceholder": "Phrase secrète",
@@ -1525,6 +1525,7 @@
       "deviceConnected": "Appareil connecté. Conservez la phrase en lieu sûr — vous en aurez besoin sur d'autres appareils.",
       "accessRestored": "Accès restauré. Vous pouvez utiliser l'application.",
       "confirmTitle": "Êtes-vous sûr d'avoir enregistré votre phrase ?",
+      "confirmHint": "Enregistrez cette phrase dans un gestionnaire de mots de passe, un carnet ou un autre endroit sûr. Vous en aurez besoin pour accéder aux données chiffrées sur un nouvel appareil ou navigateur.",
       "overwriteWarningTitle": "Important",
       "overwriteWarningBody": "Si vous avez oublié votre phrase secrète précédente et continuez, vous ne pourrez pas restaurer tout l'historique des chats, tous les événements et les plans.",
       "overwriteWarningContinue": "Continuer quand même",

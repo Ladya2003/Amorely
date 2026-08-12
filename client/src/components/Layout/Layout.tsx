@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
 import { useTranslation } from 'react-i18next';
 
@@ -99,7 +99,16 @@ const Layout: React.FC = () => {
 
   const isGameRoute = location.pathname.startsWith('/chat/games/');
 
+  const mainScrollRef = useRef<HTMLDivElement>(null);
 
+  // SPA keeps the Layout scroll container; reset on route change (e.g. feed → pet).
+  useLayoutEffect(() => {
+    const el = mainScrollRef.current;
+    if (el) {
+      el.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
 
@@ -400,7 +409,9 @@ const Layout: React.FC = () => {
 
       
 
-      <Box sx={{ 
+      <Box
+        ref={mainScrollRef}
+        sx={{ 
 
         position: 'relative',
 

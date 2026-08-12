@@ -675,9 +675,9 @@ export const getAuthLandingOutlinedCtaSx = (theme: Theme) => {
 export const getAuthCryptoDescriptionSx = () => ({
   mb: 2.5,
   whiteSpace: 'pre-line' as const,
-  fontSize: '0.875rem',
-  color: 'text.secondary',
-  lineHeight: 1.55,
+  fontSize: '1rem',
+  color: 'text.primary',
+  lineHeight: 1.6,
 });
 
 export const getAuthCryptoTitleSx = () => ({

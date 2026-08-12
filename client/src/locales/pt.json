@@ -1508,8 +1508,8 @@
     },
     "unlock": {
       "back": "Voltar",
-      "title": "Adicionar frase secreta",
-      "description": "Como proprietário do Amorely, não posso ler as suas mensagens nem ver os seus eventos.\n\nIsto é intencional para que possa ter a certeza de que o seu conteúdo é privado.\n\nPara que funcione, precisa de criar uma frase secreta e guardá-la noutro mensageiro ou num caderno.\n\nImportante: se a perder, não poderemos recuperar os seus dados — mensagens do chat, texto e media no calendário.",
+      "title": "Proteja as suas memórias 🔐",
+      "description": "No Amorely, as suas mensagens e memórias estão encriptadas de forma que nem sequer nós as podemos ler.\n\nPara isso, crie uma frase secreta. Vai precisar dela se entrar no Amorely a partir de um novo dispositivo ou navegador.\n\nImportante: não guardamos a sua frase e não a podemos recuperar. Guarde-a num local seguro.",
       "tabCreate": "Criar nova",
       "tabRestore": "Já tenho uma",
       "passphrasePlaceholder": "Frase secreta",
@@ -1525,6 +1525,7 @@
       "deviceConnected": "Dispositivo ligado. Guarde a frase num local seguro — vai precisar dela noutros dispositivos.",
       "accessRestored": "Acesso restaurado. Já pode usar a aplicação.",
       "confirmTitle": "Tem a certeza de que guardou a sua frase?",
+      "confirmHint": "Guarde esta frase num gestor de palavras-passe, num caderno ou noutro local seguro. Vai precisar dela para aceder aos dados encriptados num novo dispositivo ou navegador.",
       "overwriteWarningTitle": "Importante",
       "overwriteWarningBody": "Se esqueceu a frase secreta anterior e continuar, não poderá restaurar todo o histórico de chats, todos os eventos e planos.",
       "overwriteWarningContinue": "Continuar mesmo assim",

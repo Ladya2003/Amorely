@@ -1558,8 +1558,8 @@
     },
     "unlock": {
       "back": "Back",
-      "title": "Set up your secret phrase",
-      "description": "As the owner of Amorely, I cannot read your messages or view your events.\n\nThis is by design so you can be sure your content stays private.\n\nTo make this work, you need to create a secret phrase and save it in another messenger or a notebook.\n\nImportant: if you lose it, we cannot recover your data — chat messages, or text and media in the calendar.",
+      "title": "Protect your memories 🔐",
+      "description": "In Amorely, your messages and memories are encrypted so that even we cannot read them.\n\nTo enable this, create a secret phrase. You will need it if you sign in to Amorely from a new device or browser.\n\nImportant: we do not store your phrase and cannot recover it. Save it in a secure place.",
       "tabCreate": "Create new",
       "tabRestore": "I already have one",
       "passphrasePlaceholder": "Secret phrase",
@@ -1575,6 +1575,7 @@
       "deviceConnected": "Device connected. Save the phrase in a safe place — you will need it on other devices.",
       "accessRestored": "Access restored. You can use the app now.",
       "confirmTitle": "Are you sure you saved your phrase?",
+      "confirmHint": "Save this phrase in a password manager, notebook, or another secure place. You will need it to access encrypted data on a new device or browser.",
       "overwriteWarningTitle": "Important",
       "overwriteWarningBody": "If you forgot your previous secret phrase and continue, you will not be able to restore your full chat history, all events, and plans.",
       "overwriteWarningContinue": "Continue anyway",
