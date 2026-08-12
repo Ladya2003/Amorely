@@ -24,6 +24,12 @@ export const formatDistanceKm = (distanceKm: number): string => {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 };
 
+/** Партнёры считаются рядом: вместо цифры км показываем два сердечка. */
+export const COUPLE_DISTANCE_NEARBY_KM = 1;
+
+export const isCoupleDistanceNearby = (distanceKm: number): boolean =>
+  distanceKm < COUPLE_DISTANCE_NEARBY_KM;
+
 export const isGeolocationSupported = (): boolean =>
   typeof navigator !== 'undefined' &&
   'geolocation' in navigator &&

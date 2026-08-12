@@ -573,7 +573,10 @@
       "permissionDenied": "Sans accès à la localisation, la distance n'est pas disponible.",
       "unsupported": "Dans le navigateur, cette fonctionnalité est limitée. Elle sera plus fiable dans l'application mobile.",
       "error": "Impossible d'obtenir la distance. Réessayez plus tard.",
-      "lockAriaLabel": "Afficher la distance avec le partenaire"
+      "lockAriaLabel": "Afficher la distance avec le partenaire",
+      "nearbyResult": "Vous êtes proches !",
+      "nearbyHint": "Vous et votre partenaire êtes proches — savourez ce moment ensemble.",
+      "nearbyAriaLabel": "Vous êtes près de votre partenaire"
     },
     "openEventAriaLabel": "Ouvrir l'événement",
     "title": "Fil",

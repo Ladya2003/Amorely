@@ -573,7 +573,10 @@
       "permissionDenied": "Ohne Standortzugriff ist die Entfernung nicht verfügbar. Erlaube den Zugriff in den Browser-Einstellungen.",
       "unsupported": "Im Browser funktioniert diese Funktion nur eingeschränkt. In der mobilen App wird sie zuverlässiger sein.",
       "error": "Entfernung konnte nicht abgerufen werden. Bitte später erneut versuchen.",
-      "lockAriaLabel": "Entfernung zum Partner anzeigen"
+      "lockAriaLabel": "Entfernung zum Partner anzeigen",
+      "nearbyResult": "Ihr seid nah!",
+      "nearbyHint": "Du und dein Partner seid in der Nähe — genießt die gemeinsame Zeit.",
+      "nearbyAriaLabel": "Du bist in der Nähe deines Partners"
     },
     "openEventAriaLabel": "Ereignis öffnen",
     "title": "Feed",
