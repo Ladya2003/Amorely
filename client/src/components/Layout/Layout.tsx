@@ -283,6 +283,8 @@ const Layout: React.FC = () => {
           flexDirection: 'column',
           height: '100dvh',
           overflow: 'hidden',
+          // iOS PWA black-translucent: фон под status bar / overscroll
+          bgcolor: 'background.default',
         },
         !isMobile && ((muiTheme) => getDesktopLayoutTopGlowSx(muiTheme)),
       ]}

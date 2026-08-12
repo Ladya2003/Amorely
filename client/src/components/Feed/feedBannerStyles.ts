@@ -130,8 +130,8 @@ export const getPageTopGlowBackground = (
 };
 
 type FullBleedTopGlowOptions = {
-  top?: { xs: number; sm: number };
-  height?: { xs: number; sm: number };
+  top?: { xs: number | string; sm: number | string };
+  height?: { xs: number | string; sm: number | string };
   /** На desktop glow рисует Layout от верха страницы — локальный ::before скрываем. */
   hideOnDesktop?: boolean;
 };
@@ -240,11 +240,22 @@ export const getFeedHeaderGlowSx = (theme: Theme, options: FeedHeaderGlowOptions
       ? { xs: `calc(-1 * ${gutterXs})`, sm: `calc(-1 * ${gutterSm})` }
       : 0,
     px: { xs: gutterXs, sm: gutterSm },
-    pt: { xs: 0.5, sm: 0 },
+    // iOS PWA black-translucent: контент под status bar — отступ + glow заходят в safe-area.
+    pt: {
+      xs: `calc(${theme.spacing(0.5)} + env(safe-area-inset-top, 0px))`,
+      sm: 0,
+    },
     mt: { xs: -1, sm: -0.5 },
     pb: 0.5,
     '&::before': getFullBleedTopGlowBeforeSx(theme, intensity, {
-      top: { xs: -24, sm: -32 },
+      top: {
+        xs: 'calc(-24px - env(safe-area-inset-top, 0px))',
+        sm: -32,
+      },
+      height: {
+        xs: 'calc(300px + env(safe-area-inset-top, 0px))',
+        sm: 320,
+      },
       hideOnDesktop: true,
     }),
   };

@@ -14,7 +14,17 @@ const PetDetailPage: React.FC = () => {
 
   return (
     <Box sx={(theme) => getPetPageBackdropSx(theme)}>
-      <Container maxWidth="sm" sx={{ py: 2, px: { xs: 2, sm: 3 } }}>
+      <Container
+        maxWidth="sm"
+        sx={{
+          py: 2,
+          pt: {
+            xs: 'calc(16px + env(safe-area-inset-top, 0px))',
+            sm: 2,
+          },
+          px: { xs: 2, sm: 3 },
+        }}
+      >
         <PetDetailView
           petId={petId}
           onBack={() => navigate('/')}

@@ -77,7 +77,7 @@ const VerifyEmailPage: React.FC = () => {
 
   return (
     <Box component="main" sx={getAuthPageRootSx(theme)}>
-      <Container maxWidth="sm" sx={getAuthPageContainerSx()}>
+      <Container maxWidth="sm" sx={getAuthPageContainerSx({ safeAreaTop: true })}>
         <Box sx={{ ...getAuthPageLogoRowSx(), mb: 3, justifyContent: 'center' }}>
           <FavoriteIcon sx={getAuthPageLogoIconSx(theme)} />
           <Typography component="div" sx={getAuthPageLogoTitleSx()}>

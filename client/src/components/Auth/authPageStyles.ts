@@ -34,11 +34,19 @@ export const getAuthPageRootSx = (theme: Theme) => ({
   }),
 });
 
-export const getAuthPageContainerSx = () => ({
+export const getAuthPageContainerSx = (options?: { safeAreaTop?: boolean }) => ({
   flex: 1,
   display: 'flex',
   flexDirection: 'column' as const,
   py: { xs: 2, sm: 3 },
+  ...(options?.safeAreaTop
+    ? {
+        pt: {
+          xs: 'calc(16px + env(safe-area-inset-top, 0px))',
+          sm: 3,
+        },
+      }
+    : {}),
   px: { xs: 2, sm: 3 },
   pb: { xs: 6, sm: 8 },
   ...authPageEnterSx,
@@ -50,6 +58,7 @@ export const getAuthPageTopBarSx = () => ({
   alignItems: 'center',
   justifyContent: 'flex-end',
   mb: 2,
+  pt: { xs: 'env(safe-area-inset-top, 0px)', sm: 0 },
 });
 
 export const getAuthLandingTopBarSx = (theme: Theme) => ({
@@ -79,7 +88,11 @@ export const getAuthLandingTopBarInnerSx = () => ({
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: 1.5,
-  py: 1.25,
+  pt: {
+    xs: 'calc(10px + env(safe-area-inset-top, 0px))',
+    sm: 1.25,
+  },
+  pb: 1.25,
   px: { xs: 2, sm: 3 },
 });
 
