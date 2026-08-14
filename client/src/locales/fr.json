@@ -1,4 +1,4 @@
-﻿{
+{
   "settings": {
     "title": "Paramètres",
     "tabs": {
@@ -1536,6 +1536,33 @@
       "confirmSaved": "Oui, je l'ai enregistrée",
       "clearPassphrase": "Effacer"
     }
+  },
+  "dailyQuestions": {
+    "title": "Questions du jour",
+    "results": "Résultat",
+    "progress": "{{current}} sur {{total}}",
+    "waitingPartner": "En attente du partenaire",
+    "similarityLabel": "Similarité de vos réponses",
+    "partnerNotFinished": "Votre partenaire n'a pas encore terminé cette catégorie",
+    "notifyPartner": "Notifier le partenaire",
+    "notifySent": "Notification envoyée",
+    "yourAnswer": "Votre réponse",
+    "partnerAnswer": "Réponse du partenaire",
+    "partnerNoAnswer": "Le partenaire n'a pas encore répondu",
+    "questionOf": "Question {{current}} sur {{total}}",
+    "textPlaceholder": "Écrivez votre réponse...",
+    "next": "Suivant",
+    "finish": "Terminer",
+    "historyTitle": "Historique des questions",
+    "historyEmpty": "Pas encore de tours terminés",
+    "nextRoundIn": "Nouvelles catégories dans",
+    "timerDone": "Bientôt de nouvelles catégories",
+    "editAnswer": "Modifier",
+    "saveAnswer": "Enregistrer",
+    "youFallback": "Vous",
+    "partnerFallback": "Partenaire",
+    "noYourAnswer": "Pas de réponse",
+    "partnerNoAnswerShort": "En attente de réponse"
   },
   "common": {
     "back": "Retour",

@@ -1,4 +1,4 @@
-﻿{
+{
   "settings": {
     "title": "Налаштування",
     "tabs": {
@@ -1480,6 +1480,33 @@
       "confirmSaved": "Так, зберег(ла)",
       "clearPassphrase": "Очистити"
     }
+  },
+  "dailyQuestions": {
+    "title": "Питання дня",
+    "results": "Результат",
+    "progress": "{{current}} з {{total}}",
+    "waitingPartner": "Чекаємо партнера",
+    "similarityLabel": "Схожість ваших відповідей",
+    "partnerNotFinished": "Партнер ще не пройшов цю категорію",
+    "notifyPartner": "Сповістити партнера",
+    "notifySent": "Сповіщення надіслано",
+    "yourAnswer": "Ваша відповідь",
+    "partnerAnswer": "Відповідь партнера",
+    "partnerNoAnswer": "Партнер ще не відповів",
+    "questionOf": "Питання {{current}} з {{total}}",
+    "textPlaceholder": "Напишіть свою відповідь...",
+    "next": "Далі",
+    "finish": "Завершити",
+    "historyTitle": "Історія питань",
+    "historyEmpty": "Поки немає завершених раундів",
+    "nextRoundIn": "Нові категорії через",
+    "timerDone": "Скоро нові категорії",
+    "editAnswer": "Змінити",
+    "saveAnswer": "Зберегти",
+    "youFallback": "Ви",
+    "partnerFallback": "Партнер",
+    "noYourAnswer": "Немає відповіді",
+    "partnerNoAnswerShort": "Чекаємо відповідь"
   },
   "common": {
     "back": "Назад",

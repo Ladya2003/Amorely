@@ -1,6 +1,12 @@
 import { AppLocale } from '../i18n/locales';
 import type { DailyQuestion, DailyQuestionCategory } from './dailyQuestionsTypes';
 import { EXTRA_DAILY_QUESTIONS_EN } from './extraCategoriesI18n';
+import byOverlay from './overlays/by.json';
+import deOverlay from './overlays/de.json';
+import esOverlay from './overlays/es.json';
+import frOverlay from './overlays/fr.json';
+import ptOverlay from './overlays/pt.json';
+import ukOverlay from './overlays/uk.json';
 
 type QuestionOverlay = {
   text?: string;
@@ -12,6 +18,8 @@ type CategoryOverlay = {
   title: string;
   questions: Record<string, QuestionOverlay>;
 };
+
+type OverlayMap = Record<string, CategoryOverlay>;
 
 /** English copy for daily question categories (base content is Russian). */
 const EN: Record<string, CategoryOverlay> = {
@@ -252,6 +260,17 @@ const EN: Record<string, CategoryOverlay> = {
   ...EXTRA_DAILY_QUESTIONS_EN,
 };
 
+/** Non-Russian overlays for daily question categories (base content is Russian). */
+const OVERLAYS: Partial<Record<AppLocale, OverlayMap>> = {
+  en: EN,
+  uk: ukOverlay as OverlayMap,
+  by: byOverlay as OverlayMap,
+  de: deOverlay as OverlayMap,
+  es: esOverlay as OverlayMap,
+  fr: frOverlay as OverlayMap,
+  pt: ptOverlay as OverlayMap,
+};
+
 const localizeQuestion = (question: DailyQuestion, overlay?: QuestionOverlay): DailyQuestion => {
   if (!overlay) return question;
 
@@ -269,20 +288,25 @@ const localizeQuestion = (question: DailyQuestion, overlay?: QuestionOverlay): D
   };
 };
 
-export const resolveDailyQuestionsContentLocale = (locale: AppLocale): 'ru' | 'en' => {
+const getOverlayMap = (locale: AppLocale): OverlayMap | undefined => {
+  if (locale === 'ru') return undefined;
+  return OVERLAYS[locale] ?? OVERLAYS.en;
+};
+
+/** @deprecated Prefer AppLocale directly; kept for callers that branch on ru vs translated. */
+export const resolveDailyQuestionsContentLocale = (locale: AppLocale): AppLocale => {
   if (locale === 'ru') return 'ru';
-  return 'en';
+  return OVERLAYS[locale] ? locale : 'en';
 };
 
 export const localizeCategory = (
   category: DailyQuestionCategory,
   locale: AppLocale
 ): DailyQuestionCategory => {
-  if (resolveDailyQuestionsContentLocale(locale) === 'ru') {
-    return category;
-  }
+  const overlayMap = getOverlayMap(locale);
+  if (!overlayMap) return category;
 
-  const overlay = EN[category.id];
+  const overlay = overlayMap[category.id];
   if (!overlay) return category;
 
   return {
@@ -299,8 +323,9 @@ export const getLocalizedCategoryTitle = (
   fallback: string,
   locale: AppLocale
 ): string => {
-  if (resolveDailyQuestionsContentLocale(locale) === 'ru') return fallback;
-  return EN[categoryId]?.title ?? fallback;
+  const overlayMap = getOverlayMap(locale);
+  if (!overlayMap) return fallback;
+  return overlayMap[categoryId]?.title ?? OVERLAYS.en?.[categoryId]?.title ?? fallback;
 };
 
 export const getLocalizedQuestion = (
@@ -308,8 +333,11 @@ export const getLocalizedQuestion = (
   question: DailyQuestion,
   locale: AppLocale
 ): DailyQuestion => {
-  if (resolveDailyQuestionsContentLocale(locale) === 'ru') return question;
-  const overlay = EN[categoryId]?.questions[question.id];
+  const overlayMap = getOverlayMap(locale);
+  if (!overlayMap) return question;
+  const overlay =
+    overlayMap[categoryId]?.questions[question.id] ??
+    OVERLAYS.en?.[categoryId]?.questions[question.id];
   return localizeQuestion(question, overlay);
 };
 

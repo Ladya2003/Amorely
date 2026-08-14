@@ -1,0 +1,2738 @@
+{
+  "never_have_i_ever": {
+    "title": "Je n'ai jamais...",
+    "questions": {
+      "n1": {
+        "text": "Je n'ai jamais... (écris ton « péché » le plus drôle)"
+      },
+      "n2": {
+        "text": "Je n'ai jamais lu en secret les messages de mon/ma partenaire",
+        "options": {
+          "yes": "Oui, coupable 🙈",
+          "no": "Jamais !",
+          "tempted": "J'en ai eu envie, mais j'ai résisté"
+        }
+      },
+      "n3": {
+        "text": "Je n'ai jamais fait quelque chose de fou pour l'amour. Raconte !"
+      },
+      "n4": {
+        "text": "Je ne me suis jamais endormi(e) pendant une soirée cinéma",
+        "options": {
+          "guilty": "Coupable 😴",
+          "never": "Jamais !",
+          "partner": "C'est mon/ma partenaire qui s'est endormi(e) !"
+        }
+      }
+    }
+  },
+  "intimate_life": {
+    "title": "Notre vie intime",
+    "questions": {
+      "i1": {
+        "text": "Qu'est-ce qui compte le plus pour toi dans l'intimité ?",
+        "options": {
+          "passion": "La passion et la spontanéité",
+          "tenderness": "La tendresse et la confiance",
+          "balance": "Un équilibre des deux"
+        }
+      },
+      "i2": {
+        "text": "Quel compliment de ton/ta partenaire t'excite le plus ?"
+      },
+      "i3": {
+        "text": "Atmosphère idéale pour une soirée romantique ?",
+        "options": {
+          "candles": "Bougies et calme",
+          "music": "Musique et danse",
+          "surprise": "Une surprise sans préparation"
+        }
+      },
+      "i4": {
+        "text": "De quoi rêves-tu sans encore l'avoir dit à ton/ta partenaire ?"
+      }
+    }
+  },
+  "couple_life": {
+    "title": "La vie de couple",
+    "questions": {
+      "c1": {
+        "text": "Qui cuisine habituellement à la maison ?",
+        "options": {
+          "me": "Moi",
+          "partner": "Mon/ma partenaire",
+          "together": "Ensemble",
+          "delivery": "La livraison est notre amie"
+        }
+      },
+      "c2": {
+        "text": "Quel moment du quotidien avec ton/ta partenaire préfères-tu ?"
+      },
+      "c3": {
+        "text": "Comment vous réconciliez-vous habituellement après une dispute ?",
+        "options": {
+          "talk": "Une discussion calme",
+          "hug": "Des câlins sans paroles",
+          "time": "J'ai besoin d'être seul(e)",
+          "humor": "Une blague et des rires"
+        }
+      },
+      "c4": {
+        "text": "Quelle habitude de ton/ta partenaire aimerais-tu adopter ?"
+      }
+    }
+  },
+  "dream_house": {
+    "title": "Maison de rêve",
+    "questions": {
+      "d1": {
+        "text": "Quelle maison te ressemble le plus ?",
+        "images": {
+          "modern": "Moderne",
+          "cozy": "Cottage cosy"
+        }
+      },
+      "d2": {
+        "text": "Où aimerais-tu vivre ?",
+        "images": {
+          "beach": "Au bord de la mer",
+          "mountain": "À la montagne"
+        }
+      },
+      "d3": {
+        "text": "Quelle pièce de ta maison de rêve est ta préférée, et pourquoi ?"
+      },
+      "d4": {
+        "text": "Quelle cuisine préfères-tu ?",
+        "images": {
+          "kitchen": "Lumineuse et spacieuse",
+          "fireplace": "Avec une cheminée à proximité"
+        }
+      }
+    }
+  },
+  "love_in_balance": {
+    "title": "L'amour en équilibre",
+    "questions": {
+      "l1": {
+        "text": "De combien de temps seul(e) as-tu besoin en couple ?",
+        "options": {
+          "lot": "Beaucoup — je suis introverti(e)",
+          "some": "Un peu chaque jour",
+          "little": "Pas beaucoup — je veux qu'on soit ensemble"
+        }
+      },
+      "l2": {
+        "text": "Qu'est-ce qui t'aide à trouver l'équilibre entre « nous » et « moi » ?"
+      },
+      "l3": {
+        "text": "Comment réagis-tu quand ton/ta partenaire est occupé(e) et ne répond pas ?",
+        "options": {
+          "calm": "J'attends calmement",
+          "worry": "Je commence à m'inquiéter",
+          "busy": "Je m'occupe aussi"
+        }
+      },
+      "l4": {
+        "text": "Que peut faire ton/ta partenaire pour que tu te sentes en sécurité ?"
+      }
+    }
+  },
+  "holiday_habits": {
+    "title": "Habitudes de fêtes",
+    "questions": {
+      "h1": {
+        "text": "Comment préfères-tu fêter le Nouvel An ?",
+        "options": {
+          "home": "À la maison, cosy",
+          "party": "Lors d'une grande fête",
+          "travel": "En voyage"
+        }
+      },
+      "h2": {
+        "text": "Quelle fête aimerais-tu particulièrement célébrer ensemble ?"
+      },
+      "h3": {
+        "text": "Que penses-tu des cadeaux de fêtes ?",
+        "options": {
+          "love": "J'adore offrir et recevoir",
+          "simple": "Le temps ensemble compte le plus",
+          "surprise": "J'adore les surprises"
+        }
+      },
+      "h4": {
+        "text": "Quelle tradition de fête d'enfance te tient à cœur ?"
+      }
+    }
+  },
+  "first_dates": {
+    "title": "Premiers rendez-vous",
+    "questions": {
+      "f1": {
+        "text": "De quoi te souviens-tu le plus de notre premier rendez-vous ?"
+      },
+      "f2": {
+        "text": "Ton premier rendez-vous idéal, c'est...",
+        "options": {
+          "walk": "Une promenade et une discussion",
+          "dinner": "Un dîner au restaurant",
+          "adventure": "Quelque chose d'insolite"
+        }
+      },
+      "f3": {
+        "text": "Quel moment t'a donné envie de continuer à se voir ?"
+      },
+      "f4": {
+        "text": "Comment te sentais-tu avant notre premier baiser ?",
+        "options": {
+          "nervous": "Nerveux/nerveuse",
+          "natural": "C'était naturel",
+          "excited": "Excité(e) et transporté(e)"
+        }
+      }
+    }
+  },
+  "future_together": {
+    "title": "Notre avenir",
+    "questions": {
+      "u1": {
+        "text": "Comment imagines-tu notre vie dans 5 ans ?"
+      },
+      "u2": {
+        "text": "Combien d'enfants (s'il y en a) voudrais-tu ?",
+        "options": {
+          "zero": "Aucun",
+          "one_two": "1–2 enfants",
+          "big": "Une grande famille",
+          "open": "On verra"
+        }
+      },
+      "u3": {
+        "text": "Quel rêve veux-tu qu'on réalise ensemble cette année ?"
+      },
+      "u4": {
+        "text": "Où passerais-tu un anniversaire d'or ?",
+        "options": {
+          "home": "À la maison avec les proches",
+          "abroad": "Dans un pays lointain",
+          "revisit": "Là où on s'est rencontrés"
+        }
+      }
+    }
+  },
+  "food_romance": {
+    "title": "Cuisine & romance",
+    "questions": {
+      "r1": {
+        "text": "Le dîner romantique parfait, c'est...",
+        "options": {
+          "cook": "Cuisiner ensemble à la maison",
+          "restaurant": "Restaurant aux chandelles",
+          "picnic": "Pique-nique en plein air"
+        }
+      },
+      "r2": {
+        "text": "Quel plat te rappelle notre relation ?"
+      },
+      "r3": {
+        "text": "Que penses-tu des courses ensemble ?",
+        "options": {
+          "love": "J'adore — c'est un rendez-vous !",
+          "ok": "Ça va si c'est rapide",
+          "no": "Je préfère y aller seul(e)"
+        }
+      },
+      "r4": {
+        "text": "Quel goût ou parfum te rappelle nous ?"
+      }
+    }
+  },
+  "travel_dreams": {
+    "title": "Voyages de rêve",
+    "questions": {
+      "t1": {
+        "text": "Où devrait-on aller pour les prochaines vacances ?",
+        "images": {
+          "beach": "Plage et soleil",
+          "city": "Ville et culture"
+        }
+      },
+      "t2": {
+        "text": "Quel voyage rêves-tu de faire avec moi ?"
+      },
+      "t3": {
+        "text": "Ton style de voyage, c'est...",
+        "options": {
+          "plan": "Tout planifié",
+          "spontaneous": "Spontané et aventureux",
+          "mix": "Mélange de plans et d'improvisation"
+        }
+      },
+      "t4": {
+        "text": "Où séjourner en voyage ?",
+        "images": {
+          "hotel": "Hôtel avec vue",
+          "cottage": "Cottage cosy"
+        }
+      }
+    }
+  },
+  "silly_moments": {
+    "title": "Secrets ridicules",
+    "questions": {
+      "s1": {
+        "text": "Quelle est notre histoire la plus drôle que tu racontes aux amis ?"
+      },
+      "s2": {
+        "text": "Que fais-tu pour remonter le moral de ton/ta partenaire ?",
+        "options": {
+          "joke": "Blagues et bêtises",
+          "gift": "Une petite surprise",
+          "hug": "Un câlin serré"
+        }
+      },
+      "s3": {
+        "text": "Quel talent bizarre as-tu que je ne connais peut-être pas ?"
+      },
+      "s4": {
+        "text": "Si on était des personnages de dessin animé, ce serait...",
+        "options": {
+          "comedy": "Une comédie",
+          "adventure": "Une aventure",
+          "romance": "Un conte romantique"
+        }
+      }
+    }
+  },
+  "deep_connection": {
+    "title": "Connexion profonde",
+    "questions": {
+      "p1": {
+        "text": "Quand as-tu senti pour la dernière fois que je te comprends vraiment ?"
+      },
+      "p2": {
+        "text": "Que signifie « être entendu(e) » pour toi ?",
+        "options": {
+          "listen": "Écouter sans donner de conseils",
+          "support": "Du soutien en paroles et en actes",
+          "empathy": "Ressentir mes émotions"
+        }
+      },
+      "p3": {
+        "text": "De quoi as-tu le plus de mal à parler, mais tu voudrais essayer ?"
+      },
+      "p4": {
+        "text": "À quelle fréquence as-tu besoin de conversations profondes ?",
+        "options": {
+          "daily": "Presque tous les jours",
+          "weekly": "Une fois par semaine",
+          "sometimes": "Parfois, mais elles comptent"
+        }
+      }
+    }
+  },
+  "music_mood": {
+    "title": "Musique & humeur",
+    "questions": {
+      "m1": {
+        "text": "Quelle chanson te rappelle nous ?"
+      },
+      "m2": {
+        "text": "Quelle musique mets-tu pour une ambiance romantique ?",
+        "options": {
+          "slow": "Ballades lentes",
+          "jazz": "Jazz / lo-fi",
+          "fun": "Hits entraînants"
+        }
+      },
+      "m3": {
+        "text": "Quel concert ou festival aimerais-tu voir ensemble ?"
+      },
+      "m4": {
+        "text": "Danser à la maison, c'est...",
+        "options": {
+          "love": "Notre rituel !",
+          "sometimes": "Parfois, quand l'envie vient",
+          "shy": "Timide, mais j'essaie"
+        }
+      }
+    }
+  },
+  "morning_night": {
+    "title": "Matin & soir",
+    "questions": {
+      "o1": {
+        "text": "Es-tu un oiseau de nuit ou un lève-tôt ?",
+        "options": {
+          "owl": "Oiseau de nuit 🦉",
+          "lark": "Lève-tôt 🐦",
+          "depends": "Ça dépend du jour"
+        }
+      },
+      "o2": {
+        "text": "À quoi ressemble ton matin idéal ensemble ?"
+      },
+      "o3": {
+        "text": "Comment dors-tu le mieux ?",
+        "options": {
+          "cuddle": "En câlins",
+          "space": "J'ai besoin d'un peu d'espace",
+          "talk": "Après avoir parlé de la journée"
+        }
+      },
+      "o4": {
+        "text": "Quelle chambre te ressemble le plus ?",
+        "images": {
+          "bedroom": "Minimalisme et lumière",
+          "cozy": "Textiles cosy"
+        }
+      }
+    }
+  },
+  "gifts_surprises": {
+    "title": "Cadeaux & surprises",
+    "questions": {
+      "g1": {
+        "text": "Quel type de cadeau préfères-tu ?",
+        "options": {
+          "handmade": "Fait main",
+          "experience": "Une expérience / un voyage",
+          "thing": "Quelque chose que je voulais depuis longtemps"
+        }
+      },
+      "g2": {
+        "text": "Quelle surprise de ton/ta partenaire t'a le plus marqué(e) ?"
+      },
+      "g3": {
+        "text": "Que penses-tu des marques d'affection en public ?",
+        "options": {
+          "love": "J'adore !",
+          "sometimes": "Parfois — oui",
+          "private": "Je préfère en privé"
+        }
+      },
+      "g4": {
+        "text": "Quel petit geste quotidien te rendrait plus heureux/heureuse ?"
+      }
+    }
+  },
+  "childhood_memories": {
+    "title": "Souvenirs d'enfance",
+    "questions": {
+      "ch1": {
+        "text": "Quel souvenir d'enfance aimerais-tu revivre avec moi ?"
+      },
+      "ch2": {
+        "text": "Qu'est-ce de ton enfance que tu portes encore aujourd'hui ?",
+        "options": {
+          "playful": "L'esprit joueur et les rires",
+          "curious": "La curiosité pour le monde",
+          "sensitive": "La sensibilité et la rêverie"
+        }
+      },
+      "ch3": {
+        "text": "Quelle tradition familiale de ton enfance pourrait devenir la nôtre ?"
+      },
+      "ch4": {
+        "text": "Si on s'était rencontrés enfants, que ferait-on ensemble ?",
+        "options": {
+          "playground": "Jouer dans la cour de récréation",
+          "adventure": "Partir à l'aventure",
+          "secret": "Créer un club secret"
+        }
+      }
+    }
+  },
+  "family_traditions": {
+    "title": "Traditions familiales",
+    "questions": {
+      "fa1": {
+        "text": "Que penses-tu des fêtes de famille ?",
+        "options": {
+          "love": "J'adore — elles relient les générations",
+          "selective": "Je choisis celles qui comptent le plus",
+          "create": "Je veux créer les nôtres"
+        }
+      },
+      "fa2": {
+        "text": "Quelle tradition de ta famille transmettrais-tu à nos enfants ?"
+      },
+      "fa3": {
+        "text": "À quelle fréquence veux-tu voir la famille ?",
+        "options": {
+          "often": "Souvent — la famille proche",
+          "holidays": "Les fêtes suffisent",
+          "balance": "Un équilibre — avec notre propre espace"
+        }
+      },
+      "fa4": {
+        "text": "Quelle recette ou rituel familial veux-tu faire vivre ?"
+      }
+    }
+  },
+  "trust_foundations": {
+    "title": "Les bases de la confiance",
+    "questions": {
+      "tr1": {
+        "text": "Quand as-tu senti pour la première fois que tu pouvais me faire confiance ?"
+      },
+      "tr2": {
+        "text": "Qu'est-ce qui compte le plus pour toi dans la confiance ?",
+        "options": {
+          "honesty": "L'honnêteté, même quand ça fait mal",
+          "reliability": "La fiabilité et tenir ses promesses",
+          "transparency": "L'ouverture sans secrets"
+        }
+      },
+      "tr3": {
+        "text": "Y a-t-il eu un moment où la confiance entre nous s'est renforcée ?"
+      },
+      "tr4": {
+        "text": "Comment reconstruis-tu la confiance quand elle est ébranlée ?",
+        "options": {
+          "talk": "Une longue discussion honnête",
+          "time": "Le temps et la constance",
+          "actions": "Des actes, pas seulement des mots"
+        }
+      }
+    }
+  },
+  "conflict_style": {
+    "title": "Style de conflit",
+    "questions": {
+      "co1": {
+        "text": "Quand on se dispute, tu as tendance à...",
+        "options": {
+          "withdraw": "Te retirer et te taire",
+          "express": "Exprimer tes émotions tout de suite",
+          "analyze": "Essayer d'analyser logiquement"
+        }
+      },
+      "co2": {
+        "text": "De quoi a-t-on le plus de mal à discuter, mais qu'il faut aborder ?"
+      },
+      "co3": {
+        "text": "Qu'est-ce qui t'aide à ne pas trop en dire pendant une dispute ?",
+        "options": {
+          "pause": "Une pause et s'éloigner un moment",
+          "breathe": "Respirer profondément",
+          "remind": "Me rappeler qu'on est une équipe"
+        }
+      },
+      "co4": {
+        "text": "Quelle leçon des conflits passés nous aiderait maintenant ?"
+      }
+    }
+  },
+  "saying_sorry": {
+    "title": "Dire pardon",
+    "questions": {
+      "so1": {
+        "text": "Comment t'excuses-tu habituellement ?",
+        "options": {
+          "words": "Avec des mots — « pardon »",
+          "actions": "Par des actes et de l'attention",
+          "time": "J'ai besoin de temps, puis je parle"
+        }
+      },
+      "so2": {
+        "text": "Quelle excuse de ma part t'a le plus marqué(e) ?"
+      },
+      "so3": {
+        "text": "Qu'est-ce qui rend une excuse sincère pour toi ?",
+        "options": {
+          "acknowledge": "Reconnaître l'erreur",
+          "change": "Essayer de changer",
+          "patience": "De la patience avec mes sentiments"
+        }
+      },
+      "so4": {
+        "text": "De quoi aimerais-tu t'excuser auprès de moi maintenant ?"
+      }
+    }
+  },
+  "jealousy_talk": {
+    "title": "Jalousie & honnêteté",
+    "questions": {
+      "je1": {
+        "text": "Que penses-tu d'une légère jalousie ?",
+        "options": {
+          "normal": "Normale — ça veut dire que tu tiens à l'autre",
+          "uncomfortable": "Inconfortable, mais ça arrive",
+          "avoid": "J'essaie de ne pas être jaloux/jalouse"
+        }
+      },
+      "je2": {
+        "text": "Qu'est-ce qui t'aide à te sentir en sécurité dans notre relation ?"
+      },
+      "je3": {
+        "text": "Quelle est la meilleure façon de parler de jalousie ?",
+        "options": {
+          "direct": "Directement, sans blâmer",
+          "humor": "Avec humour et légèreté",
+          "later": "Quand les émotions se sont calmées"
+        }
+      },
+      "je4": {
+        "text": "Y a-t-il eu un moment où la jalousie nous a appris quelque chose d'important ?"
+      }
+    }
+  },
+  "personal_space": {
+    "title": "Espace personnel",
+    "questions": {
+      "ps1": {
+        "text": "De combien de temps seul(e) as-tu besoin par semaine ?",
+        "options": {
+          "daily": "Au moins une heure par jour",
+          "few": "Quelques fois par semaine",
+          "little": "Peu — je me recharge avec toi"
+        }
+      },
+      "ps2": {
+        "text": "Que fais-tu quand tu veux être seul(e) ?"
+      },
+      "ps3": {
+        "text": "Comment réagis-tu quand je demande du temps seul(e) ?",
+        "options": {
+          "support": "Soutiens sans te vexer",
+          "worry": "T'inquiètes un peu",
+          "use": "En profites aussi pour toi"
+        }
+      },
+      "ps4": {
+        "text": "Comment équilibrer « ensemble » et « chacun de son côté » ?"
+      }
+    }
+  },
+  "couple_rituals": {
+    "title": "Rituels de couple",
+    "questions": {
+      "cr1": {
+        "text": "Lequel de nos rituels apprécies-tu le plus ?"
+      },
+      "cr2": {
+        "text": "Quel nouveau rituel aimerais-tu commencer ?",
+        "options": {
+          "weekly": "Une soirée en amoureux chaque semaine",
+          "morning": "Un rituel du matin",
+          "goodnight": "Un rituel du bonsoir"
+        }
+      },
+      "cr3": {
+        "text": "Y a-t-il un rituel qu'on a perdu et qu'il vaut la peine de ramener ?"
+      },
+      "cr4": {
+        "text": "Pour toi, les rituels sont...",
+        "options": {
+          "anchor": "Un ancrage de stabilité",
+          "romance": "Une façon de garder la romance vivante",
+          "fun": "Une excuse pour la joie"
+        }
+      }
+    }
+  },
+  "date_night_ideas": {
+    "title": "Idées de soirée en amoureux",
+    "questions": {
+      "dn1": {
+        "text": "Quel rendez-vous te ressemble le plus ?",
+        "images": {
+          "restaurant_candle": "Restaurant aux chandelles",
+          "picnic_park": "Pique-nique au parc"
+        }
+      },
+      "dn2": {
+        "text": "À quelle fréquence as-tu besoin de vraies soirées en amoureux ?",
+        "options": {
+          "weekly": "Une fois par semaine",
+          "biweekly": "Toutes les deux semaines",
+          "monthly": "Une fois par mois — mais spéciale"
+        }
+      },
+      "dn3": {
+        "text": "Lequel de nos rendez-vous referais-tu ?"
+      },
+      "dn4": {
+        "text": "Le rendez-vous parfait sans téléphone, c'est...",
+        "options": {
+          "walk": "Une longue promenade",
+          "cook": "Cuisiner ensemble",
+          "surprise": "Une surprise de mon/ma partenaire"
+        }
+      }
+    }
+  },
+  "weekend_vibes": {
+    "title": "Ambiance week-end",
+    "questions": {
+      "wv1": {
+        "text": "Ton week-end idéal, c'est...",
+        "options": {
+          "active": "Activité et aventure",
+          "lazy": "Flemme et séries",
+          "mix": "Un mélange de repos et de courses"
+        }
+      },
+      "wv2": {
+        "text": "Quel week-end récent avec toi t'a marqué ?"
+      },
+      "wv3": {
+        "text": "Que penses-tu des plans du week-end ?",
+        "options": {
+          "plan": "J'adore planifier à l'avance",
+          "spontaneous": "Spontané — on verra bien",
+          "flexible": "Un jour planifié, un jour libre"
+        }
+      },
+      "wv4": {
+        "text": "Que voudrais-tu faire ce week-end ?"
+      }
+    }
+  },
+  "home_chores": {
+    "title": "Tâches ménagères",
+    "questions": {
+      "hc1": {
+        "text": "Quelle tâche ménagère aimes-tu vraiment le plus ?",
+        "options": {
+          "cooking": "La cuisine",
+          "cleaning": "Le ménage — c'est thérapeutique",
+          "none": "Aucune 😅"
+        }
+      },
+      "hc2": {
+        "text": "Comment mieux répartir les tâches ménagères équitablement ?"
+      },
+      "hc3": {
+        "text": "Quand ton/ta partenaire fait des tâches sans qu'on le demande, tu...",
+        "options": {
+          "grateful": "Te sens incroyablement reconnaissant(e)",
+          "noticed": "Remarques et apprécies",
+          "expected": "C'est normal en couple"
+        }
+      },
+      "hc4": {
+        "text": "Quelle astuce ménagère veux-tu qu'on essaie ensemble ?"
+      }
+    }
+  },
+  "cooking_bond": {
+    "title": "Cuisiner ensemble",
+    "questions": {
+      "cb1": {
+        "text": "Quel plat a-t-on le mieux réussi ensemble ?"
+      },
+      "cb2": {
+        "text": "Ton rôle en cuisine en couple, c'est...",
+        "options": {
+          "chef": "Chef/cheffe",
+          "sous": "Sous-chef/sous-cheffe",
+          "taster": "Goûteur/goûteuse et soutien moral"
+        }
+      },
+      "cb3": {
+        "text": "Quel plat veux-tu apprendre à cuisiner avec moi ?"
+      },
+      "cb4": {
+        "text": "La musique en cuisine, c'est...",
+        "options": {
+          "must": "Indispensable !",
+          "sometimes": "Parfois pour l'ambiance",
+          "quiet": "Je préfère le calme et la discussion"
+        }
+      }
+    }
+  },
+  "money_matters": {
+    "title": "Questions d'argent",
+    "questions": {
+      "mo1": {
+        "text": "Que penses-tu des dépenses partagées ?",
+        "options": {
+          "equal": "Partager à parts égales — c'est juste",
+          "flexible": "Flexible — selon les moyens de chacun",
+          "separate": "En partie séparées, en partie ensemble"
+        }
+      },
+      "mo2": {
+        "text": "Quels objectifs financiers rêves-tu avec moi ?"
+      },
+      "mo3": {
+        "text": "Parler d'argent pour toi, c'est...",
+        "options": {
+          "easy": "Facile et ouvert",
+          "hard": "Difficile, mais important",
+          "avoid": "J'essaie de l'éviter"
+        }
+      },
+      "mo4": {
+        "text": "Quel achat « pour nous » apporterait le plus de joie ?"
+      }
+    }
+  },
+  "shared_savings": {
+    "title": "Épargne commune",
+    "questions": {
+      "sa1": {
+        "text": "Pour quoi voudrais-tu épargner ensemble en premier ?"
+      },
+      "sa2": {
+        "text": "Quel est ton style d'épargne ?",
+        "options": {
+          "steady": "De petites sommes régulières",
+          "goal": "Pour un objectif précis",
+          "spontaneous": "Dès qu'on peut"
+        }
+      },
+      "sa3": {
+        "text": "Quelle habitude d'argent de l'enfance t'a formé(e) ?"
+      },
+      "sa4": {
+        "text": "Si on avait une « tirelire de rêve », qu'y aurait-il dedans ?",
+        "options": {
+          "travel": "Un voyage",
+          "home": "Un logement ou des travaux",
+          "experience": "Une expérience inoubliable"
+        }
+      }
+    }
+  },
+  "career_cheers": {
+    "title": "Soutien de carrière",
+    "questions": {
+      "cc1": {
+        "text": "Comment puis-je mieux te soutenir au travail ?"
+      },
+      "cc2": {
+        "text": "Quand tu as une dure journée au travail, tu as besoin...",
+        "options": {
+          "listen": "Que quelqu'un t'écoute",
+          "distraction": "D'une distraction et d'un changement de rythme",
+          "advice": "De conseils ou d'aide"
+        }
+      },
+      "cc3": {
+        "text": "Quelle réussite pro veux-tu célébrer avec moi ?"
+      },
+      "cc4": {
+        "text": "Carrière vs relation — comment vois-tu l'équilibre ?",
+        "options": {
+          "both": "Les deux comptent — je cherche l'équilibre",
+          "career": "La carrière est la priorité pour l'instant",
+          "us": "Nous comptons plus que n'importe quel job"
+        }
+      }
+    }
+  },
+  "work_balance": {
+    "title": "Équilibre travail-vie",
+    "questions": {
+      "wb1": {
+        "text": "Quand tu « ramènes le travail à la maison », c'est...",
+        "options": {
+          "stress": "Du stress dont j'ai envie de parler",
+          "silence": "Du silence — je ne veux pas te charger",
+          "rare": "Rare — je déconnecte bien"
+        }
+      },
+      "wb2": {
+        "text": "Comment protéger notre temps des appels pro ?"
+      },
+      "wb3": {
+        "text": "La soirée idéale après le travail, c'est...",
+        "options": {
+          "talk": "Se raconter notre journée",
+          "relax": "Se reposer tranquillement ensemble",
+          "activity": "Quelque chose d'actif"
+        }
+      },
+      "wb4": {
+        "text": "Qu'est-ce qui t'aide à passer du « mode travail » au « mode maison » ?"
+      }
+    }
+  },
+  "big_dreams": {
+    "title": "Grands rêves",
+    "questions": {
+      "bd1": {
+        "text": "Quel rêve semble fou mais tu y penses encore ?"
+      },
+      "bd2": {
+        "text": "Pour toi, les rêves sont...",
+        "options": {
+          "fuel": "Le carburant de la vie",
+          "guide": "Une boussole vers les objectifs",
+          "fun": "Juste amusant à fantasmer"
+        }
+      },
+      "bd3": {
+        "text": "Quel rêve veux-tu qu'on réalise dans les 3 prochaines années ?"
+      },
+      "bd4": {
+        "text": "Si l'argent n'était pas un problème, que ferait-on demain ?",
+        "options": {
+          "travel": "Partir faire le tour du monde",
+          "home": "Construire notre maison de rêve",
+          "help": "Aider les proches et des causes"
+        }
+      }
+    }
+  },
+  "hobbies_share": {
+    "title": "Loisirs & passions",
+    "questions": {
+      "ho1": {
+        "text": "Veux-tu que je partage ton loisir ?",
+        "options": {
+          "yes": "Oui — ça nous rapproche",
+          "partly": "Parfois — mais j'ai aussi besoin du mien",
+          "no": "Non — que ça reste le mien"
+        }
+      },
+      "ho2": {
+        "text": "Lequel de mes loisirs t'a surpris(e) ou impressionné(e) ?"
+      },
+      "ho3": {
+        "text": "Un loisir partagé, c'est...",
+        "options": {
+          "dream": "Un rêve — trouver le nôtre",
+          "have": "On en a déjà un !",
+          "optional": "Pas nécessaire"
+        }
+      },
+      "ho4": {
+        "text": "Quel nouveau loisir aimerais-tu essayer ensemble ?"
+      }
+    }
+  },
+  "learn_together": {
+    "title": "On apprend ensemble",
+    "questions": {
+      "lt1": {
+        "text": "Qu'aimerais-tu apprendre avec moi ?"
+      },
+      "lt2": {
+        "text": "Quand j'apprends quelque chose de nouveau, tu...",
+        "options": {
+          "support": "Soutiens et montres de l'intérêt",
+          "join": "Te joins à moi",
+          "space": "Me laisses de l'espace"
+        }
+      },
+      "lt3": {
+        "text": "Y a-t-il eu un moment où on s'est appris quelque chose mutuellement ?"
+      },
+      "lt4": {
+        "text": "La soirée d'« apprentissage » idéale ensemble, c'est...",
+        "options": {
+          "language": "Apprendre une langue",
+          "skill": "Une nouvelle compétence — danse, dessin",
+          "documentary": "Un documentaire et une discussion"
+        }
+      }
+    }
+  },
+  "reading_pair": {
+    "title": "Lire ensemble",
+    "questions": {
+      "rd1": {
+        "text": "Lire un même livre ensemble, c'est...",
+        "options": {
+          "romantic": "Romantique et cosy",
+          "fun": "Amusant — discuter des chapitres",
+          "hard": "Difficile — des rythmes différents"
+        }
+      },
+      "rd2": {
+        "text": "Quel livre pourrait devenir « le nôtre » ?"
+      },
+      "rd3": {
+        "text": "Parle-moi d'un livre ou d'une histoire qui t'a touché(e) récemment"
+      },
+      "rd4": {
+        "text": "Avant de dormir, tu préfères...",
+        "options": {
+          "read": "Lire",
+          "talk": "Discuter",
+          "screen": "Une série ou le téléphone"
+        }
+      }
+    }
+  },
+  "gaming_us": {
+    "title": "Jouer ensemble",
+    "questions": {
+      "gu1": {
+        "text": "Jouer ensemble, c'est...",
+        "options": {
+          "love": "Notre façon de s'amuser",
+          "sometimes": "Parfois — ça dépend du jeu",
+          "competitive": "De la compétition — je veux gagner !"
+        }
+      },
+      "gu2": {
+        "text": "Quel jeu (vidéo ou de société) montre le mieux nos personnalités ?"
+      },
+      "gu3": {
+        "text": "Quand je gagne, tu...",
+        "options": {
+          "happy": "Es content(e) pour moi",
+          "rematch": "Veux une revanche",
+          "sore": "Es un peu vexé(e) 😄"
+        }
+      },
+      "gu4": {
+        "text": "Quel jeu aimerais-tu découvrir avec moi pour la première fois ?"
+      }
+    }
+  },
+  "creative_us": {
+    "title": "Créer ensemble",
+    "questions": {
+      "cu1": {
+        "text": "Quel projet créatif ensemble imagines-tu ?"
+      },
+      "cu2": {
+        "text": "La créativité en couple, c'est...",
+        "options": {
+          "bond": "Une façon de se rapprocher",
+          "separate": "Chacun le sien, mais ensemble",
+          "new": "J'ai envie d'essayer"
+        }
+      },
+      "cu3": {
+        "text": "Que créerait-on si on avait une journée libre ?"
+      },
+      "cu4": {
+        "text": "Quand je suis créatif/créative, tu...",
+        "options": {
+          "watch": "Adore regarder",
+          "join": "Te joins à moi",
+          "inspire": "Inspires avec des idées"
+        }
+      }
+    }
+  },
+  "art_dates": {
+    "title": "Rendez-vous artistiques",
+    "questions": {
+      "ar1": {
+        "text": "Où irais-tu pour un rendez-vous ?",
+        "images": {
+          "art_studio": "Atelier d'art",
+          "museum_art": "Musée d'art"
+        }
+      },
+      "ar2": {
+        "text": "Quelle œuvre d'art aimerais-tu voir ensemble ?"
+      },
+      "ar3": {
+        "text": "Dessiner ou sculpter ensemble, c'est...",
+        "options": {
+          "fun": "Amusant, même si c'est salissant",
+          "romantic": "Romantique",
+          "stress": "Stressant — je ne suis pas doué(e)"
+        }
+      },
+      "ar4": {
+        "text": "Comment l'art peut-il faire partie de notre vie ensemble ?"
+      }
+    }
+  },
+  "fitness_pair": {
+    "title": "Sport ensemble",
+    "questions": {
+      "fp1": {
+        "text": "Quel format d'activité te parle le plus ?",
+        "images": {
+          "gym_couple": "Séance de sport en salle",
+          "yoga_calm": "Yoga et calme"
+        }
+      },
+      "fp2": {
+        "text": "Faire du sport ensemble, c'est...",
+        "options": {
+          "motivate": "De la motivation pour ne pas abandonner",
+          "fun": "Une autre façon de passer du temps",
+          "solo": "Mieux chacun de son côté"
+        }
+      },
+      "fp3": {
+        "text": "Quel défi sportif relèverais-tu ensemble ?"
+      },
+      "fp4": {
+        "text": "Après une séance ensemble, tu...",
+        "options": {
+          "proud": "Es fier/fière l'un de l'autre",
+          "tired": "T'effondres sur le canapé",
+          "food": "Direction la bouffe !"
+        }
+      }
+    }
+  },
+  "wellness_us": {
+    "title": "Bien-être ensemble",
+    "questions": {
+      "we1": {
+        "text": "Comment prends-tu soin de toi en période de stress ?",
+        "options": {
+          "rest": "Repos et sommeil",
+          "move": "Mouvement et exercice",
+          "talk": "Parler aux proches"
+        }
+      },
+      "we2": {
+        "text": "Comment puis-je t'aider à prendre soin de toi ?"
+      },
+      "we3": {
+        "text": "Les pratiques de self-care partagées, c'est...",
+        "options": {
+          "want": "Envie d'essayer — méditation, promenades",
+          "have": "On en a déjà",
+          "personal": "C'est personnel"
+        }
+      },
+      "we4": {
+        "text": "Quel rituel de bien-être ajouterais-tu à notre vie ?"
+      }
+    }
+  },
+  "mental_health": {
+    "title": "Santé mentale",
+    "questions": {
+      "mh1": {
+        "text": "Quand tu vas mal émotionnellement, qu'est-ce qui aide le plus ?"
+      },
+      "mh2": {
+        "text": "Parler de santé mentale en couple, c'est...",
+        "options": {
+          "important": "Très important",
+          "learning": "On apprend progressivement",
+          "hard": "Difficile, mais on essaie"
+        }
+      },
+      "mh3": {
+        "text": "Quel signe de ta part me dit « j'ai besoin de soutien » ?"
+      },
+      "mh4": {
+        "text": "Quand je suis triste, tu as tendance à...",
+        "options": {
+          "hold": "Câlines et restes silencieux/silencieuse",
+          "talk": "Demandes et écoutes",
+          "cheer": "Essaies de me remonter le moral"
+        }
+      }
+    }
+  },
+  "stress_support": {
+    "title": "Soutien face au stress",
+    "questions": {
+      "st1": {
+        "text": "Ta principale source de stress en ce moment, c'est...",
+        "options": {
+          "work": "Le travail",
+          "life": "Les circonstances de la vie",
+          "relations": "Les relations ou la famille"
+        }
+      },
+      "st2": {
+        "text": "Que puis-je faire aujourd'hui pour alléger ta journée ?"
+      },
+      "st3": {
+        "text": "Quand tu es stressé(e), tu préfères...",
+        "options": {
+          "alone": "Être seul(e)",
+          "together": "Être ensemble, même en silence",
+          "distraction": "Une distraction — film, promenade"
+        }
+      },
+      "st4": {
+        "text": "Quel moment a montré qu'on gère mieux le stress ensemble ?"
+      }
+    }
+  },
+  "pet_lovers": {
+    "title": "Amoureux des animaux",
+    "questions": {
+      "pl1": {
+        "text": "Quel animal est le plus proche de ton cœur ?",
+        "images": {
+          "puppy_cuddle": "Chien — ami fidèle",
+          "cat_lap": "Chat — douillet sur les genoux"
+        }
+      },
+      "pl2": {
+        "text": "Quel animal aimerais-tu adopter ensemble ?"
+      },
+      "pl3": {
+        "text": "Un animal dans notre couple, c'est...",
+        "options": {
+          "dream": "Un rêve !",
+          "maybe": "Peut-être un jour",
+          "no": "Pas pour nous"
+        }
+      },
+      "pl4": {
+        "text": "Comment appellerait-on notre animal imaginaire ?"
+      }
+    }
+  },
+  "future_pets": {
+    "title": "Futurs animaux",
+    "questions": {
+      "fpt1": {
+        "text": "Quel est le meilleur moment pour adopter un animal ?",
+        "options": {
+          "now": "Maintenant — pourquoi attendre ?",
+          "stable": "Quand la vie sera plus stable",
+          "never": "Ce n'est pas prévu"
+        }
+      },
+      "fpt2": {
+        "text": "Quelles responsabilités de soin es-tu prêt(e) à assumer ?"
+      },
+      "fpt3": {
+        "text": "Chien ou chat — ou autre chose ?",
+        "options": {
+          "dog": "Chien",
+          "cat": "Chat",
+          "exotic": "Quelque chose d'insolite — perroquet, lapin"
+        }
+      },
+      "fpt4": {
+        "text": "Comment un animal changerait-il notre quotidien ?"
+      }
+    }
+  },
+  "travel_ways": {
+    "title": "Comment on voyage",
+    "questions": {
+      "tw1": {
+        "text": "Quel transport pour un voyage de rêve ?",
+        "images": {
+          "airplane_window": "Avion — loin et vite",
+          "train_travel": "Train — lent et romantique"
+        }
+      },
+      "tw2": {
+        "text": "En voyage, tu es...",
+        "options": {
+          "planner": "Le/la planificateur/trice d'itinéraire",
+          "explorer": "Explorateur/exploratrice sans carte",
+          "follower": "À suivre mon/ma partenaire"
+        }
+      },
+      "tw3": {
+        "text": "Lequel de nos voyages appellerais-tu parfait ?"
+      },
+      "tw4": {
+        "text": "Un souvenir de voyage, c'est...",
+        "options": {
+          "thing": "Un objet pour se souvenir",
+          "photo": "Des photos et des souvenirs",
+          "tradition": "Une nouvelle tradition"
+        }
+      }
+    }
+  },
+  "road_trips": {
+    "title": "Road trips",
+    "questions": {
+      "rt1": {
+        "text": "Le road trip idéal, c'est...",
+        "images": {
+          "roadtrip_car": "Voiture et route ouverte",
+          "camping_tent": "Camping sous les étoiles"
+        }
+      },
+      "rt2": {
+        "text": "Quel itinéraire rêves-tu de parcourir ensemble ?"
+      },
+      "rt3": {
+        "text": "Qui conduit lors des road trips en couple ?",
+        "options": {
+          "me": "Moi",
+          "partner": "Mon/ma partenaire",
+          "switch": "On alterne"
+        }
+      },
+      "rt4": {
+        "text": "Quelle chanson devrait jouer dans notre voiture de rêve ?"
+      }
+    }
+  },
+  "nature_walks": {
+    "title": "Promenades dans la nature",
+    "questions": {
+      "nw1": {
+        "text": "Où irais-tu te promener ensemble ?",
+        "images": {
+          "forest_walk": "Sentier en forêt",
+          "lake_calm": "Lac calme"
+        }
+      },
+      "nw2": {
+        "text": "Quelle promenade en nature t'a le plus marqué(e) ?"
+      },
+      "nw3": {
+        "text": "Les promenades sans téléphone, c'est...",
+        "options": {
+          "need": "On en a besoin régulièrement",
+          "nice": "Agréable, mais rare",
+          "hard": "Difficile — je suis habitué(e) à mon téléphone"
+        }
+      },
+      "nw4": {
+        "text": "Que remarques-tu en promenade que je pourrais manquer ?"
+      }
+    }
+  },
+  "city_dates": {
+    "title": "Rendez-vous en ville",
+    "questions": {
+      "cd1": {
+        "text": "Le rendez-vous idéal en ville, c'est...",
+        "options": {
+          "cafe": "Café et longue discussion",
+          "walk": "Flâner dans des rues inconnues",
+          "event": "Concert, expo, événement"
+        }
+      },
+      "cd2": {
+        "text": "Quel endroit en ville veux-tu me montrer ?"
+      },
+      "cd3": {
+        "text": "Être touriste dans sa propre ville, c'est...",
+        "options": {
+          "fun": "Amusant — découvrir du nouveau",
+          "rare": "Rare, mais ça vaut le coup",
+          "no": "Ce n'est pas mon truc"
+        }
+      },
+      "cd4": {
+        "text": "Où m'emmènerais-tu si je visitais pour la première fois ?"
+      }
+    }
+  },
+  "outdoor_fun": {
+    "title": "Plaisir en plein air",
+    "questions": {
+      "of1": {
+        "text": "La journée idéale en plein air, c'est...",
+        "images": {
+          "sunset_beach": "Coucher de soleil sur la plage",
+          "stargazing": "Observation des étoiles"
+        }
+      },
+      "of2": {
+        "text": "Quelle activité en plein air veux-tu essayer ensemble ?"
+      },
+      "of3": {
+        "text": "Pique-nique ou barbecue — qu'est-ce qui te parle le plus ?",
+        "options": {
+          "picnic": "Pique-nique avec une couverture",
+          "bbq": "Barbecue entre amis",
+          "both": "Les deux !"
+        }
+      },
+      "of4": {
+        "text": "Quelle saison est la meilleure pour les aventures ensemble ?"
+      }
+    }
+  },
+  "seasons_us": {
+    "title": "Les saisons ensemble",
+    "questions": {
+      "se1": {
+        "text": "Ta saison préférée, c'est...",
+        "options": {
+          "spring": "Le printemps — le réveil",
+          "summer": "L'été — l'énergie",
+          "autumn": "L'automne — le cocooning",
+          "winter": "L'hiver — la chaleur à la maison"
+        }
+      },
+      "se2": {
+        "text": "Quel souvenir saisonnier avec toi est le plus chaud ?"
+      },
+      "se3": {
+        "text": "Comment rendre chaque saison spéciale ?",
+        "options": {
+          "tradition": "Des traditions saisonnières",
+          "trip": "Des mini-voyages",
+          "home": "Cocooning à la maison"
+        }
+      },
+      "se4": {
+        "text": "Qu'attends-tu avec impatience pour la prochaine saison ensemble ?"
+      }
+    }
+  },
+  "weather_mood": {
+    "title": "Météo & humeur",
+    "questions": {
+      "wm1": {
+        "text": "Quel temps met une ambiance romantique ?",
+        "images": {
+          "rainy_window": "La pluie à la fenêtre",
+          "snow_couple": "Promenade sous la neige"
+        }
+      },
+      "wm2": {
+        "text": "Le mauvais temps est une raison de...",
+        "options": {
+          "cuddle": "Se câliner à la maison",
+          "brave": "Sortir quand même",
+          "sleep": "Dormir et se reposer"
+        }
+      },
+      "wm3": {
+        "text": "Comment la météo influence-t-elle ton humeur dans la relation ?"
+      },
+      "wm4": {
+        "text": "Le jour de pluie idéal ensemble, c'est...",
+        "options": {
+          "movies": "Films et une couverture",
+          "cook": "Cuisine et thé",
+          "walk": "Se promener sous un parapluie"
+        }
+      }
+    }
+  },
+  "rainy_plans": {
+    "title": "Plans pour jours de pluie",
+    "questions": {
+      "rp1": {
+        "text": "Que fait-on quand il pleut à verse dehors ?"
+      },
+      "rp2": {
+        "text": "Pour toi, la pluie c'est...",
+        "options": {
+          "cozy": "Cosy et romantique",
+          "gloomy": "Morosité et flemme",
+          "neutral": "Rien de spécial"
+        }
+      },
+      "rp3": {
+        "text": "Quel film ou livre est parfait pour un jour de pluie ensemble ?"
+      },
+      "rp4": {
+        "text": "Si on était coincés à la maison trois jours, que ferait-on ?",
+        "options": {
+          "projects": "Des projets maison",
+          "games": "Jeux et amusement",
+          "talk": "Des conversations profondes"
+        }
+      }
+    }
+  },
+  "home_decor": {
+    "title": "Style de maison",
+    "questions": {
+      "hd1": {
+        "text": "Quel intérieur te ressemble le plus ?",
+        "images": {
+          "boho_decor": "Boho et cosy",
+          "minimalist_home": "Minimalisme et lumière"
+        }
+      },
+      "hd2": {
+        "text": "Quel détail d'intérieur rend une maison « la nôtre » ?"
+      },
+      "hd3": {
+        "text": "Choisir des meubles ensemble, c'est...",
+        "options": {
+          "fun": "Excitant",
+          "compromise": "Des compromis, mais le résultat ravit",
+          "stress": "Du stress — des goûts différents"
+        }
+      },
+      "hd4": {
+        "text": "Quelle pièce veux-tu décorer ensemble en premier ?"
+      }
+    }
+  },
+  "cozy_home": {
+    "title": "Maison cocooning",
+    "questions": {
+      "cy1": {
+        "text": "Qu'est-ce qui rend une maison vraiment cosy pour toi ?",
+        "options": {
+          "light": "Lumière douce et bougies",
+          "textile": "Couvertures et coussins",
+          "smell": "Les odeurs — pâtisserie, café"
+        }
+      },
+      "cy2": {
+        "text": "Quel moment cosy à la maison préfères-tu ?"
+      },
+      "cy3": {
+        "text": "La soirée idéale à la maison, c'est...",
+        "options": {
+          "cook": "Cuisine et dîner",
+          "couch": "Canapé et une série",
+          "bath": "Bain et détente"
+        }
+      },
+      "cy4": {
+        "text": "Quelle petite touche rendrait notre maison plus cosy ?"
+      }
+    }
+  },
+  "morning_ritual": {
+    "title": "Rituels du matin",
+    "questions": {
+      "mr1": {
+        "text": "Le matin idéal ensemble, c'est...",
+        "images": {
+          "coffee_morning": "Café et discussion",
+          "breakfast_bed": "Petit-déjeuner au lit"
+        }
+      },
+      "mr2": {
+        "text": "Es-tu le lève-tôt ou l'oiseau de nuit du couple ?",
+        "options": {
+          "lark": "Lève-tôt",
+          "owl": "Oiseau de nuit",
+          "match": "On est synchronisés !"
+        }
+      },
+      "mr3": {
+        "text": "Quel rituel du matin aimerais-tu commencer ?"
+      },
+      "mr4": {
+        "text": "Se réveiller ensemble, c'est...",
+        "options": {
+          "best": "Le meilleur début de journée",
+          "rare": "Rare — des horaires différents",
+          "hard": "Difficile — j'ai besoin de dormir"
+        }
+      }
+    }
+  },
+  "coffee_love": {
+    "title": "Café & discussions",
+    "questions": {
+      "cl1": {
+        "text": "Café ou thé — qu'est-ce qui te parle le plus ?",
+        "options": {
+          "coffee": "Le café !",
+          "tea": "Le thé",
+          "both": "Selon l'humeur"
+        }
+      },
+      "cl2": {
+        "text": "Quelle discussion autour d'un café t'a marqué(e) ?"
+      },
+      "cl3": {
+        "text": "Le café du matin ensemble, c'est...",
+        "options": {
+          "ritual": "Notre rituel",
+          "luxury": "Un luxe — ça arrive rarement",
+          "want": "J'en voudrais plus souvent"
+        }
+      },
+      "cl4": {
+        "text": "Dans quel café aimerais-tu passer plus de temps avec moi ?"
+      }
+    }
+  },
+  "dinner_us": {
+    "title": "Dîner ensemble",
+    "questions": {
+      "di1": {
+        "text": "Lequel de nos dîners appellerais-tu parfait ?"
+      },
+      "di2": {
+        "text": "Cuisiner ou commander — qu'est-ce qui arrive le plus souvent ?",
+        "options": {
+          "cook": "On cuisine",
+          "order": "On commande",
+          "mix": "Ça dépend"
+        }
+      },
+      "di3": {
+        "text": "De quoi rêves-tu de parler à notre prochain dîner ?"
+      },
+      "di4": {
+        "text": "Un dîner aux chandelles, c'est...",
+        "options": {
+          "often": "On peut le faire n'importe quand",
+          "special": "Pour les occasions spéciales",
+          "cliche": "Cliché, mais agréable"
+        }
+      }
+    }
+  },
+  "food_explore": {
+    "title": "Aventures culinaires",
+    "questions": {
+      "fe1": {
+        "text": "Goûter des plats exotiques, c'est...",
+        "options": {
+          "yes": "Oui ! J'adore expérimenter",
+          "careful": "Prudent(e), mais j'essaie",
+          "no": "Je préfère le connu"
+        }
+      },
+      "fe2": {
+        "text": "Quelle cuisine du monde veux-tu explorer ensemble ?"
+      },
+      "fe3": {
+        "text": "Quel plat me cuisinerais-tu même si tu n'es pas doué(e) ?"
+      },
+      "fe4": {
+        "text": "Le festival gastronomique idéal pour nous, c'est...",
+        "options": {
+          "street": "Street food",
+          "fine": "Gastronomie",
+          "market": "Marché et dégustations"
+        }
+      }
+    }
+  },
+  "movie_date": {
+    "title": "Soirées cinéma",
+    "questions": {
+      "md1": {
+        "text": "La soirée cinéma idéale, c'est...",
+        "images": {
+          "cinema_date": "Sortie au cinéma",
+          "couch_movie": "Film sur le canapé"
+        }
+      },
+      "md2": {
+        "text": "Quel film reverrais-tu avec moi ?"
+      },
+      "md3": {
+        "text": "Genre pour un rendez-vous — lequel choisis-tu ?",
+        "options": {
+          "romcom": "Comédie romantique",
+          "thriller": "Thriller — en se tenant la main",
+          "doc": "Documentaire et discussion"
+        }
+      },
+      "md4": {
+        "text": "Quel film pourrait raconter notre histoire ?"
+      }
+    }
+  },
+  "binge_watch": {
+    "title": "Marathons de séries",
+    "questions": {
+      "bw1": {
+        "text": "Regarder une série ensemble, c'est...",
+        "options": {
+          "must": "Il faut être synchronisés !",
+          "flexible": "Des rythmes différents, ça va",
+          "solo": "Parfois chacun la sienne"
+        }
+      },
+      "bw2": {
+        "text": "Quelle série aimerais-tu commencer avec moi ?"
+      },
+      "bw3": {
+        "text": "Quand je regarde « encore un épisode » sans toi, tu...",
+        "options": {
+          "fine": "Ça va — je rattraperai",
+          "wait": "Attends pour regarder ensemble",
+          "spoiler": "As peur des spoilers !"
+        }
+      },
+      "bw4": {
+        "text": "Quel personnage de série nous ressemble le plus ?"
+      }
+    }
+  },
+  "playlist_us": {
+    "title": "Notre playlist",
+    "questions": {
+      "pu1": {
+        "text": "Quelle chanson ajouterais-tu à « notre » playlist maintenant ?"
+      },
+      "pu2": {
+        "text": "La musique en voiture — qui choisit ?",
+        "options": {
+          "driver": "Le/la conducteur/trice",
+          "passenger": "Le/la passager/ère",
+          "shuffle": "Playlist en aléatoire"
+        }
+      },
+      "pu3": {
+        "text": "Quelle chanson te ramène instantanément à un moment avec moi ?"
+      },
+      "pu4": {
+        "text": "Un concert ensemble, c'est...",
+        "options": {
+          "dream": "Un rêve !",
+          "done": "Déjà fait — j'en veux encore",
+          "home": "Je préfère à la maison avec des enceintes"
+        }
+      }
+    }
+  },
+  "live_music": {
+    "title": "Musique live",
+    "questions": {
+      "lm1": {
+        "text": "Concert live vs enregistrement — qu'est-ce qui est mieux ?",
+        "options": {
+          "live": "Live — l'énergie !",
+          "record": "Enregistrement — plus confortable",
+          "both": "Selon l'humeur"
+        }
+      },
+      "lm2": {
+        "text": "À quel concert aimerais-tu assister ensemble ?"
+      },
+      "lm3": {
+        "text": "Quel moment musical avec toi t'a le plus marqué(e) ?"
+      },
+      "lm4": {
+        "text": "Si on était un groupe, qui joue quoi ?",
+        "options": {
+          "vocal": "Moi au chant, toi à l'instrument",
+          "both": "On chante tous les deux",
+          "dj": "Un DJ set ensemble"
+        }
+      }
+    }
+  },
+  "dance_us": {
+    "title": "Danser ensemble",
+    "questions": {
+      "da1": {
+        "text": "Quelle danse nous ressemble le plus ?",
+        "images": {
+          "dance_floor": "L'énergie de la piste",
+          "wedding_dance": "Danse lente de mariage"
+        }
+      },
+      "da2": {
+        "text": "Danser ensemble, c'est...",
+        "options": {
+          "love": "J'adore !",
+          "shy": "Timide, mais j'essaie",
+          "funny": "Drôle — et c'est le but"
+        }
+      },
+      "da3": {
+        "text": "Quelle chanson choisirais-tu pour notre danse lente ?"
+      },
+      "da4": {
+        "text": "Au mariage d'un ami, on...",
+        "options": {
+          "dance": "On danse toute la nuit",
+          "watch": "On regarde et on discute",
+          "leave": "On part tôt"
+        }
+      }
+    }
+  },
+  "party_mode": {
+    "title": "Fêtes & vie sociale",
+    "questions": {
+      "pm1": {
+        "text": "La soirée idéale entre amis, c'est...",
+        "images": {
+          "party_friends": "Fête entre amis",
+          "wine_evening": "Soirée calme avec du vin"
+        }
+      },
+      "pm2": {
+        "text": "Aux fêtes, on est...",
+        "options": {
+          "together": "Toujours ensemble",
+          "social": "On parle à différentes personnes",
+          "early": "On part tôt"
+        }
+      },
+      "pm3": {
+        "text": "Quelle soirée dehors ensemble t'a marqué(e) ?"
+      },
+      "pm4": {
+        "text": "Inviter des amis chez nous, c'est...",
+        "options": {
+          "love": "J'adore recevoir",
+          "sometimes": "Parfois — pas souvent",
+          "no": "Je préfère juste nous deux"
+        }
+      }
+    }
+  },
+  "friend_circle": {
+    "title": "Cercle d'amis",
+    "questions": {
+      "fc1": {
+        "text": "Les amis dans une relation, c'est...",
+        "options": {
+          "important": "Une partie importante de la vie",
+          "few": "Peu nombreux mais proches",
+          "us": "L'essentiel — nous deux"
+        }
+      },
+      "fc2": {
+        "text": "Quel ami a le plus influencé notre relation ?"
+      },
+      "fc3": {
+        "text": "Présenter ton/ta partenaire aux amis, c'est...",
+        "options": {
+          "excited": "Excitant et agréable",
+          "nervous": "Un peu stressant",
+          "natural": "Naturel"
+        }
+      },
+      "fc4": {
+        "text": "Comment mieux intégrer l'autre dans nos cercles ?"
+      }
+    }
+  },
+  "our_friends": {
+    "title": "Nos amis",
+    "questions": {
+      "ouf1": {
+        "text": "Quel ami commun est devenu important pour nous deux ?"
+      },
+      "ouf2": {
+        "text": "Les doubles rendez-vous entre amis, c'est...",
+        "options": {
+          "fun": "Amusant !",
+          "ok": "OK, mais rare",
+          "prefer": "Je préfère juste nous deux"
+        }
+      },
+      "ouf3": {
+        "text": "Lequel de mes amis aimerais-tu mieux connaître ?"
+      },
+      "ouf4": {
+        "text": "Si on invitait des amis à dîner, que cuisinerait-on ?",
+        "options": {
+          "fancy": "Quelque chose d'impressionnant",
+          "simple": "Simple et bon",
+          "order": "Commander — honnêtement"
+        }
+      }
+    }
+  },
+  "meet_family": {
+    "title": "Rencontrer la famille",
+    "questions": {
+      "mf1": {
+        "text": "Comment t'es-tu senti(e) en rencontrant ma famille ?"
+      },
+      "mf2": {
+        "text": "La famille de ton/ta partenaire, c'est...",
+        "options": {
+          "warm": "Des gens chaleureux, une part de la vie",
+          "learning": "J'apprends à comprendre",
+          "complex": "Complexe, mais j'essaie"
+        }
+      },
+      "mf3": {
+        "text": "Quel moment avec ma famille t'a marqué(e) ?"
+      },
+      "mf4": {
+        "text": "Les dîners de famille — à quelle fréquence ?",
+        "options": {
+          "monthly": "Une fois par mois",
+          "holidays": "Seulement les fêtes",
+          "rare": "Rare — et c'est OK"
+        }
+      }
+    }
+  },
+  "in_laws": {
+    "title": "Belle-famille & proches",
+    "questions": {
+      "il1": {
+        "text": "Les conseils des parents de ton/ta partenaire, c'est...",
+        "options": {
+          "welcome": "Bienvenus",
+          "filter": "J'écoute mais je filtre",
+          "hard": "Difficile à accepter"
+        }
+      },
+      "il2": {
+        "text": "Comment garder des limites avec la famille ?"
+      },
+      "il3": {
+        "text": "Les fêtes avec les deux familles, c'est...",
+        "options": {
+          "rotate": "On alterne",
+          "together": "On réunit tout le monde",
+          "separate": "On fête séparément"
+        }
+      },
+      "il4": {
+        "text": "Qu'apprécies-tu chez mes parents ou proches ?"
+      }
+    }
+  },
+  "kids_talk": {
+    "title": "Parler des enfants",
+    "questions": {
+      "kt1": {
+        "text": "Les enfants dans nos projets, c'est...",
+        "options": {
+          "yes": "Oui, on en veut",
+          "maybe": "Peut-être plus tard",
+          "no": "Non / pas sûr(e)"
+        }
+      },
+      "kt2": {
+        "text": "Quel genre de parent me vois-tu devenir ?"
+      },
+      "kt3": {
+        "text": "Comment répartira-t-on les tâches parentales ?",
+        "options": {
+          "equal": "À parts égales",
+          "strengths": "Selon les forces de chacun",
+          "discuss": "On en discutera le moment venu"
+        }
+      },
+      "kt4": {
+        "text": "Quelle valeur veux-tu transmettre à nos enfants ?"
+      }
+    }
+  },
+  "family_values": {
+    "title": "Valeurs familiales",
+    "questions": {
+      "fv1": {
+        "text": "Quelle valeur de ta famille compte le plus pour toi ?"
+      },
+      "fv2": {
+        "text": "Pour toi, la famille c'est avant tout...",
+        "options": {
+          "support": "Le soutien",
+          "tradition": "Les traditions",
+          "love": "L'amour inconditionnel"
+        }
+      },
+      "fv3": {
+        "text": "Quelles valeurs partage-t-on déjà en couple ?"
+      },
+      "fv4": {
+        "text": "Si on écrivait un « manifeste familial », qu'est-ce qui viendrait en premier ?",
+        "options": {
+          "honesty": "L'honnêteté",
+          "fun": "La joie et les rires",
+          "respect": "Le respect"
+        }
+      }
+    }
+  },
+  "talk_style": {
+    "title": "Style de communication",
+    "questions": {
+      "ts1": {
+        "text": "Préfères-tu parler ou écouter ?",
+        "options": {
+          "talk": "Parler — j'ai besoin de m'exprimer",
+          "listen": "Écouter — je comprends mieux",
+          "both": "Ça dépend du sujet"
+        }
+      },
+      "ts2": {
+        "text": "Quand je suis silencieux/silencieuse, à quoi penses-tu ?"
+      },
+      "ts3": {
+        "text": "Les discussions sérieuses se passent mieux...",
+        "options": {
+          "face": "Face à face",
+          "walk": "En promenade",
+          "evening": "Le soir, au calme"
+        }
+      },
+      "ts4": {
+        "text": "Lequel de mes styles de communication apprécies-tu le plus ?"
+      }
+    }
+  },
+  "love_language": {
+    "title": "Langages de l'amour",
+    "questions": {
+      "ll1": {
+        "text": "Ton langage de l'amour principal, c'est...",
+        "options": {
+          "words": "Les mots d'affirmation",
+          "time": "Le temps de qualité",
+          "touch": "Le toucher physique",
+          "gifts": "Les cadeaux",
+          "acts": "Les actes de service"
+        }
+      },
+      "ll2": {
+        "text": "Quand as-tu senti pour la dernière fois mon amour dans « ton langage » ?"
+      },
+      "ll3": {
+        "text": "Quel langage de l'amour de ton/ta partenaire es-tu en train d'apprendre ?",
+        "options": {
+          "same": "Les nôtres correspondent !",
+          "learning": "J'apprends à parler le sien",
+          "different": "Différents — et c'est un défi"
+        }
+      },
+      "ll4": {
+        "text": "Que puis-je faire demain pour que tu te sentes aimé(e) ?"
+      }
+    }
+  },
+  "compliments": {
+    "title": "Le pouvoir des compliments",
+    "questions": {
+      "cm1": {
+        "text": "Quel compliment de ma part t'a le plus marqué(e) ?"
+      },
+      "cm2": {
+        "text": "Pour toi, les compliments sont...",
+        "options": {
+          "need": "Nécessaires régulièrement",
+          "nice": "Agréables mais pas essentiels",
+          "shy": "Gênants — mais j'aime ça"
+        }
+      },
+      "cm3": {
+        "text": "Sur quoi aimerais-tu un compliment maintenant ?"
+      },
+      "cm4": {
+        "text": "Comment préfères-tu recevoir des compliments ?",
+        "options": {
+          "public": "En public — j'aime ça",
+          "private": "En privé",
+          "text": "Par message — je peux relire"
+        }
+      }
+    }
+  },
+  "gratitude": {
+    "title": "Gratitude",
+    "questions": {
+      "gr1": {
+        "text": "De quoi m'es-tu reconnaissant(e) aujourd'hui ?"
+      },
+      "gr2": {
+        "text": "Dire « merci » en couple, c'est...",
+        "options": {
+          "daily": "Tous les jours",
+          "when": "Quand je le ressens vraiment",
+          "actions": "Je le montre par des actes"
+        }
+      },
+      "gr3": {
+        "text": "Quel moment avec toi te remplit de gratitude quand tu y repenses ?"
+      },
+      "gr4": {
+        "text": "Comment pratiquer la gratitude ensemble ?",
+        "options": {
+          "journal": "Journal de gratitude",
+          "evening": "Le soir, « de quoi je suis reconnaissant(e) »",
+          "surprise": "Des petits mots au hasard"
+        }
+      }
+    }
+  },
+  "forgiveness": {
+    "title": "Pardon",
+    "questions": {
+      "fg1": {
+        "text": "Pardonner pour toi, c'est...",
+        "options": {
+          "quick": "Rapide — je ne garde pas rancune",
+          "time": "Ça prend du temps",
+          "hard": "Difficile, mais j'essaie"
+        }
+      },
+      "fg2": {
+        "text": "Quand je te pardonne, qu'est-ce qui compte le plus pour toi ?"
+      },
+      "fg3": {
+        "text": "Y a-t-il quelque chose que tu n'as pas encore pardonné — et dont tu es prêt(e) à parler ?"
+      },
+      "fg4": {
+        "text": "Comment un couple peut-il grandir grâce au pardon ?",
+        "options": {
+          "talk": "Des discussions honnêtes",
+          "understand": "Comprendre les motivations",
+          "move": "Lâcher prise et avancer"
+        }
+      }
+    }
+  },
+  "open_up": {
+    "title": "S'ouvrir",
+    "questions": {
+      "ou1": {
+        "text": "De quoi as-tu envie de parler mais tu remets sans cesse ?"
+      },
+      "ou2": {
+        "text": "S'ouvrir à son/sa partenaire, c'est...",
+        "options": {
+          "natural": "Naturel",
+          "gradual": "Progressivement — la confiance grandit",
+          "scary": "Effrayant, mais important"
+        }
+      },
+      "ou3": {
+        "text": "Quand sens-tu que tu peux être complètement toi-même ?"
+      },
+      "ou4": {
+        "text": "Qu'est-ce qui t'aide à t'ouvrir ?",
+        "options": {
+          "trust": "La confiance et le temps",
+          "questions": "Les bonnes questions",
+          "silence": "Le silence et la patience"
+        }
+      }
+    }
+  },
+  "emotional_intimacy": {
+    "title": "Intimité émotionnelle",
+    "questions": {
+      "ei1": {
+        "text": "Quand te sens-tu le plus proche de moi émotionnellement ?"
+      },
+      "ei2": {
+        "text": "Pour toi, l'intimité émotionnelle c'est...",
+        "options": {
+          "share": "Partager ses sentiments",
+          "understand": "Être compris(e) sans paroles",
+          "safe": "Se sentir en sécurité"
+        }
+      },
+      "ei3": {
+        "text": "Qu'est-ce qui t'empêche d'être plus proche émotionnellement — et comment puis-je aider ?"
+      },
+      "ei4": {
+        "text": "Une connexion émotionnelle profonde, c'est...",
+        "options": {
+          "have": "On l'a déjà",
+          "growing": "Elle grandit chaque jour",
+          "want": "J'en veux davantage"
+        }
+      }
+    }
+  },
+  "physical_affection": {
+    "title": "Affection physique",
+    "questions": {
+      "pa1": {
+        "text": "Quel type de toucher aimes-tu le plus ?",
+        "options": {
+          "hug": "De longs câlins",
+          "hand": "Se tenir la main",
+          "cuddle": "Se câliner en silence"
+        }
+      },
+      "pa2": {
+        "text": "Quand je te serre dans mes bras par surprise — que ressens-tu ?"
+      },
+      "pa3": {
+        "text": "L'affection en public — pour toi c'est...",
+        "options": {
+          "love": "J'aime ça",
+          "sometimes": "Ça dépend de l'endroit",
+          "private": "Je préfère en privé"
+        }
+      },
+      "pa4": {
+        "text": "Comment puis-je montrer plus souvent mon affection d'une façon que tu aimes ?"
+      }
+    }
+  },
+  "secret_wishes": {
+    "title": "Envies secrètes",
+    "questions": {
+      "sw1": {
+        "text": "De quoi rêves-tu sans encore me l'avoir dit ?"
+      },
+      "sw2": {
+        "text": "Partager des envies secrètes, c'est...",
+        "options": {
+          "exciting": "Excitant et agréable",
+          "scary": "Un peu effrayant",
+          "ready": "Prêt(e) à essayer"
+        }
+      },
+      "sw3": {
+        "text": "Quel souhait pourrait-on réaliser l'un pour l'autre ce mois-ci ?"
+      },
+      "sw4": {
+        "text": "Si j'exauçais un de tes souhaits demain — lequel serait-ce ?",
+        "options": {
+          "experience": "Une expérience ou une aventure",
+          "comfort": "De l'attention et du cosy",
+          "surprise": "Une surprise — devine toi-même"
+        }
+      }
+    }
+  },
+  "boundaries": {
+    "title": "Limites saines",
+    "questions": {
+      "bo1": {
+        "text": "Les limites dans une relation, c'est...",
+        "options": {
+          "essential": "Essentielles",
+          "learning": "On apprend ensemble",
+          "unclear": "Encore floues"
+        }
+      },
+      "bo2": {
+        "text": "Quelle limite est particulièrement importante pour toi ?"
+      },
+      "bo3": {
+        "text": "Y a-t-il eu un moment où tu as dû poser une limite ?"
+      },
+      "bo4": {
+        "text": "Quand je respecte tes limites, tu...",
+        "options": {
+          "safe": "Te sens en sécurité",
+          "closer": "On se rapproche",
+          "grateful": "Te sens reconnaissant(e)"
+        }
+      }
+    }
+  },
+  "alone_time": {
+    "title": "Temps seul(e)",
+    "questions": {
+      "at1": {
+        "text": "Que fais-tu dans ton temps seul(e) que je ne sais peut-être pas ?"
+      },
+      "at2": {
+        "text": "Se manquer, c'est...",
+        "options": {
+          "sweet": "Doux et romantique",
+          "normal": "Normal — on n'est pas collés",
+          "rare": "Rare — on est souvent ensemble"
+        }
+      },
+      "at3": {
+        "text": "Comment soutenir l'espace personnel de l'autre ?"
+      },
+      "at4": {
+        "text": "Après du temps seul(e), tu...",
+        "options": {
+          "recharged": "Reviens plein(e) d'énergie",
+          "miss": "As envie de moi et es content(e) de me revoir",
+          "same": "Rien n'a changé"
+        }
+      }
+    }
+  },
+  "phone_habits": {
+    "title": "Habitudes de téléphone",
+    "questions": {
+      "ph1": {
+        "text": "Le téléphone au dîner, c'est...",
+        "options": {
+          "no": "Tabou — on est ensemble",
+          "sometimes": "Parfois — si c'est important",
+          "normal": "Normal"
+        }
+      },
+      "ph2": {
+        "text": "Quand le téléphone de ton/ta partenaire gêne, que ressens-tu ?"
+      },
+      "ph3": {
+        "text": "Comment se distraire moins avec les écrans ?",
+        "options": {
+          "box": "Une boîte à téléphones",
+          "rule": "Règle de soirée sans téléphone",
+          "trust": "Juste se mettre d'accord"
+        }
+      },
+      "ph4": {
+        "text": "Quel type de message de ma part aimes-tu le plus recevoir ?"
+      }
+    }
+  },
+  "screen_time": {
+    "title": "Temps d'écran",
+    "questions": {
+      "sc1": {
+        "text": "Séries vs vrai temps ensemble — l'équilibre, c'est...",
+        "options": {
+          "us": "Nous comptons plus que les écrans",
+          "share": "Regarder ensemble — c'est « nous » aussi",
+          "struggle": "J'ai du mal avec ça"
+        }
+      },
+      "sc2": {
+        "text": "Quel contenu aimerais-tu regarder ou discuter ensemble ?"
+      },
+      "sc3": {
+        "text": "Une détox digitale ensemble, c'est...",
+        "options": {
+          "want": "Envie d'essayer",
+          "tried": "Déjà essayé — ça a aidé",
+          "hard": "Trop difficile"
+        }
+      },
+      "sc4": {
+        "text": "Comment les technologies aident-elles notre relation ?"
+      }
+    }
+  },
+  "social_online": {
+    "title": "Nous sur les réseaux",
+    "questions": {
+      "soc1": {
+        "text": "Les posts sur nous sur les réseaux, c'est...",
+        "options": {
+          "love": "J'adore partager",
+          "private": "Je préfère la discrétion",
+          "sometimes": "Parfois — les moments spéciaux"
+        }
+      },
+      "soc2": {
+        "text": "Que penses-tu de ce que j'aime ou commente en ligne ?"
+      },
+      "soc3": {
+        "text": "Couple en ligne — montrer ou cacher ?",
+        "options": {
+          "open": "Ouvert — rien à cacher",
+          "minimal": "Au minimum",
+          "none": "Ce n'est pas notre style"
+        }
+      },
+      "soc4": {
+        "text": "Quel moment à nous ne posterais-tu pas mais qui est précieux ?"
+      }
+    }
+  },
+  "nostalgia": {
+    "title": "Nostalgie",
+    "questions": {
+      "no1": {
+        "text": "Quelle période de notre relation regardes-tu avec tendresse ?"
+      },
+      "no2": {
+        "text": "Pour toi, la nostalgie c'est...",
+        "options": {
+          "sweet": "Une douce tristesse",
+          "motivation": "Une motivation pour l'avenir",
+          "rare": "Rare — je vis dans le présent"
+        }
+      },
+      "no3": {
+        "text": "Quel « vieux » moment avec toi reverrais-tu ?"
+      },
+      "no4": {
+        "text": "Les photos ou objets du passé, c'est...",
+        "options": {
+          "treasure": "Des trésors",
+          "sometimes": "Agréable, mais je ne m'y attarde pas",
+          "forward": "Je regarde vers l'avant"
+        }
+      }
+    }
+  },
+  "photo_wall": {
+    "title": "Mur de souvenirs",
+    "questions": {
+      "pw1": {
+        "text": "Comment garder les souvenirs ?",
+        "images": {
+          "polaroid_wall": "Mur de polaroids",
+          "vintage_room": "Coin vintage"
+        }
+      },
+      "pw2": {
+        "text": "Quelle photo de nous est ta préférée ?"
+      },
+      "pw3": {
+        "text": "Imprimer les photos ou les garder sur le téléphone ?",
+        "options": {
+          "print": "Imprimer — je veux les voir",
+          "digital": "Le téléphone suffit",
+          "both": "Les deux"
+        }
+      },
+      "pw4": {
+        "text": "Quel souvenir encadrerais-tu ?"
+      }
+    }
+  },
+  "anniversaries": {
+    "title": "Anniversaires",
+    "questions": {
+      "an1": {
+        "text": "Célébrer les anniversaires, c'est...",
+        "options": {
+          "must": "Indispensable — chaque année",
+          "flexible": "L'essentiel, c'est de s'en souvenir",
+          "surprise": "J'adore les surprises, pas les dates"
+        }
+      },
+      "an2": {
+        "text": "Quel anniversaire attends-tu particulièrement avec impatience ?"
+      },
+      "an3": {
+        "text": "Comment a-t-on fêté notre meilleur anniversaire ?"
+      },
+      "an4": {
+        "text": "Le cadeau d'anniversaire idéal, c'est...",
+        "options": {
+          "experience": "Une expérience ensemble",
+          "symbol": "Quelque chose de symbolique",
+          "letter": "Une lettre ou des mots"
+        }
+      }
+    }
+  },
+  "milestones": {
+    "title": "Étapes importantes",
+    "questions": {
+      "mi1": {
+        "text": "Quelle étape de notre relation compte le plus pour toi ?"
+      },
+      "mi2": {
+        "text": "Célébrer les petites victoires, c'est...",
+        "options": {
+          "yes": "Oui — chaque pas compte",
+          "sometimes": "Parfois on oublie",
+          "big": "Seulement les grands événements"
+        }
+      },
+      "mi3": {
+        "text": "Quelle prochaine étape veux-tu atteindre ensemble ?"
+      },
+      "mi4": {
+        "text": "Quand on atteint un objectif, tu...",
+        "options": {
+          "celebrate": "Célèbres ça !",
+          "quiet": "Te réjouis en silence",
+          "next": "En fixes un nouveau tout de suite"
+        }
+      }
+    }
+  },
+  "love_notes": {
+    "title": "Mots d'amour",
+    "questions": {
+      "ln1": {
+        "text": "Quel geste romantique te parle le plus ?",
+        "images": {
+          "handwritten_note": "Un mot manuscrit",
+          "flowers_bouquet": "Un bouquet de fleurs"
+        }
+      },
+      "ln2": {
+        "text": "As-tu déjà reçu un mot de ma part ? Comment c'était ?"
+      },
+      "ln3": {
+        "text": "Les lettres et les mots, c'est...",
+        "options": {
+          "romantic": "Très romantique",
+          "cute": "Mignon, mais rare",
+          "old": "Démodé — les messages c'est mieux"
+        }
+      },
+      "ln4": {
+        "text": "Que m'écrirais-tu dans un mot si tu le laissais le matin ?"
+      }
+    }
+  },
+  "surprises_us": {
+    "title": "Surprises",
+    "questions": {
+      "su1": {
+        "text": "Pour toi, les surprises c'est...",
+        "options": {
+          "love": "J'adore !",
+          "mixed": "Ça dépend — j'aime les agréables",
+          "plan": "Je préfère savoir à l'avance"
+        }
+      },
+      "su2": {
+        "text": "Quelle surprise de ma part n'oublieras-tu jamais ?"
+      },
+      "su3": {
+        "text": "Planifier des surprises, c'est...",
+        "options": {
+          "fun": "Amusant — j'adore planifier",
+          "stress": "Stressant — peur de rater",
+          "rare": "Rare, mais sincère"
+        }
+      },
+      "su4": {
+        "text": "Quelle surprise aimerais-tu me préparer ?"
+      }
+    }
+  },
+  "city_nights": {
+    "title": "Nuits en ville",
+    "questions": {
+      "cn1": {
+        "text": "La soirée idéale, c'est...",
+        "images": {
+          "city_night": "Les lumières de la ville",
+          "sunset_beach": "Coucher de soleil au bord de la mer"
+        }
+      },
+      "cn2": {
+        "text": "Quelle ville rêves-tu d'explorer ensemble la nuit ?"
+      },
+      "cn3": {
+        "text": "Les promenades nocturnes, c'est...",
+        "options": {
+          "romantic": "Romantique !",
+          "rare": "Rare — on est fatigués",
+          "adventure": "Une aventure"
+        }
+      },
+      "cn4": {
+        "text": "Quelle soirée en ville avec toi t'a le plus marqué(e) ?"
+      }
+    }
+  },
+  "market_stroll": {
+    "title": "Balade au marché",
+    "questions": {
+      "mk1": {
+        "text": "Où aller le samedi ?",
+        "images": {
+          "farmers_market": "Marché de producteurs",
+          "vintage_room": "Boutique vintage"
+        }
+      },
+      "mk2": {
+        "text": "Faire les courses ensemble — rendez-vous ou routine ?"
+      },
+      "mk3": {
+        "text": "Marché ou supermarché — qu'est-ce qui te parle le plus ?",
+        "options": {
+          "market": "Le marché — l'ambiance",
+          "super": "Le supermarché — rapide",
+          "delivery": "La livraison"
+        }
+      },
+      "mk4": {
+        "text": "Que trouverait-on au marché idéal ?"
+      }
+    }
+  },
+  "growth_together": {
+    "title": "Grandir ensemble",
+    "questions": {
+      "gt1": {
+        "text": "Que t'ai-je appris pendant notre relation ?"
+      },
+      "gt2": {
+        "text": "Grandir en couple, c'est...",
+        "options": {
+          "conscious": "Un travail conscient",
+          "natural": "Ça se passe naturellement",
+          "challenge": "Un défi, mais ça en vaut la peine"
+        }
+      },
+      "gt3": {
+        "text": "En quoi es-tu devenu(e) meilleur(e) grâce à nous ?"
+      },
+      "gt4": {
+        "text": "Comment grandir ensemble cette année ?",
+        "options": {
+          "goals": "Des objectifs partagés",
+          "habits": "De nouvelles habitudes",
+          "talk": "Plus de discussions profondes"
+        }
+      }
+    }
+  },
+  "change_adapt": {
+    "title": "Changement & adaptation",
+    "questions": {
+      "ca1": {
+        "text": "Quand la vie change, tu...",
+        "options": {
+          "adapt": "T'adaptes vite",
+          "stress": "Stresses, puis tu acceptes",
+          "partner": "T'appuies sur ton/ta partenaire"
+        }
+      },
+      "ca2": {
+        "text": "Quel grand changement a-t-on le mieux géré ?"
+      },
+      "ca3": {
+        "text": "Qu'est-ce qui te fait peur dans le changement — et comment puis-je aider ?"
+      },
+      "ca4": {
+        "text": "Les changements dans une relation, c'est...",
+        "options": {
+          "growth": "De la croissance",
+          "scary": "Effrayants",
+          "normal": "Une partie normale de la vie"
+        }
+      }
+    }
+  },
+  "humor_style": {
+    "title": "L'humour en couple",
+    "questions": {
+      "hs1": {
+        "text": "Ton type d'humour, c'est...",
+        "options": {
+          "sarcasm": "Le sarcasme et l'ironie",
+          "silly": "Les bêtises et les mèmes",
+          "warm": "Chaleureux et bienveillant"
+        }
+      },
+      "hs2": {
+        "text": "Quand on rit ensemble — de quoi le plus souvent ?"
+      },
+      "hs3": {
+        "text": "Plaisanter pendant une dispute, c'est...",
+        "options": {
+          "helps": "Ça aide à désamorcer",
+          "worse": "Ça empire les choses",
+          "depends": "Ça dépend de la situation"
+        }
+      },
+      "hs4": {
+        "text": "Quelle blague ou quel mème est devenu « le nôtre » ?"
+      }
+    }
+  },
+  "inside_jokes": {
+    "title": "Blagues privées",
+    "questions": {
+      "ij1": {
+        "text": "Quelle blague privée te fait sourire instantanément ?"
+      },
+      "ij2": {
+        "text": "Les blagues privées, c'est...",
+        "options": {
+          "bond": "Notre lien",
+          "many": "Trop nombreuses pour les compter",
+          "building": "On les construit encore"
+        }
+      },
+      "ij3": {
+        "text": "Comment a commencé notre blague la plus bizarre ?"
+      },
+      "ij4": {
+        "text": "Si un inconnu nous entendait, il...",
+        "options": {
+          "confused": "Ne comprendrait rien",
+          "laugh": "Rirait aussi",
+          "jealous": "Envierait notre connexion"
+        }
+      }
+    }
+  },
+  "legacy_dreams": {
+    "title": "Héritage & sens",
+    "questions": {
+      "ld1": {
+        "text": "Quelle empreinte veux-tu laisser avec moi ?"
+      },
+      "ld2": {
+        "text": "Pour toi, le sens de la vie c'est...",
+        "options": {
+          "love": "L'amour et les proches",
+          "create": "Créer quelque chose",
+          "experience": "Vivre et ressentir"
+        }
+      },
+      "ld3": {
+        "text": "De quoi veux-tu qu'on se souvienne dans 20 ans ?"
+      },
+      "ld4": {
+        "text": "Si on écrivait un livre sur nous, le genre serait...",
+        "options": {
+          "romance": "Romance",
+          "comedy": "Comédie",
+          "adventure": "Aventure"
+        }
+      }
+    }
+  },
+  "adventure_bucket": {
+    "title": "Liste d'aventures",
+    "questions": {
+      "ab1": {
+        "text": "Quelle aventure de ta liste veux-tu faire en premier ?"
+      },
+      "ab2": {
+        "text": "Adrénaline vs calme — que choisis-tu ?",
+        "options": {
+          "adrenaline": "Adrénaline — saut, plongée",
+          "calm": "Calme — trek, camping",
+          "mix": "Un mélange"
+        }
+      },
+      "ab3": {
+        "text": "Quelle aventure folle n'a-t-on pas encore essayée ?"
+      },
+      "ab4": {
+        "text": "Une liste d'aventures pour nous, c'est...",
+        "options": {
+          "have": "On en a déjà un !",
+          "make": "Il est temps d'en faire une",
+          "spontaneous": "Spontané — pas de listes"
+        }
+      }
+    }
+  },
+  "quiet_moments": {
+    "title": "Moments de calme",
+    "questions": {
+      "qm1": {
+        "text": "Le silence ensemble, c'est...",
+        "options": {
+          "comfort": "Du confort et de la proximité",
+          "awkward": "Parfois gênant",
+          "rare": "Rare — on parle beaucoup"
+        }
+      },
+      "qm2": {
+        "text": "Quel moment de calme avec toi garderais-tu pour toujours ?"
+      },
+      "qm3": {
+        "text": "La soirée calme idéale, c'est...",
+        "options": {
+          "read": "Lire côte à côte",
+          "cuddle": "Juste se câliner",
+          "nature": "Regarder par la fenêtre ou les étoiles"
+        }
+      },
+      "qm4": {
+        "text": "Que ressens-tu quand on est juste silencieux mais ensemble ?"
+      }
+    }
+  },
+  "cozy_evenings": {
+    "title": "Soirées cosy",
+    "questions": {
+      "ce1": {
+        "text": "Comment passer la soirée ?",
+        "images": {
+          "wine_evening": "Un verre de vin et une discussion",
+          "couch_movie": "Couverture et un film"
+        }
+      },
+      "ce2": {
+        "text": "Soirée à la maison vs sortir — qu'est-ce qui arrive le plus souvent ?",
+        "options": {
+          "home": "À la maison — cosy",
+          "out": "On sort",
+          "balance": "50/50"
+        }
+      },
+      "ce3": {
+        "text": "Quelle est ta soirée cosy idéale avec moi ?"
+      },
+      "ce4": {
+        "text": "Qu'est-ce qui rend une soirée « parfaite » ?",
+        "options": {
+          "presence": "Être pleinement présents l'un pour l'autre",
+          "comfort": "Le confort — nourriture, couverture, calme",
+          "surprise": "Une petite surprise"
+        }
+      }
+    }
+  }
+}

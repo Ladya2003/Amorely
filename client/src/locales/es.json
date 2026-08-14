@@ -1,4 +1,4 @@
-﻿{
+{
   "settings": {
     "title": "Ajustes",
     "tabs": {
@@ -1536,6 +1536,33 @@
       "confirmSaved": "Sí, la guardé",
       "clearPassphrase": "Borrar"
     }
+  },
+  "dailyQuestions": {
+    "title": "Preguntas del día",
+    "results": "Resultado",
+    "progress": "{{current}} de {{total}}",
+    "waitingPartner": "Esperando a tu pareja",
+    "similarityLabel": "Similitud de vuestras respuestas",
+    "partnerNotFinished": "Tu pareja aún no ha terminado esta categoría",
+    "notifyPartner": "Avisar a tu pareja",
+    "notifySent": "Aviso enviado",
+    "yourAnswer": "Tu respuesta",
+    "partnerAnswer": "Respuesta de tu pareja",
+    "partnerNoAnswer": "Tu pareja aún no ha respondido",
+    "questionOf": "Pregunta {{current}} de {{total}}",
+    "textPlaceholder": "Escribe tu respuesta...",
+    "next": "Siguiente",
+    "finish": "Terminar",
+    "historyTitle": "Historial de preguntas",
+    "historyEmpty": "Aún no hay rondas completadas",
+    "nextRoundIn": "Nuevas categorías en",
+    "timerDone": "Pronto habrá nuevas categorías",
+    "editAnswer": "Editar",
+    "saveAnswer": "Guardar",
+    "youFallback": "Tú",
+    "partnerFallback": "Pareja",
+    "noYourAnswer": "Sin respuesta",
+    "partnerNoAnswerShort": "Esperando respuesta"
   },
   "common": {
     "back": "Atrás",
