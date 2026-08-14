@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AlertColor, Box, Fade, Portal, SxProps, Theme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { getAppAlertSx } from '../../theme/alertStyles';
+import { getAppAlertStyles, getAppAlertSx } from '../../theme/alertStyles';
 
 const TOAST_PROGRESS_HEIGHT = 3;
 
@@ -67,6 +67,7 @@ interface CustomSnackbarProps {
   severity: AlertColor;
   onClose: () => void;
   autoHideDuration?: number;
+  sx?: (theme: Theme) => Record<string, unknown>;
 }
 
 const getToastShellSx = (): SxProps<Theme> => ({
@@ -88,6 +89,7 @@ const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
   severity,
   onClose,
   autoHideDuration = 3000,
+  sx,
 }) => {
   const [progressRunKey, setProgressRunKey] = useState(0);
   const showProgress = autoHideDuration > 0;
@@ -127,7 +129,10 @@ const CustomSnackbar: React.FC<CustomSnackbarProps> = ({
             onClose={onClose}
             severity={severity}
             variant="standard"
-            sx={getToastAlertSx(severity)}
+            sx={(theme) => ({
+              ...getAppAlertStyles(theme, severity),
+              ...(sx?.(theme) ?? {}),
+            })}
           >
             {message}
             {showProgress && (

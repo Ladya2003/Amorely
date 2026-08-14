@@ -22,6 +22,7 @@ import {
 import ChatIcon from '@mui/icons-material/Chat';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import ChatList, { Contact } from '../components/Chat/ChatList';
+import AvatarAdminIcon, { shouldShowAdminAvatarIcon } from '../components/Chat/AvatarAdminIcon';
 import ChatGlobalSearchField from '../components/Chat/ChatGlobalSearchField';
 import { ChatDialogLoadingSkeleton, ChatListSkeleton } from '../components/Chat/ChatSkeletons';
 import ChatDialog, {
@@ -219,6 +220,8 @@ interface SearchUser {
   username: string;
   email: string;
   avatar: string;
+  role?: string;
+  showAdminIcon?: boolean;
   hasExistingChat: boolean;
 }
 
@@ -1589,6 +1592,8 @@ const ChatPage: React.FC = () => {
     username: string;
     email: string;
     avatar: string;
+    role?: string;
+    showAdminIcon?: boolean;
   }) => {
     setContacts(prevContacts => {
       const existing = prevContacts.find(contact => contact.id === user.id);
@@ -1602,6 +1607,8 @@ const ChatPage: React.FC = () => {
         username: user.username,
         email: user.email,
         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
+        role: user.role,
+        showAdminIcon: user.showAdminIcon,
         isPartner: false,
         unreadCount: 0,
         lastMessage: {
@@ -2720,7 +2727,9 @@ const ChatPage: React.FC = () => {
                           sx={(muiTheme) => getChatListItemButtonSx(muiTheme)}
                         >
                           <ListItemAvatar>
-                            <Avatar alt={user.name} src={user.avatar} sx={{ width: 52, height: 52 }} />
+                            <AvatarAdminIcon show={shouldShowAdminAvatarIcon(user)} avatarSize={52}>
+                              <Avatar alt={user.name} src={user.avatar} sx={{ width: 52, height: 52 }} />
+                            </AvatarAdminIcon>
                           </ListItemAvatar>
                           <ListItemText
                             primary={

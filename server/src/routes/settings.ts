@@ -52,7 +52,7 @@ router.get('/user/:id', async (req: ExtendedRequest, res: Response) => {
 router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { username, firstName, lastName, bio, birthday, theme, displayBadgeGameId, showDisplayBadge } = req.body;
+    const { username, firstName, lastName, bio, birthday, theme, displayBadgeGameId, showDisplayBadge, showAdminIcon } = req.body;
     const file = req.file as Express.Multer.File & { path: string, filename: string };
     
     const user = await User.findById(id);
@@ -108,6 +108,10 @@ router.put('/user/:id', upload.single('avatar'), async (req: Request, res: Respo
 
     if (showDisplayBadge !== undefined) {
       user.showDisplayBadge = showDisplayBadge === true || showDisplayBadge === 'true';
+    }
+
+    if (showAdminIcon !== undefined && user.role === 'admin') {
+      user.showAdminIcon = showAdminIcon === true || showAdminIcon === 'true';
     }
     
     // Обновляем аватар, если он был загружен

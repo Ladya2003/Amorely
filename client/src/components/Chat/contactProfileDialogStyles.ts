@@ -108,6 +108,25 @@ export const getContactProfileSectionTitleSx = (theme: Theme) => ({
   textAlign: 'left' as const,
 });
 
+export const getContactProfileAdminRowSx = () => ({
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 1.25,
+});
+
+export const getContactProfileAdminTitleSx = () => ({
+  fontWeight: 700,
+  fontSize: '0.875rem',
+  lineHeight: 1.3,
+});
+
+export const getContactProfileAdminProofSx = (theme: Theme) => ({
+  mt: 0.25,
+  fontSize: '0.75rem',
+  lineHeight: 1.45,
+  color: theme.palette.mode === 'light' ? MODAL_TEXT_SECONDARY_LIGHT : 'text.secondary',
+});
+
 export const getContactProfileDialogContentSx = () => ({
   pt: '4px !important',
   pb: '20px !important',

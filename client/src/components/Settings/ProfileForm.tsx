@@ -18,6 +18,7 @@ import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import DisplayBadgePicker, { type BadgePreference } from './DisplayBadgePicker';
+import AdminIconToggle from './AdminIconToggle';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import { useRelationshipBadges } from '../../hooks/useRelationshipBadges';
 import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
@@ -40,6 +41,7 @@ export interface UserProfile {
   birthday?: string;
   displayBadgeGameId?: string | null;
   showDisplayBadge?: boolean;
+  showAdminIcon?: boolean;
   role?: 'user' | 'admin';
 }
 
@@ -47,6 +49,7 @@ interface ProfileFormProps {
   user: UserProfile;
   onSave: (userData: FormData) => Promise<void>;
   onBadgePreferenceSaved?: (prefs: BadgePreference) => void;
+  onAdminIconSaved?: (showAdminIcon: boolean) => void;
 }
 
 const SAVE_DEBOUNCE_MS = 800;
@@ -62,7 +65,7 @@ const formatBirthdayForApi = (birthday: Date | null): string => {
   return format(birthday, 'yyyy-MM-dd');
 };
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferenceSaved }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferenceSaved, onAdminIconSaved }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { badges } = useRelationshipBadges();
@@ -338,6 +341,15 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
                   onSaved={(prefs) => onBadgePreferenceSaved?.(prefs)}
                 />
               </Grid>
+              {user.role === 'admin' && (
+                <Grid size={{ xs: 12 }}>
+                  <AdminIconToggle
+                    userId={user._id}
+                    showAdminIcon={user.showAdminIcon}
+                    onSaved={(showAdminIcon) => onAdminIconSaved?.(showAdminIcon)}
+                  />
+                </Grid>
+              )}
             </Grid>
           </Grid>
         </Grid>

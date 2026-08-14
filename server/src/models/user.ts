@@ -31,6 +31,7 @@ export interface UserDocument extends mongoose.Document {
   primaryColor: 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
   displayBadgeGameId?: string | null;
   showDisplayBadge?: boolean;
+  showAdminIcon?: boolean;
   localeBannerDismissedAt?: Date | null;
   installBannerDismissed?: boolean;
   readNewsIds?: mongoose.Types.ObjectId[];
@@ -65,6 +66,7 @@ export interface UserDocument extends mongoose.Document {
   adminUsersTabClearedAt?: Date;
   adminModerationTabClearedAt?: Date;
   adminModerationRecoveryClearedAt?: Date;
+  adminModerationRequestsClearedAt?: Date;
   sharedLocation?: {
     lat: number;
     lng: number;
@@ -105,6 +107,7 @@ const userSchema = new mongoose.Schema({
   primaryColor: { type: String, enum: ['pink', 'purple', 'blue', 'orange', 'dark-red', 'dark-green'], default: 'pink' },
   displayBadgeGameId: { type: String, default: null },
   showDisplayBadge: { type: Boolean, default: true },
+  showAdminIcon: { type: Boolean, default: true },
   localeBannerDismissedAt: { type: Date, default: null },
   installBannerDismissed: { type: Boolean, default: false },
   readNewsIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'News' }],
@@ -148,6 +151,7 @@ const userSchema = new mongoose.Schema({
   adminUsersTabClearedAt: { type: Date },
   adminModerationTabClearedAt: { type: Date },
   adminModerationRecoveryClearedAt: { type: Date },
+  adminModerationRequestsClearedAt: { type: Date },
   sharedLocation: {
     lat: { type: Number },
     lng: { type: Number },

@@ -201,6 +201,13 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleAdminIconSaved = (showAdminIcon: boolean) => {
+    setUser((prev) => (prev ? { ...prev, showAdminIcon } : prev));
+    if (authUser) {
+      updateUser({ ...authUser, showAdminIcon });
+    }
+  };
+
   const handleAddPartner = async (partnerEmail: string, startDate: Date) => {
     try {
       setIsLoading(true);
@@ -474,6 +481,7 @@ const SettingsPage: React.FC = () => {
             user={user}
             onSave={handleSaveProfile}
             onBadgePreferenceSaved={handleBadgePreferenceSaved}
+            onAdminIconSaved={handleAdminIconSaved}
           />
         ) : (
           <ProfileSettingsSkeleton />

@@ -146,7 +146,7 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
     const users = await User.find({
       _id: { $in: Array.from(contactIdSet).map((id) => new mongoose.Types.ObjectId(id)) }
     }).select(
-      'username email firstName lastName avatar bio birthday role partnerId displayBadgeGameId showDisplayBadge lastSeen'
+      'username email firstName lastName avatar bio birthday role partnerId displayBadgeGameId showDisplayBadge showAdminIcon lastSeen'
     );
 
     const contactIds = users.map((user) => user._id.toString());
@@ -199,6 +199,7 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
         avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
         displayBadgeGameId: user.displayBadgeGameId || null,
         showDisplayBadge: user.showDisplayBadge !== false,
+        showAdminIcon: user.showAdminIcon !== false,
         badges: badgesByContactId.get(contactId) || [],
         unreadCount,
         isOnline: isUserOnline(user._id.toString()),
@@ -276,7 +277,7 @@ router.get('/contacts/search', authMiddleware, async (req: any, res: Response) =
 
     // Ищем пользователей по частичному совпадению username/email/имени, кроме текущего пользователя
     const matchedUsers = await User.find(searchFilter)
-      .select('_id username email firstName lastName avatar')
+      .select('_id username email firstName lastName avatar role showAdminIcon')
       .sort({ username: 1 })
       .skip(skip)
       .limit(limit);
@@ -317,6 +318,8 @@ router.get('/contacts/search', authMiddleware, async (req: any, res: Response) =
       username: user.username,
       email: user.email,
       avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
+      role: user.role || 'user',
+      showAdminIcon: user.showAdminIcon !== false,
       hasExistingChat: existingDialogIdSet.has(user._id.toString())
     }));
 
@@ -358,7 +361,7 @@ router.get('/contacts/:contactId/profile', authMiddleware, async (req: any, res:
     }
 
     const user = await User.findById(contactId).select(
-      'username email firstName lastName avatar bio birthday displayBadgeGameId showDisplayBadge'
+      'username email firstName lastName avatar bio birthday role displayBadgeGameId showDisplayBadge showAdminIcon'
     );
 
     if (!user) {
@@ -383,6 +386,8 @@ router.get('/contacts/:contactId/profile', authMiddleware, async (req: any, res:
       avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`,
       displayBadgeGameId: user.displayBadgeGameId || null,
       showDisplayBadge: user.showDisplayBadge !== false,
+      role: user.role || 'user',
+      showAdminIcon: user.showAdminIcon !== false,
       badges: relationship?.badges || [],
     });
   } catch (error) {

@@ -185,6 +185,14 @@
       "hint": "Une médaille s’affiche dans le chat et l’en-tête. Par défaut, la meilleure (top 1, sinon 2, sinon 3).",
       "saveFailed": "Impossible d’enregistrer la médaille"
     },
+    "adminIcon": {
+      "title": "Icône administrateur",
+      "description": "Une petite icône administrateur apparaît sur votre avatar dans la liste des chats et dans les conversations avec vous.",
+      "show": "Afficher l’icône administrateur sur l’avatar dans le chat",
+      "errors": {
+        "visibilityFailed": "Impossible d’enregistrer le paramètre d’affichage"
+      }
+    },
     "logout": {
       "button": "Se déconnecter",
       "confirmTitle": "Confirmer la déconnexion",
@@ -866,7 +874,37 @@
         "description": "30 ans — force de perle"
       }
     },
-    "datingIdea": "Via idées de rendez-vous"
+    "datingIdea": "Via idées de rendez-vous",
+    "adminRequest": {
+      "title": "Écrire à l’admin",
+      "subtitle": "Une question, une idée ou une demande — l’admin répondra dans le chat.",
+      "badgeTitle": "Comment reconnaître un vrai admin",
+      "badgeText": "Un vrai admin a toujours un badge bouclier en bas à gauche de son avatar dans le chat. C’est l’application qui l’ajoute, pas une photo.",
+      "badgeLegend": "Le badge officiel est superposé à l’avatar, en bas à gauche.",
+      "realLabel": "Vrai badge",
+      "realHint": "L’icône officielle est superposée à l’avatar, en bas à gauche.",
+      "fakeLabel": "Dessiné sur la photo",
+      "fakeHint": "Quelqu’un a dessiné une icône similaire sur l’image. Ce n’est pas un admin.",
+      "realName": "Admin Amorely",
+      "fakeName": "Pas un admin",
+      "categoryLabel": "Sujet",
+      "categories": {
+        "question": "Question",
+        "feature": "Idée",
+        "bug": "Bug",
+        "other": "Autre"
+      },
+      "textPlaceholder": "Décrivez votre question ou votre demande…",
+      "submit": "Envoyer la demande",
+      "submitting": "Envoi…",
+      "success": "Demande envoyée. L’admin vous écrira dans le chat.",
+      "error": "Impossible d’envoyer la demande. Réessayez.",
+      "textRequired": "Écrivez un message",
+      "textTooShort": "Écrivez un peu plus pour que nous puissions vous aider",
+      "tooManyOpen": "Vous avez déjà plusieurs demandes ouvertes. Attendez une réponse dans le chat.",
+      "sectionAria": "Ouvrir « Écrire à l’admin »",
+      "sectionHint": "Une question, une idée ou une demande"
+    }
   },
   "drawingTools": {
     "tool": "Outil",
@@ -1024,6 +1062,11 @@
       "title": "Profil",
       "closeAria": "Fermer le profil",
       "medals": "Médailles",
+      "admin": {
+        "title": "Administrateur",
+        "badge": "Administrateur officiel d’Amorely",
+        "proof": "Ce compte est vérifié comme administrateur Amorely."
+      },
       "medalItem": "{{rank}}e place dans « {{game}} »",
       "defaultName": "Contact",
       "placeholderBio1": "{{name}} n'a pas encore ajouté de description — les surprises ne sont pas que dans le chat.",
@@ -1684,6 +1727,14 @@
     "levelUpSuccess": "Niveau {{level}} !",
     "subLevelUpSuccess": "Étape terminée ! Stats améliorées",
     "levelUpFailed": "Échec du niveau",
+    "levelUpWarning": {
+      "gotIt": "Compris",
+      "title": "L'animal n'est pas encore prêt",
+      "hungryTitle": "Animal affamé",
+      "hungryBody": "L'animal est trop affamé et en colère pour être amélioré. Nourrissez-le d'abord.",
+      "affectionTitle": "L'animal s'est éloigné",
+      "affectionBody": "L'affection est trop faible pour progresser maintenant. Caressez-le — la chaleur ne revient pas d'un coup. S'il s'ennuie depuis longtemps, revenez : il fondra peu à peu."
+    },
     "upgradingPartnerPet": "Tu améliores l'animal de ton partenaire",
     "gift": "Offrir",
     "giftTitle": "Offrir à un ami",
@@ -1891,7 +1942,7 @@
     "title": "Idées de rendez-vous",
     "subtitle": "De l’inspiration pour vos moments spéciaux",
     "sectionAria": "Ouvrir les idées de rendez-vous",
-    "sectionHint": "Générer une idée pour {{cost}} AmoreCoins",
+    "sectionHint": "De l’inspiration pour vos moments spéciaux",
     "sectionActiveHint": "Vous avez une idée active — ouvrez pour continuer",
     "costLabel": "{{cost}} AmoreCoins",
     "generateTitle": "Nouvelle idée de rendez-vous",

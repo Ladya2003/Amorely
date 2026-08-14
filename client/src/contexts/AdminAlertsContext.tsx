@@ -28,6 +28,7 @@ const defaultState: AdminAlertsState = {
   newUsersCount: 0,
   newReportsCount: 0,
   newRecoveryRequestsCount: 0,
+  newAdminRequestsCount: 0,
 };
 
 const AdminAlertsContext = createContext<AdminAlertsContextValue>({
@@ -56,15 +57,22 @@ export const AdminAlertsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const newUsersCount = Number(data.newUsersCount) || 0;
       const newReportsCount = Number(data.newReportsCount) || 0;
       const newRecoveryRequestsCount = Number(data.newRecoveryRequestsCount) || 0;
+      const newAdminRequestsCount = Number(data.newAdminRequestsCount) || 0;
       setAlerts({
         // Prefer server feedDot; fall back to tab badges so greeting stays consistent.
         feedDot:
           typeof data.feedDot === 'boolean'
             ? data.feedDot
-            : Boolean(newUsersCount > 0 || newReportsCount > 0 || newRecoveryRequestsCount > 0),
+            : Boolean(
+                newUsersCount > 0 ||
+                  newReportsCount > 0 ||
+                  newRecoveryRequestsCount > 0 ||
+                  newAdminRequestsCount > 0
+              ),
         newUsersCount,
         newReportsCount,
         newRecoveryRequestsCount,
+        newAdminRequestsCount,
       });
     } catch (error) {
       console.error('Ошибка загрузки админ-индикаторов:', error);
@@ -97,7 +105,10 @@ export const AdminAlertsProvider: React.FC<{ children: React.ReactNode }> = ({ c
           ...prev,
           newUsersCount,
           feedDot: Boolean(
-            newUsersCount > 0 || prev.newReportsCount > 0 || prev.newRecoveryRequestsCount > 0
+            newUsersCount > 0 ||
+              prev.newReportsCount > 0 ||
+              prev.newRecoveryRequestsCount > 0 ||
+              prev.newAdminRequestsCount > 0
           ),
         };
       });
@@ -114,14 +125,21 @@ export const AdminAlertsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       await clearAdminModerationTabAlerts(scope);
       setAlerts((prev) => {
-        const newReportsCount = scope === 'recovery' ? prev.newReportsCount : 0;
-        const newRecoveryRequestsCount = scope === 'reports' ? prev.newRecoveryRequestsCount : 0;
+        const newReportsCount = scope === 'recovery' || scope === 'requests' ? prev.newReportsCount : 0;
+        const newRecoveryRequestsCount =
+          scope === 'reports' || scope === 'requests' ? prev.newRecoveryRequestsCount : 0;
+        const newAdminRequestsCount =
+          scope === 'reports' || scope === 'recovery' ? prev.newAdminRequestsCount : 0;
         return {
           ...prev,
           newReportsCount,
           newRecoveryRequestsCount,
+          newAdminRequestsCount,
           feedDot: Boolean(
-            prev.newUsersCount > 0 || newReportsCount > 0 || newRecoveryRequestsCount > 0
+            prev.newUsersCount > 0 ||
+              newReportsCount > 0 ||
+              newRecoveryRequestsCount > 0 ||
+              newAdminRequestsCount > 0
           ),
         };
       });

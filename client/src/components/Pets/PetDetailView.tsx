@@ -20,6 +20,7 @@ import CustomSnackbar from '../UI/CustomSnackbar';
 import CurrencyBadge from './CurrencyBadge';
 import PetGiftDialog from './PetGiftDialog';
 import PetFeedDialog, { shouldSkipPetFeedConfirm } from './PetFeedDialog';
+import PetLevelUpWarningDialog from './PetLevelUpWarningDialog';
 import PetLevelProgress from './PetLevelProgress';
 import PetHatchOverlay from './PetHatchOverlay';
 import PetOwnerBlock from './PetOwnerBlock';
@@ -156,6 +157,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   const [upgrading, setUpgrading] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false);
+  const [levelUpWarningOpen, setLevelUpWarningOpen] = useState(false);
   const [isFeeding, setIsFeeding] = useState(false);
   const [feedingPending, setFeedingPending] = useState(false);
   const [levelUpReveal, setLevelUpReveal] = useState<{ fromLevel: number; toLevel: number } | null>(
@@ -322,6 +324,10 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
 
   const handleLevelUp = async () => {
     if (!petId || !pet) return;
+    if (isHungry || affectionDelta <= 0) {
+      setLevelUpWarningOpen(true);
+      return;
+    }
     const previousLevel = pet.level;
     setUpgrading(true);
     unlockPetRevealAudio();
@@ -1096,6 +1102,13 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
             balance={balance}
           />
         )}
+
+        <PetLevelUpWarningDialog
+          open={levelUpWarningOpen}
+          onClose={() => setLevelUpWarningOpen(false)}
+          hungry={isHungry}
+          affectionLow={affectionDelta <= 0}
+        />
 
         <CustomSnackbar
           open={!!toast}

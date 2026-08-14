@@ -185,6 +185,14 @@
       "hint": "One badge is shown in chat and the header. By default — the best (top 1, else 2, else 3).",
       "saveFailed": "Could not save badge"
     },
+    "adminIcon": {
+      "title": "Admin icon",
+      "description": "A small admin badge is shown on your avatar in the chat list and in chats with you.",
+      "show": "Show admin icon on avatar in chat",
+      "errors": {
+        "visibilityFailed": "Failed to save display setting"
+      }
+    },
     "logout": {
       "button": "Log out",
       "confirmTitle": "Confirm logout",
@@ -866,7 +874,37 @@
         "description": "30 years — pearl strength"
       }
     },
-    "datingIdea": "From date ideas"
+    "datingIdea": "From date ideas",
+    "adminRequest": {
+      "title": "Write to the admin",
+      "subtitle": "A question, idea, or request — the admin will reply in chat.",
+      "badgeTitle": "How to recognize a real admin",
+      "badgeText": "A real admin always has a special shield badge at the bottom-left of their avatar in chat. The app adds it — it is not part of the photo.",
+      "badgeLegend": "This official badge sits on top of the avatar, bottom-left.",
+      "realLabel": "Real badge",
+      "realHint": "The official icon overlays the avatar at the bottom-left.",
+      "fakeLabel": "Painted on the photo",
+      "fakeHint": "Someone drew a similar icon into the picture. That is not an admin.",
+      "realName": "Amorely admin",
+      "fakeName": "Not an admin",
+      "categoryLabel": "Topic",
+      "categories": {
+        "question": "Question",
+        "feature": "Idea",
+        "bug": "Bug",
+        "other": "Other"
+      },
+      "textPlaceholder": "Describe your question or request…",
+      "submit": "Send request",
+      "submitting": "Sending…",
+      "success": "Request sent. The admin will write to you in chat.",
+      "error": "Could not send the request. Try again.",
+      "textRequired": "Please write a message",
+      "textTooShort": "Please write a bit more so we can help",
+      "tooManyOpen": "You already have several open requests. Wait for a reply in chat.",
+      "sectionAria": "Open write to admin",
+      "sectionHint": "A question, idea, or request"
+    }
   },
   "drawingTools": {
     "tool": "Tool",
@@ -1024,6 +1062,11 @@
       "title": "Profile",
       "closeAria": "Close profile",
       "medals": "Medals",
+      "admin": {
+        "title": "Administrator",
+        "badge": "Official Amorely admin",
+        "proof": "This account is verified as an Amorely administrator."
+      },
       "medalItem": "{{rank}} place in «{{game}}»",
       "defaultName": "Contact",
       "placeholderBio1": "{{name}} has not added a bio yet — surprises are not only in chat.",
@@ -1670,6 +1713,14 @@
     "levelUpSuccess": "Level {{level}} reached!",
     "subLevelUpSuccess": "Step complete! Stats improved",
     "levelUpFailed": "Could not level up",
+    "levelUpWarning": {
+      "gotIt": "Got it",
+      "title": "This pet isn't ready",
+      "hungryTitle": "Hungry pet",
+      "hungryBody": "This pet is too hungry and angry to upgrade. Feed it first.",
+      "affectionTitle": "This pet has grown distant",
+      "affectionBody": "Affection is too low to upgrade right now. Pet it — warmth doesn't come back all at once. If it's been a while, keep coming back: it will slowly thaw."
+    },
     "upgradingPartnerPet": "You are upgrading your partner's pet",
     "gift": "Gift pet",
     "giftTitle": "Gift to a friend",
@@ -1875,7 +1926,7 @@
     "title": "Date ideas",
     "subtitle": "Inspiration for your special moments",
     "sectionAria": "Open date ideas",
-    "sectionHint": "Generate an idea for {{cost}} AmoreCoins",
+    "sectionHint": "Inspiration for your special moments",
     "sectionActiveHint": "You have an active idea — open to continue",
     "costLabel": "{{cost}} AmoreCoins",
     "generateTitle": "New date idea",

@@ -18,6 +18,7 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
+import AvatarAdminIcon, { shouldShowAdminAvatarIcon } from './AvatarAdminIcon';
 import type { RelationshipBadge } from '../../utils/gameBadges';
 import { formatChatListTimestamp } from '../../localization/chatHelpers';
 import { getContactDisplayName } from '../../utils/contactDisplayName';
@@ -43,6 +44,7 @@ export interface Contact {
   badges?: RelationshipBadge[];
   displayBadgeGameId?: string | null;
   showDisplayBadge?: boolean;
+  showAdminIcon?: boolean;
   isOnline?: boolean;
   lastSeen?: string | null;
   unreadCount?: number;
@@ -141,27 +143,29 @@ const ChatList: React.FC<ChatListProps> = ({ contacts, onSelectContact, selected
                 showBadge={contact.showDisplayBadge !== false}
                 avatarSize={52}
               >
-                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <Avatar alt={displayName} src={contact.avatar} sx={getChatListAvatarSx()} />
-                  {contact.isOnline && (
-                    <Box
-                      sx={(muiTheme) => ({
-                        position: 'absolute',
-                        bottom: 1,
-                        right: 1,
-                        width: 12,
-                        height: 12,
-                        borderRadius: '50%',
-                        bgcolor: getOnlinePresenceColor(muiTheme),
-                        border: `2px solid ${alpha(
-                          muiTheme.palette.primary.main,
-                          muiTheme.palette.mode === 'light' ? 0.12 : 0.2
-                        )}`,
-                        boxSizing: 'border-box',
-                      })}
-                    />
-                  )}
-                </Box>
+                <AvatarAdminIcon show={shouldShowAdminAvatarIcon(contact)} avatarSize={52}>
+                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <Avatar alt={displayName} src={contact.avatar} sx={getChatListAvatarSx()} />
+                    {contact.isOnline && (
+                      <Box
+                        sx={(muiTheme) => ({
+                          position: 'absolute',
+                          bottom: 1,
+                          right: 1,
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          bgcolor: getOnlinePresenceColor(muiTheme),
+                          border: `2px solid ${alpha(
+                            muiTheme.palette.primary.main,
+                            muiTheme.palette.mode === 'light' ? 0.12 : 0.2
+                          )}`,
+                          boxSizing: 'border-box',
+                        })}
+                      />
+                    )}
+                  </Box>
+                </AvatarAdminIcon>
               </AvatarGameRankMedal>
             </ListItemAvatar>
             <ListItemText

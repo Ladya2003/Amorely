@@ -17,6 +17,7 @@ import settingsRoutes from './routes/settings';
 import authRoutes from './routes/auth';
 import chatRoutes from './routes/chat';
 import reportsRoutes from './routes/reports';
+import adminRequestsRoutes from './routes/adminRequests';
 import cryptoRoutes from './routes/crypto';
 import calendarRoutes from './routes/calendar';
 import { authMiddleware } from './middleware/auth';
@@ -367,6 +368,7 @@ app.use('/api/cron', cronRoutes);
 // Маршруты для чата
 app.use('/api', authMiddleware, chatRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/admin-requests', adminRequestsRoutes);
 app.use('/api/crypto', cryptoRoutes);
 
 // Маршруты для отношений

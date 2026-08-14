@@ -19,6 +19,7 @@ import { getDrawLeaderboard } from '../games/drawGameService';
 import { getQuizLeaderboard } from '../games/quizGameService';
 import ChatReport from '../models/chatReport';
 import CryptoRecoveryRequest from '../models/cryptoRecoveryRequest';
+import AdminRequest from '../models/adminRequest';
 import EncryptedKeyBackup from '../models/encryptedKeyBackup';
 import { sendPushToUser } from '../services/pushService';
 import { buildBlockReasons } from '../utils/userBlock';
@@ -994,6 +995,75 @@ router.patch('/crypto-recovery-requests/:id/status', async (req: ExtendedRequest
   }
 });
 
+router.get('/admin-requests', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
+    const status = String(req.query.status || '').trim();
+    const filter: Record<string, unknown> = {};
+    if (status === 'open' || status === 'resolved') {
+      filter.status = status;
+    }
+
+    const [requests, total] = await Promise.all([
+      AdminRequest.find(filter)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .populate('userId', 'username email firstName lastName isBlocked locale')
+        .lean(),
+      AdminRequest.countDocuments(filter),
+    ]);
+
+    res.json({
+      total,
+      requests: requests.map((item) => ({
+        _id: item._id.toString(),
+        user: formatReportUser(item.userId),
+        category: item.category,
+        text: item.text,
+        locale: item.locale || '',
+        status: item.status,
+        adminNote: item.adminNote ?? '',
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error('Ошибка получения заявок админу:', error);
+    res.status(500).json({ error: 'Ошибка получения заявок' });
+  }
+});
+
+router.patch('/admin-requests/:id/status', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const status = String(req.body?.status || '').trim();
+    const adminNote = req.body?.adminNote !== undefined ? String(req.body.adminNote).trim() : undefined;
+
+    if (!['open', 'resolved'].includes(status)) {
+      return res.status(400).json({ error: 'Некорректный статус' });
+    }
+
+    const update: Record<string, unknown> = { status };
+    if (adminNote !== undefined) {
+      update.adminNote = adminNote.slice(0, 5000);
+    }
+
+    const request = await AdminRequest.findByIdAndUpdate(id, update, { new: true });
+    if (!request) {
+      return res.status(404).json({ error: 'Заявка не найдена' });
+    }
+
+    res.json({
+      id: request._id.toString(),
+      status: request.status,
+      adminNote: request.adminNote,
+    });
+  } catch (error) {
+    console.error('Ошибка обновления заявки админу:', error);
+    res.status(500).json({ error: 'Ошибка обновления заявки' });
+  }
+});
+
 router.patch('/reports/:id/status', async (req: ExtendedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -1092,7 +1162,7 @@ router.post('/users/:id/unblock', async (req: ExtendedRequest, res: Response) =>
 router.get('/alerts', async (req: ExtendedRequest, res: Response) => {
   try {
     const admin = await User.findById(req.userId).select(
-      'adminUsersTabClearedAt adminModerationTabClearedAt adminModerationRecoveryClearedAt'
+      'adminUsersTabClearedAt adminModerationTabClearedAt adminModerationRecoveryClearedAt adminModerationRequestsClearedAt'
     );
     if (!admin) {
       return res.status(404).json({ error: 'Пользователь не найден' });
@@ -1101,9 +1171,10 @@ router.get('/alerts', async (req: ExtendedRequest, res: Response) => {
     const usersTabClearedAt = admin.adminUsersTabClearedAt ?? new Date(0);
     const moderationTabClearedAt = admin.adminModerationTabClearedAt ?? new Date(0);
     const moderationRecoveryClearedAt = admin.adminModerationRecoveryClearedAt ?? new Date(0);
+    const moderationRequestsClearedAt = admin.adminModerationRequestsClearedAt ?? new Date(0);
 
     // Greeting dot stays in sync with admin tab badges (not cleared just by opening /admin).
-    const [recentUsers, newReportsCount, newRecoveryRequestsCount] = await Promise.all([
+    const [recentUsers, newReportsCount, newRecoveryRequestsCount, newAdminRequestsCount] = await Promise.all([
       User.find({
         role: { $ne: 'admin' },
         createdAt: { $gt: usersTabClearedAt },
@@ -1116,6 +1187,9 @@ router.get('/alerts', async (req: ExtendedRequest, res: Response) => {
       CryptoRecoveryRequest.countDocuments({
         createdAt: { $gt: moderationRecoveryClearedAt },
       }),
+      AdminRequest.countDocuments({
+        createdAt: { $gt: moderationRequestsClearedAt },
+      }),
     ]);
 
     const newUsersCount = recentUsers.filter((user) =>
@@ -1123,10 +1197,16 @@ router.get('/alerts', async (req: ExtendedRequest, res: Response) => {
     ).length;
 
     res.json({
-      feedDot: Boolean(newUsersCount > 0 || newReportsCount > 0 || newRecoveryRequestsCount > 0),
+      feedDot: Boolean(
+        newUsersCount > 0 ||
+          newReportsCount > 0 ||
+          newRecoveryRequestsCount > 0 ||
+          newAdminRequestsCount > 0
+      ),
       newUsersCount,
       newReportsCount,
       newRecoveryRequestsCount,
+      newAdminRequestsCount,
     });
   } catch (error) {
     console.error('Ошибка получения админ-уведомлений:', error);
@@ -1183,6 +1263,9 @@ router.post('/alerts/clear-moderation-tab', async (req: ExtendedRequest, res: Re
     }
     if (scope === 'recovery' || scope === 'all') {
       admin.adminModerationRecoveryClearedAt = now;
+    }
+    if (scope === 'requests' || scope === 'all') {
+      admin.adminModerationRequestsClearedAt = now;
     }
 
     await admin.save();

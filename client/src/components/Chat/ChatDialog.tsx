@@ -43,6 +43,7 @@ import SharedEventCard from './SharedEventCard';
 import SharedNoteCard from './SharedNoteCard';
 import ContactProfileDialog from './ContactProfileDialog';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
+import AvatarAdminIcon, { shouldShowAdminAvatarIcon } from './AvatarAdminIcon';
 import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
@@ -1406,6 +1407,7 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
 
   const contactName = contact?.name || '';
   const contactAvatar = contact?.avatar || '';
+  const showContactAdminIcon = shouldShowAdminAvatarIcon(contact);
   const renderedMessages = useMemo(() => {
     const isSameDay = (a: Date, b: Date) =>
       a.getDate() === b.getDate() &&
@@ -1489,6 +1491,7 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
             isOwn={message.senderId === currentUserId}
             contactName={contactName}
             contactAvatar={contactAvatar}
+            showAdminIcon={showContactAdminIcon}
             mb={messageSpacing}
             messageFontSizePx={messageFontSizePx}
             onOpenActions={handleMessageContextMenu}
@@ -1506,7 +1509,7 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick, onSharedGameClick, theme, i18n.language, messageFontSizePx]);
+  }, [messages, currentUserId, contactName, contactAvatar, showContactAdminIcon, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick, onSharedGameClick, theme, i18n.language, messageFontSizePx]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, { url: string; mediaType: 'image' | 'video' }> = {};
@@ -1582,12 +1585,14 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
           showBadge={contact.showDisplayBadge !== false}
           avatarSize={44}
         >
-          <Avatar
-            alt={contactDisplayName}
-            src={contact.avatar}
-            onClick={() => setProfileDialogOpen(true)}
-            sx={getChatDialogHeaderAvatarSx()}
-          />
+          <AvatarAdminIcon show={showContactAdminIcon} avatarSize={44}>
+            <Avatar
+              alt={contactDisplayName}
+              src={contact.avatar}
+              onClick={() => setProfileDialogOpen(true)}
+              sx={getChatDialogHeaderAvatarSx()}
+            />
+          </AvatarAdminIcon>
         </AvatarGameRankMedal>
         <Box
           sx={{ flexGrow: 1, minWidth: 0, cursor: 'pointer' }}

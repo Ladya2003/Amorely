@@ -23,6 +23,7 @@ import {
   getChatMessageQuoteSx,
   getChatMessageReactionChipSx,
 } from './chatDialogStyles';
+import AvatarAdminIcon from './AvatarAdminIcon';
 
 const imagePreviewStyle: React.CSSProperties = {
   width: '100%',
@@ -74,6 +75,7 @@ interface MessageProps {
   onSharedNoteClick?: (noteId: string) => void;
   onSharedGameClick?: (gameId: string) => void;
   onContactAvatarClick?: () => void;
+  showAdminIcon?: boolean;
   messageFontSizePx?: number;
 }
 
@@ -92,6 +94,7 @@ const Message: React.FC<MessageProps> = ({
   onSharedNoteClick,
   onSharedGameClick,
   onContactAvatarClick,
+  showAdminIcon = false,
   messageFontSizePx = CHAT_MESSAGE_FONT_SIZE_BASE_PX,
 }) => {
   const { t } = useTranslation();
@@ -191,18 +194,20 @@ const Message: React.FC<MessageProps> = ({
       }}
     >
       {!isOwn && (
-        <Avatar
-          alt={contactName}
-          src={contactAvatar}
-          onClick={onContactAvatarClick}
-          sx={{
-            width: 36,
-            height: 36,
-            mr: 1,
-            mt: 0.5,
-            cursor: onContactAvatarClick ? 'pointer' : 'default'
-          }}
-        />
+        <AvatarAdminIcon show={showAdminIcon} avatarSize={36}>
+          <Avatar
+            alt={contactName}
+            src={contactAvatar}
+            onClick={onContactAvatarClick}
+            sx={{
+              width: 36,
+              height: 36,
+              mr: 1,
+              mt: 0.5,
+              cursor: onContactAvatarClick ? 'pointer' : 'default'
+            }}
+          />
+        </AvatarAdminIcon>
       )}
       <Box
         sx={{

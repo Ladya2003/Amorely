@@ -185,6 +185,14 @@
       "hint": "Uma medalha aparece no chat e no cabeçalho. Por padrão, a melhor (top 1, senão 2, senão 3).",
       "saveFailed": "Não foi possível salvar a medalha"
     },
+    "adminIcon": {
+      "title": "Ícone de administrador",
+      "description": "Um pequeno ícone de administrador aparece no seu avatar na lista de chats e nas conversas com você.",
+      "show": "Mostrar o ícone de administrador no avatar do chat",
+      "errors": {
+        "visibilityFailed": "Não foi possível salvar a configuração de exibição"
+      }
+    },
     "logout": {
       "button": "Sair",
       "confirmTitle": "Confirmar saída",
@@ -866,7 +874,37 @@
         "description": "30 anos — força de pérola"
       }
     },
-    "datingIdea": "Das ideias para encontros"
+    "datingIdea": "Das ideias para encontros",
+    "adminRequest": {
+      "title": "Escrever ao admin",
+      "subtitle": "Uma pergunta, ideia ou pedido — o admin responde no chat.",
+      "badgeTitle": "Como reconhecer um admin de verdade",
+      "badgeText": "Um admin de verdade sempre tem um distintivo de escudo no canto inferior esquerdo do avatar no chat. O app coloca — não faz parte da foto.",
+      "badgeLegend": "O distintivo oficial fica por cima do avatar, embaixo à esquerda.",
+      "realLabel": "Distintivo real",
+      "realHint": "O ícone oficial fica sobre o avatar, embaixo à esquerda.",
+      "fakeLabel": "Pintado na foto",
+      "fakeHint": "Alguém desenhou um ícone parecido na imagem. Isso não é um admin.",
+      "realName": "Admin Amorely",
+      "fakeName": "Não é admin",
+      "categoryLabel": "Assunto",
+      "categories": {
+        "question": "Pergunta",
+        "feature": "Ideia",
+        "bug": "Erro",
+        "other": "Outro"
+      },
+      "textPlaceholder": "Descreva sua pergunta ou pedido…",
+      "submit": "Enviar pedido",
+      "submitting": "Enviando…",
+      "success": "Pedido enviado. O admin vai escrever no chat.",
+      "error": "Não foi possível enviar o pedido. Tente de novo.",
+      "textRequired": "Escreva uma mensagem",
+      "textTooShort": "Escreva um pouco mais para podermos ajudar",
+      "tooManyOpen": "Você já tem vários pedidos abertos. Aguarde a resposta no chat.",
+      "sectionAria": "Abrir «Escrever ao admin»",
+      "sectionHint": "Uma pergunta, ideia ou pedido"
+    }
   },
   "drawingTools": {
     "tool": "Ferramenta",
@@ -1024,6 +1062,11 @@
       "title": "Perfil",
       "closeAria": "Fechar perfil",
       "medals": "Medalhas",
+      "admin": {
+        "title": "Administrador",
+        "badge": "Administrador oficial do Amorely",
+        "proof": "Esta conta está verificada como administrador do Amorely."
+      },
       "medalItem": "{{rank}}º lugar em «{{game}}»",
       "defaultName": "Contato",
       "placeholderBio1": "{{name}} ainda não adicionou uma descrição — surpresas não são só no chat.",
@@ -1684,6 +1727,14 @@
     "levelUpSuccess": "Nível {{level}}!",
     "subLevelUpSuccess": "Etapa concluída! Stats melhoradas",
     "levelUpFailed": "Falha ao subir nível",
+    "levelUpWarning": {
+      "gotIt": "Entendi",
+      "title": "O animal ainda não está pronto",
+      "hungryTitle": "Animal com fome",
+      "hungryBody": "O animal está com muita fome e raiva para evoluir. Alimente-o primeiro.",
+      "affectionTitle": "O animal se afastou",
+      "affectionBody": "O carinho está baixo demais para evoluir agora. Faça carinho — o calor não volta de uma vez. Se faz tempo, volte de novo: ele vai derretendo aos poucos."
+    },
     "upgradingPartnerPet": "Você está melhorando o pet do parceiro",
     "gift": "Presentear",
     "giftTitle": "Presentear amigo",
@@ -1891,7 +1942,7 @@
     "title": "Ideias para encontros",
     "subtitle": "Inspiração para os vossos momentos especiais",
     "sectionAria": "Abrir ideias para encontros",
-    "sectionHint": "Gerar uma ideia por {{cost}} AmoreCoins",
+    "sectionHint": "Inspiração para os vossos momentos especiais",
     "sectionActiveHint": "Têm uma ideia ativa — abram para continuar",
     "costLabel": "{{cost}} AmoreCoins",
     "generateTitle": "Nova ideia para encontro",

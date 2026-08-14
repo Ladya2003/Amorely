@@ -12,6 +12,7 @@ import LocaleBanner from '../components/Feed/LocaleBanner';
 import InstallAppBanner from '../components/Feed/InstallAppBanner';
 import ContentSlider, { ContentItem } from '../components/Feed/ContentSlider';
 import DaysTogether from '../components/Feed/DaysTogether';
+import AdminRequestSection from '../components/Feed/AdminRequest';
 import PetSection from '../components/Pets/PetSection';
 import DailyQuestionsSection from '../components/Feed/DailyQuestions/DailyQuestionsSection';
 import DatingIdeasSection from '../components/Feed/DatingIdeas/DatingIdeasSection';
@@ -494,7 +495,7 @@ const FeedPage: React.FC = () => {
         <DatingIdeasSection />
       </Box>
 
-      <Box sx={{ pb: { xs: 10, sm: 0 } }}>
+      <Box sx={{ mb: 3 }}>
         <DaysTogether
           daysCount={daysCount}
           relationshipStartDate={relationshipStartDate}
@@ -507,6 +508,10 @@ const FeedPage: React.FC = () => {
           currentUserId={user?._id}
           relationshipOwnerId={relationshipOwnerId}
         />
+      </Box>
+
+      <Box sx={{ pb: { xs: 10, sm: 0 } }}>
+        <AdminRequestSection />
       </Box>
       
       {/* Временно закомментировано - контент теперь добавляется через Календарь */}

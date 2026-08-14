@@ -39,12 +39,15 @@ import {
   AdminCryptoRecoveryRequestItem,
   AdminReportItem,
   AdminReportUser,
+  AdminUserRequestItem,
   blockAdminUser,
   fetchAdminCryptoRecoveryRequests,
   fetchAdminReports,
+  fetchAdminUserRequests,
   unblockAdminUser,
   updateAdminCryptoRecoveryRequestStatus,
   updateAdminReportStatus,
+  updateAdminUserRequestStatus,
 } from '../../services/adminService';
 import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
 import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/locale';
@@ -73,6 +76,15 @@ const CONTEXT_LABELS: Record<string, string> = {
   plans: 'Планы',
   other: 'Другое',
 };
+
+const REQUEST_CATEGORY_LABELS: Record<string, string> = {
+  question: 'Вопрос',
+  feature: 'Идея',
+  bug: 'Ошибка',
+  other: 'Другое',
+};
+
+type ModerationSection = 'reports' | 'recovery' | 'requests';
 
 const formatOptionalDate = (value?: string) => {
   if (!value) return '—';
@@ -105,17 +117,21 @@ const AdminModeration: React.FC = () => {
   const {
     newReportsCount,
     newRecoveryRequestsCount,
+    newAdminRequestsCount,
     clearModerationTabBadge,
   } = useAdminAlerts();
-  const [section, setSection] = useState<'reports' | 'recovery'>('reports');
+  const [section, setSection] = useState<ModerationSection>('reports');
   const [reports, setReports] = useState<AdminReportItem[]>([]);
   const [recoveryRequests, setRecoveryRequests] = useState<AdminCryptoRecoveryRequestItem[]>([]);
+  const [adminRequests, setAdminRequests] = useState<AdminUserRequestItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'open' | 'resolved' | ''>('open');
   const [selectedReport, setSelectedReport] = useState<AdminReportItem | null>(null);
   const [selectedRecovery, setSelectedRecovery] = useState<AdminCryptoRecoveryRequestItem | null>(null);
+  const [selectedAdminRequest, setSelectedAdminRequest] = useState<AdminUserRequestItem | null>(null);
   const [recoveryAdminNote, setRecoveryAdminNote] = useState('');
+  const [requestAdminNote, setRequestAdminNote] = useState('');
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [mediaViewerIndex, setMediaViewerIndex] = useState(0);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
@@ -161,15 +177,37 @@ const AdminModeration: React.FC = () => {
     }
   }, [statusFilter]);
 
+  const loadAdminRequests = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await fetchAdminUserRequests({
+        limit: 100,
+        status: statusFilter,
+      });
+      setAdminRequests(data.requests);
+    } catch (loadError) {
+      console.error('Ошибка загрузки заявок админу:', loadError);
+      setError('Не удалось загрузить заявки');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [statusFilter]);
+
   useEffect(() => {
     if (section === 'reports') {
       void loadReports();
       void clearModerationTabBadge('reports');
       return;
     }
-    void loadRecoveryRequests();
-    void clearModerationTabBadge('recovery');
-  }, [section, loadReports, loadRecoveryRequests, clearModerationTabBadge]);
+    if (section === 'recovery') {
+      void loadRecoveryRequests();
+      void clearModerationTabBadge('recovery');
+      return;
+    }
+    void loadAdminRequests();
+    void clearModerationTabBadge('requests');
+  }, [section, loadReports, loadRecoveryRequests, loadAdminRequests, clearModerationTabBadge]);
 
   const openChatWithUser = (targetUser: AdminReportUser | null) => {
     if (!targetUser?._id) return;
@@ -188,6 +226,7 @@ const AdminModeration: React.FC = () => {
     setPendingChatNavigation(target);
     setSelectedReport(null);
     setSelectedRecovery(null);
+    setSelectedAdminRequest(null);
   };
 
   const handleReportDialogExited = () => {
@@ -201,6 +240,10 @@ const AdminModeration: React.FC = () => {
   };
 
   const handleRecoveryDialogExited = () => {
+    handleReportDialogExited();
+  };
+
+  const handleAdminRequestDialogExited = () => {
     handleReportDialogExited();
   };
 
@@ -289,9 +332,32 @@ const AdminModeration: React.FC = () => {
     }
   };
 
+  const handleToggleAdminRequestStatus = async (request: AdminUserRequestItem) => {
+    const nextStatus = request.status === 'open' ? 'resolved' : 'open';
+    try {
+      await updateAdminUserRequestStatus(request._id, {
+        status: nextStatus,
+        adminNote: requestAdminNote,
+      });
+      await loadAdminRequests();
+      if (selectedAdminRequest?._id === request._id) {
+        setSelectedAdminRequest({ ...request, status: nextStatus, adminNote: requestAdminNote });
+      }
+      setActionSuccess(nextStatus === 'resolved' ? 'Заявка закрыта' : 'Заявка открыта снова');
+    } catch (statusError) {
+      console.error('Ошибка обновления заявки админу:', statusError);
+      setError('Не удалось обновить статус заявки');
+    }
+  };
+
   const openRecoveryDetails = (request: AdminCryptoRecoveryRequestItem) => {
     setSelectedRecovery(request);
     setRecoveryAdminNote(request.adminNote || '');
+  };
+
+  const openAdminRequestDetails = (request: AdminUserRequestItem) => {
+    setSelectedAdminRequest(request);
+    setRequestAdminNote(request.adminNote || '');
   };
 
   const mediaGallery: MediaViewerContent[] =
@@ -321,13 +387,19 @@ const AdminModeration: React.FC = () => {
 
       <Tabs
         value={section}
-        onChange={(_event, value: 'reports' | 'recovery') => setSection(value)}
+        onChange={(_event, value: ModerationSection) => setSection(value)}
+        variant="scrollable"
+        scrollButtons="auto"
         sx={{ mb: 2 }}
       >
         <Tab value="reports" label={renderSectionDot('Жалобы', newReportsCount > 0)} />
         <Tab
           value="recovery"
           label={renderSectionDot('Восстановление медиа', newRecoveryRequestsCount > 0)}
+        />
+        <Tab
+          value="requests"
+          label={renderSectionDot('Заявки', newAdminRequestsCount > 0)}
         />
       </Tabs>
 
@@ -347,6 +419,64 @@ const AdminModeration: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
+      ) : section === 'requests' ? (
+        adminRequests.length === 0 ? (
+          <Alert severity="info">Заявок пока нет</Alert>
+        ) : (
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Дата</TableCell>
+                  <TableCell>Пользователь</TableCell>
+                  <TableCell>Тема</TableCell>
+                  <TableCell>Текст</TableCell>
+                  <TableCell>Статус</TableCell>
+                  <TableCell align="right">Действия</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {adminRequests.map((request) => (
+                  <TableRow key={request._id} hover>
+                    <TableCell>
+                      {format(new Date(request.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{request.user?.displayName || '—'}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {request.user?.email || ''}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {REQUEST_CATEGORY_LABELS[request.category] || request.category}
+                    </TableCell>
+                    <TableCell sx={{ maxWidth: 280 }}>
+                      <Typography variant="body2" noWrap title={request.text}>
+                        {request.text}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={request.status === 'open' ? 'Открыта' : 'Закрыта'}
+                        color={request.status === 'open' ? 'warning' : 'default'}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        size="small"
+                        onClick={() => openAdminRequestDetails(request)}
+                        aria-label="Открыть"
+                      >
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )
       ) : section === 'reports' ? (
         reports.length === 0 ? (
           <Alert severity="info">Жалоб пока нет</Alert>
@@ -810,6 +940,92 @@ const AdminModeration: React.FC = () => {
                 {selectedRecovery.status === 'open' ? 'Закрыть заявку' : 'Открыть снова'}
               </Button>
               <Button onClick={() => setSelectedRecovery(null)}>Закрыть</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+
+      <Dialog
+        open={Boolean(selectedAdminRequest)}
+        onClose={() => setSelectedAdminRequest(null)}
+        fullWidth
+        maxWidth="md"
+        disableRestoreFocus
+        TransitionProps={{ onExited: handleAdminRequestDialogExited }}
+        PaperProps={{ sx: getAppPlainDialogPaperSx }}
+      >
+        {selectedAdminRequest && (
+          <>
+            <DialogTitle>Заявка</DialogTitle>
+            <DialogContent dividers>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Дата:{' '}
+                {format(new Date(selectedAdminRequest.createdAt), 'dd MMMM yyyy HH:mm', { locale: ru })}
+              </Typography>
+
+              <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Пользователь
+                </Typography>
+                <Typography variant="body1">{selectedAdminRequest.user?.displayName || '—'}</Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  {selectedAdminRequest.user?.email}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  userId: {selectedAdminRequest.user?._id || '—'}
+                </Typography>
+                {selectedAdminRequest.locale && (
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Язык: {selectedAdminRequest.locale}
+                  </Typography>
+                )}
+                {selectedAdminRequest.user?.isBlocked && (
+                  <Chip size="small" color="error" label="Заблокирован" sx={{ mt: 1 }} />
+                )}
+              </Paper>
+
+              <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Тема
+                </Typography>
+                <Typography variant="body2">
+                  {REQUEST_CATEGORY_LABELS[selectedAdminRequest.category] ||
+                    selectedAdminRequest.category}
+                </Typography>
+              </Paper>
+
+              <Typography variant="subtitle2" gutterBottom>
+                Сообщение
+              </Typography>
+              <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {selectedAdminRequest.text}
+                </Typography>
+              </Paper>
+
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                label="Заметка админа"
+                value={requestAdminNote}
+                onChange={(event) => setRequestAdminNote(event.target.value)}
+                helperText="Например: что уже ответили в чате"
+              />
+            </DialogContent>
+            <DialogActions sx={{ flexWrap: 'wrap', gap: 1, px: 3, py: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<ChatIcon />}
+                onClick={() => openChatWithUser(selectedAdminRequest.user)}
+                disabled={!selectedAdminRequest.user?._id}
+              >
+                Перейти в чат
+              </Button>
+              <Button onClick={() => void handleToggleAdminRequestStatus(selectedAdminRequest)}>
+                {selectedAdminRequest.status === 'open' ? 'Закрыть заявку' : 'Открыть снова'}
+              </Button>
+              <Button onClick={() => setSelectedAdminRequest(null)}>Закрыть</Button>
             </DialogActions>
           </>
         )}

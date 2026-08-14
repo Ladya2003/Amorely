@@ -181,6 +181,8 @@ const Layout: React.FC = () => {
     // Sub-pages outside bottom-nav tabs: keep a stable unique key via pathname.
     if (path.startsWith('/dating-ideas')) return false;
 
+    if (path.startsWith('/write-admin')) return false;
+
     if (path.startsWith('/pets')) return false;
 
     if (path.startsWith('/legal/')) return false;

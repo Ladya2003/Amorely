@@ -41,6 +41,7 @@ interface User {
   primaryColor?: 'pink' | 'purple' | 'blue' | 'orange' | 'dark-red' | 'dark-green';
   displayBadgeGameId?: string | null;
   showDisplayBadge?: boolean;
+  showAdminIcon?: boolean;
   role?: 'user' | 'admin';
   locale?: string;
   hasCryptoBackup?: boolean;

@@ -58,10 +58,11 @@ const AdminPage: React.FC = () => {
     newUsersCount,
     newReportsCount,
     newRecoveryRequestsCount,
+    newAdminRequestsCount,
     clearUsersTabBadge,
   } = useAdminAlerts();
   const [tabIndex, setTabIndex] = useState(0);
-  const moderationBadgeCount = newReportsCount + newRecoveryRequestsCount;
+  const moderationBadgeCount = newReportsCount + newRecoveryRequestsCount + newAdminRequestsCount;
 
   useEffect(() => {
     setShowBottomNav(false);

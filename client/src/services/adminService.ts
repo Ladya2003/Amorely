@@ -247,6 +247,42 @@ export const updateAdminCryptoRecoveryRequestStatus = async (
   return response.data;
 };
 
+export type AdminRequestCategory = 'question' | 'feature' | 'bug' | 'other';
+
+export interface AdminUserRequestItem {
+  _id: string;
+  user: AdminReportUser | null;
+  category: AdminRequestCategory;
+  text: string;
+  locale: string;
+  status: 'open' | 'resolved';
+  adminNote: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const fetchAdminUserRequests = async (params?: {
+  limit?: number;
+  status?: 'open' | 'resolved' | '';
+}) => {
+  const response = await axios.get<{
+    requests: AdminUserRequestItem[];
+    total: number;
+  }>(`${API_URL}/api/admin/admin-requests`, { params });
+  return response.data;
+};
+
+export const updateAdminUserRequestStatus = async (
+  requestId: string,
+  payload: { status: 'open' | 'resolved'; adminNote?: string }
+) => {
+  const response = await axios.patch(
+    `${API_URL}/api/admin/admin-requests/${requestId}/status`,
+    payload
+  );
+  return response.data;
+};
+
 export const blockAdminUser = async (
   userId: string,
   reasons?: Partial<Record<AppLocale, string>>
@@ -265,9 +301,10 @@ export interface AdminAlertsState {
   newUsersCount: number;
   newReportsCount: number;
   newRecoveryRequestsCount: number;
+  newAdminRequestsCount: number;
 }
 
-export type AdminModerationAlertScope = 'reports' | 'recovery' | 'all';
+export type AdminModerationAlertScope = 'reports' | 'recovery' | 'requests' | 'all';
 
 export const fetchAdminAlerts = async (): Promise<AdminAlertsState> => {
   const response = await axios.get<AdminAlertsState>(`${API_URL}/api/admin/alerts`);

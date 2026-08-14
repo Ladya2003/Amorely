@@ -122,7 +122,7 @@ const DatingIdeasSection: React.FC = () => {
             {t('datingIdeas.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>
-            {hasActive ? t('datingIdeas.sectionActiveHint') : t('datingIdeas.sectionHint', { cost })}
+            {hasActive ? t('datingIdeas.sectionActiveHint') : t('datingIdeas.sectionHint')}
           </Typography>
           {!hasActive && (
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 0.75 }}>

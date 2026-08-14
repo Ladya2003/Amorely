@@ -18,6 +18,7 @@ import { API_URL } from '../../config';
 import ContentViewer from '../Calendar/ContentViewer';
 import { Contact } from './ChatList';
 import GameBadges, { AvatarGameRankMedal } from '../Games/GameBadges';
+import { AdminBadgeIcon, shouldShowAdminAvatarIcon } from './AvatarAdminIcon';
 import type { RelationshipBadge } from '../../utils/gameBadges';
 import { formatChatBirthday, getChatPlaceholderBio } from '../../localization/chatHelpers';
 import PetSection from '../Pets/PetSection';
@@ -36,6 +37,9 @@ import {
   getContactProfileRootSx,
   getContactProfileSectionSx,
   getContactProfileSectionTitleSx,
+  getContactProfileAdminRowSx,
+  getContactProfileAdminTitleSx,
+  getContactProfileAdminProofSx,
 } from './contactProfileDialogStyles';
 
 export interface ContactProfile extends Contact {
@@ -128,6 +132,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
   const avatarUrl = displayProfile?.avatar || '';
   const contactId = displayProfile?.id ?? contact?.id ?? null;
   const showingPet = Boolean(selectedPetId);
+  const showAdminProof = shouldShowAdminAvatarIcon(displayProfile);
 
   const handleClose = () => {
     setAvatarViewerOpen(false);
@@ -238,6 +243,25 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
                     {t('chat.profile.medals')}
                   </Typography>
                   <GameBadges badges={profile.badges} variant="list" dense />
+                </Box>
+              )}
+
+              {showAdminProof && (
+                <Box sx={getContactProfileSectionSx(theme)}>
+                  <Typography component="span" sx={getContactProfileSectionTitleSx(theme)}>
+                    {t('chat.profile.admin.title')}
+                  </Typography>
+                  <Box sx={getContactProfileAdminRowSx()}>
+                    <AdminBadgeIcon size={28} />
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={getContactProfileAdminTitleSx()}>
+                        {t('chat.profile.admin.badge')}
+                      </Typography>
+                      <Typography sx={getContactProfileAdminProofSx(theme)}>
+                        {t('chat.profile.admin.proof')}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </Box>
               )}
 

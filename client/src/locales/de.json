@@ -185,6 +185,14 @@
       "hint": "Im Chat und in der Kopfzeile wird ein Abzeichen angezeigt. Standard: das beste (Top 1, sonst 2, sonst 3).",
       "saveFailed": "Abzeichen konnte nicht gespeichert werden"
     },
+    "adminIcon": {
+      "title": "Admin-Symbol",
+      "description": "Ein kleines Admin-Symbol erscheint auf deinem Avatar in der Chatliste und in Chats mit dir.",
+      "show": "Admin-Symbol auf dem Avatar im Chat anzeigen",
+      "errors": {
+        "visibilityFailed": "Anzeigeeinstellung konnte nicht gespeichert werden"
+      }
+    },
     "logout": {
       "button": "Abmelden",
       "confirmTitle": "Abmeldung bestätigen",
@@ -866,7 +874,37 @@
         "description": "30 Jahre – perlmuttstarke Liebe"
       }
     },
-    "datingIdea": "Aus Date-Ideen"
+    "datingIdea": "Aus Date-Ideen",
+    "adminRequest": {
+      "title": "Dem Admin schreiben",
+      "subtitle": "Frage, Idee oder Wunsch — der Admin antwortet im Chat.",
+      "badgeTitle": "So erkennst du einen echten Admin",
+      "badgeText": "Ein echter Admin hat im Chat immer ein spezielles Schild-Badge unten links am Avatar. Die App setzt es — es ist nicht Teil des Fotos.",
+      "badgeLegend": "Das offizielle Badge liegt oben auf dem Avatar, unten links.",
+      "realLabel": "Echtes Badge",
+      "realHint": "Das offizielle Symbol liegt unten links über dem Avatar.",
+      "fakeLabel": "Auf das Foto gemalt",
+      "fakeHint": "Ein ähnliches Symbol wurde ins Bild gezeichnet. Das ist kein Admin.",
+      "realName": "Amorely-Admin",
+      "fakeName": "Kein Admin",
+      "categoryLabel": "Thema",
+      "categories": {
+        "question": "Frage",
+        "feature": "Idee",
+        "bug": "Fehler",
+        "other": "Sonstiges"
+      },
+      "textPlaceholder": "Beschreibe deine Frage oder deinen Wunsch…",
+      "submit": "Anfrage senden",
+      "submitting": "Wird gesendet…",
+      "success": "Anfrage gesendet. Der Admin schreibt dir im Chat.",
+      "error": "Die Anfrage konnte nicht gesendet werden. Versuche es erneut.",
+      "textRequired": "Bitte schreibe eine Nachricht",
+      "textTooShort": "Bitte schreibe etwas mehr, damit wir helfen können",
+      "tooManyOpen": "Du hast bereits mehrere offene Anfragen. Warte auf eine Antwort im Chat.",
+      "sectionAria": "«Dem Admin schreiben» öffnen",
+      "sectionHint": "Frage, Idee oder Wunsch"
+    }
   },
   "drawingTools": {
     "tool": "Werkzeug",
@@ -1024,6 +1062,11 @@
       "title": "Profil",
       "closeAria": "Profil schließen",
       "medals": "Medaillen",
+      "admin": {
+        "title": "Administrator",
+        "badge": "Offizieller Amorely-Admin",
+        "proof": "Dieses Konto ist als Amorely-Administrator bestätigt."
+      },
       "medalItem": "Platz {{rank}} in „{{game}}“",
       "defaultName": "Kontakt",
       "placeholderBio1": "{{name}} hat noch keine Beschreibung — Überraschungen gibt es nicht nur im Chat.",
@@ -1684,6 +1727,14 @@
     "levelUpSuccess": "Level {{level}} erreicht!",
     "subLevelUpSuccess": "Stufe geschafft! Werte verbessert",
     "levelUpFailed": "Level-Up fehlgeschlagen",
+    "levelUpWarning": {
+      "gotIt": "Verstanden",
+      "title": "Das Haustier ist noch nicht bereit",
+      "hungryTitle": "Hungriges Haustier",
+      "hungryBody": "Das Haustier ist zu hungrig und wütend zum Verbessern. Füttere es zuerst.",
+      "affectionTitle": "Das Haustier hat sich entfremdet",
+      "affectionBody": "Die Zuneigung ist gerade zu schwach zum Verbessern. Streichel es — Wärme kommt nicht auf einmal zurück. Wenn es lange allein war, schau wieder vorbei: es taut langsam auf."
+    },
     "upgradingPartnerPet": "Du verbesserst das Haustier deines Partners",
     "gift": "Verschenken",
     "giftTitle": "An Freund schenken",
@@ -1891,7 +1942,7 @@
     "title": "Date-Ideen",
     "subtitle": "Inspiration für eure besonderen Momente",
     "sectionAria": "Date-Ideen öffnen",
-    "sectionHint": "Idee für {{cost}} AmoreCoins generieren",
+    "sectionHint": "Inspiration für eure besonderen Momente",
     "sectionActiveHint": "Ihr habt eine aktive Idee — öffnen zum Fortfahren",
     "costLabel": "{{cost}} AmoreCoins",
     "generateTitle": "Neue Date-Idee",

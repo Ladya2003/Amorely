@@ -306,6 +306,38 @@ export const notifyNewReport = async (params: {
   );
 };
 
+export const notifyNewAdminRequest = async (params: {
+  requestId: string;
+  userId: string;
+  category: string;
+  text: string;
+}) => {
+  const admins = await User.find({
+    role: 'admin',
+    'notificationSettings.push.reports': { $ne: false },
+  }).select('_id');
+
+  if (!admins.length) {
+    return;
+  }
+
+  const sender = await User.findById(params.userId).select('username firstName lastName');
+  const senderName = sender ? getUserDisplayName(sender) : 'Пользователь';
+  const preview = params.text.trim() || 'Новая заявка';
+  const body = truncatePreview(`${senderName}: ${preview}`);
+
+  await Promise.all(
+    admins.map((admin) =>
+      sendPushToUser(admin._id.toString(), {
+        title: 'Новая заявка админу',
+        body,
+        url: buildAdminUrl(),
+        tag: `admin-request-${params.requestId}`,
+      })
+    )
+  );
+};
+
 export const notifyNewsPublished = async (params: {
   newsId: string;
   title: string;
