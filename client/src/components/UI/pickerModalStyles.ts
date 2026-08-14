@@ -23,8 +23,9 @@ const getPickerPaperSx = (theme: Theme): SxProps<Theme> => ({
   overflow: 'hidden',
   ...(theme.palette.mode === 'light'
     ? {
-        bgcolor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
+        // !important: глобальный MuiDialog.paper даёт glass white-текст, иначе он перебивает
+        bgcolor: `${theme.palette.background.paper} !important`,
+        color: `${theme.palette.text.primary} !important`,
         '& .MuiPickersCalendarHeader-label': {
           color: `${theme.palette.text.primary} !important`,
         },
@@ -34,6 +35,10 @@ const getPickerPaperSx = (theme: Theme): SxProps<Theme> => ({
         '& .MuiPickersArrowSwitcher-root .MuiIconButton-root': {
           color: `${theme.palette.text.primary} !important`,
         },
+        // Toolbar date/time tabs + остальные IconButton (иначе white на white)
+        '& .MuiPickersLayout-toolbar .MuiIconButton-root': {
+          color: `${theme.palette.text.primary} !important`,
+        },
         '& .MuiDayCalendar-weekDayLabel': {
           color: `${theme.palette.text.secondary} !important`,
         },
@@ -41,8 +46,20 @@ const getPickerPaperSx = (theme: Theme): SxProps<Theme> => ({
           color: `${theme.palette.text.primary} !important`,
         },
         '& .MuiPickersYear-yearButton, & .MuiPickersMonth-monthButton': {
-          color: theme.palette.text.primary,
+          color: `${theme.palette.text.primary} !important`,
         },
+        // MultiSectionDigitalClock / DigitalClock: MenuItem в MUI v7 наследует color с paper
+        // (glass Dialog → белый текст на белом фоне — часы/минуты не видны)
+        '& .MuiMultiSectionDigitalClockSection-item, & .MuiDigitalClock-item, & .MuiMultiSectionDigitalClock-root .MuiMenuItem-root, & .MuiDigitalClock-root .MuiMenuItem-root':
+          {
+            color: `${theme.palette.text.primary} !important`,
+            '&.Mui-selected': {
+              color: `${theme.palette.primary.contrastText} !important`,
+            },
+            '&.Mui-disabled': {
+              color: `${theme.palette.text.disabled} !important`,
+            },
+          },
         // ActionBar рендерит DialogActions → наследуют white-текст glass-модалок; сбрасываем на светлом paper
         '& .MuiPickersLayout-actionBar .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
           border: `1px solid ${theme.palette.primary.main} !important`,
