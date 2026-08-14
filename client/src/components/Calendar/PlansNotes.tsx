@@ -12,6 +12,7 @@ import {
   DialogTitle,
   FormControlLabel,
   IconButton,
+  MenuItem,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -136,6 +137,8 @@ const emptyForm: NoteFormState = {
   category: ''
 };
 
+const CREATE_NEW_CATEGORY = '__create_new__';
+
 const PlansNotes: React.FC<{
   refreshKey?: number;
   noteIdFromUrl?: string | null;
@@ -195,6 +198,7 @@ const PlansNotes: React.FC<{
   const [editingNote, setEditingNote] = useState<PlanNote | null>(null);
   const [viewingNote, setViewingNote] = useState<PlanNote | null>(null);
   const [form, setForm] = useState<NoteFormState>(emptyForm);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -398,6 +402,7 @@ const PlansNotes: React.FC<{
   const openCreateForm = () => {
     setEditingNote(null);
     setForm(emptyForm);
+    setIsCreatingCategory(categories.length === 0);
     setFormError(null);
     resetMediaState();
     resetDeadlineState();
@@ -411,6 +416,7 @@ const PlansNotes: React.FC<{
       content: note.content,
       category: note.category
     });
+    setIsCreatingCategory(false);
     setFormError(null);
     resetMediaState();
     setExistingMedia(note.media || []);
@@ -689,6 +695,7 @@ const PlansNotes: React.FC<{
       setFormOpen(false);
       setEditingNote(null);
       setForm(emptyForm);
+      setIsCreatingCategory(false);
       void fetchNotes();
     } catch (err: any) {
       console.error('Ошибка сохранения заметки:', err);
@@ -996,22 +1003,62 @@ const PlansNotes: React.FC<{
           </Box>
           <Box>
             <FieldCaption>{t('calendar.plans.category')}</FieldCaption>
-            <Autocomplete
-              freeSolo
+            <AppTextField
+              select
               fullWidth
-              options={categories}
-              value={form.category}
-              onChange={(_, value) => setForm((prev) => ({ ...prev, category: value || '' }))}
-              onInputChange={(_, value) => setForm((prev) => ({ ...prev, category: value }))}
-              renderInput={(params) => (
-                <AppTextField
-                  {...params}
-                  label={t('calendar.plans.category')}
-                  placeholder={t('calendar.plans.categoryPlaceholder')}
-                  inputProps={{ ...params.inputProps, maxLength: 100 }}
-                />
+              label={t('calendar.plans.category')}
+              value={isCreatingCategory ? CREATE_NEW_CATEGORY : form.category}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (value === CREATE_NEW_CATEGORY) {
+                  setIsCreatingCategory(true);
+                  setForm((prev) => ({ ...prev, category: '' }));
+                  return;
+                }
+                setIsCreatingCategory(false);
+                setForm((prev) => ({ ...prev, category: value }));
+              }}
+              disabled={isSaving}
+              slotProps={{
+                select: {
+                  displayEmpty: true,
+                  MenuProps: {
+                    PaperProps: {
+                      sx: { maxHeight: 320 }
+                    }
+                  }
+                }
+              }}
+            >
+              {categories.length > 0 && (
+                <MenuItem value="" disabled>
+                  {t('calendar.plans.categorySelectPlaceholder')}
+                </MenuItem>
               )}
-            />
+              <MenuItem value={CREATE_NEW_CATEGORY}>
+                {t('calendar.plans.createCategory')}
+              </MenuItem>
+              {categories.map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {cat}
+                </MenuItem>
+              ))}
+            </AppTextField>
+            {isCreatingCategory && (
+              <Box sx={{ mt: 1.5 }}>
+                <FieldCaption>{t('calendar.plans.newCategory')}</FieldCaption>
+                <AppTextField
+                  label={t('calendar.plans.newCategory')}
+                  placeholder={t('calendar.plans.categoryPlaceholder')}
+                  value={form.category}
+                  onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
+                  fullWidth
+                  autoFocus={categories.length > 0}
+                  disabled={isSaving}
+                  inputProps={{ maxLength: 100 }}
+                />
+              </Box>
+            )}
           </Box>
           <Box>
             <FieldCaption>{t('calendar.plans.content')}</FieldCaption>
