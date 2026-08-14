@@ -68,7 +68,8 @@ router.get('/by-event/:eventId', async (req: ExtendedRequest, res: Response) => 
   try {
     const userId = req.userId as string;
     const { eventId } = req.params;
-    const result = await getDatingIdeaByEventId(userId, eventId);
+    const locale = await resolveRequestLocale(req);
+    const result = await getDatingIdeaByEventId(userId, eventId, locale);
 
     if ('error' in result) {
       if (result.error === 'NO_PARTNER') {
@@ -88,7 +89,8 @@ router.post('/:ideaId/skip', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
     const { ideaId } = req.params;
-    const result = await skipDatingIdea(userId, ideaId);
+    const locale = await resolveRequestLocale(req);
+    const result = await skipDatingIdea(userId, ideaId, locale);
 
     if ('error' in result) {
       if (result.error === 'NO_PARTNER') {
@@ -109,12 +111,13 @@ router.post('/:ideaId/complete', async (req: ExtendedRequest, res: Response) => 
     const userId = req.userId as string;
     const { ideaId } = req.params;
     const { eventId } = req.body || {};
+    const locale = await resolveRequestLocale(req);
 
     if (!eventId || typeof eventId !== 'string') {
       return res.status(400).json({ error: 'eventId is required' });
     }
 
-    const result = await completeDatingIdea(userId, ideaId, eventId);
+    const result = await completeDatingIdea(userId, ideaId, eventId, locale);
 
     if ('error' in result) {
       if (result.error === 'NO_PARTNER') {

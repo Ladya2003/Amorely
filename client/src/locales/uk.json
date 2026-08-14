@@ -1,4 +1,4 @@
-﻿{
+{
   "settings": {
     "title": "Налаштування",
     "tabs": {
@@ -13,7 +13,14 @@
       "notAuthorizedShort": "Не авторизовано",
       "loadFailed": "Не вдалося завантажити дані користувача. Спробуйте пізніше.",
       "addPartnerFailed": "Не вдалося додати партнера",
-      "removePartnerFailed": "Не вдалося видалити партнера"
+      "removePartnerFailed": "Не вдалося видалити партнера",
+      "colorChangeFailed": "Не вдалося змінити основний колір. Спробуйте ще раз.",
+      "localeChangeFailed": "Не вдалося змінити мову. Спробуйте ще раз.",
+      "notAuthorizedLogin": "Не авторизовано. Будь ласка, увійдіть у систему.",
+      "notificationUpdateFailed": "Не вдалося оновити налаштування сповіщень. Спробуйте ще раз.",
+      "passwordChangeFailed": "Не вдалося змінити пароль. Перевірте правильність поточного пароля.",
+      "pushToggleFailed": "Не вдалося перемкнути push-сповіщення. Спробуйте ще раз.",
+      "themeChangeFailed": "Не вдалося змінити тему. Спробуйте ще раз."
     },
     "profile": {
       "personalInfo": "Особиста інформація",
@@ -31,7 +38,13 @@
       "errors": {
         "saveFailed": "Не вдалося зберегти зміни. Спробуйте ще раз.",
         "imageRequired": "Виберіть файл зображення"
-      }
+      },
+      "birthdayHint": "Вкажіть дату народження для відображення подій у стрічці на день народження",
+      "emailReadonly": "Email не можна змінити",
+      "saveFailed": "Не вдалося зберегти зміни. Будь ласка, спробуйте ще раз.",
+      "savedToast": "Профіль успішно збережено",
+      "selectImageFile": "Оберіть файл зображення",
+      "title": "Особиста інформація"
     },
     "partner": {
       "title": "Партнер",
@@ -96,7 +109,20 @@
       "errors": {
         "selectPartnerAndDate": "Виберіть партнера та вкажіть дату початку стосунків",
         "addFailed": "Не вдалося додати партнера. Спробуйте ще раз."
-      }
+      },
+      "addDialogTitle": "Додати партнера",
+      "addFailed": "Не вдалося додати партнера. Будь ласка, спробуйте ще раз.",
+      "addedToast": "Партнера успішно додано",
+      "delete": "Видалити",
+      "deleteConfirmBody": "Видалити партнера? Цю дію не можна скасувати.",
+      "deleteConfirmTitle": "Підтвердження",
+      "notFound": "Користувачів не знайдено",
+      "removeFailed": "Не вдалося видалити партнера",
+      "searchHint": "Введіть мінімум 3 символи для пошуку",
+      "selectPartnerAndDate": "Оберіть партнера і вкажіть дату початку стосунків",
+      "startDate": "Дата початку стосунків",
+      "startDateHint": "Вкажіть дату початку ваших стосунків",
+      "startDateLocked": "Дату початку стосунків не можна змінити після додавання партнера"
     },
     "notifications": {
       "title": "Сповіщення",
@@ -112,7 +138,15 @@
       "pushNews": "Новини",
       "pushNewsHint": "Отримувати сповіщення про новини та оновлення застосунку",
       "pushReports": "Нові скарги",
-      "pushReportsHint": "Отримувати сповіщення про нові скарги користувачів (лише для адміністраторів)"
+      "pushReportsHint": "Отримувати сповіщення про нові скарги користувачів (лише для адміністраторів)",
+      "events": "Події",
+      "eventsHint": "Отримувати сповіщення про важливі дати та події",
+      "messages": "Повідомлення",
+      "messagesHint": "Отримувати сповіщення про нові повідомлення",
+      "newContent": "Новий контент від партнера",
+      "newContentHint": "Отримувати сповіщення, коли партнер додає новий контент",
+      "news": "Новини",
+      "newsHint": "Отримувати сповіщення про новини та оновлення додатка"
     },
     "security": {
       "title": "Безпека",
@@ -128,7 +162,13 @@
         "passwordMismatch": "Новий пароль і підтвердження не збігаються",
         "passwordTooShort": "Новий пароль має містити щонайменше 8 символів",
         "changeFailed": "Не вдалося змінити пароль. Перевірте правильність поточного пароля."
-      }
+      },
+      "changeFailed": "Не вдалося змінити пароль. Перевірте правильність поточного пароля.",
+      "changeSuccess": "Пароль успішно змінено",
+      "fillAllFields": "Будь ласка, заповніть усі поля",
+      "minLength": "Новий пароль має містити щонайменше 8 символів",
+      "newPasswordHint": "Мінімум 8 символів",
+      "passwordsMismatch": "Новий пароль і підтвердження не збігаються"
     },
     "badge": {
       "title": "Медаль біля імені",
@@ -141,14 +181,20 @@
       "errors": {
         "saveFailed": "Не вдалося зберегти медаль",
         "visibilityFailed": "Не вдалося зберегти налаштування відображення"
-      }
+      },
+      "hint": "У чаті та в шапці показується одна медаль. За замовчуванням — найкраща (топ-1, інакше 2, інакше 3).",
+      "saveFailed": "Не вдалося зберегти медаль"
     },
     "logout": {
       "button": "Вийти",
       "confirmTitle": "Підтвердження виходу",
       "closeAria": "Закрити",
       "confirmBody": "Ви можете просто вийти з акаунта (ключова фраза залишиться на пристрої) або вийти й видалити вашу фразу.",
-      "logoutAndRemoveKeys": "Вийти й видалити ключову фразу"
+      "logoutAndRemoveKeys": "Вийти й видалити ключову фразу",
+      "dialogBody": "Можна просто вийти з акаунта (ключова фраза залишиться на пристрої) або вийти й видалити вашу фразу.",
+      "dialogTitle": "Підтвердження виходу",
+      "logout": "Вийти",
+      "logoutAndDelete": "Вийти і видалити ключову фразу"
     },
     "language": "Мова",
     "languageHint": "Впливає на інтерфейс і тексти ігор на вашому пристрої.",
@@ -166,6 +212,18 @@
       "orange": "Помаранчевий",
       "dark-red": "Червоний",
       "dark-green": "Зелений"
+    },
+    "common": {
+      "cancel": "Скасувати",
+      "close": "Закрити",
+      "confirm": "Підтвердження",
+      "delete": "Видалити",
+      "saving": "Збереження..."
+    },
+    "success": {
+      "partnerAdded": "Партнера успішно додано",
+      "passwordChanged": "Пароль успішно змінено",
+      "profileSaved": "Профіль успішно збережено"
     }
   },
   "games": {
@@ -366,12 +424,12 @@
     },
     "tab": "Ігри",
     "list": {
-      "searchPlaceholder": "Search by game name",
+      "searchPlaceholder": "Пошук за назвою гри",
       "clearSearch": "Очистити пошук",
-      "notFound": "No games found",
-      "emptyList": "No games in the list",
-      "emptyHint": "Games for you and your partner will appear here",
-      "tryDifferentQuery": "Try a different search",
+      "notFound": "Ігри не знайдено",
+      "emptyList": "Немає ігор у списку",
+      "emptyHint": "Тут з'явиться список ігор для вас і вашої пари",
+      "tryDifferentQuery": "Спробуйте змінити запит",
       "comingSoon": "Незабаром"
     },
     "page": {
@@ -379,10 +437,10 @@
       "backToList": "До списку ігор",
       "tabGame": "Гра",
       "tabLeaderboard": "Рейтинг",
-      "leaderboardSubtitle": "Global couple leaderboard by total score",
-      "comingSoon": "This game is coming soon",
-      "addPartner": "Add your partner in settings to play together",
-      "geoDailyLimitHint": "You guessed all {{count}} places today. New rounds will open later.",
+      "leaderboardSubtitle": "Глобальний рейтинг пар за загальним рахунком",
+      "comingSoon": "Ця гра скоро з'явиться",
+      "addPartner": "Додайте партнера в налаштуваннях, щоб грати разом",
+      "geoDailyLimitHint": "Сьогодні ви вгадали всі {{count}} місць. Нові раунди відкриються пізніше.",
       "play": "Грати"
     },
     "common": {
@@ -390,21 +448,21 @@
       "you": "Ви",
       "partner": "Партнер",
       "ready": "Готовий",
-      "waitingPartner": "Waiting for partner…",
+      "waitingPartner": "Чекаємо партнера…",
       "remindPartner": "Покликати партнера",
       "partnerReminded": "Партнера покликали в чат",
       "partnerRemindedShort": "Партнера покликано",
       "remindPartnerFailed": "Не вдалося покликати партнера",
-      "readyToPlay": "Ready to play?",
-      "startingSoon": "Starting soon!",
-      "bothReady": "Both partners are ready — the round will start at the same time.",
-      "pressReady": "Press Ready when you are set. The round starts when both are ready.",
+      "readyToPlay": "Готові грати?",
+      "startingSoon": "Скоро почнемо!",
+      "bothReady": "Обидва партнери готові — раунд почнеться одночасно.",
+      "pressReady": "Натисніть «Готовий», коли будете на місці. Раунд стартує, коли готові обоє.",
       "youReadyAria": "Ви готові",
       "confirmReadyAria": "Підтвердити готовність",
       "goToSettings": "Перейти в налаштування",
       "needPartner": "Потрібен партнер",
       "loadFailed": "Не вдалося завантажити гру",
-      "partnerRequired": "You need a partner to play. Add them in profile settings.",
+      "partnerRequired": "Для гри потрібен партнер. Додайте його в налаштуваннях профілю.",
       "partnerRequiredShort": "Потрібен партнер",
       "backToGame": "До гри",
       "send": "Надіслати",
@@ -426,7 +484,7 @@
       "dailyLimitExhausted": "Денний ліміт вичерпано",
       "roundStartFailed": "Не вдалося розпочати раунд",
       "nextRound": "Наступний раунд",
-      "playMore": "Keep playing",
+      "playMore": "Грати далі",
       "finish": "Завершити",
       "yourAnswer": "Ваша відповідь",
       "yourGuesses": "Ваші здогадки",
@@ -450,25 +508,25 @@
       }
     },
     "leaderboard": {
-      "empty": "No one has played yet"
+      "empty": "Поки ніхто не грав"
     },
     "badge": {
-      "tooltip": "Top-{{rank}} · {{game}}"
+      "tooltip": "Топ-{{rank}} · {{game}}"
     },
     "dailyReset": {
-      "title": "Reset timer",
-      "playedTodayNamed": "You already played «{{gameName}}» today. ",
-      "playedTodayGeneric": "You already played this game today. ",
-      "timerHint": "The timer shows how long until the daily limit resets.",
-      "resetHint": "The limit resets at 03:00 Moscow time (00:00 UTC). You can play again after that.",
-      "untilReset": "Until reset:",
+      "title": "Таймер скидання",
+      "playedTodayNamed": "Ви вже грали в «{{gameName}}» сьогодні. ",
+      "playedTodayGeneric": "Ви вже грали в цю гру сьогодні. ",
+      "timerHint": "Таймер показує, скільки залишилось до оновлення денного ліміту.",
+      "resetHint": "Ліміт скидається о 03:00 за Москвою (00:00 UTC). Після цього можна знову грати.",
+      "untilReset": "До скидання:",
       "understood": "Зрозуміло",
-      "badgeAria": "More about the reset timer"
+      "badgeAria": "Докладніше про таймер скидання"
     },
     "geoDailyLimit": {
-      "title": "All done for today",
-      "body": "You can guess up to {{count}} places per day. You have completed all rounds for today.",
-      "nextAvailable": "New places will be available in",
+      "title": "На сьогодні все",
+      "body": "Щодня можна вгадати не більше {{count}} місць. Ви вже пройшли всі раунди на сьогодні.",
+      "nextAvailable": "Наступні місця будуть доступні через",
       "understood": "Зрозуміло"
     },
     "waitDuration": {
@@ -491,7 +549,9 @@
     "notificationsDialog": {
       "title": "Сповіщення",
       "empty": "Поки що нових сповіщень немає",
-      "close": "Зрозуміло"
+      "close": "Зрозуміло",
+      "back": "Назад",
+      "newBadge": "Нове"
     },
     "statusBubble": {
       "placeholder": "Я люблю тебе ❤️",
@@ -1023,7 +1083,19 @@
       "textOnly": "Текстова подія",
       "fileCount_one": "{{count}} файл",
       "fileCount_few": "{{count}} файли",
-      "fileCount_many": "{{count}} файлів"
+      "fileCount_many": "{{count}} файлів",
+      "anniversaryLabel": "💕 Враховувати як річницю",
+      "birthdayLabel": "🎂 Враховувати як день народження",
+      "clearForm": "Очистити форму",
+      "dateLabel": "Дата події",
+      "descriptionLabel": "Опис (необов’язково)",
+      "editTitle": "Редагувати подію",
+      "newTitle": "Нова подія",
+      "save": "Зберегти",
+      "saving": "Збереження...",
+      "titleLabel": "Назва події",
+      "uploadPhotos": "Додати фото або відео",
+      "titleShort": "Назва"
     },
     "detail": {
       "readOnly": "Лише перегляд",
@@ -1041,7 +1113,9 @@
       "author": "Автор: {{name}}",
       "lastEdit": "Остання зміна",
       "editor": "Редактор: {{name}}",
-      "datingIdea": "З ідей для побачень"
+      "datingIdea": "З ідей для побачень",
+      "noDescription": "Без опису",
+      "openMedia": "Відкрити медіа"
     },
     "list": {
       "eventsOn": "Події {{date}}"
@@ -1050,7 +1124,9 @@
       "title": "Видалити подію?",
       "body": "Ви впевнені, що хочете видалити цю подію? Усі пов'язані фото та відео буде видалено без можливості відновлення.",
       "deleting": "Видалення...",
-      "failed": "Не вдалося видалити подію"
+      "failed": "Не вдалося видалити подію",
+      "confirm": "Видалити",
+      "message": "Видалити цю подію? Усі пов’язані фото й відео буде видалено назавжди."
     },
     "deleteAll": {
       "ariaLabel": "Видалити все",
@@ -1116,7 +1192,10 @@
       "moveLater": "Сдвинути пізніше",
       "supportedWithHint": "Підтримуються зображення (JPG, PNG, GIF) та відео (MP4, MOV). {{hint}}",
       "videoHint": "Відео: до {{sourceMb}} МБ і {{durationSec}} сек. Перед завантаженням автоматично стискається до {{uploadMb}} МБ.",
-      "videoMaxSize": "Максимальний розмір відео — {{max}} МБ"
+      "videoMaxSize": "Максимальний розмір відео — {{max}} МБ",
+      "addButton": "Додати медіа",
+      "formatsHint": "JPG, PNG, MP4 та інші поширені формати",
+      "sectionTitle": "Медіа"
     },
     "common": {
       "cancel": "Скасувати",
@@ -1143,7 +1222,10 @@
       "unlockCrypto": "Розблокуйте ключі шифрування на сторінці /crypto/unlock",
       "encryptionRecipient": "Не вдалося визначити отримувача шифрування",
       "notAuthorizedShort": "Користувач не авторизований",
-      "unreadableMedia": "Не вдалося прочитати файл. Видаліть пошкоджене медіа та додайте його знову."
+      "unreadableMedia": "Не вдалося прочитати файл. Видаліть пошкоджене медіа та додайте його знову.",
+      "dateRequired": "Оберіть дату події",
+      "deleteFailed": "Не вдалося видалити подію",
+      "saveFailed": "Не вдалося зберегти подію. Спробуйте ще раз."
     },
     "filter": {
       "ariaLabel": "Фільтр подій",
@@ -1162,6 +1244,48 @@
       "apply": "Застосувати",
       "reset": "Скинути",
       "close": "Закрити"
+    },
+    "actions": {
+      "cancel": "Скасувати",
+      "delete": "Видалити",
+      "edit": "Редагувати",
+      "share": "Поділитися"
+    },
+    "anniversary": "Річниця",
+    "birthday": "День народження",
+    "filters": {
+      "all": "Усі",
+      "anniversary": "Річниці",
+      "birthday": "Дні народження"
+    },
+    "month": {
+      "today": "Сьогодні"
+    },
+    "share": {
+      "copied": "Посилання скопійовано",
+      "failed": "Не вдалося поділитися",
+      "title": "Поділитися подією"
+    },
+    "untitled": "Без назви",
+    "eventList": {
+      "file_one": "{{count}} файл",
+      "file_other": "{{count}} файлів",
+      "textOnly": "Тільки текст",
+      "title": "Події"
+    },
+    "fields": {
+      "description": "Опис"
+    },
+    "meta": {
+      "author": "Автор",
+      "created": "Створено",
+      "editor": "Редактор",
+      "lastEdited": "Остання зміна"
+    },
+    "readOnly": "Лише перегляд",
+    "tabs": {
+      "calendar": "Календар",
+      "plans": "Плани"
     }
   },
   "news": {
@@ -1484,6 +1608,33 @@
       "clearPassphrase": "Очистити"
     }
   },
+  "dailyQuestions": {
+    "title": "Питання дня",
+    "results": "Результат",
+    "progress": "{{current}} з {{total}}",
+    "waitingPartner": "Чекаємо партнера",
+    "similarityLabel": "Схожість ваших відповідей",
+    "partnerNotFinished": "Партнер ще не пройшов цю категорію",
+    "notifyPartner": "Сповістити партнера",
+    "notifySent": "Сповіщення надіслано",
+    "yourAnswer": "Ваша відповідь",
+    "partnerAnswer": "Відповідь партнера",
+    "partnerNoAnswer": "Партнер ще не відповів",
+    "questionOf": "Питання {{current}} з {{total}}",
+    "textPlaceholder": "Напишіть свою відповідь...",
+    "next": "Далі",
+    "finish": "Завершити",
+    "historyTitle": "Історія питань",
+    "historyEmpty": "Поки немає завершених раундів",
+    "nextRoundIn": "Нові категорії через",
+    "timerDone": "Скоро нові категорії",
+    "editAnswer": "Змінити",
+    "saveAnswer": "Зберегти",
+    "youFallback": "Ви",
+    "partnerFallback": "Партнер",
+    "noYourAnswer": "Немає відповіді",
+    "partnerNoAnswerShort": "Чекаємо відповідь"
+  },
   "common": {
     "back": "Назад",
     "cancel": "Скасувати",
@@ -1689,6 +1840,10 @@
         "news_read": {
           "action": "Прочитати новину",
           "period": "Один раз за кожну новину"
+        },
+        "announcement_read": {
+          "action": "Прочитати сповіщення",
+          "period": "Один раз за кожне сповіщення"
         }
       }
     },
@@ -1711,7 +1866,27 @@
       "yellow": "Жовтий",
       "white": "Білий",
       "cream": "Кремовий"
-    }
+    },
+    "loadFailed": "Не вдалося завантажити питомців. Перевірте з'єднання.",
+    "statSatiety": "Ситість",
+    "petAction": "Погладити питомця",
+    "feedAction": "Погодувати питомця",
+    "feedTitle": "Погодувати питомця",
+    "feedDescription": "Корм коштує {{cost}} Аморки і може відновити ситість на 10–20 пунктів.",
+    "feedSatietyHint": "Ситість зменшується на 2 пункти щогодини.",
+    "feedDontShowAgain": "Більше не показувати це вікно",
+    "feedConfirm": "Погодувати",
+    "feedFailed": "Не вдалося погодувати питомця",
+    "feedInsufficientBalance": "Недостатньо Аморок (потрібно {{cost}})",
+    "satietyFullReward": "Питомець повністю ситий! +{{amount}} Аморок",
+    "mood": {
+      "angry": "Голодний питомець",
+      "neutral": "Спокійний питомець",
+      "happy": "Щасливий питомець"
+    },
+    "petSuccess": "Питомець задоволений! +{{amount}} Аморок",
+    "petLimitReached": "Сьогодні питомця вже гладили 2 рази",
+    "petFailed": "Не вдалося погладити питомця"
   },
   "datingIdeas": {
     "title": "Ідеї для побачень",

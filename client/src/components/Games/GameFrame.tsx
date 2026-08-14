@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, Container, useTheme } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { getChatDialogBackdropSx } from '../Feed/feedBannerStyles';
-import { getTabPageBottomPaddingSx } from '../../theme/pageLayout';
 import { getGameDesktopPanelSx } from './gamePageStyles';
 
 type GameFrameProps = {
@@ -15,6 +14,7 @@ type GameFrameProps = {
 /**
  * Центрированная колонка md (как список игр / главная).
  * Outer на 100% ширины Layout, inner — MUI Container maxWidth="md" (надёжнее sx-хаков).
+ * Без отступа под bottom nav: на /chat/games/* меню скрыто, safe-area даёт footer.
  */
 const GameFrame: React.FC<GameFrameProps> = ({ children, hugContent = false, sx }) => {
   const theme = useTheme();
@@ -42,7 +42,6 @@ const GameFrame: React.FC<GameFrameProps> = ({ children, hugContent = false, sx 
             maxHeight: '100%',
             height: hugContent ? { xs: '100%', sm: 'auto' } : '100%',
             flex: hugContent ? { xs: 1, sm: '0 1 auto' } : 1,
-            ...getTabPageBottomPaddingSx(),
             ...getChatDialogBackdropSx(theme),
             ...getGameDesktopPanelSx(theme),
           },

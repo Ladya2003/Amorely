@@ -123,18 +123,17 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
         return;
       }
 
-      if (event.datingIdeaTitle || event.datingIdeaDescription || event.datingIdeaEmoji) {
-        setResolvedDatingIdea({
-          emoji: event.datingIdeaEmoji,
-          title: event.datingIdeaTitle,
-          description: event.datingIdeaDescription,
-        });
-        return;
-      }
-
       const eventId = event.eventId || event._id;
+      const snapshot = {
+        emoji: event.datingIdeaEmoji,
+        title: event.datingIdeaTitle,
+        description: event.datingIdeaDescription,
+      };
+
       if (!eventId) {
-        setResolvedDatingIdea(null);
+        setResolvedDatingIdea(
+          snapshot.title || snapshot.description || snapshot.emoji ? snapshot : null
+        );
         return;
       }
 
@@ -142,14 +141,16 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
         const { idea } = await fetchDatingIdeaByEventId(eventId);
         if (!cancelled) {
           setResolvedDatingIdea({
-            emoji: idea.emoji,
-            title: idea.title,
-            description: idea.description,
+            emoji: idea.emoji || snapshot.emoji,
+            title: idea.title || snapshot.title,
+            description: idea.description || snapshot.description,
           });
         }
       } catch {
         if (!cancelled) {
-          setResolvedDatingIdea(null);
+          setResolvedDatingIdea(
+            snapshot.title || snapshot.description || snapshot.emoji ? snapshot : null
+          );
         }
       }
     };

@@ -7,6 +7,7 @@ import { spendCurrency, getBalance } from './currencyService';
 import { awardDatingIdeaEvent } from '../utils/currencyRewards';
 import {
   DATING_IDEA_COST,
+  getDatingIdeaById,
   getDatingIdeaLocalized,
   pickRandomDatingIdea,
 } from '../datingIdeas/datingIdeasContent';
@@ -27,19 +28,24 @@ type DatingIdeaLike = {
   skippedAt?: Date | null;
 };
 
-const formatIdea = (doc: DatingIdeaLike) => ({
-  id: String(doc._id),
-  ideaKey: doc.ideaKey,
-  emoji: doc.emoji,
-  title: doc.title,
-  description: doc.description,
-  status: doc.status as 'active' | 'completed' | 'skipped',
-  eventId: doc.eventId || null,
-  createdBy: String(doc.createdBy),
-  createdAt: doc.createdAt,
-  completedAt: doc.completedAt || null,
-  skippedAt: doc.skippedAt || null,
-});
+const formatIdea = (doc: DatingIdeaLike, locale: AppLocale) => {
+  const catalogIdea = getDatingIdeaById(doc.ideaKey);
+  const localized = catalogIdea ? getDatingIdeaLocalized(catalogIdea, locale) : null;
+
+  return {
+    id: String(doc._id),
+    ideaKey: doc.ideaKey,
+    emoji: localized?.emoji ?? doc.emoji,
+    title: localized?.title ?? doc.title,
+    description: localized?.description ?? doc.description,
+    status: doc.status as 'active' | 'completed' | 'skipped',
+    eventId: doc.eventId || null,
+    createdBy: String(doc.createdBy),
+    createdAt: doc.createdAt,
+    completedAt: doc.completedAt || null,
+    skippedAt: doc.skippedAt || null,
+  };
+};
 
 const repairMissingEventLinks = async (ideas: DatingIdeaLike[]) => {
   const broken = ideas.filter((idea) => idea.status === 'completed' && !idea.eventId);
@@ -114,8 +120,8 @@ export const getDatingIdeasOverview = async (userId: string, localeHint?: string
     cost: DATING_IDEA_COST,
     balance: wallet.balance,
     locale,
-    active: active ? formatIdea(active) : null,
-    history: history.map((idea) => formatIdea(idea)),
+    active: active ? formatIdea(active, locale) : null,
+    history: history.map((idea) => formatIdea(idea, locale)),
   };
 };
 
@@ -177,17 +183,19 @@ export const generateDatingIdea = async (userId: string, localeHint?: string) =>
   });
 
   return {
-    idea: formatIdea(created),
+    idea: formatIdea(created, locale),
     balance: spend.balance,
     cost: DATING_IDEA_COST,
   };
 };
 
-export const skipDatingIdea = async (userId: string, ideaId: string) => {
+export const skipDatingIdea = async (userId: string, ideaId: string, localeHint?: string) => {
   const relationship = await findActiveRelationshipForUser(userId);
   if (!relationship) {
     return { error: 'NO_PARTNER' as const };
   }
+
+  const locale: AppLocale = localeHint ? resolveLocale(localeHint) : await getUserLocale(userId);
 
   const idea = await DatingIdea.findOne({
     _id: ideaId,
@@ -204,14 +212,20 @@ export const skipDatingIdea = async (userId: string, ideaId: string) => {
     await idea.save();
   }
 
-  return { idea: formatIdea(idea) };
+  return { idea: formatIdea(idea, locale) };
 };
 
-export const getDatingIdeaByEventId = async (userId: string, eventId: string) => {
+export const getDatingIdeaByEventId = async (
+  userId: string,
+  eventId: string,
+  localeHint?: string
+) => {
   const relationship = await findActiveRelationshipForUser(userId);
   if (!relationship) {
     return { error: 'NO_PARTNER' as const };
   }
+
+  const locale: AppLocale = localeHint ? resolveLocale(localeHint) : await getUserLocale(userId);
 
   const idea = await DatingIdea.findOne({
     relationshipId: relationship._id,
@@ -222,18 +236,21 @@ export const getDatingIdeaByEventId = async (userId: string, eventId: string) =>
     return { error: 'NOT_FOUND' as const };
   }
 
-  return { idea: formatIdea(idea as DatingIdeaLike) };
+  return { idea: formatIdea(idea as DatingIdeaLike, locale) };
 };
 
 export const completeDatingIdea = async (
   userId: string,
   ideaId: string,
-  eventId: string
+  eventId: string,
+  localeHint?: string
 ) => {
   const relationship = await findActiveRelationshipForUser(userId);
   if (!relationship) {
     return { error: 'NO_PARTNER' as const };
   }
+
+  const locale: AppLocale = localeHint ? resolveLocale(localeHint) : await getUserLocale(userId);
 
   const idea = await DatingIdea.findOne({
     _id: ideaId,
@@ -256,7 +273,7 @@ export const completeDatingIdea = async (
     : await awardDatingIdeaEvent(userId, String(idea._id));
 
   return {
-    idea: formatIdea(idea),
+    idea: formatIdea(idea, locale),
     awardedAmount: award.awarded ? award.amount : 0,
     balance: award.balance,
   };
