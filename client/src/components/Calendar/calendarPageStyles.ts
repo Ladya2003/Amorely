@@ -388,10 +388,87 @@ export const getCalendarPlanCategoryChipSx = (theme: Theme, selected: boolean) =
         bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.14),
       };
 
+export const getCalendarCategorySelectButtonSx = (theme: Theme, open?: boolean) => ({
+  minWidth: 0,
+  maxWidth: { xs: '100%', sm: 260 },
+  px: 1.25,
+  py: 0.75,
+  minHeight: 38,
+  borderRadius: `${CALENDAR_DRAWER_INNER_RADIUS}px`,
+  border: getSurfaceBorder(theme, open ? 'medium' : 'soft'),
+  ...getPrimaryTintSurface(theme, {
+    tint: open ? { light: 0.14, dark: 0.24 } : { light: 0.1, dark: 0.18 },
+  }),
+  textTransform: 'none' as const,
+  fontWeight: 600,
+  fontSize: '0.875rem',
+  color: 'text.primary',
+  justifyContent: 'space-between',
+  transition: 'background-color 180ms ease, border-color 180ms ease',
+  '&:hover': {
+    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.24),
+  },
+  '& .MuiButton-startIcon': {
+    mr: 0.75,
+    color: 'primary.main',
+  },
+  '& .MuiButton-endIcon': {
+    ml: 0.5,
+    color: 'primary.main',
+  },
+});
+
+export const getCalendarCategorySelectMenuPaperSx = (theme: Theme) => ({
+  mt: 1,
+  minWidth: 220,
+  maxWidth: 320,
+  overflow: 'hidden',
+  borderRadius: `${CALENDAR_DRAWER_INNER_RADIUS}px`,
+  border: getSurfaceBorder(theme),
+  boxShadow:
+    theme.palette.mode === 'light'
+      ? `0 16px 40px ${alpha(theme.palette.common.black, 0.1)}`
+      : `0 18px 44px ${alpha(theme.palette.common.black, 0.42)}`,
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  ...getPrimaryTintSurface(theme, {
+    tint: { light: 0.08, dark: 0.22 },
+  }),
+});
+
+export const getCalendarCategorySelectMenuItemSx = (theme: Theme, selected: boolean) => ({
+  mx: 0.75,
+  my: 0.15,
+  px: 1.25,
+  py: 0.85,
+  borderRadius: `${CALENDAR_DRAWER_ACTION_RADIUS}px`,
+  fontWeight: selected ? 700 : 500,
+  fontSize: '0.9rem',
+  transition: 'background-color 0.18s ease',
+  '&.Mui-selected': {
+    bgcolor: alpha(
+      theme.palette.primary.main,
+      theme.palette.mode === 'light' ? 0.12 : 0.2
+    ),
+    '&:hover': {
+      bgcolor: alpha(
+        theme.palette.primary.main,
+        theme.palette.mode === 'light' ? 0.16 : 0.26
+      ),
+    },
+  },
+  '&:hover': {
+    bgcolor: alpha(
+      theme.palette.primary.main,
+      theme.palette.mode === 'light' ? 0.08 : 0.14
+    ),
+  },
+});
+
 export const getCalendarPlansToolbarSx = () => ({
   mb: 2,
   display: 'flex',
-  flexWrap: 'wrap',
+  flexWrap: 'nowrap' as const,
   justifyContent: 'space-between',
   alignItems: 'center',
   gap: 1.5,

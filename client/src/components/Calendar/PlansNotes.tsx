@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -14,6 +14,7 @@ import {
   IconButton,
   MenuItem,
   Typography,
+  useMediaQuery,
   useTheme,
 } from '@mui/material';
 import AppTextField from '../UI/AppTextField';
@@ -64,12 +65,15 @@ import {
 } from '../../utils/calendarUiPreferences';
 import { playChatDeleteSound, playChatSendSound, unlockChatAudio } from '../../utils/chatSounds';
 import {
-  getCalendarPlanCategoryChipSx,
+  getCalendarCategorySelectMenuItemSx,
+  getCalendarCategorySelectMenuPaperSx,
+  getCalendarCreateButtonSx,
   getCalendarPlanEmptySx,
   getCalendarPlanNoteCardSx,
   getCalendarPlansSubtitleSx,
   getCalendarPlansToolbarSx,
 } from './calendarPageStyles';
+import PlanCategorySelect from './PlanCategorySelect';
 import { PlansNotesSkeleton } from './CalendarSkeletons';
 import { getEventMediaPreviewSx } from './calendarDrawerStyles';
 import { EMPTY_PLAN_FILTER, isPlanFilterActive, planNoteMatchesFilter, type PlanFilter } from './planFilterUtils';
@@ -139,13 +143,23 @@ const emptyForm: NoteFormState = {
 
 const CREATE_NEW_CATEGORY = '__create_new__';
 
-const PlansNotes: React.FC<{
+export type PlansNotesHandle = {
+  openCreateForm: () => void;
+};
+
+type PlansNotesProps = {
   refreshKey?: number;
   noteIdFromUrl?: string | null;
   planFilter?: PlanFilter;
-}> = ({ refreshKey = 0, noteIdFromUrl = null, planFilter = EMPTY_PLAN_FILTER }) => {
+};
+
+const PlansNotes = React.forwardRef<PlansNotesHandle, PlansNotesProps>(function PlansNotes(
+  { refreshKey = 0, noteIdFromUrl = null, planFilter = EMPTY_PLAN_FILTER },
+  ref
+) {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
@@ -408,6 +422,8 @@ const PlansNotes: React.FC<{
     resetDeadlineState();
     setFormOpen(true);
   };
+
+  useImperativeHandle(ref, () => ({ openCreateForm }));
 
   const openEditForm = (note: PlanNote) => {
     setEditingNote(note);
@@ -827,51 +843,34 @@ const PlansNotes: React.FC<{
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-      <Box sx={getCalendarPlansToolbarSx()}>
-        <Typography sx={getCalendarPlansSubtitleSx()}>
+      {!isMobile && (
+        <Typography sx={{ ...getCalendarPlansSubtitleSx(), mb: 1.5 }}>
           {t('calendar.plans.subtitle')}
         </Typography>
-        {!isInitialLoading && (
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<AddIcon />}
-            onClick={openCreateForm}
-            sx={{
-              flexShrink: 0,
-              textTransform: 'none',
-              fontWeight: 600,
-              '& .MuiButton-startIcon': {
-                marginRight: 0.5
-              }
-            }}
-          >
-            {t('calendar.plans.newNote')}
-          </Button>
-        )}
-      </Box>
-
-      {categories.length > 0 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-          <Chip
-            label={t('calendar.plans.all')}
-            clickable
-            color={selectedCategory === null ? 'primary' : 'default'}
-            variant={selectedCategory === null ? 'filled' : 'outlined'}
-            onClick={() => setSelectedCategory(null)}
-            sx={selectedCategory === null ? undefined : getCalendarPlanCategoryChipSx(theme, false)}
-          />
-          {categories.map((cat) => (
-            <Chip
-              key={cat}
-              label={cat}
-              clickable
-              color={selectedCategory === cat ? 'primary' : 'default'}
-              variant={selectedCategory === cat ? 'filled' : 'outlined'}
-              onClick={() => setSelectedCategory(cat)}
-              sx={selectedCategory === cat ? undefined : getCalendarPlanCategoryChipSx(theme, false)}
+      )}
+      {(categories.length > 0 || !isMobile) && (
+        <Box sx={getCalendarPlansToolbarSx()}>
+          {categories.length > 0 ? (
+            <PlanCategorySelect
+              categories={categories}
+              value={selectedCategory}
+              onChange={setSelectedCategory}
             />
-          ))}
+          ) : (
+            <Box />
+          )}
+          {!isMobile && !isInitialLoading && (
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={openCreateForm}
+              sx={getCalendarCreateButtonSx()}
+            >
+              {t('calendar.plans.newNote')}
+            </Button>
+          )}
         </Box>
       )}
 
@@ -1024,22 +1023,39 @@ const PlansNotes: React.FC<{
                   displayEmpty: true,
                   MenuProps: {
                     PaperProps: {
-                      sx: { maxHeight: 320 }
-                    }
-                  }
-                }
+                      sx: {
+                        ...getCalendarCategorySelectMenuPaperSx(theme),
+                        maxHeight: 320,
+                      },
+                    },
+                  },
+                },
               }}
             >
               {categories.length > 0 && (
-                <MenuItem value="" disabled>
+                <MenuItem
+                  value=""
+                  disabled
+                  sx={getCalendarCategorySelectMenuItemSx(theme, false)}
+                >
                   {t('calendar.plans.categorySelectPlaceholder')}
                 </MenuItem>
               )}
-              <MenuItem value={CREATE_NEW_CATEGORY}>
+              <MenuItem
+                value={CREATE_NEW_CATEGORY}
+                sx={getCalendarCategorySelectMenuItemSx(
+                  theme,
+                  isCreatingCategory
+                )}
+              >
                 {t('calendar.plans.createCategory')}
               </MenuItem>
               {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>
+                <MenuItem
+                  key={cat}
+                  value={cat}
+                  sx={getCalendarCategorySelectMenuItemSx(theme, form.category === cat)}
+                >
                   {cat}
                 </MenuItem>
               ))}
@@ -1458,6 +1474,8 @@ const PlansNotes: React.FC<{
       />
     </Box>
   );
-};
+});
+
+PlansNotes.displayName = 'PlansNotes';
 
 export default PlansNotes;

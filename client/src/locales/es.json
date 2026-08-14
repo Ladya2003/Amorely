@@ -551,7 +551,8 @@
       "empty": "Aún no hay notificaciones nuevas",
       "close": "Entendido",
       "back": "Atrás",
-      "newBadge": "Nuevo"
+      "newBadge": "Nuevo",
+      "readMore": "Leer más"
     },
     "statusBubble": {
       "placeholder": "Te quiero ❤️",

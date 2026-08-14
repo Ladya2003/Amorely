@@ -492,7 +492,23 @@ const FeedHeader: React.FC = () => {
                               )}
                             </Box>
                           }
-                          secondary={announcement.preview}
+                          secondary={
+                            <>
+                              {announcement.preview}
+                              <Typography
+                                component="span"
+                                sx={{
+                                  display: 'block',
+                                  mt: 0.5,
+                                  fontSize: '0.8125rem',
+                                  fontWeight: 600,
+                                  color: 'primary.main',
+                                }}
+                              >
+                                {t('feed.notificationsDialog.readMore')}
+                              </Typography>
+                            </>
+                          }
                           slotProps={{
                             secondary: {
                               sx: { mt: 0.5, whiteSpace: 'normal' },

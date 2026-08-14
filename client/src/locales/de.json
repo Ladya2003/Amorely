@@ -551,7 +551,8 @@
       "empty": "Noch keine neuen Benachrichtigungen",
       "close": "OK",
       "back": "Zurück",
-      "newBadge": "Neu"
+      "newBadge": "Neu",
+      "readMore": "Mehr lesen"
     },
     "statusBubble": {
       "placeholder": "Ich liebe dich ❤️",

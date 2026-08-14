@@ -551,7 +551,8 @@
       "empty": "Поки що нових сповіщень немає",
       "close": "Зрозуміло",
       "back": "Назад",
-      "newBadge": "Нове"
+      "newBadge": "Нове",
+      "readMore": "Читати повністю"
     },
     "statusBubble": {
       "placeholder": "Я люблю тебе ❤️",

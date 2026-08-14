@@ -38,7 +38,7 @@ import { formatCalendarMonthYear, getCalendarWeekdays } from '../../localization
 import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
 import { CalendarGridSkeleton, CalendarMonthSkeleton } from './CalendarSkeletons';
-import PlansNotes from './PlansNotes';
+import PlansNotes, { type PlansNotesHandle } from './PlansNotes';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   readCalendarUiPreferences,
@@ -128,6 +128,7 @@ const Calendar: React.FC<CalendarProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const weekdays = getCalendarWeekdays(t);
   const skipNextSaveRef = useRef(false);
+  const plansNotesRef = useRef<PlansNotesHandle>(null);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthDirection, setMonthDirection] = useState(0);
@@ -453,6 +454,17 @@ const Calendar: React.FC<CalendarProps> = ({
                   <FilterListIcon sx={{ fontSize: '1.25rem' }} />
                 </IconButton>
               </Badge>
+              {isMobile && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={() => plansNotesRef.current?.openCreateForm()}
+                  sx={getCalendarCreateButtonSx()}
+                >
+                  {t('calendar.plans.newNote')}
+                </Button>
+              )}
             </Box>
           )}
         </Box>
@@ -503,6 +515,7 @@ const Calendar: React.FC<CalendarProps> = ({
           </Box>
         ) : (
           <PlansNotes
+            ref={plansNotesRef}
             refreshKey={plansRefreshKey}
             noteIdFromUrl={noteIdFromUrl}
             planFilter={planFilter}
