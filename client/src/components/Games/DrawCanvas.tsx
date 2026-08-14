@@ -6,6 +6,8 @@ import { floodFillCanvas } from '../../utils/drawCanvasFill';
 import { GAMES_LIST_ITEM_RADIUS } from './gamesListStyles';
 
 export const DRAW_CANVAS_BORDER_RADIUS = GAMES_LIST_ITEM_RADIUS;
+/** Одинаковые пропорции холста на телефоне и ПК (ширина / высота). */
+export const DRAW_CANVAS_ASPECT_RATIO = 4 / 3;
 
 export interface DrawCanvasHandle {
   getCanvas: () => HTMLCanvasElement | null;
@@ -20,8 +22,6 @@ export interface DrawCanvasProps {
   onStroke?: (stroke: DrawStroke) => void;
   /** Фоновое изображение (например, ранее сохранённый рисунок) */
   backgroundImageUrl?: string | null;
-  /** Минимальная высота холста в px (по умолчанию 280) */
-  minHeight?: number;
   /** Скругление контейнера холста в px */
   borderRadius?: number;
   /** Показывать рамку вокруг холста */
@@ -42,6 +42,13 @@ const drawCanvasInteractionSx = {
 
 const getCanvasDpr = () => Math.min(window.devicePixelRatio || 1, 2);
 
+const getCanvasAspectRatio = (img: HTMLImageElement | null) => {
+  if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
+    return img.naturalWidth / img.naturalHeight;
+  }
+  return DRAW_CANVAS_ASPECT_RATIO;
+};
+
 const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
   strokes,
   canDraw,
@@ -50,7 +57,6 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
   strokeWidth = 4,
   onStroke,
   backgroundImageUrl = null,
-  minHeight = 280,
   borderRadius = DRAW_CANVAS_BORDER_RADIUS,
   showBorder = true,
 }, ref) => {
@@ -150,20 +156,7 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
         return;
       }
 
-      let drawWidth = img.width;
-      let drawHeight = img.height;
-      let x = 0;
-      let y = 0;
-
-      if (img.width > width || img.height > height) {
-        const scale = Math.min(width / img.width, height / img.height);
-        drawWidth = img.width * scale;
-        drawHeight = img.height * scale;
-      }
-
-      x = (width - drawWidth) / 2;
-      y = (height - drawHeight) / 2;
-      ctx.drawImage(img, x, y, drawWidth, drawHeight);
+      ctx.drawImage(img, 0, 0, width, height);
     },
     []
   );
@@ -245,7 +238,12 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
     reconcileOptimisticStrokes();
 
     const width = container.clientWidth;
-    const height = Math.max(minHeight, Math.round(width * 0.75));
+    if (width <= 0) {
+      return;
+    }
+    const aspectRatio = getCanvasAspectRatio(backgroundImageRef.current);
+    container.style.aspectRatio = String(aspectRatio);
+    const height = Math.max(1, Math.round(width / aspectRatio));
     const dpr = getCanvasDpr();
 
     const prevSize = canvasSizeRef.current;
@@ -310,7 +308,6 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
     bumpCommitGeneration,
     effectiveWidth,
     isEraser,
-    minHeight,
     paintBackgroundImage,
     paintStroke,
     rebuildCommittedLayer,
@@ -495,6 +492,7 @@ const DrawCanvas = forwardRef<DrawCanvasHandle, DrawCanvasProps>(({
       ref={containerRef}
       sx={{
         width: '100%',
+        aspectRatio: String(DRAW_CANVAS_ASPECT_RATIO),
         bgcolor: '#fff',
         borderRadius: `${borderRadius}px`,
         overflow: 'hidden',

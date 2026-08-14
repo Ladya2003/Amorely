@@ -1,27 +1,27 @@
-export const SUPPORTED_LOCALES = ['ru', 'en', 'es', 'de', 'fr', 'pt', 'uk', 'by'] as const;
+export const SUPPORTED_LOCALES = ['ru', 'en', 'by', 'uk', 'es', 'de', 'fr', 'pt'] as const;
 
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
 
 export const LOCALE_LABELS: Record<AppLocale, string> = {
   ru: 'Русский',
   en: 'English',
+  by: 'Беларуская',
+  uk: 'Українська',
   es: 'Español',
   de: 'Deutsch',
   fr: 'Français',
   pt: 'Português',
-  uk: 'Українська',
-  by: 'Беларуская',
 };
 
 export const LOCALE_SHORT_LABELS: Record<AppLocale, string> = {
   ru: 'RU',
   en: 'EN',
+  by: 'BY',
+  uk: 'UK',
   es: 'ES',
   de: 'DE',
   fr: 'FR',
   pt: 'PT',
-  uk: 'UK',
-  by: 'BY',
 };
 
 const LOCALE_ALIASES: Record<string, AppLocale> = {

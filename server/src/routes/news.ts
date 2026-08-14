@@ -15,6 +15,7 @@ import { resolveLocale } from '../i18n/locales';
 import { getUserLocale } from '../utils/userLocale';
 import { notifyNewsPublished } from '../services/pushService';
 import { awardNewsRead } from '../utils/currencyRewards';
+import { getReadNewsIds, markNewsRead, markNewsReadMany } from '../utils/readNews';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -145,9 +146,13 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     const news = await News.find(query).sort({ publishDate: -1 }).skip(skip).limit(Number(limit));
 
     const total = await News.countDocuments(query);
+    const readIds = req.userId ? new Set(await getReadNewsIds(req.userId)) : new Set<string>();
 
     res.json({
-      news: news.map((item) => formatNewsForClient(item, locale)),
+      news: news.map((item) => ({
+        ...formatNewsForClient(item, locale),
+        isRead: readIds.has(item._id.toString()),
+      })),
       pagination: {
         total,
         page: Number(page),
@@ -173,15 +178,43 @@ router.post('/:id/read', async (req: AuthRequest, res: Response) => {
     }
 
     const result = await awardNewsRead(userId, id);
+    const readIds = await markNewsRead(userId, id);
 
     res.json({
       awarded: result.awarded,
       awardedAmount: result.awarded ? result.amount : 0,
       balance: result.balance,
+      readIds,
     });
   } catch (error) {
     console.error('Ошибка при отметке прочтения новости:', error);
     res.status(500).json({ error: 'Ошибка при отметке прочтения новости' });
+  }
+});
+
+router.get('/read-ids', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const readIds = await getReadNewsIds(userId);
+    res.json({ readIds });
+  } catch (error) {
+    console.error('Ошибка при получении прочитанных новостей:', error);
+    res.status(500).json({ error: 'Ошибка при получении прочитанных новостей' });
+  }
+});
+
+router.post('/read', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const newsIds = Array.isArray(req.body?.newsIds)
+      ? req.body.newsIds.filter((id: unknown): id is string => typeof id === 'string')
+      : [];
+
+    const readIds = await markNewsReadMany(userId, newsIds);
+    res.json({ readIds });
+  } catch (error) {
+    console.error('Ошибка при синхронизации прочитанных новостей:', error);
+    res.status(500).json({ error: 'Ошибка при синхронизации прочитанных новостей' });
   }
 });
 

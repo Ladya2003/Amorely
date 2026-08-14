@@ -52,6 +52,8 @@ const issueAuthSuccess = async (user: UserDocument) => {
     emailVerificationExpires: _evExp,
     passwordResetTokenHash: _prHash,
     passwordResetExpires: _prExp,
+    readNewsIds: _readNewsIds,
+    readNewsBackfilled: _readNewsBackfilled,
     ...userWithoutSensitive
   } = user.toObject();
   const userHasCryptoBackup = await hasCryptoBackup(user._id);
@@ -500,7 +502,7 @@ router.get('/me', async (req: Request, res: Response) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'amorely') as { userId: string };
     
     const user = await User.findById(decoded.userId).select(
-      '-password -emailVerificationTokenHash -passwordResetTokenHash'
+      '-password -emailVerificationTokenHash -passwordResetTokenHash -readNewsIds -readNewsBackfilled'
     );
     
     if (!user) {

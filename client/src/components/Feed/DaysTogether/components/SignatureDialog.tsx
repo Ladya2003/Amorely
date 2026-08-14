@@ -297,7 +297,6 @@ const SignatureDialog: React.FC<SignatureDialogProps> = ({
           strokeWidth={brushSize}
           onStroke={handleStroke}
           backgroundImageUrl={backgroundImage}
-          minHeight={200}
           borderRadius={0}
           showBorder={false}
         />

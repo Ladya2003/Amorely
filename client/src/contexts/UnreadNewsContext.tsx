@@ -10,7 +10,8 @@ import React, {
 import axios from 'axios';
 import { API_URL } from '../config';
 import { useAuth } from './AuthContext';
-import { addReadNewsId, readReadNewsIds } from '../utils/readNewsStorage';
+import { claimNewsReadReward, fetchReadNewsIds, syncReadNewsIds } from '../services/newsService';
+import { addReadNewsId, mergeReadNewsIds, readReadNewsIds } from '../utils/readNewsStorage';
 
 interface UnreadNewsContextType {
   unreadCount: number;
@@ -41,6 +42,41 @@ export const UnreadNewsProvider: React.FC<UnreadNewsProviderProps> = ({ children
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
   const [allNewsIds, setAllNewsIds] = useState<string[]>([]);
 
+  const applyReadIds = useCallback(
+    (ids: string[]) => {
+      if (!userId) {
+        return new Set<string>();
+      }
+
+      const next = mergeReadNewsIds(userId, ids);
+      setReadIds(new Set(next));
+      return next;
+    },
+    [userId]
+  );
+
+  const syncReadStateFromAccount = useCallback(async () => {
+    if (!userId) {
+      return;
+    }
+
+    try {
+      const serverIds = await fetchReadNewsIds();
+      const localIds = Array.from(readReadNewsIds(userId));
+      const localOnly = localIds.filter((id) => !serverIds.includes(id));
+
+      if (localOnly.length > 0) {
+        const merged = await syncReadNewsIds(localOnly);
+        applyReadIds(merged);
+        return;
+      }
+
+      applyReadIds(serverIds);
+    } catch (error) {
+      console.error('Ошибка при синхронизации прочитанных новостей:', error);
+    }
+  }, [userId, applyReadIds]);
+
   useEffect(() => {
     if (!userId) {
       setReadIds(new Set());
@@ -49,7 +85,8 @@ export const UnreadNewsProvider: React.FC<UnreadNewsProviderProps> = ({ children
     }
 
     setReadIds(readReadNewsIds(userId));
-  }, [userId]);
+    void syncReadStateFromAccount();
+  }, [userId, syncReadStateFromAccount]);
 
   const refreshUnreadNews = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -63,12 +100,13 @@ export const UnreadNewsProvider: React.FC<UnreadNewsProviderProps> = ({ children
         params: { page: 1, limit: 50 },
         headers: { Authorization: `Bearer ${token}` },
       });
-      const ids = (response.data.news as Array<{ _id: string }>).map((item) => item._id);
-      setAllNewsIds(ids);
+      const items = response.data.news as Array<{ _id: string; isRead?: boolean }>;
+      setAllNewsIds(items.map((item) => item._id));
+      applyReadIds(items.filter((item) => item.isRead).map((item) => item._id));
     } catch (error) {
       console.error('Ошибка при загрузке списка новостей для счётчика:', error);
     }
-  }, []);
+  }, [applyReadIds]);
 
   const syncNewsIds = useCallback((newsIds: string[]) => {
     setAllNewsIds(newsIds);
@@ -82,8 +120,18 @@ export const UnreadNewsProvider: React.FC<UnreadNewsProviderProps> = ({ children
 
       const next = addReadNewsId(userId, newsId);
       setReadIds(new Set(next));
+
+      void claimNewsReadReward(newsId)
+        .then((result) => {
+          if (result.readIds) {
+            applyReadIds(result.readIds);
+          }
+        })
+        .catch(() => {
+          // Persist is best-effort; local cache already updated.
+        });
     },
-    [userId, readIds]
+    [userId, readIds, applyReadIds]
   );
 
   const isNewsUnread = useCallback(
@@ -112,6 +160,7 @@ export const UnreadNewsProvider: React.FC<UnreadNewsProviderProps> = ({ children
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         void refreshUnreadNews();
+        void syncReadStateFromAccount();
       }
     };
 
@@ -119,7 +168,7 @@ export const UnreadNewsProvider: React.FC<UnreadNewsProviderProps> = ({ children
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isAuthenticated, userId, refreshUnreadNews]);
+  }, [isAuthenticated, userId, refreshUnreadNews, syncReadStateFromAccount]);
 
   const value = useMemo(
     () => ({

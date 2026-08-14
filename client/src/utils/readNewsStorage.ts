@@ -32,3 +32,12 @@ export function addReadNewsId(userId: string, newsId: string): Set<string> {
   saveReadNewsIds(userId, ids);
   return ids;
 }
+
+export function mergeReadNewsIds(userId: string, incoming: string[]): Set<string> {
+  const ids = readReadNewsIds(userId);
+  incoming.forEach((id) => {
+    ids.add(id);
+  });
+  saveReadNewsIds(userId, ids);
+  return ids;
+}

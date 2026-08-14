@@ -403,42 +403,109 @@ export const getAppModalActionsSx = (theme: Theme) => ({
 });
 
 /** Обычная модалка (админка и формы) — без glass и без белого текста */
-export const getAppPlainDialogPaperSx = (theme: Theme) => ({
-  borderRadius: `${SURFACE_BORDER_RADIUS}px`,
-  bgcolor: theme.palette.background.paper,
-  color: theme.palette.text.primary,
-  backgroundImage: 'none',
-  backdropFilter: 'none',
-  WebkitBackdropFilter: 'none',
-  border: `1px solid ${alpha(theme.palette.divider, theme.palette.mode === 'light' ? 0.9 : 0.35)}`,
-  boxShadow:
-    theme.palette.mode === 'light'
-      ? `0 16px 48px ${alpha(theme.palette.common.black, 0.14)}`
-      : `0 20px 56px ${alpha(theme.palette.common.black, 0.48)}`,
-  '& .MuiDialogTitle-root': {
-    color: theme.palette.text.primary,
-  },
-  '& .MuiDialogContent-root': {
-    color: theme.palette.text.primary,
-  },
-  '& .MuiDialogActions-root': {
-    color: theme.palette.text.primary,
-  },
-  '& .MuiTypography-colorTextSecondary': {
-    color: `${theme.palette.text.secondary} !important`,
-  },
-  '& .MuiFormControlLabel-label': {
-    color: theme.palette.text.primary,
-  },
-  '& .MuiDialogActions-root .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
-    border: `1px solid ${theme.palette.primary.main}`,
-    color: theme.palette.primary.main,
-  },
-  '& .MuiDialogActions-root .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
-    borderColor: theme.palette.primary.main,
-    color: theme.palette.primary.main,
-  },
-});
+export const getAppPlainDialogPaperSx = (theme: Theme) => {
+  const textPrimary = theme.palette.text.primary;
+  const textSecondary = theme.palette.text.secondary;
+  const opaqueField = getOpaqueSurfaceFieldSx(theme);
+  const primaryBorder = `${theme.palette.primary.main} !important`;
+
+  return {
+    borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+    bgcolor: theme.palette.background.paper,
+    color: `${textPrimary} !important`,
+    backgroundImage: 'none',
+    backdropFilter: 'none',
+    WebkitBackdropFilter: 'none',
+    border: `1px solid ${alpha(theme.palette.divider, theme.palette.mode === 'light' ? 0.9 : 0.35)}`,
+    boxShadow:
+      theme.palette.mode === 'light'
+        ? `0 16px 48px ${alpha(theme.palette.common.black, 0.14)}`
+        : `0 20px 56px ${alpha(theme.palette.common.black, 0.48)}`,
+    '& .MuiDialogTitle-root': {
+      color: `${textPrimary} !important`,
+    },
+    '& .MuiDialogContent-root': {
+      color: `${textPrimary} !important`,
+    },
+    '& .MuiDialogActions-root': {
+      color: `${textPrimary} !important`,
+    },
+    // Theme glass dialogs force white text with !important — beat that on opaque paper
+    '& .MuiTypography-root:not(.MuiAlert-message)': {
+      color: `${textPrimary} !important`,
+    },
+    '& .MuiTypography-colorTextSecondary, & .MuiDialogContentText-root': {
+      color: `${textSecondary} !important`,
+    },
+    '& .MuiTypography-colorTextPrimary': {
+      color: `${textPrimary} !important`,
+    },
+    '& .MuiInputLabel-root, & .MuiFormLabel-root': {
+      color: `${textSecondary} !important`,
+    },
+    '& .MuiInputLabel-root.Mui-focused, & .MuiFormLabel-root.Mui-focused': {
+      color: `${theme.palette.primary.main} !important`,
+    },
+    '& .MuiOutlinedInput-root': opaqueField,
+    '& .MuiTextField-root .MuiOutlinedInput-root': opaqueField,
+    '& .MuiAutocomplete-root .MuiOutlinedInput-root': opaqueField,
+    '& .MuiPickersTextField-root .MuiPickersOutlinedInput-root': opaqueField,
+    '& .MuiFormControl-root .MuiPickersOutlinedInput-root': opaqueField,
+    '& .MuiPickersOutlinedInput-root': opaqueField,
+    '& .MuiFormHelperText-root': {
+      color: `${textSecondary} !important`,
+    },
+    '& .MuiFormControlLabel-label': {
+      color: `${textPrimary} !important`,
+    },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      color: `${textSecondary} !important`,
+    },
+    '& .MuiCheckbox-root': {
+      color: textSecondary,
+    },
+    '& .MuiCheckbox-root.Mui-checked': {
+      color: theme.palette.primary.main,
+    },
+    '& .MuiIconButton-root': {
+      color: `${textSecondary} !important`,
+    },
+    '& .MuiDivider-root': {
+      borderColor: theme.palette.divider,
+    },
+    '& .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+      borderColor: primaryBorder,
+      color: `${theme.palette.primary.main} !important`,
+      bgcolor: `${alpha(theme.palette.primary.main, 0.08)} !important`,
+      '&:hover': {
+        borderColor: primaryBorder,
+        bgcolor: `${alpha(theme.palette.primary.main, 0.14)} !important`,
+      },
+    },
+    '& .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+      border: `1px solid ${theme.palette.primary.main} !important`,
+      color: `${theme.palette.primary.main} !important`,
+      bgcolor: 'transparent !important',
+      '&:hover': {
+        borderColor: primaryBorder,
+        bgcolor: `${alpha(theme.palette.primary.main, 0.08)} !important`,
+      },
+    },
+    '& .MuiButton-contained.Mui-disabled:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+      bgcolor: `${alpha(theme.palette.primary.main, 0.16)} !important`,
+      color: `${alpha(textPrimary, 0.55)} !important`,
+      border: `1px solid ${alpha(theme.palette.primary.main, 0.28)} !important`,
+    },
+    '& .MuiDialogActions-root .MuiButton-text:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+      border: `1px solid ${theme.palette.primary.main} !important`,
+      color: `${theme.palette.primary.main} !important`,
+    },
+    '& .MuiDialogActions-root .MuiButton-outlined:not(.MuiButton-colorError):not(.MuiButton-colorWarning)': {
+      borderColor: primaryBorder,
+      color: `${theme.palette.primary.main} !important`,
+    },
+  };
+};
 
 export type ModalOptionsActionColor = 'warning' | 'error' | 'primary';
 

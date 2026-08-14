@@ -33,6 +33,8 @@ export interface UserDocument extends mongoose.Document {
   showDisplayBadge?: boolean;
   localeBannerDismissedAt?: Date | null;
   installBannerDismissed?: boolean;
+  readNewsIds?: mongoose.Types.ObjectId[];
+  readNewsBackfilled?: boolean;
   chatRulesConsent?: {
     version: number;
     acceptedAt: Date;
@@ -105,6 +107,8 @@ const userSchema = new mongoose.Schema({
   showDisplayBadge: { type: Boolean, default: true },
   localeBannerDismissedAt: { type: Date, default: null },
   installBannerDismissed: { type: Boolean, default: false },
+  readNewsIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'News' }],
+  readNewsBackfilled: { type: Boolean, default: false },
   chatRulesConsent: {
     version: { type: Number },
     acceptedAt: { type: Date },

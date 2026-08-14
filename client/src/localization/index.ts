@@ -31,7 +31,7 @@ i18next
     resources,
     lng: storedLocale ? resolveAppLocale(storedLocale) : undefined,
     fallbackLng: 'ru',
-    supportedLngs: ['ru', 'en', 'es', 'de', 'fr', 'pt', 'uk', 'by'],
+    supportedLngs: ['ru', 'en', 'by', 'uk', 'es', 'de', 'fr', 'pt'],
     interpolation: { escapeValue: false },
     detection: {
       order: ['localStorage', 'navigator'],

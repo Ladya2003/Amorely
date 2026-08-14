@@ -212,7 +212,7 @@ const MediaFilePicker: React.FC<MediaFilePickerProps> = ({
                   left: 0,
                   right: 0,
                   bgcolor: 'rgba(0,0,0,0.6)',
-                  color: 'white',
+                  color: '#fff !important',
                   p: 0.5,
                   textAlign: 'center',
                 }}
