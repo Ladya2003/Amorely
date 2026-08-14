@@ -228,7 +228,7 @@
   },
   "games": {
     "tap": {
-      "name": "Tap Together",
+      "name": "Toca juntos",
       "description": "Toca el bloque con tu pareja, completa rondas y gana puntos para mejoras.",
       "rules": [
         "Este juego es solo para parejas con pareja vinculada en ajustes.",
@@ -424,12 +424,12 @@
     },
     "tab": "Juegos",
     "list": {
-      "searchPlaceholder": "Search by game name",
+      "searchPlaceholder": "Buscar por nombre de juego",
       "clearSearch": "Borrar búsqueda",
-      "notFound": "No games found",
-      "emptyList": "No games in the list",
-      "emptyHint": "Games for you and your partner will appear here",
-      "tryDifferentQuery": "Try a different search",
+      "notFound": "No se encontraron juegos",
+      "emptyList": "No hay juegos en la lista",
+      "emptyHint": "Aquí aparecerán los juegos para ti y tu pareja",
+      "tryDifferentQuery": "Prueba otra búsqueda",
       "comingSoon": "Próximamente"
     },
     "page": {
@@ -437,10 +437,10 @@
       "backToList": "Volver a juegos",
       "tabGame": "Juego",
       "tabLeaderboard": "Clasificación",
-      "leaderboardSubtitle": "Global couple leaderboard by total score",
-      "comingSoon": "This game is coming soon",
-      "addPartner": "Add your partner in settings to play together",
-      "geoDailyLimitHint": "You guessed all {{count}} places today. New rounds will open later.",
+      "leaderboardSubtitle": "Ranking global de parejas por puntuación total",
+      "comingSoon": "Este juego llegará pronto",
+      "addPartner": "Añade a tu pareja en ajustes para jugar juntos",
+      "geoDailyLimitHint": "Hoy adivinaste los {{count}} lugares. Nuevas rondas se abrirán más tarde.",
       "play": "Jugar"
     },
     "common": {
@@ -448,21 +448,21 @@
       "you": "Tú",
       "partner": "Pareja",
       "ready": "Listo",
-      "waitingPartner": "Waiting for partner…",
+      "waitingPartner": "Esperando a tu pareja…",
       "remindPartner": "Llamar a la pareja",
       "partnerReminded": "Pareja llamada al chat",
       "partnerRemindedShort": "Pareja llamada",
       "remindPartnerFailed": "No se pudo llamar a la pareja",
-      "readyToPlay": "Ready to play?",
-      "startingSoon": "Starting soon!",
-      "bothReady": "Both partners are ready — the round will start at the same time.",
-      "pressReady": "Press Ready when you are set. The round starts when both are ready.",
+      "readyToPlay": "¿Listos para jugar?",
+      "startingSoon": "¡Empezamos pronto!",
+      "bothReady": "Ambos están listos — la ronda empezará a la vez.",
+      "pressReady": "Pulsa Listo cuando estés preparado. La ronda empieza cuando ambos lo estén.",
       "youReadyAria": "Estás listo",
       "confirmReadyAria": "Confirmar listo",
       "goToSettings": "Ir a ajustes",
       "needPartner": "Se necesita pareja",
       "loadFailed": "No se pudo cargar el juego",
-      "partnerRequired": "You need a partner to play. Add them in profile settings.",
+      "partnerRequired": "Necesitas una pareja para jugar. Añádela en los ajustes del perfil.",
       "partnerRequiredShort": "Se necesita pareja",
       "backToGame": "Volver al juego",
       "send": "Enviar",
@@ -484,7 +484,7 @@
       "dailyLimitExhausted": "Límite diario agotado",
       "roundStartFailed": "No se pudo iniciar la ronda",
       "nextRound": "Siguiente ronda",
-      "playMore": "Keep playing",
+      "playMore": "Seguir jugando",
       "finish": "Terminar",
       "yourAnswer": "Tu respuesta",
       "yourGuesses": "Tus intentos",
@@ -508,25 +508,25 @@
       }
     },
     "leaderboard": {
-      "empty": "No one has played yet"
+      "empty": "Nadie ha jugado todavía"
     },
     "badge": {
       "tooltip": "Top-{{rank}} · {{game}}"
     },
     "dailyReset": {
-      "title": "Reset timer",
-      "playedTodayNamed": "You already played «{{gameName}}» today. ",
-      "playedTodayGeneric": "You already played this game today. ",
-      "timerHint": "The timer shows how long until the daily limit resets.",
-      "resetHint": "The limit resets at 03:00 Moscow time (00:00 UTC). You can play again after that.",
-      "untilReset": "Until reset:",
+      "title": "Temporizador de reinicio",
+      "playedTodayNamed": "Ya jugaste a «{{gameName}}» hoy. ",
+      "playedTodayGeneric": "Ya jugaste a este juego hoy. ",
+      "timerHint": "El temporizador muestra cuánto falta para reiniciar el límite diario.",
+      "resetHint": "El límite se reinicia a las 03:00 hora de Moscú (00:00 UTC). Después podrás jugar de nuevo.",
+      "untilReset": "Hasta el reinicio:",
       "understood": "Entendido",
-      "badgeAria": "More about the reset timer"
+      "badgeAria": "Más sobre el temporizador de reinicio"
     },
     "geoDailyLimit": {
-      "title": "All done for today",
-      "body": "You can guess up to {{count}} places per day. You have completed all rounds for today.",
-      "nextAvailable": "New places will be available in",
+      "title": "Listo por hoy",
+      "body": "Puedes adivinar hasta {{count}} lugares al día. Ya completaste todas las rondas de hoy.",
+      "nextAvailable": "Nuevos lugares disponibles en",
       "understood": "Entendido"
     },
     "waitDuration": {
@@ -549,7 +549,9 @@
     "notificationsDialog": {
       "title": "Notificaciones",
       "empty": "Aún no hay notificaciones nuevas",
-      "close": "Entendido"
+      "close": "Entendido",
+      "back": "Atrás",
+      "newBadge": "Nuevo"
     },
     "statusBubble": {
       "placeholder": "Te quiero ❤️",
@@ -1079,7 +1081,19 @@
       "noTitle": "Sin título",
       "textOnly": "Evento solo de texto",
       "fileCount_one": "{{count}} archivo",
-      "fileCount_other": "{{count}} archivos"
+      "fileCount_other": "{{count}} archivos",
+      "anniversaryLabel": "💕 Contar como aniversario",
+      "birthdayLabel": "🎂 Contar como cumpleaños",
+      "clearForm": "Limpiar formulario",
+      "dateLabel": "Fecha del evento",
+      "descriptionLabel": "Descripción (opcional)",
+      "editTitle": "Editar evento",
+      "newTitle": "Nuevo evento",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "titleLabel": "Título del evento",
+      "uploadPhotos": "Añadir fotos o vídeos",
+      "titleShort": "Título"
     },
     "detail": {
       "readOnly": "Solo lectura",
@@ -1097,7 +1111,9 @@
       "author": "Autor: {{name}}",
       "lastEdit": "Última edición",
       "editor": "Editor: {{name}}",
-      "datingIdea": "De ideas para citas"
+      "datingIdea": "De ideas para citas",
+      "noDescription": "Sin descripción",
+      "openMedia": "Abrir medios"
     },
     "list": {
       "eventsOn": "Eventos del {{date}}"
@@ -1106,7 +1122,9 @@
       "title": "¿Eliminar evento?",
       "body": "¿Seguro que quieres eliminar este evento? Todas las fotos y vídeos relacionados se eliminarán permanentemente.",
       "deleting": "Eliminando...",
-      "failed": "No se pudo eliminar el evento"
+      "failed": "No se pudo eliminar el evento",
+      "confirm": "Eliminar",
+      "message": "¿Eliminar este evento? Todas las fotos y vídeos relacionados se borrarán permanentemente."
     },
     "deleteAll": {
       "ariaLabel": "Eliminar todo",
@@ -1169,7 +1187,10 @@
       "moveLater": "Mover después",
       "supportedWithHint": "Compatibles: imágenes (JPG, PNG, GIF) y vídeos (MP4, MOV). {{hint}}",
       "videoHint": "Vídeo: hasta {{sourceMb}} MB y {{durationSec}} s. Se comprime automáticamente a {{uploadMb}} MB antes de subir.",
-      "videoMaxSize": "El tamaño máximo del vídeo es {{max}} MB"
+      "videoMaxSize": "El tamaño máximo del vídeo es {{max}} MB",
+      "addButton": "Añadir medios",
+      "formatsHint": "JPG, PNG, MP4 y otros formatos comunes",
+      "sectionTitle": "Medios"
     },
     "common": {
       "cancel": "Cancelar",
@@ -1196,7 +1217,10 @@
       "unlockCrypto": "Desbloquea las claves de cifrado en /crypto/unlock",
       "encryptionRecipient": "No se pudo determinar el destinatario del cifrado",
       "notAuthorizedShort": "Usuario no autorizado",
-      "unreadableMedia": "No se pudo leer un archivo. Elimina el medio dañado y añádelo de nuevo."
+      "unreadableMedia": "No se pudo leer un archivo. Elimina el medio dañado y añádelo de nuevo.",
+      "dateRequired": "Selecciona una fecha",
+      "deleteFailed": "No se pudo eliminar el evento",
+      "saveFailed": "No se pudo guardar el evento. Inténtalo de nuevo."
     },
     "filter": {
       "ariaLabel": "Filtrar eventos",
@@ -1215,6 +1239,48 @@
       "apply": "Aplicar",
       "reset": "Restablecer",
       "close": "Cerrar"
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "share": "Compartir"
+    },
+    "anniversary": "Aniversario",
+    "birthday": "Cumpleaños",
+    "filters": {
+      "all": "Todos",
+      "anniversary": "Aniversarios",
+      "birthday": "Cumpleaños"
+    },
+    "month": {
+      "today": "Hoy"
+    },
+    "share": {
+      "copied": "Enlace copiado",
+      "failed": "No se pudo compartir",
+      "title": "Compartir evento"
+    },
+    "untitled": "Sin título",
+    "eventList": {
+      "file_one": "{{count}} archivo",
+      "file_other": "{{count}} archivos",
+      "textOnly": "Solo texto",
+      "title": "Eventos"
+    },
+    "fields": {
+      "description": "Descripción"
+    },
+    "meta": {
+      "author": "Autor",
+      "created": "Creado",
+      "editor": "Editor",
+      "lastEdited": "Última edición"
+    },
+    "readOnly": "Solo lectura",
+    "tabs": {
+      "calendar": "Calendario",
+      "plans": "Planes"
     }
   },
   "news": {
@@ -1769,6 +1835,10 @@
         "news_read": {
           "action": "Leer una noticia",
           "period": "Una vez por cada noticia"
+        },
+        "announcement_read": {
+          "action": "Leer una notificación",
+          "period": "Una vez por notificación"
         }
       }
     },
@@ -1791,7 +1861,27 @@
       "yellow": "Amarillo",
       "white": "Blanco",
       "cream": "Crema"
-    }
+    },
+    "loadFailed": "No se pudieron cargar las mascotas. Revisa tu conexión.",
+    "statSatiety": "Saciedad",
+    "petAction": "Acariciar mascota",
+    "feedAction": "Alimentar mascota",
+    "feedTitle": "Alimentar mascota",
+    "feedDescription": "La comida cuesta {{cost}} AmoreCoins y puede restaurar 10–20 puntos de saciedad.",
+    "feedSatietyHint": "La saciedad baja 2 puntos cada hora.",
+    "feedDontShowAgain": "No volver a mostrar esta ventana",
+    "feedConfirm": "Alimentar",
+    "feedFailed": "No se pudo alimentar a la mascota",
+    "feedInsufficientBalance": "No hay suficientes AmoreCoins (se necesitan {{cost}})",
+    "satietyFullReward": "¡La mascota está llena! +{{amount}} AmoreCoins",
+    "mood": {
+      "angry": "Mascota hambrienta",
+      "neutral": "Mascota tranquila",
+      "happy": "Mascota feliz"
+    },
+    "petSuccess": "¡A tu mascota le encantó! +{{amount}} AmoreCoins",
+    "petLimitReached": "Esta mascota ya fue acariciada dos veces hoy",
+    "petFailed": "No se pudo acariciar a la mascota"
   },
   "datingIdeas": {
     "title": "Ideas para citas",

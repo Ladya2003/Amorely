@@ -228,7 +228,7 @@
   },
   "games": {
     "tap": {
-      "name": "Tap Together",
+      "name": "Zusammen tippen",
       "description": "Tippt gemeinsam auf den Block, schafft Runden und verdient Punkte für Upgrades.",
       "rules": [
         "Dieses Spiel ist nur für Paare mit verknüpftem Partner in den Einstellungen.",
@@ -424,12 +424,12 @@
     },
     "tab": "Spiele",
     "list": {
-      "searchPlaceholder": "Search by game name",
+      "searchPlaceholder": "Nach Spielname suchen",
       "clearSearch": "Suche löschen",
-      "notFound": "No games found",
-      "emptyList": "No games in the list",
-      "emptyHint": "Games for you and your partner will appear here",
-      "tryDifferentQuery": "Try a different search",
+      "notFound": "Keine Spiele gefunden",
+      "emptyList": "Keine Spiele in der Liste",
+      "emptyHint": "Hier erscheinen Spiele für dich und deinen Partner",
+      "tryDifferentQuery": "Versuch eine andere Suche",
       "comingSoon": "Demnächst"
     },
     "page": {
@@ -437,10 +437,10 @@
       "backToList": "Zur Spieleliste",
       "tabGame": "Spiel",
       "tabLeaderboard": "Bestenliste",
-      "leaderboardSubtitle": "Global couple leaderboard by total score",
-      "comingSoon": "This game is coming soon",
-      "addPartner": "Add your partner in settings to play together",
-      "geoDailyLimitHint": "You guessed all {{count}} places today. New rounds will open later.",
+      "leaderboardSubtitle": "Globale Paar-Rangliste nach Gesamtpunktzahl",
+      "comingSoon": "Dieses Spiel kommt bald",
+      "addPartner": "Füge deinen Partner in den Einstellungen hinzu, um zusammen zu spielen",
+      "geoDailyLimitHint": "Du hast heute alle {{count}} Orte erraten. Neue Runden öffnen später.",
       "play": "Spielen"
     },
     "common": {
@@ -448,21 +448,21 @@
       "you": "Du",
       "partner": "Partner",
       "ready": "Bereit",
-      "waitingPartner": "Waiting for partner…",
+      "waitingPartner": "Warten auf Partner…",
       "remindPartner": "Partner rufen",
       "partnerReminded": "Partner in den Chat gerufen",
       "partnerRemindedShort": "Partner gerufen",
       "remindPartnerFailed": "Partner konnte nicht gerufen werden",
-      "readyToPlay": "Ready to play?",
-      "startingSoon": "Starting soon!",
-      "bothReady": "Both partners are ready — the round will start at the same time.",
-      "pressReady": "Press Ready when you are set. The round starts when both are ready.",
+      "readyToPlay": "Bereit zu spielen?",
+      "startingSoon": "Gleich geht’s los!",
+      "bothReady": "Beide Partner sind bereit — die Runde startet gleichzeitig.",
+      "pressReady": "Drücke „Bereit“, wenn du soweit bist. Die Runde startet, wenn beide bereit sind.",
       "youReadyAria": "Du bist bereit",
       "confirmReadyAria": "Bereitschaft bestätigen",
       "goToSettings": "Zu Einstellungen",
       "needPartner": "Partner erforderlich",
       "loadFailed": "Spiel konnte nicht geladen werden",
-      "partnerRequired": "You need a partner to play. Add them in profile settings.",
+      "partnerRequired": "Du brauchst einen Partner zum Spielen. Füge ihn in den Profileinstellungen hinzu.",
       "partnerRequiredShort": "Partner erforderlich",
       "backToGame": "Zurück zum Spiel",
       "send": "Senden",
@@ -484,7 +484,7 @@
       "dailyLimitExhausted": "Tageslimit erreicht",
       "roundStartFailed": "Runde konnte nicht gestartet werden",
       "nextRound": "Nächste Runde",
-      "playMore": "Keep playing",
+      "playMore": "Weiter spielen",
       "finish": "Beenden",
       "yourAnswer": "Deine Antwort",
       "yourGuesses": "Deine Tipps",
@@ -508,25 +508,25 @@
       }
     },
     "leaderboard": {
-      "empty": "No one has played yet"
+      "empty": "Noch niemand hat gespielt"
     },
     "badge": {
       "tooltip": "Top-{{rank}} · {{game}}"
     },
     "dailyReset": {
-      "title": "Reset timer",
-      "playedTodayNamed": "You already played «{{gameName}}» today. ",
-      "playedTodayGeneric": "You already played this game today. ",
-      "timerHint": "The timer shows how long until the daily limit resets.",
-      "resetHint": "The limit resets at 03:00 Moscow time (00:00 UTC). You can play again after that.",
-      "untilReset": "Until reset:",
+      "title": "Reset-Timer",
+      "playedTodayNamed": "Du hast „{{gameName}}“ heute schon gespielt. ",
+      "playedTodayGeneric": "Du hast dieses Spiel heute schon gespielt. ",
+      "timerHint": "Der Timer zeigt, wie lange es bis zum Reset des Tageslimits dauert.",
+      "resetHint": "Das Limit setzt sich um 03:00 Moskauer Zeit (00:00 UTC) zurück. Danach kannst du wieder spielen.",
+      "untilReset": "Bis zum Reset:",
       "understood": "Verstanden",
-      "badgeAria": "More about the reset timer"
+      "badgeAria": "Mehr zum Reset-Timer"
     },
     "geoDailyLimit": {
-      "title": "All done for today",
-      "body": "You can guess up to {{count}} places per day. You have completed all rounds for today.",
-      "nextAvailable": "New places will be available in",
+      "title": "Für heute fertig",
+      "body": "Du kannst bis zu {{count}} Orte pro Tag erraten. Du hast alle Runden für heute abgeschlossen.",
+      "nextAvailable": "Neue Orte sind verfügbar in",
       "understood": "Verstanden"
     },
     "waitDuration": {
@@ -549,7 +549,9 @@
     "notificationsDialog": {
       "title": "Benachrichtigungen",
       "empty": "Noch keine neuen Benachrichtigungen",
-      "close": "OK"
+      "close": "OK",
+      "back": "Zurück",
+      "newBadge": "Neu"
     },
     "statusBubble": {
       "placeholder": "Ich liebe dich ❤️",
@@ -1079,7 +1081,19 @@
       "noTitle": "Ohne Titel",
       "textOnly": "Nur-Text-Ereignis",
       "fileCount_one": "{{count}} Datei",
-      "fileCount_other": "{{count}} Dateien"
+      "fileCount_other": "{{count}} Dateien",
+      "anniversaryLabel": "💕 Als Jahrestag zählen",
+      "birthdayLabel": "🎂 Als Geburtstag zählen",
+      "clearForm": "Formular leeren",
+      "dateLabel": "Datum des Ereignisses",
+      "descriptionLabel": "Beschreibung (optional)",
+      "editTitle": "Ereignis bearbeiten",
+      "newTitle": "Neues Ereignis",
+      "save": "Speichern",
+      "saving": "Speichern...",
+      "titleLabel": "Titel des Ereignisses",
+      "uploadPhotos": "Fotos oder Videos hinzufügen",
+      "titleShort": "Titel"
     },
     "detail": {
       "readOnly": "Nur Ansicht",
@@ -1097,7 +1111,9 @@
       "author": "Autor: {{name}}",
       "lastEdit": "Zuletzt bearbeitet",
       "editor": "Bearbeiter: {{name}}",
-      "datingIdea": "Aus Date-Ideen"
+      "datingIdea": "Aus Date-Ideen",
+      "noDescription": "Keine Beschreibung",
+      "openMedia": "Medien öffnen"
     },
     "list": {
       "eventsOn": "Ereignisse am {{date}}"
@@ -1106,7 +1122,9 @@
       "title": "Ereignis löschen?",
       "body": "Möchtet ihr dieses Ereignis wirklich löschen? Alle zugehörigen Fotos und Videos werden unwiderruflich gelöscht.",
       "deleting": "Wird gelöscht...",
-      "failed": "Ereignis konnte nicht gelöscht werden"
+      "failed": "Ereignis konnte nicht gelöscht werden",
+      "confirm": "Löschen",
+      "message": "Dieses Ereignis wirklich löschen? Alle zugehörigen Fotos und Videos werden dauerhaft gelöscht."
     },
     "deleteAll": {
       "ariaLabel": "Alles löschen",
@@ -1169,7 +1187,10 @@
       "moveLater": "Weiter nach hinten",
       "supportedWithHint": "Unterstützt: Bilder (JPG, PNG, GIF) und Videos (MP4, MOV). {{hint}}",
       "videoHint": "Video: bis {{sourceMb}} MB und {{durationSec}} Sek. Wird vor dem Upload automatisch auf {{uploadMb}} MB komprimiert.",
-      "videoMaxSize": "Maximale Videogröße: {{max}} MB"
+      "videoMaxSize": "Maximale Videogröße: {{max}} MB",
+      "addButton": "Medien hinzufügen",
+      "formatsHint": "JPG, PNG, MP4 und andere gängige Formate",
+      "sectionTitle": "Medien"
     },
     "common": {
       "cancel": "Abbrechen",
@@ -1196,7 +1217,10 @@
       "unlockCrypto": "Entsperrt die Verschlüsselungsschlüssel unter /crypto/unlock",
       "encryptionRecipient": "Verschlüsselungsempfänger konnte nicht ermittelt werden",
       "notAuthorizedShort": "Benutzer nicht autorisiert",
-      "unreadableMedia": "Datei konnte nicht gelesen werden. Entfernt das beschädigte Medium und fügt es erneut hinzu."
+      "unreadableMedia": "Datei konnte nicht gelesen werden. Entfernt das beschädigte Medium und fügt es erneut hinzu.",
+      "dateRequired": "Bitte wähle ein Datum",
+      "deleteFailed": "Ereignis konnte nicht gelöscht werden",
+      "saveFailed": "Ereignis konnte nicht gespeichert werden. Bitte erneut versuchen."
     },
     "filter": {
       "ariaLabel": "Ereignisse filtern",
@@ -1215,6 +1239,48 @@
       "apply": "Anwenden",
       "reset": "Zurücksetzen",
       "close": "Schließen"
+    },
+    "actions": {
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "edit": "Bearbeiten",
+      "share": "Teilen"
+    },
+    "anniversary": "Jahrestag",
+    "birthday": "Geburtstag",
+    "filters": {
+      "all": "Alle",
+      "anniversary": "Jahrestage",
+      "birthday": "Geburtstage"
+    },
+    "month": {
+      "today": "Heute"
+    },
+    "share": {
+      "copied": "Link kopiert",
+      "failed": "Teilen fehlgeschlagen",
+      "title": "Ereignis teilen"
+    },
+    "untitled": "Ohne Titel",
+    "eventList": {
+      "file_one": "{{count}} Datei",
+      "file_other": "{{count}} Dateien",
+      "textOnly": "Nur Text",
+      "title": "Ereignisse"
+    },
+    "fields": {
+      "description": "Beschreibung"
+    },
+    "meta": {
+      "author": "Autor",
+      "created": "Erstellt",
+      "editor": "Bearbeiter",
+      "lastEdited": "Zuletzt bearbeitet"
+    },
+    "readOnly": "Nur Ansicht",
+    "tabs": {
+      "calendar": "Kalender",
+      "plans": "Pläne"
     }
   },
   "news": {
@@ -1769,6 +1835,10 @@
         "news_read": {
           "action": "Eine Neuigkeit lesen",
           "period": "Einmal pro Artikel"
+        },
+        "announcement_read": {
+          "action": "Eine Benachrichtigung lesen",
+          "period": "Einmal pro Benachrichtigung"
         }
       }
     },
@@ -1791,7 +1861,27 @@
       "yellow": "Gelb",
       "white": "Weiß",
       "cream": "Creme"
-    }
+    },
+    "loadFailed": "Haustiere konnten nicht geladen werden. Prüfe deine Verbindung.",
+    "statSatiety": "Sättigung",
+    "petAction": "Haustier streicheln",
+    "feedAction": "Haustier füttern",
+    "feedTitle": "Haustier füttern",
+    "feedDescription": "Futter kostet {{cost}} AmoreCoins und kann 10–20 Sättigungspunkte wiederherstellen.",
+    "feedSatietyHint": "Die Sättigung sinkt jede Stunde um 2 Punkte.",
+    "feedDontShowAgain": "Dieses Fenster nicht mehr anzeigen",
+    "feedConfirm": "Füttern",
+    "feedFailed": "Haustier konnte nicht gefüttert werden",
+    "feedInsufficientBalance": "Nicht genug AmoreCoins (benötigt {{cost}})",
+    "satietyFullReward": "Haustier ist satt! +{{amount}} AmoreCoins",
+    "mood": {
+      "angry": "Hungriges Haustier",
+      "neutral": "Ruhiges Haustier",
+      "happy": "Glückliches Haustier"
+    },
+    "petSuccess": "Dein Haustier freut sich! +{{amount}} AmoreCoins",
+    "petLimitReached": "Dieses Haustier wurde heute schon zweimal gestreichelt",
+    "petFailed": "Haustier konnte nicht gestreichelt werden"
   },
   "datingIdeas": {
     "title": "Date-Ideen",

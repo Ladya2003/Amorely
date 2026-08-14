@@ -1,4 +1,5 @@
 import axios from 'axios';
+import i18next from 'i18next';
 import { API_URL } from '../config';
 
 export type DatingIdeaStatus = 'active' | 'completed' | 'skipped';
@@ -31,10 +32,13 @@ const authHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const resolveLocaleParam = (locale?: string) =>
+  locale || i18next.language || localStorage.getItem('locale') || 'ru';
+
 export const fetchDatingIdeas = async (locale?: string): Promise<DatingIdeasOverview> => {
   const response = await axios.get(`${API_URL}/api/dating-ideas`, {
     headers: authHeaders(),
-    params: locale ? { locale } : undefined,
+    params: { locale: resolveLocaleParam(locale) },
   });
   return response.data;
 };
@@ -42,7 +46,7 @@ export const fetchDatingIdeas = async (locale?: string): Promise<DatingIdeasOver
 export const generateDatingIdea = async (locale?: string) => {
   const response = await axios.post(
     `${API_URL}/api/dating-ideas/generate`,
-    { locale },
+    { locale: resolveLocaleParam(locale) },
     { headers: authHeaders() }
   );
   return response.data as {
@@ -53,28 +57,31 @@ export const generateDatingIdea = async (locale?: string) => {
   };
 };
 
-export const skipDatingIdea = async (ideaId: string) => {
+export const skipDatingIdea = async (ideaId: string, locale?: string) => {
   const response = await axios.post(
     `${API_URL}/api/dating-ideas/${ideaId}/skip`,
-    {},
-    { headers: authHeaders() }
+    { locale: resolveLocaleParam(locale) },
+    { headers: authHeaders(), params: { locale: resolveLocaleParam(locale) } }
   );
   return response.data as { idea: DatingIdea };
 };
 
-export const completeDatingIdea = async (ideaId: string, eventId: string) => {
+export const completeDatingIdea = async (ideaId: string, eventId: string, locale?: string) => {
   const response = await axios.post(
     `${API_URL}/api/dating-ideas/${ideaId}/complete`,
-    { eventId },
-    { headers: authHeaders() }
+    { eventId, locale: resolveLocaleParam(locale) },
+    { headers: authHeaders(), params: { locale: resolveLocaleParam(locale) } }
   );
   return response.data as { idea: DatingIdea };
 };
 
-export const fetchDatingIdeaByEventId = async (eventId: string) => {
+export const fetchDatingIdeaByEventId = async (eventId: string, locale?: string) => {
   const response = await axios.get(
     `${API_URL}/api/dating-ideas/by-event/${encodeURIComponent(eventId)}`,
-    { headers: authHeaders() }
+    {
+      headers: authHeaders(),
+      params: { locale: resolveLocaleParam(locale) },
+    }
   );
   return response.data as { idea: DatingIdea };
 };

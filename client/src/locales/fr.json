@@ -228,7 +228,7 @@
   },
   "games": {
     "tap": {
-      "name": "Tap Together",
+      "name": "Tapez ensemble",
       "description": "Touchez le bloc avec votre partenaire, terminez les manches et gagnez des points.",
       "rules": [
         "Ce jeu est réservé aux couples avec partenaire lié dans les paramètres.",
@@ -249,7 +249,7 @@
         "close": "Fermer",
         "items": {
           "double_tap": {
-            "name": "Double tap",
+            "name": "Double frappe",
             "description": "Les 5 prochains taps valent ×2 points."
           },
           "triple_tap": {
@@ -424,12 +424,12 @@
     },
     "tab": "Jeux",
     "list": {
-      "searchPlaceholder": "Search by game name",
+      "searchPlaceholder": "Rechercher par nom de jeu",
       "clearSearch": "Effacer la recherche",
-      "notFound": "No games found",
-      "emptyList": "No games in the list",
-      "emptyHint": "Games for you and your partner will appear here",
-      "tryDifferentQuery": "Try a different search",
+      "notFound": "Aucun jeu trouvé",
+      "emptyList": "Aucun jeu dans la liste",
+      "emptyHint": "Les jeux pour vous et votre partenaire apparaîtront ici",
+      "tryDifferentQuery": "Essayez une autre recherche",
       "comingSoon": "Bientôt"
     },
     "page": {
@@ -437,10 +437,10 @@
       "backToList": "Retour aux jeux",
       "tabGame": "Jeu",
       "tabLeaderboard": "Classement",
-      "leaderboardSubtitle": "Global couple leaderboard by total score",
-      "comingSoon": "This game is coming soon",
-      "addPartner": "Add your partner in settings to play together",
-      "geoDailyLimitHint": "You guessed all {{count}} places today. New rounds will open later.",
+      "leaderboardSubtitle": "Classement mondial des couples par score total",
+      "comingSoon": "Ce jeu arrive bientôt",
+      "addPartner": "Ajoutez votre partenaire dans les paramètres pour jouer ensemble",
+      "geoDailyLimitHint": "Vous avez trouvé les {{count}} lieux aujourd’hui. De nouvelles manches s’ouvriront plus tard.",
       "play": "Jouer"
     },
     "common": {
@@ -448,21 +448,21 @@
       "you": "Vous",
       "partner": "Partenaire",
       "ready": "Prêt",
-      "waitingPartner": "Waiting for partner…",
+      "waitingPartner": "En attente du partenaire…",
       "remindPartner": "Appeler le partenaire",
       "partnerReminded": "Partenaire appelé dans le chat",
       "partnerRemindedShort": "Partenaire appelé",
       "remindPartnerFailed": "Impossible d'appeler le partenaire",
-      "readyToPlay": "Ready to play?",
-      "startingSoon": "Starting soon!",
-      "bothReady": "Both partners are ready — the round will start at the same time.",
-      "pressReady": "Press Ready when you are set. The round starts when both are ready.",
+      "readyToPlay": "Prêts à jouer ?",
+      "startingSoon": "Ça commence bientôt !",
+      "bothReady": "Les deux partenaires sont prêts — la manche démarrera en même temps.",
+      "pressReady": "Appuyez sur Prêt quand vous êtes installés. La manche commence quand les deux sont prêts.",
       "youReadyAria": "Vous êtes prêt",
       "confirmReadyAria": "Confirmer la disponibilité",
       "goToSettings": "Aller aux paramètres",
       "needPartner": "Partenaire requis",
       "loadFailed": "Échec du chargement du jeu",
-      "partnerRequired": "You need a partner to play. Add them in profile settings.",
+      "partnerRequired": "Il vous faut un partenaire pour jouer. Ajoutez-le dans les paramètres du profil.",
       "partnerRequiredShort": "Partenaire requis",
       "backToGame": "Retour au jeu",
       "send": "Envoyer",
@@ -484,7 +484,7 @@
       "dailyLimitExhausted": "Limite quotidienne atteinte",
       "roundStartFailed": "Échec du démarrage de la manche",
       "nextRound": "Manche suivante",
-      "playMore": "Keep playing",
+      "playMore": "Continuer à jouer",
       "finish": "Terminer",
       "yourAnswer": "Votre réponse",
       "yourGuesses": "Vos tentatives",
@@ -508,25 +508,25 @@
       }
     },
     "leaderboard": {
-      "empty": "No one has played yet"
+      "empty": "Personne n’a encore joué"
     },
     "badge": {
       "tooltip": "Top-{{rank}} · {{game}}"
     },
     "dailyReset": {
-      "title": "Reset timer",
-      "playedTodayNamed": "You already played «{{gameName}}» today. ",
-      "playedTodayGeneric": "You already played this game today. ",
-      "timerHint": "The timer shows how long until the daily limit resets.",
-      "resetHint": "The limit resets at 03:00 Moscow time (00:00 UTC). You can play again after that.",
-      "untilReset": "Until reset:",
+      "title": "Minuteur de réinitialisation",
+      "playedTodayNamed": "Vous avez déjà joué à «{{gameName}}» aujourd’hui. ",
+      "playedTodayGeneric": "Vous avez déjà joué à ce jeu aujourd’hui. ",
+      "timerHint": "Le minuteur indique le temps restant avant la réinitialisation de la limite quotidienne.",
+      "resetHint": "La limite se réinitialise à 03:00 heure de Moscou (00:00 UTC). Vous pourrez rejouer ensuite.",
+      "untilReset": "Jusqu’à la réinitialisation :",
       "understood": "Compris",
-      "badgeAria": "More about the reset timer"
+      "badgeAria": "En savoir plus sur le minuteur de réinitialisation"
     },
     "geoDailyLimit": {
-      "title": "All done for today",
-      "body": "You can guess up to {{count}} places per day. You have completed all rounds for today.",
-      "nextAvailable": "New places will be available in",
+      "title": "C’est tout pour aujourd’hui",
+      "body": "Vous pouvez trouver jusqu’à {{count}} lieux par jour. Vous avez terminé toutes les manches d’aujourd’hui.",
+      "nextAvailable": "De nouveaux lieux seront disponibles dans",
       "understood": "Compris"
     },
     "waitDuration": {
@@ -549,7 +549,9 @@
     "notificationsDialog": {
       "title": "Notifications",
       "empty": "Pas de nouvelles notifications pour le moment",
-      "close": "OK"
+      "close": "OK",
+      "back": "Retour",
+      "newBadge": "Nouveau"
     },
     "statusBubble": {
       "placeholder": "Je t'aime ❤️",
@@ -1079,7 +1081,19 @@
       "noTitle": "Sans titre",
       "textOnly": "Événement texte seul",
       "fileCount_one": "{{count}} fichier",
-      "fileCount_other": "{{count}} fichiers"
+      "fileCount_other": "{{count}} fichiers",
+      "anniversaryLabel": "💕 Compter comme anniversaire de couple",
+      "birthdayLabel": "🎂 Compter comme anniversaire",
+      "clearForm": "Effacer le formulaire",
+      "dateLabel": "Date de l’événement",
+      "descriptionLabel": "Description (facultatif)",
+      "editTitle": "Modifier l’événement",
+      "newTitle": "Nouvel événement",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "titleLabel": "Titre de l’événement",
+      "uploadPhotos": "Ajouter des photos ou vidéos",
+      "titleShort": "Titre"
     },
     "detail": {
       "readOnly": "Lecture seule",
@@ -1097,7 +1111,9 @@
       "author": "Auteur : {{name}}",
       "lastEdit": "Dernière modification",
       "editor": "Éditeur : {{name}}",
-      "datingIdea": "Via idées de rendez-vous"
+      "datingIdea": "Via idées de rendez-vous",
+      "noDescription": "Pas de description",
+      "openMedia": "Ouvrir les médias"
     },
     "list": {
       "eventsOn": "Événements du {{date}}"
@@ -1106,7 +1122,9 @@
       "title": "Supprimer l'événement ?",
       "body": "Voulez-vous vraiment supprimer cet événement ? Toutes les photos et vidéos associées seront définitivement supprimées.",
       "deleting": "Suppression...",
-      "failed": "Impossible de supprimer l'événement"
+      "failed": "Impossible de supprimer l'événement",
+      "confirm": "Supprimer",
+      "message": "Supprimer cet événement ? Toutes les photos et vidéos associées seront définitivement supprimées."
     },
     "deleteAll": {
       "ariaLabel": "Tout supprimer",
@@ -1169,7 +1187,10 @@
       "moveLater": "Déplacer plus tard",
       "supportedWithHint": "Pris en charge : images (JPG, PNG, GIF) et vidéos (MP4, MOV). {{hint}}",
       "videoHint": "Vidéo : jusqu'à {{sourceMb}} Mo et {{durationSec}} s. Compressée automatiquement à {{uploadMb}} Mo avant l'envoi.",
-      "videoMaxSize": "Taille maximale de la vidéo : {{max}} Mo"
+      "videoMaxSize": "Taille maximale de la vidéo : {{max}} Mo",
+      "addButton": "Ajouter des médias",
+      "formatsHint": "JPG, PNG, MP4 et autres formats courants",
+      "sectionTitle": "Médias"
     },
     "common": {
       "cancel": "Annuler",
@@ -1196,7 +1217,10 @@
       "unlockCrypto": "Déverrouillez les clés de chiffrement sur /crypto/unlock",
       "encryptionRecipient": "Impossible de déterminer le destinataire du chiffrement",
       "notAuthorizedShort": "Utilisateur non autorisé",
-      "unreadableMedia": "Impossible de lire un fichier. Supprimez le média endommagé et ajoutez-le à nouveau."
+      "unreadableMedia": "Impossible de lire un fichier. Supprimez le média endommagé et ajoutez-le à nouveau.",
+      "dateRequired": "Veuillez choisir une date",
+      "deleteFailed": "Impossible de supprimer l’événement",
+      "saveFailed": "Impossible d’enregistrer l’événement. Réessayez."
     },
     "filter": {
       "ariaLabel": "Filtrer les événements",
@@ -1215,6 +1239,48 @@
       "apply": "Appliquer",
       "reset": "Réinitialiser",
       "close": "Fermer"
+    },
+    "actions": {
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "share": "Partager"
+    },
+    "anniversary": "Anniversaire de couple",
+    "birthday": "Anniversaire",
+    "filters": {
+      "all": "Tous",
+      "anniversary": "Anniversaires de couple",
+      "birthday": "Anniversaires"
+    },
+    "month": {
+      "today": "Aujourd’hui"
+    },
+    "share": {
+      "copied": "Lien copié",
+      "failed": "Échec du partage",
+      "title": "Partager l’événement"
+    },
+    "untitled": "Sans titre",
+    "eventList": {
+      "file_one": "{{count}} fichier",
+      "file_other": "{{count}} fichiers",
+      "textOnly": "Texte seulement",
+      "title": "Événements"
+    },
+    "fields": {
+      "description": "Description"
+    },
+    "meta": {
+      "author": "Auteur",
+      "created": "Créé",
+      "editor": "Éditeur",
+      "lastEdited": "Dernière modification"
+    },
+    "readOnly": "Lecture seule",
+    "tabs": {
+      "calendar": "Calendrier",
+      "plans": "Plans"
     }
   },
   "news": {
@@ -1769,6 +1835,10 @@
         "news_read": {
           "action": "Lire une actualité",
           "period": "Une fois par article"
+        },
+        "announcement_read": {
+          "action": "Lire une notification",
+          "period": "Une fois par notification"
         }
       }
     },
@@ -1791,7 +1861,27 @@
       "yellow": "Jaune",
       "white": "Blanc",
       "cream": "Crème"
-    }
+    },
+    "loadFailed": "Impossible de charger les animaux. Vérifiez votre connexion.",
+    "statSatiety": "Satiété",
+    "petAction": "Caressez l'animal",
+    "feedAction": "Nourrir l'animal",
+    "feedTitle": "Nourrir l'animal",
+    "feedDescription": "La nourriture coûte {{cost}} AmoreCoins et peut restaurer 10–20 points de satiété.",
+    "feedSatietyHint": "La satiété diminue de 2 points chaque heure.",
+    "feedDontShowAgain": "Ne plus afficher cette fenêtre",
+    "feedConfirm": "Nourrir",
+    "feedFailed": "Impossible de nourrir l'animal",
+    "feedInsufficientBalance": "Pas assez d'AmoreCoins (il en faut {{cost}})",
+    "satietyFullReward": "L'animal est rassasié ! +{{amount}} AmoreCoins",
+    "mood": {
+      "angry": "Animal affamé",
+      "neutral": "Animal calme",
+      "happy": "Animal heureux"
+    },
+    "petSuccess": "Votre animal a adoré ! +{{amount}} AmoreCoins",
+    "petLimitReached": "Cet animal a déjà été caressé deux fois aujourd'hui",
+    "petFailed": "Impossible de caresser l'animal"
   },
   "datingIdeas": {
     "title": "Idées de rendez-vous",
