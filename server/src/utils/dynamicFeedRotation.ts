@@ -270,7 +270,9 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
     return sortDocsBySlotOrder(selectedIds, docs);
   };
 
-  if (state.lastGeneratedSlot === slotKey) {
+  const slotAlreadyGenerated = state.lastGeneratedSlot === slotKey;
+
+  if (slotAlreadyGenerated) {
     const cachedIds = getIdsFromSlots(state.currentSlots);
     const cachedDocs = await fetchDocsForSlotIds(cachedIds);
 
@@ -358,8 +360,13 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
     return fetchFullFeedForPair(ownerId, partnerId);
   }
 
+  // Если слот уже был записан, но часть контента исчезла (например, событие удалили
+  // из календаря), нужно перезаписать currentSlots. Иначе $ne: slotKey блокирует
+  // апдейт, и лента остаётся пустой до следующего окна 02:00/17:00.
   const updateResult = await FeedRotationState.updateOne(
-    { _id: state._id, lastGeneratedSlot: { $ne: slotKey } },
+    slotAlreadyGenerated
+      ? { _id: state._id }
+      : { _id: state._id, lastGeneratedSlot: { $ne: slotKey } },
     {
       $set: {
         status: relationship.status,
@@ -381,7 +388,12 @@ export const buildOrGetDynamicFeed = async (userId: string, now: Date = new Date
     return fetchFullFeedForPair(ownerId, partnerId);
   }
 
-  return fetchDocsForSlotIds(selectedIds);
+  const selectedDocs = await fetchDocsForSlotIds(selectedIds);
+  if (selectedDocs.length === 0) {
+    return fetchFullFeedForPair(ownerId, partnerId);
+  }
+
+  return selectedDocs;
 };
 
 export const refreshDynamicFeedForAllActiveRelationships = async (now: Date = new Date()) => {

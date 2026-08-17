@@ -178,6 +178,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
   const satietyFloatIdRef = useRef(0);
   const ambientHeartIdRef = useRef(0);
   const ambientHeartTimeoutsRef = useRef<number[]>([]);
+  const levelProgressRef = useRef<HTMLDivElement | null>(null);
 
   const loadPet = useCallback(async () => {
     if (!petId) return;
@@ -344,6 +345,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
         setLevelUpReveal({ fromLevel: previousLevel, toLevel: result.pet.level });
       } else {
         void playPetSubLevelUpSound();
+        levelProgressRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setToast({ message: t('pets.subLevelUpSuccess'), severity: 'success' });
       }
     } catch (err: any) {
@@ -1026,11 +1028,13 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
         </Box>
 
         <Paper
+          ref={levelProgressRef}
           elevation={0}
           sx={(theme) => ({
             ...getPetSectionPaperSx(theme),
             p: 2.5,
             mb: 2.5,
+            overflow: 'visible',
             ...(glassSurface ? getAppGlassSurfaceLightTextSx(theme) : {}),
           })}
         >

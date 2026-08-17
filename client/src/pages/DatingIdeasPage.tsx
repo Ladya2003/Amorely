@@ -94,7 +94,58 @@ const toCompletedEventPreview = (
 };
 
 const PENDING_COMPLETED_IDEA_KEY = 'amorely:dating-ideas:pending-completed';
-const PENDING_COMPLETED_IDEA_EVENT = 'amorely:dating-ideas-pending';
+
+type PendingCompletedIdea = {
+  id: string;
+  eventId?: string | null;
+  title?: string;
+  description?: string;
+  emoji?: string;
+};
+
+const readPendingCompletedIdea = (): PendingCompletedIdea | null => {
+  try {
+    const raw = sessionStorage.getItem(PENDING_COMPLETED_IDEA_KEY);
+    return raw ? (JSON.parse(raw) as PendingCompletedIdea) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writePendingCompletedIdea = (idea: DatingIdea) => {
+  try {
+    sessionStorage.setItem(
+      PENDING_COMPLETED_IDEA_KEY,
+      JSON.stringify({
+        id: idea.id,
+        eventId: idea.eventId || null,
+        title: idea.title,
+        description: idea.description,
+        emoji: idea.emoji,
+      })
+    );
+  } catch {
+    // ignore quota / private mode
+  }
+};
+
+const clearPendingCompletedIdea = () => {
+  try {
+    sessionStorage.removeItem(PENDING_COMPLETED_IDEA_KEY);
+  } catch {
+    // ignore
+  }
+};
+
+const isSameHistoryIdea = (a: DatingIdea | null, b: DatingIdea | null) => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.id === b.id &&
+    a.status === b.status &&
+    String(a.eventId || '') === String(b.eventId || '')
+  );
+};
 
 const DatingIdeasPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -128,6 +179,7 @@ const DatingIdeasPage: React.FC = () => {
   const selectedHistoryIdeaRef = useRef<DatingIdea | null>(null);
   const editorOpenRef = useRef(false);
   const seededPreviewEventIdRef = useRef<string | null>(null);
+  const completedPreviewEventIdRef = useRef<string | null>(null);
   const pageTopRef = useRef<HTMLDivElement | null>(null);
   const language = i18n.language;
 
@@ -149,51 +201,22 @@ const DatingIdeasPage: React.FC = () => {
   }, []);
 
   const selectHistoryIdea = useCallback((idea: DatingIdea | null, options?: { persist?: boolean }) => {
+    const unchanged = isSameHistoryIdea(selectedHistoryIdeaRef.current, idea);
     selectedHistoryIdeaRef.current = idea;
-    setSelectedHistoryIdea(idea);
-    if (options?.persist) {
-      if (idea?.status === 'completed' && idea.id) {
-        try {
-          sessionStorage.setItem(
-            PENDING_COMPLETED_IDEA_KEY,
-            JSON.stringify({
-              id: idea.id,
-              eventId: idea.eventId || null,
-              title: idea.title,
-              description: idea.description,
-              emoji: idea.emoji,
-            })
-          );
-          window.dispatchEvent(new Event(PENDING_COMPLETED_IDEA_EVENT));
-        } catch {
-          // ignore quota / private mode
-        }
-      }
+    if (!unchanged) {
+      setSelectedHistoryIdea(idea);
+    }
+    if (options?.persist && idea?.status === 'completed' && idea.id) {
+      writePendingCompletedIdea(idea);
     } else if (idea === null) {
-      try {
-        sessionStorage.removeItem(PENDING_COMPLETED_IDEA_KEY);
-      } catch {
-        // ignore
-      }
+      clearPendingCompletedIdea();
     }
   }, []);
 
   const loadOverview = useCallback(async (options?: { preservePhase?: boolean }) => {
     try {
       const data = await fetchDatingIdeas(language);
-      let pendingCompleted: {
-        id: string;
-        eventId?: string | null;
-        title?: string;
-        description?: string;
-        emoji?: string;
-      } | null = null;
-      try {
-        const raw = sessionStorage.getItem(PENDING_COMPLETED_IDEA_KEY);
-        pendingCompleted = raw ? JSON.parse(raw) : null;
-      } catch {
-        pendingCompleted = null;
-      }
+      const pendingCompleted = readPendingCompletedIdea();
 
       // Do not clobber the post-save completed view (or an in-flight save)
       // just because there is no longer an active idea.
@@ -236,7 +259,15 @@ const DatingIdeasPage: React.FC = () => {
               } satisfies DatingIdea)
             : null);
         if (refreshed) {
-          selectHistoryIdea(refreshed, { persist: Boolean(pendingCompleted?.id) });
+          const fromHistory = (data.history ?? []).some((item) => item.id === selectedId);
+          const historyComplete =
+            fromHistory && refreshed.status === 'completed' && Boolean(refreshed.eventId);
+          selectHistoryIdea(refreshed, {
+            persist: Boolean(pendingCompleted?.id) && !historyComplete,
+          });
+          if (historyComplete) {
+            clearPendingCompletedIdea();
+          }
           setPhase('idea');
           setFlipped(false);
         }
@@ -270,47 +301,38 @@ const DatingIdeasPage: React.FC = () => {
   }, [loadOverview]);
 
   useEffect(() => {
-    const handlePendingCompleted = () => {
-      void loadOverview({ preservePhase: true });
-    };
-    window.addEventListener(PENDING_COMPLETED_IDEA_EVENT, handlePendingCompleted);
-    return () => {
-      window.removeEventListener(PENDING_COMPLETED_IDEA_EVENT, handlePendingCompleted);
-    };
-  }, [loadOverview]);
-
-  useEffect(() => {
     let cancelled = false;
+    const selectedId = selectedHistoryIdea?.id;
+    const selectedStatus = selectedHistoryIdea?.status;
+    const selectedEventId = selectedHistoryIdea?.eventId
+      ? String(selectedHistoryIdea.eventId)
+      : null;
 
     const loadCompletedEvent = async () => {
-      if (!selectedHistoryIdea || selectedHistoryIdea.status !== 'completed') {
+      if (!selectedHistoryIdea || !selectedId || selectedStatus !== 'completed') {
         seededPreviewEventIdRef.current = null;
+        completedPreviewEventIdRef.current = null;
         setCompletedEventPreview(null);
         setCompletedEventError(null);
         setCompletedEventLoading(false);
         return;
       }
 
-      const selectedEventId = selectedHistoryIdea.eventId
-        ? String(selectedHistoryIdea.eventId)
-        : null;
-
-      // Already seeded from save — keep preview, do not flash empty state.
+      // Already showing this event — do not flash skeleton / empty media.
       if (
         selectedEventId &&
-        seededPreviewEventIdRef.current === selectedEventId
+        (seededPreviewEventIdRef.current === selectedEventId ||
+          completedPreviewEventIdRef.current === selectedEventId)
       ) {
         setCompletedEventLoading(false);
         setCompletedEventError(null);
         return;
       }
 
-      // Selecting another idea — drop the save seed.
       seededPreviewEventIdRef.current = null;
-
+      setCompletedEventPreview(null);
       setCompletedEventLoading(true);
       setCompletedEventError(null);
-      setCompletedEventPreview(null);
 
       const fallbackPreview: CompletedEventPreviewData = {
         title: selectedHistoryIdea.title,
@@ -386,15 +408,18 @@ const DatingIdeasPage: React.FC = () => {
             preview.title = selectedHistoryIdea.title;
             preview.description = selectedHistoryIdea.description;
           }
+          completedPreviewEventIdRef.current = preview.eventId || selectedEventId;
           setCompletedEventPreview(preview);
           setCompletedEventError(null);
         } else {
+          completedPreviewEventIdRef.current = fallbackPreview.eventId || selectedEventId;
           setCompletedEventPreview(fallbackPreview);
           setCompletedEventError(null);
         }
       } catch (loadError) {
         console.error('Failed to load dating idea event preview:', loadError);
         if (!cancelled) {
+          completedPreviewEventIdRef.current = fallbackPreview.eventId || selectedEventId;
           setCompletedEventPreview(fallbackPreview);
           setCompletedEventError(null);
         }
@@ -647,6 +672,7 @@ const DatingIdeasPage: React.FC = () => {
       };
 
       seededPreviewEventIdRef.current = String(eventId);
+      completedPreviewEventIdRef.current = String(eventId);
       selectHistoryIdea(completedIdea, { persist: true });
       setHistory((prev) =>
         prev.some((item) => item.id === completedIdea.id)
@@ -697,6 +723,7 @@ const DatingIdeasPage: React.FC = () => {
         readyPreview = toCompletedEventPreview(loadedEvent, String(eventId));
         if (!readyPreview.title) readyPreview.title = eventData.title;
         if (!readyPreview.description) readyPreview.description = eventData.description;
+        completedPreviewEventIdRef.current = String(eventId);
         setCompletedEventPreview(readyPreview);
       }
 
@@ -727,14 +754,16 @@ const DatingIdeasPage: React.FC = () => {
             ) || null;
         }
 
-        const resolvedIdea =
+        const serverConfirmed =
           matched?.status === 'completed' &&
-          matched.eventId &&
-          String(matched.eventId) === String(eventId)
-            ? matched
-            : completedIdea;
+          Boolean(matched.eventId) &&
+          String(matched.eventId) === String(eventId);
+        const resolvedIdea = serverConfirmed && matched ? matched : completedIdea;
 
-        selectHistoryIdea(resolvedIdea, { persist: true });
+        selectHistoryIdea(resolvedIdea, { persist: !serverConfirmed });
+        if (serverConfirmed) {
+          clearPendingCompletedIdea();
+        }
         setBalance(overview.balance ?? 0);
         setCost(overview.cost ?? cost);
         setHistory(
@@ -937,6 +966,7 @@ const DatingIdeasPage: React.FC = () => {
       {displayedIdea &&
         (phase === 'idea' || phase === 'flipping' || Boolean(selectedHistoryIdea)) && (
         <Box
+          key={displayedIdea.id}
           sx={{
             animation: `${cardReveal} 500ms ease both`,
           }}
