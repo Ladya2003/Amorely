@@ -108,7 +108,7 @@ export const EXTRA_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
     questions: [
       { id: 'wv1', type: 'choice', text: 'Идеальные выходные для тебя — это...', options: [{ id: 'active', label: 'Активность и приключения' }, { id: 'lazy', label: 'Лень и сериалы' }, { id: 'mix', label: 'Микс отдыха и дел' }] },
       { id: 'wv2', type: 'text', text: 'Какой последний выходной с тобой запомнился особенно?' },
-      { id: 'wv3', type: 'choice', text: 'Как ты относишься к планам на выходные?', options: [{ id: 'plan', label: 'Люблю заранее планировать' }, { id: 'spontaneous', label: 'Спontanно — как пойдёт' }, { id: 'flexible', label: 'Один день по плану, один — нет' }] },
+      { id: 'wv3', type: 'choice', text: 'Как ты относишься к планам на выходные?', options: [{ id: 'plan', label: 'Люблю заранее планировать' }, { id: 'spontaneous', label: 'Спонтанно — как пойдёт' }, { id: 'flexible', label: 'Один день по плану, один — нет' }] },
       { id: 'wv4', type: 'text', text: 'Что бы ты хотел(а) сделать в ближайшие выходные?' },
     ],
   },
@@ -184,7 +184,7 @@ export const EXTRA_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
     title: 'Большие мечты',
     questions: [
       { id: 'bd1', type: 'text', text: 'Какая мечта кажется безумной, но ты всё равно о ней думаешь?' },
-      { id: 'bd2', type: 'choice', text: 'Мечты для тебя — это...', options: [{ id: 'fuel', label: 'Топливо для жизни' }, { id: 'guide', label: 'Комpass к целям' }, { id: 'fun', label: 'Просто приятно фантазировать' }] },
+      { id: 'bd2', type: 'choice', text: 'Мечты для тебя — это...', options: [{ id: 'fuel', label: 'Топливо для жизни' }, { id: 'guide', label: 'Компас к целям' }, { id: 'fun', label: 'Просто приятно фантазировать' }] },
       { id: 'bd3', type: 'text', text: 'Какую мечту ты хочешь, чтобы мы осуществили в ближайшие 3 года?' },
       { id: 'bd4', type: 'choice', text: 'Если бы деньги не были проблемой, что бы мы сделали завтра?', options: [{ id: 'travel', label: 'Отправились в кругосветку' }, { id: 'home', label: 'Построили дом мечты' }, { id: 'help', label: 'Помогли близким и проектам' }] },
     ],
@@ -329,7 +329,7 @@ export const EXTRA_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
       { id: 'tw1', type: 'image', text: 'Какой транспорт для путешествия мечты?', images: [{ id: 'airplane_window', label: 'Самолёт — далеко и быстро', url: IMG.airplane_window }, { id: 'train_travel', label: 'Поезд — медленно и романтично', url: IMG.train_travel }] },
       { id: 'tw2', type: 'choice', text: 'В путешествии ты — это...', options: [{ id: 'planner', label: 'Планировщик маршрута' }, { id: 'explorer', label: 'Исследователь без карты' }, { id: 'follower', label: 'Следую за партнёром' }] },
       { id: 'tw3', type: 'text', text: 'Какое наше путешествие ты бы назвал(а) идеальным?' },
-      { id: 'tw4', type: 'choice', text: 'Сouvenir из поездки — это...', options: [{ id: 'thing', label: 'Предмет на память' }, { id: 'photo', label: 'Фото и впечатления' }, { id: 'tradition', label: 'Новая традиция' }] },
+      { id: 'tw4', type: 'choice', text: 'Сувенир из поездки — это...', options: [{ id: 'thing', label: 'Предмет на память' }, { id: 'photo', label: 'Фото и впечатления' }, { id: 'tradition', label: 'Новая традиция' }] },
     ],
   },
   {
@@ -777,7 +777,7 @@ export const EXTRA_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
     emoji: '🖼️',
     title: 'Стена воспоминаний',
     questions: [
-      { id: 'pw1', type: 'image', text: 'Как хранить воспоминания?', images: [{ id: 'polaroid_wall', label: 'Стена поларoidов', url: IMG.polaroid_wall }, { id: 'vintage_room', label: 'Винтажный уголок', url: IMG.vintage_room }] },
+      { id: 'pw1', type: 'image', text: 'Как хранить воспоминания?', images: [{ id: 'polaroid_wall', label: 'Стена полароидов', url: IMG.polaroid_wall }, { id: 'vintage_room', label: 'Винтажный уголок', url: IMG.vintage_room }] },
       { id: 'pw2', type: 'text', text: 'Какое фото с нами — твоё любимое?' },
       { id: 'pw3', type: 'choice', text: 'Печатать фото или хранить в телефоне?', options: [{ id: 'print', label: 'Печатать — хочу видеть' }, { id: 'digital', label: 'В телефоне достаточно' }, { id: 'both', label: 'И то, и другое' }] },
       { id: 'pw4', type: 'text', text: 'Какое воспоминание ты хотел(а) бы оформить в рамку?' },
@@ -823,7 +823,7 @@ export const EXTRA_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
     questions: [
       { id: 'su1', type: 'choice', text: 'Сюрпризы для тебя — это...', options: [{ id: 'love', label: 'Обожаю!' }, { id: 'mixed', label: 'Зависит — люблю приятные' }, { id: 'plan', label: 'Предпочитаю знать заранее' }] },
       { id: 'su2', type: 'text', text: 'Какой сюрприз от меня ты никогда не забудешь?' },
-      { id: 'su3', type: 'choice', text: 'Устраивать сюрпризы — это...', options: [{ id: 'fun', label: 'Весело — люблю готовить' }, { id: 'stress', label: 'Стress — боюсь не угадать' }, { id: 'rare', label: 'Редко, но от души' }] },
+      { id: 'su3', type: 'choice', text: 'Устраивать сюрпризы — это...', options: [{ id: 'fun', label: 'Весело — люблю готовить' }, { id: 'stress', label: 'Стресс — боюсь не угадать' }, { id: 'rare', label: 'Редко, но от души' }] },
       { id: 'su4', type: 'text', text: 'Какой сюрприз ты хотел(а) бы устроить мне?' },
     ],
   },
@@ -845,7 +845,7 @@ export const EXTRA_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
     questions: [
       { id: 'mk1', type: 'image', text: 'Куда пойти в субботу?', images: [{ id: 'farmers_market', label: 'Фермерский рынок', url: IMG.farmers_market }, { id: 'vintage_room', label: 'Винтажная лавка', url: IMG.vintage_room }] },
       { id: 'mk2', type: 'text', text: 'Совместный поход за продуктами — свидание или рутина?' },
-      { id: 'mk3', type: 'choice', text: 'Рынок или супermarket — что ближе?', options: [{ id: 'market', label: 'Рынок — атмосфера' }, { id: 'super', label: 'Супermarket — быстро' }, { id: 'delivery', label: 'Доставка' }] },
+      { id: 'mk3', type: 'choice', text: 'Рынок или супермаркет — что ближе?', options: [{ id: 'market', label: 'Рынок — атмосфера' }, { id: 'super', label: 'Супермаркет — быстро' }, { id: 'delivery', label: 'Доставка' }] },
       { id: 'mk4', type: 'text', text: 'Что бы мы нашли на идеальном рынке?' },
     ],
   },
@@ -910,9 +910,9 @@ export const EXTRA_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
     title: 'Список приключений',
     questions: [
       { id: 'ab1', type: 'text', text: 'Какое приключение из «списка мечты» ты хочешь сделать первым?' },
-      { id: 'ab2', type: 'choice', text: 'Адrenaline vs спокойствие — что выбираешь?', options: [{ id: 'adrenaline', label: 'Adrenaline — прыжок, дайving' }, { id: 'calm', label: 'Спокойствие — трекking, кемпинг' }, { id: 'mix', label: 'Микс' }] },
+      { id: 'ab2', type: 'choice', text: 'Адреналин или спокойствие — что выбираешь?', options: [{ id: 'adrenaline', label: 'Адреналин — прыжок, дайвинг' }, { id: 'calm', label: 'Спокойствие — треккинг, кемпинг' }, { id: 'mix', label: 'Микс' }] },
       { id: 'ab3', type: 'text', text: 'Какое безумное приключение мы ещё не пробовали?' },
-      { id: 'ab4', type: 'choice', text: 'Bucket list для нас — это...', options: [{ id: 'have', label: 'Уже есть список!' }, { id: 'make', label: 'Пора составить' }, { id: 'spontaneous', label: 'Спontanно — без списков' }] },
+      { id: 'ab4', type: 'choice', text: 'Список желаний для нас — это...', options: [{ id: 'have', label: 'Уже есть список!' }, { id: 'make', label: 'Пора составить' }, { id: 'spontaneous', label: 'Спонтанно — без списков' }] },
     ],
   },
   {

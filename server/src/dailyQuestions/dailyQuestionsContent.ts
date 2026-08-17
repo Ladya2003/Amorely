@@ -146,7 +146,7 @@ const BASE_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
         type: 'choice',
         text: 'Сколько личного времени тебе нужно в отношениях?',
         options: [
-          { id: 'lot', label: 'Много — я introvert' },
+          { id: 'lot', label: 'Много — я интроверт' },
           { id: 'some', label: 'Немного каждый день' },
           { id: 'little', label: 'Мало — хочу быть вместе' },
         ],
@@ -303,7 +303,7 @@ const BASE_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
         text: 'Стиль путешествий — какой твой?',
         options: [
           { id: 'plan', label: 'Всё распланировано' },
-          { id: 'spontaneous', label: 'Спontanно и авантюрно' },
+          { id: 'spontaneous', label: 'Спонтанно и авантюрно' },
           { id: 'mix', label: 'Микс планов и импровизации' },
         ],
       },
@@ -388,7 +388,7 @@ const BASE_DAILY_QUESTION_CATEGORIES: DailyQuestionCategory[] = [
         text: 'Какую музыку ты включаешь для романтического настроения?',
         options: [
           { id: 'slow', label: 'Медленные баллады' },
-          { id: 'jazz', label: 'Джazz / лоу-фай' },
+          { id: 'jazz', label: 'Джаз / лоу-фай' },
           { id: 'fun', label: 'Весёлые хиты' },
         ],
       },

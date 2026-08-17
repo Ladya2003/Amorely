@@ -721,7 +721,7 @@ const CATEGORIES = [
           },
           {
             "id": "spontaneous",
-            "label": "Спontanно — как пойдёт",
+            "label": "Спонтанно — как пойдёт",
             "labelEn": "Spontaneous — see how it goes"
           },
           {
@@ -1160,7 +1160,7 @@ const CATEGORIES = [
           },
           {
             "id": "guide",
-            "label": "Комpass к целям",
+            "label": "Компас к целям",
             "labelEn": "A compass to goals"
           },
           {
@@ -2051,7 +2051,7 @@ const CATEGORIES = [
       {
         "id": "tw4",
         "type": "choice",
-        "text": "Сouvenir из поездки — это...",
+        "text": "Сувенир из поездки — это...",
         "textEn": "A souvenir from a trip is...",
         "options": [
           {
@@ -4767,7 +4767,7 @@ const CATEGORIES = [
           "vintage_room"
         ],
         "imageLabels": [
-          "Стена поларoidов",
+          "Стена полароидов",
           "Винтажный уголок"
         ],
         "imageLabelsEn": [
@@ -5053,7 +5053,7 @@ const CATEGORIES = [
           },
           {
             "id": "stress",
-            "label": "Стress — боюсь не угадать",
+            "label": "Стресс — боюсь не угадать",
             "labelEn": "Stressful — afraid to miss"
           },
           {
@@ -5165,7 +5165,7 @@ const CATEGORIES = [
       {
         "id": "mk3",
         "type": "choice",
-        "text": "Рынок или супermarket — что ближе?",
+        "text": "Рынок или супермаркет — что ближе?",
         "textEn": "Market or supermarket — what's closer?",
         "options": [
           {
@@ -5175,7 +5175,7 @@ const CATEGORIES = [
           },
           {
             "id": "super",
-            "label": "Супermarket — быстро",
+            "label": "Супермаркет — быстро",
             "labelEn": "Supermarket — quick"
           },
           {
@@ -5538,17 +5538,17 @@ const CATEGORIES = [
       {
         "id": "ab2",
         "type": "choice",
-        "text": "Адrenaline vs спокойствие — что выбираешь?",
+        "text": "Адреналин или спокойствие — что выбираешь?",
         "textEn": "Adrenaline vs calm — what do you pick?",
         "options": [
           {
             "id": "adrenaline",
-            "label": "Adrenaline — прыжок, дайving",
+            "label": "Адреналин — прыжок, дайвинг",
             "labelEn": "Adrenaline — jump, diving"
           },
           {
             "id": "calm",
-            "label": "Спокойствие — трекking, кемпинг",
+            "label": "Спокойствие — треккинг, кемпинг",
             "labelEn": "Calm — trekking, camping"
           },
           {
@@ -5567,7 +5567,7 @@ const CATEGORIES = [
       {
         "id": "ab4",
         "type": "choice",
-        "text": "Bucket list для нас — это...",
+        "text": "Список желаний для нас — это...",
         "textEn": "A bucket list for us is...",
         "options": [
           {
@@ -5582,7 +5582,7 @@ const CATEGORIES = [
           },
           {
             "id": "spontaneous",
-            "label": "Спontanно — без списков",
+            "label": "Спонтанно — без списков",
             "labelEn": "Spontaneous — no lists"
           }
         ]
