@@ -1364,7 +1364,7 @@
       "features": {
         "feed": {
           "title": "See each other — and your moments",
-          "body": "Avatars show how far you are, while the feed brings back shared photos and notes from everyday life.",
+          "body": "Avatars show how far you are, while the Feed shows shared photos and important events.",
           "imageAlt": "Amorely home screen with partner avatars, distance, and shared feed"
         },
         "questions": {
@@ -1384,12 +1384,12 @@
         },
         "daysTogether": {
           "title": "Count your days together",
-          "body": "Track how long you’ve been a couple, chase milestones, unlock achievements, and keep your story visible.",
+          "body": "Track how long you’ve been a couple, unlock achievements, share drawings, and keep your story visible.",
           "imageAlt": "Days together counter with milestone progress and achievements"
         },
         "chat": {
           "title": "Encrypted chat for two",
-          "body": "Send texts, photos, and little check-ins in a private chat — only the two of you can read it.",
+          "body": "Send texts, photos, and share events and plans in a private chat — only the two of you can read it.",
           "imageAlt": "Encrypted couple chat with photo and messages"
         },
         "guessLocation": {
@@ -1399,7 +1399,7 @@
         },
         "guessLocationResult": {
           "title": "Compare guesses, share the score",
-          "body": "See how close each of you got, add up the pair score, and climb today’s challenge together.",
+          "body": "See how close each of you got, add up the pair score, and climb the challenge together.",
           "imageAlt": "Guess the location results with both partners’ pins and scores"
         },
         "guessDrawing": {
