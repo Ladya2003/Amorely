@@ -6,6 +6,7 @@ import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlin
 import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined';
 import RevealOnScroll from './RevealOnScroll';
 import AuthLandingFaq from './AuthLandingFaq';
+import AuthLandingReviews from './AuthLandingReviews';
 import {
   getAuthLandingClosingLeadSx,
   getAuthLandingClosingSx,
@@ -64,6 +65,8 @@ const AuthLandingClosing: React.FC = () => {
           </Box>
         </RevealOnScroll>
       </Box>
+
+      <AuthLandingReviews />
 
       <AuthLandingFaq />
 

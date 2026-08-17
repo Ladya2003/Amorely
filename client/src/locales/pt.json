@@ -1461,6 +1461,38 @@
         "footerBrand": "Amorely",
         "footerNote": "Um espaço privado para casais — aproximar, jogar e lembrar."
       },
+      "reviews": {
+        "ariaLabel": "Avaliações de casais sobre o Amorely",
+        "title": "Avaliações",
+        "lead": "Casais sobre o chat, o calendário e os jogos no Amorely.",
+        "items": {
+          "anya": {
+            "name": "Anya",
+            "quote": "Estamos juntos há dois anos. Antes, a conversa desaparecia num messenger normal. No Amorely somos só nós dois. O calendário partilhado com fotos é o favorito. Abres um mês e vês logo como viveram.",
+            "imageAlt": "Foto da Anya"
+          },
+          "arseniy": {
+            "name": "Arseni",
+            "quote": "Pensei que seria mais uma app que íamos largar numa semana. Agora, todas as noites, são as perguntas do dia e o nosso jogo. Mesmo cansados, leva 10 minutos e fica mais quente.",
+            "imageAlt": "Foto do Arseni"
+          },
+          "tanya": {
+            "name": "Tanya",
+            "quote": "Para mim importa que o chat seja fechado. Não é para amigos, nem para stories. E é tudo grátis. Não esperávamos que no terceiro ecrã aparecesse uma subscrição.",
+            "imageAlt": "Foto da Tanya"
+          },
+          "lesha": {
+            "name": "Lesha",
+            "quote": "Vivemos na mesma cidade, mas quase não nos cruzamos por causa do trabalho. Aqui pomos fotos do dia, planos do fim de semana e às vezes só jogos. Como um caderno partilhado, só que bonito.",
+            "imageAlt": "Foto do Lesha"
+          },
+          "andrey": {
+            "name": "Andrei",
+            "quote": "Instala-se num minuto, embora não esteja na Play Store. Só isto: guardem já a frase secreta. Quase saltámos esse passo.",
+            "imageAlt": "Foto do Andrei"
+          }
+        }
+      },
       "faq": {
         "ariaLabel": "Perguntas frequentes",
         "title": "Perguntas frequentes",

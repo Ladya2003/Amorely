@@ -1445,6 +1445,38 @@
         "footerBrand": "Amorely",
         "footerNote": "A private space for couples to bond, play, and remember."
       },
+      "reviews": {
+        "ariaLabel": "Couple reviews of Amorely",
+        "title": "Reviews",
+        "lead": "What couples say about chat, calendar, and games in Amorely.",
+        "items": {
+          "anya": {
+            "name": "Anya",
+            "quote": "We've been together for two years. Before, our chats disappeared into a regular messenger. In Amorely it's just the two of us. The shared photo calendar is our favorite. Open a month and you instantly see how you've been living.",
+            "imageAlt": "Photo of Anya"
+          },
+          "arseniy": {
+            "name": "Arseniy",
+            "quote": "I thought it would be another app we'd drop in a week. Now every evening it's questions of the day and our own game. Even when we're both tired, it takes 10 minutes and things feel warmer.",
+            "imageAlt": "Photo of Arseniy"
+          },
+          "tanya": {
+            "name": "Tanya",
+            "quote": "What matters to me is that the chat is closed. Not for friends, not for stories. Plus it's all free. We weren't waiting for a subscription to pop up on the third screen.",
+            "imageAlt": "Photo of Tanya"
+          },
+          "lesha": {
+            "name": "Lesha",
+            "quote": "We live in the same city, but barely cross paths because of work. We drop daily photos, weekend plans, and sometimes just games. Like a shared notebook — only prettier.",
+            "imageAlt": "Photo of Lesha"
+          },
+          "andrey": {
+            "name": "Andrey",
+            "quote": "It installs in a minute, even though it's not from the Play Store. One thing: save your secret phrase right away. We almost skipped that step.",
+            "imageAlt": "Photo of Andrey"
+          }
+        }
+      },
       "faq": {
         "ariaLabel": "Frequently asked questions",
         "title": "Frequently asked questions",

@@ -1461,6 +1461,38 @@
         "footerBrand": "Amorely",
         "footerNote": "Ein privater Raum für Paare — zum Verbinden, Spielen und Erinnern."
       },
+      "reviews": {
+        "ariaLabel": "Stimmen von Paaren zu Amorely",
+        "title": "Stimmen",
+        "lead": "Paare über Chat, Kalender und Spiele in Amorely.",
+        "items": {
+          "anya": {
+            "name": "Anja",
+            "quote": "Wir sind seit zwei Jahren zusammen. Früher ist der Chat in einem normalen Messenger untergegangen. In Amorely sind nur wir zwei. Der gemeinsame Fotokalender ist unser Liebling. Du öffnest einen Monat und siehst sofort, wie ihr gelebt habt.",
+            "imageAlt": "Foto von Anja"
+          },
+          "arseniy": {
+            "name": "Arseni",
+            "quote": "Ich dachte, wieder eine App, die wir nach einer Woche liegen lassen. Jetzt sind es jeden Abend die Fragen des Tages und unser Spiel. Selbst wenn wir beide müde sind, dauert es 10 Minuten — und es wird wärmer.",
+            "imageAlt": "Foto von Arseni"
+          },
+          "tanya": {
+            "name": "Tanja",
+            "quote": "Mir ist wichtig, dass der Chat geschlossen ist. Nicht für Freunde, nicht für Stories. Plus: alles kostenlos. Wir haben nicht darauf gewartet, dass im dritten Screen ein Abo auftaucht.",
+            "imageAlt": "Foto von Tanja"
+          },
+          "lesha": {
+            "name": "Lescha",
+            "quote": "Wir wohnen in derselben Stadt, sehen uns aber wegen der Arbeit kaum. Hier landen Fotos vom Tag, Wochenendpläne und manchmal einfach Spiele. Wie ein gemeinsames Notizbuch — nur schöner.",
+            "imageAlt": "Foto von Lescha"
+          },
+          "andrey": {
+            "name": "Andrej",
+            "quote": "Ist in einer Minute eingerichtet, obwohl es nicht aus dem Play Store kommt. Nur eins: speichert sofort die geheime Passphrase. Das hätten wir fast übersprungen.",
+            "imageAlt": "Foto von Andrej"
+          }
+        }
+      },
       "faq": {
         "ariaLabel": "Häufige Fragen",
         "title": "Häufige Fragen",

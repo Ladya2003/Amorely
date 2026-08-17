@@ -334,6 +334,80 @@ export const getAuthLandingFreePointSx = () => ({
   gap: 1,
 });
 
+export const getAuthLandingReviewsSx = () => ({
+  maxWidth: 640,
+  mx: 'auto',
+  mt: { xs: 10, sm: 12 },
+});
+
+export const getAuthLandingReviewsTitleSx = () => ({
+  fontWeight: 700,
+  fontSize: { xs: '1.35rem', sm: '1.65rem' },
+  letterSpacing: '-0.03em',
+  lineHeight: 1.2,
+  textAlign: 'center' as const,
+  mb: 1.25,
+});
+
+export const getAuthLandingReviewsLeadSx = () => ({
+  fontSize: { xs: '0.9375rem', sm: '1rem' },
+  color: 'text.secondary',
+  lineHeight: 1.55,
+  textAlign: 'center' as const,
+  maxWidth: 480,
+  mx: 'auto',
+  mb: { xs: 2.5, sm: 3 },
+});
+
+export const getAuthLandingReviewsListSx = () => ({
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: { xs: 1.5, sm: 2 },
+});
+
+export const getAuthLandingReviewCardSx = (theme: Theme) => ({
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: 1.25,
+  px: { xs: 2, sm: 2.5 },
+  py: { xs: 2, sm: 2.25 },
+  borderRadius: `${SURFACE_BORDER_RADIUS}px`,
+  border: getSurfaceBorder(theme, 'soft'),
+  ...getPrimaryTintSurface(theme, {
+    tint: { light: 0.06, dark: 0.12 },
+  }),
+});
+
+export const getAuthLandingReviewHeaderSx = () => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 1.25,
+  minWidth: 0,
+});
+
+export const getAuthLandingReviewAvatarSx = () => ({
+  width: { xs: 52, sm: 56 },
+  height: { xs: 52, sm: 56 },
+  borderRadius: '50%',
+  objectFit: 'cover' as const,
+  flexShrink: 0,
+});
+
+export const getAuthLandingReviewNameSx = () => ({
+  fontWeight: 600,
+  fontSize: '0.9375rem',
+  letterSpacing: '-0.01em',
+  lineHeight: 1.3,
+  minWidth: 0,
+});
+
+export const getAuthLandingReviewQuoteSx = () => ({
+  m: 0,
+  fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+  color: 'text.secondary',
+  lineHeight: 1.55,
+});
+
 export const getAuthLandingFaqSx = () => ({
   maxWidth: 640,
   mx: 'auto',

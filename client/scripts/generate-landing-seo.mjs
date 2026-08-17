@@ -34,6 +34,7 @@ const FEATURE_IDS = [
 const VALUE_IDS = ['private', 'forTwo', 'anywhere'];
 const FREE_POINT_IDS = ['noPaywall', 'fullAccess', 'invitePartner'];
 const FAQ_IDS = ['free', 'private', 'partner', 'distance', 'features', 'devices'];
+const REVIEW_IDS = ['anya', 'arseniy', 'tanya', 'lesha', 'andrey'];
 
 const OG_LOCALES = {
   en: 'en_US',
@@ -65,7 +66,7 @@ const loadLandingByLocale = () => {
   const byLocale = {};
   for (const lang of LOCALES) {
     const landing = readLocaleJson(lang).auth?.landing;
-    if (!landing?.faq?.items || !landing?.free || !landing?.closing) {
+    if (!landing?.faq?.items || !landing?.free || !landing?.closing || !landing?.reviews?.items) {
       throw new Error(`Missing auth.landing SEO keys in ${lang}.json`);
     }
     byLocale[lang] = landing;
@@ -100,6 +101,18 @@ const renderLanguageBlock = (lang, landing) => {
                 <strong>${e(landing.closing.values[id].title)}</strong> —
                 ${e(landing.closing.values[id].body)}
               </li>`
+  ).join('\n');
+
+  const reviewItems = REVIEW_IDS.map(
+    (id) => `            <article itemscope itemtype="https://schema.org/Review">
+              <img src="${SITE_ORIGIN}/landing/reviews/${id}.jpg" alt="${e(landing.reviews.items[id].imageAlt)}" width="160" height="160" />
+              <h3 itemprop="author" itemscope itemtype="https://schema.org/Person"><span itemprop="name">${e(landing.reviews.items[id].name)}</span></h3>
+              <blockquote itemprop="reviewBody">${e(landing.reviews.items[id].quote)}</blockquote>
+              <div itemprop="itemReviewed" itemscope itemtype="https://schema.org/WebApplication">
+                <meta itemprop="name" content="Amorely" />
+                <link itemprop="url" href="${SITE_ORIGIN}/" />
+              </div>
+            </article>`
   ).join('\n');
 
   const faqItems = FAQ_IDS.map(
@@ -142,6 +155,12 @@ ${freePoints}
             <ul>
 ${valueItems}
             </ul>
+          </section>
+
+          <section aria-label="${e(landing.reviews.ariaLabel)}">
+            <h2>${e(landing.reviews.title)}</h2>
+            <p>${e(landing.reviews.lead)}</p>
+${reviewItems}
           </section>
 
           <section aria-label="${e(landing.faq.ariaLabel)}" itemscope itemtype="https://schema.org/FAQPage">
@@ -222,6 +241,31 @@ const buildLocaleJsonLd = (lang, landing, byLocale, pageUrl = `${SITE_ORIGIN}/${
       name: 'Amorely',
       url: SITE_ORIGIN + '/',
     },
+  });
+
+  scripts.push({
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: landing.reviews.title,
+    inLanguage: lang,
+    itemListElement: REVIEW_IDS.map((id, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Review',
+        author: {
+          '@type': 'Person',
+          name: landing.reviews.items[id].name,
+        },
+        reviewBody: landing.reviews.items[id].quote,
+        image: `${SITE_ORIGIN}/landing/reviews/${id}.jpg`,
+        itemReviewed: {
+          '@type': 'WebApplication',
+          name: 'Amorely',
+          url: pageUrl,
+        },
+      },
+    })),
   });
 
   scripts.push({
