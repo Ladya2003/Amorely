@@ -13,7 +13,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -33,11 +32,14 @@ import {
   getGamePlayHeaderSx,
   getGamePlayHeaderSubtitleSx,
   getGamePlayHeaderTitleSx,
-  getGamePlayHintCardSx,
   getGamePlayLoadingWrapSx,
   getGamePlayOverlaySx,
   getGamePlayPrimaryButtonSx,
+  getGamePlayCenteredBodySx,
   getGamePlayQuizCellButtonSx,
+  getGamePlayQuizQuestionBodySx,
+  getGamePlayQuizOptionButtonSx,
+  type QuizOptionVisualState,
   getGamePlayReadyDotSx,
   getGamePlayReadyLabelSx,
   getGamePlayRootSx,
@@ -73,13 +75,26 @@ import { ArrowBackIcon } from '../components/UI/icons';
 
 const QUIZ_GAME_INFO_PATH = '/chat/games/quiz';
 const POINT_TIERS = [100, 200, 300];
-const LOVE_LANGUAGE_HINT_KEYS = [
-  'affirmation',
-  'qualityTime',
-  'gifts',
-  'service',
-  'touch',
-] as const;
+const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const;
+
+const getQuizOptionVisualState = (
+  optionId: string,
+  isRevealed: boolean,
+  myOptionId: string | null,
+  correctOptionId?: string
+): QuizOptionVisualState => {
+  if (isRevealed) {
+    if (optionId === correctOptionId) {
+      return 'correct';
+    }
+    if (myOptionId === optionId) {
+      return 'wrong';
+    }
+    return 'dimmed';
+  }
+
+  return myOptionId === optionId ? 'selected' : 'idle';
+};
 
 const QuizGamePlayPage: React.FC = () => {
   const theme = useTheme();
@@ -89,7 +104,7 @@ const QuizGamePlayPage: React.FC = () => {
   const [state, setState] = useState<QuizGameState | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [answerInput, setAnswerInput] = useState('');
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [lobbySecondsLeft, setLobbySecondsLeft] = useState(0);
   const [questionSecondsLeft, setQuestionSecondsLeft] = useState(0);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
@@ -130,7 +145,7 @@ const QuizGamePlayPage: React.FC = () => {
 
     if (!question) {
       setQuestionSecondsLeft(0);
-      setAnswerInput('');
+      setSelectedOptionId(null);
       setLobbySecondsLeft(nextState.lobbySecondsRemaining);
       expireSyncRequestedRef.current = false;
       return;
@@ -140,7 +155,9 @@ const QuizGamePlayPage: React.FC = () => {
     setQuestionSecondsLeft(question.secondsRemaining);
 
     if (question.status === 'revealed') {
-      setAnswerInput('');
+      setSelectedOptionId(null);
+    } else {
+      setSelectedOptionId(question.myOptionId);
     }
   }, []);
 
@@ -324,23 +341,24 @@ const QuizGamePlayPage: React.FC = () => {
     }
   };
 
-  const handleSubmitAnswer = async () => {
-    if (!answerInput.trim()) {
+  const handleSelectOption = async (optionId: string) => {
+    if (selectedOptionId || state?.currentQuestion?.myAnswerSubmitted) {
       return;
     }
 
     unlockGameAudio();
+    setSelectedOptionId(optionId);
     setSubmitting(true);
     try {
       const socket = socketService.getSocket();
       if (socket?.connected) {
-        socket.emit('quiz_game_answer', { answer: answerInput.trim() });
+        socket.emit('quiz_game_answer', { optionId });
       } else {
-        const result = await postQuizAnswer(answerInput.trim());
+        const result = await postQuizAnswer(optionId);
         applyState(result.state);
       }
-      setAnswerInput('');
     } catch (error: any) {
+      setSelectedOptionId(state?.currentQuestion?.myOptionId ?? null);
       setToast({
         open: true,
         message: error?.response?.data?.error || t('games.common.errors.answerFailed'),
@@ -559,7 +577,13 @@ const QuizGamePlayPage: React.FC = () => {
     <GameFrame>
     <Box sx={getGamePlayRootSx()}>
       <Box
-        sx={question ? getGamePlayBoardHiddenSx() : undefined}
+        sx={{
+          ...(question ? getGamePlayBoardHiddenSx() : {}),
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
         aria-hidden={Boolean(question)}
       >
         <Box sx={getGamePlayHeaderSx(theme)}>
@@ -581,7 +605,8 @@ const QuizGamePlayPage: React.FC = () => {
           </Box>
         </Box>
 
-        <Box sx={{ ...getGamePlayContentSx(), p: 1 }}>
+        <Box sx={{ ...getGamePlayContentSx(), p: 1, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={getGamePlayCenteredBodySx(560)}>
           {!state.currentQuestion && (
             <Typography component="div" sx={getGamePlayTurnBannerSx(theme, state.isMyTurnToPick)}>
               {state.isMyTurnToPick
@@ -636,6 +661,7 @@ const QuizGamePlayPage: React.FC = () => {
             </TableBody>
           </Table>
           </Box>
+          </Box>
         </Box>
       </Box>
 
@@ -656,63 +682,54 @@ const QuizGamePlayPage: React.FC = () => {
           )}
 
           <Box sx={{ ...getGamePlayContentSx(), display: 'flex', flexDirection: 'column' }}>
+            <Box sx={getGamePlayQuizQuestionBodySx()}>
             <Typography variant="overline" color="primary.main">
               {question.categoryName} · {question.points}
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, flex: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
               {question.questionText}
             </Typography>
 
-            {question.showLoveLanguagesHint && (
-              <Box sx={getGamePlayHintCardSx(theme)}>
-                <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 0.75 }}>
-                  {t('games.quiz.play.loveLanguagesHint.title')}
-                </Typography>
-                <Stack spacing={0.25}>
-                  {LOVE_LANGUAGE_HINT_KEYS.map((key) => (
-                    <Typography key={key} variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
-                      {t(`games.quiz.play.loveLanguagesHint.${key}`)}
-                    </Typography>
-                  ))}
-                </Stack>
-              </Box>
-            )}
+            <Stack spacing={1.5} sx={{ mb: isRevealed ? 2 : 0 }}>
+              {(question.options || []).map((option, index) => {
+                const visualState = getQuizOptionVisualState(
+                  option.id,
+                  isRevealed,
+                  selectedOptionId ?? question.myOptionId,
+                  reveal?.correctOptionId
+                );
+                const letter = OPTION_LETTERS[index] ?? String(index + 1);
+
+                return (
+                  <Button
+                    key={option.id}
+                    variant="outlined"
+                    fullWidth
+                    disabled={
+                      isAnswering &&
+                      (Boolean(selectedOptionId) || question.myAnswerSubmitted || submitting)
+                    }
+                    onClick={() => {
+                      if (isAnswering) {
+                        void handleSelectOption(option.id);
+                      }
+                    }}
+                    sx={getGamePlayQuizOptionButtonSx(theme, visualState)}
+                  >
+                    {letter}. {option.text}
+                  </Button>
+                );
+              })}
+            </Stack>
 
             {isAnswering && (
-              <Stack spacing={1.5}>
-                <Typography variant="body2" color="text.secondary" align="center">
-                  {question.myAnswerSubmitted
-                    ? t('games.quiz.play.answerSentWaiting')
-                    : question.partnerAnswerSubmitted
-                      ? t('games.quiz.play.partnerAnsweredYourTurn')
-                      : t('games.quiz.play.oneAnswerUntilTimer')}
-                </Typography>
-                <TextField
-                  fullWidth
-                  placeholder={t('games.common.yourAnswer')}
-                  value={answerInput}
-                  onChange={(event) => setAnswerInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      handleSubmitAnswer();
-                    }
-                  }}
-                  disabled={question.myAnswerSubmitted || submitting}
-                  autoComplete="off"
-                />
-                <Button
-                  variant="contained"
-                  size="large"
-                  fullWidth
-                  sx={getGamePlayPrimaryButtonSx()}
-                  disabled={!answerInput.trim() || question.myAnswerSubmitted || submitting}
-                  onClick={handleSubmitAnswer}
-                >
-                  {question.myAnswerSubmitted
-                    ? t('games.quiz.play.answerSent')
-                    : t('games.common.send')}
-                </Button>
-              </Stack>
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1.5 }}>
+                {question.myAnswerSubmitted || selectedOptionId
+                  ? t('games.quiz.play.answerSentWaiting')
+                  : question.partnerAnswerSubmitted
+                    ? t('games.quiz.play.partnerAnsweredYourTurn')
+                    : t('games.quiz.play.oneAnswerUntilTimer')}
+              </Typography>
             )}
 
             {isRevealed && reveal && (
@@ -753,6 +770,7 @@ const QuizGamePlayPage: React.FC = () => {
                 </Button>
               </Stack>
             )}
+            </Box>
           </Box>
         </Box>
       )}

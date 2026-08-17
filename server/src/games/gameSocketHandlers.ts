@@ -677,7 +677,7 @@ export const attachGameSocketHandlers = (
     }
   );
 
-  socket.on('quiz_game_answer', async (payload: { answer?: string }) => {
+  socket.on('quiz_game_answer', async (payload: { optionId?: string; answer?: string }) => {
     try {
       const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
       if (!senderSocketData) {
@@ -688,7 +688,7 @@ export const attachGameSocketHandlers = (
       const state = await submitQuizAnswer(
         senderSocketData.userId,
         context,
-        String(payload?.answer ?? '')
+        String(payload?.optionId ?? payload?.answer ?? '')
       );
 
       await updateQuizGameBadges();

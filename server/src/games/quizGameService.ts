@@ -5,19 +5,23 @@ import QuizGameState from '../models/quizGameState';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
 import { getNextUtcMidnight, getUtcDayKey } from '../utils/dailyReset';
 import {
+  QUIZ_CONTENT_VERSION,
   QUIZ_LOBBY_COUNTDOWN_SEC,
   QUIZ_QUESTION_TIME_SEC,
   buildDailyBoard,
   getQuizCellKey,
   getQuizQuestionById,
-  isQuizQuestionAnswerCorrect,
+  getShuffledQuizOptionIds,
+  isQuizOptionCorrect,
+  isQuizOptionId,
+  type QuizOptionId,
 } from './quizGameConfig';
 import { awardGameDailyCompleteToParticipants, GAME_DAILY_COMPLETE_AMOUNTS } from './gameCurrencyAwards';
 import {
   getQuizCategoryName,
   getQuizCorrectAnswer,
+  getQuizOptionText,
   getQuizQuestionText,
-  shouldShowLoveLanguagesHint,
 } from '../i18n/quizI18n';
 import { AppLocale } from '../i18n/locales';
 import { getUserLocale } from '../utils/userLocale';
@@ -48,6 +52,7 @@ export interface QuizQuestionRevealPublic {
   points: number;
   questionText: string;
   correctAnswer: string;
+  correctOptionId: string;
   answers: QuizAnswerPublic[];
   pointsAwardedTotal: number;
   secondsRemaining: number;
@@ -83,9 +88,10 @@ export interface QuizGamePublicState {
     categoryName: string;
     points: number;
     questionText: string;
-    showLoveLanguagesHint: boolean;
+    options: Array<{ id: string; text: string }>;
     status: 'answering' | 'revealed';
     secondsRemaining: number;
+    myOptionId: string | null;
     myAnswerSubmitted: boolean;
     partnerAnswerSubmitted: boolean;
     reveal: QuizQuestionRevealPublic | null;
@@ -288,7 +294,7 @@ const resolveQuestionOnDocument = (state: any, participantIds: string[]) => {
   let pointsAwardedTotal = 0;
   round.answers = round.answers.map(
     (entry: { userId: mongoose.Types.ObjectId; text: string; isCorrect?: boolean; pointsEarned?: number }) => {
-      const isCorrect = entry.text ? isQuizQuestionAnswerCorrect(entry.text, configQuestion) : false;
+      const isCorrect = entry.text ? isQuizOptionCorrect(configQuestion, entry.text) : false;
       const pointsEarned = isCorrect ? round.points : 0;
       pointsAwardedTotal += pointsEarned;
       return {
@@ -436,6 +442,13 @@ export const formatQuizGameState = (
     const localizedQuestionText = configQuestion
       ? getQuizQuestionText(configQuestion, viewerLocale)
       : '';
+    const optionIds = ((state.currentQuestion.optionIds || []) as string[]).filter(isQuizOptionId);
+    const localizedOptions = configQuestion
+      ? optionIds.map((optionId: QuizOptionId) => ({
+          id: optionId,
+          text: getQuizOptionText(configQuestion, optionId, viewerLocale),
+        }))
+      : [];
 
     const myAnswer = state.currentQuestion.answers?.find(
       (entry: { userId: { toString(): string } }) => entry.userId.toString() === viewerUserId
@@ -454,6 +467,7 @@ export const formatQuizGameState = (
             correctAnswer: configQuestion
               ? getQuizCorrectAnswer(configQuestion, viewerLocale)
               : '',
+            correctOptionId: configQuestion?.correctId ?? '',
             answers: (state.currentQuestion.answers || []).map(
               (entry: {
                 userId: { toString(): string };
@@ -462,7 +476,10 @@ export const formatQuizGameState = (
                 pointsEarned: number;
               }) => ({
                 userId: entry.userId.toString(),
-                text: entry.text,
+                text:
+                  entry.text && configQuestion && isQuizOptionId(entry.text)
+                    ? getQuizOptionText(configQuestion, entry.text, viewerLocale)
+                    : '',
                 isCorrect: entry.isCorrect,
                 pointsEarned: entry.pointsEarned,
                 submitted: Boolean(entry.text),
@@ -479,12 +496,13 @@ export const formatQuizGameState = (
       categoryName,
       points: state.currentQuestion.points,
       questionText: localizedQuestionText,
-      showLoveLanguagesHint: configQuestion ? shouldShowLoveLanguagesHint(configQuestion) : false,
+      options: localizedOptions,
       status: state.currentQuestion.status,
       secondsRemaining:
         state.currentQuestion.status === 'answering'
           ? getSecondsRemaining(new Date(state.currentQuestion.deadlineAt))
           : 0,
+      myOptionId: myAnswer?.text || null,
       myAnswerSubmitted: Boolean(myAnswer?.text),
       partnerAnswerSubmitted: Boolean(partnerAnswer?.text),
       reveal,
@@ -525,6 +543,7 @@ export const getOrCreateQuizGameState = async (context: QuizGameContext) => {
     try {
       state = await QuizGameState.create({
         relationshipId,
+        contentVersion: QUIZ_CONTENT_VERSION,
         totalScore: 0,
         boardDayKey: null,
         boardCells: [],
@@ -547,6 +566,28 @@ export const getOrCreateQuizGameState = async (context: QuizGameContext) => {
 
   if (!state) {
     throw new QuizGameError('STATE_NOT_FOUND', 'Состояние игры не найдено');
+  }
+
+  if (state.contentVersion !== QUIZ_CONTENT_VERSION) {
+    state.contentVersion = QUIZ_CONTENT_VERSION;
+    state.boardDayKey = null;
+    state.boardCells = [];
+    state.usedCellKeys = [];
+    state.seenQuestionIds = [];
+    state.readyUserIds = [];
+    state.lobbyCountdownEndsAt = null;
+    state.sessionActive = false;
+    state.pickerUserId = null;
+    state.currentQuestion = null;
+    await state.save();
+  } else if (
+    state.currentQuestion &&
+    (!Array.isArray(state.currentQuestion.optionIds) ||
+      state.currentQuestion.optionIds.length === 0 ||
+      !getQuizQuestionById(state.currentQuestion.questionId))
+  ) {
+    state.currentQuestion = null;
+    await state.save();
   }
 
   await expireQuizQuestionIfNeeded(state, context);
@@ -656,6 +697,10 @@ export const pickQuizQuestion = async (
 
   const startedAt = new Date();
   const deadlineAt = new Date(startedAt.getTime() + QUIZ_QUESTION_TIME_SEC * 1000);
+  const optionIds = getShuffledQuizOptionIds(
+    configQuestion,
+    `options:${context.relationship._id}:${cell.questionId}`
+  );
 
   const updated = await QuizGameState.findOneAndUpdate(
     {
@@ -672,6 +717,7 @@ export const pickQuizQuestion = async (
           categoryId,
           points,
           questionId: cell.questionId,
+          optionIds,
           startedAt,
           deadlineAt,
           status: 'answering',
@@ -692,8 +738,8 @@ export const pickQuizQuestion = async (
 
 export const submitQuizAnswer = async (userId: string, context: QuizGameContext, answerText: string) => {
   const trimmed = answerText.trim();
-  if (!trimmed) {
-    throw new QuizGameError('EMPTY_ANSWER', 'Введите ответ');
+  if (!isQuizOptionId(trimmed)) {
+    throw new QuizGameError('EMPTY_ANSWER', 'Выберите один из вариантов');
   }
 
   let state = await QuizGameState.findOne({ relationshipId: context.relationship._id });
@@ -725,7 +771,12 @@ export const submitQuizAnswer = async (userId: string, context: QuizGameContext,
     throw new QuizGameError('QUESTION_NOT_FOUND', 'Вопрос не найден');
   }
 
-  const isCorrect = isQuizQuestionAnswerCorrect(trimmed, configQuestion);
+  const optionIds = state.currentQuestion.optionIds || [];
+  if (!optionIds.includes(trimmed)) {
+    throw new QuizGameError('EMPTY_ANSWER', 'Выберите один из вариантов');
+  }
+
+  const isCorrect = isQuizOptionCorrect(configQuestion, trimmed);
   const pointsEarned = isCorrect ? state.currentQuestion.points : 0;
 
   state.currentQuestion.answers.push({

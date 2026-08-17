@@ -12,6 +12,7 @@ export interface QuizCurrentQuestion {
   categoryId: string;
   points: number;
   questionId: string;
+  optionIds: string[];
   startedAt: Date;
   deadlineAt: Date;
   status: 'answering' | 'revealed';
@@ -30,6 +31,7 @@ export interface QuizBoardCell {
 
 export interface QuizGameStateDocument extends Document {
   relationshipId: mongoose.Types.ObjectId;
+  contentVersion: number;
   totalScore: number;
   boardDayKey: string | null;
   boardCells: QuizBoardCell[];
@@ -62,6 +64,7 @@ const quizCurrentQuestionSchema = new mongoose.Schema(
     categoryId: { type: String, required: true },
     points: { type: Number, required: true },
     questionId: { type: String, required: true },
+    optionIds: { type: [String], default: [] },
     startedAt: { type: Date, required: true },
     deadlineAt: { type: Date, required: true },
     status: { type: String, enum: ['answering', 'revealed'], default: 'answering' },
@@ -91,6 +94,7 @@ const quizGameStateSchema = new mongoose.Schema({
     unique: true,
     index: true,
   },
+  contentVersion: { type: Number, default: 0 },
   totalScore: { type: Number, default: 0, index: true },
   boardDayKey: { type: String, default: null },
   boardCells: { type: [quizBoardCellSchema], default: [] },

@@ -414,6 +414,7 @@ export interface QuizQuestionReveal {
   points: number;
   questionText: string;
   correctAnswer: string;
+  correctOptionId: string;
   answers: QuizAnswerResult[];
   pointsAwardedTotal: number;
   secondsRemaining: number;
@@ -449,9 +450,10 @@ export interface QuizGameState {
     categoryName: string;
     points: number;
     questionText: string;
-    showLoveLanguagesHint?: boolean;
+    options: Array<{ id: string; text: string }>;
     status: 'answering' | 'revealed';
     secondsRemaining: number;
+    myOptionId: string | null;
     myAnswerSubmitted: boolean;
     partnerAnswerSubmitted: boolean;
     reveal: QuizQuestionReveal | null;
@@ -483,10 +485,10 @@ export const postQuizPick = async (categoryId: string, points: number) => {
   return response.data as { state: QuizGameState };
 };
 
-export const postQuizAnswer = async (answer: string) => {
+export const postQuizAnswer = async (optionId: string) => {
   const response = await axios.post(
     `${API_URL}/api/games/quiz/answer`,
-    { answer },
+    { optionId },
     { headers: authHeaders() }
   );
   return response.data as { state: QuizGameState };

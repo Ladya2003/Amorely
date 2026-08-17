@@ -109,7 +109,11 @@ const categoryEn: Record<string, string> = {
   tech: 'Technology & Internet',
   sport: 'Sports',
   art: 'Art & Literature',
-  home: 'Home & Daily Life',
+  history: 'History',
+  mythology: 'Mythology',
+  animals: 'Animals',
+  series: 'TV Series',
+  videoGames: 'Video Games',
 };
 
 const outDir = path.join(__dirname, '../src/i18n/generated');

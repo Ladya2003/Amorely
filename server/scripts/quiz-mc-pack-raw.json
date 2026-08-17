@@ -1,0 +1,2662 @@
+{
+  "cinema": [
+    {
+      "categoryId": "cinema",
+      "text": "Which actor has starred in both The King's Speech and The English Patient?",
+      "correct": "Colin Firth",
+      "incorrect": [
+        "Sean Penn",
+        "Billy Bob Thornton",
+        "Jean-Claude Van Damme"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which actor played Det. Terry Hoitz in the film \"The Other Guys\"?",
+      "correct": "Mark Wahlberg",
+      "incorrect": [
+        "Colin Farrel",
+        "Matt Damon",
+        "Leonardo DiCaprio"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Who won the 2020 Academy Award for Best Leading Actor for playing the role of Anthony in The Father?",
+      "correct": "Anthony Hopkins",
+      "incorrect": [
+        "Riz Ahmed",
+        "Chadwick Boseman",
+        "Gary Oldman"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which 2010 Coen Brothers Western stars Hailee Steinfeld as young Mattie, who tracks down Josh Brolin's character?",
+      "correct": "True Grit",
+      "incorrect": [
+        "No Country for Old Men",
+        "The Hateful Eight",
+        "The Ballad of Buster Scruggs"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "In the 1967 animated film 'The Jungle Book', what is the name of the tiger character?",
+      "correct": "Shere Khan",
+      "incorrect": [
+        "Baloo",
+        "Bagheera",
+        "King Louie"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which actress has featured in films including Avatar and Alien?",
+      "correct": "Sigourney Weaver",
+      "incorrect": [
+        "Natalie Portman",
+        "Kate Winslet",
+        "Helen Mirren"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which actor played the role of Hannibal Lecter in The Silence of the Lambs?",
+      "correct": "Anthony Hopkins",
+      "incorrect": [
+        "Michael Douglas",
+        "Bill Murray",
+        "John Belushi"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which actor has played roles such as Willy Wonka and Gilbert Grape?",
+      "correct": "Johnny Depp",
+      "incorrect": [
+        "Robert Downey Jr.",
+        "Keanu Reeves",
+        "Brad Pitt"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Who won the 1995 Academy Award for Best Leading Actress for playing the role of Sister Helen Prejean in Dead Man Walking?",
+      "correct": "Susan Sarandon",
+      "incorrect": [
+        "Elisabeth Shue",
+        "Sharon Stone",
+        "Meryl Streep"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "In what recent film does Paul Rudd enlist the aid of his insect allies to defeat the villainous Yellow Jacket?",
+      "correct": "Ant-Man",
+      "incorrect": [
+        "Spider-Man",
+        "Iron Man",
+        "Batman"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which actor played the role of The Terminator in The Terminator?",
+      "correct": "Arnold Schwarzenegger",
+      "incorrect": [
+        "Michael Douglas",
+        "Dustin Hoffman",
+        "Andy Serkis"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Who won the 2019 Academy Award for Best Supporting Actor for playing the role of Cliff Booth in Once upon a Time...in Hollywood?",
+      "correct": "Brad Pitt",
+      "incorrect": [
+        "Tom Hanks",
+        "Anthony Hopkins",
+        "Al Pacino"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which actor played the role of Tom Powers in The Public Enemy?",
+      "correct": "James Cagney",
+      "incorrect": [
+        "Robert Mitchum",
+        "Bruce Willis",
+        "Mel Gibson"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which film contains the character 'The Dude'?",
+      "correct": "The Big Lebowski",
+      "incorrect": [
+        "Caddyshack",
+        "Broadcast News",
+        "Fast Times at Ridgemont High"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "In which year was Schindler's List first released in the cinema?",
+      "correct": "1993",
+      "incorrect": [
+        "1989",
+        "1997",
+        "2001"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "In the film 'Million Dollar Baby', what sport does the protagonist pursue?",
+      "correct": "Boxing",
+      "incorrect": [
+        "Golf",
+        "Tennis",
+        "Soccer"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which song from \"The Lego Movie\" received an Oscar nomination?",
+      "correct": "Everything Is Awesome",
+      "incorrect": [
+        "Little Red Bricks",
+        "Build Something Great",
+        "The Power of Imagination"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Jaws was released in which year?",
+      "correct": "1975",
+      "incorrect": [
+        "1965",
+        "1970",
+        "1980"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which actor has featured in films including Pulp Fiction and Sin City?",
+      "correct": "Bruce Willis",
+      "incorrect": [
+        "Robert De Niro",
+        "Samuel L. Jackson",
+        "Liam Neeson"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which of these quotes is from the film 'National Lampoon's Animal House'?",
+      "correct": "\"Toga! Toga!\"",
+      "incorrect": [
+        "\"With great power comes great responsiblity.\"",
+        "\"Frankly, my dear, I don't give a damn.\"",
+        "\"Soylent Green is people!\""
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which film won the Academy Award for Best Picture in 1952?",
+      "correct": "The Greatest Show on Earth",
+      "incorrect": [
+        "High Noon",
+        "Ivanhoe",
+        "Moulin Rouge"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Who played the role of James Bond in GoldenEye?",
+      "correct": "Pierce Brosnan",
+      "incorrect": [
+        "Roger Moore",
+        "Sean Connery",
+        "Daniel Craig"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "The role of Vision in the Marvel Cinematic Universe is played by which actor?",
+      "correct": "Paul Bettany",
+      "incorrect": [
+        "Robert Downey Jr.",
+        "Mark Ruffalo",
+        "Benicio Del Toro"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "cinema",
+      "text": "Which of these quotes is from the film 'Dog Day Afternoon'?",
+      "correct": "\"Attica! Attica!\"",
+      "incorrect": [
+        "\"Why don't you come up sometime and see me?\"",
+        "\"Well, here's another nice mess you've gotten me into!\"",
+        "\"Well, I don’t want to survive. I want to live.\""
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "travel": [
+    {
+      "categoryId": "travel",
+      "text": "Which country are the Galapagos Islands part of?",
+      "correct": "Ecuador",
+      "incorrect": [
+        "Indonesia",
+        "Japan",
+        "Chile"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which Canadian city is nicknamed 'Oil City'?",
+      "correct": "Edmonton",
+      "incorrect": [
+        "Calgary",
+        "Toronto",
+        "Vancouver"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which Borough of New York is northeast of and adjacent to Manhattan?",
+      "correct": "The Bronx",
+      "incorrect": [
+        "Brooklyn",
+        "Staten Island",
+        "The Jersey Shore"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "What is the capital city of Uganda?",
+      "correct": "Kampala",
+      "incorrect": [
+        "Nuku'alofa",
+        "Yamoussoukro",
+        "Lilongwe"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which Central American country extends furthest North?",
+      "correct": "Belize",
+      "incorrect": [
+        "Guatemala",
+        "Honduras",
+        "El Salvador"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "What is the capital city of Tunisia?",
+      "correct": "Tunis",
+      "incorrect": [
+        "Ankara",
+        "Algiers",
+        "Dakar"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which country is home to the cities of Taranto, Anzio, and Padua?",
+      "correct": "Italy",
+      "incorrect": [
+        "Spain",
+        "Portugal",
+        "Greece"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which US state is known by the nicknames \"The Sagebrush State\" and \"The Silver State\"?",
+      "correct": "Nevada",
+      "incorrect": [
+        "Arizona",
+        "Colorado",
+        "Utah"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "What is the other name for the Côte d'Azur in France?",
+      "correct": "The Riviera",
+      "incorrect": [
+        "The Alps",
+        "The Mediterranean",
+        "Champagne"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which of these cities is in Portugal?",
+      "correct": "Guimaraes",
+      "incorrect": [
+        "The Hague",
+        "Budapest",
+        "Milan"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "The country of Kiribati is on which continent?",
+      "correct": "Oceania",
+      "incorrect": [
+        "South America",
+        "Europe",
+        "Asia"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which of these cities is in Romania?",
+      "correct": "Timisoara",
+      "incorrect": [
+        "Paris",
+        "Amsterdam",
+        "Prague"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "In which country is the city of Jeddah?",
+      "correct": "Saudi Arabia",
+      "incorrect": [
+        "Qatar",
+        "Turkey",
+        "Jordan"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which of these colors would you find on the flag of Luxembourg?",
+      "correct": "Red",
+      "incorrect": [
+        "Black",
+        "Yellow",
+        "Orange"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Quito is the capital city of which country?",
+      "correct": "Ecuador",
+      "incorrect": [
+        "Bahamas",
+        "Mauritius",
+        "Albania"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which is the only landlocked country in South East Asia?",
+      "correct": "Laos",
+      "incorrect": [
+        "Cambodia",
+        "Thailand",
+        "Vietnam"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "In which country would you find the Dolomites?",
+      "correct": "Italy",
+      "incorrect": [
+        "China",
+        "Belgium",
+        "Argentina"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "What is the world's widest river?",
+      "correct": "The Amazon",
+      "incorrect": [
+        "The Ganges",
+        "The Loire",
+        "The Mekong"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which European city is nicknamed the city of a hundred spires?",
+      "correct": "Prague",
+      "incorrect": [
+        "Vienna",
+        "Oxford",
+        "Budapest"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which region of the world uses '.zw' at the end of its web addresses?",
+      "correct": "Zimbabwe",
+      "incorrect": [
+        "Zambia",
+        "The Netherlands",
+        "Western Sahara"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which of these countries borders Bangladesh?",
+      "correct": "India",
+      "incorrect": [
+        "Bhutan",
+        "Nepal",
+        "Thailand"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "In which Canadian province is Halifax?",
+      "correct": "Nova Scotia",
+      "incorrect": [
+        "Prince Edward Island",
+        "New Brunswick",
+        "Quebec"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "Which of these cities is in Australia?",
+      "correct": "Melbourne",
+      "incorrect": [
+        "Queenstown",
+        "Auckland",
+        "Wellington"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "travel",
+      "text": "What is the basic unit of currency for Georgia (country)?",
+      "correct": "Lari",
+      "incorrect": [
+        "Dinar",
+        "Dollar",
+        "Terpo"
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "sport": [
+    {
+      "categoryId": "sport",
+      "text": "Baseball: The Baltimore ________.",
+      "correct": "Orioles",
+      "incorrect": [
+        "Ravens",
+        "Yankees",
+        "Jays"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which of these is a baseball team based in Cleveland?",
+      "correct": "Cleveland Indians",
+      "incorrect": [
+        "Cleveland Celtics",
+        "Cleveland Hornets",
+        "Cleveland Blackhawks"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which country won the 1994 FIFA World Cup, hosted in United States?",
+      "correct": "Brazil",
+      "incorrect": [
+        "France",
+        "Germany",
+        "Uruguay"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "How Many Lanes Does An Olympic Standard Swimming Pool Have?",
+      "correct": "Eight",
+      "incorrect": [
+        "Four",
+        "Twelve",
+        "Sixteen"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which of these is an American Football team based in San Francisco?",
+      "correct": "San Francisco 49ers",
+      "incorrect": [
+        "San Francisco Jaguars",
+        "San Francisco Pistons",
+        "San Francisco Predators"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "With which sport is Andy Murray associated?",
+      "correct": "Tennis",
+      "incorrect": [
+        "Badminton",
+        "Surfing",
+        "Motor racing"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which country won the 1950 FIFA World Cup, hosted in Brazil?",
+      "correct": "Uruguay",
+      "incorrect": [
+        "Brazil",
+        "West Germany",
+        "Argentina"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "What is the name of the poker hand that consists of three cards of one rank and two cards of another rank?",
+      "correct": "A full house",
+      "incorrect": [
+        "A flush",
+        "A straight",
+        "Three of a kind"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which of these is an American Football team based in Jacksonville?",
+      "correct": "Jacksonville Jaguars",
+      "incorrect": [
+        "Jacksonville Wizards",
+        "Jacksonville Seahawks",
+        "Jacksonville Nuggets"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "How Many Draughts Are On The Board At The Start Of A Game?",
+      "correct": "24",
+      "incorrect": [
+        "16",
+        "20",
+        "12"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "What event occurs in soccer when a defender commits a foul in their own penalty area?",
+      "correct": "A penalty kick",
+      "incorrect": [
+        "A free kick",
+        "An own goal",
+        "A red card"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which sport is played at The Super Bowl?",
+      "correct": "American Football",
+      "incorrect": [
+        "Horse Racing",
+        "Tennis",
+        "Cycling"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Who Was Beaten By Muhammad Ali In The Bout Entitled 'The Thriller In Manilla'?",
+      "correct": "Joe Frazier",
+      "incorrect": [
+        "Sugar Ray Robinson",
+        "George Foreman",
+        "Mike Tyson"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "With which sport is John McEnroe associated?",
+      "correct": "Tennis",
+      "incorrect": [
+        "Snooker",
+        "Hockey",
+        "Cycling"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "With which sport is Shane Warne associated?",
+      "correct": "Cricket",
+      "incorrect": [
+        "Volleyball",
+        "Badminton",
+        "Ice Hockey"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which NFL team, known for its fans' distinctive cheese wedge hats, is also nicknamed \"Cheeseheads\"?",
+      "correct": "The Green Bay Packers",
+      "incorrect": [
+        "The Dallas Cowboys",
+        "The Pittsburgh Steelers",
+        "The New England Patriots"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which country won the 1978 FIFA World Cup, hosted in Argentina?",
+      "correct": "Argentina",
+      "incorrect": [
+        "Brazil",
+        "England",
+        "West Germany"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which of these is a Motorsports competition?",
+      "correct": "The F1 Grand Prix",
+      "incorrect": [
+        "The FIFA World Cup",
+        "The Africa Cup of Nations",
+        "The Hopman Cup"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which sport is played by the Minnesota Twins?",
+      "correct": "Baseball",
+      "incorrect": [
+        "Basketball",
+        "Football",
+        "Ice Hockey"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "What word, derived from Latin, refers to a boxer or prizefighter?",
+      "correct": "Pugilist",
+      "incorrect": [
+        "Boxerite",
+        "Fightman",
+        "Brawler"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "Which legendary games designer/producer created the Super Mario Brothers franchise for Nintendo?",
+      "correct": "Shigeru Miyamoto",
+      "incorrect": [
+        "Yu Suzuki",
+        "Satoru Iwata",
+        "Gunpei Yokoi"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "In hockey, what is the penalty called that involves impeding the progress of an opponent with the stick?",
+      "correct": "Hooking",
+      "incorrect": [
+        "Swiping",
+        "Checking",
+        "Slashing"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "How many fighters are playable in 'Street Fighter II'?",
+      "correct": "8",
+      "incorrect": [
+        "5",
+        "14",
+        "20"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "sport",
+      "text": "With which sport is Tiger Woods associated?",
+      "correct": "Golf",
+      "incorrect": [
+        "Table tennis",
+        "Swimming",
+        "Rowing"
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "music": [
+    {
+      "categoryId": "music",
+      "text": "Who In The World Of Music Was Born With The Name \"Declan McManus\"?",
+      "correct": "Elvis Costello",
+      "incorrect": [
+        "Elton John",
+        "Bob Dylan",
+        "Bono"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which actor and musician, a member of OutKast, is known as André ____?",
+      "correct": "3000",
+      "incorrect": [
+        "2000",
+        "1000",
+        "4000"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which British rock band released the studio album 'Jazz'?",
+      "correct": "Queen",
+      "incorrect": [
+        "Level 42",
+        "Deep Purple",
+        "Feeder"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which British progressive rock band released the album 'In the Court of the Crimson King'?",
+      "correct": "King Crimson",
+      "incorrect": [
+        "Mogwai",
+        "Deep Purple",
+        "Sade"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Who had a one hit wonder with Stumblin' In?",
+      "correct": "Suzi Quatro",
+      "incorrect": [
+        "Billy Paul",
+        "David Naughton",
+        "Gary Glitter"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which Swedish pop group released the song 'Gimme! Gimme! Gimme! (A Man After Midnight)'?",
+      "correct": "ABBA",
+      "incorrect": [
+        "In Flames",
+        "HammerFall",
+        "Katatonia"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which musical term instructs a musician to play at a slow pace?",
+      "correct": "Adagio",
+      "incorrect": [
+        "Allegro",
+        "Presto",
+        "Vivace"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which American musician released the album 'Blonde on Blonde'?",
+      "correct": "Bob Dylan",
+      "incorrect": [
+        "Neil Young",
+        "Eric Clapton",
+        "Alanis Morissette"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which Motown singer did an album called \"Here, My Dear\" to pay for his divorce?",
+      "correct": "Marvin Gaye",
+      "incorrect": [
+        "Otis Redding",
+        "James Brown",
+        "Wilson Pickett"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which song begins with the lyrics: \"ALL ABOARD! (maniacal laughter)\"?",
+      "correct": "\"Crazy Train\" by Ozzy Osbourne",
+      "incorrect": [
+        "\"Bohemian Rhapsody\" by Queen",
+        "\"Immigrant Song\" by Led Zeppelin",
+        "\"Let's Go Crazy\" by Prince and The Revolution"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Who sang 'I Left My Heart In San Francisco'?",
+      "correct": "Tony Bennett",
+      "incorrect": [
+        "Dean Martin",
+        "Frank Sinatra",
+        "Nat King Cole"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which singer-songwriter's lyrics include 'People talking without speaking...people writing songs that voices never share'?",
+      "correct": "Paul Simon",
+      "incorrect": [
+        "Bob Dylan",
+        "Joni Mitchell",
+        "Leonard Cohen"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which English-American psychedelic rock band released the album 'Electric Ladyland'?",
+      "correct": "The Jimi Hendrix Experience",
+      "incorrect": [
+        "Poison",
+        "The Pussycat Dolls",
+        "Three 6 Mafia"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which heavy metal band from the United States released the studio album 'Iowa'?",
+      "correct": "Slipknot",
+      "incorrect": [
+        "MercyMe",
+        "Three 6 Mafia",
+        "The Velvet Underground"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which singer released the album 'Goodbye Yellow Brick Road'?",
+      "correct": "Elton John",
+      "incorrect": [
+        "Mika",
+        "Madonna",
+        "Eric Clapton"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which American rock band released the song 'Break On Through'?",
+      "correct": "The Doors",
+      "incorrect": [
+        "Styx",
+        "The Pussycat Dolls",
+        "Three 6 Mafia"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which British rock band released the album 'The Miracle'?",
+      "correct": "Queen",
+      "incorrect": [
+        "Level 42",
+        "Deep Purple",
+        "Feeder"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Who was the very first performer to be inducted into the Rock & Roll Hall of Fame in 1986?",
+      "correct": "Chuck Berry",
+      "incorrect": [
+        "Elvis Presley",
+        "Buddy Holly",
+        "Little Richard"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "What is the name for a musical piece composed for nine instruments?",
+      "correct": "Nonet",
+      "incorrect": [
+        "Norchestra",
+        "Ninstrumental",
+        "Novario"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which English rock band released the album 'Exile on Main St.'?",
+      "correct": "The Rolling Stones",
+      "incorrect": [
+        "McFly",
+        "Delirious?",
+        "Depeche Mode"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "What type of instrument is a clarinet?",
+      "correct": "Woodwind",
+      "incorrect": [
+        "Stringed",
+        "Brass",
+        "Percussion"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Who Released The 70's Album Entitled John Barleycorn Must Die?",
+      "correct": "Traffic",
+      "incorrect": [
+        "The Who",
+        "The Rolling Stones",
+        "The Moody Blues"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which American rock band released the song 'Wouldn't It Be Nice'?",
+      "correct": "The Beach Boys",
+      "incorrect": [
+        "The Velvet Underground",
+        "The Monkees",
+        "Fleetwood Mac"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "music",
+      "text": "Which English rock band released the song 'Creep'?",
+      "correct": "Radiohead",
+      "incorrect": [
+        "Goldfrapp",
+        "Cream",
+        "Girls Aloud"
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "food": [
+    {
+      "categoryId": "food",
+      "text": "In which country is pisco a popular drink?",
+      "correct": "Peru",
+      "incorrect": [
+        "Cambodia",
+        "Denmark",
+        "Finland"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What spirit is used in fortifying red wine to create port?",
+      "correct": "Aguardente",
+      "incorrect": [
+        "Grappa",
+        "Schnapps",
+        "Marc"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What type of milk is a basic ingredient of Thai cookery?",
+      "correct": "Coconut milk",
+      "incorrect": [
+        "Almond milk",
+        "Goat milk",
+        "Sheep milk"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which of these dishes would you most expect to find in Equatorial Guinea?",
+      "correct": "Succotash",
+      "incorrect": [
+        "Rösti",
+        "Plov",
+        "Pad Thai"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "From Which Birds Nest Is Birds Nest Soup Made?",
+      "correct": "Swift",
+      "incorrect": [
+        "Lark",
+        "Blackbird",
+        "Heron"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which of these dishes would you most expect to find in Russia?",
+      "correct": "Pelmeni",
+      "incorrect": [
+        "Larb",
+        "Biryani",
+        "Khachapuri"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What is the name of the Swedish specialty that consists of raw salmon cured in a salt-sugar-dill mixture?",
+      "correct": "Gravlax",
+      "incorrect": [
+        "Kroppkakor",
+        "Smorgasbord",
+        "Falukorv"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which famous French chef invented the Peach Melba in 1893?",
+      "correct": "Auguste Escoffier",
+      "incorrect": [
+        "Jacque Pépin",
+        "Raymond Oliver",
+        "Marie-Antoine Carême"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which type of seafood has varieties called Maine and spiny, and turns a vivid red only after it's been cooked?",
+      "correct": "Lobster",
+      "incorrect": [
+        "Crab",
+        "Shrimp",
+        "Clam"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What is the process of soaking and storing food in brine or vinegar?",
+      "correct": "Pickling",
+      "incorrect": [
+        "Chilling",
+        "Canning",
+        "Smoking"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "From which country Does Bull's Blood wine originate?",
+      "correct": "Hungary",
+      "incorrect": [
+        "India",
+        "Portugal",
+        "Turkey"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which two cheeses are layered in a Huntsman Cheese?",
+      "correct": "Double Gloucester & Stilton",
+      "incorrect": [
+        "Cheddar & Red Leicester",
+        "Brie & Wensleydale",
+        "Gorgonzola & Mozzarella"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "In cocktails, what does the word 'virgin' mean?",
+      "correct": "Non alcoholic",
+      "incorrect": [
+        "With ice",
+        "Strong",
+        "Served with a straw"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which type of cheese is used to make fondue?",
+      "correct": "Gruyère",
+      "incorrect": [
+        "Mozzarella",
+        "Feta",
+        "Gouda"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What does the HP stand for in HP sauce?",
+      "correct": "Houses Of Parliament",
+      "incorrect": [
+        "Healing Property",
+        "Hit Point",
+        "Heavy Produce"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which drink made of hot milk curdled with ale, wine, etc. and often flavoured with spices, was formerly used as a cold remedy?",
+      "correct": "Posset",
+      "incorrect": [
+        "Hot Toddie",
+        "Yarg",
+        "Bitter Buttie"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which type of restaurant popularized the use of conveyor belts?",
+      "correct": "Sushi",
+      "incorrect": [
+        "Dessert",
+        "Sandwich",
+        "Pizza"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Which of these dishes isn't Italian?",
+      "correct": "Sashimi",
+      "incorrect": [
+        "Risotto",
+        "Pizza",
+        "Lasagne"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What is the common name of the long, thin red chili pepper often ground into a powder and used in Cajun cuisine?",
+      "correct": "Cayenne",
+      "incorrect": [
+        "Jalapeno",
+        "Serrano",
+        "Habanero"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What is the term used for a trained wine professional?",
+      "correct": "Sommelier",
+      "incorrect": [
+        "Charnaud",
+        "Chimbaud",
+        "Caranee"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What type of pasta is pastina?",
+      "correct": "Soup pasta",
+      "incorrect": [
+        "Shaped pasta",
+        "Strand pasta",
+        "Ribbon pasta"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What drink is an almond liqueur that comes from the Italian word for 'bitter'?",
+      "correct": "Amaretto",
+      "incorrect": [
+        "Grappa",
+        "Limoncello",
+        "Schnapps"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "What type of whiskey is Old Rip Van Winkle, a brand made in Kentucky?",
+      "correct": "Bourbon",
+      "incorrect": [
+        "Scotch",
+        "Rye",
+        "Irish whiskey"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "food",
+      "text": "Where in the world are parsnips originally from?",
+      "correct": "Europe",
+      "incorrect": [
+        "Central America",
+        "China",
+        "Central Asia"
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "nature": [
+    {
+      "categoryId": "nature",
+      "text": "In which organ is your \"hypothalmus\" located?",
+      "correct": "Brain",
+      "incorrect": [
+        "Lungs",
+        "Heart",
+        "Liver"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What type of tree do both dates and coconuts come from?",
+      "correct": "Palm tree",
+      "incorrect": [
+        "Maple tree",
+        "Birch tree",
+        "Fir tree"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What is the word for a group of lions?",
+      "correct": "A pride",
+      "incorrect": [
+        "A muster",
+        "A clowder",
+        "A shrewdness"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What is the process by which both milk and blood can become semisolid?",
+      "correct": "Clotting",
+      "incorrect": [
+        "Pasteurization",
+        "Filtration",
+        "Distillation"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What is the heaviest element that can be formed by regular fusion reactions in the core of a star?",
+      "correct": "Iron",
+      "incorrect": [
+        "Copper",
+        "Gold",
+        "Nickel"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "In computing what do the initials JPEG stand for?",
+      "correct": "Joint Photographic Experts Group",
+      "incorrect": [
+        "Joyful Pictures Editable Graphics",
+        "Judged Process Edging Gaps",
+        "Jagged Point Enabled Graphs"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What is Petrology the study of?",
+      "correct": "rocks and the conditions by which they form",
+      "incorrect": [
+        "demons",
+        "medicine relating to women, or of women in general",
+        "prehistoric metaphytes"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "Which protocol is used to send and receive emails?",
+      "correct": "SMTP",
+      "incorrect": [
+        "FTP",
+        "HTTP",
+        "DNS"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "A male goat is known as what?",
+      "correct": "A Billy",
+      "incorrect": [
+        "A Macho",
+        "A Drone",
+        "A Ram"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "Phobos is a moon of which planet in our solar system?",
+      "correct": "Mars",
+      "incorrect": [
+        "Venus",
+        "Mercury",
+        "Jupiter"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "How many hearts do earthworms have?",
+      "correct": "5",
+      "incorrect": [
+        "1",
+        "0",
+        "3"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What is the word for a group of doves?",
+      "correct": "A flight",
+      "incorrect": [
+        "A run",
+        "A sounder",
+        "A muster"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "Who proposed The Theory of Relativity?",
+      "correct": "Albert Einstein",
+      "incorrect": [
+        "Stephen Hawking",
+        "Enrico Fermi",
+        "Paul Dirac"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What chemical element is brimstone synonymous with?",
+      "correct": "Sulfur",
+      "incorrect": [
+        "Hydrogen",
+        "Chlorine",
+        "Gold"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "Which fingerlike projection is attached to the large intestine?",
+      "correct": "Appendix",
+      "incorrect": [
+        "Bowel",
+        "Spleen",
+        "Pancreas"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "A female deer is known as what?",
+      "correct": "A Doe",
+      "incorrect": [
+        "A Pen",
+        "A Mare",
+        "A Nanny"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "How many vertebrae is the average human born with?",
+      "correct": "33",
+      "incorrect": [
+        "24",
+        "12",
+        "8"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What is Sitiology the study of?",
+      "correct": "dietetics",
+      "incorrect": [
+        "intonation in speech",
+        "in ethics, duty",
+        "fossils of ancient life"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What type of rock is formed by the compaction and cementation of particles and organic material?",
+      "correct": "Sedimentary Rocks",
+      "incorrect": [
+        "Igneous Rocks",
+        "Metamorphic Rocks",
+        "Fossils"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "From which plant is the poison ricin obtained?",
+      "correct": "The Castor Bean Plant",
+      "incorrect": [
+        "Lily of the Valley",
+        "Water Hemlock",
+        "Giant Hogweed"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "Which of the following is widely considered to be the largest dinosaur?",
+      "correct": "Argentinosaurus",
+      "incorrect": [
+        "Eodromaeus",
+        "Stegosaurus",
+        "Spinosaurus"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "Which astronomer had a metal nose?",
+      "correct": "Tycho Brahe",
+      "incorrect": [
+        "Johanes Kepler",
+        "Galileo Galilei",
+        "Nicolas Copernicus"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "What is the name of the largest asteroid in the Solar System?",
+      "correct": "Ceres",
+      "incorrect": [
+        "Vesta",
+        "Pallas",
+        "Hygiea"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "nature",
+      "text": "Which organ has a mitral valve and semilunar valves?",
+      "correct": "Heart",
+      "incorrect": [
+        "Liver",
+        "Lung",
+        "Stomach"
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "art": [
+    {
+      "categoryId": "art",
+      "text": "Which musical features the songs 'The People's Song' and 'Paris'?",
+      "correct": "Les Misérables",
+      "incorrect": [
+        "Phantom of the Opera",
+        "Cats",
+        "Hamilton"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'Finnegans Wake'?",
+      "correct": "James Joyce",
+      "incorrect": [
+        "Samuel Beckett",
+        "Oscar Wilde",
+        "Jonathan Swift"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'The Word for World Is Forest'?",
+      "correct": "Ursula K. Le Guin",
+      "incorrect": [
+        "Stephen King",
+        "Jack Vance",
+        "George R. R. Martin"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "In which book does 'Lydia Bennet' appear?",
+      "correct": "Pride and Prejudice",
+      "incorrect": [
+        "The Fault in Our Stars",
+        "Ship of Fools",
+        "War and Peace"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which architect designed The Whitehouse?",
+      "correct": "James Hoban",
+      "incorrect": [
+        "Frank Lloyd Wright",
+        "Christopher Wren",
+        "Otto Wagner"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which famous book contains the line \"Once upon a time there was a little chimney sweep and his name was Tom\"?",
+      "correct": "The Water Babies",
+      "incorrect": [
+        "Oliver Twist",
+        "The Little Prince",
+        "The Prince and the Pauper"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'Opticks, or a Treatise of the Reflections, Refractions, Inflections and Colours of Light'?",
+      "correct": "Isaac Newton",
+      "incorrect": [
+        "Daniel Defoe",
+        "Percy Bysshe Shelley",
+        "Walter Scott"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "What household objects did Sleeping Beauty's parents try to have burned?",
+      "correct": "Spinning wheels",
+      "incorrect": [
+        "Candles",
+        "Pillows",
+        "Dolls"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'Encyclopédie'?",
+      "correct": "Voltaire",
+      "incorrect": [
+        "Stendhal",
+        "Paulo Coelho",
+        "Isabel Allende"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'The Princess Diaries'?",
+      "correct": "Meg Cabot",
+      "incorrect": [
+        "Stephenie Meyer",
+        "Philip K. Dick",
+        "Brandon Sanderson"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which character's heart was described as being '2 sizes too small' and had reasons for his grumpiness?",
+      "correct": "The Grinch",
+      "incorrect": [
+        "Scrooge",
+        "Darth Vader",
+        "The Wicked Witch of the West"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'The Tales of Beedle the Bard'?",
+      "correct": "J. K. Rowling",
+      "incorrect": [
+        "Christopher Tolkien",
+        "Philip Pullman",
+        "C. S. Lewis"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'Prose Edda'?",
+      "correct": "Snorri Sturluson",
+      "incorrect": [
+        "Sebastian Brant",
+        "Agatha Christie",
+        "Rainer Maria Rilke"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Whose ghost appears at the dinner table in \"Macbeth\"?",
+      "correct": "Banquo",
+      "incorrect": [
+        "Lady Macbeth",
+        "Macduff",
+        "King Duncan"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'And Quiet Flows the Don'?",
+      "correct": "Mikhail Sholokhov",
+      "incorrect": [
+        "Ivan Turgenev",
+        "Henryk Sienkiewicz",
+        "Leo Tolstoy"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'Mary Stuart'?",
+      "correct": "Friedrich Schiller",
+      "incorrect": [
+        "Sebastian Brant",
+        "Agatha Christie",
+        "Rainer Maria Rilke"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which Dr. Seuss character heard a small noise in the Jungle of Nool?",
+      "correct": "Horton",
+      "incorrect": [
+        "The Cat in the Hat",
+        "The Grinch",
+        "Sam-I-Am"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "In which book does 'Thorin' appear?",
+      "correct": "The Hobbit",
+      "incorrect": [
+        "Alice's Adventures in Wonderland",
+        "Bluebeard",
+        "Jonathan Livingston Seagull"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'Heimskringla'?",
+      "correct": "Snorri Sturluson",
+      "incorrect": [
+        "Sebastian Brant",
+        "Agatha Christie",
+        "Rainer Maria Rilke"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'Novelas ejemplares ruth nailibeth'?",
+      "correct": "Miguel de Cervantes",
+      "incorrect": [
+        "Oscar Wilde",
+        "Victor Hugo",
+        "Alphonse Daudet"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'A Little Princess'?",
+      "correct": "Frances Hodgson Burnett",
+      "incorrect": [
+        "Robert Louis Stevenson",
+        "Arthur Conan Doyle",
+        "Joseph Conrad"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'A Sportsman's Sketches'?",
+      "correct": "Ivan Turgenev",
+      "incorrect": [
+        "Leo Tolstoy",
+        "Henryk Sienkiewicz",
+        "Alphonse Daudet"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which piece of written work starts with the line 'The sky above the port was the color of television, tuned to a dead channel.'?",
+      "correct": "Neuromancer",
+      "incorrect": [
+        "Altered Carbon",
+        "We",
+        "The Handmaid's Tale"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "art",
+      "text": "Which author wrote 'A Journey to the Center of the Earth'?",
+      "correct": "Jules Verne",
+      "incorrect": [
+        "Victor Hugo",
+        "Alphonse Daudet",
+        "Edgar Rice Burroughs"
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "general": [
+    {
+      "categoryId": "general",
+      "text": "After which famous person in history was the teddy bear named?",
+      "correct": "Theodore Roosevelt",
+      "incorrect": [
+        "Edward the Confessor",
+        "Edward Elgar",
+        "Ted Nugent"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What does the name Dracula mean in Romanian?",
+      "correct": "Son of the Dragon",
+      "incorrect": [
+        "The Beast",
+        "Blood Snatcher",
+        "Night Lord"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "In British English, what does a 'Biro' refer to?",
+      "correct": "A ballpoint pen",
+      "incorrect": [
+        "A typewriter",
+        "A book",
+        "A lamp"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "Which word is defined as 'having wooly or crispy hair'?",
+      "correct": "Ulotrichous",
+      "incorrect": [
+        "Conjubilant",
+        "Kakorrhaphiophobia",
+        "Sprunt"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What word precedes both 'Dane' and 'Depression'?",
+      "correct": "Great",
+      "incorrect": [
+        "Large",
+        "Grand",
+        "Happy"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "According to the Christmas song what did my true love give to me on the fifth day of Christmas?",
+      "correct": "Five Gold Rings",
+      "incorrect": [
+        "Five Lords a Leaping",
+        "Five Drummers Drumming",
+        "Five Calling Birds"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "In phonetics, the j in 'juice' is an example of what kind of sound?",
+      "correct": "affricative",
+      "incorrect": [
+        "nasal",
+        "plosive",
+        "approximant"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "In gaming, what is the meaning of the abbreviation RPG?",
+      "correct": "Role Playing Game",
+      "incorrect": [
+        "Real Professional Game",
+        "Remote Party Game",
+        "Random Progress Game"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What word is used in the NATO Phonetic Alphabet for the letter H?",
+      "correct": "Hotel",
+      "incorrect": [
+        "Heart",
+        "Honey",
+        "Hill"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "Which American Military Academy was established in 1802 on the Hudson river?",
+      "correct": "West Point",
+      "incorrect": [
+        "East Point",
+        "North Point",
+        "South Point"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What Does The XP In The Operating System 'Windows XP' Actually Stand For?",
+      "correct": "Experience",
+      "incorrect": [
+        "Expertise",
+        "Extra Power",
+        "Express"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "Where is Capitol Hill?",
+      "correct": "Washington DC",
+      "incorrect": [
+        "New York City",
+        "Brussels",
+        "Geneva"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "In the Christmas carol 'Away in a Manger', what was the little Lord Jesus asleep on?",
+      "correct": "The Hay",
+      "incorrect": [
+        "The Manger",
+        "A Donkey",
+        "The Stars"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "In phonetics, which of these is an example of a plosive sound?",
+      "correct": "The d in 'door'",
+      "incorrect": [
+        "The y in 'yellow'",
+        "The r in 'red'",
+        "The z in 'zoo'"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What word is used in the NATO Phonetic Alphabet for the letter C?",
+      "correct": "Charlie",
+      "incorrect": [
+        "Catalog",
+        "Criminal",
+        "Cart"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "Which word is defined as 'to look amorously after somebody'?",
+      "correct": "Smicker",
+      "incorrect": [
+        "Whiffler",
+        "Gardyloo",
+        "Widdershins"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "Which word is defined as 'to engage in cut-and-thrust fighting with knives'?",
+      "correct": "Snickersnee",
+      "incorrect": [
+        "Curmudgeon",
+        "Xertz",
+        "Cattywampus"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What was the name of the domestic videocassette tape recorder system introduced by Sony in 1975?",
+      "correct": "Betamax",
+      "incorrect": [
+        "VHS",
+        "SuperMotion",
+        "Videoman"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What term means to prudishly edit vulgar bits out of a written work, named after someone who did it to Shakespeare?",
+      "correct": "Bowdlerize",
+      "incorrect": [
+        "Censor",
+        "Redact",
+        "Amend"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "Which word is defined as 'adin a left-handed or contrary direction; counterclockwise'?",
+      "correct": "Widdershins",
+      "incorrect": [
+        "Borborygmus",
+        "Meldrop",
+        "Kakorrhaphiophobia"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "In the song \"The Twelve Days Of Christmas\", what did my true love give to me on the 12th day?",
+      "correct": "12 Drummers Drumming",
+      "incorrect": [
+        "12 Lords a Leaping",
+        "12 Maids a Milking",
+        "12 Swans a Swimming"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What is the name given to the art of miniaturising trees and maintaining their small size?",
+      "correct": "Bonsai",
+      "incorrect": [
+        "Ornamental Shrubbery",
+        "Decorage",
+        "Topiary"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What is the basic unit of currency for San Marino?",
+      "correct": "Euro",
+      "incorrect": [
+        "Peso",
+        "Lira",
+        "Dollar"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "general",
+      "text": "What type of comparison is the phrase 'He was like an eagle chained to the ground' an example of?",
+      "correct": "A simile",
+      "incorrect": [
+        "A metaphor",
+        "An analogy",
+        "A hyperbole"
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "history": [
+    {
+      "categoryId": "history",
+      "text": "In 1447, Johannes Gutenberg invented the printing press. What was the first book he produced?",
+      "correct": "The Bible",
+      "incorrect": [
+        "Don Quixote",
+        "The Magna Carta",
+        "Macbeth"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Which battle did Napoleon win that proved his military genius?",
+      "correct": "Battle of Austerlitz",
+      "incorrect": [
+        "Battle of Talavera",
+        "Battle of Waterloo",
+        "Battle of Trafalgar"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Who Said \"Will No-One Rid Me Of This Turbulent Priest\"?",
+      "correct": "Henry II",
+      "incorrect": [
+        "William I",
+        "Richard III",
+        "Henry VIII"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "What was the primary language of the Aztecs?",
+      "correct": "Nahuatl",
+      "incorrect": [
+        "Mayan",
+        "Mixtec",
+        "Otomi"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Who was the first king of Hungary?",
+      "correct": "St. Stephen",
+      "incorrect": [
+        "St. Marko",
+        "St. Cyril",
+        "St. Alexander"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "What Happened To Alaska In 1867?",
+      "correct": "It Was Sold To The United States",
+      "incorrect": [
+        "It had the most deadly volcanic eruption in history",
+        "The first recorded meteor impact",
+        "It declared independence"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Which country did China invade on Christmas day 1950",
+      "correct": "Tibet",
+      "incorrect": [
+        "Bhutan",
+        "Nepal",
+        "Mongolia"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Which of the following technologies was developed most recently?",
+      "correct": "Laser",
+      "incorrect": [
+        "Kodachrome",
+        "Television",
+        "Atomic Bomb"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Where was the Greek army of Leonides annihilated by Persians in 480BC?",
+      "correct": "Thermopylae",
+      "incorrect": [
+        "Marathon",
+        "Corinth",
+        "Troy"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Who was the second President of the USA?",
+      "correct": "John Adams",
+      "incorrect": [
+        "Abraham Lincoln",
+        "Thomas Jefferson",
+        "George Washington"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Alexander the Great was king of which kingdom?",
+      "correct": "Macedon",
+      "incorrect": [
+        "Thrace",
+        "Epirus",
+        "Mycenae"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Who Was President Of The USA In 1952?",
+      "correct": "Harry Truman",
+      "incorrect": [
+        "Lyndon Johnson",
+        "Dwight Eisenhower",
+        "Richard Nixon"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Which building in Berlin was burned down In 1933?",
+      "correct": "The Reichstag",
+      "incorrect": [
+        "The Brandenburg Gate",
+        "Charlottenburg Palace",
+        "The Berlin Wall"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "In What Year Did India Gain Independence From The United Kingdom?",
+      "correct": "1947",
+      "incorrect": [
+        "1953",
+        "1959",
+        "1941"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "When was the Greek alphabet first used?",
+      "correct": "800BC",
+      "incorrect": [
+        "2000BC",
+        "50BC",
+        "200AD"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Who was the first Norman King of England?",
+      "correct": "William",
+      "incorrect": [
+        "Robert",
+        "Harold",
+        "Alfred"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "How Long Was The American Civil War?",
+      "correct": "Four Years",
+      "incorrect": [
+        "One Year",
+        "Nine Years",
+        "Seven Years"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "In which battle was George A. Custer defeated?",
+      "correct": "Battle of Little Bighorn",
+      "incorrect": [
+        "Battle of Gettysburg",
+        "Battle of Cold Harbor",
+        "Battle of Stones River"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Which leader was known as 'The Father of Modern China'?",
+      "correct": "Mao Zedong",
+      "incorrect": [
+        "Sun Yat-sen",
+        "Deng Xiaoping",
+        "Chiang Kai-shek"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Germany's allies in WW II were Japan, Italy, Hungary, Bulgaria, Finland, Libya, and _________.",
+      "correct": "Romania",
+      "incorrect": [
+        "Poland",
+        "Bulgaria",
+        "Turkey"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Who was the great czar who led Russia to victory against Charles XII of Sweden in The Great Northern War of 1700-1721?",
+      "correct": "Peter The Great",
+      "incorrect": [
+        "Ivan The Terrible",
+        "Catherine The Great",
+        "Ivan The Great"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "What were the Ottoman Empire’s elite slave infantrymen called?",
+      "correct": "Janissaries",
+      "incorrect": [
+        "Samurai",
+        "Ghazis",
+        "Sipahis"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "On which continent was the historical country of Rhodesia?",
+      "correct": "Africa",
+      "incorrect": [
+        "Europe",
+        "Asia",
+        "South America"
+      ],
+      "source": "trivia-api"
+    },
+    {
+      "categoryId": "history",
+      "text": "Which wine god's orgiastic worship was suppressed by the Roman Senate in the 180s BC?",
+      "correct": "Bacchus",
+      "incorrect": [
+        "Apollo",
+        "Zeus",
+        "Hermes"
+      ],
+      "source": "trivia-api"
+    }
+  ],
+  "tech": [
+    {
+      "categoryId": "tech",
+      "text": "What is the name of Layer 7 of the OSI model?",
+      "correct": "Application",
+      "incorrect": [
+        "Session",
+        "Network",
+        "Present"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "America Online (AOL) started out as which of these online service providers?",
+      "correct": "Quantum Link",
+      "incorrect": [
+        "CompuServe",
+        "Prodigy",
+        "GEnie"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "On Twitter, what was the original character limit for a Tweet?",
+      "correct": "140",
+      "incorrect": [
+        "120",
+        "160",
+        "100"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "In the server hosting industry IaaS stands for...",
+      "correct": "Infrastructure as a Service",
+      "incorrect": [
+        "Internet as a Service",
+        "Internet and a Server",
+        "Infrastructure as a Server"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What is the most preferred image format used for logos in the Wikimedia database?",
+      "correct": ".svg",
+      "incorrect": [
+        ".png",
+        ".jpeg",
+        ".gif"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What language does Node.js use?",
+      "correct": "JavaScript",
+      "incorrect": [
+        "Java",
+        "Java Source",
+        "Joomla Source Code"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What does the term MIME stand for, in regards to computing?",
+      "correct": "Multipurpose Internet Mail Extensions",
+      "incorrect": [
+        "Mail Internet Mail Exchange",
+        "Multipurpose Interleave Mail Exchange",
+        "Mail Interleave Method Exchange"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What five letter word is the motto of the IBM Computer company?",
+      "correct": "Think",
+      "incorrect": [
+        "Click",
+        "Logic",
+        "Pixel"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "Dutch computer scientist Mark Overmars is known for creating which game development engine?",
+      "correct": "Game Maker",
+      "incorrect": [
+        "Stencyl",
+        "Construct",
+        "Torque 2D"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "Which RAID array type is associated with data mirroring?",
+      "correct": "RAID 1",
+      "incorrect": [
+        "RAID 0",
+        "RAID 10",
+        "RAID 5"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What does the term USB stand for?",
+      "correct": "Universal Serial Bus",
+      "incorrect": [
+        "Universal Simtex Blot",
+        "Unified Signal Bus",
+        "Unityped Semtex Backer"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What is the name of the process that sends one qubit of information using two bits of classical information?",
+      "correct": "Quantum Teleportation",
+      "incorrect": [
+        "Super Dense Coding",
+        "Quantum Entanglement",
+        "Quantum Programming"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What vulnerability ranked #1 on the OWASP Top 10 in 2013?",
+      "correct": "Injection",
+      "incorrect": [
+        "Broken Authentication",
+        "Cross-Site Scripting",
+        "Insecure Direct Object References"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "In computing terms, typically what does CLI stand for?",
+      "correct": "Command Line Interface",
+      "incorrect": [
+        "Common Language Input",
+        "Control Line Interface",
+        "Common Language Interface"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "Which data structure does FILO apply to?",
+      "correct": "Stack",
+      "incorrect": [
+        "Queue",
+        "Heap",
+        "Tree"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "Which computer hardware device provides an interface for all other connected devices to communicate?",
+      "correct": "Motherboard",
+      "incorrect": [
+        "Central Processing Unit",
+        "Hard Disk Drive",
+        "Random Access Memory"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "Moore's law originally stated that the number of transistors on a microprocessor chip would double every...",
+      "correct": "Year",
+      "incorrect": [
+        "Four Years",
+        "Two Years",
+        "Eight Years"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "In CSS, which of these values CANNOT be used with the \"position\" property?",
+      "correct": "center",
+      "incorrect": [
+        "static",
+        "absolute",
+        "relative"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What major programming language does Unreal Engine 4 use?",
+      "correct": "C++",
+      "incorrect": [
+        "Assembly",
+        "C#",
+        "ECMAScript"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "On which day did the World Wide Web go online?",
+      "correct": "December 20, 1990",
+      "incorrect": [
+        "December 17, 1996",
+        "November 12, 1990",
+        "November 24, 1995"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What did the name of the Tor Anonymity Network orignially stand for?",
+      "correct": "The Onion Router",
+      "incorrect": [
+        "The Only Router",
+        "The Orange Router",
+        "The Ominous Router"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What was the name of the image that features as the default background wallpaper for Windows XP?",
+      "correct": "Bliss",
+      "incorrect": [
+        "Azul",
+        "Red moon desert",
+        "Tulips"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What does SSD stand for?",
+      "correct": "Solid State Drive",
+      "incorrect": [
+        "Solution Source Disk",
+        "Solid State Disk",
+        "Source Solution Drive"
+      ],
+      "source": "opentdb"
+    },
+    {
+      "categoryId": "tech",
+      "text": "What is the domain name for the country Tuvalu?",
+      "correct": ".tv",
+      "incorrect": [
+        ".tu",
+        ".tt",
+        ".tl"
+      ],
+      "source": "opentdb"
+    }
+  ]
+}

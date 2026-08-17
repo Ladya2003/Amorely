@@ -1,13 +1,16 @@
-import { QUIZ_ANSWER_I18N } from '../i18n/generated/quizAnswersI18n';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from './quizGameContent';
+import type { QuizOptionId, QuizQuestion } from './quizGameTypes';
+import { QUIZ_OPTION_IDS } from './quizGameTypes';
 
 export { QUIZ_CATEGORIES, QUIZ_QUESTIONS };
+export type { QuizOptionId, QuizQuestion, QuizQuestionOption } from './quizGameTypes';
 
+export const QUIZ_CONTENT_VERSION = 4;
 export const QUIZ_LOBBY_COUNTDOWN_SEC = 3;
 export const QUIZ_QUESTION_TIME_SEC = 30;
 export const QUIZ_POINT_TIERS = [100, 200, 300] as const;
 export const QUIZ_DAILY_CATEGORY_COUNT = 5;
-export const QUIZ_QUESTIONS_PER_CATEGORY = 40;
+export const QUIZ_QUESTIONS_PER_CATEGORY = 20;
 export const QUIZ_BOARD_QUESTIONS_PER_CATEGORY = QUIZ_POINT_TIERS.length;
 
 export type QuizPointTier = (typeof QUIZ_POINT_TIERS)[number];
@@ -15,14 +18,6 @@ export type QuizPointTier = (typeof QUIZ_POINT_TIERS)[number];
 export interface QuizCategory {
   id: string;
   name: string;
-}
-
-export interface QuizQuestion {
-  id: string;
-  categoryId: string;
-  text: string;
-  /** Допустимые варианты ответа (сравнение без учёта регистра) */
-  answers: string[];
 }
 
 export const getQuizCellKey = (categoryId: string, points: number) => `${categoryId}:${points}`;
@@ -47,43 +42,20 @@ export const seededShuffle = <T>(items: T[], seed: string): T[] => {
   return result;
 };
 
-export const normalizeQuizAnswer = (value: string) =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/ß/g, 'ss')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/ё/g, 'е')
-    .replace(/[^a-zа-яґєіїў0-9\s]/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+export const isQuizOptionId = (value: string): value is QuizOptionId =>
+  (QUIZ_OPTION_IDS as readonly string[]).includes(value);
 
-export const getQuizAcceptedAnswers = (question: QuizQuestion): string[] => {
-  const accepted = new Set(question.answers);
-  const localized = QUIZ_ANSWER_I18N[question.id];
+export const isQuizOptionCorrect = (question: QuizQuestion, optionId: string) =>
+  isQuizOptionId(optionId) && optionId === question.correctId;
 
-  if (localized) {
-    for (const answer of Object.values(localized)) {
-      if (answer) {
-        accepted.add(answer);
-      }
-    }
-  }
+export const getQuizOption = (question: QuizQuestion, optionId: string) =>
+  question.options.find((option) => option.id === optionId) ?? null;
 
-  return [...accepted];
-};
-
-export const isQuizAnswerCorrect = (guess: string, acceptedAnswers: string[]) => {
-  const normalizedGuess = normalizeQuizAnswer(guess);
-  if (!normalizedGuess) {
-    return false;
-  }
-  return acceptedAnswers.some((answer) => normalizeQuizAnswer(answer) === normalizedGuess);
-};
-
-export const isQuizQuestionAnswerCorrect = (guess: string, question: QuizQuestion) =>
-  isQuizAnswerCorrect(guess, getQuizAcceptedAnswers(question));
+export const getShuffledQuizOptionIds = (question: QuizQuestion, seed: string): QuizOptionId[] =>
+  seededShuffle(
+    question.options.map((option) => option.id),
+    seed
+  );
 
 export const getCategoryById = (categoryId: string) =>
   QUIZ_CATEGORIES.find((category) => category.id === categoryId) ?? null;

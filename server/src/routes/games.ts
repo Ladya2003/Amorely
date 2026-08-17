@@ -610,10 +610,10 @@ router.post('/quiz/pick', async (req: any, res: Response) => {
 router.post('/quiz/answer', async (req: any, res: Response) => {
   try {
     const userId = req.userId as string;
-    const { answer } = req.body;
+    const { optionId, answer } = req.body;
 
     const context = await resolveQuizGameContext(userId);
-    const state = await submitQuizAnswer(userId, context, String(answer ?? ''));
+    const state = await submitQuizAnswer(userId, context, String(optionId ?? answer ?? ''));
 
     await updateQuizGameBadges();
 

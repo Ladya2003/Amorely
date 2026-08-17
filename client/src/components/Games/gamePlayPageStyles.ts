@@ -146,6 +146,15 @@ export const getGamePlayContentSx = () => ({
   p: 2,
 });
 
+export const getGamePlayCenteredBodySx = (maxWidth = 520) => ({
+  my: 'auto',
+  width: '100%',
+  maxWidth,
+  mx: 'auto',
+});
+
+export const getGamePlayQuizQuestionBodySx = () => getGamePlayCenteredBodySx(520);
+
 export const getGamePlayFooterSx = (theme: Theme) => ({
   p: 2,
   pb: {
@@ -500,3 +509,111 @@ export const getTapShopItemImageSx = (theme: Theme) => ({
   flexShrink: 0,
   border: getSurfaceBorder(theme, 'soft'),
 });
+
+export type QuizOptionVisualState = 'idle' | 'selected' | 'correct' | 'wrong' | 'dimmed';
+
+export const getGamePlayQuizOptionButtonSx = (theme: Theme, state: QuizOptionVisualState) => {
+  const isDark = theme.palette.mode === 'dark';
+  const idleColor = isDark ? theme.palette.common.white : theme.palette.text.primary;
+  const idleBorder = isDark
+    ? alpha(theme.palette.common.white, 0.42)
+    : alpha(theme.palette.primary.main, 0.28);
+  const idleFill = isDark
+    ? alpha(theme.palette.common.white, 0.08)
+    : alpha(theme.palette.primary.main, 0.04);
+
+  const base = {
+    justifyContent: 'flex-start' as const,
+    textAlign: 'left' as const,
+    textTransform: 'none' as const,
+    fontWeight: 600,
+    minHeight: 48,
+    px: 1.75,
+    borderRadius: `${GAME_PLAY_ACTION_RADIUS}px`,
+    whiteSpace: 'normal' as const,
+    '&.Mui-disabled': {
+      opacity: 1,
+    },
+  };
+
+  switch (state) {
+    case 'idle':
+      return {
+        ...base,
+        color: idleColor,
+        borderColor: idleBorder,
+        bgcolor: idleFill,
+        '&:hover': {
+          borderColor: isDark ? alpha(theme.palette.common.white, 0.62) : theme.palette.primary.main,
+          bgcolor: isDark
+            ? alpha(theme.palette.common.white, 0.14)
+            : alpha(theme.palette.primary.main, 0.08),
+        },
+        '&.Mui-disabled': {
+          ...base['&.Mui-disabled'],
+          color: idleColor,
+          borderColor: idleBorder,
+          bgcolor: idleFill,
+        },
+      };
+    case 'selected':
+      return {
+        ...base,
+        color: isDark ? theme.palette.common.white : theme.palette.primary.main,
+        borderColor: isDark ? theme.palette.primary.light : theme.palette.primary.main,
+        bgcolor: alpha(theme.palette.primary.main, isDark ? 0.34 : 0.12),
+        '&.Mui-disabled': {
+          ...base['&.Mui-disabled'],
+          color: isDark ? theme.palette.common.white : theme.palette.primary.main,
+          borderColor: isDark ? theme.palette.primary.light : theme.palette.primary.main,
+          bgcolor: alpha(theme.palette.primary.main, isDark ? 0.34 : 0.12),
+        },
+      };
+    case 'correct':
+      return {
+        ...base,
+        borderColor: theme.palette.success.main,
+        bgcolor: alpha(theme.palette.success.main, isDark ? 0.28 : 0.14),
+        color: isDark ? theme.palette.success.light : theme.palette.success.dark,
+        '&.Mui-disabled': {
+          ...base['&.Mui-disabled'],
+          borderColor: theme.palette.success.main,
+          bgcolor: alpha(theme.palette.success.main, isDark ? 0.28 : 0.14),
+          color: isDark ? theme.palette.success.light : theme.palette.success.dark,
+        },
+      };
+    case 'wrong':
+      return {
+        ...base,
+        borderColor: theme.palette.error.main,
+        bgcolor: alpha(theme.palette.error.main, isDark ? 0.26 : 0.12),
+        color: isDark ? theme.palette.error.light : theme.palette.error.dark,
+        '&.Mui-disabled': {
+          ...base['&.Mui-disabled'],
+          borderColor: theme.palette.error.main,
+          bgcolor: alpha(theme.palette.error.main, isDark ? 0.26 : 0.12),
+          color: isDark ? theme.palette.error.light : theme.palette.error.dark,
+        },
+      };
+    case 'dimmed':
+      return {
+        ...base,
+        color: isDark ? alpha(theme.palette.common.white, 0.55) : theme.palette.text.secondary,
+        borderColor: isDark
+          ? alpha(theme.palette.common.white, 0.18)
+          : alpha(theme.palette.primary.main, 0.16),
+        bgcolor: isDark ? alpha(theme.palette.common.white, 0.04) : 'transparent',
+        '&.Mui-disabled': {
+          ...base['&.Mui-disabled'],
+          color: isDark ? alpha(theme.palette.common.white, 0.55) : theme.palette.text.secondary,
+          borderColor: isDark
+            ? alpha(theme.palette.common.white, 0.18)
+            : alpha(theme.palette.primary.main, 0.16),
+        },
+      };
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+};
