@@ -16,8 +16,6 @@ import {
   ListItemText,
   CircularProgress,
 } from '@mui/material';
-import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAdminAlerts } from '../../contexts/AdminAlertsContext';
 import { getUserDisplayName } from '../UI/UserProfileChip';
@@ -32,6 +30,7 @@ import {
   addReadAnnouncementKey,
   readReadAnnouncementKeys,
 } from '../../utils/readAnnouncementsStorage';
+import { ArrowBackIcon, NotificationsNoneOutlinedIcon } from '../UI/icons';
 
 const AVATAR_SIZE_WITH_PHOTO = 92;
 const AVATAR_SIZE_WITHOUT_PHOTO = 56;

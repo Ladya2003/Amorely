@@ -7,9 +7,8 @@ import {
   TextField,
   useTheme,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import SearchIcon from '@mui/icons-material/Search';
 import { getChatListSearchFieldSx } from './chatListStyles';
+import { CloseIcon, SearchIcon } from '../UI/icons';
 
 type ChatGlobalSearchFieldProps = {
   isSearching: boolean;

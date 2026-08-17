@@ -26,7 +26,6 @@ import {
 
 } from '@mui/material';
 
-import FavoriteIcon from '@mui/icons-material/Favorite';
 
 import {
   AppCalendarFilledIcon,
@@ -66,6 +65,7 @@ import {
 } from './bottomNavStyles';
 
 import { getDesktopLayoutTopGlowSx } from '../Feed/feedBannerStyles';
+import { FavoriteIcon } from '../UI/icons';
 
 
 

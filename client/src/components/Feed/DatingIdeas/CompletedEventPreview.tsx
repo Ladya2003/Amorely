@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Box, IconButton, Skeleton, Typography, useTheme } from '@mui/material';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import NorthEastIcon from '@mui/icons-material/NorthEast';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import DecryptedMedia from '../../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../../crypto/contentCryptoService';
 import { useHorizontalSwipe } from '../../../hooks/useHorizontalSwipe';
 import { getCompletedEventPreviewSx } from './datingIdeasStyles';
+import { ArrowBackIosNewIcon, ArrowForwardIosIcon, NorthEastIcon } from '../../UI/icons';
 
 export interface CompletedEventMediaItem {
   mediaUrl: string;

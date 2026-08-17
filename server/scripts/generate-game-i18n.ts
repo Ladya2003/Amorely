@@ -1,5 +1,6 @@
 /**
  * Generates draw word EN labels and quiz question EN texts.
+ * Other locales live in src/i18n/drawWordsLocales.ts (do not overwrite them here).
  * Run: npx ts-node scripts/generate-game-i18n.ts
  */
 import * as fs from 'fs';

@@ -17,8 +17,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import LockResetIcon from '@mui/icons-material/LockReset';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { useCrypto } from '../../contexts/CryptoContext';
 import {
@@ -27,6 +25,7 @@ import {
   type CryptoRecoveryRememberOption,
   type CryptoRecoveryYesNoUnsure,
 } from '../../services/cryptoRecoveryService';
+import { CloseIcon, LockResetIcon } from '../UI/icons';
 
 interface CryptoRecoveryRequestDialogProps {
   open: boolean;

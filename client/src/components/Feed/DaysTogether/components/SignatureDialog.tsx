@@ -14,13 +14,12 @@ import {
 } from '@mui/material';
 import ResponsiveDialog from '../../../UI/ResponsiveDialog';
 import { getModalFooterActionsSx } from '../../../../theme/appTheme';
-import CreateIcon from '@mui/icons-material/Create';
-import DeleteIcon from '@mui/icons-material/Delete';
 import DrawingToolsToolbar, { type DrawingTool } from '../../../Games/DrawingToolsToolbar';
 import DrawCanvas, { type DrawCanvasHandle } from '../../../Games/DrawCanvas';
 import type { DrawStroke } from '../../../../services/gamesService';
 import { ColorTheme } from './ColorPicker';
 import { getDaysTogetherActionButtonSx, DAYS_TOGETHER_INNER_RADIUS } from '../daysTogetherStyles';
+import { CreateIcon, DeleteIcon } from '../../../UI/icons';
 
 const SIGNATURE_IMAGE_CORNER_RADIUS = DAYS_TOGETHER_INNER_RADIUS;
 /** Отображение в карточке ~100px; 512px достаточно даже для Retina. */

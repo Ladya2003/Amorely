@@ -14,7 +14,6 @@ import {
   useTheme,
   DialogTitle,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import ResponsiveDialog from '../../UI/ResponsiveDialog';
 import { ContentManagementDialogProps } from './types';
 import { useContentManagement } from './hooks/useContentManagement';
@@ -34,6 +33,7 @@ import {
   getContentManagementTabsSx,
 } from '../../Calendar/calendarDrawerStyles';import ConfirmDeleteDialog from '../../UI/ConfirmDeleteDialog';
 import FrequencyChangeDialog from '../../UI/FrequencyChangeDialog';
+import { CloseIcon } from '../../UI/icons';
 
 const ContentManagementDialog: React.FC<ContentManagementDialogProps> = ({
   open,

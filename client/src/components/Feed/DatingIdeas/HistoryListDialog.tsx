@@ -12,12 +12,10 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import SkipNextIcon from '@mui/icons-material/SkipNext';
 import ResponsiveDialog from '../../UI/ResponsiveDialog';
 import type { DatingIdea } from '../../../services/datingIdeasService';
 import { formatCalendarDate } from '../../../localization/calendarHelpers';
+import { CheckCircleOutlineIcon, CloseIcon, SkipNextIcon } from '../../UI/icons';
 
 interface HistoryListDialogProps {
   open: boolean;

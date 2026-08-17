@@ -11,8 +11,6 @@ import {
   useTheme,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-import CloseIcon from '@mui/icons-material/Close';
-import CakeOutlinedIcon from '@mui/icons-material/CakeOutlined';
 import axios from 'axios';
 import { API_URL } from '../../config';
 import ContentViewer from '../Calendar/ContentViewer';
@@ -41,6 +39,7 @@ import {
   getContactProfileAdminTitleSx,
   getContactProfileAdminProofSx,
 } from './contactProfileDialogStyles';
+import { CakeOutlinedIcon, CloseIcon } from '../UI/icons';
 
 export interface ContactProfile extends Contact {
   bio?: string;

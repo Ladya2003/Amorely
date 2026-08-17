@@ -7,9 +7,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useTranslation } from 'react-i18next';
-import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsActiveOutlined';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useRelationship } from '../../../hooks/useRelationship';
 import type { CategoryResults } from './types';
@@ -17,6 +15,7 @@ import AnswerInput from './AnswerInput';
 import { ResultImageChoiceBlock, ResultTextChoiceBlock } from './ResultQuestionBlocks';
 import { getSimilarityRingSx } from './dailyQuestionsStyles';
 import { getResultQuestionCardProps, getResultQuestionTitleSx, getResultEditButtonSx } from './resultQuestionStyles';
+import { EditOutlinedIcon, NotificationsActiveOutlinedIcon } from '../../UI/icons';
 
 interface CategoryResultsViewProps {
   results: CategoryResults;

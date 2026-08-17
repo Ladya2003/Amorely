@@ -6,12 +6,9 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import AnnouncementIcon from '@mui/icons-material/Announcement';
-import EventIcon from '@mui/icons-material/Event';
-import UpdateIcon from '@mui/icons-material/Update';
-import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
 import { getChatTabToggleGroupSx } from '../Chat/chatListStyles';
 import { getNewsCategoryRowSx } from './newsPageStyles';
+import { AllInclusiveIcon, AnnouncementIcon, EventIcon, UpdateIcon } from '../UI/icons';
 
 interface NewsFilterProps {
   category: string | null;

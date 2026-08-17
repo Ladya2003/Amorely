@@ -12,8 +12,6 @@ import AuthLandingClosing from '../components/Auth/AuthLandingClosing';
 import AuthLandingFree from '../components/Auth/AuthLandingFree';
 import RevealOnScroll from '../components/Auth/RevealOnScroll';
 import LanguageSelector from '../components/UI/LanguageSelector';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { shouldUseBilingualLanguageLabelOnLogin } from '../localization/locale';
 import { applyLandingDocumentSeo } from '../localization/landingSeo';
 import { translateAuthServerError } from '../localization/authHelpers';
@@ -39,6 +37,7 @@ import {
   getAuthSectionSx,
   getAuthTaglineSx,
 } from '../components/Auth/authPageStyles';
+import { FavoriteIcon, KeyboardArrowUpIcon } from '../components/UI/icons';
 
 const AUTH_SECTION_ID = 'auth-section';
 const SCROLL_TOP_SHOW_OFFSET = 480;

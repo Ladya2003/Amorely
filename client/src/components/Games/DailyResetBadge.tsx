@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography, useTheme } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { formatGameWaitDuration } from '../../localization/gameHelpers';
 import { getMinutesUntilUtcMidnight } from '../../utils/dailyReset';
 import { getDailyResetBadgeSx, getDailyResetBadgeTextSx } from './gamePlayPageStyles';
+import { AccessTimeIcon } from '../UI/icons';
 
 interface DailyResetBadgeProps {
   sx?: object;

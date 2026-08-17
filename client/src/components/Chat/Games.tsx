@@ -11,10 +11,6 @@ import {
   Chip,
   useTheme,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import LockIcon from '@mui/icons-material/Lock';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import GameListItem from './GameListItem';
 import DailyResetBadge from '../Games/DailyResetBadge';
 import DailyResetInfoDialog from '../Games/DailyResetInfoDialog';
@@ -40,6 +36,7 @@ import {
   getGamesListSearchWrapSx,
   getGamesListStackSx,
 } from '../Games/gamesListStyles';
+import { CloseIcon, LockIcon, SearchIcon, SportsEsportsIcon } from '../UI/icons';
 
 const DAILY_RESET_GAME_IDS = new Set<DailyResetGameId>(['geo', 'draw', 'quiz']);
 

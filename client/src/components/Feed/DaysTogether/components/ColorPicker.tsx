@@ -12,9 +12,6 @@ import {
   Tooltip,
   useTheme,
 } from '@mui/material';
-import PaletteIcon from '@mui/icons-material/Palette';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckIcon from '@mui/icons-material/Check';
 import { HexColorPicker } from 'react-colorful';
 import {
   getColorPickerBackButtonSx,
@@ -27,6 +24,7 @@ import {
   getColorPickerTitleSx,
   getDaysTogetherActionButtonSx,
 } from '../daysTogetherStyles';
+import { ArrowBackIcon, CheckIcon, PaletteIcon } from '../../../UI/icons';
 
 export interface ColorTheme {
   id: string;

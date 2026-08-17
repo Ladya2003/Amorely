@@ -26,5 +26,6 @@ db exports
 
 # quiz i18n generation cache
 server/scripts/.quiz-i18n-cache.json
+server/scripts/.geo-i18n-cache.json
 
 README local.md

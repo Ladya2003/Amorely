@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
-import StickyNote2Icon from '@mui/icons-material/StickyNote2';
-import ImageIcon from '@mui/icons-material/Image';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { SharedNoteMediaRef, SharedNoteRef } from './ChatDialog';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
@@ -10,6 +8,7 @@ import { decryptSharedEventMediaItem } from '../../crypto/contentCryptoService';
 import { useCrypto } from '../../contexts/CryptoContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerId } from '../../hooks/usePartnerId';
+import { ImageIcon, StickyNote2Icon } from '../UI/icons';
 
 interface SharedNoteCardProps {
   sharedNote: SharedNoteRef;

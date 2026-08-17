@@ -1,11 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { DialogTitle, DialogContent, DialogActions, Button, Typography, Box } from '@mui/material';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
-import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { alpha } from '@mui/material/styles';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
+import { FavoriteRoundedIcon, RestaurantMenuIcon, WarningAmberRoundedIcon } from '../UI/icons';
 
 interface PetLevelUpWarningDialogProps {
   open: boolean;

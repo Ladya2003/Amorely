@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Alert, Box, Button, CircularProgress, Container, Typography, useTheme } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useAuth } from '../contexts/AuthContext';
 import { translateAuthServerError } from '../localization/authHelpers';
 import {
@@ -17,6 +16,7 @@ import {
   getAuthPrimaryButtonSx,
 } from '../components/Auth/authPageStyles';
 import { getLandingPath, resolvePreferredLandingLocale } from '../localization/landingLocale';
+import { FavoriteIcon } from '../components/UI/icons';
 
 /** Share one verify call per token across Strict Mode remounts. */
 const verifyOnceByToken = new Map<string, Promise<boolean>>();

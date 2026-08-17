@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Box, Button, Chip, TextField, Typography } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
 import {
   submitAdminRequest,
   type AdminRequestCategory,
 } from '../../../services/adminRequestService';
 import AdminBadgeExamples from './AdminBadgeExamples';
 import { ADMIN_REQUEST_INNER_RADIUS } from './adminRequestStyles';
+import { SendIcon } from '../../UI/icons';
 
 const CATEGORIES: AdminRequestCategory[] = ['question', 'feature', 'bug', 'other'];
 const MIN_TEXT_LENGTH = 8;

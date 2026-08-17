@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Box, Stack, Typography, useTheme } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { getUserDisplayName } from '../UI/UserProfileChip';
 import type { LeaderboardEntry } from '../../services/gamesService';
 import GameRankMedalIcon, { getMedalSizeForAvatar } from './GameRankMedalIcon';
@@ -15,6 +14,7 @@ import {
   getGameLeaderboardRankSx,
   getGameLeaderboardScoreSx,
 } from './gamePageStyles';
+import { EmojiEventsIcon } from '../UI/icons';
 
 interface GameLeaderboardProps {
   entries: LeaderboardEntry[];

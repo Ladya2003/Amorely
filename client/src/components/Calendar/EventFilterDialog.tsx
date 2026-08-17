@@ -9,12 +9,12 @@ import {
   IconButton,
   InputAdornment,
 } from '@mui/material';
-import ClearIcon from '@mui/icons-material/Clear';
 import AppDatePicker from '../UI/AppDatePicker';
 import AppTextField from '../UI/AppTextField';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
 import { EMPTY_EVENT_FILTER, type EventFilter } from './eventFilterUtils';
+import { ClearIcon } from '../UI/icons';
 
 interface EventFilterDialogProps {
   open: boolean;

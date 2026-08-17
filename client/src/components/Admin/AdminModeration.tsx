@@ -28,10 +28,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import BlockIcon from '@mui/icons-material/Block';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import ChatIcon from '@mui/icons-material/Chat';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import MediaViewerDialog, { MediaViewerContent } from '../common/MediaViewerDialog';
@@ -54,6 +50,7 @@ import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/
 import { useAuth } from '../../contexts/AuthContext';
 import { useAdminAlerts } from '../../contexts/AdminAlertsContext';
 import { saveOpenChatTarget, type StoredOpenChatTarget } from '../../utils/openChatTargetStorage';
+import { BlockIcon, ChatIcon, LockOpenIcon, VisibilityIcon } from '../UI/icons';
 
 const emptyBlockReasons = (): Partial<Record<AppLocale, string>> => ({});
 

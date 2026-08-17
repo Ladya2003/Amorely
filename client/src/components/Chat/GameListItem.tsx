@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, ListItemButton, Typography, useTheme } from '@mui/material';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import type { Game } from './gamesData';
 import {
   getGamesListDescriptionSx,
@@ -9,6 +8,7 @@ import {
   getGamesListThumbSx,
   getGamesListTitleSx,
 } from '../Games/gamesListStyles';
+import { SportsEsportsIcon } from '../UI/icons';
 
 interface GameListItemProps {
   game: Game;

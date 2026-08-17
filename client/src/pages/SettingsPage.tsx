@@ -9,11 +9,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
-import PeopleIcon from '@mui/icons-material/People';
-import PaletteIcon from '@mui/icons-material/Palette';
-import SecurityIcon from '@mui/icons-material/Security';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import axios from 'axios';
 import { API_URL } from '../config';
 import ProfileForm, { UserProfile } from '../components/Settings/ProfileForm';
@@ -60,6 +55,7 @@ import {
   getSettingsTabPanelEnterSx,
   settingsPageEnterSx,
 } from '../components/Settings/settingsPageStyles';
+import { NotificationsIcon, PaletteIcon, PeopleIcon, PersonIcon, SecurityIcon } from '../components/UI/icons';
 
 const SETTINGS_TAB_KEYS = ['profile', 'partner', 'theme', 'notifications', 'security'] as const;
 

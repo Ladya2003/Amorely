@@ -9,10 +9,10 @@ import {
   IconButton,
   InputAdornment,
 } from '@mui/material';
-import ClearIcon from '@mui/icons-material/Clear';
 import AppTextField from '../UI/AppTextField';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { EMPTY_PLAN_FILTER, type PlanFilter } from './planFilterUtils';
+import { ClearIcon } from '../UI/icons';
 
 interface PlanFilterDialogProps {
   open: boolean;

@@ -10,11 +10,10 @@ import {
   useTheme,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-import LogoutIcon from '@mui/icons-material/Logout';
-import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
 import { getSettingsLogoutButtonSx } from './settingsPageStyles';
+import { CloseIcon, LogoutIcon } from '../UI/icons';
 
 interface LogoutButtonProps {
   size?: 'small' | 'medium' | 'large';

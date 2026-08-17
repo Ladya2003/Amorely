@@ -10,10 +10,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ReportOutlinedIcon from '@mui/icons-material/ReportOutlined';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import MediaFilePicker from '../common/MediaFilePicker';
 import { getVideoLimitsHint } from '../../localization/calendarHelpers';
+import { ReportOutlinedIcon } from '../UI/icons';
 
 interface ChatReportModalProps {
   open: boolean;

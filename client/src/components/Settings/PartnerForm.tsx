@@ -23,9 +23,6 @@ import BreakupContentDialog from './BreakupContentDialog';
 import AppDatePicker from '../UI/AppDatePicker';
 import FieldCaption from '../UI/FieldCaption';
 import { DATE_INPUT_FORMAT } from '../../localization/calendarHelpers';
-import SearchIcon from '@mui/icons-material/Search';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import { API_URL } from '../../config';
 import ContentViewer from '../Calendar/ContentViewer';
@@ -37,6 +34,7 @@ import {
   getSettingsSectionDividerSx,
   getSettingsSectionTitleSx,
 } from './settingsPageStyles';
+import { DeleteIcon, PersonAddIcon, SearchIcon } from '../UI/icons';
 
 export interface Partner {
   _id: string;

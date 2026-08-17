@@ -14,15 +14,13 @@ import {
   Divider,
   useTheme,
 } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteIcon from '@mui/icons-material/Delete';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { VIDEO_LIMITS_HINT } from '../../../../utils/mediaLimits';
 import {
   getEventEditorUploadCardSx,
   getEventMediaDeleteButtonSx,
   getEventMediaPreviewSx,
 } from '../../../Calendar/calendarDrawerStyles';
+import { CloudUploadIcon, DeleteIcon, InfoOutlinedIcon } from '../../../UI/icons';
 
 interface UploadTabProps {
   files: File[];

@@ -1,10 +1,9 @@
 import React from 'react';
 import { Box, Paper, Typography, useTheme } from '@mui/material';
-import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getAdminRequestSectionSx } from './adminRequestStyles';
+import { ChevronRightIcon, SupportAgentIcon } from '../../UI/icons';
 
 const AdminRequestSection: React.FC = () => {
   const { t } = useTranslation();

@@ -11,10 +11,6 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import SettingsBrightnessIcon from '@mui/icons-material/SettingsBrightness';
-import CheckIcon from '@mui/icons-material/Check';
 import { ThemePreference, PrimaryColorPreference, primaryColorOptions } from '../../theme/appTheme';
 import LanguageSelector from '../UI/LanguageSelector';
 import {
@@ -24,6 +20,7 @@ import {
   getSettingsSectionTitleSx,
   getSettingsSubsectionTitleSx,
 } from './settingsPageStyles';
+import { CheckIcon, DarkModeIcon, LightModeIcon, SettingsBrightnessIcon } from '../UI/icons';
 
 interface ThemeSettingsProps {
   currentTheme: ThemePreference;

@@ -16,7 +16,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../contexts/AuthContext';
 import DrawCanvas from '../components/Games/DrawCanvas';
 import GameLobbyRemindButton from '../components/Games/GameLobbyRemindButton';
@@ -73,6 +72,7 @@ import {
   type DrawGameState,
   type DrawStroke,
 } from '../services/gamesService';
+import { ArrowBackIcon } from '../components/UI/icons';
 
 const DRAW_GAME_INFO_PATH = '/chat/games/draw';
 

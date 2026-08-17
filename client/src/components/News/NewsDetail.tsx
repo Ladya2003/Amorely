@@ -9,10 +9,6 @@ import {
   Slide,
   useTheme,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AnnouncementIcon from '@mui/icons-material/Announcement';
-import EventIcon from '@mui/icons-material/Event';
-import UpdateIcon from '@mui/icons-material/Update';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { formatCalendarDate } from '../../localization/calendarHelpers';
 import { getNewsCategoryLabel } from '../../localization/newsHelpers';
@@ -34,6 +30,7 @@ import {
   getNewsDetailVideoSx,
   NEWS_DETAIL_TRANSITION_MS,
 } from './newsPageStyles';
+import { AnnouncementIcon, ArrowBackIcon, EventIcon, UpdateIcon } from '../UI/icons';
 
 interface NewsDetailProps {
   open: boolean;

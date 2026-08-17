@@ -1,9 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography, useTheme } from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
-import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined';
 import RevealOnScroll from './RevealOnScroll';
 import AuthLandingFaq from './AuthLandingFaq';
 import AuthLandingReviews from './AuthLandingReviews';
@@ -16,6 +13,7 @@ import {
   getAuthLandingValueItemSx,
   getAuthLandingValuesSx,
 } from './authPageStyles';
+import { DevicesOutlinedIcon, FavoriteBorderOutlinedIcon, LockOutlinedIcon } from '../UI/icons';
 
 const VALUE_IDS = ['private', 'forTwo', 'anywhere'] as const;
 

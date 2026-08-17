@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo } from 'react';
 import { Box, Button, IconButton, Typography } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { validateAndFilterMediaFiles } from '../../utils/validateMediaFile';
 import { VIDEO_LIMITS_HINT } from '../../utils/mediaLimits';
+import { CloudUploadIcon, DeleteIcon } from '../UI/icons';
 
 export interface ExistingMediaItem {
   id: string;

@@ -9,11 +9,11 @@ import {
   useTheme,
 } from '@mui/material';
 import AppTextField from '../UI/AppTextField';
-import LockIcon from '@mui/icons-material/Lock';
 import {
   getSettingsSectionDividerSx,
   getSettingsSectionTitleSx,
 } from './settingsPageStyles';
+import { LockIcon } from '../UI/icons';
 
 interface SecuritySettingsProps {
   onChangePassword: (oldPassword: string, newPassword: string) => Promise<void>;

@@ -10,12 +10,9 @@ import {
   IconButton,
   Box
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PhotoIcon from '@mui/icons-material/Photo';
-import VideocamIcon from '@mui/icons-material/Videocam';
-import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { ContentItem } from '../types';
 import { formatFileSize, formatDate } from '../utils/helpers';
+import { DeleteIcon, DragHandleIcon, PhotoIcon, VideocamIcon } from '../../../UI/icons';
 
 interface ContentListProps {
   content: ContentItem[];

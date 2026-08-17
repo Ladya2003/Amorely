@@ -10,8 +10,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import MyLocationOutlinedIcon from '@mui/icons-material/MyLocationOutlined';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import {
   fetchCoupleDistanceStatus,
@@ -25,6 +23,7 @@ import {
   requestCurrentPosition,
 } from '../../utils/geoDistance';
 import { getCoupleDistanceAccentColor } from './feedCoupleAvatarsStyles';
+import { FavoriteIcon, MapPinIcon } from '../UI/icons';
 
 type DialogView =
   | 'intro'
@@ -143,7 +142,7 @@ const CoupleDistanceDialog: React.FC<CoupleDistanceDialogProps> = ({
   return (
     <ResponsiveDialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <MyLocationOutlinedIcon color="primary" fontSize="small" />
+        <MapPinIcon color="primary" fontSize="small" />
         {t('feed.coupleDistance.title')}
       </DialogTitle>
       <DialogContent>

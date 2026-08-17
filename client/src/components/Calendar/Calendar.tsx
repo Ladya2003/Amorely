@@ -18,15 +18,6 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import GridViewIcon from '@mui/icons-material/GridView';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import EventFilterDialog from './EventFilterDialog';
 import PlanFilterDialog from './PlanFilterDialog';
@@ -69,6 +60,7 @@ import {
   getCalendarViewToggleGroupSx,
   getCalendarWeekdayLabelSx,
 } from './calendarPageStyles';
+import { AddIcon, ArrowBackIosNewIcon, ArrowForwardIosIcon, CalendarMonthIcon, DeleteSweepIcon, ExpandMoreIcon, FilterListIcon, GridViewIcon, ListAltIcon } from '../UI/icons';
 
 interface MediaFile {
   _id: string;

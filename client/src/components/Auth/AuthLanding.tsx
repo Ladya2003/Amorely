@@ -1,17 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Typography, useMediaQuery, useTheme } from '@mui/material';
-import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined';
-import QuizOutlinedIcon from '@mui/icons-material/QuizOutlined';
-import PetsOutlinedIcon from '@mui/icons-material/PetsOutlined';
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import PublicOutlinedIcon from '@mui/icons-material/PublicOutlined';
-import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
-import BrushOutlinedIcon from '@mui/icons-material/BrushOutlined';
-import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
-import { SvgIconComponent } from '@mui/icons-material';
 import { getPublicAssetPath } from '../../utils/publicAssetPath';
 import RevealOnScroll from './RevealOnScroll';
 import {
@@ -31,6 +20,8 @@ import {
   getAuthLandingCtaButtonSx,
   getAuthLandingOutlinedCtaSx,
 } from './authPageStyles';
+import type { AppIconComponent } from '../UI/icons';
+import { BrushOutlinedIcon, CalendarMonthOutlinedIcon, ChatBubbleOutlineIcon, EmojiEventsOutlinedIcon, FavoriteBorderOutlinedIcon, LightbulbOutlinedIcon, PetsOutlinedIcon, PhotoLibraryOutlinedIcon, PublicOutlinedIcon, QuizOutlinedIcon } from '../UI/icons';
 
 export type AuthLandingMode = 'login' | 'register';
 
@@ -52,7 +43,7 @@ type FeatureId =
 
 interface LandingFeature {
   id: FeatureId;
-  Icon: SvgIconComponent;
+  Icon: AppIconComponent;
   lightFile: string;
   darkFile: string;
   /** Intrinsic size — резервирует высоту до загрузки, иначе scroll к форме промахивается */

@@ -11,9 +11,6 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { getDaysWord } from '../utils/helpers';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Achievement } from '../types';
 import { ColorTheme } from './ColorPicker';
 import {
@@ -22,6 +19,7 @@ import {
   getDaysTogetherChipSx,
   getDaysTogetherInnerSurfaceSx,
 } from '../daysTogetherStyles';
+import { EmojiEventsIcon, ExpandLessIcon, ExpandMoreIcon } from '../../../UI/icons';
 
 interface MilestoneCardProps {
   achievements: Achievement[];

@@ -10,7 +10,6 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useAdminAlerts } from '../contexts/AdminAlertsContext';
 import AdminDashboard from '../components/Admin/AdminDashboard';
@@ -19,6 +18,7 @@ import AdminNews from '../components/Admin/AdminNews';
 import AdminAnnouncements from '../components/Admin/AdminAnnouncements';
 import AdminHealth from '../components/Admin/AdminHealth';
 import AdminModeration from '../components/Admin/AdminModeration';
+import { ArrowBackIcon } from '../components/UI/icons';
 
 const USERS_TAB_INDEX = 1;
 const MODERATION_TAB_INDEX = 5;

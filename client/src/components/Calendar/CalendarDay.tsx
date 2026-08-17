@@ -1,10 +1,6 @@
 import React from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import { format } from 'date-fns';
-import DescriptionIcon from '@mui/icons-material/Description';
-import CakeIcon from '@mui/icons-material/Cake';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import {
@@ -12,6 +8,7 @@ import {
   getCalendarDayEmptySx,
   getCalendarDayPlaceholderSx,
 } from './calendarPageStyles';
+import { AutoAwesomeIcon, CakeIcon, DescriptionIcon, FavoriteIcon } from '../UI/icons';
 
 interface CalendarDayProps {
   date: Date;

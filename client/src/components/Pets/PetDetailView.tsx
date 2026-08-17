@@ -10,11 +10,6 @@ import {
   CircularProgress,
   Skeleton,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
-import PanToolAltOutlinedIcon from '@mui/icons-material/PanToolAltOutlined';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import { alpha } from '@mui/material/styles';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import CurrencyBadge from './CurrencyBadge';
@@ -24,7 +19,12 @@ import PetLevelUpWarningDialog from './PetLevelUpWarningDialog';
 import PetLevelProgress from './PetLevelProgress';
 import PetHatchOverlay from './PetHatchOverlay';
 import PetOwnerBlock from './PetOwnerBlock';
-import { unlockPetRevealAudio, playPetHeartsSound, playPetFeedSound } from '../../utils/petRevealSound';
+import {
+  unlockPetRevealAudio,
+  playPetHeartsSound,
+  playPetFeedSound,
+  playPetSubLevelUpSound,
+} from '../../utils/petRevealSound';
 import { fetchPet, fetchUserPet, levelUpPet, giftPet, petPet, feedPet } from '../../services/petsService';
 import type { Pet } from '../../services/petsService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -44,6 +44,7 @@ import {
 import { getAppGlassSurfaceLightTextSx } from '../../theme/modalStyles';
 import { INPUT_BORDER_RADIUS } from '../../theme/appTheme';
 import { MOBILE_BOTTOM_NAV_OFFSET } from '../../constants/layout';
+import { ArrowBackIcon, CardGiftcardIcon, FavoriteRoundedIcon, PanToolAltOutlinedIcon, RestaurantMenuIcon } from '../UI/icons';
 
 const statProgressSx = {
   height: 10,
@@ -342,6 +343,7 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
       if (result.mainLevelReached) {
         setLevelUpReveal({ fromLevel: previousLevel, toLevel: result.pet.level });
       } else {
+        void playPetSubLevelUpSound();
         setToast({ message: t('pets.subLevelUpSuccess'), severity: 'success' });
       }
     } catch (err: any) {
@@ -508,6 +510,25 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
           sx={(theme) => ({
             ...getPetSectionPaperSx(theme),
             p: 2.5,
+            mb: 2.5,
+            ...(glassSurface ? getAppGlassSurfaceLightTextSx(theme) : {}),
+          })}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75 }}>
+            <Skeleton variant="circular" animation="wave" width={56} height={56} />
+            <Box sx={{ flex: 1 }}>
+              <Skeleton variant="text" animation="wave" width={88} height={22} />
+              <Skeleton variant="text" animation="wave" width={48} height={18} />
+              <Skeleton variant="rounded" animation="wave" height={10} sx={{ borderRadius: 999, mt: 0.75 }} />
+            </Box>
+          </Box>
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={(theme) => ({
+            ...getPetSectionPaperSx(theme),
+            p: 2.5,
             mb: visitOnly ? 0 : 2.5,
             ...(glassSurface ? getAppGlassSurfaceLightTextSx(theme) : {}),
           })}
@@ -522,9 +543,6 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
               <Skeleton variant="rounded" animation="wave" height={10} sx={{ borderRadius: 999 }} />
             </Box>
           ))}
-          <Box sx={{ mt: 2 }}>
-            <Skeleton variant="rounded" animation="wave" height={56} sx={{ borderRadius: `${INPUT_BORDER_RADIUS}px` }} />
-          </Box>
         </Paper>
 
         {!visitOnly && (
@@ -1012,6 +1030,23 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
           sx={(theme) => ({
             ...getPetSectionPaperSx(theme),
             p: 2.5,
+            mb: 2.5,
+            ...(glassSurface ? getAppGlassSurfaceLightTextSx(theme) : {}),
+          })}
+        >
+          <PetLevelProgress
+            level={pet.level}
+            subLevel={subLevel}
+            subLevelMax={subLevelMax}
+            levelProgressPercent={pet.levelProgressPercent}
+          />
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={(theme) => ({
+            ...getPetSectionPaperSx(theme),
+            p: 2.5,
             mb: visitOnly ? 0 : 2.5,
             ...(glassSurface ? getAppGlassSurfaceLightTextSx(theme) : {}),
           })}
@@ -1044,14 +1079,6 @@ const PetDetailView: React.FC<PetDetailViewProps> = ({
           />
           <StatBar label={t('pets.statPlayfulness')} value={pet.stats.playfulness} />
           <StatBar label={t('pets.statCharm')} value={pet.stats.charm} />
-          <Box sx={{ mt: 2 }}>
-            <PetLevelProgress
-              level={pet.level}
-              subLevel={subLevel}
-              subLevelMax={subLevelMax}
-              levelProgressPercent={pet.levelProgressPercent}
-            />
-          </Box>
         </Paper>
 
         {!visitOnly && canLevelUp && nextCost !== null && (

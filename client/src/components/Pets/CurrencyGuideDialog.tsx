@@ -9,7 +9,8 @@ import {
   IconButton,
   Typography,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { lighten, type Theme } from '@mui/material/styles';
+import { MODAL_TEXT_SECONDARY_LIGHT } from '../../theme/modalStyles';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import CurrencyCoinIcon from './CurrencyCoinIcon';
 import {
@@ -17,6 +18,29 @@ import {
   CURRENCY_GUIDE_SECTIONS,
   type CurrencyGuideSection,
 } from '../../config/currencyRewardCatalog';
+import { CloseIcon } from '../UI/icons';
+
+const getSectionTitleColor = (theme: Theme) =>
+  lighten(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.48 : 0.42);
+
+const getRulePeriodColor = (theme: Theme) =>
+  theme.palette.mode === 'light' ? 'rgba(255, 236, 242, 0.62)' : theme.palette.text.secondary;
+
+const getAmountChipSx = (theme: Theme) => {
+  const isDark = theme.palette.mode === 'dark';
+  const text = isDark ? '#FFE082' : '#6B4E00';
+
+  return {
+    fontWeight: 700,
+    flexShrink: 0,
+    bgcolor: `${isDark ? 'rgba(255, 213, 79, 0.16)' : 'rgba(255, 243, 196, 0.92)'} !important`,
+    color: `${text} !important`,
+    border: `1px solid ${isDark ? 'rgba(255, 213, 79, 0.45)' : 'rgba(180, 130, 0, 0.45)'} !important`,
+    '& .MuiChip-label': {
+      color: `${text} !important`,
+    },
+  };
+};
 
 interface CurrencyGuideDialogProps {
   open: boolean;
@@ -57,7 +81,7 @@ const CurrencyGuideDialog: React.FC<CurrencyGuideDialogProps> = ({ open, onClose
 
       <DialogContent dividers sx={{ px: 2, py: 1.5 }}>
         <Box
-          sx={{
+          sx={(theme) => ({
             display: 'grid',
             gridTemplateColumns: '1fr auto',
             gap: 1,
@@ -65,10 +89,13 @@ const CurrencyGuideDialog: React.FC<CurrencyGuideDialogProps> = ({ open, onClose
             pb: 1,
             typography: 'caption',
             fontWeight: 700,
-            color: 'text.secondary',
+            color:
+              theme.palette.mode === 'light'
+                ? MODAL_TEXT_SECONDARY_LIGHT
+                : theme.palette.text.secondary,
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
-          }}
+          })}
         >
           <span>{t('pets.currencyGuide.columns.action')}</span>
           <span>{t('pets.currencyGuide.columns.amount')}</span>
@@ -82,7 +109,14 @@ const CurrencyGuideDialog: React.FC<CurrencyGuideDialogProps> = ({ open, onClose
 
           return (
             <Box key={section} sx={{ mb: sectionIndex < CURRENCY_GUIDE_SECTIONS.length - 1 ? 2 : 0 }}>
-              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, color: 'primary.main' }}>
+              <Typography
+                variant="subtitle2"
+                fontWeight={700}
+                sx={(theme) => ({
+                  mb: 1,
+                  color: `${getSectionTitleColor(theme)} !important`,
+                })}
+              >
                 {t(`pets.currencyGuide.sections.${section}`)}
               </Typography>
 
@@ -101,31 +135,21 @@ const CurrencyGuideDialog: React.FC<CurrencyGuideDialogProps> = ({ open, onClose
                       <Typography variant="body2" fontWeight={600}>
                         {t(`pets.currencyGuide.rules.${rule.id}.action`)}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.35 }}>
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        sx={(theme) => ({
+                          mt: 0.35,
+                          color: `${getRulePeriodColor(theme)} !important`,
+                        })}
+                      >
                         {t(`pets.currencyGuide.rules.${rule.id}.period`)}
                       </Typography>
                     </Box>
                     <Chip
                       label={t('pets.currencyGuide.amount', { amount: rule.amount })}
                       size="small"
-                      sx={(theme) => ({
-                        fontWeight: 700,
-                        bgcolor:
-                          theme.palette.mode === 'dark'
-                            ? 'rgba(255, 213, 79, 0.16)'
-                            : '#FFF3C4',
-                        color:
-                          theme.palette.mode === 'dark' ? '#FFE082' : '#6B4E00',
-                        border: `1px solid ${
-                          theme.palette.mode === 'dark'
-                            ? 'rgba(255, 213, 79, 0.45)'
-                            : 'rgba(180, 130, 0, 0.45)'
-                        }`,
-                        flexShrink: 0,
-                        '& .MuiChip-label': {
-                          color: theme.palette.mode === 'dark' ? '#FFE082' : '#6B4E00',
-                        },
-                      })}
+                      sx={getAmountChipSx}
                     />
                   </Box>
                   {ruleIndex < rules.length - 1 && <Divider />}

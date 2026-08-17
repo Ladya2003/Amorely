@@ -24,10 +24,6 @@ import {
   Typography
 } from '@mui/material';
 import AppTextField from '../UI/AppTextField';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SendIcon from '@mui/icons-material/Send';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
@@ -51,6 +47,7 @@ import {
   PET_FEEDING_ANNOUNCEMENT_PRESET,
 } from '../../localization/announcementContent';
 import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
+import { AddIcon, DeleteIcon, EditIcon, SendIcon } from '../UI/icons';
 
 type AnnouncementFormState = {
   key: string;

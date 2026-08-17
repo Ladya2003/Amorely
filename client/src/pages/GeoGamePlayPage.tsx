@@ -11,9 +11,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CloseIcon from '@mui/icons-material/Close';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useAuth } from '../contexts/AuthContext';
 import socketService from '../services/socketService';
 import {
@@ -63,6 +60,7 @@ import {
   useLobbyCountdownSound,
   useRoundTimerSound,
 } from '../utils/gameSounds';
+import { ArrowBackIcon, CloseIcon, OpenInFullIcon } from '../components/UI/icons';
 
 const MY_GUESS_COLOR = '#FF4B8D';
 const PARTNER_GUESS_COLOR = '#6366f1';

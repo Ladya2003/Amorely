@@ -11,9 +11,8 @@ import {
   Button,
   IconButton,
 } from '@mui/material';
-import LockIcon from '@mui/icons-material/Lock';
-import CloseIcon from '@mui/icons-material/Close';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
+import { CloseIcon, LockIcon } from '../UI/icons';
 
 interface EncryptedIndicatorProps {
   sx?: SxProps<Theme>;

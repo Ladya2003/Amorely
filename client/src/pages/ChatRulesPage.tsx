@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { Box, Button, Container, Link, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { CHAT_RULES_FULL_SECTIONS } from '../legal/chatRulesContent';
+import { ArrowBackIcon } from '../components/UI/icons';
 
 const ChatRulesPage: React.FC = () => {
   return (

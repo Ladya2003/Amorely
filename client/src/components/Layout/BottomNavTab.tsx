@@ -43,7 +43,7 @@ const BottomNavTab: React.FC<BottomNavTabProps> = ({ value, label, icon, ...muiI
           className="bottom-nav-tab-label"
           sx={{
             fontSize: '0.6875rem',
-            fontWeight: 600,
+            fontWeight: 500,
             lineHeight: 1.2,
             textAlign: 'center',
             '@media (max-width:360px)': {

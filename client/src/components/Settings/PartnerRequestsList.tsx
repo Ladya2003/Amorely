@@ -18,8 +18,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import { API_URL } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
@@ -50,6 +48,7 @@ import {
   getSettingsSectionTitleSx,
   getSettingsToggleGroupSx,
 } from './settingsPageStyles';
+import { CheckIcon, CloseIcon } from '../UI/icons';
 
 interface PartnerRequestsListProps {
   incomingRequests: IncomingPartnerRequestItem[];

@@ -95,6 +95,10 @@ export const getQuizCorrectAnswer = (question: QuizQuestion, locale: AppLocale):
     return formatAnswerDisplay(localized);
   }
 
+  if (contentLocale === 'by' || contentLocale === 'uk') {
+    return getRussianDisplayAnswer(question);
+  }
+
   const latinAnswer = question.answers.find(isPrimarilyLatin);
   if (latinAnswer) {
     return formatAnswerDisplay(latinAnswer);

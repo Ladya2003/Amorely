@@ -10,7 +10,6 @@ import {
   Fade,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import AddIcon from '@mui/icons-material/Add';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import CurrencyBadge from './CurrencyBadge';
 import CurrencyCoinIcon from './CurrencyCoinIcon';
@@ -32,6 +31,7 @@ import {
   SURFACE_BORDER_RADIUS,
 } from '../Feed/feedBannerStyles';
 import { getAppGlassSurfaceLightTextSx } from '../../theme/modalStyles';
+import { AddIcon } from '../UI/icons';
 
 interface PetSectionProps {
   onBalanceChange?: (balance: number) => void;

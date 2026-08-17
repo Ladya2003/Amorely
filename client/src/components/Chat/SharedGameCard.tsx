@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import type { SharedGameRef } from './ChatDialog';
+import { SportsEsportsIcon } from '../UI/icons';
 
 interface SharedGameCardProps {
   sharedGame: SharedGameRef;

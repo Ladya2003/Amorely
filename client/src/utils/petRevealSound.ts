@@ -328,3 +328,39 @@ export const playPetFeedSound = async (): Promise<void> => {
   scheduleTone(ctx, start + 0.55, 659.25, 0.4, 0.045, master, 'sine');
   scheduleTone(ctx, start + 0.62, 783.99, 0.5, 0.03, master, 'triangle');
 };
+
+/** Короткий «буст» при прокачке ступени — легче фанфар основного уровня. */
+export const playPetSubLevelUpSound = async (): Promise<void> => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  try {
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+  } catch {
+    return;
+  }
+
+  const start = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.8, start);
+  master.connect(ctx.destination);
+
+  schedulePop(ctx, start, master, 0.08);
+
+  const intervals = [1, 1.25, 1.5] as const;
+  intervals.forEach((ratio, index) => {
+    scheduleTone(
+      ctx,
+      start + 0.02 + index * 0.07,
+      523.25 * ratio,
+      0.28,
+      0.09 - index * 0.008,
+      master,
+      index === intervals.length - 1 ? 'triangle' : 'sine'
+    );
+  });
+
+  scheduleTone(ctx, start + 0.22, 1046.5, 0.38, 0.05, master, 'sine');
+};

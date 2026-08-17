@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Container, IconButton, Paper, Typography, useTheme } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AdminRequestForm from '../components/Feed/AdminRequest/AdminRequestForm';
@@ -8,6 +7,7 @@ import {
   getAdminRequestCardSx,
   getAdminRequestPageRootSx,
 } from '../components/Feed/AdminRequest/adminRequestStyles';
+import { ArrowBackIcon } from '../components/UI/icons';
 
 const AdminRequestPage: React.FC = () => {
   const { t } = useTranslation();

@@ -9,9 +9,9 @@ import {
   Typography,
   TypographyProps,
 } from '@mui/material';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import type { SxProps, Theme } from '@mui/material/styles';
 import ResponsiveDialog from './ResponsiveDialog';
+import { UnfoldMoreIcon } from './icons';
 
 const clampSx = (maxLines: number) =>
   ({

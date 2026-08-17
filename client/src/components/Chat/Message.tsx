@@ -3,10 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Box, Typography, Avatar, Paper, IconButton, useTheme } from '@mui/material';
 import MediaViewerDialog, { type MediaViewerContent } from '../common/MediaViewerDialog';
 import type { ChatMediaEnvelope } from '../../crypto/cryptoService';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import DoneIcon from '@mui/icons-material/Done';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
-import ScheduleIcon from '@mui/icons-material/Schedule';
 import { MessageType, MessageForwardRef, MessageReaction } from './ChatDialog';
 import EncryptedAttachment from './EncryptedAttachment';
 import ChatVideoPlayer from '../common/ChatVideoPlayer';
@@ -24,6 +20,7 @@ import {
   getChatMessageReactionChipSx,
 } from './chatDialogStyles';
 import AvatarAdminIcon from './AvatarAdminIcon';
+import { DoneAllIcon, DoneIcon, MoreHorizIcon, ScheduleIcon } from '../UI/icons';
 
 const imagePreviewStyle: React.CSSProperties = {
   width: '100%',

@@ -1,10 +1,9 @@
 import React from 'react';
 import { Avatar, Box, Typography, useTheme } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import { useTranslation } from 'react-i18next';
 import AvatarAdminIcon, { AdminBadgeIcon } from '../../Chat/AvatarAdminIcon';
 import { getAdminRequestExampleCardSx } from './adminRequestStyles';
+import { CancelIcon, CheckCircleIcon } from '../../UI/icons';
 
 const AVATAR_SIZE = 72;
 

@@ -1,14 +1,12 @@
 import React, { useId, useState } from 'react';
 import { Box, Button, ListItemIcon, Menu, MenuItem, Typography, useTheme } from '@mui/material';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import LabelOutlinedIcon from '@mui/icons-material/LabelOutlined';
 import { useTranslation } from 'react-i18next';
 import {
   getCalendarCategorySelectButtonSx,
   getCalendarCategorySelectMenuItemSx,
   getCalendarCategorySelectMenuPaperSx,
 } from './calendarPageStyles';
+import { CheckRoundedIcon, ExpandMoreRoundedIcon, LabelOutlinedIcon } from '../UI/icons';
 
 type PlanCategorySelectProps = {
   categories: string[];

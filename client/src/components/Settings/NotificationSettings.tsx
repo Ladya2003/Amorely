@@ -11,18 +11,13 @@ import {
   ListSubheader,
   useTheme,
 } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import ChatIcon from '@mui/icons-material/Chat';
-import EventIcon from '@mui/icons-material/Event';
-import NewReleasesIcon from '@mui/icons-material/NewReleases';
-import ReportOutlinedIcon from '@mui/icons-material/ReportOutlined';
 import {
   getSettingsListSubheaderSx,
   getSettingsNotificationListSx,
   getSettingsSectionDividerSx,
   getSettingsSectionTitleSx,
 } from './settingsPageStyles';
+import { ChatIcon, EventIcon, FavoriteIcon, NewReleasesIcon, NotificationsIcon, ReportOutlinedIcon } from '../UI/icons';
 
 interface NotificationSettingsProps {
   settings: {

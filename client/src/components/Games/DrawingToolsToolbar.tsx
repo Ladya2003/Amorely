@@ -11,14 +11,8 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha, type Theme } from '@mui/material/styles';
-import BrushIcon from '@mui/icons-material/Brush';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
-import PaletteIcon from '@mui/icons-material/Palette';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import UndoIcon from '@mui/icons-material/Undo';
-import RedoIcon from '@mui/icons-material/Redo';
 import { HexColorPicker } from 'react-colorful';
+import { AutoFixHighIcon, BrushIcon, DeleteSweepIcon, FormatColorFillIcon, PaletteIcon, RedoIcon, UndoIcon } from '../UI/icons';
 
 export type DrawingTool = 'pen' | 'eraser' | 'fill';
 

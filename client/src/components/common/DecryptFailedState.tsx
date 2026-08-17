@@ -2,11 +2,11 @@ import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Typography, useTheme } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { SURFACE_BORDER_RADIUS } from '../Feed/feedBannerStyles';
 import { APP_OPAQUE_SURFACE_CLASS } from '../../theme/modalStyles';
 import type { CryptoRecoveryContext } from '../../services/cryptoRecoveryService';
 import CryptoRecoveryRequestDialog from './CryptoRecoveryRequestDialog';
+import { LockOutlinedIcon } from '../UI/icons';
 
 interface DecryptFailedStateProps {
   variant?: 'compact' | 'full';

@@ -55,7 +55,7 @@ export const normalizeQuizAnswer = (value: string) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/ё/g, 'е')
-    .replace(/[^a-zа-яґєії0-9\s]/gi, '')
+    .replace(/[^a-zа-яґєіїў0-9\s]/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 

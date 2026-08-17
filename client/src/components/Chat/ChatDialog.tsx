@@ -21,22 +21,8 @@ import {
   Alert
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import ReportOutlinedIcon from '@mui/icons-material/ReportOutlined';
 import ChatReportModal from './ChatReportModal';
 import { ChatMessagesSkeleton } from './ChatSkeletons';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
-import CloseIcon from '@mui/icons-material/Close';
-import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import ForwardOutlinedIcon from '@mui/icons-material/ForwardOutlined';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import BlockIcon from '@mui/icons-material/Block';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import TextDecreaseIcon from '@mui/icons-material/TextDecrease';
-import TextIncreaseIcon from '@mui/icons-material/TextIncrease';
 import { Contact } from './ChatList';
 import Message from './Message';
 import SharedEventCard from './SharedEventCard';
@@ -88,6 +74,7 @@ import {
   getChatOptionsActionButtonSx,
   CHAT_DIALOG_ACTION_RADIUS,
 } from './chatDialogStyles';
+import { ArrowBackIcon, BlockIcon, CloseIcon, DeleteOutlineIcon, EditOutlinedIcon, ForwardOutlinedIcon, KeyboardArrowDownIcon, LockOpenIcon, MoreVertIcon, PlayCircleOutlineIcon, ReplyOutlinedIcon, ReportOutlinedIcon, TextDecreaseIcon, TextIncreaseIcon } from '../UI/icons';
 
 const CHAT_FONT_FAMILY = APP_FONT_FAMILY;
 

@@ -2,7 +2,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardActionArea, CardContent, Typography, Box, CircularProgress } from '@mui/material';
-import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import { alpha } from '@mui/material/styles';
 import type { Pet } from '../../services/petsService';
 import { getPublicAssetPath } from '../../utils/publicAssetPath';
@@ -10,6 +9,7 @@ import { getSubLevelMax } from '../../config/petCatalogShared';
 import { getPetMood, getPetMoodEmoji } from '../../utils/petMood';
 import { SURFACE_BORDER_RADIUS } from '../Feed/feedBannerStyles';
 import PetLevelProgress from './PetLevelProgress';
+import { CardGiftcardIcon } from '../UI/icons';
 
 interface PetCardProps {
   pet: Pet;

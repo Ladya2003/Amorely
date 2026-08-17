@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Collapse, IconButton, Paper } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { feedBannerCollapseSx, getFeedBannerPaperSx } from './feedBannerStyles';
+import { CloseIcon } from '../UI/icons';
 
 interface FeedDismissibleBannerProps {
   initiallyVisible: boolean;

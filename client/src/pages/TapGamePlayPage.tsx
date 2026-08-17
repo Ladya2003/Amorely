@@ -12,8 +12,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useAuth } from '../contexts/AuthContext';
 import socketService from '../services/socketService';
 import {
@@ -43,6 +41,7 @@ import CustomSnackbar from '../components/UI/CustomSnackbar';
 import GameFrame from '../components/Games/GameFrame';
 import { fireRoundConfetti } from '../utils/roundConfetti';
 import { playRoundSuccessSound, playTapSound, unlockGameAudio } from '../utils/gameSounds';
+import { ArrowBackIcon, StorefrontIcon } from '../components/UI/icons';
 
 interface TapFloatText {
   id: number;

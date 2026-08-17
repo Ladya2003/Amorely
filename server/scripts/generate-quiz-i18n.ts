@@ -8,8 +8,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { QUIZ_CATEGORIES, QUIZ_QUESTIONS } from '../src/games/quizGameConfig';
 import { QUIZ_ANSWER_EN } from '../src/i18n/generated/quizAnswersEn';
+import { QUIZ_ANSWER_I18N } from '../src/i18n/generated/quizAnswersI18n';
 import { QUIZ_QUESTION_EN } from '../src/i18n/generated/quizQuestionsEn';
+import { QUIZ_QUESTION_I18N } from '../src/i18n/generated/quizQuestionsI18n';
 import { AppLocale, SUPPORTED_LOCALES } from '../src/i18n/locales';
+import { translateText } from './googleTranslate';
 
 const TARGET_LOCALES = SUPPORTED_LOCALES.filter((locale) => locale !== 'ru' && locale !== 'en') as AppLocale[];
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -164,26 +167,14 @@ const saveCache = (cache: TranslationCache) => {
   fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2));
 };
 
-const translateText = async (text: string, targetLang: AppLocale, attempt = 0): Promise<string> => {
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = (await response.json()) as [Array<[string]>, ...unknown[]];
-    return data[0].map((part) => part[0]).join('');
-  } catch (error) {
-    if (attempt >= 4) {
-      throw new Error(`Translate failed for "${text}" -> ${targetLang}: ${error}`);
-    }
-
-    const delay = 500 * 2 ** attempt;
-    console.warn(`  retry ${attempt + 1}/4 in ${delay}ms (${targetLang}): ${text.slice(0, 60)}...`);
-    await sleep(delay);
-    return translateText(text, targetLang, attempt + 1);
+const seedCacheFromGenerated = (cache: TranslationCache) => {
+  for (const [id, locales] of Object.entries(QUIZ_QUESTION_I18N)) {
+    const key = `questions:${id}`;
+    cache[key] = { ...locales, ...cache[key] };
+  }
+  for (const [id, locales] of Object.entries(QUIZ_ANSWER_I18N)) {
+    const key = `answers:${id}`;
+    cache[key] = { ...locales, ...cache[key] };
   }
 };
 
@@ -306,6 +297,7 @@ const main = async () => {
   }));
 
   const cache = loadCache();
+  seedCacheFromGenerated(cache);
 
   console.log(`Translating ${questionEntries.length} questions to ${TARGET_LOCALES.join(', ')}...`);
   const translatedQuestions = await translateBatch(questionEntries, 'questions', cache);

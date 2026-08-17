@@ -11,9 +11,9 @@ import {
   Checkbox,
   FormControlLabel,
 } from '@mui/material';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import { alpha } from '@mui/material/styles';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
+import { RestaurantMenuIcon } from '../UI/icons';
 
 export const PET_FEED_COST = 2;
 export const PET_FEED_SKIP_CONFIRM_STORAGE_KEY = 'amorely_pet_feed_skip_confirm';

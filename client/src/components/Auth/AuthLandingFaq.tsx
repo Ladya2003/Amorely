@@ -8,7 +8,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RevealOnScroll from './RevealOnScroll';
 import {
   getAuthLandingFaqAccordionSx,
@@ -18,6 +17,7 @@ import {
   getAuthLandingFaqSx,
   getAuthLandingFaqTitleSx,
 } from './authPageStyles';
+import { ExpandMoreIcon } from '../UI/icons';
 
 const FAQ_IDS = ['free', 'private', 'partner', 'distance', 'features', 'devices'] as const;
 

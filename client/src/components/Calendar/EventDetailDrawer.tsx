@@ -11,17 +11,6 @@ import {
   Divider
 } from '@mui/material';
 import MediaViewerDialog from '../common/MediaViewerDialog';
-import CloseIcon from '@mui/icons-material/Close';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import ImageIcon from '@mui/icons-material/Image';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import CakeIcon from '@mui/icons-material/Cake';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import {
   formatCalendarDate,
   formatCalendarDateTime
@@ -42,6 +31,7 @@ import {
   getCalendarDrawerPaperSx,
   getEventDetailMediaCarouselSx,
 } from './calendarDrawerStyles';
+import { ArrowBackIosNewIcon, ArrowForwardIosIcon, AutoAwesomeIcon, CakeIcon, CalendarTodayIcon, CloseIcon, DeleteIcon, EditIcon, FavoriteIcon, ImageIcon, ReplyOutlinedIcon } from '../UI/icons';
 
 interface MediaFile {
   _id: string;

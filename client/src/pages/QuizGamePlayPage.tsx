@@ -17,7 +17,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../contexts/AuthContext';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import GameLobbyRemindButton from '../components/Games/GameLobbyRemindButton';
@@ -70,6 +69,7 @@ import {
   useRoundTimerSound,
 } from '../utils/gameSounds';
 import { formatGameWaitDuration } from '../localization/gameHelpers';
+import { ArrowBackIcon } from '../components/UI/icons';
 
 const QUIZ_GAME_INFO_PATH = '/chat/games/quiz';
 const POINT_TIERS = [100, 200, 300];

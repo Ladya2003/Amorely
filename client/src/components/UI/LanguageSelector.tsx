@@ -11,9 +11,6 @@ import {
   lighten,
   useTheme,
 } from '@mui/material';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import TranslateRoundedIcon from '@mui/icons-material/TranslateRounded';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -28,6 +25,7 @@ import {
 import { getLandingPath, isLandingLocaleSegment } from '../../localization/landingLocale';
 import { persistAppLocale } from '../../localization/localeSync';
 import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from '../../theme/surfaceStyles';
+import { CheckRoundedIcon, ExpandMoreRoundedIcon, TranslateRoundedIcon } from './icons';
 
 const ACTION_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.5);
 const MENU_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.65);

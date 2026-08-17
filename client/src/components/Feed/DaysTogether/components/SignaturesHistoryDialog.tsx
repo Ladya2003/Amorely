@@ -11,8 +11,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ViewListIcon from '@mui/icons-material/ViewList';
 import { format } from 'date-fns';
 import axios from 'axios';
 import ResponsiveDialog from '../../../UI/ResponsiveDialog';
@@ -25,6 +23,7 @@ import {
 } from '../../../Calendar/calendarPageStyles';
 import { ColorTheme } from './ColorPicker';
 import { getDaysTogetherActionButtonSx } from '../daysTogetherStyles';
+import { CloseIcon, ViewListIcon } from '../../../UI/icons';
 
 export interface SignatureHistoryItem {
   _id: string;

@@ -1,8 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Typography, useTheme } from '@mui/material';
-import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import RevealOnScroll from './RevealOnScroll';
 import {
   getAuthLandingCtaButtonSx,
@@ -13,6 +11,7 @@ import {
   getAuthLandingFreeTitleSx,
 } from './authPageStyles';
 import { AuthLandingMode } from './AuthLanding';
+import { CardGiftcardOutlinedIcon, CheckCircleOutlineIcon } from '../UI/icons';
 
 const FREE_POINT_IDS = ['noPaywall', 'fullAccess', 'invitePartner'] as const;
 

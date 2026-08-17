@@ -3,10 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Grid, Box, Typography, useTheme } from '@mui/material';
 import { format } from 'date-fns';
 import { formatCalendarDate, formatCalendarMonthYear } from '../../localization/calendarHelpers';
-import DescriptionIcon from '@mui/icons-material/Description';
-import CakeIcon from '@mui/icons-material/Cake';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import {
@@ -15,6 +11,7 @@ import {
   getCalendarGridTextTileSx,
   getCalendarGridTileSx,
 } from './calendarPageStyles';
+import { AutoAwesomeIcon, CakeIcon, DescriptionIcon, FavoriteIcon } from '../UI/icons';
 
 interface MediaFile {
   _id: string;

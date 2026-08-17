@@ -13,7 +13,6 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
@@ -23,6 +22,7 @@ import {
   fetchAdminDashboard,
   fetchAdminDashboardDetails,
 } from '../../services/adminService';
+import { ExpandMoreIcon } from '../UI/icons';
 
 type MetricConfig = {
   key: DashboardMetricKey;

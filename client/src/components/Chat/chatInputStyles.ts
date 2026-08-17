@@ -59,8 +59,8 @@ export const chatComposerAttachIconSx = {
 
 export const chatComposerSendIconSx = {
   fontSize: 20,
-  ml: 0.125,
-  mt: -0.125,
+  display: 'block',
+  transform: 'translate(1px, 1px)',
 } as const;
 
 export { getChatComposerInputSx } from './chatDialogStyles';

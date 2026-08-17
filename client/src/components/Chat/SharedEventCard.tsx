@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import ImageIcon from '@mui/icons-material/Image';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import DecryptedMedia from '../common/DecryptedMedia';
@@ -12,6 +10,7 @@ import { decryptSharedEventMediaItem } from '../../crypto/contentCryptoService';
 import { useCrypto } from '../../contexts/CryptoContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePartnerId } from '../../hooks/usePartnerId';
+import { CalendarTodayIcon, ImageIcon } from '../UI/icons';
 
 interface SharedEventCardProps {
   sharedEvent: SharedEventRef;

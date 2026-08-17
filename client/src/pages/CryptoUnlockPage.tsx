@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ClearIcon from '@mui/icons-material/Clear';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   AlertColor,
   Alert,
@@ -41,6 +38,7 @@ import {
   getAuthPrimaryButtonSx,
   getAuthToggleGroupSx,
 } from '../components/Auth/authPageStyles';
+import { ArrowBackIcon, ClearIcon, ContentCopyIcon } from '../components/UI/icons';
 
 const MIN_PASSPHRASE_WORDS = 12;
 

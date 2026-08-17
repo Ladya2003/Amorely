@@ -14,9 +14,6 @@ import {
   useTheme,
 } from '@mui/material';
 import { alpha, type Theme } from '@mui/material/styles';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import MyLocationOutlinedIcon from '@mui/icons-material/MyLocationOutlined';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useStatusBubbles } from '../../hooks/useStatusBubbles';
@@ -46,6 +43,7 @@ import {
   getThoughtBubbleRootSx,
   getThoughtBubbleTailSx,
 } from './feedCoupleAvatarsStyles';
+import { FavoriteIcon, LockOutlinedIcon, MapPinIcon } from '../UI/icons';
 
 interface StatusThoughtBubbleProps {
   text: string;
@@ -189,7 +187,7 @@ const CoupleConnector: React.FC<CoupleConnectorProps> = ({
         ) : (
           <>
             {distanceKm != null ? (
-              <MyLocationOutlinedIcon sx={{ fontSize: 16, color: 'inherit' }} />
+              <MapPinIcon sx={{ fontSize: 16, color: 'inherit' }} />
             ) : (
               <LockOutlinedIcon sx={{ fontSize: 16, color: 'inherit' }} />
             )}

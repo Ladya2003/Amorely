@@ -8,13 +8,12 @@ import {
   Box,
   useTheme,
 } from '@mui/material';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ImageCropDialog from '../../../UI/ImageCropDialog';
 import CustomSnackbar from '../../../UI/CustomSnackbar';
 import { validateFileSize, validateFileType } from '../utils/helpers';
 import { ColorTheme } from './ColorPicker';
 import { getDaysTogetherActionButtonSx } from '../daysTogetherStyles';
+import { AddPhotoAlternateIcon, DeleteIcon } from '../../../UI/icons';
 
 interface PhotoUploaderProps {
   onPhotoUpload: (file: File) => void;

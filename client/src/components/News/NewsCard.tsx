@@ -6,11 +6,8 @@ import {
   Chip,
   useTheme,
 } from '@mui/material';
-import AnnouncementIcon from '@mui/icons-material/Announcement';
 import { formatCalendarDate } from '../../localization/calendarHelpers';
 import { getNewsCategoryLabel } from '../../localization/newsHelpers';
-import EventIcon from '@mui/icons-material/Event';
-import UpdateIcon from '@mui/icons-material/Update';
 import type { NewsTranslations } from '../../localization/newsContent';
 import {
   getNewsCardContentSx,
@@ -21,6 +18,7 @@ import {
   getNewsDetailMediaSx,
   NEWS_MEDIA_RADIUS,
 } from './newsPageStyles';
+import { AnnouncementIcon, EventIcon, UpdateIcon } from '../UI/icons';
 
 export interface NewsItem {
   _id: string;

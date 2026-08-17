@@ -19,8 +19,6 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from '@mui/material';
-import ChatIcon from '@mui/icons-material/Chat';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import ChatList, { Contact } from '../components/Chat/ChatList';
 import AvatarAdminIcon, { shouldShowAdminAvatarIcon } from '../components/Chat/AvatarAdminIcon';
 import ChatGlobalSearchField from '../components/Chat/ChatGlobalSearchField';
@@ -94,6 +92,7 @@ import {
 import { useVisualViewportLayout } from '../hooks/useVisualViewportLayout';
 import { useDisableForeignFormFields } from '../hooks/useDisableForeignFormFields';
 import { isIOSDevice } from '../utils/isIOSDevice';
+import { ChatIcon, SportsEsportsIcon } from '../components/UI/icons';
 
 // Временные данные для демонстрации
 const MOCK_CONTACTS: Contact[] = [

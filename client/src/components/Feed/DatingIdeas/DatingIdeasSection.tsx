@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Box, Paper, Skeleton, Typography, useTheme } from '@mui/material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { fetchDatingIdeas } from '../../../services/datingIdeasService';
@@ -9,6 +7,7 @@ import { PARTNER_CHANGED_EVENT } from '../../../hooks/useRelationship';
 import { usePartnerId } from '../../../hooks/usePartnerId';
 import { getDatingIdeasSectionSx } from './datingIdeasStyles';
 import CurrencyCoinIcon from '../../Pets/CurrencyCoinIcon';
+import { AutoAwesomeIcon, ChevronRightIcon } from '../../UI/icons';
 
 const DatingIdeasSection: React.FC = () => {
   const { t, i18n } = useTranslation();

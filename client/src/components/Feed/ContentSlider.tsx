@@ -1,13 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, IconButton, Typography, Skeleton, Chip } from '@mui/material';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import NorthEastIcon from '@mui/icons-material/NorthEast';
-import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
-import CakeIcon from '@mui/icons-material/Cake';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import DecryptedMedia from '../common/DecryptedMedia';
@@ -15,6 +8,7 @@ import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { AppCalendarFilledIcon } from '../UI/AppIcons';
 import { getFeedContentEmptyIconSx, getFeedContentEmptySx } from './feedBannerStyles';
+import { ArrowBackIosNewIcon, ArrowForwardIosIcon, AutoAwesomeIcon, CakeIcon, FavoriteIcon, NorthEastIcon, PlayCircleFilledIcon } from '../UI/icons';
 
 export const CAROUSEL_BORDER_RADIUS = 32;
 

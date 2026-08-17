@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Box, Container, Fab, Badge, Typography, Tooltip, IconButton, useTheme } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +21,7 @@ import { decryptContentItemsWithMedia } from '../crypto/contentCryptoService';
 import { usePartnerId, useEncryptionRecipientId } from '../hooks/usePartnerId';
 import { PARTNER_CHANGED_EVENT } from '../hooks/useRelationship';
 import { getFeedContentUpdateTooltipSlotProps } from '../components/Feed/feedBannerStyles';
+import { EditIcon, InfoOutlinedIcon } from '../components/UI/icons';
 
 // Интерфейс для контента из диалога управления
 interface UserContentItem {

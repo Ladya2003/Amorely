@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Box, DialogContent, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
 import DecryptedMedia from './DecryptedMedia';
 import ChatVideoPlayer from './ChatVideoPlayer';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
+import { ArrowBackIosNewIcon, ArrowForwardIosIcon, CloseIcon } from '../UI/icons';
 
 export interface MediaViewerContent {
   url: string;

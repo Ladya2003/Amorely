@@ -13,10 +13,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import LockIcon from '@mui/icons-material/Lock';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { getGameById } from '../components/Chat/gamesData';
 import { getGameRules, getGeoAttributionRules } from '../localization/gameHelpers';
 import GameLeaderboard from '../components/Games/GameLeaderboard';
@@ -59,6 +55,7 @@ import {
   type LeaderboardEntry,
 } from '../services/gamesService';
 import { playGamePlayButtonSound, unlockGameAudio } from '../utils/gameSounds';
+import { ArrowBackIcon, EmojiEventsIcon, LockIcon, SportsEsportsIcon } from '../components/UI/icons';
 
 const getGamePageTabIndex = (tab: string | null | undefined, gameAvailable: boolean) =>
   tab === 'leaderboard' && gameAvailable ? 1 : 0;

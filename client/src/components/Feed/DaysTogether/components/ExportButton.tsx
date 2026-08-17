@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton, CircularProgress, Tooltip, useTheme } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
 import html2canvas from 'html2canvas';
 import CustomSnackbar from '../../../UI/CustomSnackbar';
 import { claimCurrency } from '../../../../services/petsService';
 import { ColorTheme } from './ColorPicker';
 import { getDaysTogetherActionButtonSx } from '../daysTogetherStyles';
+import { DownloadIcon } from '../../../UI/icons';
 
 interface ExportButtonProps {
   targetId: string;

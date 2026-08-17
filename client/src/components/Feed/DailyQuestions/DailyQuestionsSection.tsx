@@ -9,8 +9,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import { useTranslation } from 'react-i18next';
 import CategoryCard from './CategoryCard';
 import CategoryFlowDialog from './CategoryFlowDialog';
@@ -36,6 +34,7 @@ import {
   getDailyQuestionsCardsRowSx,
   getCategoryTimerSx,
 } from './dailyQuestionsStyles';
+import { CloseIcon, HistoryOutlinedIcon } from '../../UI/icons';
 
 const DailyQuestionsSection: React.FC = () => {
   const { t, i18n } = useTranslation();

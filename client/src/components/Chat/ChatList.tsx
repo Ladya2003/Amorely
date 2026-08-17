@@ -10,12 +10,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import BlockIcon from '@mui/icons-material/Block';
-import ImageIcon from '@mui/icons-material/Image';
 import { AppPinIcon } from '../UI/AppIcons';
-import DoneIcon from '@mui/icons-material/Done';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
-import ScheduleIcon from '@mui/icons-material/Schedule';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import AvatarGameRankMedal from '../Games/AvatarGameRankMedal';
 import AvatarAdminIcon, { shouldShowAdminAvatarIcon } from './AvatarAdminIcon';
@@ -28,6 +23,7 @@ import {
   getChatListStackSx,
   getChatListUnreadBadgeSx,
 } from './chatListStyles';
+import { BlockIcon, DoneAllIcon, DoneIcon, ImageIcon, ScheduleIcon } from '../UI/icons';
 
 export interface Contact {
   id: string;

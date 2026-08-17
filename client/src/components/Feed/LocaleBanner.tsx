@@ -2,12 +2,12 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
-import LanguageIcon from '@mui/icons-material/Language';
 import { useAuth } from '../../contexts/AuthContext';
 import { LOCALE_LABELS, resolveAppLocale } from '../../localization/locale';
 import { updateUiPreferences } from '../../services/uiPreferencesService';
 import { isLocaleBannerDismissedOnAccount } from './feedBannerStorage';
 import FeedDismissibleBanner from './FeedDismissibleBanner';
+import { LanguageIcon } from '../UI/icons';
 
 const LocaleBanner: React.FC = () => {
   const { t, i18n } = useTranslation();

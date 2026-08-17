@@ -16,10 +16,9 @@ import {
   CircularProgress,
   Divider
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import { API_URL } from '../../config';
+import { CloseIcon, SearchIcon } from '../UI/icons';
 
 export interface ShareRecipientContact {
   id: string;

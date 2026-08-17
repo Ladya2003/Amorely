@@ -16,7 +16,7 @@ export const getLocalizedQuizField = (
     return localized;
   }
 
-  if (locale === 'ru') {
+  if (locale === 'ru' || locale === 'by' || locale === 'uk') {
     return ruFallback;
   }
 

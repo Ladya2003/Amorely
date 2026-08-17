@@ -2,12 +2,12 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
-import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import { getHomeScreenNewsPath } from '../../constants/homeScreenNews';
 import { useAuth } from '../../contexts/AuthContext';
 import { updateUiPreferences } from '../../services/uiPreferencesService';
 import { canShowInstallBanner } from './feedBannerStorage';
 import FeedDismissibleBanner from './FeedDismissibleBanner';
+import { InstallMobileIcon } from '../UI/icons';
 
 const InstallAppBanner: React.FC = () => {
   const { t } = useTranslation();

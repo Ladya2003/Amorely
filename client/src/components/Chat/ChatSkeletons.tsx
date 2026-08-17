@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, IconButton, Skeleton, useTheme } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useTranslation } from 'react-i18next';
 import { getChatDialogBackdropSx } from '../Feed/feedBannerStyles';
 import {
@@ -14,6 +13,7 @@ import {
   getChatDialogHeaderWrapSx,
   getChatDialogMessagesAreaSx,
 } from './chatDialogStyles';
+import { ArrowBackIcon } from '../UI/icons';
 
 const CONTACT_ROW_COUNT = 6;
 

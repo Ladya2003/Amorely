@@ -38,13 +38,6 @@ import {
   getEventEditorMediaGridSx,
   getEventEditorMediaPreviewSx,
 } from './calendarDrawerStyles';
-import CloseIcon from '@mui/icons-material/Close';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteIcon from '@mui/icons-material/Delete';
-import SaveIcon from '@mui/icons-material/Save';
-import StopCircleIcon from '@mui/icons-material/StopCircle';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import { deleteUploadedEncryptedFiles } from '../../crypto/encryptedUploadService';
 import { isSaveAborted } from '../../utils/saveAbort';
@@ -65,8 +58,6 @@ import ContentViewer from './ContentViewer';
 import DecryptedMedia from '../common/DecryptedMedia';
 import EncryptedIndicator from '../common/EncryptedIndicator';
 import { playChatSendSound, unlockChatAudio } from '../../utils/chatSounds';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import {
   buildMediaSequence,
   createNewMediaItem,
@@ -78,6 +69,7 @@ import {
   revokeNewMediaPreviews,
   type EventMediaSequenceSlot,
 } from './eventEditorMedia';
+import { AutoAwesomeIcon, CalendarTodayIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, CloudUploadIcon, DeleteIcon, SaveIcon, StopCircleIcon } from '../UI/icons';
 
 interface EventEditorDrawerProps {
   open: boolean;

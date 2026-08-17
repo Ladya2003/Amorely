@@ -9,8 +9,7 @@ import {
   Box,
   IconButton
 } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import CloseIcon from '@mui/icons-material/Close';
+import { CloseIcon, WarningAmberIcon } from './icons';
 
 interface ConfirmDeleteDialogProps {
   open: boolean;

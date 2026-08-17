@@ -11,7 +11,6 @@ import {
   Divider,
 } from '@mui/material';
 import AppTextField from '../UI/AppTextField';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { USE_PASSWORD_LOGIN_CODE, useAuth } from '../../contexts/AuthContext';
 import { translateAuthServerError } from '../../localization/authHelpers';
 import {
@@ -24,6 +23,7 @@ import {
 } from './authPageStyles';
 import GoogleSignInButton from './GoogleSignInButton';
 import { useNavigate } from 'react-router-dom';
+import { Visibility, VisibilityOff } from '../UI/icons';
 
 interface RegisterFormProps {
   onSwitchToLogin: (credentials?: { email: string; password: string }) => void;

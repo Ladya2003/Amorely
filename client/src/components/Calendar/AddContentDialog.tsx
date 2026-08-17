@@ -11,14 +11,13 @@ import {
   IconButton,
   useTheme,
 } from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { formatCalendarDate } from '../../localization/calendarHelpers';
 import {
   getEventEditorUploadCardSx,
   getEventMediaDeleteButtonSx,
   getEventMediaPreviewSx,
 } from '../Calendar/calendarDrawerStyles';
+import { CloudUploadIcon, DeleteIcon } from '../UI/icons';
 
 interface AddContentDialogProps {
   open: boolean;

@@ -11,7 +11,6 @@ import {
   Divider,
 } from '@mui/material';
 import AppTextField from '../UI/AppTextField';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { EMAIL_NOT_VERIFIED_CODE, USE_PASSWORD_LOGIN_CODE, useAuth } from '../../contexts/AuthContext';
 import { translateAuthServerError } from '../../localization/authHelpers';
 import { resolveAppLocale } from '../../localization/locale';
@@ -26,6 +25,7 @@ import {
   getAuthSwitchTextSx,
 } from './authPageStyles';
 import GoogleSignInButton from './GoogleSignInButton';
+import { Visibility, VisibilityOff } from '../UI/icons';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;

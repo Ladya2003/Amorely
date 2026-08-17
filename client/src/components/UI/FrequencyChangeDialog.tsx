@@ -13,9 +13,7 @@ import {
   RadioGroup,
   Alert
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { PlayArrowIcon, RestartAltIcon, SettingsIcon } from './icons';
 
 interface FrequencyChangeDialogProps {
   open: boolean;

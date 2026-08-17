@@ -11,12 +11,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import ReplayIcon from '@mui/icons-material/Replay';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
@@ -58,6 +52,7 @@ import {
 } from '../components/Feed/DatingIdeas/datingIdeasStyles';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import { emitCurrencyUpdated } from '../utils/currencyEvents';
+import { ArrowBackIcon, AutoAwesomeIcon, CheckCircleIcon, FavoriteBorderIcon, ReplayIcon, ViewListIcon } from '../components/UI/icons';
 
 type PagePhase = 'loading' | 'offer' | 'generating' | 'idea' | 'flipping';
 

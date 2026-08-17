@@ -28,9 +28,6 @@ import {
   Typography
 } from '@mui/material';
 import AppTextField from '../UI/AppTextField';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import MediaFilePicker, { ExistingMediaItem } from '../common/MediaFilePicker';
@@ -53,6 +50,7 @@ import {
   normalizeNewsTranslations,
   NewsLocaleContent,
 } from '../../localization/newsContent';
+import { AddIcon, DeleteIcon, EditIcon } from '../UI/icons';
 
 type NewsFormState = {
   translations: Record<AppLocale, NewsLocaleContent>;

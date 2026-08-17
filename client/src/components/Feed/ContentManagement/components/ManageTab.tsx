@@ -13,14 +13,11 @@ import {
   ToggleButton,
   Alert
 } from '@mui/material';
-import GridViewIcon from '@mui/icons-material/GridView';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import SearchIcon from '@mui/icons-material/Search';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { ContentItem, ViewMode, SizeFilter, DateFilter } from '../types';
 import { filterContent } from '../utils/helpers';
 import ContentGrid from './ContentGrid';
 import ContentList from './ContentList';
+import { CloudUploadIcon, GridViewIcon, SearchIcon, ViewListIcon } from '../../../UI/icons';
 
 interface ManageTabProps {
   content: ContentItem[];

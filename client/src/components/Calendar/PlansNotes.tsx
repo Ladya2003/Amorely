@@ -21,13 +21,6 @@ import AppTextField from '../UI/AppTextField';
 import AppDateTimePicker from '../UI/AppDateTimePicker';
 import FieldCaption from '../UI/FieldCaption';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import ImageIcon from '@mui/icons-material/Image';
-import ReplyOutlinedIcon from '@mui/icons-material/ReplyOutlined';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -77,6 +70,7 @@ import PlanCategorySelect from './PlanCategorySelect';
 import { PlansNotesSkeleton } from './CalendarSkeletons';
 import { getEventMediaPreviewSx } from './calendarDrawerStyles';
 import { EMPTY_PLAN_FILTER, isPlanFilterActive, planNoteMatchesFilter, type PlanFilter } from './planFilterUtils';
+import { AddIcon, CloseIcon, CloudUploadIcon, DeleteIcon, EditIcon, ImageIcon, ReplyOutlinedIcon } from '../UI/icons';
 
 const planNoteMediaPreviewStyle: React.CSSProperties = {
   width: '100%',

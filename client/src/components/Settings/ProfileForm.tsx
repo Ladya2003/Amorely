@@ -13,7 +13,6 @@ import {
 import AppTextField from '../UI/AppTextField';
 import AppDatePicker from '../UI/AppDatePicker';
 import FieldCaption from '../UI/FieldCaption';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
@@ -29,6 +28,7 @@ import {
   getSettingsSectionSavingSx,
   getSettingsSectionTitleSx,
 } from './settingsPageStyles';
+import { PhotoCameraIcon } from '../UI/icons';
 
 export interface UserProfile {
   _id: string;

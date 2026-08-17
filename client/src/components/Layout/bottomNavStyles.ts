@@ -73,7 +73,7 @@ export const getAnimatedBottomNavActionStyles = (theme: Theme) => {
     },
     '& .bottom-nav-tab-label': {
       color: 'inherit',
-      fontWeight: 600,
+      fontWeight: 500,
       transition: 'font-weight 220ms ease',
     },
     '& .MuiSvgIcon-root': {
@@ -94,7 +94,7 @@ export const getAnimatedBottomNavActionStyles = (theme: Theme) => {
       color: selectedColor,
       bgcolor: 'transparent',
       '& .bottom-nav-tab-label': {
-        fontWeight: 600,
+        fontWeight: 500,
       },
       '& .bottom-nav-tab-icon .MuiSvgIcon-root': {
         transform: 'scale(1.04)',

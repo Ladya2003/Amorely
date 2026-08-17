@@ -12,11 +12,10 @@ import {
   Box,
   Typography
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import DescriptionIcon from '@mui/icons-material/Description';
 import { formatCalendarDate } from '../../localization/calendarHelpers';
 import DecryptedMedia from '../common/DecryptedMedia';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
+import { CloseIcon, DescriptionIcon } from '../UI/icons';
 
 interface EventItem {
   _id?: string;

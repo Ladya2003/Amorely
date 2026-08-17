@@ -11,8 +11,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import AppTextField from '../components/UI/AppTextField';
 import { useAuth } from '../contexts/AuthContext';
 import { translateAuthServerError } from '../localization/authHelpers';
@@ -29,6 +27,7 @@ import {
   getAuthPageRootSx,
   getAuthPrimaryButtonSx,
 } from '../components/Auth/authPageStyles';
+import { FavoriteIcon, Visibility, VisibilityOff } from '../components/UI/icons';
 
 const ResetPasswordPage: React.FC = () => {
   const { t } = useTranslation();
