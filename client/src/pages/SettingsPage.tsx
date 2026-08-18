@@ -31,6 +31,7 @@ import {
 } from '../components/Settings/SettingsSkeletons';
 import { useAuth } from '../contexts/AuthContext';
 import { usePendingPartnerRequests } from '../contexts/PendingPartnerRequestsContext';
+import { useMemoryRestore } from '../contexts/MemoryRestoreContext';
 import { useTabSlideDirection } from '../hooks/useTabSlideDirection';
 import {
   checkPushSubscriptionStatus,
@@ -71,6 +72,8 @@ const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user: authUser, updateUser } = useAuth();
   const { pendingIncomingCount: pendingPartnerRequestsCount } = usePendingPartnerRequests();
+  const { pendingIncomingCount: pendingMemoryRestoreCount } = useMemoryRestore();
+  const partnerTabBadgeCount = pendingPartnerRequestsCount + pendingMemoryRestoreCount;
   const [searchParams] = useSearchParams();
   const [tabValue, setTabValue] = useState(() => getSettingsTabIndex(searchParams.get('tab')));
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -90,12 +93,12 @@ const SettingsPage: React.FC = () => {
   const settingsTabs = useMemo(
     () => [
       { icon: PersonIcon, label: t('settings.tabs.profile'), badgeCount: 0 },
-      { icon: PeopleIcon, label: t('settings.tabs.partner'), badgeCount: pendingPartnerRequestsCount },
+      { icon: PeopleIcon, label: t('settings.tabs.partner'), badgeCount: partnerTabBadgeCount },
       { icon: PaletteIcon, label: t('settings.tabs.theme'), badgeCount: 0 },
       { icon: NotificationsIcon, label: t('settings.tabs.notifications'), badgeCount: 0 },
       { icon: SecurityIcon, label: t('settings.tabs.security'), badgeCount: 0 },
     ],
-    [t, pendingPartnerRequestsCount]
+    [t, partnerTabBadgeCount]
   );
 
   useEffect(() => {

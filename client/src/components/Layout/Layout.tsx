@@ -44,6 +44,7 @@ import { useUnreadMessages } from '../../contexts/UnreadMessagesContext';
 import { useUnreadNews } from '../../contexts/UnreadNewsContext';
 
 import { usePendingPartnerRequests } from '../../contexts/PendingPartnerRequestsContext';
+import { useMemoryRestore } from '../../contexts/MemoryRestoreContext';
 
 import { useTabSlideDirection } from '../../hooks/useTabSlideDirection';
 
@@ -94,6 +95,8 @@ const Layout: React.FC = () => {
   const { unreadCount: unreadNewsCount } = useUnreadNews();
 
   const { pendingIncomingCount: pendingPartnerRequestsCount } = usePendingPartnerRequests();
+  const { pendingIncomingCount: pendingMemoryRestoreCount } = useMemoryRestore();
+  const settingsBadgeCount = pendingPartnerRequestsCount + pendingMemoryRestoreCount;
 
 
 
@@ -222,13 +225,13 @@ const Layout: React.FC = () => {
 
     <Badge
 
-      badgeContent={pendingPartnerRequestsCount}
+      badgeContent={settingsBadgeCount}
 
       color="error"
 
       max={99}
 
-      invisible={pendingPartnerRequestsCount === 0}
+      invisible={settingsBadgeCount === 0}
 
     >
 

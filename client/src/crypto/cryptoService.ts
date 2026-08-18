@@ -106,6 +106,7 @@ export const generateRecoveryPhrase = (wordCount = 12): string =>
 const storageKey = (userId: string) => `${ACTIVE_DEVICE_KEY}:${userId}`;
 
 const peerPublicCacheKey = (peerUserId: string) => `${SESSION_CACHE_PREFIX}peer-public:${peerUserId}`;
+const peerDevicesCacheKey = (peerUserId: string) => `${SESSION_CACHE_PREFIX}peer-devices:${peerUserId}`;
 
 export const loadLocalKeys = async (userId: string): Promise<LocalDeviceKeys | null> =>
   getStoredValue<LocalDeviceKeys>(storageKey(userId));
@@ -119,10 +120,12 @@ export const removeLocalKeys = async (userId: string): Promise<void> => {
 
 export const clearPeerPublicKeyCaches = async (): Promise<void> => {
   await clearStoredKeysByPrefix(`${SESSION_CACHE_PREFIX}peer-public:`);
+  await clearStoredKeysByPrefix(`${SESSION_CACHE_PREFIX}peer-devices:`);
 };
 
 export const invalidatePeerPublicKeyCache = async (peerUserId: string): Promise<void> => {
   await removeStoredValue(peerPublicCacheKey(peerUserId));
+  await removeStoredValue(peerDevicesCacheKey(peerUserId));
 };
 
 export const wipeAllLocalCrypto = async (): Promise<void> => {
@@ -441,6 +444,24 @@ export const prefetchPeerPublicKey = async (peerUserId: string): Promise<void> =
   await fetchPeerPublicKey(peerUserId);
 };
 
+const fetchPeerDevicePublicKeys = async (peerUserId: string): Promise<string[]> => {
+  const cacheKey = peerDevicesCacheKey(peerUserId);
+  const cached = await getStoredValue<string[]>(cacheKey);
+  if (cached?.length) {
+    return cached;
+  }
+
+  const response = await axios.get<Array<{ identityPublicKey?: string }>>(
+    `${API_URL}/api/crypto/devices/${peerUserId}`
+  );
+  const keys = (response.data || [])
+    .map((device) => String(device.identityPublicKey || '').trim())
+    .filter(Boolean);
+
+  await setStoredValue(cacheKey, keys);
+  return keys;
+};
+
 export const decryptChatTextWithFallback = async (
   localKeys: LocalDeviceKeys,
   peerUserId: string,
@@ -458,7 +479,7 @@ export const decryptChatTextWithFallback = async (
   keyFetchers.push(() => fetchPeerPublicKey(peerUserId));
   if (options?.allowCacheBust !== false) {
     keyFetchers.push(async () => {
-      await invalidatePeerPublicKeyCache(peerUserId);
+      await removeStoredValue(peerPublicCacheKey(peerUserId));
       return fetchPeerPublicKey(peerUserId, { bypassCache: true });
     });
   }
@@ -466,17 +487,39 @@ export const decryptChatTextWithFallback = async (
   const triedKeys = new Set<string>();
   let lastError: unknown;
 
+  const tryPublicKey = async (peerPublicKeyBase64: string): Promise<string | null> => {
+    if (!peerPublicKeyBase64 || triedKeys.has(peerPublicKeyBase64)) {
+      return null;
+    }
+    triedKeys.add(peerPublicKeyBase64);
+    return decryptChatTextWithPeerPublicKey(localKeys, peerPublicKeyBase64, encryptedPayload);
+  };
+
   for (const fetchKey of keyFetchers) {
     try {
-      const peerPublicKeyBase64 = await fetchKey();
-      if (triedKeys.has(peerPublicKeyBase64)) {
-        continue;
+      const decrypted = await tryPublicKey(await fetchKey());
+      if (decrypted !== null) {
+        return decrypted;
       }
-      triedKeys.add(peerPublicKeyBase64);
-      return await decryptChatTextWithPeerPublicKey(localKeys, peerPublicKeyBase64, encryptedPayload);
     } catch (error) {
       lastError = error;
     }
+  }
+
+  try {
+    const historicalKeys = await fetchPeerDevicePublicKeys(peerUserId);
+    for (const historicalKey of historicalKeys) {
+      try {
+        const decrypted = await tryPublicKey(historicalKey);
+        if (decrypted !== null) {
+          return decrypted;
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+  } catch (error) {
+    lastError = error;
   }
 
   throw lastError ?? new Error('Не удалось расшифровать сообщение');

@@ -7,6 +7,7 @@ import { NavigationProvider } from './contexts/NavigationContext';
 import { UnreadMessagesProvider } from './contexts/UnreadMessagesContext';
 import { UnreadNewsProvider } from './contexts/UnreadNewsContext';
 import { PendingPartnerRequestsProvider } from './contexts/PendingPartnerRequestsContext';
+import { MemoryRestoreProvider } from './contexts/MemoryRestoreContext';
 import { CryptoProvider } from './contexts/CryptoContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
@@ -107,6 +108,7 @@ function App() {
               <UnreadMessagesProvider>
               <UnreadNewsProvider>
               <PendingPartnerRequestsProvider>
+              <MemoryRestoreProvider>
               <Routes>
                 {/* Старый URL лендинга → preferred locale (GH Pages: `/auth` goes via 404.html) */}
                 <Route
@@ -172,6 +174,7 @@ function App() {
                   }
                 />
               </Routes>
+              </MemoryRestoreProvider>
               </PendingPartnerRequestsProvider>
               </UnreadNewsProvider>
               </UnreadMessagesProvider>

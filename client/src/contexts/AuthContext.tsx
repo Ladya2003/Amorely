@@ -272,12 +272,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handlePartnerRequestReceived = () => {
       notifyPartnerRequestsChanged();
     };
+    const handleMemoryRestoreChanged = () => {
+      window.dispatchEvent(new CustomEvent('amorely:memory-restore-changed'));
+      notifyCalendarEventsChanged();
+    };
 
     socket.on('partner_linked', handlePartnerLinked);
     socket.on('partner_unlinked', handlePartnerUnlinked);
     socket.on('partner_request_received', handlePartnerRequestReceived);
     socket.on('partner_request_cancelled', handlePartnerRequestReceived);
     socket.on('partner_request_declined', handlePartnerRequestReceived);
+    socket.on('memory_restore_request_received', handleMemoryRestoreChanged);
+    socket.on('memory_restore_request_updated', handleMemoryRestoreChanged);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
@@ -287,6 +293,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       socket.off('partner_request_received', handlePartnerRequestReceived);
       socket.off('partner_request_cancelled', handlePartnerRequestReceived);
       socket.off('partner_request_declined', handlePartnerRequestReceived);
+      socket.off('memory_restore_request_received', handleMemoryRestoreChanged);
+      socket.off('memory_restore_request_updated', handleMemoryRestoreChanged);
     };
   }, [user?._id, token, handleBlockedResponse]);
 

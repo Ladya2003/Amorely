@@ -76,43 +76,12 @@ interface ContentItem {
   readOnly?: boolean;
 }
 
-const isDecryptFailedTitle = (title?: string): boolean => {
-  if (!title?.trim()) {
-    return false;
-  }
-
-  const failedTitles = new Set([
-    'Failed to decrypt',
-    'Не удалось расшифровать',
-    'No se pudo descifrar',
-    'Échec du déchiffrement',
-    'Entschlüsselung fehlgeschlagen',
-    'Falha ao descriptografar',
-    'Не вдалося розшифрувати'
-  ]);
-
-  return failedTitles.has(title.trim());
-};
-
-const isViewableCalendarEvent = (
-  event: ContentItem,
-  _selfUserId?: string,
-  _activePartnerId?: string
-): boolean => {
-  if (event.title?.trim() && !isDecryptFailedTitle(event.title)) {
+const isViewableCalendarEvent = (event: ContentItem): boolean => {
+  if (event.title?.trim()) {
     return true;
   }
 
-  const mediaItems = event.media || [];
-  const hasMedia = mediaItems.some((item) => item.url?.trim());
-  if (!hasMedia) {
-    return false;
-  }
-
-  return mediaItems.some(
-    (item) =>
-      !item.encrypted || Boolean(item.mediaEnvelope?.mediaKey && item.mediaEnvelope?.iv)
-  );
+  return (event.media || []).some((item) => Boolean(item.url?.trim()));
 };
 
 const CalendarPage: React.FC = () => {
@@ -342,9 +311,7 @@ const CalendarPage: React.FC = () => {
           activePartnerId
         );
 
-        events = events.filter((event) =>
-          isViewableCalendarEvent(event, user?._id, activePartnerId || undefined)
-        );
+        events = events.filter((event) => isViewableCalendarEvent(event));
       }
 
       setAllEvents(events);

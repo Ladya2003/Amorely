@@ -5,6 +5,9 @@ import EncryptedKeyBackup from '../models/encryptedKeyBackup';
 import CryptoRecoveryRequest from '../models/cryptoRecoveryRequest';
 import PairingSession from '../models/pairingSession';
 import { authMiddleware } from '../middleware/auth';
+import memoryRestoreRoutes from './memoryRestore';
+import { resolvePartnerContext } from '../utils/resolvePartnerId';
+import { idsEqual } from '../utils/normalizeId';
 
 const YES_NO_UNSURE = new Set(['yes', 'no', 'unsure']);
 const REMEMBER_OPTIONS = new Set(['yes', 'partial', 'no']);
@@ -144,6 +147,38 @@ router.get('/devices/me', async (req: any, res: Response) => {
     );
   } catch (error) {
     console.error('Ошибка при получении устройств:', error);
+    return res.status(500).json({ error: 'Ошибка при получении устройств' });
+  }
+});
+
+router.get('/devices/:userId', async (req: any, res: Response) => {
+  try {
+    const requesterId = req.userId as string;
+    const targetUserId = req.params.userId as string;
+    if (!mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return res.status(400).json({ error: 'Некорректный userId' });
+    }
+
+    const { partnerId, hasPartner } = await resolvePartnerContext(requesterId);
+    const canRead =
+      idsEqual(requesterId, targetUserId) || (hasPartner && idsEqual(partnerId, targetUserId));
+    if (!canRead) {
+      return res.status(403).json({ error: 'Нельзя получить устройства этого пользователя' });
+    }
+
+    const devices = await CryptoDevice.find({ userId: new mongoose.Types.ObjectId(targetUserId) })
+      .sort({ updatedAt: -1 })
+      .select('deviceId identityPublicKey updatedAt');
+
+    return res.json(
+      devices.map((device) => ({
+        deviceId: device.deviceId,
+        identityPublicKey: device.identityPublicKey,
+        updatedAt: device.updatedAt
+      }))
+    );
+  } catch (error) {
+    console.error('Ошибка при получении устройств пользователя:', error);
     return res.status(500).json({ error: 'Ошибка при получении устройств' });
   }
 });
@@ -394,5 +429,7 @@ router.post('/recovery-requests', async (req: any, res: Response) => {
     return res.status(500).json({ error: 'Ошибка при отправке заявки' });
   }
 });
+
+router.use('/memory-restore', memoryRestoreRoutes);
 
 export default router;

@@ -6,6 +6,8 @@ import { SURFACE_BORDER_RADIUS } from '../Feed/feedBannerStyles';
 import { APP_OPAQUE_SURFACE_CLASS } from '../../theme/modalStyles';
 import type { CryptoRecoveryContext } from '../../services/cryptoRecoveryService';
 import CryptoRecoveryRequestDialog from './CryptoRecoveryRequestDialog';
+import MemoryRestoreRequestDialog from './MemoryRestoreRequestDialog';
+import { usePartnerId } from '../../hooks/usePartnerId';
 import { LockOutlinedIcon } from '../UI/icons';
 
 interface DecryptFailedStateProps {
@@ -24,6 +26,9 @@ const DecryptFailedState: React.FC<DecryptFailedStateProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [memoryRestoreOpen, setMemoryRestoreOpen] = useState(false);
+  const partnerId = usePartnerId();
+  const canAskPartner = Boolean(partnerId);
   const clickThroughGuardTimerRef = useRef<number | null>(null);
   const isCompact = variant === 'compact';
   const isLight = theme.palette.mode === 'light';
@@ -145,9 +150,28 @@ const DecryptFailedState: React.FC<DecryptFailedStateProps> = ({
             >
               {t('crypto.recoveryRequest.hint')}
             </Typography>
+            {canAskPartner && (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setMemoryRestoreOpen(true);
+                }}
+                sx={{
+                  mt: 0.5,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  px: 1.5,
+                }}
+              >
+                {t('crypto.memoryRestore.cta')}
+              </Button>
+            )}
             <Button
               size="small"
-              variant="contained"
+              variant={canAskPartner ? 'outlined' : 'contained'}
               onClick={openRecoveryDialog}
               sx={{
                 mt: 0.5,
@@ -167,6 +191,13 @@ const DecryptFailedState: React.FC<DecryptFailedStateProps> = ({
         open={dialogOpen}
         onClose={handleRecoveryDialogClose}
         context={context}
+      />
+      <MemoryRestoreRequestDialog
+        open={memoryRestoreOpen}
+        onClose={() => {
+          setMemoryRestoreOpen(false);
+          armClickThroughGuard();
+        }}
       />
     </>
   );

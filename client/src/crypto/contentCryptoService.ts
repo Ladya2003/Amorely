@@ -403,9 +403,15 @@ export const encryptTextForPartner = async (
 export const encryptMediaEnvelopeForPartner = async (
   keys: LocalDeviceKeys,
   partnerUserId: string,
-  secrets: Pick<ContentMediaEnvelope, 'mediaKey' | 'iv'>
+  secrets: Pick<ContentMediaEnvelope, 'mediaKey' | 'iv'>,
+  options?: { bypassCache?: boolean }
 ): Promise<EncryptedTextPayload> =>
-  encryptTextForPartner(keys, partnerUserId, serializeMediaSecrets(secrets.mediaKey, secrets.iv));
+  encryptTextForPartner(
+    keys,
+    partnerUserId,
+    serializeMediaSecrets(secrets.mediaKey, secrets.iv),
+    options
+  );
 
 export const decryptTextFromSender = async (
   keys: LocalDeviceKeys,

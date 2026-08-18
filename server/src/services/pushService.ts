@@ -267,6 +267,21 @@ export const notifyNewPartnerContent = async (params: {
   });
 };
 
+export const notifyMemoryRestoreRequest = async (params: {
+  receiverId: string;
+  senderId: string;
+  senderName?: string;
+}) => {
+  const senderName = params.senderName?.trim() || 'Партнёр';
+
+  await sendPushToUser(params.receiverId, {
+    title: senderName,
+    body: 'Просит восстановить доступ к общим воспоминаниям',
+    url: buildChatUrl(params.senderId),
+    tag: `memory-restore-${params.senderId}`
+  });
+};
+
 const buildAdminUrl = () => buildAppUrl('/admin');
 
 export const notifyNewReport = async (params: {

@@ -16,6 +16,7 @@ import {
   formatCalendarDateTime
 } from '../../localization/calendarHelpers';
 import DecryptedMedia from '../common/DecryptedMedia';
+import DecryptFailedState from '../common/DecryptFailedState';
 import EncryptedIndicator from '../common/EncryptedIndicator';
 import { useHorizontalSwipe } from '../../hooks/useHorizontalSwipe';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
@@ -212,6 +213,7 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
 
   const eventDate = new Date(event.eventDate || event.createdAt);
   const eventTitle = event.title || t('calendar.event.noTitle');
+  const titleDecryptFailed = event.title?.trim() === t('crypto.decryptFailed');
   const currentMedia = mediaFiles[currentMediaIndex];
 
   const handleOpenMediaViewer = () => {
@@ -564,6 +566,12 @@ const EventDetailDrawer: React.FC<EventDetailDrawerProps> = ({
                       )}
                     </Box>
                   </Box>
+                </Box>
+              )}
+
+              {titleDecryptFailed && mediaFiles.length === 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <DecryptFailedState variant="full" context="calendar" />
                 </Box>
               )}
 

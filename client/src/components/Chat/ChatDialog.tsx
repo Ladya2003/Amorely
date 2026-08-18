@@ -38,6 +38,8 @@ import { isVideoFile } from '../../utils/videoMetadata';
 import { captureVideoPosterFromFile } from '../../utils/videoPoster';
 import MediaViewerDialog from '../common/MediaViewerDialog';
 import EncryptedIndicator from '../common/EncryptedIndicator';
+import MemoryRestoreChatBanner from './MemoryRestoreChatBanner';
+import { usePartnerId } from '../../hooks/usePartnerId';
 import { formatContactPresence } from '../../utils/formatContactPresence';
 import { getContactDisplayName } from '../../utils/contactDisplayName';
 import { formatChatDayBadge } from '../../localization/chatHelpers';
@@ -341,6 +343,7 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const useIOSAccessoryFix = isMobile && isIOSDevice();
   const { otherUnreadCount } = useUnreadMessages();
+  const partnerId = usePartnerId();
   const {
     fontSizePx: messageFontSizePx,
     canDecrease: canDecreaseMessageFontSize,
@@ -1671,6 +1674,7 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
         </Box>
       </Paper>
       </Box>
+      {partnerId && contact.id === partnerId && <MemoryRestoreChatBanner />}
 
       {/* Область сообщений */}
       <Box

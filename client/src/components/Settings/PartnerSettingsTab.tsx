@@ -2,6 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import PartnerForm, { type BreakupContentOptions } from './PartnerForm';
 import PartnerRequestsList from './PartnerRequestsList';
+import MemoryRestoreRequestsList from './MemoryRestoreRequestsList';
 import { PartnerFormSkeleton } from './SettingsSkeletons';
 import { useRelationship } from '../../hooks/useRelationship';
 import { usePartnerRequests } from '../../hooks/usePartnerRequests';
@@ -66,6 +67,8 @@ const PartnerSettingsTab: React.FC<PartnerSettingsTabProps> = ({
         hasPartner={Boolean(partner)}
         onAccepted={handleAccepted}
       />
+
+      <MemoryRestoreRequestsList />
     </Box>
   );
 };
