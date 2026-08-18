@@ -40,6 +40,10 @@ export interface DailyQuestionsState {
   bothCompletedAllAt?: string | null;
   nextRoundAt?: string | null;
   msUntilNextRound?: number | null;
+  rotationMs?: number;
+  fastRotation?: boolean;
+  speedupCost?: number;
+  balance?: number;
 }
 
 export interface CategoryResultItem {

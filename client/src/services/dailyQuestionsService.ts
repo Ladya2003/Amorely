@@ -82,3 +82,12 @@ export const notifyPartnerDailyQuestions = async (categoryId?: string): Promise<
     { headers: authHeaders() }
   );
 };
+
+export const purchaseDailyQuestionsSpeedup = async (): Promise<DailyQuestionsState> => {
+  const { data } = await axios.post(
+    `${API_URL}/api/daily-questions/speedup`,
+    {},
+    { headers: authHeaders(), params: localeParams() }
+  );
+  return data;
+};

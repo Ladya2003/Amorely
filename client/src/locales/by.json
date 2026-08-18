@@ -1764,7 +1764,15 @@
     "youFallback": "Вы",
     "partnerFallback": "Партнёр",
     "noYourAnswer": "Няма адказу",
-    "partnerNoAnswerShort": "Чакаем адказ"
+    "partnerNoAnswerShort": "Чакаем адказ",
+    "speedupLabel": "12 гадз",
+    "speedupCostAria": "Скараціць чаканне да 12 гадзін за {{cost}} Аморак",
+    "speedupActiveAria": "Новыя катэгорыі кожныя 12 гадзін",
+    "speedupDialogTitle": "Хутчэй новыя пытанні",
+    "speedupDialogBody": "Назаўжды скароціць чаканне з 24 да 12 гадзін для вас абодвух. Можна адказваць увечары і зноў раніцай.",
+    "speedupConfirm": "Адкрыць за {{cost}}",
+    "speedupInsufficient": "Недастаткова Аморак (патрэбна {{cost}})",
+    "speedupError": "Не атрымалася паскорыць пытанні дня"
   },
   "common": {
     "back": "Назад",
@@ -1886,7 +1894,7 @@
         },
         "daily_question_category": {
           "action": "Пройдзі катэгорыю ў «Пытанні дня»",
-          "period": "10 за катэгорыю, да 2 катэгорый у дзень"
+          "period": "10 за кожную пройдзеную катэгорыю"
         },
         "signature": {
           "action": "Дадаць малюнак у блоку «Дзён разам» (раніца або вечар)",

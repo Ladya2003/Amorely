@@ -11,16 +11,24 @@ import {
 
 interface CategoryCardProps {
   category: CategoryStatus;
+  nextRoundAt?: string | null;
+  rotationMs?: number;
   onOpen: () => void;
   onResults: () => void;
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({ category, onOpen, onResults }) => {
+const CategoryCard: React.FC<CategoryCardProps> = ({
+  category,
+  nextRoundAt,
+  rotationMs,
+  onOpen,
+  onResults,
+}) => {
   const { t } = useTranslation();
   const theme = useTheme();
 
   const showResults = category.userCompleted;
-  const showTimer = category.bothCompleted && category.bothCompletedAt;
+  const showTimer = Boolean(nextRoundAt) && category.bothCompleted;
 
   const handleClick = () => {
     if (category.userCompleted) {
@@ -60,9 +68,11 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, onOpen, onResults
         </Typography>
       )}
 
-      {showTimer && category.bothCompletedAt && (
+      {showTimer && (
         <CountdownTimer
-          startedAt={category.bothCompletedAt}
+          startedAt={category.bothCompletedAt ?? undefined}
+          endsAt={nextRoundAt}
+          durationMs={rotationMs}
           sx={getCategoryTimerSx(theme)}
         />
       )}

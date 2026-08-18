@@ -140,12 +140,10 @@ export const awardNewsRead = (userId: string, newsId: string) =>
 export const awardAnnouncementRead = (userId: string, announcementKey: string) =>
   awardCurrency(userId, 3, 'announcement_read', `announcement_read:${userId}:${announcementKey}`);
 
-/** Завершение категории «Вопросы дня» — до 2 категорий в день (20 Аморок). */
+/** Завершение категории «Вопросы дня» — 10 Аморок за категорию, без дневного лимита. */
 export const awardDailyQuestionCategory = (userId: string, roundKey: string, categoryId: string) =>
-  incrementDailyActivityAward(
+  awardCurrency(
     userId,
-    'daily_question_categories',
-    2,
     10,
     'daily_question_category',
     `daily_question_category:${userId}:${roundKey}:${categoryId}`

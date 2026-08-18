@@ -12,7 +12,9 @@ import {
   getHistoricalCategoryResults,
   getHistory,
   notifyPartnerAboutQuestions,
+  purchaseFastRotation,
 } from '../services/dailyQuestionsService';
+import { getBalance } from '../services/currencyService';
 import { attachCurrencyToResponse } from '../utils/currencyRewards';
 
 const router = express.Router();
@@ -39,7 +41,8 @@ router.get('/', async (req: ExtendedRequest, res: Response) => {
       return res.json({ hasPartner: false });
     }
 
-    res.json(buildDailyQuestionsResponse(state, userId, locale));
+    const wallet = await getBalance(userId);
+    res.json(buildDailyQuestionsResponse(state, userId, locale, wallet.balance));
   } catch (error) {
     console.error('Daily questions GET error:', error);
     res.status(500).json({ error: 'Failed to load daily questions' });
@@ -159,6 +162,40 @@ router.get('/history', async (req: ExtendedRequest, res: Response) => {
   } catch (error) {
     console.error('Daily questions history error:', error);
     res.status(500).json({ error: 'Failed to load history' });
+  }
+});
+
+router.post('/speedup', async (req: ExtendedRequest, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const locale = await resolveRequestLocale(req);
+    const result = await purchaseFastRotation(userId, locale);
+
+    if (!result.ok) {
+      if (result.error === 'NO_PARTNER') {
+        return res.status(400).json({ error: 'Partner required' });
+      }
+      if (result.error === 'ALREADY_UNLOCKED') {
+        return res.status(409).json({
+          error: 'Already unlocked',
+          ...result.response,
+        });
+      }
+      return res.status(402).json({
+        error: 'Insufficient balance',
+        balance: result.balance,
+        required: result.required,
+      });
+    }
+
+    res.json({
+      ...result.response,
+      awardedAmount: 0,
+      balance: result.balance,
+    });
+  } catch (error) {
+    console.error('Daily questions speedup error:', error);
+    res.status(500).json({ error: 'Failed to unlock faster questions' });
   }
 });
 

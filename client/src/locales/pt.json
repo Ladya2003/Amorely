@@ -1776,7 +1776,15 @@
     "youFallback": "Você",
     "partnerFallback": "Parceiro",
     "noYourAnswer": "Sem resposta",
-    "partnerNoAnswerShort": "Aguardando resposta"
+    "partnerNoAnswerShort": "Aguardando resposta",
+    "speedupLabel": "12 h",
+    "speedupCostAria": "Encurtar a espera para 12 horas por {{cost}} AmoreCoins",
+    "speedupActiveAria": "Novas categorias a cada 12 horas",
+    "speedupDialogTitle": "Perguntas mais rápidas",
+    "speedupDialogBody": "Encurta para sempre a espera de 24 para 12 horas para vocês dois. Respondam à noite e de novo de manhã.",
+    "speedupConfirm": "Desbloquear por {{cost}}",
+    "speedupInsufficient": "AmoreCoins insuficientes (precisa de {{cost}})",
+    "speedupError": "Não foi possível desbloquear as perguntas mais rápidas"
   },
   "common": {
     "back": "Voltar",
@@ -1878,7 +1886,7 @@
         },
         "daily_question_category": {
           "action": "Concluir uma categoria em Perguntas do dia",
-          "period": "10 por categoria, até 2 categorias por dia"
+          "period": "10 por cada categoria concluída"
         },
         "signature": {
           "action": "Adicionar um desenho no bloco Dias juntos (manhã ou tarde)",

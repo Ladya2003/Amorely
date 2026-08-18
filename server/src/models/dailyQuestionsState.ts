@@ -35,6 +35,8 @@ const dailyQuestionsStateSchema = new mongoose.Schema({
   categoryIds: [{ type: String }],
   roundStartedAt: { type: Date, default: Date.now },
   bothCompletedAllAt: { type: Date },
+  fastRotation: { type: Boolean, default: false },
+  fastRotationUnlockedAt: { type: Date },
   categoryBothCompleted: { type: [categoryBothCompletedSchema], default: [] },
   progress: { type: [userCategoryProgressSchema], default: [] },
   history: { type: [historyRoundSchema], default: [] },

@@ -11,6 +11,7 @@ import {
   IconBan,
   IconBell,
   IconBellRinging,
+  IconBolt,
   IconBrandLine,
   IconBrush,
   IconBucketDroplet,
@@ -317,6 +318,7 @@ export const SkipNextIcon = createTablerIcon(IconPlayerSkipForward);
 export const AllInclusiveIcon = createTablerIcon(IconInfinity);
 export const AddPhotoAlternateIcon = createTablerIcon(IconPhotoPlus);
 export const NotificationsActiveOutlinedIcon = createTablerIcon(IconBellRinging);
+export const BoltIcon = createTablerIcon(IconBolt);
 
 export const AppHomeIcon = iconHome;
 export const AppHomeFilledIcon = iconHome;

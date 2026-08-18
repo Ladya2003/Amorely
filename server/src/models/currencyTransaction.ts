@@ -30,6 +30,7 @@ export const CURRENCY_REASONS = [
   'news_read',
   'announcement_read',
   'daily_question_category',
+  'daily_questions_speedup',
   'pet_purchase',
   'pet_level_up',
   'pet_petting',

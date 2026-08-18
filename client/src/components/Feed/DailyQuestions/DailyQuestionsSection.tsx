@@ -27,14 +27,17 @@ import {
 } from '../../../services/dailyQuestionsService';
 import { PARTNER_CHANGED_EVENT } from '../../../hooks/useRelationship';
 import { usePartnerId } from '../../../hooks/usePartnerId';
+import { CURRENCY_UPDATED_EVENT } from '../../../utils/currencyEvents';
 import { SURFACE_BORDER_RADIUS } from '../../../theme/surfaceStyles';
 import {
   getDailyQuestionsPaperSx,
   getDailyQuestionsHeaderSx,
+  getDailyQuestionsHeaderActionsSx,
   getDailyQuestionsCardsRowSx,
   getCategoryTimerSx,
 } from './dailyQuestionsStyles';
 import { CloseIcon, HistoryOutlinedIcon } from '../../UI/icons';
+import SpeedupButton from './SpeedupButton';
 
 const DailyQuestionsSection: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -73,6 +76,16 @@ const DailyQuestionsSection: React.FC = () => {
     window.addEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
     return () => window.removeEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
   }, [loadState]);
+
+  useEffect(() => {
+    const handleCurrencyUpdated = (event: Event) => {
+      const balance = (event as CustomEvent<{ balance?: number }>).detail?.balance;
+      if (typeof balance !== 'number') return;
+      setState((prev) => (prev ? { ...prev, balance } : prev));
+    };
+    window.addEventListener(CURRENCY_UPDATED_EVENT, handleCurrencyUpdated);
+    return () => window.removeEventListener(CURRENCY_UPDATED_EVENT, handleCurrencyUpdated);
+  }, []);
 
   const openResults = useCallback(async (categoryId: string, roundKey?: string | null) => {
     setResultsCategoryId(categoryId);
@@ -135,7 +148,10 @@ const DailyQuestionsSection: React.FC = () => {
       <Paper elevation={0} sx={getDailyQuestionsPaperSx(theme)} aria-busy="true">
         <Box sx={getDailyQuestionsHeaderSx()}>
           <Skeleton variant="text" width={180} height={32} animation="wave" />
-          <Skeleton variant="circular" width={32} height={32} animation="wave" />
+          <Box sx={getDailyQuestionsHeaderActionsSx()}>
+            <Skeleton variant="rounded" width={72} height={32} animation="wave" sx={{ borderRadius: 999 }} />
+            <Skeleton variant="circular" width={32} height={32} animation="wave" />
+          </Box>
         </Box>
         <Box sx={getDailyQuestionsCardsRowSx()}>
           {[0, 1, 2].map((key) => (
@@ -170,17 +186,35 @@ const DailyQuestionsSection: React.FC = () => {
     <>
       <Paper elevation={0} sx={getDailyQuestionsPaperSx(theme)}>
         <Box sx={getDailyQuestionsHeaderSx()}>
-          <Typography variant="h6" fontWeight={700}>
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            sx={{
+              flex: '1 1 8rem',
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {t('dailyQuestions.title')}
           </Typography>
-          <IconButton
-            size="small"
-            onClick={() => setHistoryOpen(true)}
-            aria-label={t('dailyQuestions.historyTitle')}
-            sx={{ color: 'text.secondary' }}
-          >
-            <HistoryOutlinedIcon />
-          </IconButton>
+          <Box sx={getDailyQuestionsHeaderActionsSx()}>
+            <SpeedupButton
+              fastRotation={Boolean(state.fastRotation)}
+              cost={state.speedupCost ?? 350}
+              balance={state.balance ?? 0}
+              onUnlocked={setState}
+            />
+            <IconButton
+              size="small"
+              onClick={() => setHistoryOpen(true)}
+              aria-label={t('dailyQuestions.historyTitle')}
+              sx={{ color: 'text.secondary' }}
+            >
+              <HistoryOutlinedIcon />
+            </IconButton>
+          </Box>
         </Box>
 
         {showNextRoundTimer && state.bothCompletedAllAt && (
@@ -190,7 +224,10 @@ const DailyQuestionsSection: React.FC = () => {
             </Typography>
             <CountdownTimer
               startedAt={state.bothCompletedAllAt}
+              endsAt={state.nextRoundAt}
+              durationMs={state.rotationMs}
               sx={getCategoryTimerSx(theme)}
+              onExpire={loadState}
             />
           </Box>
         )}
@@ -200,6 +237,8 @@ const DailyQuestionsSection: React.FC = () => {
             <CategoryCard
               key={cat.id}
               category={cat}
+              nextRoundAt={showNextRoundTimer ? state.nextRoundAt : null}
+              rotationMs={state.rotationMs}
               onOpen={() => {
                 if (cat.userCompleted) {
                   void openResults(cat.id);

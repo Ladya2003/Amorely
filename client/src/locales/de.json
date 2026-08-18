@@ -1776,7 +1776,15 @@
     "youFallback": "Du",
     "partnerFallback": "Partner",
     "noYourAnswer": "Keine Antwort",
-    "partnerNoAnswerShort": "Warten auf Antwort"
+    "partnerNoAnswerShort": "Warten auf Antwort",
+    "speedupLabel": "12 Std.",
+    "speedupCostAria": "Wartezeit auf 12 Stunden verkürzen für {{cost}} AmoreCoins",
+    "speedupActiveAria": "Neue Kategorien alle 12 Stunden",
+    "speedupDialogTitle": "Schnellere Fragen",
+    "speedupDialogBody": "Verkürzt die Wartezeit dauerhaft von 24 auf 12 Stunden für euch beide. Abends antworten und morgens wieder.",
+    "speedupConfirm": "Freischalten für {{cost}}",
+    "speedupInsufficient": "Nicht genug AmoreCoins ({{cost}} nötig)",
+    "speedupError": "Schnellere Fragen konnten nicht freigeschaltet werden"
   },
   "common": {
     "back": "Zurück",
@@ -1878,7 +1886,7 @@
         },
         "daily_question_category": {
           "action": "Eine Kategorie in „Tagesfragen“ abschließen",
-          "period": "10 pro Kategorie, bis zu 2 Kategorien pro Tag"
+          "period": "10 pro abgeschlossener Kategorie"
         },
         "signature": {
           "action": "Zeichnung im Block „Tage zusammen“ hinzufügen (Vormittag oder Nachmittag)",

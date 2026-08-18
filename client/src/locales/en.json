@@ -1760,7 +1760,15 @@
     "youFallback": "You",
     "partnerFallback": "Partner",
     "noYourAnswer": "No answer",
-    "partnerNoAnswerShort": "Waiting for answer"
+    "partnerNoAnswerShort": "Waiting for answer",
+    "speedupLabel": "12 h",
+    "speedupCostAria": "Shorten the wait to 12 hours for {{cost}} AmoreCoins",
+    "speedupActiveAria": "New categories every 12 hours",
+    "speedupDialogTitle": "Faster questions",
+    "speedupDialogBody": "Permanently shortens the wait from 24 to 12 hours for both of you. Answer in the evening and again in the morning.",
+    "speedupConfirm": "Unlock for {{cost}}",
+    "speedupInsufficient": "Not enough AmoreCoins (need {{cost}})",
+    "speedupError": "Couldn't unlock faster questions"
   },
   "common": {
     "back": "Back",
@@ -1882,7 +1890,7 @@
         },
         "daily_question_category": {
           "action": "Complete a category in Daily questions",
-          "period": "10 per category, up to 2 categories per day"
+          "period": "10 per completed category"
         },
         "signature": {
           "action": "Add a drawing in Days together (morning or afternoon)",

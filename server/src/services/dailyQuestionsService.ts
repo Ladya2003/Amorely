@@ -19,10 +19,15 @@ import { findActiveRelationshipForUser } from '../utils/relationshipHelpers';
 import { normalizeIdStr, idsEqual } from '../utils/normalizeId';
 import { sendPushToUser } from './pushService';
 import { awardDailyQuestionCategory } from '../utils/currencyRewards';
-import type { CurrencyAwardResult } from './currencyService';
+import { getBalance, spendCurrency, type CurrencyAwardResult } from './currencyService';
 
-const MS_24H = 24 * 60 * 60 * 1000;
+export const DAILY_QUESTIONS_ROTATION_MS = 24 * 60 * 60 * 1000;
+export const DAILY_QUESTIONS_FAST_ROTATION_MS = 12 * 60 * 60 * 1000;
+export const DAILY_QUESTIONS_SPEEDUP_COST = 350;
 const CATEGORIES_PER_ROUND = 2;
+
+const getRotationMs = (state: { fastRotation?: boolean }) =>
+  state.fastRotation ? DAILY_QUESTIONS_FAST_ROTATION_MS : DAILY_QUESTIONS_ROTATION_MS;
 
 const generateRoundKey = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -206,7 +211,7 @@ const maybeRotateRound = (state: any) => {
   if (!state.bothCompletedAllAt) return false;
 
   const elapsed = Date.now() - new Date(state.bothCompletedAllAt).getTime();
-  if (elapsed < MS_24H) return false;
+  if (elapsed < getRotationMs(state)) return false;
 
   archiveAndStartNewRound(state);
   return true;
@@ -281,6 +286,10 @@ export interface DailyQuestionsResponse {
   bothCompletedAllAt: string | null;
   nextRoundAt: string | null;
   msUntilNextRound: number | null;
+  rotationMs: number;
+  fastRotation: boolean;
+  speedupCost: number;
+  balance: number;
   allCategories: { id: string; emoji: string; title: string }[];
 }
 
@@ -442,17 +451,19 @@ const buildCategoryStatus = (
 export const buildDailyQuestionsResponse = (
   state: any,
   userId: string,
-  locale: AppLocale = 'ru'
+  locale: AppLocale = 'ru',
+  balance = 0
 ): DailyQuestionsResponse => {
   const categories = state.categoryIds
     .map((id: string) => buildCategoryStatus(state, userId, id, locale))
     .filter(Boolean) as CategoryStatus[];
 
+  const rotationMs = getRotationMs(state);
   let nextRoundAt: string | null = null;
   let msUntilNextRound: number | null = null;
 
   if (state.bothCompletedAllAt) {
-    const target = new Date(state.bothCompletedAllAt).getTime() + MS_24H;
+    const target = new Date(state.bothCompletedAllAt).getTime() + rotationMs;
     nextRoundAt = new Date(target).toISOString();
     msUntilNextRound = Math.max(0, target - Date.now());
   }
@@ -465,12 +476,26 @@ export const buildDailyQuestionsResponse = (
     bothCompletedAllAt: state.bothCompletedAllAt?.toISOString() ?? null,
     nextRoundAt,
     msUntilNextRound,
+    rotationMs,
+    fastRotation: Boolean(state.fastRotation),
+    speedupCost: DAILY_QUESTIONS_SPEEDUP_COST,
+    balance,
     allCategories: DAILY_QUESTION_CATEGORIES.map((c) => ({
       id: c.id,
       emoji: c.emoji,
       title: getLocalizedCategoryTitle(c.id, c.title, locale),
     })),
   };
+};
+
+const buildResponseWithBalance = async (
+  state: any,
+  userId: string,
+  locale: AppLocale = 'ru',
+  balance?: number
+) => {
+  const walletBalance = balance ?? (await getBalance(userId)).balance;
+  return buildDailyQuestionsResponse(state, userId, locale, walletBalance);
 };
 
 export const getCategoryQuestions = (categoryId: string, locale: AppLocale = 'ru') => {
@@ -547,7 +572,7 @@ export const submitAnswer = async (
 
   await persistState(state);
   return {
-    response: buildDailyQuestionsResponse(state, userId, locale),
+    response: await buildResponseWithBalance(state, userId, locale),
     currencyAward,
   };
 };
@@ -697,4 +722,61 @@ export const notifyPartnerAboutQuestions = async (
   });
 };
 
-export { MS_24H as DAILY_QUESTIONS_ROTATION_MS };
+export type PurchaseFastRotationResult =
+  | {
+      ok: true;
+      response: DailyQuestionsResponse;
+      balance: number;
+    }
+  | {
+      ok: false;
+      error: 'NO_PARTNER' | 'ALREADY_UNLOCKED' | 'INSUFFICIENT_BALANCE';
+      balance?: number;
+      required?: number;
+      response?: DailyQuestionsResponse;
+    };
+
+export const purchaseFastRotation = async (
+  userId: string,
+  locale: AppLocale = 'ru'
+): Promise<PurchaseFastRotationResult> => {
+  const state = await getOrCreateState(userId);
+  if (!state) {
+    return { ok: false, error: 'NO_PARTNER' };
+  }
+
+  if (state.fastRotation) {
+    const response = await buildResponseWithBalance(state, userId, locale);
+    return {
+      ok: false,
+      error: 'ALREADY_UNLOCKED',
+      balance: response.balance,
+      response,
+    };
+  }
+
+  const relationshipId = String(state.relationshipId);
+  const spend = await spendCurrency(
+    userId,
+    DAILY_QUESTIONS_SPEEDUP_COST,
+    'daily_questions_speedup',
+    `daily_questions_speedup:${relationshipId}`
+  );
+
+  if (!spend.success) {
+    return {
+      ok: false,
+      error: 'INSUFFICIENT_BALANCE',
+      balance: spend.balance,
+      required: DAILY_QUESTIONS_SPEEDUP_COST,
+    };
+  }
+
+  state.fastRotation = true;
+  state.fastRotationUnlockedAt = new Date();
+  maybeRotateRound(state);
+  await persistState(state);
+
+  const response = await buildResponseWithBalance(state, userId, locale, spend.balance);
+  return { ok: true, response, balance: spend.balance };
+};

@@ -14,7 +14,61 @@ export const getDailyQuestionsHeaderSx = () => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
+  flexWrap: 'wrap' as const,
+  gap: 1,
   mb: 2,
+});
+
+export const getDailyQuestionsHeaderActionsSx = () => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 0.5,
+  ml: 'auto',
+  flexShrink: 0,
+});
+
+export const getSpeedupChipSx = (theme: Theme, interactive: boolean) => {
+  const isLight = theme.palette.mode === 'light';
+
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 0.5,
+    minHeight: 32,
+    px: { xs: 0.9, sm: 1.15 },
+    py: 0.35,
+    borderRadius: 999,
+    cursor: interactive ? 'pointer' : 'default',
+    userSelect: 'none' as const,
+    border: `1px solid ${alpha(theme.palette.primary.main, isLight ? 0.28 : 0.45)}`,
+    bgcolor: alpha(theme.palette.primary.main, isLight ? 0.1 : 0.28),
+    color: isLight ? theme.palette.primary.dark : '#FFE082',
+    boxShadow: `inset 0 1px 0 ${alpha('#fff', isLight ? 0.55 : 0.12)}`,
+    transition: 'background 160ms ease, transform 140ms ease, border-color 160ms ease',
+    ...(interactive && {
+      '&:hover': {
+        bgcolor: alpha(theme.palette.primary.main, isLight ? 0.16 : 0.38),
+        borderColor: theme.palette.primary.main,
+      },
+      '&:active': {
+        transform: 'scale(0.98)',
+      },
+    }),
+  };
+};
+
+export const getSpeedupActiveChipSx = (theme: Theme) => ({
+  ...getSpeedupChipSx(theme, false),
+  bgcolor: alpha(
+    theme.palette.text.primary,
+    theme.palette.mode === 'light' ? 0.05 : 0.1
+  ),
+  borderColor: alpha(
+    theme.palette.text.primary,
+    theme.palette.mode === 'light' ? 0.1 : 0.18
+  ),
+  color: theme.palette.text.secondary,
+  boxShadow: 'none',
 });
 
 export const getDailyQuestionsCardsRowSx = () => ({

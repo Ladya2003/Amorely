@@ -1778,7 +1778,15 @@
     "youFallback": "Ви",
     "partnerFallback": "Партнер",
     "noYourAnswer": "Немає відповіді",
-    "partnerNoAnswerShort": "Чекаємо відповідь"
+    "partnerNoAnswerShort": "Чекаємо відповідь",
+    "speedupLabel": "12 год",
+    "speedupCostAria": "Скоротити очікування до 12 годин за {{cost}} Аморок",
+    "speedupActiveAria": "Нові категорії кожні 12 годин",
+    "speedupDialogTitle": "Швидше нові питання",
+    "speedupDialogBody": "Назавжди скоротить очікування з 24 до 12 годин для вас обох. Можна відповідати ввечері і знову вранці.",
+    "speedupConfirm": "Відкрити за {{cost}}",
+    "speedupInsufficient": "Недостатньо Аморок (потрібно {{cost}})",
+    "speedupError": "Не вдалося прискорити питання дня"
   },
   "common": {
     "back": "Назад",
@@ -1880,7 +1888,7 @@
         },
         "daily_question_category": {
           "action": "Пройти категорію в «Питання дня»",
-          "period": "10 за категорію, до 2 категорій на день"
+          "period": "10 за кожну пройдену категорію"
         },
         "signature": {
           "action": "Додати малюнок у блоці «Днів разом» (ранок або вечір)",
