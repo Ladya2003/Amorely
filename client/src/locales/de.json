@@ -1744,7 +1744,7 @@
       "confirmTitle": "Bist du sicher, dass du deine Passphrase gespeichert hast?",
       "confirmHint": "Speichere diese Phrase in einem Passwortmanager, Notizbuch oder an einem anderen sicheren Ort. Du brauchst sie, um auf verschlüsselte Daten auf einem neuen Gerät oder in einem neuen Browser zuzugreifen.",
       "overwriteWarningTitle": "Wichtig",
-      "overwriteWarningBody": "Wenn du deine vorherige geheime Passphrase vergessen hast und fortfährst, kannst du den gesamten Chatverlauf sowie alle Ereignisse und Pläne nicht wiederherstellen.",
+      "overwriteWarningBody": "Wenn du deine vorherige geheime Passphrase vergessen hast und fortfährst, kannst du den gesamten Chatverlauf sowie alle Ereignisse und Pläne nicht selbst wiederherstellen.\n\nSobald du dich anmeldest, kannst du deinen Partner bitten, deine Daten wiederherzustellen.",
       "overwriteWarningContinue": "Trotzdem fortfahren",
       "cancel": "Abbrechen",
       "confirmSaved": "Ja, gespeichert",

@@ -1728,7 +1728,7 @@
       "confirmTitle": "Are you sure you saved your phrase?",
       "confirmHint": "Save this phrase in a password manager, notebook, or another secure place. You will need it to access encrypted data on a new device or browser.",
       "overwriteWarningTitle": "Important",
-      "overwriteWarningBody": "If you forgot your previous secret phrase and continue, you will not be able to restore your full chat history, all events, and plans.",
+      "overwriteWarningBody": "If you forgot your previous secret phrase and continue, you will not be able to restore your full chat history, all events, and plans on your own.\n\nAfter you sign in, you can ask your partner to restore your data.",
       "overwriteWarningContinue": "Continue anyway",
       "cancel": "Cancel",
       "confirmSaved": "Yes, I saved it",

@@ -1744,7 +1744,7 @@
       "confirmTitle": "Êtes-vous sûr d'avoir enregistré votre phrase ?",
       "confirmHint": "Enregistrez cette phrase dans un gestionnaire de mots de passe, un carnet ou un autre endroit sûr. Vous en aurez besoin pour accéder aux données chiffrées sur un nouvel appareil ou navigateur.",
       "overwriteWarningTitle": "Important",
-      "overwriteWarningBody": "Si vous avez oublié votre phrase secrète précédente et continuez, vous ne pourrez pas restaurer tout l'historique des chats, tous les événements et les plans.",
+      "overwriteWarningBody": "Si vous avez oublié votre phrase secrète précédente et continuez, vous ne pourrez pas restaurer vous-même tout l'historique des chats, tous les événements et les plans.\n\nUne fois connecté, vous pourrez demander à votre partenaire de restaurer vos données.",
       "overwriteWarningContinue": "Continuer quand même",
       "cancel": "Annuler",
       "confirmSaved": "Oui, je l'ai enregistrée",

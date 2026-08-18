@@ -1744,7 +1744,7 @@
       "confirmTitle": "¿Estás seguro de que guardaste tu frase?",
       "confirmHint": "Guarda esta frase en un gestor de contraseñas, un cuaderno u otro lugar seguro. La necesitarás para acceder a los datos cifrados en un nuevo dispositivo o navegador.",
       "overwriteWarningTitle": "Importante",
-      "overwriteWarningBody": "Si olvidaste tu frase secreta anterior y continúas, no podrás restaurar todo el historial del chat, todos los eventos y los planes.",
+      "overwriteWarningBody": "Si olvidaste tu frase secreta anterior y continúas, no podrás restaurar por tu cuenta todo el historial del chat, todos los eventos y los planes.\n\nCuando entres en la app, podrás pedirle a tu pareja que restaure tus datos.",
       "overwriteWarningContinue": "Continuar de todos modos",
       "cancel": "Cancelar",
       "confirmSaved": "Sí, la guardé",
