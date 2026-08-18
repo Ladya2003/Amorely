@@ -307,7 +307,7 @@
         "The closer the marker to the real spot, the more points; both partners' scores are summed.",
         "Each confirms only their own marker — two independent guesses per round.",
         "Up to 5 locations per day; the limit resets the next day.",
-        "When all 200 locations are done, the pool starts over.",
+        "When all 300 locations are done, the pool starts over.",
         "The leaderboard ranks pairs by total score across all rounds."
       ],
       "play": {
@@ -319,7 +319,7 @@
         "dailyAllDoneBody": "You completed all 5 locations. New ones tomorrow.",
         "dailyGuessedAll": "You guessed {{count}} places today. New rounds tomorrow.",
         "restartGame": "Go back to the game description and start again.",
-        "restartHint": "When all 200 locations are done, the pool starts over.",
+        "restartHint": "When all 300 locations are done, the pool starts over.",
         "openPhotoFullscreen": "Open photo fullscreen",
         "openMapFullscreen": "Open map fullscreen",
         "timedOut": "Time's up",

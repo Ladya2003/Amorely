@@ -22,27 +22,88 @@ interface SeedPlace {
   city: string;
 }
 
-/** Новые места для geoGameConfig.ts (QID проверены через Wikipedia) */
+/** Новые места для geoGameConfig.ts (QID проверены: P625 + P18) */
 const SEED_PLACES: SeedPlace[] = [
-  { id: 'usa-death-valley', wikidataId: 'Q242111', nameRu: 'Долина Смерти, США', continent: 'Северная Америка', country: 'США', city: 'Калифорния' },
-  { id: 'usa-bryce-canyon', wikidataId: 'Q219562', nameRu: 'Каньон Брайс, США', continent: 'Северная Америка', country: 'США', city: 'Юта' },
-  { id: 'canada-banff', wikidataId: 'Q41858', nameRu: 'Национальный парк Банф', continent: 'Северная Америка', country: 'Канада', city: 'Альберта' },
-  { id: 'peru-rainbow-mountain', wikidataId: 'Q28025526', nameRu: 'Радужная гора Виникунка', continent: 'Южная Америка', country: 'Перу', city: 'Куско' },
-  { id: 'spain-seville-cathedral', wikidataId: 'Q231606', nameRu: 'Севильский собор, Испания', continent: 'Европа', country: 'Испания', city: 'Севилья' },
-  { id: 'spain-segovia-aqueduct', wikidataId: 'Q244947', nameRu: 'Акведук Сеговии, Испания', continent: 'Европа', country: 'Испания', city: 'Сеговия' },
-  { id: 'portugal-jeronimos', wikidataId: 'Q272781', nameRu: 'Монастырь Жеронимуш, Лиссабон', continent: 'Европа', country: 'Португалия', city: 'Лиссабон' },
-  { id: 'belgium-bruges', wikidataId: 'Q12994', nameRu: 'Брюгге, Бельгия', continent: 'Европа', country: 'Бельгия', city: 'Брюгге' },
-  { id: 'latvia-riga', wikidataId: 'Q1773', nameRu: 'Рига, Латвия', continent: 'Европа', country: 'Латвия', city: 'Рига' },
-  { id: 'scotland-old-man-storr', wikidataId: 'Q104578769', nameRu: 'Старый человек Сторр, Шотландия', continent: 'Европа', country: 'Великобритания', city: 'Остров Скай' },
-  { id: 'china-potala-palace', wikidataId: 'Q71229', nameRu: 'Дворец Потала, Тибет', continent: 'Азия', country: 'Китай', city: 'Лхаса' },
-  { id: 'china-lijiang', wikidataId: 'Q205914', nameRu: 'Старый город Лицзян', continent: 'Азия', country: 'Китай', city: 'Лицзян' },
-  { id: 'cambodia-bayon', wikidataId: 'Q654024', nameRu: 'Храм Байон, Ангкор', continent: 'Азия', country: 'Камбоджа', city: 'Сиемреап' },
-  { id: 'laos-luang-prabang', wikidataId: 'Q190165', nameRu: 'Луангпхабанг, Лаос', continent: 'Азия', country: 'Лаос', city: 'Луангпхабанг' },
-  { id: 'jordan-wadi-rum', wikidataId: 'Q40729', nameRu: 'Вади-Рам, Иордания', continent: 'Азия', country: 'Иордания', city: 'Вади-Рам' },
-  { id: 'morocco-majorelle', wikidataId: 'Q1395431', nameRu: 'Сад Мажорель, Марракеш', continent: 'Африка', country: 'Марокко', city: 'Марракеш' },
-  { id: 'zimbabwe-great-zimbabwe', wikidataId: 'Q209217', nameRu: 'Великий Зимбабве', continent: 'Африка', country: 'Зимбабве', city: 'Масвинго' },
-  { id: 'new-zealand-hobbiton', wikidataId: 'Q18924400', nameRu: 'Хоббитон, Новая Зеландия', continent: 'Океания', country: 'Новая Зеландия', city: 'Матамата' },
-  { id: 'usa-hawaii-volcanoes', wikidataId: 'Q205952', nameRu: 'Вулканический парк Гавайи', continent: 'Океания', country: 'США', city: 'Гавайи' },
+  { id: 'portugal-belem-tower', wikidataId: 'Q215003', nameRu: 'Башня Белен, Лиссабон', continent: 'Европа', country: 'Португалия', city: 'Лиссабон' },
+  { id: 'spain-casa-mila', wikidataId: 'Q207870', nameRu: 'Каса-Мила, Барселона', continent: 'Европа', country: 'Испания', city: 'Барселона' },
+  { id: 'spain-city-of-arts', wikidataId: 'Q239935', nameRu: 'Город искусств и наук, Валенсия', continent: 'Европа', country: 'Испания', city: 'Валенсия' },
+  { id: 'spain-montserrat', wikidataId: 'Q771935', nameRu: 'Монсеррат, Испания', continent: 'Европа', country: 'Испания', city: 'Монсеррат' },
+  { id: 'spain-teide', wikidataId: 'Q715124', nameRu: 'Вулкан Тейде, Тенерифе', continent: 'Европа', country: 'Испания', city: 'Тенерифе' },
+  { id: 'france-sacre-coeur', wikidataId: 'Q28785', nameRu: 'Сакре-Кёр, Париж', continent: 'Европа', country: 'Франция', city: 'Париж' },
+  { id: 'france-chenonceau', wikidataId: 'Q193215', nameRu: 'Замок Шенонсо', continent: 'Европа', country: 'Франция', city: 'Шенонсо' },
+  { id: 'france-carcassonne', wikidataId: 'Q6582', nameRu: 'Каркасон, Франция', continent: 'Европа', country: 'Франция', city: 'Каркасон' },
+  { id: 'france-dune-pilat', wikidataId: 'Q501726', nameRu: 'Дюна Пила, Франция', continent: 'Европа', country: 'Франция', city: 'Аркашон' },
+  { id: 'france-annecy', wikidataId: 'Q50189', nameRu: 'Анси, Франция', continent: 'Европа', country: 'Франция', city: 'Анси' },
+  { id: 'germany-reichstag', wikidataId: 'Q151897', nameRu: 'Рейхстаг, Берлин', continent: 'Европа', country: 'Германия', city: 'Берлин' },
+  { id: 'germany-sanssouci', wikidataId: 'Q151330', nameRu: 'Сан-Суси, Потсдам', continent: 'Европа', country: 'Германия', city: 'Потсдам' },
+  { id: 'germany-elbphilharmonie', wikidataId: 'Q673223', nameRu: 'Эльбская филармония, Гамбург', continent: 'Европа', country: 'Германия', city: 'Гамбург' },
+  { id: 'netherlands-zaanse-schans', wikidataId: 'Q136661', nameRu: 'Зансе-Сханс, Нидерланды', continent: 'Европа', country: 'Нидерланды', city: 'Зандам' },
+  { id: 'belgium-grand-place', wikidataId: 'Q215429', nameRu: 'Гран-Плас, Брюссель', continent: 'Европа', country: 'Бельгия', city: 'Брюссель' },
+  { id: 'czech-orloj', wikidataId: 'Q729370', nameRu: 'Пражские куранты', continent: 'Европа', country: 'Чехия', city: 'Прага' },
+  { id: 'czech-krumlov', wikidataId: 'Q188082', nameRu: 'Чески-Крумлов', continent: 'Европа', country: 'Чехия', city: 'Чески-Крумлов' },
+  { id: 'poland-wieliczka', wikidataId: 'Q454019', nameRu: 'Величка, Польша', continent: 'Европа', country: 'Польша', city: 'Величка' },
+  { id: 'romania-peles', wikidataId: 'Q917702', nameRu: 'Замок Пелеш, Румыния', continent: 'Европа', country: 'Румыния', city: 'Синая' },
+  { id: 'italy-spanish-steps', wikidataId: 'Q848072', nameRu: 'Испанская лестница, Рим', continent: 'Европа', country: 'Италия', city: 'Рим' },
+  { id: 'italy-rialto', wikidataId: 'Q52505', nameRu: 'Мост Риальто, Венеция', continent: 'Европа', country: 'Италия', city: 'Венеция' },
+  { id: 'italy-tre-cime', wikidataId: 'Q1257207', nameRu: 'Тре-Чиме, Доломиты', continent: 'Европа', country: 'Италия', city: 'Доломиты' },
+  { id: 'switzerland-chillon', wikidataId: 'Q372647', nameRu: 'Шильонский замок', continent: 'Европа', country: 'Швейцария', city: 'Монтрё' },
+  { id: 'switzerland-chapel-bridge', wikidataId: 'Q25225', nameRu: 'Часовенный мост, Люцерн', continent: 'Европа', country: 'Швейцария', city: 'Люцерн' },
+  { id: 'uk-london-eye', wikidataId: 'Q160659', nameRu: 'Лондонский глаз', continent: 'Европа', country: 'Великобритания', city: 'Лондон' },
+  { id: 'iceland-jokulsarlon', wikidataId: 'Q511933', nameRu: 'Йёкюльсаурлоун, Исландия', continent: 'Европа', country: 'Исландия', city: 'Хёбн' },
+  { id: 'norway-oslo-opera', wikidataId: 'Q43280', nameRu: 'Оперный театр Осло', continent: 'Европа', country: 'Норвегия', city: 'Осло' },
+  { id: 'lithuania-trakai', wikidataId: 'Q1482013', nameRu: 'Тракайский замок', continent: 'Европа', country: 'Литва', city: 'Тракай' },
+  { id: 'finland-suomenlinna', wikidataId: 'Q1292442', nameRu: 'Суоменлинна, Хельсинки', continent: 'Европа', country: 'Финляндия', city: 'Хельсинки' },
+  { id: 'usa-zion', wikidataId: 'Q205325', nameRu: 'Национальный парк Зайон', continent: 'Северная Америка', country: 'США', city: 'Юта' },
+  { id: 'usa-lincoln-memorial', wikidataId: 'Q213559', nameRu: 'Мемориал Линкольна', continent: 'Северная Америка', country: 'США', city: 'Вашингтон' },
+  { id: 'usa-white-house', wikidataId: 'Q35525', nameRu: 'Белый дом, Вашингтон', continent: 'Северная Америка', country: 'США', city: 'Вашингтон' },
+  { id: 'usa-alcatraz', wikidataId: 'Q131354', nameRu: 'Алькатрас', continent: 'Северная Америка', country: 'США', city: 'Сан-Франциско' },
+  { id: 'usa-grand-prismatic', wikidataId: 'Q1422831', nameRu: 'Гранд-Призматик, Йеллоустон', continent: 'Северная Америка', country: 'США', city: 'Вайоминг' },
+  { id: 'usa-crater-lake', wikidataId: 'Q239304', nameRu: 'Кратер-Лейк, США', continent: 'Северная Америка', country: 'США', city: 'Орегон' },
+  { id: 'usa-brooklyn-bridge', wikidataId: 'Q125006', nameRu: 'Бруклинский мост', continent: 'Северная Америка', country: 'США', city: 'Нью-Йорк' },
+  { id: 'usa-one-wtc', wikidataId: 'Q11245', nameRu: 'Башня Свободы, Нью-Йорк', continent: 'Северная Америка', country: 'США', city: 'Нью-Йорк' },
+  { id: 'canada-hopewell-rocks', wikidataId: 'Q1627589', nameRu: 'Скалы Хоупвелл, Канада', continent: 'Северная Америка', country: 'Канада', city: 'Нью-Брансуик' },
+  { id: 'argentina-teatro-colon', wikidataId: 'Q827401', nameRu: 'Театр Колон, Буэнос-Айрес', continent: 'Южная Америка', country: 'Аргентина', city: 'Буэнос-Айрес' },
+  { id: 'argentina-ushuaia', wikidataId: 'Q44254', nameRu: 'Ушуая, Аргентина', continent: 'Южная Америка', country: 'Аргентина', city: 'Ушуая' },
+  { id: 'brazil-fernando-noronha', wikidataId: 'Q2438090', nameRu: 'Фернанду-ди-Норонья', continent: 'Южная Америка', country: 'Бразилия', city: 'Пернамбуку' },
+  { id: 'peru-nazca', wikidataId: 'Q2620036', nameRu: 'Линии Наски, Перу', continent: 'Южная Америка', country: 'Перу', city: 'Наска' },
+  { id: 'egypt-sphinx', wikidataId: 'Q130958', nameRu: 'Сфинкс Гизы', continent: 'Африка', country: 'Египет', city: 'Каир' },
+  { id: 'egypt-karnak', wikidataId: 'Q522862', nameRu: 'Карнакский храм, Египет', continent: 'Африка', country: 'Египет', city: 'Луксор' },
+  { id: 'egypt-valley-kings', wikidataId: 'Q133423', nameRu: 'Долина царей, Египет', continent: 'Африка', country: 'Египет', city: 'Луксор' },
+  { id: 'morocco-ait-benhaddou', wikidataId: 'Q309436', nameRu: 'Айт-Бен-Хадду, Марокко', continent: 'Африка', country: 'Марокко', city: 'Уарзазат' },
+  { id: 'morocco-hassan-ii', wikidataId: 'Q41346', nameRu: 'Мечеть Хасана II, Касабланка', continent: 'Африка', country: 'Марокко', city: 'Касабланка' },
+  { id: 'morocco-essaouira', wikidataId: 'Q216939', nameRu: 'Эссуэйра, Марокко', continent: 'Африка', country: 'Марокко', city: 'Эссуэйра' },
+  { id: 'morocco-volubilis', wikidataId: 'Q391215', nameRu: 'Волюбилис, Марокко', continent: 'Африка', country: 'Марокко', city: 'Мекнес' },
+  { id: 'tunisia-el-jem', wikidataId: 'Q2914326', nameRu: 'Амфитеатр Эль-Джема', continent: 'Африка', country: 'Тунис', city: 'Эль-Джем' },
+  { id: 'tanzania-ngorongoro', wikidataId: 'Q3002224', nameRu: 'Нгоронгоро, Танзания', continent: 'Африка', country: 'Танзания', city: 'Нгоронгоро' },
+  { id: 'tanzania-stone-town', wikidataId: 'Q844417', nameRu: 'Каменный город, Занзибар', continent: 'Африка', country: 'Танзания', city: 'Занзибар' },
+  { id: 'japan-tokyo-skytree', wikidataId: 'Q57965', nameRu: 'Токийский Скайтри', continent: 'Азия', country: 'Япония', city: 'Токио' },
+  { id: 'japan-arashiyama', wikidataId: 'Q23579173', nameRu: 'Бамбуковая роща Арасияма', continent: 'Азия', country: 'Япония', city: 'Киото' },
+  { id: 'japan-shirakawa-go', wikidataId: 'Q1002193', nameRu: 'Сиракава-го, Япония', continent: 'Азия', country: 'Япония', city: 'Гифу' },
+  { id: 'japan-kiyomizu', wikidataId: 'Q221716', nameRu: 'Храм Киёмидзу-дэра, Киото', continent: 'Азия', country: 'Япония', city: 'Киото' },
+  { id: 'korea-seongsan', wikidataId: 'Q122225', nameRu: 'Сонсан Ильчульбон, Чеджу', continent: 'Азия', country: 'Южная Корея', city: 'Чеджу' },
+  { id: 'china-huangshan', wikidataId: 'Q180470', nameRu: 'Хуаншань, Китай', continent: 'Азия', country: 'Китай', city: 'Хуаншань' },
+  { id: 'china-jiuzhaigou', wikidataId: 'Q4111', nameRu: 'Цзючжайгоу, Китай', continent: 'Азия', country: 'Китай', city: 'Сычуань' },
+  { id: 'china-li-river', wikidataId: 'Q334225', nameRu: 'Река Ли, Гуйлинь', continent: 'Азия', country: 'Китай', city: 'Гуйлинь' },
+  { id: 'uae-burj-al-arab', wikidataId: 'Q62939', nameRu: 'Бурдж-эль-Араб, Дубай', continent: 'Азия', country: 'ОАЭ', city: 'Дубай' },
+  { id: 'india-hawa-mahal', wikidataId: 'Q836531', nameRu: 'Хава-Махал, Джайпур', continent: 'Азия', country: 'Индия', city: 'Джайпур' },
+  { id: 'india-meenakshi', wikidataId: 'Q1424358', nameRu: 'Храм Минакши, Мадурай', continent: 'Азия', country: 'Индия', city: 'Мадурай' },
+  { id: 'india-qutb-minar', wikidataId: 'Q187635', nameRu: 'Кутб-Минар, Дели', continent: 'Азия', country: 'Индия', city: 'Дели' },
+  { id: 'indonesia-prambanan', wikidataId: 'Q47721', nameRu: 'Прамбанан, Индонезия', continent: 'Азия', country: 'Индонезия', city: 'Джокьякарта' },
+  { id: 'indonesia-uluwatu', wikidataId: 'Q1381933', nameRu: 'Храм Улувату, Бали', continent: 'Азия', country: 'Индонезия', city: 'Бали' },
+  { id: 'indonesia-raja-ampat', wikidataId: 'Q26785', nameRu: 'Раджа-Ампат, Индонезия', continent: 'Азия', country: 'Индонезия', city: 'Раджа-Ампат' },
+  { id: 'myanmar-shwedagon', wikidataId: 'Q464535', nameRu: 'Пагода Шведагон, Янгон', continent: 'Азия', country: 'Мьянма', city: 'Янгон' },
+  { id: 'thailand-wat-pho', wikidataId: 'Q1059910', nameRu: 'Ват Пхо, Бангкок', continent: 'Азия', country: 'Таиланд', city: 'Бангкок' },
+  { id: 'vietnam-hoi-an', wikidataId: 'Q36160', nameRu: 'Хойан, Вьетнам', continent: 'Азия', country: 'Вьетнам', city: 'Хойан' },
+  { id: 'singapore-gardens-bay', wikidataId: 'Q630135', nameRu: 'Сады у залива, Сингапур', continent: 'Азия', country: 'Сингапур', city: 'Сингапур' },
+  { id: 'uzbekistan-bukhara', wikidataId: 'Q5764', nameRu: 'Бухара, Узбекистан', continent: 'Азия', country: 'Узбекистан', city: 'Бухара' },
+  { id: 'uzbekistan-khiva', wikidataId: 'Q486195', nameRu: 'Хива, Узбекистан', continent: 'Азия', country: 'Узбекистан', city: 'Хива' },
+  { id: 'israel-masada', wikidataId: 'Q186312', nameRu: 'Масада, Израиль', continent: 'Азия', country: 'Израиль', city: 'Масада' },
+  { id: 'new-zealand-moeraki', wikidataId: 'Q516651', nameRu: 'Валуны Моераки', continent: 'Океания', country: 'Новая Зеландия', city: 'Отаго' },
+  { id: 'australia-whitehaven', wikidataId: 'Q2123432', nameRu: 'Пляж Уайтхейвен', continent: 'Океания', country: 'Австралия', city: 'Квинсленд' },
+  { id: 'new-zealand-tekapo', wikidataId: 'Q1194022', nameRu: 'Озеро Текапо', continent: 'Океания', country: 'Новая Зеландия', city: 'Текапо' },
+  { id: 'new-zealand-tongariro', wikidataId: 'Q202845', nameRu: 'Тонгариро, Новая Зеландия', continent: 'Океания', country: 'Новая Зеландия', city: 'Тонгариро' },
+  { id: 'french-polynesia-moorea', wikidataId: 'Q673400', nameRu: 'Муреа, Французская Полинезия', continent: 'Океания', country: 'Франция', city: 'Муреа' },
+  { id: 'new-zealand-fox-glacier', wikidataId: 'Q1147722', nameRu: 'Ледник Фокс, Новая Зеландия', continent: 'Океания', country: 'Новая Зеландия', city: 'Фокс-Глейшер' },
 ];
 
 interface WikidataEntity {
@@ -88,24 +149,32 @@ const fetchWithRetry = async (url: string, retries = 4): Promise<Response> => {
 const fetchWikidataEntities = async (
   wikidataIds: string[]
 ): Promise<Record<string, WikidataEntity>> => {
-  const params = new URLSearchParams({
-    action: 'wbgetentities',
-    ids: wikidataIds.join('|'),
-    props: 'claims',
-    format: 'json',
-    origin: '*',
-  });
+  const entities: Record<string, WikidataEntity> = {};
 
-  const response = await fetchWithRetry(`${WIKIDATA_API}?${params}`);
-  if (!response.ok) {
-    throw new Error(`Wikidata API error ${response.status}`);
+  for (let index = 0; index < wikidataIds.length; index += 40) {
+    const chunk = wikidataIds.slice(index, index + 40);
+    const params = new URLSearchParams({
+      action: 'wbgetentities',
+      ids: chunk.join('|'),
+      props: 'claims',
+      format: 'json',
+      origin: '*',
+    });
+
+    const response = await fetchWithRetry(`${WIKIDATA_API}?${params}`);
+    if (!response.ok) {
+      throw new Error(`Wikidata API error ${response.status}`);
+    }
+
+    const data = (await response.json()) as {
+      entities?: Record<string, WikidataEntity>;
+    };
+
+    Object.assign(entities, data.entities ?? {});
+    await sleep(400);
   }
 
-  const data = (await response.json()) as {
-    entities: Record<string, WikidataEntity>;
-  };
-
-  return data.entities;
+  return entities;
 };
 
 const getCoordinates = (entity: WikidataEntity): { lat: number; lng: number } => {

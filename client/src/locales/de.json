@@ -307,7 +307,7 @@
         "Je näher die Markierung, desto mehr Punkte; beide Punkte werden addiert.",
         "Jeder bestätigt nur seine Markierung — zwei unabhängige Tipps pro Runde.",
         "Bis zu 5 Orte pro Tag; Limit wird am nächsten Tag zurückgesetzt.",
-        "Nach allen 200 Orten beginnt der Pool von vorn.",
+        "Nach allen 300 Orten beginnt der Pool von vorn.",
         "Bestenliste nach Gesamtpunkten des Paares."
       ],
       "play": {
@@ -319,7 +319,7 @@
         "dailyAllDoneBody": "Alle 5 Orte geschafft. Morgen neue.",
         "dailyGuessedAll": "Ihr habt heute {{count}} Orte erraten. Neue Runden morgen.",
         "restartGame": "Geht zurück zur Spielbeschreibung und startet neu.",
-        "restartHint": "Nach allen 200 Orten beginnt der Pool von vorn.",
+        "restartHint": "Nach allen 300 Orten beginnt der Pool von vorn.",
         "openPhotoFullscreen": "Foto im Vollbild öffnen",
         "openMapFullscreen": "Karte im Vollbild öffnen",
         "timedOut": "Zeit abgelaufen",

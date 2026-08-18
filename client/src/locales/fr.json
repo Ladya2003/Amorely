@@ -307,7 +307,7 @@
         "Plus le marqueur est proche, plus de points ; les scores des deux sont additionnés.",
         "Chacun confirme uniquement son marqueur — deux tentatives indépendantes par manche.",
         "Jusqu'à 5 lieux par jour ; la limite se réinitialise le lendemain.",
-        "Quand les 200 lieux sont faits, le pool recommence.",
+        "Quand les 300 lieux sont faits, le pool recommence.",
         "Classement par score total du couple."
       ],
       "play": {
@@ -319,7 +319,7 @@
         "dailyAllDoneBody": "Vous avez fait les 5 lieux. Nouveaux demain.",
         "dailyGuessedAll": "Vous avez deviné {{count}} lieux aujourd'hui. Nouvelles manches demain.",
         "restartGame": "Retournez à la description du jeu et recommencez.",
-        "restartHint": "Quand les 200 lieux sont faits, le pool recommence.",
+        "restartHint": "Quand les 300 lieux sont faits, le pool recommence.",
         "openPhotoFullscreen": "Ouvrir la photo en plein écran",
         "openMapFullscreen": "Ouvrir la carte en plein écran",
         "timedOut": "Temps écoulé",

@@ -307,7 +307,7 @@
         "Cuanto más cerca el marcador, más puntos; se suman los puntos de ambos.",
         "Cada uno confirma solo su marcador — dos intentos independientes por ronda.",
         "Hasta 5 lugares al día; el límite se reinicia al día siguiente.",
-        "Cuando se completan las 200 ubicaciones, el pool vuelve a empezar.",
+        "Cuando se completan las 300 ubicaciones, el pool vuelve a empezar.",
         "La clasificación ordena parejas por puntuación total."
       ],
       "play": {
@@ -319,7 +319,7 @@
         "dailyAllDoneBody": "Completaste los 5 lugares. Nuevos mañana.",
         "dailyGuessedAll": "Adivinaste {{count}} lugares hoy. Nuevas rondas mañana.",
         "restartGame": "Vuelve a la descripción del juego y empieza de nuevo.",
-        "restartHint": "Cuando se completan las 200 ubicaciones, el pool vuelve a empezar.",
+        "restartHint": "Cuando se completan las 300 ubicaciones, el pool vuelve a empezar.",
         "openPhotoFullscreen": "Abrir foto a pantalla completa",
         "openMapFullscreen": "Abrir mapa a pantalla completa",
         "timedOut": "Se acabó el tiempo",
