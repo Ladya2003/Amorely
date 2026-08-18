@@ -41,6 +41,11 @@ export const chatComposerAttachButtonSx = {
 
 export const chatComposerSendButtonSx = {
   ...chatComposerActionButtonBaseSx,
+  p: 0,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 0,
   bgcolor: 'primary.main',
   color: 'primary.contrastText',
   '&:hover': {
@@ -60,7 +65,8 @@ export const chatComposerAttachIconSx = {
 export const chatComposerSendIconSx = {
   fontSize: 20,
   display: 'block',
-  transform: 'translate(1px, 1px)',
+  // Tabler send points to the top-right; shift opposite the nose so it looks centered.
+  transform: 'translate(-1px, 1px)',
 } as const;
 
 export { getChatComposerInputSx } from './chatDialogStyles';
