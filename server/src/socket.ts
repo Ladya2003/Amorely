@@ -54,6 +54,7 @@ const formatSocketMessage = (message: any, clientTempId?: string) => ({
   sharedEvent: message.sharedEvent || undefined,
   sharedNote: message.sharedNote || undefined,
   sharedGame: message.sharedGame || undefined,
+  sharedChatRestore: message.sharedChatRestore || undefined,
   clientTempId,
   encryptedPayload: message.encryptedPayload
     ? {
@@ -153,6 +154,10 @@ export default function setupSocketIO(server: HttpServer) {
         gameId: string;
         title: string;
         imageUrl?: string;
+      } | null,
+      sharedChatRestore?: {
+        requesterId: string;
+        status?: 'pending' | 'completed' | 'failed';
       } | null
     }) => {
       try {
@@ -166,6 +171,7 @@ export default function setupSocketIO(server: HttpServer) {
           sharedEvent,
           sharedNote,
           sharedGame,
+          sharedChatRestore,
           clientTempId,
           pushPreview
         } = data;
@@ -210,6 +216,12 @@ export default function setupSocketIO(server: HttpServer) {
           sharedEvent: sharedEvent || undefined,
           sharedNote: sharedNote || undefined,
           sharedGame: sharedGame || undefined,
+          sharedChatRestore: sharedChatRestore && String(sharedChatRestore.requesterId || senderId) === senderId
+            ? {
+                requesterId: senderId,
+                status: 'pending'
+              }
+            : undefined,
           isRead: false,
           createdAt: new Date()
         });
@@ -308,7 +320,7 @@ export default function setupSocketIO(server: HttpServer) {
           return;
         }
 
-        if (message.forwardFrom || message.sharedEvent || message.sharedNote || message.sharedGame) {
+        if (message.forwardFrom || message.sharedEvent || message.sharedNote || message.sharedGame || message.sharedChatRestore) {
           socket.emit('error', { message: 'Это сообщение нельзя редактировать' });
           return;
         }

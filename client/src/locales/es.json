@@ -1084,6 +1084,32 @@
     "game": {
       "label": "Juego",
       "joinHint": "Toca para unirte"
+    },
+    "restore": {
+      "banner": "Algunos mensajes de este chat no se pudieron descifrar. Puedes pedir a la otra persona que restaure el historial.",
+      "bannerAction": "Pedir restauración",
+      "bannerClose": "Ocultar",
+      "cardTitle": "Solicitud de restauración del chat",
+      "cardBody": "{{name}} pide restaurar los mensajes que ya no se abren después de una nueva frase secreta.",
+      "cardBodySelf": "Pediste restaurar los mensajes que ya no se abren. Solo la otra persona puede hacerlo.",
+      "cardAction": "Restaurar chat",
+      "cardPending": "En espera",
+      "cardCompleted": "Chat restaurado",
+      "cardFailed": "No se pudo restaurar",
+      "senderToast": "Solo la otra persona puede restaurar este chat.",
+      "preview": "Solicitud de restauración del chat",
+      "previewCompleted": "Historial del chat restaurado",
+      "progressTitle": "Restaurando el chat",
+      "progressBody": "Los mensajes se vuelven a cifrar para que se abran con la nueva frase secreta…",
+      "progressDoneTitle": "Chat restaurado",
+      "progressDoneBody": "La otra persona ya debería poder leer los mensajes otra vez.",
+      "progressFailedTitle": "No se pudo restaurar el chat",
+      "progressCounts": "Restaurados: {{restored}} · Omitidos: {{failed}} · Total: {{total}}",
+      "needKeys": "Desbloquea el cifrado en este dispositivo para restaurar el chat.",
+      "alreadyPending": "Ya hay una solicitud de restauración en este chat.",
+      "sendFailed": "No se pudo enviar la solicitud de restauración",
+      "restoreFailed": "No se pudo restaurar el chat",
+      "close": "Cerrar"
     }
   },
   "calendar": {

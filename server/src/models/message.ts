@@ -76,6 +76,18 @@ const sharedGameSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const sharedChatRestoreSchema = new mongoose.Schema(
+  {
+    requesterId: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'failed'],
+      default: 'pending'
+    }
+  },
+  { _id: false }
+);
+
 const sharedNoteSchema = new mongoose.Schema(
   {
     noteId: { type: String, required: true },
@@ -106,6 +118,7 @@ const messageSchema = new mongoose.Schema({
   sharedEvent: { type: sharedEventSchema, required: false },
   sharedNote: { type: sharedNoteSchema, required: false },
   sharedGame: { type: sharedGameSchema, required: false },
+  sharedChatRestore: { type: sharedChatRestoreSchema, required: false },
   editedAt: { type: Date, required: false },
   reactions: { type: [reactionSchema], default: [] },
   isRead: { type: Boolean, default: false },

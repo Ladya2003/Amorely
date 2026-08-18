@@ -9,6 +9,7 @@ import ChatVideoPlayer from '../common/ChatVideoPlayer';
 import SharedEventCard from './SharedEventCard';
 import SharedNoteCard from './SharedNoteCard';
 import SharedGameCard from './SharedGameCard';
+import SharedChatRestoreCard from './SharedChatRestoreCard';
 import {
   CHAT_MESSAGE_FONT_SIZE_BASE_PX,
 } from '../../utils/chatMessageFontSize';
@@ -19,7 +20,6 @@ import {
   getChatMessageQuoteSx,
   getChatMessageReactionChipSx,
 } from './chatDialogStyles';
-import AvatarAdminIcon from './AvatarAdminIcon';
 import { DoneAllIcon, DoneIcon, MoreHorizIcon, ScheduleIcon } from '../UI/icons';
 
 const imagePreviewStyle: React.CSSProperties = {
@@ -71,8 +71,8 @@ interface MessageProps {
   onSharedEventClick?: (eventId: string) => void;
   onSharedNoteClick?: (noteId: string) => void;
   onSharedGameClick?: (gameId: string) => void;
+  onSharedChatRestoreClick?: (message: MessageType) => void;
   onContactAvatarClick?: () => void;
-  showAdminIcon?: boolean;
   messageFontSizePx?: number;
 }
 
@@ -90,8 +90,8 @@ const Message: React.FC<MessageProps> = ({
   onSharedEventClick,
   onSharedNoteClick,
   onSharedGameClick,
+  onSharedChatRestoreClick,
   onContactAvatarClick,
-  showAdminIcon = false,
   messageFontSizePx = CHAT_MESSAGE_FONT_SIZE_BASE_PX,
 }) => {
   const { t } = useTranslation();
@@ -151,6 +151,7 @@ const Message: React.FC<MessageProps> = ({
   const sharedEvent = message.sharedEvent;
   const sharedNote = message.sharedNote;
   const sharedGame = message.sharedGame;
+  const sharedChatRestore = message.sharedChatRestore;
   const isPending = message.id.startsWith('temp-');
 
   const hasVideoAttachment = useMemo(
@@ -165,11 +166,11 @@ const Message: React.FC<MessageProps> = ({
   );
 
   const isVideoOnlyBubble =
-    hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote && !sharedGame;
+    hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote && !sharedGame && !sharedChatRestore;
 
   const hasImageAttachment = imageAttachmentIndices.length > 0;
   const isImageOnlyBubble =
-    hasImageAttachment && !hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote && !sharedGame;
+    hasImageAttachment && !hasVideoAttachment && !message.text?.trim() && !sharedEvent && !sharedNote && !sharedGame && !sharedChatRestore;
 
   const footerReserveWidth = isOwn
     ? (message.editedAt ? 118 : 94)
@@ -191,20 +192,18 @@ const Message: React.FC<MessageProps> = ({
       }}
     >
       {!isOwn && (
-        <AvatarAdminIcon show={showAdminIcon} avatarSize={36}>
-          <Avatar
-            alt={contactName}
-            src={contactAvatar}
-            onClick={onContactAvatarClick}
-            sx={{
-              width: 36,
-              height: 36,
-              mr: 1,
-              mt: 0.5,
-              cursor: onContactAvatarClick ? 'pointer' : 'default'
-            }}
-          />
-        </AvatarAdminIcon>
+        <Avatar
+          alt={contactName}
+          src={contactAvatar}
+          onClick={onContactAvatarClick}
+          sx={{
+            width: 36,
+            height: 36,
+            mr: 1,
+            mt: 0.5,
+            cursor: onContactAvatarClick ? 'pointer' : 'default'
+          }}
+        />
       )}
       <Box
         sx={{
@@ -422,7 +421,7 @@ const Message: React.FC<MessageProps> = ({
                 fontSize: `${messageFontSizePx}px`,
                 wordBreak: 'break-word',
                 lineHeight: 1.3,
-                mb: sharedEvent || sharedNote || sharedGame ? 0.8 : 0
+                mb: sharedEvent || sharedNote || sharedGame || sharedChatRestore ? 0.8 : 0
               }}
             >
               {message.text}
@@ -464,6 +463,17 @@ const Message: React.FC<MessageProps> = ({
                 sharedGame={sharedGame}
                 isOwn={isOwn}
                 onClick={() => onSharedGameClick?.(sharedGame.gameId)}
+              />
+            </Box>
+          )}
+
+          {sharedChatRestore && (
+            <Box sx={{ mb: message.text ? 0 : 0.25, pb: 2.5 }}>
+              <SharedChatRestoreCard
+                sharedChatRestore={sharedChatRestore}
+                isOwn={isOwn}
+                contactName={contactName}
+                onAction={() => onSharedChatRestoreClick?.(message)}
               />
             </Box>
           )}

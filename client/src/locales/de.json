@@ -1084,6 +1084,32 @@
     "game": {
       "label": "Spiel",
       "joinHint": "Tippen, um beizutreten"
+    },
+    "restore": {
+      "banner": "Einige Nachrichten in diesem Chat konnten nicht entschlüsselt werden. Du kannst dein Gegenüber bitten, den Verlauf wiederherzustellen.",
+      "bannerAction": "Wiederherstellung fragen",
+      "bannerClose": "Ausblenden",
+      "cardTitle": "Anfrage zur Chat-Wiederherstellung",
+      "cardBody": "{{name}} bittet, Nachrichten wiederherzustellen, die nach einer neuen Geheimphrase nicht mehr öffnen.",
+      "cardBodySelf": "Du hast gebeten, Nachrichten wiederherzustellen, die nicht mehr öffnen. Das kann nur dein Gegenüber tun.",
+      "cardAction": "Chat wiederherstellen",
+      "cardPending": "Warten",
+      "cardCompleted": "Chat wiederhergestellt",
+      "cardFailed": "Wiederherstellung fehlgeschlagen",
+      "senderToast": "Nur dein Gegenüber kann diesen Chat wiederherstellen.",
+      "preview": "Anfrage zur Chat-Wiederherstellung",
+      "previewCompleted": "Chatverlauf wiederhergestellt",
+      "progressTitle": "Chat wird wiederhergestellt",
+      "progressBody": "Nachrichten werden neu verschlüsselt, damit sie mit der neuen Geheimphrase öffnen…",
+      "progressDoneTitle": "Chat wiederhergestellt",
+      "progressDoneBody": "Dein Gegenüber sollte die Nachrichten jetzt wieder lesen können.",
+      "progressFailedTitle": "Chat konnte nicht wiederhergestellt werden",
+      "progressCounts": "Wiederhergestellt: {{restored}} · Übersprungen: {{failed}} · Gesamt: {{total}}",
+      "needKeys": "Schalte die Verschlüsselung auf diesem Gerät frei, um den Chat wiederherzustellen.",
+      "alreadyPending": "In diesem Chat wartet bereits eine Wiederherstellungsanfrage.",
+      "sendFailed": "Wiederherstellungsanfrage konnte nicht gesendet werden",
+      "restoreFailed": "Chat konnte nicht wiederhergestellt werden",
+      "close": "Schließen"
     }
   },
   "calendar": {

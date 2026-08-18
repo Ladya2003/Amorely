@@ -28,9 +28,11 @@ import ChatDialog, {
   MessageForwardRef,
   MessageReplyRef,
   MessageType,
+  SharedChatRestoreRef,
   SharedEventRef,
   SharedNoteRef
 } from '../components/Chat/ChatDialog';
+import ChatHistoryRestoreProgressDialog from '../components/Chat/ChatHistoryRestoreProgressDialog';
 import ShareRecipientDialog, { ShareRecipientContact } from '../components/Chat/ShareRecipientDialog';
 import Games from '../components/Chat/Games';
 import {
@@ -74,6 +76,7 @@ import { CHAT_RULES_DOCUMENT_VERSION, hasAcceptedChatRules } from '../legal/chat
 import { updateUiPreferences } from '../services/uiPreferencesService';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
 import { getChatMessagePreview } from '../localization/chatHelpers';
+import { runChatHistoryRestoreRewrap, type ChatHistoryRestoreProgress } from '../crypto/chatRestoreRewrap';
 import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import ResponsiveDialog from '../components/UI/ResponsiveDialog';
@@ -283,6 +286,13 @@ const matchesPendingServerMessage = (
     return true;
   }
 
+  if (
+    pendingMessage.sharedChatRestore?.requesterId &&
+    serverMessage.sharedChatRestore?.requesterId === pendingMessage.sharedChatRestore.requesterId
+  ) {
+    return true;
+  }
+
   const pendingText = (pendingMessage.text || '').trim();
   const serverText = (serverMessage.text || '').trim();
   if (pendingText && serverText && pendingText === serverText) {
@@ -314,7 +324,7 @@ const ChatPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const previewMessage = useCallback(
-    (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'sharedNote' | 'sharedGame' | 'encryptedPayload' | 'mediaEnvelopes'>) =>
+    (message: Pick<MessageType, 'text' | 'attachments' | 'forwardFrom' | 'sharedEvent' | 'sharedNote' | 'sharedGame' | 'sharedChatRestore' | 'encryptedPayload' | 'mediaEnvelopes'>) =>
       getChatMessagePreview(t, message),
     [t]
   );
@@ -359,12 +369,25 @@ const ChatPage: React.FC = () => {
   const [deleteToast, setDeleteToast] = useState<{
     open: boolean;
     message: string;
-    severity: 'success' | 'error';
+    severity: 'success' | 'error' | 'warning';
   }>({
     open: false,
     message: '',
     severity: 'success'
   });
+  const [chatHistoryRestore, setChatHistoryRestore] = useState<{
+    open: boolean;
+    progress: ChatHistoryRestoreProgress | null;
+    error: string | null;
+    done: boolean;
+  }>({
+    open: false,
+    progress: null,
+    error: null,
+    done: false
+  });
+  const chatHistoryRestoreInFlightRef = useRef(false);
+  const skipChatHistoryPageReloadRef = useRef(false);
   const [typingByContactId, setTypingByContactId] = useState<Record<string, boolean>>({});
   const [chatRulesAccepted, setChatRulesAccepted] = useState(false);
   const [isChatRulesChecked, setIsChatRulesChecked] = useState(false);
@@ -465,6 +488,19 @@ const ChatPage: React.FC = () => {
       return Promise.all(
         contactsToDecrypt.map(async (contact) => {
           const { lastMessage } = contact;
+          if (lastMessage.sharedChatRestore) {
+            return {
+              ...contact,
+              lastMessage: {
+                ...lastMessage,
+                text: previewMessage({
+                  text: '',
+                  sharedChatRestore: lastMessage.sharedChatRestore
+                })
+              }
+            };
+          }
+
           if (!lastMessage.encryptedPayload) {
             return contact;
           }
@@ -499,7 +535,7 @@ const ChatPage: React.FC = () => {
         })
       );
     },
-    [CURRENT_USER_ID, decryptMessageForDialog, localDeviceKeys]
+    [CURRENT_USER_ID, decryptMessageForDialog, localDeviceKeys, previewMessage]
   );
 
   const sendEncryptedSocketMessage = useCallback(
@@ -910,7 +946,9 @@ const ChatPage: React.FC = () => {
             replyTo: message.replyTo || tempMessage.replyTo,
             forwardFrom: message.forwardFrom || tempMessage.forwardFrom,
             sharedEvent: message.sharedEvent || tempMessage.sharedEvent,
-            sharedNote: message.sharedNote || tempMessage.sharedNote
+            sharedNote: message.sharedNote || tempMessage.sharedNote,
+            sharedGame: message.sharedGame || tempMessage.sharedGame,
+            sharedChatRestore: message.sharedChatRestore || tempMessage.sharedChatRestore
           };
           return newMessages;
         }
@@ -1402,6 +1440,13 @@ const ChatPage: React.FC = () => {
       clearContactTyping(userId);
     };
 
+    const onChatHistoryRestored = () => {
+      if (skipChatHistoryPageReloadRef.current) {
+        return;
+      }
+      window.location.reload();
+    };
+
     newSocket.on('new_message', onNewMessage);
     newSocket.on('message_sent', onMessageSent);
     newSocket.on('message_read', onMessageRead);
@@ -1417,6 +1462,7 @@ const ChatPage: React.FC = () => {
     newSocket.on('presence_snapshot', onPresenceSnapshot);
     newSocket.on('user_typing', onUserTyping);
     newSocket.on('user_stop_typing', onUserStopTyping);
+    newSocket.on('chat_history_restored', onChatHistoryRestored);
 
     return () => {
       newSocket.off('new_message', onNewMessage);
@@ -1434,6 +1480,7 @@ const ChatPage: React.FC = () => {
       newSocket.off('presence_snapshot', onPresenceSnapshot);
       newSocket.off('user_typing', onUserTyping);
       newSocket.off('user_stop_typing', onUserStopTyping);
+      newSocket.off('chat_history_restored', onChatHistoryRestored);
     };
   }, [
     CURRENT_USER_ID,
@@ -2239,6 +2286,148 @@ const ChatPage: React.FC = () => {
     navigate(`/chat/games/${encodeURIComponent(gameId)}/play`);
   };
 
+  const handleRequestChatHistoryRestore = () => {
+    if (!selectedContactId || !CURRENT_USER_ID) return;
+    const selectedChatContact = contacts.find((contact) => contact.id === selectedContactId);
+    if (selectedChatContact?.role === 'system' || selectedChatContact?.isBlocked) return;
+
+    const hasPendingRequest = messages.some(
+      (message) => message.sharedChatRestore?.status === 'pending'
+    );
+    if (hasPendingRequest) {
+      setDeleteToast({
+        open: true,
+        message: t('chat.restore.alreadyPending'),
+        severity: 'warning'
+      });
+      return;
+    }
+
+    const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const clientTempId = `client-temp-${uniqueSuffix}`;
+    const sharedChatRestore: SharedChatRestoreRef = {
+      requesterId: CURRENT_USER_ID,
+      status: 'pending'
+    };
+    const newMessage: MessageType = {
+      id: `temp-${uniqueSuffix}`,
+      clientTempId,
+      senderId: CURRENT_USER_ID,
+      text: '',
+      timestamp: new Date().toISOString(),
+      sharedChatRestore
+    };
+
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    registerPendingSend(clientTempId, newMessage, selectedContactId);
+    updateContactLastMessage(
+      selectedContactId,
+      previewMessage(newMessage),
+      newMessage.timestamp,
+      false,
+      false,
+      CURRENT_USER_ID,
+      newMessage.id,
+      true
+    );
+
+    try {
+      socketService.sendMessage(
+        selectedContactId,
+        '',
+        undefined,
+        [],
+        null,
+        null,
+        null,
+        clientTempId,
+        t('chat.restore.preview'),
+        null,
+        null,
+        sharedChatRestore
+      );
+      startPendingSendTimeout(clientTempId);
+    } catch (error) {
+      failPendingSend(
+        clientTempId,
+        error instanceof Error ? error.message : t('chat.restore.sendFailed')
+      );
+    }
+  };
+
+  const handleSharedChatRestoreClick = (message: MessageType) => {
+    const restore = message.sharedChatRestore;
+    if (!restore || restore.status !== 'pending') {
+      return;
+    }
+
+    if (message.senderId === CURRENT_USER_ID || restore.requesterId === CURRENT_USER_ID) {
+      setDeleteToast({
+        open: true,
+        message: t('chat.restore.senderToast'),
+        severity: 'warning'
+      });
+      return;
+    }
+
+    if (!localDeviceKeys || !CURRENT_USER_ID) {
+      setDeleteToast({
+        open: true,
+        message: t('chat.restore.needKeys'),
+        severity: 'warning'
+      });
+      return;
+    }
+
+    if (chatHistoryRestoreInFlightRef.current) {
+      return;
+    }
+
+    chatHistoryRestoreInFlightRef.current = true;
+    skipChatHistoryPageReloadRef.current = true;
+    setChatHistoryRestore({
+      open: true,
+      progress: { restored: 0, failed: 0, total: 0 },
+      error: null,
+      done: false
+    });
+
+    void runChatHistoryRestoreRewrap(
+      localDeviceKeys,
+      CURRENT_USER_ID,
+      restore.requesterId,
+      message.id,
+      (progress) => {
+        setChatHistoryRestore((prev) => ({
+          ...prev,
+          progress
+        }));
+      }
+    )
+      .then((progress) => {
+        setChatHistoryRestore({
+          open: true,
+          progress,
+          error: progress.restored > 0 ? null : t('chat.restore.restoreFailed'),
+          done: progress.restored > 0
+        });
+      })
+      .catch((caught: unknown) => {
+        const messageText =
+          caught && typeof caught === 'object' && 'response' in caught
+            ? (caught as { response?: { data?: { error?: string } } }).response?.data?.error
+            : null;
+        setChatHistoryRestore((prev) => ({
+          ...prev,
+          error: messageText || t('chat.restore.restoreFailed'),
+          done: false
+        }));
+      })
+      .finally(() => {
+        chatHistoryRestoreInFlightRef.current = false;
+      });
+  };
+
   const handleEditMessage = (messageId: string, text: string) => {
     if (!selectedContactId || !CURRENT_USER_ID) return;
 
@@ -2834,6 +3023,8 @@ const ChatPage: React.FC = () => {
                       onSharedEventClick={handleSharedEventClick}
                       onSharedNoteClick={handleSharedNoteClick}
                       onSharedGameClick={handleSharedGameClick}
+                      onSharedChatRestoreClick={handleSharedChatRestoreClick}
+                      onRequestChatHistoryRestore={handleRequestChatHistoryRestore}
                       hasMoreMessages={hasMoreMessages}
                       isLoadingOlder={isLoadingOlderMessages}
                       isLoading={isLoadingMessages}
@@ -2941,6 +3132,25 @@ const ChatPage: React.FC = () => {
           </Button>
         </DialogActions>
       </ResponsiveDialog>
+      <ChatHistoryRestoreProgressDialog
+        open={chatHistoryRestore.open}
+        progress={chatHistoryRestore.progress}
+        error={chatHistoryRestore.error}
+        done={chatHistoryRestore.done}
+        onClose={() => {
+          if (chatHistoryRestore.done) {
+            window.location.reload();
+            return;
+          }
+          skipChatHistoryPageReloadRef.current = false;
+          setChatHistoryRestore({
+            open: false,
+            progress: null,
+            error: null,
+            done: false
+          });
+        }}
+      />
       <CustomSnackbar
         open={deleteToast.open}
         message={deleteToast.message}

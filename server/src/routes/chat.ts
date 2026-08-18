@@ -66,6 +66,45 @@ const sortContactsByLastMessageDesc = <T extends { isPartner?: boolean; lastMess
   });
 };
 
+const CHAT_RESTORE_STATUSES = ['pending', 'completed', 'failed'] as const;
+
+const buildDialogFilter = (userId: string, contactId: string) => ({
+  $or: [
+    { senderId: userId, receiverId: contactId },
+    { senderId: contactId, receiverId: userId }
+  ]
+});
+
+const parseEncryptedChatPayload = (value: any) => {
+  if (!value?.ciphertext || !value?.iv || !value?.senderDeviceId) {
+    return null;
+  }
+
+  return {
+    version: Number(value.version) || 1,
+    algorithm: String(value.algorithm || 'ECDH-P256-AES-GCM'),
+    ciphertext: String(value.ciphertext),
+    iv: String(value.iv),
+    senderDeviceId: String(value.senderDeviceId)
+  };
+};
+
+const sanitizeSharedChatRestore = (value: any, senderId: string) => {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const requesterId = String(value.requesterId || senderId);
+  if (requesterId !== String(senderId)) {
+    return undefined;
+  }
+
+  return {
+    requesterId,
+    status: 'pending' as const
+  };
+};
+
 const formatMessageForClient = (message: any) => ({
   id: message._id.toString(),
   senderId: message.senderId.toString(),
@@ -78,6 +117,7 @@ const formatMessageForClient = (message: any) => ({
   sharedEvent: message.sharedEvent || undefined,
   sharedNote: message.sharedNote || undefined,
   sharedGame: message.sharedGame || undefined,
+  sharedChatRestore: message.sharedChatRestore || undefined,
   encryptedPayload: message.encryptedPayload
     ? {
         version: message.encryptedPayload.version,
@@ -179,7 +219,9 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
       const displayText = lastMessage
         ? (lastMessage.encryptedPayload
             ? ''
-            : (hasMedia && !lastMessage.text ? 'Медиафайл' : lastMessage.text || 'Медиафайл'))
+            : (lastMessage.sharedChatRestore
+              ? ''
+              : (hasMedia && !lastMessage.text ? 'Медиафайл' : lastMessage.text || 'Медиафайл')))
         : 'Нет сообщений';
 
       return {
@@ -225,7 +267,8 @@ router.get('/contacts', authMiddleware, async (req: any, res: Response) => {
             url: attachment.url,
             publicId: attachment.publicId,
             encrypted: Boolean(attachment.encrypted)
-          }))
+          })),
+          sharedChatRestore: lastMessage.sharedChatRestore || undefined
         } : {
           id: '',
           senderId: '',
@@ -441,10 +484,135 @@ router.get('/messages', authMiddleware, async (req: any, res: Response) => {
   }
 });
 
+router.get('/messages/restore-copies', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const contactId = String(req.query.contactId || '');
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 100));
+    const skip = (page - 1) * limit;
+
+    if (!userId || !contactId) {
+      return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    const dialogFilter = {
+      ...buildDialogFilter(userId, contactId),
+      encryptedPayload: { $exists: true, $ne: null }
+    };
+
+    const total = await Message.countDocuments(dialogFilter);
+    const messages = await Message.find(dialogFilter)
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit)
+      .select('_id senderId receiverId encryptedPayload');
+
+    return res.json({
+      items: messages.map((message) => ({
+        id: message._id.toString(),
+        senderId: message.senderId.toString(),
+        receiverId: message.receiverId.toString(),
+        encryptedPayload: parseEncryptedChatPayload(message.encryptedPayload)
+      })).filter((item) => item.encryptedPayload),
+      hasMore: skip + messages.length < total,
+      page,
+      limit,
+      total
+    });
+  } catch (error) {
+    console.error('Ошибка при получении сообщений для восстановления чата:', error);
+    return res.status(500).json({ error: 'Ошибка при получении сообщений' });
+  }
+});
+
+router.patch('/messages/restore-copies', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const contactId = String(req.body?.contactId || '');
+    const requestMessageId = String(req.body?.requestMessageId || '');
+    const copies = Array.isArray(req.body?.copies) ? req.body.copies : [];
+    const nextStatus = CHAT_RESTORE_STATUSES.includes(req.body?.status)
+      ? req.body.status as typeof CHAT_RESTORE_STATUSES[number]
+      : undefined;
+
+    if (!userId || !contactId || !requestMessageId) {
+      return res.status(400).json({ error: 'Не указаны необходимые параметры' });
+    }
+
+    if (await isChatBlockedBetween(userId, contactId)) {
+      return res.status(403).json({ error: 'Чат заблокирован' });
+    }
+
+    const requestMessage = await Message.findById(requestMessageId);
+    if (!requestMessage?.sharedChatRestore) {
+      return res.status(404).json({ error: 'Заявка на восстановление не найдена' });
+    }
+
+    const requesterId = String(requestMessage.sharedChatRestore.requesterId);
+    if (requesterId !== contactId) {
+      return res.status(400).json({ error: 'Заявка относится к другому чату' });
+    }
+    if (requesterId === userId) {
+      return res.status(403).json({ error: 'Восстановить историю может только собеседник' });
+    }
+
+    const requestInDialog =
+      (requestMessage.senderId.toString() === userId && requestMessage.receiverId.toString() === contactId) ||
+      (requestMessage.senderId.toString() === contactId && requestMessage.receiverId.toString() === userId);
+    if (!requestInDialog) {
+      return res.status(403).json({ error: 'Недостаточно прав' });
+    }
+
+    let updated = 0;
+    for (const copy of copies.slice(0, 80)) {
+      const messageId = String(copy?.id || '');
+      const encryptedPayload = parseEncryptedChatPayload(copy?.encryptedPayload);
+      if (!messageId || !encryptedPayload) {
+        continue;
+      }
+
+      const result = await Message.updateOne(
+        {
+          _id: messageId,
+          encryptedPayload: { $exists: true, $ne: null },
+          $or: [
+            { senderId: userId, receiverId: contactId },
+            { senderId: contactId, receiverId: userId }
+          ]
+        },
+        { $set: { encryptedPayload } }
+      );
+      updated += result.modifiedCount;
+    }
+
+    if (nextStatus) {
+      requestMessage.sharedChatRestore.status = nextStatus;
+      await requestMessage.save();
+    }
+
+    const formattedRequest = formatMessageForClient(requestMessage);
+    if (nextStatus) {
+      notifySocketUser(userId, 'message_edited', formattedRequest);
+      notifySocketUser(contactId, 'message_edited', formattedRequest);
+      notifySocketUser(userId, 'chat_history_restored', { peerId: contactId, requestMessageId });
+      notifySocketUser(contactId, 'chat_history_restored', { peerId: userId, requestMessageId });
+    }
+
+    return res.json({
+      updated,
+      request: formattedRequest
+    });
+  } catch (error) {
+    console.error('Ошибка при сохранении восстановленных сообщений:', error);
+    return res.status(500).json({ error: 'Ошибка при сохранении сообщений' });
+  }
+});
+
 // Отправка нового сообщения
 router.post('/messages', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { senderId, receiverId, text, attachments, replyTo, forwardFrom, sharedEvent, sharedNote, sharedGame, encryptedPayload } = req.body;
+    const { senderId, receiverId, text, attachments, replyTo, forwardFrom, sharedEvent, sharedNote, sharedGame, sharedChatRestore, encryptedPayload } = req.body;
     
     if (!senderId || !receiverId) {
       return res.status(400).json({ error: 'Не указаны необходимые параметры' });
@@ -466,6 +634,7 @@ router.post('/messages', authMiddleware, async (req: Request, res: Response) => 
       sharedEvent,
       sharedNote,
       sharedGame,
+      sharedChatRestore: sanitizeSharedChatRestore(sharedChatRestore, senderId),
       isRead: false,
       createdAt: new Date()
     });
@@ -499,7 +668,7 @@ router.put('/messages/:id', authMiddleware, async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Недостаточно прав для редактирования' });
     }
 
-    if (message.forwardFrom || message.sharedEvent || message.sharedNote || message.sharedGame) {
+    if (message.forwardFrom || message.sharedEvent || message.sharedNote || message.sharedGame || message.sharedChatRestore) {
       return res.status(403).json({ error: 'Это сообщение нельзя редактировать' });
     }
 

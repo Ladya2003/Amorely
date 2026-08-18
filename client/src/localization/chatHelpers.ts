@@ -11,6 +11,7 @@ type MessagePreviewSource = {
   sharedEvent?: { title?: string } | null;
   sharedNote?: { title?: string } | null;
   sharedGame?: { title?: string } | null;
+  sharedChatRestore?: { status?: string } | null;
   encryptedPayload?: unknown;
   mediaEnvelopes?: unknown[];
 };
@@ -44,6 +45,12 @@ export const getChatMessagePreview = (t: TFunction, message: MessagePreviewSourc
 
   if (!message.text && message.sharedGame) {
     return t('chat.message.game', { title: message.sharedGame.title });
+  }
+
+  if (message.sharedChatRestore) {
+    return message.sharedChatRestore.status === 'completed'
+      ? t('chat.restore.previewCompleted')
+      : t('chat.restore.preview');
   }
 
   if (message.encryptedPayload && hasEncryptedMedia) {

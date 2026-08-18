@@ -1084,6 +1084,32 @@
     "game": {
       "label": "Jeu",
       "joinHint": "Appuyez pour rejoindre"
+    },
+    "restore": {
+      "banner": "Certains messages de ce chat n’ont pas pu être déchiffrés. Vous pouvez demander à votre interlocuteur de restaurer l’historique.",
+      "bannerAction": "Demander la restauration",
+      "bannerClose": "Masquer",
+      "cardTitle": "Demande de restauration du chat",
+      "cardBody": "{{name}} demande de restaurer les messages qui ne s’ouvrent plus après une nouvelle phrase secrète.",
+      "cardBodySelf": "Vous avez demandé de restaurer les messages qui ne s’ouvrent plus. Seul votre interlocuteur peut le faire.",
+      "cardAction": "Restaurer le chat",
+      "cardPending": "En attente",
+      "cardCompleted": "Chat restauré",
+      "cardFailed": "Échec de la restauration",
+      "senderToast": "Seul votre interlocuteur peut restaurer ce chat.",
+      "preview": "Demande de restauration du chat",
+      "previewCompleted": "Historique du chat restauré",
+      "progressTitle": "Restauration du chat",
+      "progressBody": "Les messages sont rechiffrés pour s’ouvrir avec la nouvelle phrase secrète…",
+      "progressDoneTitle": "Chat restauré",
+      "progressDoneBody": "Votre interlocuteur devrait à nouveau pouvoir lire les messages.",
+      "progressFailedTitle": "Impossible de restaurer le chat",
+      "progressCounts": "Restaurés : {{restored}} · Ignorés : {{failed}} · Total : {{total}}",
+      "needKeys": "Déverrouillez le chiffrement sur cet appareil pour restaurer le chat.",
+      "alreadyPending": "Une demande de restauration est déjà en attente dans ce chat.",
+      "sendFailed": "Impossible d’envoyer la demande de restauration",
+      "restoreFailed": "Impossible de restaurer le chat",
+      "close": "Fermer"
     }
   },
   "calendar": {

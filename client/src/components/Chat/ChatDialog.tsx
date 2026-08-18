@@ -39,6 +39,7 @@ import { captureVideoPosterFromFile } from '../../utils/videoPoster';
 import MediaViewerDialog from '../common/MediaViewerDialog';
 import EncryptedIndicator from '../common/EncryptedIndicator';
 import MemoryRestoreChatBanner from './MemoryRestoreChatBanner';
+import ChatHistoryRestoreBanner from './ChatHistoryRestoreBanner';
 import { usePartnerId } from '../../hooks/usePartnerId';
 import { formatContactPresence } from '../../utils/formatContactPresence';
 import { getContactDisplayName } from '../../utils/contactDisplayName';
@@ -156,6 +157,11 @@ export interface SharedGameRef {
   imageUrl?: string;
 }
 
+export interface SharedChatRestoreRef {
+  requesterId: string;
+  status: 'pending' | 'completed' | 'failed';
+}
+
 export interface MessageReaction {
   emoji: string;
   userId: string;
@@ -216,6 +222,7 @@ export interface MessageType {
   sharedEvent?: SharedEventRef;
   sharedNote?: SharedNoteRef;
   sharedGame?: SharedGameRef;
+  sharedChatRestore?: SharedChatRestoreRef;
   clientTempId?: string;
   encryptedPayload?: {
     version: number;
@@ -274,6 +281,8 @@ interface ChatDialogProps {
   onSharedEventClick?: (eventId: string) => void;
   onSharedNoteClick?: (noteId: string) => void;
   onSharedGameClick?: (gameId: string) => void;
+  onSharedChatRestoreClick?: (message: MessageType) => void;
+  onRequestChatHistoryRestore?: () => void;
   hasMoreMessages?: boolean;
   isLoadingOlder?: boolean;
   isLoading?: boolean;
@@ -286,6 +295,7 @@ const isMessageEditable = (message: MessageType, currentUserId: string) => {
   if (message.sharedEvent && !message.text?.trim() && !message.encryptedPayload) return false;
   if (message.sharedNote && !message.text?.trim() && !message.encryptedPayload) return false;
   if (message.sharedGame && !message.text?.trim() && !message.encryptedPayload) return false;
+  if (message.sharedChatRestore) return false;
 
   const hasMediaAttachments = Boolean(
     message.attachments?.some(
@@ -334,6 +344,8 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
   onSharedEventClick,
   onSharedNoteClick,
   onSharedGameClick,
+  onSharedChatRestoreClick,
+  onRequestChatHistoryRestore,
   hasMoreMessages = false,
   isLoadingOlder = false,
   isLoading = false
@@ -1342,12 +1354,16 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
           </MenuItem>,
         ]
       : []),
-    <MenuItem key="chat-action-forward" onClick={handleForwardFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
-      <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
-        <ReplyOutlinedIcon sx={{ fontSize: 18 }} />
-      </ListItemIcon>
-      {t('chat.dialog.forward')}
-    </MenuItem>,
+    ...(contextMenu && !contextMenu.message.sharedChatRestore
+      ? [
+          <MenuItem key="chat-action-forward" onClick={handleForwardFromContextMenu} sx={getChatContextMenuItemSx(theme)}>
+            <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
+              <ReplyOutlinedIcon sx={{ fontSize: 18 }} />
+            </ListItemIcon>
+            {t('chat.dialog.forward')}
+          </MenuItem>,
+        ]
+      : []),
     <MenuItem key="chat-action-delete" onClick={handleDeleteFromContextMenu} sx={getChatContextMenuItemSx(theme, { danger: true })}>
       <ListItemIcon sx={{ minWidth: 32, color: 'inherit' }}>
         <DeleteOutlineIcon sx={{ fontSize: 18 }} />
@@ -1481,7 +1497,6 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
             isOwn={message.senderId === currentUserId}
             contactName={contactName}
             contactAvatar={contactAvatar}
-            showAdminIcon={showContactAdminIcon}
             mb={messageSpacing}
             messageFontSizePx={messageFontSizePx}
             onOpenActions={handleMessageContextMenu}
@@ -1492,6 +1507,7 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
             onSharedEventClick={onSharedEventClick}
             onSharedNoteClick={onSharedNoteClick}
             onSharedGameClick={onSharedGameClick}
+            onSharedChatRestoreClick={onSharedChatRestoreClick}
             onContactAvatarClick={() => setProfileDialogOpen(true)}
           />
         </Box>
@@ -1499,7 +1515,7 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
     });
 
     return nodes;
-  }, [messages, currentUserId, contactName, contactAvatar, showContactAdminIcon, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick, onSharedGameClick, theme, i18n.language, messageFontSizePx]);
+  }, [messages, currentUserId, contactName, contactAvatar, hiddenDayBadgeKeys, highlightedMessageId, enteringMessageIds, handleForwardSourceClick, onSharedEventClick, onSharedNoteClick, onSharedGameClick, onSharedChatRestoreClick, theme, i18n.language, messageFontSizePx]);
 
   const attachmentPreviewByIndex = useMemo(() => {
     const result: Record<number, { url: string; mediaType: 'image' | 'video' }> = {};
@@ -1675,6 +1691,15 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
       </Paper>
       </Box>
       {partnerId && contact.id === partnerId && <MemoryRestoreChatBanner />}
+      {onRequestChatHistoryRestore && (
+        <ChatHistoryRestoreBanner
+          contactId={contact.id}
+          contactRole={contact.role}
+          currentUserId={currentUserId}
+          messages={messages}
+          onRequestRestore={onRequestChatHistoryRestore}
+        />
+      )}
 
       {/* Область сообщений */}
       <Box

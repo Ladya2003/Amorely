@@ -68,6 +68,10 @@ export interface Contact {
       publicId?: string;
       encrypted?: boolean;
     }>;
+    sharedChatRestore?: {
+      requesterId: string;
+      status: 'pending' | 'completed' | 'failed';
+    };
   };
 }
 

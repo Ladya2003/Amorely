@@ -166,6 +166,10 @@ class SocketService {
       gameId: string;
       title: string;
       imageUrl?: string;
+    } | null,
+    sharedChatRestore?: {
+      requesterId: string;
+      status?: 'pending' | 'completed' | 'failed';
     } | null
   ) {
     if (!this.socket) {
@@ -189,7 +193,8 @@ class SocketService {
       clientTempId,
       pushPreview,
       sharedNote,
-      sharedGame
+      sharedGame,
+      sharedChatRestore
     });
   }
 

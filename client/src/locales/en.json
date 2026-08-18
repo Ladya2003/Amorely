@@ -1084,6 +1084,32 @@
     "game": {
       "label": "Game",
       "joinHint": "Tap to join"
+    },
+    "restore": {
+      "banner": "Some messages in this chat could not be decrypted. You can ask your chat partner to restore the history.",
+      "bannerAction": "Ask to restore",
+      "bannerClose": "Hide",
+      "cardTitle": "Chat restore request",
+      "cardBody": "{{name}} asks to restore messages that no longer open after a new secret phrase.",
+      "cardBodySelf": "You asked to restore messages that no longer open. Only your chat partner can do this.",
+      "cardAction": "Restore chat",
+      "cardPending": "Waiting",
+      "cardCompleted": "Chat restored",
+      "cardFailed": "Could not restore",
+      "senderToast": "Only your chat partner can restore this chat.",
+      "preview": "Chat restore request",
+      "previewCompleted": "Chat history restored",
+      "progressTitle": "Restoring chat",
+      "progressBody": "Re-encrypting messages so they open with the new secret phrase…",
+      "progressDoneTitle": "Chat restored",
+      "progressDoneBody": "Your chat partner should now be able to read the messages again.",
+      "progressFailedTitle": "Could not restore the chat",
+      "progressCounts": "Restored: {{restored}} · Skipped: {{failed}} · Total: {{total}}",
+      "needKeys": "Unlock encryption on this device to restore the chat.",
+      "alreadyPending": "A restore request is already waiting in this chat.",
+      "sendFailed": "Could not send the restore request",
+      "restoreFailed": "Could not restore the chat",
+      "close": "Close"
     }
   },
   "calendar": {
