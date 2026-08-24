@@ -622,15 +622,23 @@ router.get('/users', async (req: ExtendedRequest, res: Response) => {
     }
 
     const partnerIds = [...new Set(users.map((user) => user.partnerId?.toString()).filter(Boolean))] as string[];
-    const partners = partnerIds.length
-      ? await User.find({ _id: { $in: partnerIds } }).select('username email').lean()
-      : [];
+    const userIds = users.map((user) => user._id);
+    const [partners, backupUserIds] = await Promise.all([
+      partnerIds.length
+        ? User.find({ _id: { $in: partnerIds } }).select('username email').lean()
+        : Promise.resolve([]),
+      userIds.length
+        ? EncryptedKeyBackup.distinct('userId', { userId: { $in: userIds } })
+        : Promise.resolve([]),
+    ]);
     const partnerMap = new Map(partners.map((partner) => [partner._id.toString(), partner]));
+    const backupUserIdSet = new Set(backupUserIds.map((id) => id.toString()));
 
     const items = users.map((user) => {
       const userId = user._id.toString();
       const rel = relationshipByUserId.get(userId);
       const partner = user.partnerId ? partnerMap.get(user.partnerId.toString()) : null;
+      const authProvider = user.authProvider === 'google' ? 'google' : 'local';
 
       let calendarEvents = userStats.calendarMap.get(userId) ?? 0;
       let feedMedia = userStats.feedMap.get(userId) ?? 0;
@@ -650,6 +658,9 @@ router.get('/users', async (req: ExtendedRequest, res: Response) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role ?? 'user',
+        authProvider,
+        emailVerified: Boolean(user.emailVerified),
+        hasSecretPhrase: backupUserIdSet.has(userId),
         isBlocked: Boolean(user.isBlocked),
         isNewForAdmin: user.isNewForAdmin ?? null,
         isNewForAdminEffective: getEffectiveIsNewForAdmin(user),

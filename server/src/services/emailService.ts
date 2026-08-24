@@ -49,7 +49,11 @@ export const buildVerificationUrl = (token: string): string => {
   return `${base}/verify-email?token=${encodeURIComponent(token)}`;
 };
 
-export async function sendVerificationEmail(email: string, token: string): Promise<void> {
+export async function sendVerificationEmail(
+  email: string,
+  token: string,
+  locale?: string | null
+): Promise<void> {
   const verifyUrl = buildVerificationUrl(token);
   const resend = getResendClient();
 
@@ -61,9 +65,9 @@ export async function sendVerificationEmail(email: string, token: string): Promi
   const { error } = await resend.emails.send({
     from: getFromAddress(),
     to: email,
-    subject: buildVerificationEmailSubject(),
-    html: buildVerificationEmailHtml(verifyUrl),
-    text: buildVerificationEmailText(verifyUrl),
+    subject: buildVerificationEmailSubject(locale),
+    html: buildVerificationEmailHtml(verifyUrl, locale),
+    text: buildVerificationEmailText(verifyUrl, locale),
   });
 
   if (error) {
@@ -77,7 +81,11 @@ export const buildPasswordResetUrl = (token: string): string => {
   return `${base}/reset-password?token=${encodeURIComponent(token)}`;
 };
 
-export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+export async function sendPasswordResetEmail(
+  email: string,
+  token: string,
+  locale?: string | null
+): Promise<void> {
   const resetUrl = buildPasswordResetUrl(token);
   const resend = getResendClient();
 
@@ -89,9 +97,9 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
   const { error } = await resend.emails.send({
     from: getFromAddress(),
     to: email,
-    subject: buildPasswordResetEmailSubject(),
-    html: buildPasswordResetEmailHtml(resetUrl),
-    text: buildPasswordResetEmailText(resetUrl),
+    subject: buildPasswordResetEmailSubject(locale),
+    html: buildPasswordResetEmailHtml(resetUrl, locale),
+    text: buildPasswordResetEmailText(resetUrl, locale),
   });
 
   if (error) {

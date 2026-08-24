@@ -60,6 +60,9 @@ export interface AdminUserItem {
   firstName?: string;
   lastName?: string;
   role: 'user' | 'admin';
+  authProvider: 'local' | 'google';
+  emailVerified: boolean;
+  hasSecretPhrase: boolean;
   isBlocked: boolean;
   isNewForAdmin: boolean | null;
   isNewForAdminEffective: boolean;

@@ -51,6 +51,9 @@ const formatDate = (value?: string) => {
   return format(new Date(value), 'dd MMM yyyy, HH:mm', { locale: ru });
 };
 
+const isEmailVerified = (user: AdminUserItem) =>
+  user.authProvider === 'google' || user.emailVerified;
+
 const formatGames = (user: AdminUserItem) => {
   const entries = Object.entries(user.stats.games)
     .filter(([, info]) => info.score > 0 || info.rank !== null)
@@ -225,6 +228,8 @@ const AdminUsers: React.FC = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Пользователь</TableCell>
+                  <TableCell>Проверка почты</TableCell>
+                  <TableCell>Секретная фраза</TableCell>
                   <TableCell>Партнёр</TableCell>
                   <TableCell>Статус</TableCell>
                   <TableCell>Блокировка</TableCell>
@@ -248,6 +253,24 @@ const AdminUsers: React.FC = () => {
                       <Typography variant="caption" color="text.secondary" display="block">
                         {user.email}
                       </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {isEmailVerified(user) ? (
+                        <Chip
+                          label={user.authProvider === 'google' ? 'Google' : 'Да'}
+                          size="small"
+                          color="success"
+                        />
+                      ) : (
+                        <Chip label="Нет" size="small" color="warning" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.hasSecretPhrase ? (
+                        <Chip label="Да" size="small" color="success" />
+                      ) : (
+                        <Chip label="Нет" size="small" color="warning" />
+                      )}
                     </TableCell>
                     <TableCell>
                       {user.partner ? (
@@ -301,7 +324,7 @@ const AdminUsers: React.FC = () => {
                 ))}
                 {users.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} align="center">
+                    <TableCell colSpan={11} align="center">
                       Пользователи не найдены
                     </TableCell>
                   </TableRow>

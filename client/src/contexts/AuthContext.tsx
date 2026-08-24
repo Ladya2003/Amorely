@@ -343,7 +343,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await axios.post(`${API_URL}/api/auth/register`, {
         email,
         username,
-        password
+        password,
+        locale: resolveAppLocale(i18next.language),
       });
 
       if (response.data?.needsEmailVerification) {
@@ -455,7 +456,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resendVerification = async (email: string): Promise<ResendVerificationResult> => {
     try {
       setIsLoading(true);
-      const response = await axios.post(`${API_URL}/api/auth/resend-verification`, { email });
+      const response = await axios.post(`${API_URL}/api/auth/resend-verification`, {
+        email,
+        locale: resolveAppLocale(i18next.language),
+      });
       return {
         ok: true,
         resendAvailableInSeconds: Number(response.data?.resendAvailableInSeconds) || 60,
@@ -481,7 +485,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       setError(null);
-      const response = await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
+      const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
+        email,
+        locale: resolveAppLocale(i18next.language),
+      });
       return {
         ok: true,
         resendAvailableInSeconds: Number(response.data?.resendAvailableInSeconds) || 60,

@@ -12,6 +12,7 @@ import { ACCOUNT_BLOCKED_ERROR, buildBlockReasons, getLocalizedBlockReason } fro
 import { awardRegistrationBonus } from '../utils/currencyRewards';
 import { getBalance } from '../services/currencyService';
 import { sendPasswordResetEmail, sendVerificationEmail } from '../services/emailService';
+import { resolveLocale } from '../i18n/locales';
 import {
   createEmailVerificationToken,
   getVerificationResendCooldownMs,
@@ -41,6 +42,11 @@ const PASSWORD_RESET_REQUEST_MESSAGE =
   'Если аккаунт с этим email существует, мы отправили письмо для сброса пароля';
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
+const resolveRequestLocale = (req: Request, stored?: string | null) => {
+  const fromBody = typeof req.body?.locale === 'string' ? req.body.locale.trim() : '';
+  return resolveLocale(fromBody || stored);
+};
 
 const googleClient = new OAuth2Client();
 
@@ -77,10 +83,11 @@ const assignVerificationToken = async (user: UserDocument): Promise<string> => {
 /** Send verification email and bump send counters. Caller must ensure cooldown already passed. */
 const sendVerificationAndTrack = async (
   user: UserDocument,
-  email: string
+  email: string,
+  locale?: string | null
 ): Promise<{ resendAvailableInSeconds: number }> => {
   const verificationToken = await assignVerificationToken(user);
-  await sendVerificationEmail(email, verificationToken);
+  await sendVerificationEmail(email, verificationToken, resolveLocale(locale || user.locale));
   const sendCount = (user.emailVerificationSendCount ?? 0) + 1;
   user.emailVerificationSendCount = sendCount;
   user.emailVerificationSentAt = new Date();
@@ -113,6 +120,7 @@ router.post(
       // so a page reload doesn't trap the user on "email already exists".
       if (existingByEmail && !existingByEmail.emailVerified && existingByEmail.authProvider === 'local') {
         existingByEmail.password = password;
+        existingByEmail.locale = resolveRequestLocale(req, existingByEmail.locale);
         if (username !== existingByEmail.username) {
           const usernameTaken = await User.findOne({
             username,
@@ -135,7 +143,11 @@ router.post(
         }
 
         try {
-          const { resendAvailableInSeconds } = await sendVerificationAndTrack(existingByEmail, email);
+          const { resendAvailableInSeconds } = await sendVerificationAndTrack(
+            existingByEmail,
+            email,
+            existingByEmail.locale
+          );
           return res.status(200).json({
             message: 'Проверьте почту для подтверждения email',
             needsEmailVerification: true,
@@ -163,18 +175,20 @@ router.post(
         return res.status(400).json({ error: 'Пользователь с таким логином уже существует' });
       }
 
+      const locale = resolveRequestLocale(req);
       const newUser = new User({
         email,
         username,
         password,
         authProvider: 'local',
         emailVerified: false,
+        locale,
       });
 
       await newUser.save();
 
       try {
-        const { resendAvailableInSeconds } = await sendVerificationAndTrack(newUser, email);
+        const { resendAvailableInSeconds } = await sendVerificationAndTrack(newUser, email, locale);
         res.status(201).json({
           message: 'Проверьте почту для подтверждения email',
           needsEmailVerification: true,
@@ -229,7 +243,11 @@ router.post(
         });
       }
 
-      const { resendAvailableInSeconds } = await sendVerificationAndTrack(user, email);
+      const { resendAvailableInSeconds } = await sendVerificationAndTrack(
+        user,
+        email,
+        resolveRequestLocale(req, user.locale)
+      );
 
       res.json({
         message: 'Если аккаунт требует подтверждения, письмо отправлено',
@@ -600,7 +618,7 @@ router.post(
       user.passwordResetExpires = expiresAt;
 
       try {
-        await sendPasswordResetEmail(email, token);
+        await sendPasswordResetEmail(email, token, resolveRequestLocale(req, user.locale));
       } catch (emailError) {
         // Same generic response as "no account" — do not leak existence via send failures.
         console.error('Ошибка отправки письма сброса пароля:', emailError);
