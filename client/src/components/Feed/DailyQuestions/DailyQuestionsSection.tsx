@@ -38,11 +38,13 @@ import {
 } from './dailyQuestionsStyles';
 import { CloseIcon, HistoryOutlinedIcon } from '../../UI/icons';
 import SpeedupButton from './SpeedupButton';
+import { useOptionalFeedHome } from '../../../contexts/FeedHomeContext';
 
 const DailyQuestionsSection: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const theme = useTheme();
   const partnerId = usePartnerId();
+  const feedHome = useOptionalFeedHome();
   const [state, setState] = useState<DailyQuestionsState | null>(null);
   const [loading, setLoading] = useState(true);
   const [flowCategoryId, setFlowCategoryId] = useState<string | null>(null);
@@ -66,8 +68,16 @@ const DailyQuestionsSection: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (feedHome) {
+      if (feedHome.data?.dailyQuestions) {
+        setState(feedHome.data.dailyQuestions);
+        setLoading(false);
+      }
+      return;
+    }
+
     void loadState();
-  }, [loadState, i18n.language]);
+  }, [feedHome, loadState]);
 
   useEffect(() => {
     const handlePartnerChanged = () => {

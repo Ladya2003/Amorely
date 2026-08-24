@@ -36,6 +36,8 @@ export interface UserDocument extends mongoose.Document {
   installBannerDismissed?: boolean;
   readNewsIds?: mongoose.Types.ObjectId[];
   readNewsBackfilled?: boolean;
+  readAnnouncementKeys?: string[];
+  readAnnouncementsBackfilled?: boolean;
   chatRulesConsent?: {
     version: number;
     acceptedAt: Date;
@@ -112,6 +114,8 @@ const userSchema = new mongoose.Schema({
   installBannerDismissed: { type: Boolean, default: false },
   readNewsIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'News' }],
   readNewsBackfilled: { type: Boolean, default: false },
+  readAnnouncementKeys: [{ type: String }],
+  readAnnouncementsBackfilled: { type: Boolean, default: false },
   chatRulesConsent: {
     version: { type: Number },
     acceptedAt: { type: Date },

@@ -25,13 +25,21 @@ import ResponsiveDialog from '../UI/ResponsiveDialog';
 import { getFeedHeaderGlowSx, getNotificationBellButtonAnimSx, getNotificationBellIconSx } from './feedBannerStyles';
 import FeedCoupleAvatars, { FeedCoupleAvatarsLoader } from './FeedCoupleAvatars';
 import { useRelationship } from '../../hooks/useRelationship';
-import { fetchAnnouncements, type AppAnnouncement, claimAnnouncementReadReward } from '../../services/announcementsService';
+import {
+  claimAnnouncementReadReward,
+  fetchAnnouncements,
+  fetchReadAnnouncementKeys,
+  syncReadAnnouncementKeys,
+  type AppAnnouncement,
+} from '../../services/announcementsService';
 import {
   addReadAnnouncementKey,
+  mergeReadAnnouncementKeys,
   readReadAnnouncementKeys,
 } from '../../utils/readAnnouncementsStorage';
 import { ArrowBackIcon, NotificationsNoneOutlinedIcon } from '../UI/icons';
 import BrandLoader from '../common/BrandLoader';
+import { useOptionalFeedHome } from '../../contexts/FeedHomeContext';
 
 const AVATAR_SIZE_WITH_PHOTO = 92;
 const AVATAR_SIZE_WITHOUT_PHOTO = 56;
@@ -111,6 +119,7 @@ const FeedHeader: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  const feedHome = useOptionalFeedHome();
   const { partner, isLoading: isRelationshipLoading } = useRelationship();
   const { badges } = useRelationshipBadges();
   const { feedDot } = useAdminAlerts();
@@ -124,38 +133,116 @@ const FeedHeader: React.FC = () => {
   const [notificationsView, setNotificationsView] = useState<NotificationsView>('list');
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<AppAnnouncement | null>(null);
 
+  const applyReadKeys = useCallback(
+    (keys: string[]) => {
+      if (!user?._id) {
+        return new Set<string>();
+      }
+
+      const next = mergeReadAnnouncementKeys(user._id, keys);
+      setReadKeys(new Set(next));
+      return next;
+    },
+    [user?._id]
+  );
+
+  const syncReadStateFromAccount = useCallback(async () => {
+    if (!user?._id) {
+      return;
+    }
+
+    try {
+      const serverKeys = await fetchReadAnnouncementKeys();
+      const localKeys = Array.from(readReadAnnouncementKeys(user._id));
+      const localOnly = localKeys.filter((key) => !serverKeys.includes(key));
+
+      if (localOnly.length > 0) {
+        const merged = await syncReadAnnouncementKeys(localOnly);
+        applyReadKeys(merged);
+        return;
+      }
+
+      applyReadKeys(serverKeys);
+    } catch (error) {
+      console.error('Failed to sync read announcements:', error);
+    }
+  }, [user?._id, applyReadKeys]);
+
   const loadAnnouncements = useCallback(async () => {
     try {
       setAnnouncementsLoading(true);
       const items = await fetchAnnouncements();
       setAnnouncements(items);
+      applyReadKeys(items.filter((item) => item.isRead).map((item) => item.key));
     } catch (error) {
       console.error('Failed to load announcements:', error);
       setAnnouncements([]);
     } finally {
       setAnnouncementsLoading(false);
     }
-  }, []);
+  }, [applyReadKeys]);
 
   useEffect(() => {
+    if (feedHome) {
+      if (feedHome.data) {
+        setAnnouncements(feedHome.data.announcements);
+        applyReadKeys(
+          feedHome.data.announcements.filter((item) => item.isRead).map((item) => item.key)
+        );
+        setAnnouncementsLoading(false);
+      }
+      return;
+    }
+
     void loadAnnouncements();
-  }, [loadAnnouncements]);
+  }, [feedHome, loadAnnouncements, applyReadKeys]);
+
+  useEffect(() => {
+    if (!user?._id) {
+      setReadKeys(new Set());
+      return;
+    }
+
+    setReadKeys(readReadAnnouncementKeys(user._id));
+    void syncReadStateFromAccount();
+  }, [user?._id, syncReadStateFromAccount]);
 
   useEffect(() => {
     if (!user?._id) {
       return;
     }
-    setReadKeys(readReadAnnouncementKeys(user._id));
-  }, [user?._id]);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void syncReadStateFromAccount();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user?._id, syncReadStateFromAccount]);
 
   const markAnnouncementRead = useCallback(
     (announcementKey: string) => {
-      if (!user?._id) {
+      if (!user?._id || readKeys.has(announcementKey)) {
         return;
       }
+
       setReadKeys(addReadAnnouncementKey(user._id, announcementKey));
+
+      void claimAnnouncementReadReward(announcementKey)
+        .then((result) => {
+          if (result.readKeys) {
+            applyReadKeys(result.readKeys);
+          }
+        })
+        .catch(() => {
+          // Persist is best-effort; local cache already updated.
+        });
     },
-    [user?._id]
+    [user?._id, readKeys, applyReadKeys]
   );
 
   const unreadCount = useMemo(
@@ -168,9 +255,6 @@ const FeedHeader: React.FC = () => {
       setSelectedAnnouncement(announcement);
       setNotificationsView('detail');
       markAnnouncementRead(announcement.key);
-      void claimAnnouncementReadReward(announcement.key).catch(() => {
-        // Reward is best-effort; ignore network errors.
-      });
     },
     [markAnnouncementRead]
   );

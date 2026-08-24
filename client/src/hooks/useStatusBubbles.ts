@@ -4,6 +4,7 @@ import { API_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import socketService from '../services/socketService';
 import { PARTNER_CHANGED_EVENT } from './useRelationship';
+import { useOptionalFeedHome } from '../contexts/FeedHomeContext';
 
 export interface StatusBubbles {
   user: string;
@@ -11,6 +12,7 @@ export interface StatusBubbles {
 }
 
 export const useStatusBubbles = () => {
+  const feedHome = useOptionalFeedHome();
   const { user, token } = useAuth();
   const [statusBubbles, setStatusBubbles] = useState<StatusBubbles | null>(null);
   const [ownerId, setOwnerId] = useState<string | null>(null);
@@ -89,8 +91,22 @@ export const useStatusBubbles = () => {
   );
 
   useEffect(() => {
+    if (feedHome) {
+      if (feedHome.data?.relationship) {
+        setStatusBubbles(feedHome.data.relationship.statusBubbles || { user: '', partner: '' });
+        setOwnerId(feedHome.data.relationship.ownerId);
+        hasLoadedOnceRef.current = true;
+        setIsLoading(false);
+      } else if (!feedHome.loading) {
+        setStatusBubbles(null);
+        setOwnerId(null);
+        setIsLoading(false);
+      }
+      return;
+    }
+
     void refresh();
-  }, [refresh, user?._id, user?.partnerId]);
+  }, [feedHome, refresh, user?._id, user?.partnerId]);
 
   useEffect(() => {
     const handlePartnerChanged = () => {

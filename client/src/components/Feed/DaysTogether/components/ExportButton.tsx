@@ -3,10 +3,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton, CircularProgress, Tooltip, useTheme } from '@mui/material';
-import html2canvas from 'html2canvas';
 import CustomSnackbar from '../../../UI/CustomSnackbar';
 import { claimCurrency } from '../../../../services/petsService';
-import { ColorTheme } from './ColorPicker';
+import type { ColorTheme } from './colorThemes';
 import { getDaysTogetherActionButtonSx } from '../daysTogetherStyles';
 import { DownloadIcon } from '../../../UI/icons';
 
@@ -30,7 +29,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({ targetId, colorTheme }) => 
         throw new Error('Элемент не найден');
       }
 
-      // Создаем canvas из элемента
+      const { default: html2canvas } = await import('html2canvas');
       const canvas = await html2canvas(element, {
         backgroundColor: null,
         scale: 2, // Увеличиваем качество

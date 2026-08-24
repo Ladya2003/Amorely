@@ -12,7 +12,7 @@ import {
 import { alpha } from '@mui/material/styles';
 import { getDaysWord } from '../utils/helpers';
 import { Achievement } from '../types';
-import { ColorTheme } from './ColorPicker';
+import type { ColorTheme } from './colorThemes';
 import {
   DAYS_TOGETHER_ACTION_RADIUS,
   getDaysTogetherAchievementItemSx,

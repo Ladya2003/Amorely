@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AdminAlertsProvider } from './contexts/AdminAlertsContext';
@@ -11,22 +11,6 @@ import { MemoryRestoreProvider } from './contexts/MemoryRestoreContext';
 import { CryptoProvider } from './contexts/CryptoContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Layout from './components/Layout/Layout';
-import FeedPage from './pages/FeedPage';
-import ChatPage from './pages/ChatPage';
-import GamePage from './pages/GamePage';
-import GamePlayPage from './pages/GamePlayPage';
-import CalendarPage from './pages/CalendarPage';
-import NewsPage from './pages/NewsPage';
-import SettingsPage from './pages/SettingsPage';
-import LegalDocumentPage from './pages/LegalDocumentPage';
-import SupportPage from './pages/SupportPage';
-import BlogPage from './pages/BlogPage';
-import BlogPostPage from './pages/BlogPostPage';
-import CryptoUnlockPage from './pages/CryptoUnlockPage';
-import PetDetailPage from './pages/PetDetailPage';
-import DatingIdeasPage from './pages/DatingIdeasPage';
-import AdminRequestPage from './pages/AdminRequestPage';
-import AdminPage from './pages/AdminPage';
 import AdminRoute from './components/Auth/AdminRoute';
 import LandingRoute from './components/Auth/LandingRoute';
 import PartnerBreakupNotifier from './components/Settings/PartnerBreakupNotifier';
@@ -34,8 +18,28 @@ import BlockNoticeSnackbar from './components/Auth/BlockNoticeSnackbar';
 import CalendarPartnerMigrationRunner from './components/Calendar/CalendarPartnerMigrationRunner';
 import CurrencyAwardOverlay from './components/Pets/CurrencyAwardOverlay';
 import AppDateLocalizationProvider from './components/UI/AppDateLocalizationProvider';
-import VerifyEmailPage from './pages/VerifyEmailPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
+import BrandLoader from './components/common/BrandLoader';
+import { FeedHomeProvider } from './contexts/FeedHomeContext';
+import {
+  AdminPage,
+  AdminRequestPage,
+  BlogPage,
+  BlogPostPage,
+  CalendarPage,
+  ChatPage,
+  CryptoUnlockPage,
+  DatingIdeasPage,
+  FeedPage,
+  GamePage,
+  GamePlayPage,
+  LegalDocumentPage,
+  NewsPage,
+  PetDetailPage,
+  ResetPasswordPage,
+  SettingsPage,
+  SupportPage,
+  VerifyEmailPage,
+} from './routing/lazyPages';
 import {
   LANDING_LOCALES,
   getLandingPath,
@@ -112,6 +116,7 @@ function App() {
               <UnreadNewsProvider>
               <PendingPartnerRequestsProvider>
               <MemoryRestoreProvider>
+              <Suspense fallback={<BrandLoader fullscreen />}>
               <Routes>
                 {/* Старый URL лендинга → preferred locale (GH Pages: `/auth` goes via 404.html) */}
                 <Route
@@ -157,7 +162,14 @@ function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route index element={<FeedPage />} />
+                  <Route
+                    index
+                    element={
+                      <FeedHomeProvider>
+                        <FeedPage />
+                      </FeedHomeProvider>
+                    }
+                  />
                   <Route path="pets/:petId" element={<PetDetailPage />} />
                   <Route path="dating-ideas" element={<DatingIdeasPage />} />
                   <Route path="write-admin" element={<AdminRequestPage />} />
@@ -184,6 +196,7 @@ function App() {
                   }
                 />
               </Routes>
+              </Suspense>
               </MemoryRestoreProvider>
               </PendingPartnerRequestsProvider>
               </UnreadNewsProvider>

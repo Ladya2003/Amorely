@@ -1,50 +1,75 @@
 import i18next, { changeLanguage } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import ru from '../locales/ru.json';
-import en from '../locales/en.json';
-import es from '../locales/es.json';
-import de from '../locales/de.json';
-import fr from '../locales/fr.json';
-import pt from '../locales/pt.json';
-import uk from '../locales/uk.json';
-import by from '../locales/by.json';
-import { resolveAppLocale } from './locale';
+import { AppLocale, resolveAppLocale } from './locale';
 
-const resources = {
-  ru: { translation: ru },
-  en: { translation: en },
-  es: { translation: es },
-  de: { translation: de },
-  fr: { translation: fr },
-  pt: { translation: pt },
-  uk: { translation: uk },
-  by: { translation: by },
+const localeLoaders: Record<AppLocale, () => Promise<{ default: Record<string, unknown> }>> = {
+  ru: () => import('../locales/ru.json'),
+  en: () => import('../locales/en.json'),
+  es: () => import('../locales/es.json'),
+  de: () => import('../locales/de.json'),
+  fr: () => import('../locales/fr.json'),
+  pt: () => import('../locales/pt.json'),
+  uk: () => import('../locales/uk.json'),
+  by: () => import('../locales/by.json'),
 };
 
-const storedLocale = localStorage.getItem('locale');
+const loadedLocales = new Set<AppLocale>();
 
-i18next
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: storedLocale ? resolveAppLocale(storedLocale) : undefined,
-    fallbackLng: 'ru',
-    supportedLngs: ['ru', 'en', 'by', 'uk', 'es', 'de', 'fr', 'pt'],
-    interpolation: { escapeValue: false },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      lookupLocalStorage: 'locale',
-      caches: ['localStorage'],
-      convertDetectedLanguage: (lng) => resolveAppLocale(lng),
-    },
-  });
+const detectInitialLocale = (): AppLocale => {
+  if (typeof window === 'undefined') {
+    return 'ru';
+  }
+
+  const storedLocale = window.localStorage.getItem('locale');
+  if (storedLocale) {
+    return resolveAppLocale(storedLocale);
+  }
+
+  return resolveAppLocale(window.navigator.language);
+};
+
+export const loadAppLocale = async (locale: string): Promise<AppLocale> => {
+  const normalized = resolveAppLocale(locale);
+  if (loadedLocales.has(normalized)) {
+    return normalized;
+  }
+
+  const bundle = await localeLoaders[normalized]();
+  i18next.addResourceBundle(normalized, 'translation', bundle.default, true, true);
+  loadedLocales.add(normalized);
+  return normalized;
+};
+
+export const initAppI18n = async (): Promise<void> => {
+  const initialLocale = detectInitialLocale();
+  const bundle = await localeLoaders[initialLocale]();
+  loadedLocales.add(initialLocale);
+
+  await i18next
+    .use(LanguageDetector)
+    .use(initReactI18next)
+    .init({
+      resources: {
+        [initialLocale]: { translation: bundle.default },
+      },
+      lng: initialLocale,
+      fallbackLng: initialLocale,
+      supportedLngs: ['ru', 'en', 'by', 'uk', 'es', 'de', 'fr', 'pt'],
+      interpolation: { escapeValue: false },
+      detection: {
+        order: ['localStorage', 'navigator'],
+        lookupLocalStorage: 'locale',
+        caches: ['localStorage'],
+        convertDetectedLanguage: (lng) => resolveAppLocale(lng),
+      },
+    });
+};
 
 export const setAppLocale = (locale: string) => {
   const normalized = resolveAppLocale(locale);
   localStorage.setItem('locale', normalized);
-  void changeLanguage(normalized);
+  void loadAppLocale(normalized).then(() => changeLanguage(normalized));
   return normalized;
 };
 

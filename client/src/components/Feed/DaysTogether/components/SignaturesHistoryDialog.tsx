@@ -20,7 +20,7 @@ import {
   getCalendarGridMonthTitleSx,
   getCalendarGridTileSx,
 } from '../../../Calendar/calendarPageStyles';
-import { ColorTheme } from './ColorPicker';
+import type { ColorTheme } from './colorThemes';
 import { getDaysTogetherActionButtonSx } from '../daysTogetherStyles';
 import { CloseIcon, ViewListIcon } from '../../../UI/icons';
 import BrandLoader from '../../../common/BrandLoader';

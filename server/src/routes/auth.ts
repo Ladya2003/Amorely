@@ -60,6 +60,8 @@ const issueAuthSuccess = async (user: UserDocument) => {
     passwordResetExpires: _prExp,
     readNewsIds: _readNewsIds,
     readNewsBackfilled: _readNewsBackfilled,
+    readAnnouncementKeys: _readAnnouncementKeys,
+    readAnnouncementsBackfilled: _readAnnouncementsBackfilled,
     ...userWithoutSensitive
   } = user.toObject();
   const userHasCryptoBackup = await hasCryptoBackup(user._id);
@@ -520,7 +522,7 @@ router.get('/me', async (req: Request, res: Response) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'amorely') as { userId: string };
     
     const user = await User.findById(decoded.userId).select(
-      '-password -emailVerificationTokenHash -passwordResetTokenHash -readNewsIds -readNewsBackfilled'
+      '-password -emailVerificationTokenHash -passwordResetTokenHash -readNewsIds -readNewsBackfilled -readAnnouncementKeys -readAnnouncementsBackfilled'
     );
     
     if (!user) {

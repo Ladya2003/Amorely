@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Box, Typography, LinearProgress, Chip, useTheme } from '@mui/material';
 import { Milestone } from '../types';
 import { getDaysWord } from '../utils/helpers';
-import { ColorTheme } from './ColorPicker';
+import type { ColorTheme } from './colorThemes';
 import {
   getDaysTogetherChipSx,
   getDaysTogetherInnerSurfaceSx,

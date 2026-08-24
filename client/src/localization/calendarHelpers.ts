@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { be as beDateFns, de, enUS, es, fr, ptBR, ru, uk } from 'date-fns/locale';
+import { ru } from 'date-fns/locale/ru';
 import type { TFunction } from 'i18next';
 import type { Locale } from 'date-fns';
 import { AppLocale, resolveAppLocale } from './locale';
@@ -10,15 +10,17 @@ import {
   formatMegabytes,
 } from '../utils/mediaLimits';
 
-const DATE_FNS_LOCALES: Record<AppLocale, Locale> = {
-  ru,
-  en: enUS,
-  es,
-  de,
-  fr,
-  pt: ptBR,
-  uk,
-  by: beDateFns,
+const dateFnsLocaleCache: Partial<Record<AppLocale, Locale>> = { ru };
+
+const dateFnsLocaleLoaders: Record<AppLocale, () => Promise<Locale>> = {
+  ru: () => Promise.resolve(ru),
+  en: () => import('date-fns/locale/en-US').then((module) => module.enUS),
+  es: () => import('date-fns/locale/es').then((module) => module.es),
+  de: () => import('date-fns/locale/de').then((module) => module.de),
+  fr: () => import('date-fns/locale/fr').then((module) => module.fr),
+  pt: () => import('date-fns/locale/pt-BR').then((module) => module.ptBR),
+  uk: () => import('date-fns/locale/uk').then((module) => module.uk),
+  by: () => import('date-fns/locale/be').then((module) => module.be),
 };
 
 /** ISO-style week: Monday first, Sunday last (matches calendar grid). */
@@ -36,9 +38,21 @@ export const DATE_INPUT_FORMAT = 'dd/MM/yyyy';
 /** Day-first format for datetime inputs (plans deadline, etc.). */
 export const DATE_TIME_INPUT_FORMAT = `${DATE_INPUT_FORMAT} HH:mm`;
 
+export const ensureDateFnsLocale = async (locale?: string | null): Promise<Locale> => {
+  const appLocale = resolveAppLocale(locale ?? undefined);
+  const cached = dateFnsLocaleCache[appLocale];
+  if (cached) {
+    return withMondayWeekStart(cached);
+  }
+
+  const loaded = await dateFnsLocaleLoaders[appLocale]();
+  dateFnsLocaleCache[appLocale] = loaded;
+  return withMondayWeekStart(loaded);
+};
+
 export const getDateFnsLocale = (locale?: string | null): Locale => {
   const appLocale = resolveAppLocale(locale ?? undefined);
-  return withMondayWeekStart(DATE_FNS_LOCALES[appLocale]);
+  return withMondayWeekStart(dateFnsLocaleCache[appLocale] ?? ru);
 };
 
 export const formatNumericDate = (date: Date, locale?: string | null): string =>

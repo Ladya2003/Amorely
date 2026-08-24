@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
+import { useOptionalFeedHome } from '../contexts/FeedHomeContext';
 import type { Partner } from '../components/Settings/PartnerForm';
 
 export const PARTNER_CHANGED_EVENT = 'amorely:partner-changed';
@@ -22,6 +23,7 @@ export const notifyBreakupInitiated = () => {
 
 export const useRelationship = () => {
   const { user, token } = useAuth();
+  const feedHome = useOptionalFeedHome();
   const [partner, setPartner] = useState<Partner | null>(null);
   const [relationshipStartDate, setRelationshipStartDate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(() => Boolean(user?.partnerId));
@@ -61,11 +63,24 @@ export const useRelationship = () => {
   }, [token, user?.partnerId]);
 
   useEffect(() => {
+    if (feedHome) {
+      if (feedHome.data) {
+        setPartner(feedHome.data.partner);
+        setRelationshipStartDate(feedHome.data.relationship?.startDate ?? null);
+      }
+      setIsLoading(feedHome.loading && !feedHome.data);
+      return;
+    }
+
     void refresh();
-  }, [refresh, user?._id, user?.partnerId]);
+  }, [feedHome, refresh, user?._id, user?.partnerId]);
 
   useEffect(() => {
     const handlePartnerChanged = () => {
+      if (feedHome) {
+        void feedHome.refresh();
+        return;
+      }
       void refresh();
     };
 
@@ -84,7 +99,7 @@ export const useRelationship = () => {
       window.removeEventListener('focus', handlePartnerChanged);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [refresh]);
+  }, [feedHome, refresh]);
 
   return {
     partner,

@@ -5,9 +5,13 @@ export interface BottomNavTabProps {
   value: number;
   label: string;
   icon: React.ReactNode;
+  onPrefetch?: () => void;
 }
 
-const BottomNavTab: React.FC<BottomNavTabProps> = ({ value, label, icon, ...muiInjected }) => (
+const BottomNavTab: React.FC<BottomNavTabProps> = ({ value, label, icon, onPrefetch, ...muiInjected }) => {
+  const injected = muiInjected as React.ComponentProps<typeof BottomNavigationAction>;
+
+  return (
   <BottomNavigationAction
     value={value}
     showLabel={false}
@@ -65,8 +69,17 @@ const BottomNavTab: React.FC<BottomNavTabProps> = ({ value, label, icon, ...muiI
         overflow: 'hidden',
       },
     }}
-    {...(muiInjected as React.ComponentProps<typeof BottomNavigationAction>)}
+    {...injected}
+    onMouseEnter={(event) => {
+      onPrefetch?.();
+      injected.onMouseEnter?.(event);
+    }}
+    onFocus={(event) => {
+      onPrefetch?.();
+      injected.onFocus?.(event);
+    }}
   />
-);
+  );
+};
 
 export default BottomNavTab;

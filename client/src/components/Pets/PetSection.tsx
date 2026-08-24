@@ -16,6 +16,7 @@ import CurrencyCoinIcon from './CurrencyCoinIcon';
 import PetCard from './PetCard';
 import PetCreateDialog from './PetCreateDialog';
 import { fetchMyPets, fetchPartnerPets, fetchUserPets, type Pet } from '../../services/petsService';
+import { useOptionalFeedHome } from '../../contexts/FeedHomeContext';
 import { PET_PURCHASE_COST } from '../../config/petCatalogShared';
 import { CURRENCY_UPDATED_EVENT } from '../../utils/currencyEvents';
 import { usePartnerId } from '../../hooks/usePartnerId';
@@ -234,6 +235,7 @@ const PetSection: React.FC<PetSectionProps> = ({
   const [moodLoading, setMoodLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
+  const feedHome = useOptionalFeedHome();
 
   const loadPets = useCallback(async (options?: { silent?: boolean }) => {
     const silent = options?.silent ?? false;
@@ -272,8 +274,20 @@ const PetSection: React.FC<PetSectionProps> = ({
   }, [isReadonly, onBalanceChange, partnerId, t, userId]);
 
   useEffect(() => {
+    if (!isReadonly && feedHome) {
+      if (feedHome.data) {
+        setPets(feedHome.data.pets.pets);
+        setPartnerPets(feedHome.data.partnerPets.pets);
+        setBalance(feedHome.data.pets.balance);
+        onBalanceChange?.(feedHome.data.pets.balance);
+        setMoodLoading(false);
+        setLoading(false);
+      }
+      return;
+    }
+
     void loadPets();
-  }, [loadPets]);
+  }, [feedHome, isReadonly, loadPets, onBalanceChange]);
 
   useEffect(() => {
     if (!partnerId) {

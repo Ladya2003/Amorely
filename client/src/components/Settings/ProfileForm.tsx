@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { lazy, Suspense, useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import {
@@ -13,7 +13,6 @@ import {
 import AppTextField from '../UI/AppTextField';
 import AppDatePicker from '../UI/AppDatePicker';
 import FieldCaption from '../UI/FieldCaption';
-import ImageCropDialog from '../UI/ImageCropDialog';
 import ContentViewer from '../Calendar/ContentViewer';
 import CustomSnackbar from '../UI/CustomSnackbar';
 import DisplayBadgePicker, { type BadgePreference } from './DisplayBadgePicker';
@@ -29,6 +28,8 @@ import {
   getSettingsSectionTitleSx,
 } from './settingsPageStyles';
 import { PhotoCameraIcon } from '../UI/icons';
+
+const ImageCropDialog = lazy(() => import('../UI/ImageCropDialog'));
 
 export interface UserProfile {
   _id: string;
@@ -355,15 +356,19 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user, onSave, onBadgePreferen
         </Grid>
       </Box>
 
-      <ImageCropDialog
-        open={cropDialogOpen}
-        imageSrc={cropImageSrc}
-        originalFile={pendingAvatarFile}
-        onClose={handleCropDialogClose}
-        onConfirm={handleAvatarCropped}
-        title={t('settings.profile.cropTitle')}
-        aspect={1}
-      />
+      {cropDialogOpen && (
+        <Suspense fallback={null}>
+          <ImageCropDialog
+            open={cropDialogOpen}
+            imageSrc={cropImageSrc}
+            originalFile={pendingAvatarFile}
+            onClose={handleCropDialogClose}
+            onConfirm={handleAvatarCropped}
+            title={t('settings.profile.cropTitle')}
+            aspect={1}
+          />
+        </Suspense>
+      )}
 
       <ContentViewer
         open={avatarViewerOpen}

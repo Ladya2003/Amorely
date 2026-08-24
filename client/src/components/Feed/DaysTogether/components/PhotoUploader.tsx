@@ -1,6 +1,6 @@
 // Компонент загрузки и обрезки фото с валидацией
 
-import React, { useState, useRef } from 'react';
+import React, { lazy, Suspense, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { alpha } from '@mui/material/styles';
 import {
@@ -8,12 +8,13 @@ import {
   Box,
   useTheme,
 } from '@mui/material';
-import ImageCropDialog from '../../../UI/ImageCropDialog';
 import CustomSnackbar from '../../../UI/CustomSnackbar';
 import { validateFileSize, validateFileType } from '../utils/helpers';
-import { ColorTheme } from './ColorPicker';
+import type { ColorTheme } from './colorThemes';
 import { getDaysTogetherActionButtonSx } from '../daysTogetherStyles';
 import { AddPhotoAlternateIcon, DeleteIcon } from '../../../UI/icons';
+
+const ImageCropDialog = lazy(() => import('../../../UI/ImageCropDialog'));
 
 interface PhotoUploaderProps {
   onPhotoUpload: (file: File) => void;
@@ -115,13 +116,17 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         )}
       </Box>
 
-      <ImageCropDialog
-        open={cropDialogOpen}
-        imageSrc={imageSrc}
-        originalFile={originalFileRef.current}
-        onClose={handleCropDialogClose}
-        onConfirm={onPhotoUpload}
-      />
+      {cropDialogOpen && (
+        <Suspense fallback={null}>
+          <ImageCropDialog
+            open={cropDialogOpen}
+            imageSrc={imageSrc}
+            originalFile={originalFileRef.current}
+            onClose={handleCropDialogClose}
+            onConfirm={onPhotoUpload}
+          />
+        </Suspense>
+      )}
 
       <CustomSnackbar
         open={!!error}

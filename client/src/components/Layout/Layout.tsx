@@ -67,6 +67,7 @@ import {
 
 import { getDesktopLayoutTopGlowSx } from '../Feed/feedBannerStyles';
 import { FavoriteIcon } from '../UI/icons';
+import { prefetchRoute } from '../../routing/lazyPages';
 
 
 
@@ -270,11 +271,11 @@ const Layout: React.FC = () => {
 
 
   const bottomNavActions = [
-    <BottomNavTab key="home" value={0} label={t('nav.home')} icon={<AppHomeFilledIcon />} />,
-    <BottomNavTab key="chat" value={1} label={t('nav.chat')} icon={chatTabIcon} />,
-    <BottomNavTab key="calendar" value={2} label={t('nav.calendar')} icon={<AppCalendarFilledIcon />} />,
-    <BottomNavTab key="news" value={3} label={t('nav.news')} icon={newsTabIcon} />,
-    <BottomNavTab key="settings" value={4} label={t('nav.settings')} icon={settingsTabIcon} />,
+    <BottomNavTab key="home" value={0} label={t('nav.home')} icon={<AppHomeFilledIcon />} onPrefetch={() => prefetchRoute('/')} />,
+    <BottomNavTab key="chat" value={1} label={t('nav.chat')} icon={chatTabIcon} onPrefetch={() => prefetchRoute('/chat')} />,
+    <BottomNavTab key="calendar" value={2} label={t('nav.calendar')} icon={<AppCalendarFilledIcon />} onPrefetch={() => prefetchRoute('/calendar')} />,
+    <BottomNavTab key="news" value={3} label={t('nav.news')} icon={newsTabIcon} onPrefetch={() => prefetchRoute('/news')} />,
+    <BottomNavTab key="settings" value={4} label={t('nav.settings')} icon={settingsTabIcon} onPrefetch={() => prefetchRoute('/settings')} />,
   ];
 
   

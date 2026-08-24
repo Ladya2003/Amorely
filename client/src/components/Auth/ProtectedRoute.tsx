@@ -20,8 +20,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, bypassCryptoC
 
   // Do not gate on crypto `isChecking`: ensureLocalKeys() toggles it during saves
   // (calendar / dating ideas) and would unmount the whole protected tree mid-action.
-  // Initial key bootstrap is already covered by `isCryptoBootstrapComplete`.
-  if (isLoading || !isCryptoBootstrapComplete) {
+  if (isLoading) {
     return <BrandLoader fullscreen />;
   }
 
@@ -31,7 +30,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, bypassCryptoC
     return <Navigate to={landingPath} replace state={{ from: location }} />;
   }
 
-  if (!bypassCryptoCheck && !isCryptoReady) {
+  if (!bypassCryptoCheck && isCryptoBootstrapComplete && !isCryptoReady) {
     return <Navigate to="/crypto/unlock" replace state={{ from: location }} />;
   }
 

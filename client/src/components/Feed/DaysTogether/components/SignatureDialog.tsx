@@ -17,7 +17,7 @@ import { getModalFooterActionsSx } from '../../../../theme/appTheme';
 import DrawingToolsToolbar, { type DrawingTool } from '../../../Games/DrawingToolsToolbar';
 import DrawCanvas, { type DrawCanvasHandle } from '../../../Games/DrawCanvas';
 import type { DrawStroke } from '../../../../services/gamesService';
-import { ColorTheme } from './ColorPicker';
+import type { ColorTheme } from './colorThemes';
 import { getDaysTogetherActionButtonSx, DAYS_TOGETHER_INNER_RADIUS } from '../daysTogetherStyles';
 import { CreateIcon, DeleteIcon } from '../../../UI/icons';
 

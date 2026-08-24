@@ -5,7 +5,7 @@ import {
   MODAL_TEXT_SECONDARY_LIGHT,
 } from '../../../theme/modalStyles';
 import { SURFACE_BORDER_RADIUS, getPrimaryTintSurface } from '../feedBannerStyles';
-import { ColorTheme } from './components/ColorPicker';
+import type { ColorTheme } from './components/colorThemes';
 
 export const DAYS_TOGETHER_INNER_RADIUS = Math.round(SURFACE_BORDER_RADIUS * 0.75);
 

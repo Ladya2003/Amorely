@@ -14,6 +14,7 @@ import { calculateDaysTogether } from '../config/daysAchievementCatalog';
 import { processNewDaysAchievements } from '../services/daysAchievementService';
 import { notifyNewPartnerContent } from '../services/pushService';
 import { notifySocketUser } from '../socket';
+import { getFeedHomePayload } from '../services/feedHomeService';
 
 const router = express.Router();
 const STATUS_BUBBLE_MAX_LENGTH = 100;
@@ -64,6 +65,21 @@ const storage = new CloudinaryStorage({
 });
 
 const upload = multer({ storage });
+
+router.get('/home', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    if (!userId) {
+      return res.status(400).json({ error: 'Не указан ID пользователя' });
+    }
+
+    const locale = typeof req.query.locale === 'string' ? req.query.locale : undefined;
+    res.json(await getFeedHomePayload(userId, locale));
+  } catch (error) {
+    console.error('Ошибка при получении домашней ленты:', error);
+    res.status(500).json({ error: 'Ошибка при получении домашней ленты' });
+  }
+});
 
 // Получение контента для ленты из календаря
 router.get('/content', async (req: any, res: Response) => {

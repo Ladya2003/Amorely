@@ -26,6 +26,7 @@ import CoupleDistanceDialog from './CoupleDistanceDialog';
 import type { Contact } from '../Chat/ChatList';
 import type { Partner } from '../Settings/PartnerForm';
 import { fetchCoupleDistanceStatus } from '../../services/coupleDistanceService';
+import { useOptionalFeedHome } from '../../contexts/FeedHomeContext';
 import { formatDistanceKm, isCoupleDistanceNearby } from '../../utils/geoDistance';
 import {
   COUPLE_AVATAR_SIZE,
@@ -258,6 +259,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const feedHome = useOptionalFeedHome();
   const { badges } = useRelationshipBadges();
   const {
     myBubbleText,
@@ -294,6 +296,14 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
     let cancelled = false;
 
     const loadDistance = async () => {
+      if (feedHome?.data) {
+        if (!cancelled) {
+          setDistanceKm(feedHome.data.location?.distanceKm ?? null);
+          setIsDistanceLoading(false);
+        }
+        return;
+      }
+
       setIsDistanceLoading(true);
 
       try {
@@ -317,7 +327,7 @@ const FeedCoupleAvatars: React.FC<FeedCoupleAvatarsProps> = ({ partner }) => {
     return () => {
       cancelled = true;
     };
-  }, [partner._id]);
+  }, [feedHome, partner._id]);
 
   if (!user) {
     return null;

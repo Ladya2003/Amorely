@@ -407,12 +407,9 @@ ${ogAlternates}
     <meta name="twitter:image" content="${SITE_ORIGIN}/logo512.png" />
     <!--! SEO_META_END -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
     <!--! SEO_JSONLD_START -->
 ${enJsonLd}
     <!--! SEO_JSONLD_END -->
@@ -497,12 +494,9 @@ const buildPublicLocaleIndexHtml = (lang, landing, byLocale) => {
 ${metaHtml}
     <!--! SEO_META_END -->
     <link rel="manifest" href="/manifest.json" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
     <!--! SEO_JSONLD_START -->
 ${jsonLdHtml}
     <!--! SEO_JSONLD_END -->

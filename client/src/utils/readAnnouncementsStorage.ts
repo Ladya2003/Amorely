@@ -32,3 +32,12 @@ export function addReadAnnouncementKey(userId: string, announcementKey: string):
   saveReadAnnouncementKeys(userId, keys);
   return keys;
 }
+
+export function mergeReadAnnouncementKeys(userId: string, incoming: string[]): Set<string> {
+  const keys = readReadAnnouncementKeys(userId);
+  incoming.forEach((key) => {
+    keys.add(key);
+  });
+  saveReadAnnouncementKeys(userId, keys);
+  return keys;
+}

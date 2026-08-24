@@ -22,6 +22,7 @@ import { notifyCalendarEventsChanged } from '../hooks/useCalendarEvents';
 import { migrateLocalUiPreferencesToAccount } from '../utils/migrateUiPreferences';
 import { clearPendingEmailVerification } from '../utils/pendingEmailVerification';
 import { getAuthApiErrorMessage } from '../localization/authHelpers';
+import { prefetchFeedPage } from '../routing/lazyPages';
 
 export const EMAIL_NOT_VERIFIED_CODE = 'EMAIL_NOT_VERIFIED';
 export const USE_PASSWORD_LOGIN_CODE = 'USE_PASSWORD_LOGIN';
@@ -168,6 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const migrated = await migrateLocalUiPreferencesToAccount(userData);
     setUser({ ...userData, locale: preferredLocale, ...migrated });
     setIsAuthenticated(true);
+    prefetchFeedPage();
     clearPendingEmailVerification();
   }, []);
 
@@ -202,6 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const migrated = await migrateLocalUiPreferencesToAccount(response.data);
           setUser({ ...response.data, locale: preferredLocale, ...migrated });
           setIsAuthenticated(true);
+          prefetchFeedPage();
 
           if (
             isPushSupported() &&

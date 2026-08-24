@@ -8,12 +8,14 @@ import { usePartnerId } from '../../../hooks/usePartnerId';
 import { getDatingIdeasSectionSx } from './datingIdeasStyles';
 import CurrencyCoinIcon from '../../Pets/CurrencyCoinIcon';
 import { AutoAwesomeIcon, ChevronRightIcon } from '../../UI/icons';
+import { useOptionalFeedHome } from '../../../contexts/FeedHomeContext';
 
 const DatingIdeasSection: React.FC = () => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
   const partnerId = usePartnerId();
+  const feedHome = useOptionalFeedHome();
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [cost, setCost] = useState(100);
@@ -38,8 +40,23 @@ const DatingIdeasSection: React.FC = () => {
   }, [i18n.language]);
 
   useEffect(() => {
+    if (feedHome) {
+      if (feedHome.data?.datingIdeas) {
+        const data = feedHome.data.datingIdeas;
+        if (!data.hasPartner) {
+          setVisible(false);
+        } else {
+          setVisible(true);
+          setCost(data.cost ?? 1);
+          setHasActive(Boolean(data.active));
+        }
+        setLoading(false);
+      }
+      return;
+    }
+
     void load();
-  }, [load]);
+  }, [feedHome, load]);
 
   useEffect(() => {
     const onPartnerChanged = () => {

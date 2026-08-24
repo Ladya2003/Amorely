@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -6,11 +6,10 @@ import { DaysTogetherProps } from './types';
 import { useDaysTogether } from './hooks/useDaysTogether';
 import { getDaysWord, getRelationshipStatus, formatDate } from './utils/helpers';
 import PhotoUploader from './components/PhotoUploader';
-import SignatureDialog from './components/SignatureDialog';
 import ProgressIndicator from './components/ProgressIndicator';
 import MilestoneCard from './components/MilestoneCard';
 import ExportButton from './components/ExportButton';
-import ColorPicker, { getThemeById } from './components/ColorPicker';
+import { getThemeById } from './components/colorThemes';
 import SignaturesHistoryDialog from './components/SignaturesHistoryDialog';
 import {
   DAYS_TOGETHER_ACTION_RADIUS,
@@ -26,6 +25,9 @@ import {
   getDaysTogetherHeroTitleSx,
   getDaysTogetherSignatureImageSx,
 } from './daysTogetherStyles';
+
+const ColorPicker = lazy(() => import('./components/ColorPicker'));
+const SignatureDialog = lazy(() => import('./components/SignatureDialog'));
 
 const DEFAULT_ROMANTIC_BG =
   'https://img.freepik.com/free-photo/couple-making-heart-from-hands-sea-shore_23-2148019887.jpg?w=360';
@@ -198,12 +200,36 @@ const DaysTogether: React.FC<DaysTogetherProps> = ({
 
         <Box sx={getDaysTogetherActionsRowSx(theme)}>
           <PhotoUploader onPhotoUpload={onAddPhoto} photo={photo} colorTheme={currentTheme} />
-          <SignatureDialog
-            onSave={onAddSignature}
-            signature={currentUserSignature || signature}
-            colorTheme={currentTheme}
-          />
-          <ColorPicker selectedTheme={selectedTheme} onThemeChange={handleThemeChange} />
+          <Suspense
+            fallback={
+              <Skeleton
+                variant="rounded"
+                width={44}
+                height={44}
+                animation="wave"
+                sx={{ borderRadius: `${DAYS_TOGETHER_ACTION_RADIUS}px` }}
+              />
+            }
+          >
+            <SignatureDialog
+              onSave={onAddSignature}
+              signature={currentUserSignature || signature}
+              colorTheme={currentTheme}
+            />
+          </Suspense>
+          <Suspense
+            fallback={
+              <Skeleton
+                variant="rounded"
+                width={44}
+                height={44}
+                animation="wave"
+                sx={{ borderRadius: `${DAYS_TOGETHER_ACTION_RADIUS}px` }}
+              />
+            }
+          >
+            <ColorPicker selectedTheme={selectedTheme} onThemeChange={handleThemeChange} />
+          </Suspense>
           <SignaturesHistoryDialog
             colorTheme={currentTheme}
             relationshipOwnerId={relationshipOwnerId}

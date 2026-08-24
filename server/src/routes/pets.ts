@@ -234,30 +234,47 @@ const loadPetsForOwner = async (ownerId: string) => {
   );
 };
 
+export const getMyPetsPayload = async (userId: string) => {
+  const pets = await Pet.find({ ownerId: userId }).sort({ createdAt: 1 });
+  await Promise.all(pets.map((pet) => applyPendingPetStateDecay(pet)));
+  const wallet = await getBalance(userId);
+
+  const giftedByIds = pets
+    .map((p) => p.giftedByUserId?.toString())
+    .filter(Boolean) as string[];
+  const gifters = giftedByIds.length
+    ? await User.find({ _id: { $in: giftedByIds } }).select('username firstName lastName avatar').lean()
+    : [];
+  const gifterMap = new Map(gifters.map((g) => [g._id.toString(), g]));
+
+  return {
+    pets: pets.map((p) =>
+      formatPet(p.toObject(), p.giftedByUserId ? gifterMap.get(p.giftedByUserId.toString()) : null)
+    ),
+    balance: wallet.balance,
+    canAffordFirstPet: wallet.canAffordFirstPet,
+    petPurchaseCost: PET_PURCHASE_COST,
+    awardedAmount: wallet.registrationBonusAwarded ?? 0,
+  };
+};
+
+export const getPartnerPetsPayload = async (userId: string) => {
+  const partnerContext = await resolvePartnerContext(userId);
+  if (!partnerContext.partnerId) {
+    return { pets: [], partnerId: null as string | null };
+  }
+
+  const pets = await loadPetsForOwner(partnerContext.partnerId);
+  return {
+    pets,
+    partnerId: partnerContext.partnerId,
+  };
+};
+
 router.get('/', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
-    const pets = await Pet.find({ ownerId: userId }).sort({ createdAt: 1 });
-    await Promise.all(pets.map((pet) => applyPendingPetStateDecay(pet)));
-    const wallet = await getBalance(userId);
-
-    const giftedByIds = pets
-      .map((p) => p.giftedByUserId?.toString())
-      .filter(Boolean) as string[];
-    const gifters = giftedByIds.length
-      ? await User.find({ _id: { $in: giftedByIds } }).select('username firstName lastName avatar').lean()
-      : [];
-    const gifterMap = new Map(gifters.map((g) => [g._id.toString(), g]));
-
-    res.json({
-      pets: pets.map((p) =>
-        formatPet(p.toObject(), p.giftedByUserId ? gifterMap.get(p.giftedByUserId.toString()) : null)
-      ),
-      balance: wallet.balance,
-      canAffordFirstPet: wallet.canAffordFirstPet,
-      petPurchaseCost: PET_PURCHASE_COST,
-      awardedAmount: wallet.registrationBonusAwarded ?? 0,
-    });
+    res.json(await getMyPetsPayload(userId));
   } catch (error) {
     console.error('GET /api/pets error:', error);
     res.status(500).json({ error: 'Failed to load pets' });
@@ -267,17 +284,7 @@ router.get('/', async (req: ExtendedRequest, res: Response) => {
 router.get('/partner', async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = req.userId as string;
-    const partnerContext = await resolvePartnerContext(userId);
-    if (!partnerContext.partnerId) {
-      return res.json({ pets: [] });
-    }
-
-    const pets = await loadPetsForOwner(partnerContext.partnerId);
-
-    res.json({
-      pets,
-      partnerId: partnerContext.partnerId,
-    });
+    res.json(await getPartnerPetsPayload(userId));
   } catch (error) {
     console.error('GET /api/pets/partner error:', error);
     res.status(500).json({ error: 'Failed to load partner pets' });

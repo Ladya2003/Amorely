@@ -17,7 +17,9 @@ import DatingIdeasSection from '../components/Feed/DatingIdeas/DatingIdeasSectio
 import ContentManagementDialog from '../components/Feed/ContentManagement';
 import ContentViewer from '../components/Feed/ContentViewer';
 import { useCrypto } from '../contexts/CryptoContext';
+import { useFeedHome } from '../contexts/FeedHomeContext';
 import { decryptContentItemsWithMedia } from '../crypto/contentCryptoService';
+import type { LocalDeviceKeys } from '../crypto/cryptoService';
 import { usePartnerId, useEncryptionRecipientId } from '../hooks/usePartnerId';
 import { PARTNER_CHANGED_EVENT } from '../hooks/useRelationship';
 import { getFeedContentUpdateTooltipSlotProps } from '../components/Feed/feedBannerStyles';
@@ -36,6 +38,58 @@ interface UserContentItem {
   frequency?: { count: number; hours: number }; // Добавляем информацию о частоте
 }
 
+const mapFeedContentItem = (item: any): ContentItem => ({
+  id: item.id || item._id,
+  url: item.url,
+  resourceType: item.resourceType,
+  createdAt: item.createdAt,
+  title: item.title,
+  description: item.description,
+  encrypted: item.encrypted,
+  mediaEnvelope: item.mediaEnvelope,
+  eventId: item.eventId,
+  isBirthdayEvent: item.isBirthdayEvent,
+  isAnniversaryEvent: item.isAnniversaryEvent,
+  isDatingIdeaEvent: item.isDatingIdeaEvent,
+  datingIdeaEmoji: item.datingIdeaEmoji,
+  datingIdeaTitle: item.datingIdeaTitle,
+  datingIdeaDescription: item.datingIdeaDescription,
+});
+
+const formatFeedContentItems = async (
+  items: any[],
+  localDeviceKeys: LocalDeviceKeys | null,
+  userId?: string,
+  partnerId?: string | null
+): Promise<ContentItem[]> => {
+  let formattedContent = items.map((item) => ({
+    ...mapFeedContentItem(item),
+    encryptedMediaEnvelope: item.encryptedMediaEnvelope,
+    encryptedMediaEnvelopePartner: item.encryptedMediaEnvelopePartner,
+    encryptedTitle: item.encryptedTitle,
+    encryptedDescription: item.encryptedDescription,
+    encryptedTitlePartner: item.encryptedTitlePartner,
+    encryptedDescriptionPartner: item.encryptedDescriptionPartner,
+    metadataSenderId: item.metadataSenderId,
+    metadataRecipientId: item.metadataRecipientId,
+    targetId: item.targetId,
+    userId: item.userId,
+    createdBy: item.createdBy,
+  }));
+
+  if (!localDeviceKeys) {
+    return formattedContent.map(mapFeedContentItem);
+  }
+
+  const decrypted = await decryptContentItemsWithMedia(
+    localDeviceKeys,
+    formattedContent,
+    userId,
+    partnerId || undefined
+  );
+  return decrypted.map(mapFeedContentItem);
+};
+
 const FeedPage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -43,7 +97,8 @@ const FeedPage: React.FC = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const { localDeviceKeys } = useCrypto();
+  const { localDeviceKeys, isCryptoBootstrapComplete } = useCrypto();
+  const { data: feedHome, loading: isFeedHomeLoading, refresh: refreshFeedHome } = useFeedHome();
   const partnerId = usePartnerId();
   const encryptionRecipientId = useEncryptionRecipientId();
   
@@ -71,15 +126,75 @@ const FeedPage: React.FC = () => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
 
-  // Загрузка данных при монтировании и при возврате на главную
   useEffect(() => {
-    void fetchUserData();
-    void fetchUserContent();
-
-    if (location.pathname === '/') {
-      void fetchContent();
+    if (!feedHome) {
+      setIsRelationshipLoading(isFeedHomeLoading);
+      if (isFeedHomeLoading) {
+        setIsContentLoading(true);
+      }
+      return;
     }
-  }, [localDeviceKeys, user?._id, partnerId, location.pathname]);
+
+    if (feedHome.relationship) {
+      setRelationshipStartDate(feedHome.relationship.startDate);
+      setDaysCount(feedHome.relationship.daysCount);
+      setRelationshipPhoto(feedHome.relationship.photo);
+      setRelationshipSignature(feedHome.relationship.signature);
+      setRelationshipSignatures(feedHome.relationship.signatures || {});
+      setRelationshipOwnerId(feedHome.relationship.ownerId);
+    } else {
+      setRelationshipStartDate(null);
+      setDaysCount(null);
+      setRelationshipPhoto(undefined);
+      setRelationshipSignature(undefined);
+      setRelationshipSignatures({});
+      setRelationshipOwnerId(null);
+    }
+    setIsRelationshipLoading(false);
+  }, [feedHome, isFeedHomeLoading]);
+
+  useEffect(() => {
+    if (!feedHome || !isCryptoBootstrapComplete) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const applyHomeContent = async () => {
+      setIsContentLoading(true);
+      setCurrentIndex(0);
+      try {
+        const formattedContent = await formatFeedContentItems(
+          feedHome.content,
+          localDeviceKeys,
+          user?._id,
+          partnerId
+        );
+        if (!cancelled) {
+          setPartnerContent(formattedContent);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке контента:', error);
+      } finally {
+        if (!cancelled) {
+          setIsContentLoading(false);
+        }
+      }
+    };
+
+    void applyHomeContent();
+    return () => {
+      cancelled = true;
+    };
+  }, [feedHome, isCryptoBootstrapComplete, localDeviceKeys, user?._id, partnerId]);
+
+  useEffect(() => {
+    if (!addContentDialogOpen) {
+      return;
+    }
+
+    void fetchUserContent();
+  }, [addContentDialogOpen, localDeviceKeys, user?._id, partnerId]);
 
   useEffect(() => {
     if (!user?._id || location.pathname !== '/') {
@@ -131,15 +246,12 @@ const FeedPage: React.FC = () => {
 
   useEffect(() => {
     const handlePartnerChanged = () => {
-      void fetchUserData();
-      if (location.pathname === '/') {
-        void fetchContent();
-      }
+      void refreshFeedHome();
     };
 
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted && location.pathname === '/') {
-        void fetchContent();
+        void refreshFeedHome();
       }
     };
 
@@ -149,31 +261,7 @@ const FeedPage: React.FC = () => {
       window.removeEventListener(PARTNER_CHANGED_EVENT, handlePartnerChanged);
       window.removeEventListener('pageshow', handlePageShow);
     };
-  }, [localDeviceKeys, user?._id, partnerId, location.pathname]);
-  
-  // Функция для загрузки данных об отношениях
-  const fetchUserData = async () => {
-    try {
-      setIsRelationshipLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/feed/relationship`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data) {
-        setRelationshipStartDate(response.data.startDate);
-        setDaysCount(response.data.daysCount);
-        setRelationshipPhoto(response.data.photo);
-        setRelationshipSignature(response.data.signature);
-        setRelationshipSignatures(response.data.signatures || {});
-        setRelationshipOwnerId(response.data.ownerId); // Сохраняем ID владельца отношений
-      }
-    } catch (error) {
-      console.error('Ошибка при загрузке данных об отношениях:', error);
-    } finally {
-      setIsRelationshipLoading(false);
-    }
-  };
+  }, [refreshFeedHome, location.pathname]);
   
   // Функция для загрузки контента для управления
   const fetchUserContent = async () => {
@@ -248,60 +336,12 @@ const FeedPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      let formattedContent: ContentItem[] = partnerResponse.data.map((item: any) => ({
-        id: item.id || item._id,
-        url: item.url,
-        resourceType: item.resourceType,
-        createdAt: item.createdAt,
-        title: item.title,
-        description: item.description,
-        encrypted: item.encrypted,
-        mediaEnvelope: item.mediaEnvelope,
-        encryptedMediaEnvelope: item.encryptedMediaEnvelope,
-        encryptedMediaEnvelopePartner: item.encryptedMediaEnvelopePartner,
-        encryptedTitle: item.encryptedTitle,
-        encryptedDescription: item.encryptedDescription,
-        encryptedTitlePartner: item.encryptedTitlePartner,
-        encryptedDescriptionPartner: item.encryptedDescriptionPartner,
-        metadataSenderId: item.metadataSenderId,
-        metadataRecipientId: item.metadataRecipientId,
-        targetId: item.targetId,
-        userId: item.userId,
-        createdBy: item.createdBy,
-        eventId: item.eventId,
-        isBirthdayEvent: item.isBirthdayEvent,
-        isAnniversaryEvent: item.isAnniversaryEvent,
-        isDatingIdeaEvent: item.isDatingIdeaEvent,
-        datingIdeaEmoji: item.datingIdeaEmoji,
-        datingIdeaTitle: item.datingIdeaTitle,
-        datingIdeaDescription: item.datingIdeaDescription,
-      }));
-
-      if (localDeviceKeys) {
-        const decrypted = await decryptContentItemsWithMedia(
-          localDeviceKeys,
-          formattedContent,
-          user?._id,
-          partnerId || undefined
-        );
-        formattedContent = decrypted.map((item) => ({
-          id: item.id,
-          url: item.url,
-          resourceType: item.resourceType,
-          createdAt: item.createdAt,
-          title: item.title,
-          description: item.description,
-          encrypted: item.encrypted,
-          mediaEnvelope: item.mediaEnvelope,
-          eventId: item.eventId,
-          isBirthdayEvent: item.isBirthdayEvent,
-          isAnniversaryEvent: item.isAnniversaryEvent,
-          isDatingIdeaEvent: item.isDatingIdeaEvent,
-          datingIdeaEmoji: item.datingIdeaEmoji,
-          datingIdeaTitle: item.datingIdeaTitle,
-          datingIdeaDescription: item.datingIdeaDescription,
-        }));
-      }
+      const formattedContent = await formatFeedContentItems(
+        partnerResponse.data,
+        localDeviceKeys,
+        user?._id,
+        partnerId
+      );
 
       setPartnerContent(formattedContent);
     } catch (error) {

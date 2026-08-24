@@ -1,4 +1,5 @@
 import { GEO_MAP_ATTRIBUTION, GEO_PHOTOS_ATTRIBUTION } from '../../config/geoMapTiles';
+import { optimizeCloudinaryUrl } from '../../utils/optimizeCloudinaryUrl';
 
 export interface GameCatalogEntry {
   id: string;
@@ -16,7 +17,10 @@ export const GAMES: GameCatalogEntry[] = [
     id: 'geo',
     name: 'Угадай локацию',
     description: 'Угадайте, где на карте находится загаданное место, и соревнуйтесь с другими парами.',
-    imageUrl: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/geofinder_n8kzj2.jpg',
+    imageUrl: optimizeCloudinaryUrl(
+      'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/geofinder_n8kzj2.jpg',
+      { width: 640 }
+    ),
     requiresPartner: true,
     available: true,
     rulesImages: [],
@@ -37,7 +41,10 @@ export const GAMES: GameCatalogEntry[] = [
     id: 'draw',
     name: 'Угадай рисунок',
     description: 'Один рисует, другой угадывает — как Gartic, но для вашей пары.',
-    imageUrl: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/paintguesser_ml5qjl.jpg',
+    imageUrl: optimizeCloudinaryUrl(
+      'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/paintguesser_ml5qjl.jpg',
+      { width: 640 }
+    ),
     requiresPartner: true,
     available: true,
     rulesImages: [],
@@ -54,7 +61,10 @@ export const GAMES: GameCatalogEntry[] = [
     id: 'quiz',
     name: 'Своя игра',
     description: 'Игровое поле с категориями и вопросами — отвечайте вместе и набирайте баллы.',
-    imageUrl: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/amorelyquestions_nobsog.jpg',
+    imageUrl: optimizeCloudinaryUrl(
+      'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/amorelyquestions_nobsog.jpg',
+      { width: 640 }
+    ),
     requiresPartner: true,
     available: true,
     rulesImages: [],
@@ -75,7 +85,10 @@ export const GAMES: GameCatalogEntry[] = [
     name: 'Тыкалка',
     description:
       'Нажимайте на блок вместе с партнёром: проходите раунды и зарабатывайте баллы на улучшения в магазине.',
-    imageUrl: 'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/tikalka_ha1xkg.jpg',
+    imageUrl: optimizeCloudinaryUrl(
+      'https://res.cloudinary.com/dlbrkdlco/image/upload/v1779967133/tikalka_ha1xkg.jpg',
+      { width: 640 }
+    ),
     requiresPartner: true,
     available: true,
     rulesImages: [],

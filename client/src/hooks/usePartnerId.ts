@@ -31,19 +31,6 @@ export const usePartnerId = (): string | null => {
       }
 
       try {
-        const meResponse = await axios.get(`${API_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const fromMe = normalizeUserId(meResponse.data?.partnerId);
-        if (fromMe && fromMe !== selfId) {
-          if (!cancelled) setPartnerId(fromMe);
-          return;
-        }
-      } catch {
-        // пробуем relationships
-      }
-
-      try {
         const relationshipResponse = await axios.get(`${API_URL}/api/relationships`, {
           headers: { Authorization: `Bearer ${token}` }
         });
