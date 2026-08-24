@@ -101,3 +101,46 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     throw new Error('Failed to send password reset email');
   }
 }
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+const getSupportInbox = (): string =>
+  process.env.SUPPORT_EMAIL?.trim() || 'amorely013@gmail.com';
+
+export async function sendSupportInboxEmail(payload: {
+  name: string;
+  email: string;
+  message: string;
+}): Promise<void> {
+  const resend = getResendClient();
+  const inbox = getSupportInbox();
+  const subject = `Amorely support: ${payload.name}`;
+  const text = `Name: ${payload.name}\nEmail: ${payload.email}\n\n${payload.message}`;
+  const html = `<p><strong>Name:</strong> ${escapeHtml(payload.name)}</p>
+<p><strong>Email:</strong> ${escapeHtml(payload.email)}</p>
+<p>${escapeHtml(payload.message).replace(/\n/g, '<br />')}</p>`;
+
+  if (!resend) {
+    console.warn('[email] RESEND_API_KEY is not set. Support form accepted without sending.');
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: getFromAddress(),
+    to: inbox,
+    replyTo: payload.email,
+    subject,
+    html,
+    text,
+  });
+
+  if (error) {
+    console.error('[email] Failed to send support inbox email');
+    throw new Error('Failed to send support inbox email');
+  }
+}

@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Avatar,
   Box,
-  CircularProgress,
   DialogContent,
   DialogTitle,
   IconButton,
@@ -11,6 +10,7 @@ import {
   useTheme,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
+import BrandLoader from '../common/BrandLoader';
 import axios from 'axios';
 import { API_URL } from '../../config';
 import ContentViewer from '../Calendar/ContentViewer';
@@ -176,7 +176,7 @@ const ContactProfileDialog: React.FC<ContactProfileDialogProps> = ({ open, onClo
             />
           ) : isLoading && !displayProfile ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-              <CircularProgress size={28} />
+              <BrandLoader size={40} />
             </Box>
           ) : displayProfile ? (
             <Box sx={getContactProfileRootSx()}>

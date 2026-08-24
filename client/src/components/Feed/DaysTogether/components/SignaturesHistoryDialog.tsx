@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
-  CircularProgress,
   DialogContent,
   DialogTitle,
   Grid,
@@ -24,6 +23,7 @@ import {
 import { ColorTheme } from './ColorPicker';
 import { getDaysTogetherActionButtonSx } from '../daysTogetherStyles';
 import { CloseIcon, ViewListIcon } from '../../../UI/icons';
+import BrandLoader from '../../../common/BrandLoader';
 
 export interface SignatureHistoryItem {
   _id: string;
@@ -162,7 +162,7 @@ const SignaturesHistoryDialog: React.FC<SignaturesHistoryDialogProps> = ({
         <DialogContent dividers sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-              <CircularProgress size={32} />
+              <BrandLoader size={48} />
             </Box>
           ) : items.length === 0 ? (
             <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>

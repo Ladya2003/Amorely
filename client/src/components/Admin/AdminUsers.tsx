@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -34,6 +33,7 @@ import {
 import { useAdminAlerts } from '../../contexts/AdminAlertsContext';
 import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '../../localization/locale';
 import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
+import BrandLoader from '../common/BrandLoader';
 
 const GAME_LABELS: Record<string, string> = {
   tap: 'Тыкалка',
@@ -216,7 +216,7 @@ const AdminUsers: React.FC = () => {
 
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress />
+          <BrandLoader size={48} />
         </Box>
       ) : (
         <>

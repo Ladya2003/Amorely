@@ -577,6 +577,8 @@ export const attachGameSocketHandlers = (
       return;
     }
 
+    const freshState = (await QuizGameState.findById(state._id)) ?? state;
+
     await Promise.all(
       participantUserIds.map(async (uid) => {
         const socketData = connectedUsers.find((user) => user.userId === uid);
@@ -585,7 +587,7 @@ export const attachGameSocketHandlers = (
         }
         const locale = await getUserLocale(uid);
         io.to(socketData.socketId).emit('quiz_game_state', {
-          state: formatQuizGameState(state, uid, locale),
+          state: formatQuizGameState(freshState, uid, locale),
         });
       })
     );
@@ -691,8 +693,8 @@ export const attachGameSocketHandlers = (
         String(payload?.optionId ?? payload?.answer ?? '')
       );
 
-      await updateQuizGameBadges();
       await emitQuizStateToPartners(state!, getQuizGameParticipantIds(context));
+      await updateQuizGameBadges();
     } catch (error) {
       if (error instanceof QuizGameError) {
         socket.emit('quiz_game_error', { message: error.message, code: error.code });

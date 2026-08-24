@@ -1877,14 +1877,14 @@ export const QUIZ_QUESTIONS_PACK_SOURCE: QuizQuestionSource[] = [
   {
     id: 'general-5',
     categoryId: 'general',
-    text: 'Какое слово предшествует словам «датчанин» и «депрессия»?',
+    text: 'Какое английское слово стоит перед Dane и Depression?',
     textEn: 'What word precedes both \'Dane\' and \'Depression\'?',
     correctId: 'a',
     options: [
-      { id: 'a', text: 'Большой', textEn: 'Great' },
-      { id: 'b', text: 'Большой', textEn: 'Large' },
-      { id: 'c', text: 'Гранд', textEn: 'Grand' },
-      { id: 'd', text: 'Счастливый', textEn: 'Happy' },
+      { id: 'a', text: 'Great', textEn: 'Great' },
+      { id: 'b', text: 'Large', textEn: 'Large' },
+      { id: 'c', text: 'Grand', textEn: 'Grand' },
+      { id: 'd', text: 'Happy', textEn: 'Happy' },
     ],
   },
   {
@@ -2531,7 +2531,7 @@ export const QUIZ_QUESTIONS_PACK_SOURCE: QuizQuestionSource[] = [
     textEn: 'Which data structure does FILO apply to?',
     correctId: 'a',
     options: [
-      { id: 'a', text: 'Куча', textEn: 'Stack' },
+      { id: 'a', text: 'Стек', textEn: 'Stack' },
       { id: 'b', text: 'Очередь', textEn: 'Queue' },
       { id: 'c', text: 'Куча', textEn: 'Heap' },
       { id: 'd', text: 'Дерево', textEn: 'Tree' },

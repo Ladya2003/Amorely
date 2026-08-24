@@ -21,7 +21,7 @@ import ChatReport from '../models/chatReport';
 import CryptoRecoveryRequest from '../models/cryptoRecoveryRequest';
 import AdminRequest from '../models/adminRequest';
 import EncryptedKeyBackup from '../models/encryptedKeyBackup';
-import { sendPushToUser } from '../services/pushService';
+import { notifyAppAnnouncement, sendPushToUser } from '../services/pushService';
 import { buildBlockReasons } from '../utils/userBlock';
 import { getEffectiveIsNewForAdmin } from '../utils/adminUserFlags';
 import { AppLocale, SUPPORTED_LOCALES } from '../i18n/locales';
@@ -31,7 +31,6 @@ import {
   normalizeAnnouncementTranslations,
   parseAnnouncementTranslationsInput,
 } from '../i18n/announcementContent';
-import { notifyAppAnnouncement } from '../services/pushService';
 
 const router = express.Router();
 

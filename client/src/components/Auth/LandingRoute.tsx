@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { Box, CircularProgress } from '@mui/material';
+import BrandLoader from '../common/BrandLoader';
 import { useAuth } from '../../contexts/AuthContext';
 import { setAppLocale } from '../../localization';
 import {
@@ -33,11 +33,7 @@ const LandingRoute: React.FC = () => {
   // Only block while restoring an existing session. Do not unmount AuthPage during
   // login/register/Google — that was wiping the Google username step (needsUsername).
   if (isLoading && token) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <BrandLoader fullscreen />;
   }
 
   if (isAuthenticated) {

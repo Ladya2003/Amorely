@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Alert, Box, Button, CircularProgress, Container, Typography, useTheme } from '@mui/material';
+import { Alert, Box, Button, Container, Typography, useTheme } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { translateAuthServerError } from '../localization/authHelpers';
 import {
@@ -17,6 +17,7 @@ import {
 } from '../components/Auth/authPageStyles';
 import { getLandingPath, resolvePreferredLandingLocale } from '../localization/landingLocale';
 import { FavoriteIcon } from '../components/UI/icons';
+import BrandLoader from '../components/common/BrandLoader';
 
 /** Share one verify call per token across Strict Mode remounts. */
 const verifyOnceByToken = new Map<string, Promise<boolean>>();
@@ -91,7 +92,7 @@ const VerifyEmailPage: React.FC = () => {
 
           {status === 'loading' && (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-              <CircularProgress />
+              <BrandLoader size={48} />
             </Box>
           )}
 

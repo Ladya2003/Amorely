@@ -111,6 +111,7 @@ export interface AdminHealthInfo {
 }
 
 export interface AdminNewsItem extends NewsItem {
+  seedKey?: string;
   translations?: NewsTranslations;
   isPublished?: boolean;
   updatedAt?: string;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, startTransition } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link as RouterLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Box,
   useMediaQuery,
@@ -11,11 +11,6 @@ import {
   ListItemText,
   Avatar,
   CircularProgress,
-  Button,
-  Link,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   ToggleButtonGroup,
   ToggleButton,
 } from '@mui/material';
@@ -72,19 +67,11 @@ import {
   type EncryptedChatPayload
 } from '../crypto/cryptoService';
 import { encryptAndUploadChatFiles, type StoredChatAttachment } from '../crypto/chatMediaService';
-import { CHAT_RULES_DOCUMENT_VERSION, hasAcceptedChatRules } from '../legal/chatRulesConsent';
-import { updateUiPreferences } from '../services/uiPreferencesService';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
 import { getChatMessagePreview } from '../localization/chatHelpers';
 import { runChatHistoryRestoreRewrap, type ChatHistoryRestoreProgress } from '../crypto/chatRestoreRewrap';
 import { isVideoFile } from '../utils/videoMetadata';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
-import ResponsiveDialog from '../components/UI/ResponsiveDialog';
-import {
-  getAppModalActionsSx,
-  getAppModalContentSx,
-  getAppModalTitleSx,
-} from '../theme/modalStyles';
 import { submitChatReport } from '../services/reportService';
 import {
   clearOpenChatTarget,
@@ -389,8 +376,6 @@ const ChatPage: React.FC = () => {
   const chatHistoryRestoreInFlightRef = useRef(false);
   const skipChatHistoryPageReloadRef = useRef(false);
   const [typingByContactId, setTypingByContactId] = useState<Record<string, boolean>>({});
-  const [chatRulesAccepted, setChatRulesAccepted] = useState(false);
-  const [isChatRulesChecked, setIsChatRulesChecked] = useState(false);
   const [pendingOpenContact, setPendingOpenContact] = useState<{
     id: string;
     name: string;
@@ -399,40 +384,11 @@ const ChatPage: React.FC = () => {
     avatar: string;
   } | null>(null);
 
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const { setShowBottomNav } = useNavigation();
   const { syncUnreadFromContacts, setActiveContactId } = useUnreadMessages();
   const { localDeviceKeys } = useCrypto();
   const CURRENT_USER_ID = user?._id;
-
-  useEffect(() => {
-    if (!CURRENT_USER_ID) {
-      setChatRulesAccepted(false);
-      setIsChatRulesChecked(false);
-      return;
-    }
-    setChatRulesAccepted(hasAcceptedChatRules(user?.chatRulesConsent));
-    setIsChatRulesChecked(true);
-  }, [CURRENT_USER_ID, user?.chatRulesConsent?.version, user?.chatRulesConsent?.acceptedAt]);
-
-  const handleChatRulesAccept = () => {
-    if (!CURRENT_USER_ID || !user) return;
-    setChatRulesAccepted(true);
-    updateUser({
-      ...user,
-      chatRulesConsent: {
-        version: CHAT_RULES_DOCUMENT_VERSION,
-        acceptedAt: new Date().toISOString(),
-      },
-    });
-    void updateUiPreferences({ acceptChatRules: true }).catch((error) => {
-      console.error('Не удалось сохранить согласие с правилами чата:', error);
-    });
-  };
-
-  const handleChatRulesDecline = () => {
-    navigate('/');
-  };
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -2758,10 +2714,8 @@ const ChatPage: React.FC = () => {
   const chatTabSlideDirection = useTabSlideDirection(tabValue);
   const visualViewportLayout = useVisualViewportLayout(isMobileChatOpen);
   useDisableForeignFormFields(isMobileChatOpen && isIOSDevice());
-  const isChatListReady = isChatRulesChecked && !isLoadingContacts && Boolean(CURRENT_USER_ID);
+  const isChatListReady = !isLoadingContacts && Boolean(CURRENT_USER_ID);
   const showChatListSkeleton = tabValue === 0 && !isChatListReady && !selectedContactId;
-  const showChatRulesConsent =
-    tabValue === 0 && isChatRulesChecked && !chatRulesAccepted && Boolean(CURRENT_USER_ID);
 
   return (
     <Box sx={(muiTheme) => ({
@@ -3080,58 +3034,6 @@ const ChatPage: React.FC = () => {
           contacts={contacts}
         />
       )}
-      <ResponsiveDialog
-        open={showChatRulesConsent}
-        onClose={() => {
-          // Согласие обязательно — закрытие только через Agree / Disagree.
-        }}
-        disableEscapeKeyDown
-        disableMobileDrawer
-        maxWidth="sm"
-        fullWidth
-        aria-labelledby="chat-rules-consent-title"
-      >
-        <DialogTitle id="chat-rules-consent-title" sx={(muiTheme) => getAppModalTitleSx(muiTheme)}>
-          {t('chat.rules.title')}
-        </DialogTitle>
-        <DialogContent sx={(muiTheme) => getAppModalContentSx(muiTheme)}>
-          <Typography variant="body2" sx={{ mb: 2, lineHeight: 1.6 }}>
-            {t('chat.rules.summary')}
-          </Typography>
-          <Link
-            component={RouterLink}
-            to="/legal/chat-rules"
-            variant="body2"
-            sx={{
-              display: 'inline-block',
-              fontWeight: 600,
-              color: (muiTheme) =>
-                muiTheme.palette.mode === 'light'
-                  ? `${muiTheme.palette.common.white} !important`
-                  : 'primary.main',
-              textDecorationColor: 'currentColor',
-            }}
-          >
-            {t('chat.rules.readMore')}
-          </Link>
-        </DialogContent>
-        <DialogActions
-          sx={(muiTheme) => ({
-            ...getAppModalActionsSx(muiTheme),
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: 'stretch',
-            gap: 1.5,
-            '& > :not(style) ~ :not(style)': { ml: 0 },
-          })}
-        >
-          <Button variant="contained" color="primary" onClick={handleChatRulesAccept} fullWidth>
-            {t('chat.rules.accept')}
-          </Button>
-          <Button variant="outlined" color="inherit" onClick={handleChatRulesDecline} fullWidth>
-            {t('chat.rules.decline')}
-          </Button>
-        </DialogActions>
-      </ResponsiveDialog>
       <ChatHistoryRestoreProgressDialog
         open={chatHistoryRestore.open}
         progress={chatHistoryRestore.progress}

@@ -1,5 +1,20 @@
 import { AppLocale } from './locales';
 
+export const normalizeQuizDisplayText = (value: string) =>
+  value.trim().toLowerCase().replace(/\s+/g, ' ');
+
+export const quizDisplayTextsAreUnique = (texts: string[]) => {
+  const seen = new Set<string>();
+  for (const text of texts) {
+    const key = normalizeQuizDisplayText(text);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+  }
+  return true;
+};
+
 export const getLocalizedQuizField = (
   map: Record<string, Partial<Record<AppLocale, string>>> | undefined,
   id: string,

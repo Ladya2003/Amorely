@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -44,6 +43,7 @@ import {
   getGamePlayTimerTextSx,
 } from '../components/Games/gamePlayPageStyles';
 import GameFrame from '../components/Games/GameFrame';
+import BrandLoader from '../components/common/BrandLoader';
 import DrawGuessChat from '../components/Games/DrawGuessChat';
 import DrawingToolsToolbar, { type DrawingTool } from '../components/Games/DrawingToolsToolbar';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
@@ -577,7 +577,7 @@ const DrawGamePlayPage: React.FC = () => {
     return (
       <GameFrame>
       <Box sx={getGamePlayLoadingWrapSx()}>
-        <CircularProgress />
+        <BrandLoader />
       </Box>
     </GameFrame>
     );

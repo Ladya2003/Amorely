@@ -330,14 +330,14 @@ export const QUIZ_QUESTIONS_PACK_EXPAND_SOURCE: QuizQuestionSource[] = [
   {
     id: 'travel-26',
     categoryId: 'travel',
-    text: 'Как правильно пишется столица Венгрии?',
+    text: 'Как правильно пишется столица Венгрии по-английски?',
     textEn: 'What is the right way to spell the capital of Hungary?',
     correctId: 'a',
     options: [
-      { id: 'a', text: 'Будапешт', textEn: 'Budapest' },
-      { id: 'b', text: 'Будапешт', textEn: 'Boodapest' },
-      { id: 'c', text: 'Будапешт', textEn: 'Bhudapest' },
-      { id: 'd', text: 'Будапас', textEn: 'Budapast' },
+      { id: 'a', text: 'Budapest', textEn: 'Budapest' },
+      { id: 'b', text: 'Boodapest', textEn: 'Boodapest' },
+      { id: 'c', text: 'Bhudapest', textEn: 'Bhudapest' },
+      { id: 'd', text: 'Budapast', textEn: 'Budapast' },
     ],
   },
   {
@@ -1090,7 +1090,7 @@ export const QUIZ_QUESTIONS_PACK_EXPAND_SOURCE: QuizQuestionSource[] = [
     options: [
       { id: 'a', text: 'Нога', textEn: 'Leg' },
       { id: 'b', text: 'Рука', textEn: 'Arm' },
-      { id: 'c', text: 'Рука', textEn: 'Hand' },
+      { id: 'c', text: 'Кисть', textEn: 'Hand' },
       { id: 'd', text: 'Голова', textEn: 'Head' },
     ],
   },
@@ -2416,7 +2416,7 @@ export const QUIZ_QUESTIONS_PACK_EXPAND_SOURCE: QuizQuestionSource[] = [
     options: [
       { id: 'a', text: 'Бык', textEn: 'Bull' },
       { id: 'b', text: 'Свинья', textEn: 'Pig' },
-      { id: 'c', text: 'Бык', textEn: 'Ox' },
+      { id: 'c', text: 'Вол', textEn: 'Ox' },
       { id: 'd', text: 'Лошадь', textEn: 'Horse' },
     ],
   },

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Chip,
-  CircularProgress,
   DialogContent,
   DialogTitle,
   Typography,
@@ -12,6 +11,7 @@ import ResponsiveDialog from '../../UI/ResponsiveDialog';
 import { fetchDailyQuestionsHistory } from '../../../services/dailyQuestionsService';
 import type { HistoryEntry } from './types';
 import { getHistoryRoundSx } from './dailyQuestionsStyles';
+import BrandLoader from '../../common/BrandLoader';
 
 interface HistoryDialogProps {
   open: boolean;
@@ -68,7 +68,7 @@ const HistoryDialog: React.FC<HistoryDialogProps> = ({
       <DialogContent>
         {loading && (
           <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress size={32} />
+            <BrandLoader size={48} />
           </Box>
         )}
 

@@ -31,6 +31,7 @@ import {
   readReadAnnouncementKeys,
 } from '../../utils/readAnnouncementsStorage';
 import { ArrowBackIcon, NotificationsNoneOutlinedIcon } from '../UI/icons';
+import BrandLoader from '../common/BrandLoader';
 
 const AVATAR_SIZE_WITH_PHOTO = 92;
 const AVATAR_SIZE_WITHOUT_PHOTO = 56;
@@ -450,7 +451,7 @@ const FeedHeader: React.FC = () => {
             <>
               {announcementsLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                  <CircularProgress size={28} />
+                  <BrandLoader size={40} />
                 </Box>
               ) : announcements.length === 0 ? (
                 <Typography variant="body1" color="text.secondary" sx={{ py: 1, textAlign: 'center' }}>

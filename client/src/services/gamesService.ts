@@ -455,6 +455,7 @@ export interface QuizGameState {
     secondsRemaining: number;
     myOptionId: string | null;
     myAnswerSubmitted: boolean;
+    partnerOptionId: string | null;
     partnerAnswerSubmitted: boolean;
     reveal: QuizQuestionReveal | null;
   } | null;

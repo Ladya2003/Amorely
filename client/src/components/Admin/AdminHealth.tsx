@@ -5,13 +5,13 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Grid,
   Typography,
 } from '@mui/material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { AdminHealthInfo, fetchAdminHealth } from '../../services/adminService';
+import BrandLoader from '../common/BrandLoader';
 
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) {
@@ -62,7 +62,7 @@ const AdminHealth: React.FC = () => {
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-        <CircularProgress />
+        <BrandLoader size={48} />
       </Box>
     );
   }

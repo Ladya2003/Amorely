@@ -18,7 +18,10 @@ import GamePlayPage from './pages/GamePlayPage';
 import CalendarPage from './pages/CalendarPage';
 import NewsPage from './pages/NewsPage';
 import SettingsPage from './pages/SettingsPage';
-import ChatRulesPage from './pages/ChatRulesPage';
+import LegalDocumentPage from './pages/LegalDocumentPage';
+import SupportPage from './pages/SupportPage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 import CryptoUnlockPage from './pages/CryptoUnlockPage';
 import PetDetailPage from './pages/PetDetailPage';
 import DatingIdeasPage from './pages/DatingIdeasPage';
@@ -120,6 +123,14 @@ function App() {
 
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/terms" element={<LegalDocumentPage docId="terms" />} />
+                <Route path="/privacy" element={<LegalDocumentPage docId="privacy" />} />
+                <Route path="/offer" element={<LegalDocumentPage docId="offer" />} />
+                <Route path="/payment" element={<LegalDocumentPage docId="payment" />} />
+                <Route path="/support" element={<SupportPage />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/legal/chat-rules" element={<Navigate to="/terms" replace />} />
 
                 {/* Защищенный маршрут восстановления ключей */}
                 <Route
@@ -153,7 +164,6 @@ function App() {
                   <Route path="chat" element={<ChatPage />} />
                   <Route path="chat/games/:gameId" element={<GamePage />} />
                   <Route path="chat/games/:gameId/play" element={<GamePlayPage />} />
-                  <Route path="legal/chat-rules" element={<ChatRulesPage />} />
                   <Route path="calendar" element={<CalendarPage />} />
                   <Route path="news" element={<NewsPage />} />
                   <Route path="settings" element={<SettingsPage />} />

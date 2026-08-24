@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Box, Button, Typography, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import AppTextField from '../UI/AppTextField';
+import LegalConsentCheckbox from '../Legal/LegalConsentCheckbox';
 import {
   getAuthAlertSx,
   getAuthFormTitleSx,
@@ -32,6 +33,8 @@ const GoogleUsernameStep: React.FC<GoogleUsernameStepProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const [username, setUsername] = useState(suggestedUsername);
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
+  const [legalError, setLegalError] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,6 +44,11 @@ const GoogleUsernameStep: React.FC<GoogleUsernameStepProps> = ({
     const trimmed = username.trim();
     if (trimmed.length < 3) {
       setValidationError(t('auth.google.usernameTooShort'));
+      return;
+    }
+    if (!acceptedLegal) {
+      setLegalError(true);
+      setValidationError(t('legal.consent.required'));
       return;
     }
     await onSubmit(trimmed);
@@ -85,6 +93,18 @@ const GoogleUsernameStep: React.FC<GoogleUsernameStepProps> = ({
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         disabled={isLoading}
+      />
+
+      <LegalConsentCheckbox
+        checked={acceptedLegal}
+        onChange={(checked) => {
+          setAcceptedLegal(checked);
+          if (checked) {
+            setLegalError(false);
+          }
+        }}
+        disabled={isLoading}
+        error={legalError}
       />
 
       <Button

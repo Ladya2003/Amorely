@@ -1773,7 +1773,8 @@
   "common": {
     "back": "Back",
     "cancel": "Cancel",
-    "close": "Close"
+    "close": "Close",
+    "loading": "Loading"
   },
   "pets": {
     "title": "My pets",
@@ -2067,5 +2068,83 @@
     "openEventAria": "Open event",
     "mediaPrevAria": "Previous media",
     "mediaNextAria": "Next media"
+  },
+  "legal": {
+    "openApp": "Open app",
+    "backHome": "Back to home",
+    "updatedAt": "Last updated: {{date}}",
+    "consent": {
+      "label": "I accept the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>",
+      "required": "Please accept the Terms and Privacy Policy"
+    },
+    "footer": {
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "offer": "Offer",
+      "payment": "Payment",
+      "support": "Support",
+      "blog": "Blog",
+      "contactAria": "Contact email",
+      "contactLead": "For any question, write to"
+    },
+    "pages": {
+      "terms": {
+        "title": "Terms of Use",
+        "description": "Terms of use for the Amorely couples app.",
+        "keywords": "Amorely terms, terms of use, couples app rules, chat rules, Belarus"
+      },
+      "privacy": {
+        "title": "Privacy Policy",
+        "description": "How Amorely processes personal data.",
+        "keywords": "Amorely privacy, personal data, 99-Z, data protection, encrypted chat"
+      },
+      "offer": {
+        "title": "Public Offer",
+        "description": "Public offer for Amorely. The service is currently free.",
+        "keywords": "Amorely offer, public offer, free couples app, Belarus"
+      },
+      "payment": {
+        "title": "Payment",
+        "description": "Amorely is completely free. Payments are not accepted.",
+        "keywords": "Amorely free, no subscription, no payment, couples app"
+      }
+    },
+    "support": {
+      "documentTitle": "Support — Amorely",
+      "documentDescription": "Write to the Amorely support team. We will reply to the email you provide.",
+      "keywords": "Amorely support, contact, help, couples app",
+      "title": "Support",
+      "subtitle": "Write to us — we will reply to the email you provide.",
+      "name": "Name",
+      "email": "Reply email",
+      "message": "Message",
+      "submit": "Send",
+      "submitting": "Sending...",
+      "success": "Message sent. We will reply to the email you provided.",
+      "orWrite": "Or write to",
+      "errors": {
+        "fillAllFields": "Please fill in all fields",
+        "tooShort": "Please write a slightly longer message",
+        "sendFailed": "Could not send the message. Try again or write to the support email."
+      }
+    },
+    "blog": {
+      "documentTitle": "Blog — Amorely",
+      "documentDescription": "Notes about Amorely: a private space for couples, encrypted chat, and a shared calendar.",
+      "keywords": "Amorely blog, couples app, encrypted chat, shared calendar, dating ideas",
+      "title": "Blog",
+      "lead": "Ideas for couples, how the app works, and what we are building next.",
+      "search": "Search posts",
+      "searchAria": "Search blog posts",
+      "home": "Home",
+      "readMore": "Read more",
+      "empty": "No posts match your search.",
+      "categories": {
+        "all": "All",
+        "product": "Product",
+        "tips": "Tips",
+        "updates": "Updates"
+      }
+    }
   }
 }

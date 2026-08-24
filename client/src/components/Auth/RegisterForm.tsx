@@ -22,6 +22,7 @@ import {
   getAuthSwitchTextSx,
 } from './authPageStyles';
 import GoogleSignInButton from './GoogleSignInButton';
+import LegalConsentCheckbox from '../Legal/LegalConsentCheckbox';
 import { useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '../UI/icons';
 
@@ -56,6 +57,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
+  const [legalError, setLegalError] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [usePasswordNotice, setUsePasswordNotice] = useState<string | null>(null);
 
@@ -81,6 +84,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
       return;
     }
 
+    if (!acceptedLegal) {
+      setLegalError(true);
+      setValidationError(t('legal.consent.required'));
+      return;
+    }
+
     try {
       const response = await register(email, username, password);
       if (response?.data?.needsEmailVerification) {
@@ -100,6 +109,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   };
 
   const handleGoogle = async (idToken: string) => {
+    if (!acceptedLegal) {
+      setLegalError(true);
+      setValidationError(t('legal.consent.required'));
+      return;
+    }
     setUsePasswordNotice(null);
     clearError();
     const result = await loginWithGoogle(idToken);
@@ -232,6 +246,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
             </InputAdornment>
           ),
         }}
+      />
+
+      <LegalConsentCheckbox
+        checked={acceptedLegal}
+        onChange={(checked) => {
+          setAcceptedLegal(checked);
+          if (checked) {
+            setLegalError(false);
+          }
+        }}
+        disabled={isLoading}
+        error={legalError}
       />
 
       <Button

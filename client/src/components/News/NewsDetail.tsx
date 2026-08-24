@@ -31,6 +31,7 @@ import {
   NEWS_DETAIL_TRANSITION_MS,
 } from './newsPageStyles';
 import { AnnouncementIcon, ArrowBackIcon, EventIcon, UpdateIcon } from '../UI/icons';
+import NewsLinkifiedText from './NewsLinkifiedText';
 
 interface NewsDetailProps {
   open: boolean;
@@ -190,7 +191,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ open, onClose, news }) => {
                 </Box>
 
                 <Typography component="div" sx={getNewsDetailBodySx()}>
-                  {activeNews.content}
+                  <NewsLinkifiedText text={activeNews.content} />
                 </Typography>
 
                 {galleryMedia.map((media, mediaIndex) => (

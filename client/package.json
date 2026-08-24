@@ -42,12 +42,14 @@
   },
   "scripts": {
     "seo:landing": "node scripts/generate-landing-seo.mjs",
+    "seo:public": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-public-seo.mjs",
     "seo:inject-locales": "node scripts/inject-locale-landings.mjs",
-    "prestart": "npm run seo:landing",
-    "prebuild": "npm run seo:landing",
+    "seo:inject-public": "node scripts/inject-public-pages.mjs",
+    "prestart": "npm run seo:landing && npm run seo:public",
+    "prebuild": "npm run seo:landing && npm run seo:public",
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "npm run seo:inject-locales",
+    "postbuild": "npm run seo:inject-locales && npm run seo:inject-public",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

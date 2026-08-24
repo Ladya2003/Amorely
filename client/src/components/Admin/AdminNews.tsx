@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -49,8 +48,10 @@ import {
   createEmptyNewsTranslations,
   normalizeNewsTranslations,
   NewsLocaleContent,
+  SOCIAL_PRESENCE_NEWS_PRESET,
 } from '../../localization/newsContent';
 import { AddIcon, DeleteIcon, EditIcon } from '../UI/icons';
+import BrandLoader from '../common/BrandLoader';
 
 type NewsFormState = {
   translations: Record<AppLocale, NewsLocaleContent>;
@@ -138,6 +139,18 @@ const AdminNews: React.FC = () => {
   const openCreateDialog = () => {
     setEditingNews(null);
     setForm(emptyForm());
+    setActiveLocale('ru');
+    resetMediaState();
+    setDialogOpen(true);
+  };
+
+  const openSocialPresencePresetDialog = () => {
+    setEditingNews(null);
+    setForm({
+      translations: SOCIAL_PRESENCE_NEWS_PRESET.translations,
+      category: SOCIAL_PRESENCE_NEWS_PRESET.category,
+      isPublished: true,
+    });
     setActiveLocale('ru');
     resetMediaState();
     setDialogOpen(true);
@@ -267,20 +280,25 @@ const AdminNews: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, gap: 1, flexWrap: 'wrap' }}>
         <Typography variant="body2" color="text.secondary">
           Создание, редактирование и публикация новостей на разных языках
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateDialog}>
-          Новая новость
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button variant="outlined" onClick={openSocialPresencePresetDialog}>
+            Шаблон: Instagram, TikTok, YouTube
+          </Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreateDialog}>
+            Новая новость
+          </Button>
+        </Box>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress />
+          <BrandLoader size={48} />
         </Box>
       ) : (
         <TableContainer component={Paper} variant="outlined">

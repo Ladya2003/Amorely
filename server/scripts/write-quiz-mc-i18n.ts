@@ -5,6 +5,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { QUIZ_CATEGORIES, QUIZ_QUESTION_SOURCES } from '../src/games/quizGameContent';
+import { quizDisplayTextsAreUnique } from '../src/i18n/quizI18nHelpers';
 
 const escapeTs = (value: string) => value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
@@ -86,12 +87,15 @@ ${lines.join('\n')}
 };
 
 const writeOptionFile = () => {
-  const lines = QUIZ_QUESTION_SOURCES.flatMap((question) =>
-    question.options.map(
-      (option) =>
-        `  '${question.id}:${option.id}': { ru: '${escapeTs(option.text)}', en: '${escapeTs(option.textEn)}' },`
-    )
-  );
+  const lines = QUIZ_QUESTION_SOURCES.flatMap((question) => {
+    const ruTexts = question.options.map((option) => option.text);
+    const useEnglishForRu = !quizDisplayTextsAreUnique(ruTexts);
+
+    return question.options.map((option) => {
+      const ruText = useEnglishForRu ? option.textEn : option.text;
+      return `  '${question.id}:${option.id}': { ru: '${escapeTs(ruText)}', en: '${escapeTs(option.textEn)}' },`;
+    });
+  });
 
   fs.writeFileSync(
     path.join(outDir, 'quizOptionsI18n.ts'),

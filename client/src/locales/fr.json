@@ -1789,7 +1789,8 @@
   "common": {
     "back": "Retour",
     "cancel": "Annuler",
-    "close": "Fermer"
+    "close": "Fermer",
+    "loading": "Chargement"
   },
   "pets": {
     "title": "Mes animaux",
@@ -2083,5 +2084,83 @@
     "openEventAria": "Ouvrir l’événement",
     "mediaPrevAria": "Média précédent",
     "mediaNextAria": "Média suivant"
+  },
+  "legal": {
+    "openApp": "Ouvrir l’app",
+    "backHome": "Retour à l’accueil",
+    "updatedAt": "Dernière mise à jour : {{date}}",
+    "consent": {
+      "label": "J’accepte les <terms>Conditions</terms> et la <privacy>Politique de confidentialité</privacy>",
+      "required": "Veuillez accepter les Conditions et la Politique de confidentialité"
+    },
+    "footer": {
+      "terms": "Conditions",
+      "privacy": "Confidentialité",
+      "offer": "Offre",
+      "payment": "Paiement",
+      "support": "Assistance",
+      "blog": "Blog",
+      "contactAria": "E-mail de contact",
+      "contactLead": "Pour toute question, écrivez à"
+    },
+    "pages": {
+      "terms": {
+        "title": "Conditions d’utilisation",
+        "description": "Conditions d’utilisation de l’application couple Amorely.",
+        "keywords": "Amorely conditions, accord, règles du chat, application couple"
+      },
+      "privacy": {
+        "title": "Politique de confidentialité",
+        "description": "Comment Amorely traite les données personnelles.",
+        "keywords": "Amorely confidentialité, données personnelles, politique de confidentialité"
+      },
+      "offer": {
+        "title": "Offre publique",
+        "description": "Offre publique d’Amorely. Le service est actuellement gratuit.",
+        "keywords": "Amorely offre, offre publique, application couple gratuite"
+      },
+      "payment": {
+        "title": "Paiement",
+        "description": "Amorely est entièrement gratuit. Aucun paiement n’est accepté.",
+        "keywords": "Amorely gratuit, sans abonnement, sans paiement"
+      }
+    },
+    "support": {
+      "documentTitle": "Assistance — Amorely",
+      "documentDescription": "Écrivez à l’équipe d’assistance Amorely. Nous répondrons à l’e-mail indiqué.",
+      "keywords": "Amorely assistance, contact, aide",
+      "title": "Assistance",
+      "subtitle": "Écrivez-nous — nous répondrons à l’e-mail indiqué.",
+      "name": "Nom",
+      "email": "E-mail de réponse",
+      "message": "Message",
+      "submit": "Envoyer",
+      "submitting": "Envoi...",
+      "success": "Message envoyé. Nous répondrons à l’e-mail indiqué.",
+      "orWrite": "Ou écrivez à",
+      "errors": {
+        "fillAllFields": "Veuillez remplir tous les champs",
+        "tooShort": "Écrivez un message un peu plus long",
+        "sendFailed": "Impossible d’envoyer le message. Réessayez ou écrivez à l’e-mail d’assistance."
+      }
+    },
+    "blog": {
+      "documentTitle": "Blog — Amorely",
+      "documentDescription": "Notes sur Amorely : un espace privé pour les couples, un chat chiffré et un calendrier partagé.",
+      "keywords": "blog Amorely, application couple, chat chiffré, calendrier",
+      "title": "Blog",
+      "lead": "Idées pour les couples, fonctionnement de l’app et ce que nous préparons.",
+      "search": "Rechercher des articles",
+      "searchAria": "Rechercher dans le blog",
+      "home": "Accueil",
+      "readMore": "Lire la suite",
+      "empty": "Aucun article ne correspond.",
+      "categories": {
+        "all": "Tous",
+        "product": "Produit",
+        "tips": "Conseils",
+        "updates": "Actualités"
+      }
+    }
   }
 }

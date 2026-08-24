@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCrypto } from '../../contexts/CryptoContext';
-import { Box, CircularProgress } from '@mui/material';
+import BrandLoader from '../common/BrandLoader';
 import {
   getLandingPath,
   resolvePreferredLandingLocale,
@@ -22,11 +22,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, bypassCryptoC
   // (calendar / dating ideas) and would unmount the whole protected tree mid-action.
   // Initial key bootstrap is already covered by `isCryptoBootstrapComplete`.
   if (isLoading || !isCryptoBootstrapComplete) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <BrandLoader fullscreen />;
   }
 
   if (!isAuthenticated) {

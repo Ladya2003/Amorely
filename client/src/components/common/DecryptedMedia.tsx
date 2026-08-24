@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import type { ContentMediaEnvelope } from '../../crypto/contentCryptoService';
 import { fetchDecryptedBlobUrl, getCachedBlobUrl } from '../../crypto/decryptedMediaCache';
 import { captureVideoPosterFromUrl } from '../../utils/videoPoster';
 import type { CryptoRecoveryContext } from '../../services/cryptoRecoveryService';
 import ChatVideoPlayer from './ChatVideoPlayer';
 import DecryptFailedState from './DecryptFailedState';
+import BrandLoader from './BrandLoader';
 
 interface DecryptedMediaProps {
   cacheKey: string;
@@ -143,7 +144,7 @@ const DecryptedMedia: React.FC<DecryptedMediaProps> = ({
   if (loading || (videoPreview && resourceType === 'video' && posterLoading)) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 2, minHeight: loadingMinHeight }}>
-        <CircularProgress size={28} />
+        <BrandLoader size={40} />
       </Box>
     );
   }

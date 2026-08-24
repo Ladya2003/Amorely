@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Container,
   IconButton,
   Skeleton,
@@ -15,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { API_URL } from '../config';
+import BrandLoader from '../components/common/BrandLoader';
 import { useAuth } from '../contexts/AuthContext';
 import { usePartnerId } from '../hooks/usePartnerId';
 import { useCrypto } from '../contexts/CryptoContext';
@@ -839,7 +839,7 @@ const DatingIdeasPage: React.FC = () => {
               minWidth: 220,
             }}
           >
-            <CircularProgress size={32} />
+            <BrandLoader size={48} />
             <Typography variant="body1" fontWeight={700}>
               {t('calendar.common.saving')}
             </Typography>
@@ -959,7 +959,9 @@ const DatingIdeasPage: React.FC = () => {
           <Typography variant="body2" color="text.secondary">
             {t('datingIdeas.generatingHint')}
           </Typography>
-          <CircularProgress size={28} sx={{ mt: 1 }} />
+          <Box sx={{ mt: 1 }}>
+            <BrandLoader size={40} />
+          </Box>
         </Box>
       )}
 

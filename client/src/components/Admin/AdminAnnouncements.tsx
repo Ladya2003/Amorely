@@ -48,6 +48,7 @@ import {
 } from '../../localization/announcementContent';
 import { getAppPlainDialogPaperSx } from '../../theme/modalStyles';
 import { AddIcon, DeleteIcon, EditIcon, SendIcon } from '../UI/icons';
+import BrandLoader from '../common/BrandLoader';
 
 type AnnouncementFormState = {
   key: string;
@@ -291,7 +292,7 @@ const AdminAnnouncements: React.FC = () => {
 
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress />
+          <BrandLoader size={48} />
         </Box>
       ) : (
         <TableContainer component={Paper} variant="outlined">

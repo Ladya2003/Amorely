@@ -93,6 +93,7 @@ export interface QuizGamePublicState {
     secondsRemaining: number;
     myOptionId: string | null;
     myAnswerSubmitted: boolean;
+    partnerOptionId: string | null;
     partnerAnswerSubmitted: boolean;
     reveal: QuizQuestionRevealPublic | null;
   } | null;
@@ -328,14 +329,74 @@ const maybeAwardQuizDailyComplete = async (state: any, context: QuizGameContext)
   );
 };
 
+const serializeCurrentQuestion = (question: any) => {
+  const raw = typeof question.toObject === 'function' ? question.toObject() : { ...question };
+  return {
+    ...raw,
+    answers: (raw.answers || []).map(
+      (entry: { userId: unknown; text: string; isCorrect: boolean; pointsEarned: number }) => ({
+        userId: entry.userId,
+        text: entry.text,
+        isCorrect: entry.isCorrect,
+        pointsEarned: entry.pointsEarned,
+      })
+    ),
+  };
+};
+
+const persistResolvedQuestion = async (state: any, cellKey: string) => {
+  const question = state.currentQuestion;
+  const filter = {
+    _id: state._id,
+    'currentQuestion.status': 'answering',
+    'currentQuestion.cellKey': cellKey,
+  };
+
+  if (!question) {
+    return QuizGameState.findOneAndUpdate(
+      filter,
+      {
+        $set: {
+          currentQuestion: null,
+          boardCells: state.boardCells,
+          usedCellKeys: state.usedCellKeys,
+          seenQuestionIds: state.seenQuestionIds,
+          updatedAt: new Date(),
+        },
+      },
+      { new: true }
+    );
+  }
+
+  return QuizGameState.findOneAndUpdate(
+    filter,
+    {
+      $set: {
+        currentQuestion: serializeCurrentQuestion(question),
+        totalScore: state.totalScore,
+        boardCells: state.boardCells,
+        usedCellKeys: state.usedCellKeys,
+        seenQuestionIds: state.seenQuestionIds,
+        updatedAt: new Date(),
+      },
+    },
+    { new: true }
+  );
+};
+
 const resolveQuestionAndMaybeAwardDaily = async (state: any, context: QuizGameContext) => {
   const round = state.currentQuestion;
   if (!round || round.status !== 'answering') {
-    return;
+    return null;
   }
 
+  const cellKey = round.cellKey;
   resolveQuestionOnDocument(state, getUniqueParticipantIds(context));
-  await maybeAwardQuizDailyComplete(state, context);
+  const persisted = await persistResolvedQuestion(state, cellKey);
+  if (persisted) {
+    await maybeAwardQuizDailyComplete(persisted, context);
+  }
+  return persisted;
 };
 
 export const expireQuizQuestionIfNeeded = async (state: any, context: QuizGameContext): Promise<boolean> => {
@@ -345,15 +406,18 @@ export const expireQuizQuestionIfNeeded = async (state: any, context: QuizGameCo
 
   if (getSecondsRemaining(new Date(state.currentQuestion.deadlineAt)) > 0) {
     const participantIds = getUniqueParticipantIds(context);
-    const answeredCount = state.currentQuestion.answers?.length ?? 0;
-    if (answeredCount < participantIds.length) {
+    const answeredIds = new Set(
+      (state.currentQuestion.answers || []).map((entry: { userId: { toString(): string } }) =>
+        entry.userId.toString()
+      )
+    );
+    if (participantIds.some((participantId) => !answeredIds.has(participantId))) {
       return false;
     }
   }
 
-  await resolveQuestionAndMaybeAwardDaily(state, context);
-  await state.save();
-  return true;
+  const persisted = await resolveQuestionAndMaybeAwardDaily(state, context);
+  return Boolean(persisted);
 };
 
 const syncQuizLobby = async (state: any, context?: QuizGameContext) => {
@@ -502,8 +566,10 @@ export const formatQuizGameState = (
         state.currentQuestion.status === 'answering'
           ? getSecondsRemaining(new Date(state.currentQuestion.deadlineAt))
           : 0,
-      myOptionId: myAnswer?.text || null,
+      myOptionId: myAnswer?.text && isQuizOptionId(myAnswer.text) ? myAnswer.text : null,
       myAnswerSubmitted: Boolean(myAnswer?.text),
+      partnerOptionId:
+        partnerAnswer?.text && isQuizOptionId(partnerAnswer.text) ? partnerAnswer.text : null,
       partnerAnswerSubmitted: Boolean(partnerAnswer?.text),
       reveal,
     };
@@ -778,27 +844,58 @@ export const submitQuizAnswer = async (userId: string, context: QuizGameContext,
 
   const isCorrect = isQuizOptionCorrect(configQuestion, trimmed);
   const pointsEarned = isCorrect ? state.currentQuestion.points : 0;
+  const userObjectId = new mongoose.Types.ObjectId(userId);
 
-  state.currentQuestion.answers.push({
-    userId: new mongoose.Types.ObjectId(userId),
-    text: trimmed,
-    isCorrect,
-    pointsEarned,
-  });
+  const updated = await QuizGameState.findOneAndUpdate(
+    {
+      _id: state._id,
+      'currentQuestion.status': 'answering',
+      'currentQuestion.deadlineAt': { $gt: new Date() },
+      'currentQuestion.answers.userId': { $ne: userObjectId },
+    },
+    {
+      $push: {
+        'currentQuestion.answers': {
+          userId: userObjectId,
+          text: trimmed,
+          isCorrect,
+          pointsEarned,
+        },
+      },
+    },
+    { new: true }
+  );
+
+  if (!updated?.currentQuestion) {
+    const latest = await QuizGameState.findById(state._id);
+    if (!latest?.currentQuestion || latest.currentQuestion.status !== 'answering') {
+      throw new QuizGameError('QUESTION_NOT_ACTIVE', 'Сейчас нельзя ответить');
+    }
+    if (getSecondsRemaining(new Date(latest.currentQuestion.deadlineAt)) <= 0) {
+      await expireQuizQuestionIfNeeded(latest, context);
+      throw new QuizGameError('QUESTION_EXPIRED', 'Время на ответ истекло');
+    }
+    const alreadyStored = (latest.currentQuestion.answers || []).some(
+      (entry: { userId: { toString(): string } }) => entry.userId.toString() === userId
+    );
+    if (alreadyStored) {
+      throw new QuizGameError('ALREADY_ANSWERED', 'Вы уже отправили ответ');
+    }
+    throw new QuizGameError('QUESTION_NOT_ACTIVE', 'Сейчас нельзя ответить');
+  }
 
   const participantIds = getUniqueParticipantIds(context);
   const allAnswered = participantIds.every((participantId) =>
-    state.currentQuestion!.answers.some(
+    updated.currentQuestion!.answers.some(
       (entry: { userId: { toString(): string } }) => entry.userId.toString() === participantId
     )
   );
 
   if (allAnswered) {
-    await resolveQuestionAndMaybeAwardDaily(state, context);
+    await resolveQuestionAndMaybeAwardDaily(updated, context);
   }
 
-  await state.save();
-  return QuizGameState.findById(state._id);
+  return QuizGameState.findById(updated._id);
 };
 
 export const dismissQuizReveal = async (userId: string, context: QuizGameContext) => {

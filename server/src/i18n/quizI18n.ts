@@ -3,10 +3,24 @@ import { getQuizOption } from '../games/quizGameConfig';
 import { QUIZ_CATEGORY_I18N } from './generated/quizI18nData';
 import { QUIZ_OPTION_I18N } from './generated/quizOptionsI18n';
 import { QUIZ_QUESTION_I18N } from './generated/quizQuestionsI18n';
-import { getLocalizedQuizField } from './quizI18nHelpers';
+import { getLocalizedQuizField, quizDisplayTextsAreUnique } from './quizI18nHelpers';
 import { AppLocale, DEFAULT_LOCALE, getGameContentLocale } from './locales';
 
 const getOptionI18nKey = (questionId: string, optionId: QuizOptionId) => `${questionId}:${optionId}`;
+
+const getRawQuizOptionText = (
+  question: QuizQuestion,
+  optionId: QuizOptionId,
+  locale: AppLocale
+): string => {
+  const fallback = getQuizOption(question, optionId)?.text ?? optionId;
+  return getLocalizedQuizField(
+    QUIZ_OPTION_I18N,
+    getOptionI18nKey(question.id, optionId),
+    locale,
+    fallback
+  );
+};
 
 export const getQuizCategoryName = (categoryId: string, fallbackName: string, locale: AppLocale): string =>
   getLocalizedQuizField(QUIZ_CATEGORY_I18N, categoryId, getGameContentLocale(locale), fallbackName);
@@ -19,13 +33,19 @@ export const getQuizOptionText = (
   optionId: QuizOptionId,
   locale: AppLocale
 ): string => {
-  const fallback = getQuizOption(question, optionId)?.text ?? optionId;
-  return getLocalizedQuizField(
-    QUIZ_OPTION_I18N,
-    getOptionI18nKey(question.id, optionId),
-    getGameContentLocale(locale),
-    fallback
+  const contentLocale = getGameContentLocale(locale);
+  if (contentLocale === 'en') {
+    return getRawQuizOptionText(question, optionId, 'en');
+  }
+
+  const localizedTexts = question.options.map((option) =>
+    getRawQuizOptionText(question, option.id, contentLocale)
   );
+  if (quizDisplayTextsAreUnique(localizedTexts)) {
+    return getRawQuizOptionText(question, optionId, contentLocale);
+  }
+
+  return getRawQuizOptionText(question, optionId, 'en');
 };
 
 export const getQuizCorrectAnswer = (question: QuizQuestion, locale: AppLocale): string =>

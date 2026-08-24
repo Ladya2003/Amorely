@@ -5,7 +5,6 @@ import type { TFunction } from 'i18next';
 import {
   Box,
   Button,
-  CircularProgress,
   IconButton,
   LinearProgress,
   Stack,
@@ -39,6 +38,7 @@ import {
 } from '../components/Games/gamePlayPageStyles';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import GameFrame from '../components/Games/GameFrame';
+import BrandLoader from '../components/common/BrandLoader';
 import { fireRoundConfetti } from '../utils/roundConfetti';
 import { playRoundSuccessSound, playTapSound, unlockGameAudio } from '../utils/gameSounds';
 import { ArrowBackIcon, StorefrontIcon } from '../components/UI/icons';
@@ -349,7 +349,7 @@ const TapGamePlayPage: React.FC = () => {
     return (
       <GameFrame>
         <Box sx={getGamePlayLoadingWrapSx()}>
-          <CircularProgress />
+          <BrandLoader />
         </Box>
       </GameFrame>
     );

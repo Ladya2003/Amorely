@@ -22,6 +22,7 @@ import {
   fetchAdminDashboard,
   fetchAdminDashboardDetails,
 } from '../../services/adminService';
+import BrandLoader from '../common/BrandLoader';
 import { ExpandMoreIcon } from '../UI/icons';
 
 type MetricConfig = {
@@ -169,7 +170,7 @@ const AdminDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-        <CircularProgress />
+        <BrandLoader size={48} />
       </Box>
     );
   }

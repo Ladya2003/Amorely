@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Box,
   Button,
-  CircularProgress,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -11,6 +10,7 @@ import {
   useTheme,
 } from '@mui/material';
 import ResponsiveDialog from '../UI/ResponsiveDialog';
+import BrandLoader from '../common/BrandLoader';
 import {
   fetchCoupleDistanceStatus,
   shareCurrentLocation,
@@ -148,7 +148,7 @@ const CoupleDistanceDialog: React.FC<CoupleDistanceDialogProps> = ({
       <DialogContent>
         {view === 'loading' && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-            <CircularProgress size={28} />
+            <BrandLoader size={40} />
           </Box>
         )}
 

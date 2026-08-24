@@ -51,6 +51,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAdminAlerts } from '../../contexts/AdminAlertsContext';
 import { saveOpenChatTarget, type StoredOpenChatTarget } from '../../utils/openChatTargetStorage';
 import { BlockIcon, ChatIcon, LockOpenIcon, VisibilityIcon } from '../UI/icons';
+import BrandLoader from '../common/BrandLoader';
 
 const emptyBlockReasons = (): Partial<Record<AppLocale, string>> => ({});
 
@@ -414,7 +415,7 @@ const AdminModeration: React.FC = () => {
 
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
+          <BrandLoader size={48} />
         </Box>
       ) : section === 'requests' ? (
         adminRequests.length === 0 ? (

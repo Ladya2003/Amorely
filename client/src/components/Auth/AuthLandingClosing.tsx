@@ -8,11 +8,10 @@ import {
   getAuthLandingClosingLeadSx,
   getAuthLandingClosingSx,
   getAuthLandingClosingTitleSx,
-  getAuthLandingFooterMetaSx,
-  getAuthLandingFooterSx,
   getAuthLandingValueItemSx,
   getAuthLandingValuesSx,
 } from './authPageStyles';
+import SiteFooter from '../Legal/SiteFooter';
 import { DevicesOutlinedIcon, FavoriteBorderOutlinedIcon, LockOutlinedIcon } from '../UI/icons';
 
 const VALUE_IDS = ['private', 'forTwo', 'anywhere'] as const;
@@ -69,14 +68,7 @@ const AuthLandingClosing: React.FC = () => {
       <AuthLandingFaq />
 
       <RevealOnScroll delayMs={80}>
-        <Box component="footer" sx={getAuthLandingFooterSx()}>
-          <Typography sx={getAuthLandingFooterMetaSx()}>
-            {t('auth.landing.closing.footerBrand')}
-          </Typography>
-          <Typography sx={{ ...getAuthLandingFooterMetaSx(), mt: 0.75, opacity: 0.85 }}>
-            {t('auth.landing.closing.footerNote')}
-          </Typography>
-        </Box>
+        <SiteFooter />
       </RevealOnScroll>
     </>
   );

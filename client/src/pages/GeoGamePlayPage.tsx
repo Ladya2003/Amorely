@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
-  CircularProgress,
   IconButton,
   LinearProgress,
   Stack,
@@ -47,6 +46,7 @@ import {
   getGamePlayTimerTextSx,
 } from '../components/Games/gamePlayPageStyles';
 import GameFrame from '../components/Games/GameFrame';
+import BrandLoader from '../components/common/BrandLoader';
 import CustomSnackbar from '../components/UI/CustomSnackbar';
 import ContentViewer from '../components/Calendar/ContentViewer';
 import ResponsiveDialog from '../components/UI/ResponsiveDialog';
@@ -388,7 +388,7 @@ const GeoGamePlayPage: React.FC = () => {
     return (
       <GameFrame>
       <Box sx={getGamePlayLoadingWrapSx()}>
-        <CircularProgress />
+        <BrandLoader />
       </Box>
     </GameFrame>
     );

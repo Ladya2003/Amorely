@@ -4,7 +4,6 @@ import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParam
 import {
   Box,
   Button,
-  CircularProgress,
   IconButton,
   Link,
   Stack,
@@ -46,6 +45,7 @@ import {
   getGamePlayPrimaryButtonSx,
 } from '../components/Games/gamePlayPageStyles';
 import GameFrame from '../components/Games/GameFrame';
+import BrandLoader from '../components/common/BrandLoader';
 import {
   fetchGameDetails,
   fetchGameLeaderboard,
@@ -291,7 +291,7 @@ const GamePage: React.FC = () => {
       <Box sx={getGamePageScrollSx()}>
         {loading ? (
           <Box sx={getGamePageLoadingSx(theme)}>
-            <CircularProgress size={32} />
+            <BrandLoader size={48} />
           </Box>
         ) : (
           <Box key={tab} sx={{ ...gamePageTabContentEnterSx, ...getGamePageContentStackSx() }}>
@@ -340,7 +340,7 @@ const GamePage: React.FC = () => {
               </>
             ) : leaderboardLoading ? (
               <Box sx={getGamePageLoadingSx(theme)}>
-                <CircularProgress size={32} />
+                <BrandLoader size={48} />
               </Box>
             ) : (
               <>

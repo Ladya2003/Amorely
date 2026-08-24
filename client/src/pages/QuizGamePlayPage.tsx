@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
-  CircularProgress,
   IconButton,
   LinearProgress,
   Stack,
@@ -49,6 +48,7 @@ import {
   getGamePlayTurnBannerSx,
 } from '../components/Games/gamePlayPageStyles';
 import GameFrame from '../components/Games/GameFrame';
+import BrandLoader from '../components/common/BrandLoader';
 import socketService from '../services/socketService';
 import {
   fetchQuizGameState,
@@ -81,13 +81,14 @@ const getQuizOptionVisualState = (
   optionId: string,
   isRevealed: boolean,
   myOptionId: string | null,
+  partnerOptionId: string | null,
   correctOptionId?: string
 ): QuizOptionVisualState => {
   if (isRevealed) {
     if (optionId === correctOptionId) {
       return 'correct';
     }
-    if (myOptionId === optionId) {
+    if (myOptionId === optionId || partnerOptionId === optionId) {
       return 'wrong';
     }
     return 'dimmed';
@@ -114,12 +115,24 @@ const QuizGamePlayPage: React.FC = () => {
     severity: 'info' as 'info' | 'error' | 'success',
   });
   const prevQuestionStatusRef = useRef<string | null>(null);
+  const revealedCellKeysRef = useRef<Set<string>>(new Set());
   const expireSyncRequestedRef = useRef(false);
   const lobbySyncRequestedRef = useRef(false);
   const lobbyExpireSyncDoneRef = useRef(false);
 
   const applyState = useCallback((nextState: QuizGameState) => {
+    if (!nextState.sessionActive) {
+      revealedCellKeysRef.current.clear();
+    }
+
     const question = nextState.currentQuestion;
+    const isStaleAnsweringAfterReveal =
+      question?.status === 'answering' && revealedCellKeysRef.current.has(question.cellKey);
+
+    if (isStaleAnsweringAfterReveal) {
+      return;
+    }
+
     const justRevealed =
       question?.status === 'revealed' &&
       question.reveal &&
@@ -140,6 +153,9 @@ const QuizGamePlayPage: React.FC = () => {
     }
 
     prevQuestionStatusRef.current = question?.status ?? null;
+    if (question?.status === 'revealed') {
+      revealedCellKeysRef.current.add(question.cellKey);
+    }
 
     setState(nextState);
 
@@ -270,11 +286,21 @@ const QuizGamePlayPage: React.FC = () => {
     Boolean(state?.inLobby),
     Boolean(state?.currentQuestion && !state.inLobby)
   );
-  useRoundTimerSound(questionSecondsLeft, state?.currentQuestion?.status === 'answering');
+  const bothAnswersIn =
+    Boolean(state?.currentQuestion?.myAnswerSubmitted) &&
+    Boolean(state?.currentQuestion?.partnerAnswerSubmitted);
+  useRoundTimerSound(
+    questionSecondsLeft,
+    state?.currentQuestion?.status === 'answering' && !bothAnswersIn
+  );
 
   useEffect(() => {
     const question = state?.currentQuestion;
-    if (!question || question.status !== 'answering') {
+    if (
+      !question ||
+      question.status !== 'answering' ||
+      (question.myAnswerSubmitted && question.partnerAnswerSubmitted)
+    ) {
       return;
     }
 
@@ -396,7 +422,7 @@ const QuizGamePlayPage: React.FC = () => {
     return (
       <GameFrame>
       <Box sx={getGamePlayLoadingWrapSx()}>
-        <CircularProgress />
+        <BrandLoader />
       </Box>
     </GameFrame>
     );
@@ -568,7 +594,9 @@ const QuizGamePlayPage: React.FC = () => {
   const reveal = question?.reveal;
   const isAnswering = question?.status === 'answering';
   const isRevealed = question?.status === 'revealed';
-  const isTimeLow = isAnswering && questionSecondsLeft <= GAME_TIMER_LOW_THRESHOLD;
+  const bothAnswered = Boolean(question?.myAnswerSubmitted && question?.partnerAnswerSubmitted);
+  const showQuestionTimer = isAnswering && !bothAnswered;
+  const isTimeLow = showQuestionTimer && questionSecondsLeft <= GAME_TIMER_LOW_THRESHOLD;
   const timeProgress = question
     ? Math.max(0, Math.min(100, (questionSecondsLeft / state.questionTimeSec) * 100))
     : 0;
@@ -667,7 +695,7 @@ const QuizGamePlayPage: React.FC = () => {
 
       {question && (
         <Box sx={getGamePlayOverlaySx(theme)}>
-          {isAnswering && (
+          {showQuestionTimer && (
             <Box sx={getGamePlayTimerBarSx(theme)}>
               <Typography component="span" sx={getGamePlayTimerTextSx(isTimeLow)}>
                 {t('games.common.secondsLeft', { seconds: questionSecondsLeft })}
@@ -696,6 +724,7 @@ const QuizGamePlayPage: React.FC = () => {
                   option.id,
                   isRevealed,
                   selectedOptionId ?? question.myOptionId,
+                  question.partnerOptionId,
                   reveal?.correctOptionId
                 );
                 const letter = OPTION_LETTERS[index] ?? String(index + 1);
