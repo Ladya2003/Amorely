@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Box, Container, Fab, Badge, Typography, Tooltip, IconButton, useTheme } from '@mui/material';
@@ -56,38 +56,45 @@ const mapFeedContentItem = (item: any): ContentItem => ({
   datingIdeaDescription: item.datingIdeaDescription,
 });
 
-const formatFeedContentItems = async (
-  items: any[],
-  localDeviceKeys: LocalDeviceKeys | null,
+const toFeedDecryptSource = (item: any) => ({
+  ...mapFeedContentItem(item),
+  encryptedMediaEnvelope: item.encryptedMediaEnvelope,
+  encryptedMediaEnvelopePartner: item.encryptedMediaEnvelopePartner,
+  encryptedTitle: item.encryptedTitle,
+  encryptedDescription: item.encryptedDescription,
+  encryptedTitlePartner: item.encryptedTitlePartner,
+  encryptedDescriptionPartner: item.encryptedDescriptionPartner,
+  metadataSenderId: item.metadataSenderId,
+  metadataRecipientId: item.metadataRecipientId,
+  targetId: item.targetId,
+  userId: item.userId,
+  createdBy: item.createdBy,
+});
+
+const feedItemNeedsDecrypt = (item: any): boolean =>
+  Boolean(
+    item?.encrypted ||
+      item?.encryptedMediaEnvelope?.ciphertext ||
+      item?.encryptedMediaEnvelopePartner?.ciphertext ||
+      item?.encryptedTitle?.ciphertext ||
+      item?.encryptedDescription?.ciphertext ||
+      item?.encryptedTitlePartner?.ciphertext ||
+      item?.encryptedDescriptionPartner?.ciphertext
+  );
+
+const decryptFeedContentItem = async (
+  item: any,
+  localDeviceKeys: LocalDeviceKeys,
   userId?: string,
   partnerId?: string | null
-): Promise<ContentItem[]> => {
-  let formattedContent = items.map((item) => ({
-    ...mapFeedContentItem(item),
-    encryptedMediaEnvelope: item.encryptedMediaEnvelope,
-    encryptedMediaEnvelopePartner: item.encryptedMediaEnvelopePartner,
-    encryptedTitle: item.encryptedTitle,
-    encryptedDescription: item.encryptedDescription,
-    encryptedTitlePartner: item.encryptedTitlePartner,
-    encryptedDescriptionPartner: item.encryptedDescriptionPartner,
-    metadataSenderId: item.metadataSenderId,
-    metadataRecipientId: item.metadataRecipientId,
-    targetId: item.targetId,
-    userId: item.userId,
-    createdBy: item.createdBy,
-  }));
-
-  if (!localDeviceKeys) {
-    return formattedContent.map(mapFeedContentItem);
-  }
-
-  const decrypted = await decryptContentItemsWithMedia(
+): Promise<ContentItem> => {
+  const [decrypted] = await decryptContentItemsWithMedia(
     localDeviceKeys,
-    formattedContent,
+    [toFeedDecryptSource(item)],
     userId,
     partnerId || undefined
   );
-  return decrypted.map(mapFeedContentItem);
+  return mapFeedContentItem(decrypted);
 };
 
 const FeedPage: React.FC = () => {
@@ -101,6 +108,7 @@ const FeedPage: React.FC = () => {
   const { data: feedHome, loading: isFeedHomeLoading, refresh: refreshFeedHome } = useFeedHome();
   const partnerId = usePartnerId();
   const encryptionRecipientId = useEncryptionRecipientId();
+  const decryptGenerationRef = useRef(0);
   
   // Состояние для табов
   const [tabValue, setTabValue] = useState(0);
@@ -153,40 +161,79 @@ const FeedPage: React.FC = () => {
     setIsRelationshipLoading(false);
   }, [feedHome, isFeedHomeLoading]);
 
+  const hydratePartnerContent = useCallback(
+    async (rawItems: any[], priorityIndex = 0) => {
+      const generation = decryptGenerationRef.current + 1;
+      decryptGenerationRef.current = generation;
+
+      const placeholders = rawItems.map((item) => ({
+        ...mapFeedContentItem(item),
+        isPending: Boolean(localDeviceKeys && feedItemNeedsDecrypt(item)),
+      }));
+      setPartnerContent(placeholders);
+      setIsContentLoading(false);
+
+      if (!localDeviceKeys || rawItems.length === 0) {
+        return;
+      }
+
+      const applyDecrypted = (index: number, decrypted: ContentItem) => {
+        if (generation !== decryptGenerationRef.current) {
+          return;
+        }
+        setPartnerContent((prev) => {
+          if (index < 0 || index >= prev.length || prev[index].id !== decrypted.id) {
+            return prev;
+          }
+          const next = [...prev];
+          next[index] = decrypted;
+          return next;
+        });
+      };
+
+      const decryptIndex = async (index: number) => {
+        const raw = rawItems[index];
+        if (!raw || !feedItemNeedsDecrypt(raw)) {
+          return;
+        }
+        try {
+          const decrypted = await decryptFeedContentItem(
+            raw,
+            localDeviceKeys,
+            user?._id,
+            partnerId
+          );
+          applyDecrypted(index, decrypted);
+        } catch (error) {
+          console.error('Ошибка при расшифровке контента:', error);
+          applyDecrypted(index, mapFeedContentItem(raw));
+        }
+      };
+
+      const safePriorityIndex =
+        priorityIndex >= 0 && priorityIndex < rawItems.length ? priorityIndex : 0;
+      void decryptIndex(safePriorityIndex);
+      rawItems.forEach((_, index) => {
+        if (index !== safePriorityIndex) {
+          void decryptIndex(index);
+        }
+      });
+    },
+    [localDeviceKeys, user?._id, partnerId]
+  );
+
   useEffect(() => {
     if (!feedHome || !isCryptoBootstrapComplete) {
       return;
     }
 
-    let cancelled = false;
+    setCurrentIndex(0);
+    void hydratePartnerContent(feedHome.content || [], 0);
 
-    const applyHomeContent = async () => {
-      setIsContentLoading(true);
-      setCurrentIndex(0);
-      try {
-        const formattedContent = await formatFeedContentItems(
-          feedHome.content,
-          localDeviceKeys,
-          user?._id,
-          partnerId
-        );
-        if (!cancelled) {
-          setPartnerContent(formattedContent);
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке контента:', error);
-      } finally {
-        if (!cancelled) {
-          setIsContentLoading(false);
-        }
-      }
-    };
-
-    void applyHomeContent();
     return () => {
-      cancelled = true;
+      decryptGenerationRef.current += 1;
     };
-  }, [feedHome, isCryptoBootstrapComplete, localDeviceKeys, user?._id, partnerId]);
+  }, [feedHome, isCryptoBootstrapComplete, hydratePartnerContent]);
 
   useEffect(() => {
     if (!addContentDialogOpen) {
@@ -232,6 +279,10 @@ const FeedPage: React.FC = () => {
     const partnerItem = partnerContent.find((item) => item.id === contentId);
     const selfItem = selfContent.find((item) => item.id === contentId);
     const matchedItem = partnerItem || selfItem;
+
+    if (matchedItem?.isPending) {
+      return;
+    }
 
     if (matchedItem) {
       setTabValue(partnerItem ? 0 : 1);
@@ -321,12 +372,11 @@ const FeedPage: React.FC = () => {
   // Функция для загрузки контента
   const fetchContent = async () => {
     try {
-      setIsContentLoading(true);
-      setPartnerContent([]);
       setCurrentIndex(0);
 
       const token = localStorage.getItem('token');
       if (!token) {
+        setPartnerContent([]);
         setIsContentLoading(false);
         return;
       }
@@ -335,18 +385,10 @@ const FeedPage: React.FC = () => {
       const partnerResponse = await axios.get(`${API_URL}/api/feed/content?target=partner`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      const formattedContent = await formatFeedContentItems(
-        partnerResponse.data,
-        localDeviceKeys,
-        user?._id,
-        partnerId
-      );
 
-      setPartnerContent(formattedContent);
+      await hydratePartnerContent(partnerResponse.data || [], 0);
     } catch (error) {
       console.error('Ошибка при загрузке контента:', error);
-    } finally {
       setIsContentLoading(false);
     }
   };
@@ -362,6 +404,9 @@ const FeedPage: React.FC = () => {
   };
   
   const handleContentClick = (content: ContentItem) => {
+    if (content.isPending) {
+      return;
+    }
     setSelectedContent(content);
     setViewerOpen(true);
   };

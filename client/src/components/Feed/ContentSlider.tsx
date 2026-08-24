@@ -38,6 +38,7 @@ export interface ContentItem {
   datingIdeaEmoji?: string;
   datingIdeaTitle?: string;
   datingIdeaDescription?: string;
+  isPending?: boolean;
 }
 
 interface ContentSliderProps {
@@ -88,6 +89,9 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
   };
 
   const handleOpenItem = (item: ContentItem) => {
+    if (item.isPending) {
+      return;
+    }
     if (item.eventId && onEventClick) {
       onEventClick(item.eventId);
     } else if (onContentClick) {
@@ -206,11 +210,24 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
               sx={{
                 minWidth: '100%',
                 height: '100%',
-                cursor: 'pointer',
+                cursor: item.isPending ? 'default' : 'pointer',
                 position: 'relative',
               }}
               onClick={() => handleSlideItemClick(item)}
             >
+              {item.isPending ? (
+                <Skeleton
+                  variant="rectangular"
+                  animation="wave"
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    bgcolor: 'action.hover',
+                    transform: 'none',
+                  }}
+                />
+              ) : (
+              <>
               <Box
                 sx={{
                   position: 'absolute',
@@ -369,6 +386,8 @@ const ContentSlider: React.FC<ContentSliderProps> = ({
                     )}
                   </Box>
                 </Box>
+              )}
+              </>
               )}
             </Box>
           ))}
