@@ -28,7 +28,7 @@ import {
 import { PARTNER_CHANGED_EVENT } from '../../../hooks/useRelationship';
 import { usePartnerId } from '../../../hooks/usePartnerId';
 import { CURRENCY_UPDATED_EVENT } from '../../../utils/currencyEvents';
-import { SURFACE_BORDER_RADIUS } from '../../../theme/surfaceStyles';
+import { SURFACE_BORDER_RADIUS, getTintedIconButtonSx } from '../../../theme/surfaceStyles';
 import {
   getDailyQuestionsPaperSx,
   getDailyQuestionsHeaderSx,
@@ -36,7 +36,7 @@ import {
   getDailyQuestionsCardsRowSx,
   getCategoryTimerSx,
 } from './dailyQuestionsStyles';
-import { CloseIcon, HistoryOutlinedIcon } from '../../UI/icons';
+import { CloseIcon, ViewListIcon } from '../../UI/icons';
 import SpeedupButton from './SpeedupButton';
 import { useOptionalFeedHome } from '../../../contexts/FeedHomeContext';
 
@@ -220,9 +220,9 @@ const DailyQuestionsSection: React.FC = () => {
               size="small"
               onClick={() => setHistoryOpen(true)}
               aria-label={t('dailyQuestions.historyTitle')}
-              sx={{ color: 'text.secondary' }}
+              sx={getTintedIconButtonSx(theme)}
             >
-              <HistoryOutlinedIcon />
+              <ViewListIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Box>
         </Box>

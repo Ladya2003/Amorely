@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import CurrencyBadge from '../../Pets/CurrencyBadge';
 import CurrencyCoinIcon from '../../Pets/CurrencyCoinIcon';
 import ResponsiveDialog from '../../UI/ResponsiveDialog';
 import { BoltIcon } from '../../UI/icons';
@@ -68,7 +69,7 @@ const SpeedupButton: React.FC<SpeedupButtonProps> = ({
         return;
       }
       if (status === 402) {
-        setError(t('dailyQuestions.speedupInsufficient', { cost }));
+        setError(null);
       } else {
         setError(t('dailyQuestions.speedupError'));
       }
@@ -113,63 +114,33 @@ const SpeedupButton: React.FC<SpeedupButtonProps> = ({
           sx={{
             lineHeight: 1,
             whiteSpace: 'nowrap',
-            display: { xs: 'none', sm: 'inline' },
           }}
         >
           {t('dailyQuestions.speedupLabel')}
         </Typography>
-        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.4 }}>
-          <CurrencyCoinIcon size={18} />
-          <Typography
-            variant="body2"
-            fontWeight={700}
-            sx={{
-              lineHeight: 1,
-              fontSize: '0.95rem',
-              fontVariantNumeric: 'tabular-nums',
-              color: theme.palette.mode === 'light' ? '#5A1A52' : '#FFE082',
-            }}
-          >
-            {cost}
-          </Typography>
-        </Box>
       </Box>
 
       <ResponsiveDialog open={dialogOpen} onClose={handleClose} maxWidth="xs" fullWidth>
-        <DialogTitle>{t('dailyQuestions.speedupDialogTitle')}</DialogTitle>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1.5,
+          }}
+        >
+          <Box component="span" sx={{ minWidth: 0 }}>
+            {t('dailyQuestions.speedupDialogTitle')}
+          </Box>
+          <CurrencyBadge balance={balance} size="small" variant="tinted" />
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
             {t('dailyQuestions.speedupDialogBody')}
           </Typography>
-          <Box
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.75,
-              mt: 2,
-              px: 1.25,
-              py: 0.75,
-              borderRadius: 999,
-              bgcolor: (chipTheme) =>
-                chipTheme.palette.mode === 'light'
-                  ? 'rgba(255, 215, 0, 0.14)'
-                  : 'rgba(255, 215, 0, 0.1)',
-              border: '1px solid rgba(255, 165, 0, 0.28)',
-            }}
-          >
-            <CurrencyCoinIcon size={20} />
-            <Typography variant="body2" fontWeight={700} sx={{ fontVariantNumeric: 'tabular-nums' }}>
-              {cost}
-            </Typography>
-          </Box>
           {error && (
             <Typography variant="body2" color="error" sx={{ mt: 1.5 }}>
               {error}
-            </Typography>
-          )}
-          {!canAfford && !error && (
-            <Typography variant="body2" color="error" sx={{ mt: 1.5 }}>
-              {t('dailyQuestions.speedupInsufficient', { cost })}
             </Typography>
           )}
         </DialogContent>
@@ -181,6 +152,7 @@ const SpeedupButton: React.FC<SpeedupButtonProps> = ({
             variant="contained"
             onClick={() => void handleConfirm()}
             disabled={submitting || !canAfford}
+            startIcon={<CurrencyCoinIcon size={20} />}
           >
             {t('dailyQuestions.speedupConfirm', { cost })}
           </Button>

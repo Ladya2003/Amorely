@@ -6,7 +6,6 @@ import { fetchDatingIdeas } from '../../../services/datingIdeasService';
 import { PARTNER_CHANGED_EVENT } from '../../../hooks/useRelationship';
 import { usePartnerId } from '../../../hooks/usePartnerId';
 import { getDatingIdeasSectionSx } from './datingIdeasStyles';
-import CurrencyCoinIcon from '../../Pets/CurrencyCoinIcon';
 import { AutoAwesomeIcon, ChevronRightIcon } from '../../UI/icons';
 import { useOptionalFeedHome } from '../../../contexts/FeedHomeContext';
 
@@ -18,7 +17,6 @@ const DatingIdeasSection: React.FC = () => {
   const feedHome = useOptionalFeedHome();
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
-  const [cost, setCost] = useState(100);
   const [hasActive, setHasActive] = useState(false);
 
   const load = useCallback(async () => {
@@ -30,7 +28,6 @@ const DatingIdeasSection: React.FC = () => {
         return;
       }
       setVisible(true);
-      setCost(data.cost ?? 1);
       setHasActive(Boolean(data.active));
     } catch {
       setVisible(false);
@@ -47,7 +44,6 @@ const DatingIdeasSection: React.FC = () => {
           setVisible(false);
         } else {
           setVisible(true);
-          setCost(data.cost ?? 1);
           setHasActive(Boolean(data.active));
         }
         setLoading(false);
@@ -140,14 +136,6 @@ const DatingIdeasSection: React.FC = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>
             {hasActive ? t('datingIdeas.sectionActiveHint') : t('datingIdeas.sectionHint')}
           </Typography>
-          {!hasActive && (
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 0.75 }}>
-              <CurrencyCoinIcon size={16} />
-              <Typography variant="caption" fontWeight={700} color="text.secondary">
-                {t('datingIdeas.costLabel', { cost })}
-              </Typography>
-            </Box>
-          )}
         </Box>
         <ChevronRightIcon color="action" />
       </Box>

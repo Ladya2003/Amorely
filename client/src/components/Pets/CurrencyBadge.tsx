@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { alpha, Theme } from '@mui/material/styles';
 import CurrencyCoinIcon from './CurrencyCoinIcon';
 import CurrencyGuideDialog from './CurrencyGuideDialog';
+import { InfoOutlinedIcon } from '../UI/icons';
+import { getTintedIconButtonSx } from '../../theme/surfaceStyles';
 
 const getTintedCurrencyBackground = (theme: Theme, hovered = false) => {
   const { primary } = theme.palette;
@@ -23,6 +25,7 @@ interface CurrencyBadgeProps {
   balance: number;
   size?: 'small' | 'medium';
   showGuideOnClick?: boolean;
+  showInfoIcon?: boolean;
   variant?: 'gold' | 'tinted';
 }
 
@@ -30,6 +33,7 @@ const CurrencyBadge: React.FC<CurrencyBadgeProps> = ({
   balance,
   size = 'medium',
   showGuideOnClick = true,
+  showInfoIcon = false,
   variant = 'gold',
 }) => {
   const { t } = useTranslation();
@@ -56,69 +60,81 @@ const CurrencyBadge: React.FC<CurrencyBadgeProps> = ({
 
   return (
     <>
-      <Box
-        role={showGuideOnClick ? 'button' : undefined}
-        tabIndex={showGuideOnClick ? 0 : undefined}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        aria-label={showGuideOnClick ? t('pets.currencyGuide.openHint') : undefined}
-        sx={(theme) => ({
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 0.75,
-          px: 1.5,
-          py: 0.6,
-          borderRadius: 999,
-          cursor: showGuideOnClick ? 'pointer' : 'default',
-          transition: 'background 0.2s ease, transform 0.15s ease',
-          ...(isTinted
-            ? {
-                background: getTintedCurrencyBackground(theme),
-                border: `1px solid ${alpha(theme.palette.primary.dark, theme.palette.mode === 'light' ? 0.42 : 0.55)}`,
-                boxShadow: `0 3px 14px ${alpha(theme.palette.primary.main, 0.32)}, inset 0 1px 0 ${alpha('#fff', theme.palette.mode === 'light' ? 0.55 : 0.16)}`,
-                '&:hover': showGuideOnClick
-                  ? {
-                      background: getTintedCurrencyBackground(theme, true),
-                    }
-                  : {},
-              }
-            : {
-                bgcolor: 'rgba(255, 215, 0, 0.15)',
-                border: '1px solid rgba(255, 165, 0, 0.3)',
-                '&:hover': showGuideOnClick
-                  ? {
-                      bgcolor: 'rgba(255, 215, 0, 0.28)',
-                    }
-                  : {},
-              }),
-          ...(showGuideOnClick && {
-            '&:active': {
-              transform: 'scale(0.98)',
-            },
-          }),
-        })}
-      >
-        <CurrencyCoinIcon size={iconSize} />
-        <Typography
-          variant="body2"
-          fontWeight={700}
+      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+        <Box
+          role={showGuideOnClick ? 'button' : undefined}
+          tabIndex={showGuideOnClick ? 0 : undefined}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          aria-label={showGuideOnClick ? t('pets.currencyGuide.openHint') : undefined}
           sx={(theme) => ({
-            fontSize,
-            color: isTinted
-              ? theme.palette.common.white
-              : theme.palette.mode === 'light'
-                ? '#7A5200'
-                : '#FFE082',
-            textShadow: isTinted
-              ? `0 1px 2px ${alpha(theme.palette.common.black, 0.42)}`
-              : 'none',
-            fontVariantNumeric: 'tabular-nums',
-            minWidth: '2.75ch',
-            textAlign: 'right',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.75,
+            px: 1.5,
+            py: 0.6,
+            borderRadius: 999,
+            cursor: showGuideOnClick ? 'pointer' : 'default',
+            transition: 'background 0.2s ease, transform 0.15s ease',
+            ...(isTinted
+              ? {
+                  background: getTintedCurrencyBackground(theme),
+                  border: `1px solid ${alpha(theme.palette.primary.dark, theme.palette.mode === 'light' ? 0.42 : 0.55)}`,
+                  boxShadow: `0 3px 14px ${alpha(theme.palette.primary.main, 0.32)}, inset 0 1px 0 ${alpha('#fff', theme.palette.mode === 'light' ? 0.55 : 0.16)}`,
+                  '&:hover': showGuideOnClick
+                    ? {
+                        background: getTintedCurrencyBackground(theme, true),
+                      }
+                    : {},
+                }
+              : {
+                  bgcolor: 'rgba(255, 215, 0, 0.15)',
+                  border: '1px solid rgba(255, 165, 0, 0.3)',
+                  '&:hover': showGuideOnClick
+                    ? {
+                        bgcolor: 'rgba(255, 215, 0, 0.28)',
+                      }
+                    : {},
+                }),
+            ...(showGuideOnClick && {
+              '&:active': {
+                transform: 'scale(0.98)',
+              },
+            }),
           })}
         >
-          {balance}
-        </Typography>
+          <CurrencyCoinIcon size={iconSize} />
+          <Typography
+            variant="body2"
+            fontWeight={700}
+            sx={(theme) => ({
+              fontSize,
+              color: isTinted
+                ? theme.palette.common.white
+                : theme.palette.mode === 'light'
+                  ? '#7A5200'
+                  : '#FFE082',
+              textShadow: isTinted
+                ? `0 1px 2px ${alpha(theme.palette.common.black, 0.42)}`
+                : 'none',
+              fontVariantNumeric: 'tabular-nums',
+              minWidth: '2.75ch',
+              textAlign: 'right',
+            })}
+          >
+            {balance}
+          </Typography>
+        </Box>
+        {showInfoIcon && showGuideOnClick && (
+          <IconButton
+            size="small"
+            onClick={() => setGuideOpen(true)}
+            aria-label={t('pets.currencyGuide.openHint')}
+            sx={getTintedIconButtonSx}
+          >
+            <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        )}
       </Box>
 
       {showGuideOnClick && (

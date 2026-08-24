@@ -437,9 +437,9 @@ const PetSection: React.FC<PetSectionProps> = ({
           </Typography>
           {!isReadonly &&
             (loading && pets.length === 0 ? (
-              <Skeleton variant="rounded" width={72} height={32} animation="wave" sx={{ borderRadius: '16px' }} />
+              <Skeleton variant="rounded" width={108} height={32} animation="wave" sx={{ borderRadius: '16px' }} />
             ) : (
-              <CurrencyBadge balance={balance} variant="tinted" size="small" />
+              <CurrencyBadge balance={balance} variant="tinted" size="small" showInfoIcon />
             ))}
         </Box>
 
