@@ -17,6 +17,7 @@ import { getTapLeaderboard } from '../games/tapGameService';
 import { getGeoLeaderboard } from '../games/geoGameService';
 import { getDrawLeaderboard } from '../games/drawGameService';
 import { getQuizLeaderboard } from '../games/quizGameService';
+import { getCliffLeaderboard } from '../games/cliffGameService';
 import ChatReport from '../models/chatReport';
 import CryptoRecoveryRequest from '../models/cryptoRecoveryRequest';
 import AdminRequest from '../models/adminRequest';
@@ -34,7 +35,7 @@ import {
 
 const router = express.Router();
 
-const GAME_IDS = ['tap', 'geo', 'draw', 'quiz'] as const;
+const GAME_IDS = ['tap', 'geo', 'draw', 'quiz', 'cliff'] as const;
 type GameId = (typeof GAME_IDS)[number];
 
 type GameRankInfo = {
@@ -55,11 +56,12 @@ const startOfDay = (daysAgo = 0) => {
 };
 
 const buildRelationshipRankMap = async (): Promise<Map<string, RelationshipGameRanks>> => {
-  const [tap, geo, draw, quiz] = await Promise.all([
+  const [tap, geo, draw, quiz, cliff] = await Promise.all([
     getTapLeaderboard(500),
     getGeoLeaderboard(500),
     getDrawLeaderboard(500),
     getQuizLeaderboard(500),
+    getCliffLeaderboard(500),
   ]);
 
   const leaderboards: Record<GameId, typeof tap> = {
@@ -67,6 +69,7 @@ const buildRelationshipRankMap = async (): Promise<Map<string, RelationshipGameR
     geo,
     draw,
     quiz,
+    cliff,
   };
 
   const rankMap = new Map<string, RelationshipGameRanks>();
@@ -88,6 +91,7 @@ const buildRelationshipRankMap = async (): Promise<Map<string, RelationshipGameR
         geo: { score: 0, rank: null },
         draw: { score: 0, rank: null },
         quiz: { score: 0, rank: null },
+        cliff: { score: 0, rank: null },
       };
 
       existing[gameId] = {
@@ -218,6 +222,7 @@ const emptyGames = (): RelationshipGameRanks => ({
   geo: { score: 0, rank: null },
   draw: { score: 0, rank: null },
   quiz: { score: 0, rank: null },
+  cliff: { score: 0, rank: null },
 });
 
 const DASHBOARD_METRIC_KEYS = [

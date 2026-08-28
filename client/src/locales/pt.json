@@ -430,6 +430,150 @@
         }
       }
     },
+    "cliff": {
+      "name": "Penhasco do Amor",
+      "description": "Cheguem juntos ao cume: comprem ferramentas, extraia minério, abram o portão, reparem a ponte e atravessem as cordas.",
+      "rules": [
+        "Só para casais com parceiro vinculado.",
+        "O inventário é compartilhado, exceto AmoreCoins pessoais.",
+        "Cada um só pode comprar um tipo de picareta — ferro ou cobre.",
+        "A mina tem dez pedras: cinco de ferro e cinco de cobre.",
+        "O machado custa 20 de ferro e 20 de cobre e abre o portão.",
+        "Depois do portão, cada um tem 20 pedrinhas e precisa acertar três buracos.",
+        "Depois da ponte, dois pets de nível 2 ou superior têm de se pôr na placa. Os dois de um parceiro, ou um de cada.",
+        "Depois da pedra subir, atravessem as cordas. Saltem quando a marca estiver na zona. Três cordas levam a um ponto de controlo, depois mais cinco até ao outro lado.",
+        "O ranking ordena pelo melhor tempo. Partidas em andamento também aparecem."
+      ],
+      "intro": { "wow": "Uau, que montanha enorme!", "agree": "Sim… é gigante." },
+      "shop": {
+        "title": "Loja",
+        "badge": "Loja",
+        "buy": "Comprar",
+        "buyFor": "Comprar por",
+        "coinsCost": "{{amount}} AmoreCoins",
+        "ironCost": "{{amount}} de ferro",
+        "copperCost": "{{amount}} de cobre",
+        "and": "e",
+        "items": {
+          "iron_pickaxe": { "name": "Picareta de ferro", "description": "Minera ferro." },
+          "copper_pickaxe": { "name": "Picareta de cobre", "description": "Minera cobre." },
+          "axe": { "name": "Machado", "description": "Quebra o portão." }
+        },
+        "lock": {
+          "owned": "Já está no inventário compartilhado",
+          "already_bought": "Você já comprou uma picareta",
+          "taken": "Seu parceiro já comprou esta picareta",
+          "no_funds": "AmoreCoins insuficientes",
+          "no_ore": "É preciso 20 de ferro e 20 de cobre"
+        }
+      },
+      "mine": {
+        "title": "Mina",
+        "badge": "Mina",
+        "ironBoulder": "Pedra de ferro",
+        "copperBoulder": "Pedra de cobre",
+        "tapVein": "Toque na veia",
+        "taps": "{{current}}/{{goal}}",
+        "needIronPickaxe": "É precisa uma picareta de ferro",
+        "needCopperPickaxe": "É precisa uma picareta de cobre",
+        "tapFailed": "Não foi possível minerar",
+        "refreshIn": "Novo em {{time}}"
+      },
+      "gate": {
+        "title": "Portão do Penhasco do Amor",
+        "badge": "Portão",
+        "lore": "Esta é a entrada do Penhasco do Amor. Se chegarem ao fim, encontrarão o amor verdadeiro; senão, o fracasso eterno. Muitos casais tentaram, por isso fechámos este portão.",
+        "needAxe": "É preciso um machado para passar.",
+        "break": "Quebrar as tábuas",
+        "breakFailed": "Não foi possível abrir o portão"
+      },
+      "climb": { "caption": "Subindo o caminho…" },
+      "bridge": {
+        "progress": "Buracos {{holes}}/3 · Pedras {{stones}} · Parceiro {{partnerHoles}}/3 · {{partnerStones}}",
+        "next": "Continuar",
+        "surrender": "Tentar a ponte de novo",
+        "throwFailed": "Não foi possível lançar",
+        "surrenderFailed": "Não foi possível reiniciar a ponte",
+        "hint": "Acho que temos de atirar pedras para esses buracos para arranjar a ponte…",
+        "restored": "Sim! A ponte está arranjada — podemos seguir.",
+        "beautiful": "Que ponte tão bonita!",
+        "choose": "Escolher",
+        "throw": "Atirar"
+      },
+      "lift": {
+        "badge": "Placa",
+        "title": "Placa de pressão",
+        "lore": "Este bloco de pedra sobe só quando dois pets de nível 2 ou superior se põem na placa. Podem ser os dois de um de vocês, ou um de cada.",
+        "needPets": "São precisos dois pets de nível 2 ou superior. Evoluam-nos em Pets.",
+        "pick": "Escolham dois pets",
+        "you": "Seu",
+        "partner": "Do parceiro",
+        "level": "Nv. {{level}}",
+        "activate": "Colocar os pets",
+        "activateFailed": "Não foi possível chamar os pets",
+        "raised": "Os pets pisaram a placa — a pedra subiu.",
+        "rising": "Vamos subir!",
+        "next": "Continuar"
+      },
+      "ropes": {
+        "badge": "Corda",
+        "hint": "Acho que dá para agarrar nestas cordas e saltar para o outro lado…",
+        "jump": "Saltar",
+        "progress": "Cordas {{current}}/{{total}} · Parceiro {{partnerCurrent}}/{{total}}",
+        "checkpoint": "Um lado seguro — se cairmos, voltamos aqui.",
+        "cleared": "Atravessámos! Podemos seguir.",
+        "next": "Continuar",
+        "enterFailed": "Não foi possível chegar às cordas",
+        "jumpFailed": "Não foi possível saltar"
+      },
+      "finish": {
+        "title": "A ponte é de vocês",
+        "time": "Tempo: {{time}}",
+        "best": "Melhor tempo: {{time}}",
+        "playAgain": "Jogar de novo",
+        "resetConfirm": "Reiniciar a partida para melhorar o tempo? O melhor resultado fica.",
+        "failed": "Não foi possível terminar",
+        "resetFailed": "Não foi possível reiniciar"
+      },
+      "inventory": {
+        "coins": {
+          "title": "AmoreCoins",
+          "body": "São as suas moedas pessoais. Neste jogo compram uma picareta de ferro ou de cobre."
+        },
+        "iron": {
+          "title": "Ferro",
+          "body": "Minério partilhado das pedras de ferro. Extrai-se com a picareta de ferro. O machado custa 20 de ferro e 20 de cobre."
+        },
+        "copper": {
+          "title": "Cobre",
+          "body": "Minério partilhado das pedras de cobre. Extrai-se com a picareta de cobre. O machado custa 20 de ferro e 20 de cobre."
+        },
+        "altitude": {
+          "title": "Altitude",
+          "body": "A que altura estão agora. Primeiro o pé da montanha, depois o portão, a ponte, a placa e as cordas sobre o abismo."
+        },
+        "time": {
+          "title": "Tempo",
+          "body": "Há quanto tempo corre esta partida. O cronómetro pausa se ninguém estiver no jogo. O ranking ordena casais pelo melhor tempo."
+        },
+        "ironPickaxe": {
+          "title": "Picareta de ferro",
+          "body": "Serve para extrair ferro. Cada parceiro só pode comprar um tipo de picareta — ferro ou cobre."
+        },
+        "copperPickaxe": {
+          "title": "Picareta de cobre",
+          "body": "Serve para extrair cobre. Cada parceiro só pode comprar um tipo de picareta — ferro ou cobre."
+        },
+        "axe": {
+          "title": "Machado",
+          "body": "Parte as tábuas do portão do Penhasco do Amor. Custa 20 de ferro e 20 de cobre e é partilhado."
+        },
+        "resetGate": "Resetar portão e ponte",
+        "resetGateFailed": "Não foi possível resetar o portão",
+        "resetRopes": "Resetar nível das cordas",
+        "resetRopesFailed": "Não foi possível resetar as cordas"
+      }
+    },
     "tab": "Jogos",
     "list": {
       "searchPlaceholder": "Pesquisar pelo nome do jogo",
@@ -438,7 +582,8 @@
       "emptyList": "Não há jogos na lista",
       "emptyHint": "Aqui aparecerão jogos para si e o seu parceiro",
       "tryDifferentQuery": "Tente outra pesquisa",
-      "comingSoon": "Em breve"
+      "comingSoon": "Em breve",
+      "badgeNew": "Nova"
     },
     "page": {
       "notFound": "Jogo não encontrado",
@@ -446,6 +591,7 @@
       "tabGame": "Jogo",
       "tabLeaderboard": "Ranking",
       "leaderboardSubtitle": "Ranking global de casais por pontuação total",
+      "leaderboardSubtitleTime": "Ranking global de casais pelo melhor tempo",
       "comingSoon": "Este jogo chega em breve",
       "addPartner": "Adicione o seu parceiro nas definições para jogarem juntos",
       "geoDailyLimitHint": "Hoje adivinhou todos os {{count}} lugares. Novas rondas abrem mais tarde.",
@@ -516,7 +662,8 @@
       }
     },
     "leaderboard": {
-      "empty": "Ainda ninguém jogou"
+      "empty": "Ainda ninguém jogou",
+      "playingTime": "{{time}} · {{altitude}}m"
     },
     "badge": {
       "tooltip": "Top-{{rank}} · {{game}}"

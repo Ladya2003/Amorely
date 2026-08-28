@@ -34,6 +34,7 @@ import publicSupportRoutes from './routes/publicSupport';
 import { adminMiddleware } from './middleware/admin';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { migrateLegacyTapGameStates } from './games/tapGameService';
+import { reconcileCliffPresenceOnStartup } from './games/cliffGameService';
 import { ensureSystemUser } from './services/systemUserService';
 import { ensureDailyQuestionImagesUploaded } from './services/dailyQuestionsImageService';
 import { ensureFeatureNews } from './services/ensureFeatureNews';
@@ -59,6 +60,7 @@ mongoose.connect(mongoUri)
     await ensureSystemUser();
     await ensureDailyQuestionImagesUploaded();
     await ensureFeatureNews();
+    await reconcileCliffPresenceOnStartup();
   })
   .catch((err: any) => {
     console.error('Ошибка подключения к MongoDB:', err);

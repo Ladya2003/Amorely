@@ -430,6 +430,150 @@
         }
       }
     },
+    "cliff": {
+      "name": "Acantilado del Amor",
+      "description": "Llegad juntos a la cima: comprad herramientas, extraed mineral, abrid la puerta, reparad el puente y cruzad las cuerdas.",
+      "rules": [
+        "Solo para parejas con pareja vinculada.",
+        "El inventario es compartido, excepto los AmoreCoins personales.",
+        "Cada uno solo puede comprar un tipo de pico: hierro o cobre.",
+        "En la mina hay diez rocas: cinco de hierro y cinco de cobre.",
+        "El hacha cuesta 20 de hierro y 20 de cobre y abre la puerta.",
+        "Tras la puerta, cada uno tiene 20 piedras y debe acertar tres huecos.",
+        "Tras el puente, dos mascotas de nivel 2 o más deben subirse a la placa. Pueden ser las dos de uno o una de cada.",
+        "Tras subir la piedra, cruzad las cuerdas. Saltad cuando la marca esté en la zona. Tres cuerdas llevan a un punto de control, luego cinco más hasta el otro risco.",
+        "La clasificación ordena por mejor tiempo. Las partidas en curso también aparecen."
+      ],
+      "intro": { "wow": "¡Guau, qué montaña tan grande!", "agree": "Sí… es enorme." },
+      "shop": {
+        "title": "Tienda",
+        "badge": "Tienda",
+        "buy": "Comprar",
+        "buyFor": "Comprar por",
+        "coinsCost": "{{amount}} AmoreCoins",
+        "ironCost": "{{amount}} de hierro",
+        "copperCost": "{{amount}} de cobre",
+        "and": "y",
+        "items": {
+          "iron_pickaxe": { "name": "Pico de hierro", "description": "Excava hierro." },
+          "copper_pickaxe": { "name": "Pico de cobre", "description": "Excava cobre." },
+          "axe": { "name": "Hacha", "description": "Rompe la puerta." }
+        },
+        "lock": {
+          "owned": "Ya está en el inventario compartido",
+          "already_bought": "Ya compraste un pico",
+          "taken": "Tu pareja ya compró este pico",
+          "no_funds": "No hay suficientes AmoreCoins",
+          "no_ore": "Necesitas 20 de hierro y 20 de cobre"
+        }
+      },
+      "mine": {
+        "title": "Mina",
+        "badge": "Mina",
+        "ironBoulder": "Roca de hierro",
+        "copperBoulder": "Roca de cobre",
+        "tapVein": "Toca la veta",
+        "taps": "{{current}}/{{goal}}",
+        "needIronPickaxe": "Necesitas un pico de hierro",
+        "needCopperPickaxe": "Necesitas un pico de cobre",
+        "tapFailed": "No se pudo excavar",
+        "refreshIn": "Nuevo en {{time}}"
+      },
+      "gate": {
+        "title": "Puerta del Acantilado del Amor",
+        "badge": "Puerta",
+        "lore": "Esta es la entrada al Acantilado del Amor. Si llegáis al final, hallaréis el amor verdadero; si no, el fracaso eterno. Muchas parejas lo intentaron, por eso cerramos esta puerta.",
+        "needAxe": "Necesitas un hacha para pasar.",
+        "break": "Romper las tablas",
+        "breakFailed": "No se pudo abrir la puerta"
+      },
+      "climb": { "caption": "Subiendo el sendero…" },
+      "bridge": {
+        "progress": "Huecos {{holes}}/3 · Piedras {{stones}} · Pareja {{partnerHoles}}/3 · {{partnerStones}}",
+        "next": "Seguir",
+        "surrender": "Reintentar el puente",
+        "throwFailed": "No se pudo lanzar",
+        "surrenderFailed": "No se pudo reiniciar el puente",
+        "hint": "Creo que hay que lanzar piedras a esos agujeros para reparar el puente…",
+        "restored": "¡Sí! El puente está arreglado — podemos seguir.",
+        "beautiful": "¡Qué puente tan bonito!",
+        "choose": "Elegir",
+        "throw": "Lanzar"
+      },
+      "lift": {
+        "badge": "Placa",
+        "title": "Placa de presión",
+        "lore": "Este bloque de piedra sube solo si dos mascotas de nivel 2 o más se ponen en la placa. Pueden ser las dos de uno de vosotros, o una de cada uno.",
+        "needPets": "Hacen falta dos mascotas de nivel 2 o más. Súbelas de nivel en Mascotas.",
+        "pick": "Elige dos mascotas",
+        "you": "Tuya",
+        "partner": "De tu pareja",
+        "level": "Niv. {{level}}",
+        "activate": "Poner a las mascotas",
+        "activateFailed": "No se pudo llamar a las mascotas",
+        "raised": "Las mascotas se pusieron en la placa y la piedra subió.",
+        "rising": "¡Subimos!",
+        "next": "Seguir"
+      },
+      "ropes": {
+        "badge": "Cuerda",
+        "hint": "Creo que podemos agarrarnos a estas cuerdas y saltar al otro lado…",
+        "jump": "Saltar",
+        "progress": "Cuerdas {{current}}/{{total}} · Pareja {{partnerCurrent}}/{{total}}",
+        "checkpoint": "Un risco seguro: si caemos, volvemos aquí.",
+        "cleared": "¡Lo cruzamos! Podemos seguir.",
+        "next": "Seguir",
+        "enterFailed": "No se pudo llegar a las cuerdas",
+        "jumpFailed": "No se pudo saltar"
+      },
+      "finish": {
+        "title": "El puente es vuestro",
+        "time": "Tiempo: {{time}}",
+        "best": "Mejor tiempo: {{time}}",
+        "playAgain": "Jugar de nuevo",
+        "resetConfirm": "¿Reiniciar la partida para mejorar el tiempo? Se guarda el mejor resultado.",
+        "failed": "No se pudo terminar",
+        "resetFailed": "No se pudo reiniciar"
+      },
+      "inventory": {
+        "coins": {
+          "title": "AmoreCoins",
+          "body": "Son tus monedas personales. En este juego sirven para comprar un pico de hierro o de cobre."
+        },
+        "iron": {
+          "title": "Hierro",
+          "body": "Mineral compartido de las rocas de hierro. Se extrae con el pico de hierro. El hacha cuesta 20 de hierro y 20 de cobre."
+        },
+        "copper": {
+          "title": "Cobre",
+          "body": "Mineral compartido de las rocas de cobre. Se extrae con el pico de cobre. El hacha cuesta 20 de hierro y 20 de cobre."
+        },
+        "altitude": {
+          "title": "Altitud",
+          "body": "A qué altura estáis ahora. Primero el pie de la montaña, luego la puerta, el puente, la placa y las cuerdas sobre el abismo."
+        },
+        "time": {
+          "title": "Tiempo",
+          "body": "Cuánto dura esta partida. El temporizador se pausa si nadie está en el juego. La clasificación ordena parejas por el mejor tiempo."
+        },
+        "ironPickaxe": {
+          "title": "Pico de hierro",
+          "body": "Sirve para extraer hierro. Cada miembro de la pareja solo puede comprar un tipo de pico: hierro o cobre."
+        },
+        "copperPickaxe": {
+          "title": "Pico de cobre",
+          "body": "Sirve para extraer cobre. Cada miembro de la pareja solo puede comprar un tipo de pico: hierro o cobre."
+        },
+        "axe": {
+          "title": "Hacha",
+          "body": "Rompe las tablas de la puerta del Acantilado del Amor. Cuesta 20 de hierro y 20 de cobre y es compartida."
+        },
+        "resetGate": "Resetear puerta y puente",
+        "resetGateFailed": "No se pudo resetear la puerta",
+        "resetRopes": "Resetear nivel de cuerdas",
+        "resetRopesFailed": "No se pudieron resetear las cuerdas"
+      }
+    },
     "tab": "Juegos",
     "list": {
       "searchPlaceholder": "Buscar por nombre de juego",
@@ -438,7 +582,8 @@
       "emptyList": "No hay juegos en la lista",
       "emptyHint": "Aquí aparecerán los juegos para ti y tu pareja",
       "tryDifferentQuery": "Prueba otra búsqueda",
-      "comingSoon": "Próximamente"
+      "comingSoon": "Próximamente",
+      "badgeNew": "Nueva"
     },
     "page": {
       "notFound": "Juego no encontrado",
@@ -446,6 +591,7 @@
       "tabGame": "Juego",
       "tabLeaderboard": "Clasificación",
       "leaderboardSubtitle": "Ranking global de parejas por puntuación total",
+      "leaderboardSubtitleTime": "Ranking global de parejas por mejor tiempo",
       "comingSoon": "Este juego llegará pronto",
       "addPartner": "Añade a tu pareja en ajustes para jugar juntos",
       "geoDailyLimitHint": "Hoy adivinaste los {{count}} lugares. Nuevas rondas se abrirán más tarde.",
@@ -516,7 +662,8 @@
       }
     },
     "leaderboard": {
-      "empty": "Nadie ha jugado todavía"
+      "empty": "Nadie ha jugado todavía",
+      "playingTime": "{{time}} · {{altitude}}m"
     },
     "badge": {
       "tooltip": "Top-{{rank}} · {{game}}"

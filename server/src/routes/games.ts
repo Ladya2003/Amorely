@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { GAME_CATALOG, getGameById } from '../games/catalog';
+import { GAME_CATALOG, getGameById, isGameVisibleToRole } from '../games/catalog';
 import {
   getGameDailyResetStatus,
   getSingleGameDailyResetStatus,
@@ -62,6 +62,28 @@ import {
   syncQuizGameState,
   updateQuizGameBadges,
 } from '../games/quizGameService';
+import {
+  CliffGameError,
+  breakCliffGate,
+  buyCliffShopItem,
+  enterCliffGame,
+  activateCliffLift,
+  enterCliffMine,
+  enterCliffRopes,
+  finishCliffBridge,
+  jumpCliffRope,
+  formatCliffGameState,
+  getCliffLeaderboard,
+  getOrCreateCliffGameState,
+  leaveCliffGame,
+  resetCliffGateAndBridge,
+  resetCliffRopes,
+  resetCliffRun,
+  resolveCliffGameContext,
+  surrenderCliffBridge,
+  tapCliffBoulder,
+  throwCliffStone,
+} from '../games/cliffGameService';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
 import { getUserLocale } from '../utils/userLocale';
 
@@ -156,8 +178,57 @@ const handleQuizGameError = (error: unknown, res: Response): boolean => {
   return false;
 };
 
-router.get('/catalog', (_req, res: Response) => {
-  res.json({ games: GAME_CATALOG });
+const handleCliffGameError = (error: unknown, res: Response): boolean => {
+  if (error instanceof CliffGameError) {
+    const status =
+      error.code === 'NO_PARTNER'
+        ? 403
+        : error.code === 'ITEM_NOT_FOUND' || error.code === 'BOULDER_NOT_FOUND'
+          ? 404
+          : error.code === 'NOT_ENOUGH_COINS'
+            ? 402
+            : error.code === 'ALREADY_BOUGHT' ||
+                error.code === 'PICKAXE_TAKEN' ||
+                error.code === 'ALREADY_OWNED' ||
+                error.code === 'NOT_ENOUGH_ORE' ||
+                error.code === 'NEED_PICKAXE' ||
+                error.code === 'NEED_AXE' ||
+                error.code === 'BOULDER_DEPLETED' ||
+                error.code === 'WRONG_SCENE' ||
+                error.code === 'RUN_FINISHED' ||
+                error.code === 'GATE_ALREADY_OPEN' ||
+                error.code === 'HOLES_COMPLETE' ||
+                error.code === 'NO_STONES' ||
+                error.code === 'NEED_FIRST_HIT' ||
+                error.code === 'ON_COOLDOWN' ||
+                error.code === 'CANNOT_SURRENDER' ||
+                error.code === 'BRIDGE_NOT_READY' ||
+                error.code === 'RUN_NOT_FINISHED' ||
+                error.code === 'LIFT_NOT_READY' ||
+                error.code === 'LIFT_ALREADY_RAISED' ||
+                error.code === 'NEED_TWO_PETS' ||
+                error.code === 'PETS_NOT_ELIGIBLE'
+              ? 409
+              : 400;
+
+    res.status(status).json({ error: error.message, code: error.code });
+    return true;
+  }
+
+  return false;
+};
+
+router.get('/catalog', (req: any, res: Response) => {
+  const games = GAME_CATALOG.filter((game) => isGameVisibleToRole(game, req.userRole));
+  res.json({ games });
+});
+
+router.use('/cliff', (req: any, res: Response, next) => {
+  const game = getGameById('cliff');
+  if (!isGameVisibleToRole(game, req.userRole)) {
+    return res.status(404).json({ error: 'Игра не найдена' });
+  }
+  next();
 });
 
 router.get('/daily-reset', async (req: any, res: Response) => {
@@ -668,9 +739,264 @@ router.post('/quiz/sync', async (req: any, res: Response) => {
   }
 });
 
+router.get('/cliff/state', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await getOrCreateCliffGameState(context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/state:', error);
+    res.status(500).json({ error: 'Не удалось загрузить игру' });
+  }
+});
+
+router.post('/cliff/enter', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const { state, playIntro, introLine, enteringUserId } = await enterCliffGame(userId, context);
+    res.json({
+      state: await formatCliffGameState(state, userId, context),
+      playIntro,
+      introLine,
+      enteringUserId,
+    });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/enter:', error);
+    res.status(500).json({ error: 'Не удалось войти в игру' });
+  }
+});
+
+router.post('/cliff/leave', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await leaveCliffGame(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/leave:', error);
+    res.status(500).json({ error: 'Не удалось выйти из игры' });
+  }
+});
+
+router.post('/cliff/shop/buy', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await buyCliffShopItem(userId, context, String(req.body?.itemId ?? ''));
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/shop/buy:', error);
+    res.status(500).json({ error: 'Не удалось купить предмет' });
+  }
+});
+
+router.post('/cliff/mine/enter', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await enterCliffMine(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/mine/enter:', error);
+    res.status(500).json({ error: 'Не удалось войти в шахту' });
+  }
+});
+
+router.post('/cliff/boulder/tap', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const { state, yielded, metal } = await tapCliffBoulder(
+      userId,
+      context,
+      String(req.body?.boulderId ?? ''),
+      req.body?.count
+    );
+    res.json({
+      state: await formatCliffGameState(state, userId, context),
+      yielded,
+      metal,
+    });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/boulder/tap:', error);
+    res.status(500).json({ error: 'Не удалось копать' });
+  }
+});
+
+router.post('/cliff/gate/break', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await breakCliffGate(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/gate/break:', error);
+    res.status(500).json({ error: 'Не удалось открыть врата' });
+  }
+});
+
+router.post('/cliff/throw', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await throwCliffStone(userId, context, Boolean(req.body?.hit));
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/throw:', error);
+    res.status(500).json({ error: 'Не удалось бросить камень' });
+  }
+});
+
+router.post('/cliff/surrender', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await surrenderCliffBridge(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/surrender:', error);
+    res.status(500).json({ error: 'Не удалось сбросить мини-игру' });
+  }
+});
+
+router.post('/cliff/finish', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await finishCliffBridge(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/finish:', error);
+    res.status(500).json({ error: 'Не удалось завершить игру' });
+  }
+});
+
+router.post('/cliff/ropes/enter', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await enterCliffRopes(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/ropes/enter:', error);
+    res.status(500).json({ error: 'Не удалось перейти к канатам' });
+  }
+});
+
+router.post('/cliff/ropes/jump', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await jumpCliffRope(userId, context, Boolean(req.body?.hit));
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/ropes/jump:', error);
+    res.status(500).json({ error: 'Не удалось прыгнуть' });
+  }
+});
+
+router.post('/cliff/lift/activate', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const petIds = Array.isArray(req.body?.petIds) ? req.body.petIds : [];
+    const state = await activateCliffLift(userId, context, petIds);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/lift/activate:', error);
+    res.status(500).json({ error: 'Не удалось активировать плиту' });
+  }
+});
+
+router.post('/cliff/reset', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await resetCliffRun(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/reset:', error);
+    res.status(500).json({ error: 'Не удалось сбросить забег' });
+  }
+});
+
+router.post('/cliff/reset-gate', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await resetCliffGateAndBridge(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/reset-gate:', error);
+    res.status(500).json({ error: 'Не удалось сбросить врата и мост' });
+  }
+});
+
+router.post('/cliff/reset-ropes', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await resetCliffRopes(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/reset-ropes:', error);
+    res.status(500).json({ error: 'Не удалось сбросить канаты' });
+  }
+});
+
 router.get('/:gameId/leaderboard', async (req: any, res: Response) => {
   const game = getGameById(req.params.gameId);
-  if (!game) {
+  if (!isGameVisibleToRole(game, req.userRole)) {
     return res.status(404).json({ error: 'Игра не найдена' });
   }
 
@@ -694,12 +1020,17 @@ router.get('/:gameId/leaderboard', async (req: any, res: Response) => {
     return res.json({ gameId: 'quiz', entries });
   }
 
+  if (req.params.gameId === 'cliff') {
+    const entries = await getCliffLeaderboard(50);
+    return res.json({ gameId: 'cliff', entries });
+  }
+
   res.json({ gameId: req.params.gameId, entries: [] });
 });
 
 router.get('/:gameId', async (req: any, res: Response) => {
   const game = getGameById(req.params.gameId);
-  if (!game) {
+  if (!isGameVisibleToRole(game, req.userRole)) {
     return res.status(404).json({ error: 'Игра не найдена' });
   }
 

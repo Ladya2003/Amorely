@@ -143,6 +143,23 @@ export const getGamesListComingSoonChipSx = (theme: Theme) => ({
   },
 });
 
+export const getGamesListNewChipSx = (theme: Theme) => ({
+  position: 'absolute' as const,
+  top: 12,
+  right: 12,
+  height: 26,
+  fontWeight: 700,
+  fontSize: '0.6875rem',
+  borderRadius: `${GAMES_LIST_THUMB_RADIUS}px`,
+  color: theme.palette.primary.contrastText,
+  bgcolor: theme.palette.primary.main,
+  border: 'none',
+  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.35)}`,
+  '& .MuiChip-icon': {
+    color: 'inherit',
+  },
+});
+
 export const getGamesListBadgeWrapSx = () => ({
   position: 'absolute' as const,
   top: 12,

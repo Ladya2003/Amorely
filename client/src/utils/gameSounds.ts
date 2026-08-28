@@ -259,4 +259,162 @@ export const useRoundTimerSound = (secondsLeft: number, active: boolean) => {
   }, [secondsLeft, active]);
 };
 
+export const playCliffBuySound = async (itemId?: 'iron_pickaxe' | 'copper_pickaxe' | 'axe'): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 987.77, 0.1, 0.12, 'sine');
+  playTone(ctx, start + 0.05, 1318.51, 0.12, 0.13, 'triangle');
+  playTone(ctx, start + 0.09, 1567.98, 0.1, 0.08, 'sine');
+  if (!itemId) {
+    playTone(ctx, start + 0.14, 784, 0.14, 0.07, 'triangle');
+    return;
+  }
+  switch (itemId) {
+    case 'axe':
+      playTone(ctx, start + 0.12, 330, 0.14, 0.16, 'sawtooth');
+      playTone(ctx, start + 0.18, 196, 0.16, 0.14, 'square');
+      playTone(ctx, start + 0.26, 130, 0.18, 0.12, 'sawtooth');
+      return;
+    case 'iron_pickaxe':
+    case 'copper_pickaxe':
+      playTone(ctx, start + 0.14, 784, 0.14, 0.07, 'triangle');
+      return;
+    default: {
+      const exhaustive: never = itemId;
+      return exhaustive;
+    }
+  }
+};
+
+export const playCliffMineTapSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 140 + Math.random() * 40, 0.05, 0.06, 'square');
+};
+
+export const playCliffOreDropSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 392, 0.08, 0.1, 'triangle');
+  playTone(ctx, start + 0.07, 523.25, 0.12, 0.09, 'sine');
+};
+
+export const playCliffWoodBreakSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 260, 0.1, 0.16, 'sawtooth');
+  playTone(ctx, start + 0.05, 170, 0.12, 0.14, 'square');
+  playTone(ctx, start + 0.11, 120, 0.16, 0.13, 'sawtooth');
+  playTone(ctx, start + 0.18, 85, 0.14, 0.1, 'square');
+};
+
+export const playCliffThrowSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  playTone(ctx, ctx.currentTime, 310, 0.08, 0.07, 'sine');
+};
+
+export const playCliffHitSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 523.25, 0.08, 0.1, 'triangle');
+  playTone(ctx, start + 0.05, 783.99, 0.12, 0.09, 'sine');
+};
+
+export const playCliffMissSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  playTone(ctx, ctx.currentTime, 196, 0.12, 0.07, 'sine');
+};
+
+export const playCliffBridgeRepairSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  [392, 494, 587, 784].forEach((freq, index) => {
+    playTone(ctx, start + index * 0.08, freq, 0.18, 0.08, index === 3 ? 'triangle' : 'sine');
+  });
+};
+
+const playCliffLiftRumble = (ctx: AudioContext, start: number, duration: number, volume: number) => {
+  const sampleCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
+  const buffer = ctx.createBuffer(1, sampleCount, ctx.sampleRate);
+  const samples = buffer.getChannelData(0);
+  for (let index = 0; index < sampleCount; index += 1) {
+    samples[index] = (Math.random() * 2 - 1) * (1 - index / sampleCount);
+  }
+
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  source.buffer = buffer;
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(180, start);
+  filter.frequency.exponentialRampToValueAtTime(360, start + duration * 0.7);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.1);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  source.start(start);
+};
+
+export const playCliffLiftRiseSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+
+  playTone(ctx, start, 220, 0.1, 0.06, 'triangle');
+  playTone(ctx, start + 0.14, 196, 0.12, 0.055, 'sine');
+  playCliffLiftRumble(ctx, start + 0.48, 2.15, 0.08);
+  playTone(ctx, start + 0.5, 82, 0.7, 0.05, 'sawtooth');
+  playTone(ctx, start + 1.05, 98, 0.7, 0.045, 'square');
+  playTone(ctx, start + 1.6, 123, 0.55, 0.04, 'sawtooth');
+  playTone(ctx, start + 2.15, 392, 0.22, 0.06, 'sine');
+  playTone(ctx, start + 2.3, 523.25, 0.26, 0.055, 'triangle');
+  playTone(ctx, start + 2.46, 659.25, 0.28, 0.05, 'sine');
+};
+
+export const playCliffRopeSwingSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 196, 0.16, 0.05, 'sine');
+  playTone(ctx, start + 0.06, 247, 0.18, 0.045, 'triangle');
+  playTone(ctx, start + 0.14, 165, 0.2, 0.04, 'sine');
+};
+
+export const playCliffRopeJumpSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 392, 0.08, 0.07, 'triangle');
+  playTone(ctx, start + 0.05, 523.25, 0.1, 0.06, 'sine');
+  playTone(ctx, start + 0.12, 659.25, 0.12, 0.05, 'triangle');
+};
+
+export const playCliffRopeFallSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 247, 0.1, 0.07, 'sawtooth');
+  playTone(ctx, start + 0.08, 185, 0.14, 0.08, 'square');
+  playTone(ctx, start + 0.18, 123, 0.2, 0.07, 'sawtooth');
+  playTone(ctx, start + 0.32, 82, 0.22, 0.06, 'sine');
+};
+
+export const playCliffSpeechSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 349.23, 0.05, 0.05, 'sine');
+  playTone(ctx, start + 0.05, 392, 0.06, 0.05, 'sine');
+};
+
 export const GAME_TIMER_LOW_THRESHOLD = TIMER_LOW_THRESHOLD;

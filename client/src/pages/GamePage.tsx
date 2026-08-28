@@ -12,7 +12,8 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { getGameById } from '../components/Chat/gamesData';
+import { getGameById, isGameVisibleToUser } from '../components/Chat/gamesData';
+import { useAuth } from '../contexts/AuthContext';
 import { getGameRules, getGeoAttributionRules } from '../localization/gameHelpers';
 import GameLeaderboard from '../components/Games/GameLeaderboard';
 import GeoDailyLimitDialog from '../components/Games/GeoDailyLimitDialog';
@@ -68,10 +69,15 @@ const GamePage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { gameId = '' } = useParams();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const staticGame = getGameById(gameId);
+  const catalogGame = getGameById(gameId);
+  const staticGame =
+    !authLoading && catalogGame && isGameVisibleToUser(catalogGame, user?.role)
+      ? catalogGame
+      : undefined;
 
   const [tab, setTab] = useState(() =>
     getGamePageTabIndex(searchParams.get('tab'), staticGame?.available ?? false)
@@ -172,6 +178,16 @@ const GamePage: React.FC = () => {
     setGeoDailyLimitDialogOpen(true);
     setPendingGeoDailyLimitDialog(false);
   }, [pendingGeoDailyLimitDialog, geoState]);
+
+  if (authLoading) {
+    return (
+      <GameFrame>
+        <Box sx={getGamePageLoadingSx(theme)}>
+          <BrandLoader />
+        </Box>
+      </GameFrame>
+    );
+  }
 
   if (!staticGame) {
     return (
@@ -345,9 +361,17 @@ const GamePage: React.FC = () => {
             ) : (
               <>
                 <Typography color="text.secondary" sx={getGameLeaderboardSubtitleSx()}>
-                  {t('games.page.leaderboardSubtitle')}
+                  {t(
+                    gameId === 'cliff'
+                      ? 'games.page.leaderboardSubtitleTime'
+                      : 'games.page.leaderboardSubtitle'
+                  )}
                 </Typography>
-                <GameLeaderboard entries={leaderboard} emptyMessage={t('games.leaderboard.empty')} />
+                <GameLeaderboard
+                  entries={leaderboard}
+                  emptyMessage={t('games.leaderboard.empty')}
+                  scoreMode={gameId === 'cliff' ? 'time' : 'points'}
+                />
               </>
             )}
           </Box>

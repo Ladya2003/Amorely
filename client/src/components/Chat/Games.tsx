@@ -15,7 +15,7 @@ import GameListItem from './GameListItem';
 import DailyResetBadge from '../Games/DailyResetBadge';
 import DailyResetInfoDialog from '../Games/DailyResetInfoDialog';
 import TapGameListBadge from '../Games/TapGameListBadge';
-import { GAMES } from './gamesData';
+import { GAMES, isGameVisibleToUser } from './gamesData';
 import { getLocalizedGameName } from '../../localization/gameHelpers';
 import socketService from '../../services/socketService';
 import {
@@ -30,13 +30,14 @@ import { getChatListSearchFieldSx } from './chatListStyles';
 import {
   getGamesListBadgeWrapSx,
   getGamesListComingSoonChipSx,
+  getGamesListNewChipSx,
   getGamesListEmptyStateSx,
   getGamesListRootSx,
   getGamesListScrollSx,
   getGamesListSearchWrapSx,
   getGamesListStackSx,
 } from '../Games/gamesListStyles';
-import { CloseIcon, LockIcon, SearchIcon, SportsEsportsIcon } from '../UI/icons';
+import { AutoAwesomeIcon, CloseIcon, LockIcon, SearchIcon, SportsEsportsIcon } from '../UI/icons';
 
 const DAILY_RESET_GAME_IDS = new Set<DailyResetGameId>(['geo', 'draw', 'quiz']);
 
@@ -114,16 +115,21 @@ const Games: React.FC = () => {
     };
   }, [user?._id]);
 
+  const visibleGames = useMemo(
+    () => GAMES.filter((game) => isGameVisibleToUser(game, user?.role)),
+    [user?.role]
+  );
+
   const filteredGames = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) {
-      return GAMES;
+      return visibleGames;
     }
-    return GAMES.filter((game) => {
+    return visibleGames.filter((game) => {
       const name = getLocalizedGameName(t, game.id, game.name);
       return name.toLowerCase().includes(query);
     });
-  }, [searchQuery, t]);
+  }, [searchQuery, t, visibleGames]);
 
   const handleClearSearch = () => {
     setSearchQuery('');
@@ -178,6 +184,7 @@ const Games: React.FC = () => {
                 DAILY_RESET_GAME_IDS.has(game.id as DailyResetGameId) &&
                 Boolean(dailyReset?.[game.id as DailyResetGameId]?.hasPlayed);
               const showTapProgress = game.id === 'tap' && tapState?.hasPartner;
+              const showNewBadge = game.badge === 'new';
               const gameName = getLocalizedGameName(t, game.id, game.name);
 
               return (
@@ -185,7 +192,9 @@ const Games: React.FC = () => {
                   <GameListItem
                     game={game}
                     onClick={() => navigate(`/chat/games/${game.id}`)}
-                    reserveTopRightSpace={showTapProgress || showDailyReset || !game.available}
+                    reserveTopRightSpace={
+                      showTapProgress || showDailyReset || showNewBadge || !game.available
+                    }
                   />
                   {showTapProgress && tapState && (
                     <Box sx={getGamesListBadgeWrapSx()}>
@@ -202,6 +211,14 @@ const Games: React.FC = () => {
                         }}
                       />
                     </Box>
+                  )}
+                  {showNewBadge && game.available && (
+                    <Chip
+                      icon={<AutoAwesomeIcon sx={{ fontSize: '14px !important' }} />}
+                      label={t('games.list.badgeNew')}
+                      size="small"
+                      sx={getGamesListNewChipSx(theme)}
+                    />
                   )}
                   {!game.available && (
                     <Chip

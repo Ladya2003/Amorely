@@ -39,6 +39,7 @@ export const CURRENCY_REASONS = [
   'dating_idea_generate',
   'dating_idea_event',
   'manual_claim',
+  'cliff_shop',
 ] as const;
 
 export type CurrencyReason = (typeof CURRENCY_REASONS)[number];

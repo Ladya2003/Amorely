@@ -5,6 +5,7 @@ import { ACCOUNT_BLOCKED_ERROR, buildBlockReasons, getLocalizedBlockReason } fro
 
 interface AuthRequest extends Request {
   userId?: string;
+  userRole?: 'user' | 'admin' | 'system';
 }
 
 export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -32,6 +33,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     }
 
     req.userId = decoded.userId;
+    req.userRole = user.role;
     next();
   } catch (error) {
     console.error('Ошибка аутентификации:', error);

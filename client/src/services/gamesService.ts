@@ -38,6 +38,10 @@ export interface LeaderboardEntry {
   relationshipId: string;
   totalScore: number;
   users: LeaderboardUser[];
+  bestTimeMs?: number | null;
+  elapsedMs?: number;
+  altitudeM?: number;
+  status?: 'finished' | 'playing';
 }
 
 export interface TapGameBlock {
@@ -512,3 +516,187 @@ export const syncQuizGameState = async () => {
   );
   return response.data as { state: QuizGameState };
 };
+
+export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'finished';
+
+export interface CliffLiftPet {
+  id: string;
+  ownerId: string;
+  mine: boolean;
+  name: string;
+  level: number;
+  species: string;
+  variant: string;
+  imageUrl: string;
+}
+export type CliffMetal = 'iron' | 'copper';
+export type CliffShopItemId = 'iron_pickaxe' | 'copper_pickaxe' | 'axe';
+export type CliffIntroLine = 'wow' | 'agree';
+
+export interface CliffPublicUser {
+  id: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+}
+
+export interface CliffPublicBoulder {
+  id: string;
+  metal: CliffMetal;
+  yield: number;
+  tapsRequired: number;
+  tapsDone: number;
+  depleted: boolean;
+}
+
+export interface CliffShopPublicItem {
+  id: CliffShopItemId;
+  canBuy: boolean;
+  lockReason: 'owned' | 'already_bought' | 'taken' | 'no_funds' | 'no_ore' | null;
+}
+
+export interface CliffGameState {
+  relationshipId: string;
+  hasPartner: true;
+  userId: string;
+  partnerId: string;
+  me: CliffPublicUser;
+  partner: CliffPublicUser;
+  scene: CliffScene;
+  altitudeM: number;
+  gateDestroyed: boolean;
+  runStartedAt: string | null;
+  timerPaused: boolean;
+  elapsedMs: number;
+  bestTimeMs: number | null;
+  lastTimeMs: number | null;
+  inventory: {
+    iron: number;
+    copper: number;
+    hasAxe: boolean;
+    hasIronPickaxe: boolean;
+    hasCopperPickaxe: boolean;
+  };
+  amoreCoins: number;
+  myPurchasedPickaxe: CliffMetal | null;
+  partnerPurchasedPickaxe: CliffMetal | null;
+  shopItems: CliffShopPublicItem[];
+  boulders: CliffPublicBoulder[];
+  mineResetAt: string | null;
+  presentUserIds: string[];
+  myPresent: boolean;
+  partnerPresent: boolean;
+  bridge: {
+    myStones: number;
+    partnerStones: number;
+    myHolesCompleted: number;
+    partnerHolesCompleted: number;
+    repaired: boolean;
+    canSurrender: boolean;
+  };
+  lift: {
+    raised: boolean;
+    minLevel: number;
+    requiredCount: number;
+    eligiblePets: CliffLiftPet[];
+    standingPets: CliffLiftPet[];
+  };
+  ropes: {
+    myIndex: number;
+    partnerIndex: number;
+    firstCount: number;
+    secondCount: number;
+    total: number;
+    checkpointIndex: number;
+    cleared: boolean;
+  };
+  canReset: boolean;
+}
+
+export interface CliffEnterPayload {
+  state: CliffGameState;
+  playIntro?: boolean;
+  introLine?: CliffIntroLine | null;
+  enteringUserId?: string;
+}
+
+export interface CliffThrowEvent {
+  userId: string;
+  hit: boolean;
+  angle: number;
+  power: number;
+}
+
+const postCliffAction = async (path: string, body: Record<string, unknown> = {}) => {
+  const response = await axios.post(`${API_URL}/api/games/cliff/${path}`, body, {
+    headers: authHeaders(),
+  });
+  return response.data as { state: CliffGameState } & Record<string, unknown>;
+};
+
+export const fetchCliffGameState = async () => {
+  const response = await axios.get(`${API_URL}/api/games/cliff/state`, {
+    headers: authHeaders(),
+  });
+  return response.data as { state: CliffGameState };
+};
+
+export const postCliffEnter = async () => {
+  const response = await axios.post(
+    `${API_URL}/api/games/cliff/enter`,
+    {},
+    { headers: authHeaders() }
+  );
+  return response.data as CliffEnterPayload;
+};
+
+export const postCliffLeave = async () => {
+  const token = localStorage.getItem('token');
+  return fetch(`${API_URL}/api/games/cliff/leave`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: '{}',
+    keepalive: true,
+  });
+};
+
+export const postCliffBuy = async (itemId: CliffShopItemId) =>
+  (await postCliffAction('shop/buy', { itemId })).state;
+
+export const postCliffEnterMine = async () => (await postCliffAction('mine/enter')).state;
+
+export const postCliffTapBoulder = async (boulderId: string, count = 1) => {
+  const response = await axios.post(
+    `${API_URL}/api/games/cliff/boulder/tap`,
+    { boulderId, count },
+    { headers: authHeaders() }
+  );
+  return response.data as { state: CliffGameState; yielded: number; metal: CliffMetal };
+};
+
+export const postCliffBreakGate = async () => (await postCliffAction('gate/break')).state;
+
+export const postCliffThrow = async (hit: boolean, angle: number, power: number) =>
+  (await postCliffAction('throw', { hit, angle, power })).state;
+
+export const postCliffSurrender = async () => (await postCliffAction('surrender')).state;
+
+export const postCliffFinish = async () => (await postCliffAction('finish')).state;
+
+export const postCliffActivateLift = async (petIds: string[]) =>
+  (await postCliffAction('lift/activate', { petIds })).state;
+
+export const postCliffEnterRopes = async () => (await postCliffAction('ropes/enter')).state;
+
+export const postCliffRopeJump = async (hit: boolean) =>
+  (await postCliffAction('ropes/jump', { hit })).state;
+
+export const postCliffReset = async () => (await postCliffAction('reset')).state;
+
+export const postCliffResetGate = async () => (await postCliffAction('reset-gate')).state;
+
+export const postCliffResetRopes = async () => (await postCliffAction('reset-ropes')).state;

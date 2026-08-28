@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Avatar, Box, Stack, Typography, useTheme } from '@mui/material';
 import { getUserDisplayName } from '../UI/UserProfileChip';
 import type { LeaderboardEntry } from '../../services/gamesService';
+import { formatCliffTime } from './Cliff/cliffStyles';
 import GameRankMedalIcon, { getMedalSizeForAvatar } from './GameRankMedalIcon';
 import {
   gameLeaderboardRowEnterSx,
@@ -19,6 +20,7 @@ import { EmojiEventsIcon } from '../UI/icons';
 interface GameLeaderboardProps {
   entries: LeaderboardEntry[];
   emptyMessage?: string;
+  scoreMode?: 'points' | 'time';
 }
 
 const getPairLabel = (entry: LeaderboardEntry) =>
@@ -31,6 +33,7 @@ const LEADERBOARD_AVATAR_SIZE = 38;
 const GameLeaderboard: React.FC<GameLeaderboardProps> = ({
   entries,
   emptyMessage,
+  scoreMode = 'points',
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -87,7 +90,14 @@ const GameLeaderboard: React.FC<GameLeaderboardProps> = ({
           </Box>
 
           <Typography variant="body2" sx={getGameLeaderboardScoreSx()}>
-            {entry.totalScore}
+            {scoreMode === 'time'
+              ? entry.status === 'playing'
+                ? t('games.leaderboard.playingTime', {
+                    time: formatCliffTime(entry.elapsedMs ?? entry.totalScore),
+                    altitude: entry.altitudeM ?? 0,
+                  })
+                : formatCliffTime(entry.bestTimeMs ?? entry.totalScore)
+              : entry.totalScore}
           </Typography>
         </Box>
       ))}

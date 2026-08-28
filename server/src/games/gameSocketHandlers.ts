@@ -1,6 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import DrawGameState from '../models/drawGameState';
 import QuizGameState from '../models/quizGameState';
+import User from '../models/user';
 import {
   GeoGameError,
   advanceGeoRound,
@@ -52,8 +53,31 @@ import {
   syncQuizGameState,
   updateQuizGameBadges,
 } from './quizGameService';
+import {
+  CliffGameError,
+  activateCliffLift,
+  breakCliffGate,
+  buyCliffShopItem,
+  bindCliffPresenceNotify,
+  enterCliffGame,
+  enterCliffMine,
+  enterCliffRopes,
+  finishCliffBridge,
+  jumpCliffRope,
+  formatCliffGameState,
+  getCliffGameParticipantIds,
+  leaveCliffGame,
+  resetCliffGateAndBridge,
+  resetCliffRopes,
+  resetCliffRun,
+  resolveCliffGameContext,
+  surrenderCliffBridge,
+  tapCliffBoulder,
+  throwCliffStone,
+} from './cliffGameService';
 import { bindGameCurrencyNotify } from './gameCurrencyAwards';
 import { getUserLocale } from '../utils/userLocale';
+import { getGameById, isGameVisibleToRole } from './catalog';
 
 interface ConnectedUser {
   userId: string;
@@ -61,6 +85,7 @@ interface ConnectedUser {
 }
 
 let gameCurrencyNotifyBound = false;
+let cliffPresenceNotifyBound = false;
 
 export const attachGameSocketHandlers = (
   socket: Socket,
@@ -718,5 +743,203 @@ export const attachGameSocketHandlers = (
         socket.emit('quiz_game_error', { message: error.message, code: error.code });
       }
     }
+  });
+
+  const emitCliffStateToPartners = async (
+    state: any,
+    participantUserIds: string[],
+    extra: Record<string, unknown> = {}
+  ) => {
+    await Promise.all(
+      participantUserIds.map(async (uid) => {
+        const socketData = connectedUsers.find((user) => user.userId === uid);
+        if (!socketData) {
+          return;
+        }
+        const userContext = await resolveCliffGameContext(uid);
+        io.to(socketData.socketId).emit('cliff_game_state', {
+          state: await formatCliffGameState(state, uid, userContext),
+          ...extra,
+        });
+      })
+    );
+  };
+
+  if (!cliffPresenceNotifyBound) {
+    cliffPresenceNotifyBound = true;
+    bindCliffPresenceNotify((state, context) => {
+      void emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  }
+
+  const withCliffAction = async (
+    emitErrorOnMissingAuth: boolean,
+    handler: (userId: string) => Promise<void>
+  ) => {
+    try {
+      const senderSocketData = connectedUsers.find((user) => user.socketId === socket.id);
+      if (!senderSocketData) {
+        if (emitErrorOnMissingAuth) {
+          socket.emit('cliff_game_error', { message: 'Пользователь не авторизован' });
+        }
+        return;
+      }
+      const actor = await User.findById(senderSocketData.userId).select('role');
+      if (!isGameVisibleToRole(getGameById('cliff'), actor?.role)) {
+        if (emitErrorOnMissingAuth) {
+          socket.emit('cliff_game_error', { message: 'Игра не найдена' });
+        }
+        return;
+      }
+      await handler(senderSocketData.userId);
+    } catch (error) {
+      if (error instanceof CliffGameError) {
+        socket.emit('cliff_game_error', { message: error.message, code: error.code });
+        return;
+      }
+      console.error('cliff game socket error:', error);
+      socket.emit('cliff_game_error', { message: 'Не удалось обработать действие' });
+    }
+  };
+
+  socket.on('cliff_game_subscribe', async () => {
+    await withCliffAction(false, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const { state, playIntro, introLine, enteringUserId } = await enterCliffGame(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context), {
+        playIntro,
+        introLine,
+        enteringUserId,
+      });
+    });
+  });
+
+  socket.on('cliff_game_leave', async () => {
+    await withCliffAction(false, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      await leaveCliffGame(userId, context);
+    });
+  });
+
+  socket.on('cliff_game_buy', async (payload?: { itemId?: string }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await buyCliffShopItem(userId, context, String(payload?.itemId ?? ''));
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_enter_mine', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await enterCliffMine(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_tap_boulder', async (payload?: { boulderId?: string; count?: number }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const { state, yielded, metal } = await tapCliffBoulder(
+        userId,
+        context,
+        String(payload?.boulderId ?? ''),
+        payload?.count
+      );
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context), {
+        yielded,
+        metal,
+        miningUserId: userId,
+      });
+    });
+  });
+
+  socket.on('cliff_game_break_gate', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await breakCliffGate(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_throw', async (payload?: { hit?: boolean; angle?: number; power?: number }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await throwCliffStone(userId, context, Boolean(payload?.hit));
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context), {
+        throwEvent: {
+          userId,
+          hit: Boolean(payload?.hit),
+          angle: Number(payload?.angle) || 0,
+          power: Number(payload?.power) || 0,
+        },
+      });
+    });
+  });
+
+  socket.on('cliff_game_surrender', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await surrenderCliffBridge(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_finish', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await finishCliffBridge(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_activate_lift', async (payload?: { petIds?: string[] }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await activateCliffLift(userId, context, payload?.petIds ?? []);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_enter_ropes', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await enterCliffRopes(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_rope_jump', async (payload?: { hit?: boolean }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await jumpCliffRope(userId, context, Boolean(payload?.hit));
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context), {
+        ropeJump: { userId, hit: Boolean(payload?.hit) },
+      });
+    });
+  });
+
+  socket.on('cliff_game_reset', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await resetCliffRun(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_reset_gate', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await resetCliffGateAndBridge(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_reset_ropes', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await resetCliffRopes(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
   });
 };

@@ -430,6 +430,150 @@
         }
       }
     },
+    "cliff": {
+      "name": "Falaise de l’amour",
+      "description": "Atteignez le sommet ensemble : achetez des outils, extraire le minerai, ouvrez la porte, réparez le pont et traversez les cordes.",
+      "rules": [
+        "Réservé aux couples avec un partenaire lié.",
+        "L’inventaire est partagé, sauf les AmoreCoins personnels.",
+        "Chaque partenaire ne peut acheter qu’un type de pioche — fer ou cuivre.",
+        "La mine contient dix rochers : cinq de fer et cinq de cuivre.",
+        "La hache coûte 20 fer et 20 cuivre et ouvre la porte.",
+        "Après la porte, chacun a 20 cailloux et doit viser trois trous.",
+        "Après le pont, deux animaux de niveau 2 ou plus doivent monter sur la dalle. Les deux d’un partenaire, ou un chacun.",
+        "Après la montée, traversez les cordes. Sautez quand la marque est dans la zone. Trois cordes mènent à un point de contrôle, puis cinq autres jusqu’à l’autre versant.",
+        "Le classement se fait au meilleur temps. Les parties en cours apparaissent aussi."
+      ],
+      "intro": { "wow": "Waouh, quelle grande montagne !", "agree": "Oui… elle est énorme." },
+      "shop": {
+        "title": "Boutique",
+        "badge": "Boutique",
+        "buy": "Acheter",
+        "buyFor": "Acheter pour",
+        "coinsCost": "{{amount}} AmoreCoins",
+        "ironCost": "{{amount}} fer",
+        "copperCost": "{{amount}} cuivre",
+        "and": "et",
+        "items": {
+          "iron_pickaxe": { "name": "Pioche de fer", "description": "Mine le fer." },
+          "copper_pickaxe": { "name": "Pioche de cuivre", "description": "Mine le cuivre." },
+          "axe": { "name": "Hache", "description": "Brise la porte." }
+        },
+        "lock": {
+          "owned": "Déjà dans l’inventaire partagé",
+          "already_bought": "Vous avez déjà acheté une pioche",
+          "taken": "Votre partenaire a déjà cette pioche",
+          "no_funds": "Pas assez d’AmoreCoins",
+          "no_ore": "Il faut 20 fer et 20 cuivre"
+        }
+      },
+      "mine": {
+        "title": "Mine",
+        "badge": "Mine",
+        "ironBoulder": "Rocher de fer",
+        "copperBoulder": "Rocher de cuivre",
+        "tapVein": "Touchez la veine",
+        "taps": "{{current}}/{{goal}}",
+        "needIronPickaxe": "Il faut une pioche de fer",
+        "needCopperPickaxe": "Il faut une pioche de cuivre",
+        "tapFailed": "Extraction impossible",
+        "refreshIn": "Nouveau dans {{time}}"
+      },
+      "gate": {
+        "title": "Porte de la Falaise de l’amour",
+        "badge": "Porte",
+        "lore": "Voici l’entrée de la Falaise de l’amour. Atteignez la fin et vous trouverez le vrai amour, sinon l’échec éternel. Beaucoup de couples ont essayé, alors nous avons cloué cette porte.",
+        "needAxe": "Il faut une hache pour passer.",
+        "break": "Casser les planches",
+        "breakFailed": "Impossible d’ouvrir la porte"
+      },
+      "climb": { "caption": "Le sentier monte…" },
+      "bridge": {
+        "progress": "Trous {{holes}}/3 · Cailloux {{stones}} · Partenaire {{partnerHoles}}/3 · {{partnerStones}}",
+        "next": "Continuer",
+        "surrender": "Réessayer le pont",
+        "throwFailed": "Lancer impossible",
+        "surrenderFailed": "Impossible de réinitialiser le pont",
+        "hint": "Je crois qu’il faut jeter des cailloux dans ces trous pour réparer le pont…",
+        "restored": "Oui ! Le pont est réparé — on peut continuer.",
+        "beautiful": "Quel beau pont !",
+        "choose": "Choisir",
+        "throw": "Lancer"
+      },
+      "lift": {
+        "badge": "Dalle",
+        "title": "Dalle de pression",
+        "lore": "Ce bloc de pierre ne s’élève que si deux animaux de niveau 2 ou plus se tiennent sur la dalle. Ils peuvent appartenir à l’un de vous, ou un chacun.",
+        "needPets": "Il faut deux animaux de niveau 2 ou plus. Faites-les progresser dans Animaux.",
+        "pick": "Choisissez deux animaux",
+        "you": "Le vôtre",
+        "partner": "Du partenaire",
+        "level": "Niv. {{level}}",
+        "activate": "Placer les animaux",
+        "activateFailed": "Impossible d’appeler les animaux",
+        "raised": "Les animaux sont montés sur la dalle — la pierre s’est élevée.",
+        "rising": "On monte !",
+        "next": "Continuer"
+      },
+      "ropes": {
+        "badge": "Corde",
+        "hint": "Je crois qu’on peut s’accrocher à ces cordes et passer de l’autre côté…",
+        "jump": "Sauter",
+        "progress": "Cordes {{current}}/{{total}} · Partenaire {{partnerCurrent}}/{{total}}",
+        "checkpoint": "Un versant sûr — si on tombe, on revient ici.",
+        "cleared": "On a traversé ! On peut continuer.",
+        "next": "Continuer",
+        "enterFailed": "Impossible d’atteindre les cordes",
+        "jumpFailed": "Impossible de sauter"
+      },
+      "finish": {
+        "title": "Le pont est à vous",
+        "time": "Temps : {{time}}",
+        "best": "Meilleur temps : {{time}}",
+        "playAgain": "Rejouer",
+        "resetConfirm": "Réinitialiser la partie pour battre le temps ? Le meilleur résultat est conservé.",
+        "failed": "Fin impossible",
+        "resetFailed": "Réinitialisation impossible"
+      },
+      "inventory": {
+        "coins": {
+          "title": "AmoreCoins",
+          "body": "Ce sont vos pièces personnelles. Dans ce jeu, elles achètent une pioche de fer ou de cuivre."
+        },
+        "iron": {
+          "title": "Fer",
+          "body": "Minerai partagé des rochers de fer. On l’extrait avec la pioche de fer. La hache coûte 20 de fer et 20 de cuivre."
+        },
+        "copper": {
+          "title": "Cuivre",
+          "body": "Minerai partagé des rochers de cuivre. On l’extrait avec la pioche de cuivre. La hache coûte 20 de fer et 20 de cuivre."
+        },
+        "altitude": {
+          "title": "Altitude",
+          "body": "À quelle hauteur vous êtes. D’abord le pied de la montagne, puis la porte, le pont, la dalle et les cordes au-dessus du gouffre."
+        },
+        "time": {
+          "title": "Temps",
+          "body": "Depuis combien de temps dure cette partie. Le chrono se met en pause si personne n’est dans le jeu. Le classement trie les couples par meilleur temps."
+        },
+        "ironPickaxe": {
+          "title": "Pioche de fer",
+          "body": "Elle sert à extraire le fer. Chaque partenaire ne peut acheter qu’un type de pioche — fer ou cuivre."
+        },
+        "copperPickaxe": {
+          "title": "Pioche de cuivre",
+          "body": "Elle sert à extraire le cuivre. Chaque partenaire ne peut acheter qu’un type de pioche — fer ou cuivre."
+        },
+        "axe": {
+          "title": "Hache",
+          "body": "Elle ouvre la porte clouée de la Falaise de l’amour. Elle coûte 20 de fer et 20 de cuivre et est partagée."
+        },
+        "resetGate": "Reset porte et pont",
+        "resetGateFailed": "Impossible de réinitialiser la porte",
+        "resetRopes": "Reset niveau cordes",
+        "resetRopesFailed": "Impossible de réinitialiser les cordes"
+      }
+    },
     "tab": "Jeux",
     "list": {
       "searchPlaceholder": "Rechercher par nom de jeu",
@@ -438,7 +582,8 @@
       "emptyList": "Aucun jeu dans la liste",
       "emptyHint": "Les jeux pour vous et votre partenaire apparaîtront ici",
       "tryDifferentQuery": "Essayez une autre recherche",
-      "comingSoon": "Bientôt"
+      "comingSoon": "Bientôt",
+      "badgeNew": "Nouveau"
     },
     "page": {
       "notFound": "Jeu introuvable",
@@ -446,6 +591,7 @@
       "tabGame": "Jeu",
       "tabLeaderboard": "Classement",
       "leaderboardSubtitle": "Classement mondial des couples par score total",
+      "leaderboardSubtitleTime": "Classement mondial des couples par meilleur temps",
       "comingSoon": "Ce jeu arrive bientôt",
       "addPartner": "Ajoutez votre partenaire dans les paramètres pour jouer ensemble",
       "geoDailyLimitHint": "Vous avez trouvé les {{count}} lieux aujourd’hui. De nouvelles manches s’ouvriront plus tard.",
@@ -516,7 +662,8 @@
       }
     },
     "leaderboard": {
-      "empty": "Personne n’a encore joué"
+      "empty": "Personne n’a encore joué",
+      "playingTime": "{{time}} · {{altitude}}m"
     },
     "badge": {
       "tooltip": "Top-{{rank}} · {{game}}"

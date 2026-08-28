@@ -1,0 +1,75 @@
+import mongoose from 'mongoose';
+
+const cliffBoulderSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    metal: { type: String, enum: ['iron', 'copper'], required: true },
+    yield: { type: Number, required: true, min: 4, max: 8 },
+    tapsRequired: { type: Number, required: true, min: 5, max: 20 },
+    tapsDone: { type: Number, default: 0, min: 0 },
+    depleted: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
+const cliffPickaxePurchaseSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    type: { type: String, enum: ['iron', 'copper'], required: true },
+  },
+  { _id: false }
+);
+
+const cliffPlayerProgressSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    stonesRemaining: { type: Number, default: 20, min: 0 },
+    holesCompleted: { type: Number, default: 0, min: 0, max: 3 },
+    encouragementUses: { type: Number, default: 0, min: 0, max: 5 },
+    encouragementCooldownUntil: { type: Date, default: null },
+    ropeIndex: { type: Number, default: 0, min: 0, max: 8 },
+  },
+  { _id: false }
+);
+
+const cliffGameStateSchema = new mongoose.Schema({
+  relationshipId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Relationship',
+    required: true,
+    unique: true,
+  },
+  runId: { type: String, required: true },
+  scene: { type: String, enum: ['hub', 'bridge', 'lift', 'ropes', 'finished'], default: 'hub' },
+  altitudeM: { type: Number, default: 10 },
+  gateDestroyed: { type: Boolean, default: false },
+  runStartedAt: { type: Date, default: null },
+  runPausedAt: { type: Date, default: null },
+  bestTimeMs: { type: Number, default: null },
+  lastTimeMs: { type: Number, default: null },
+  iron: { type: Number, default: 0, min: 0 },
+  copper: { type: Number, default: 0, min: 0 },
+  hasAxe: { type: Boolean, default: false },
+  hasIronPickaxe: { type: Boolean, default: false },
+  hasCopperPickaxe: { type: Boolean, default: false },
+  purchasedPickaxes: { type: [cliffPickaxePurchaseSchema], default: [] },
+  boulders: { type: [cliffBoulderSchema], default: [] },
+  mineCycleStartedAt: { type: Date, default: null },
+  presentUserIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },
+  introPlayedUserIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },
+  playerProgress: { type: [cliffPlayerProgressSchema], default: [] },
+  holeExpandedForUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  holeExpandedUntil: { type: Date, default: null },
+  bridgeRepaired: { type: Boolean, default: false },
+  liftRaised: { type: Boolean, default: false },
+  liftPetIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+cliffGameStateSchema.pre('save', function save(next) {
+  this.updatedAt = new Date();
+  next();
+});
+
+export default mongoose.model('CliffGameState', cliffGameStateSchema);

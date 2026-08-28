@@ -430,6 +430,164 @@
         }
       }
     },
+    "cliff": {
+      "name": "Love Cliff",
+      "description": "Reach the summit together: buy tools, mine ore, open the gate, rebuild the bridge, rise with your pets, and swing across the ropes.",
+      "rules": [
+        "This game is only for couples with a linked partner.",
+        "Inventory is shared, except personal AmoreCoins.",
+        "Each partner can buy only one pickaxe type — iron or copper.",
+        "The mine has ten boulders: five iron and five copper. You need the matching pickaxe.",
+        "The axe costs 20 iron and 20 copper and opens the gate to Love Cliff.",
+        "After the gate, each player gets 20 pebbles and must hit three holes.",
+        "After the bridge, two pets of level 2 or higher must stand on the pressure plate. They can both belong to one partner, or one each.",
+        "After the stone rises, swing across the ropes. Time the jump when the mark is in the zone. Three ropes lead to a checkpoint, then five more to the far ledge.",
+        "The leaderboard ranks pairs by best finish time. Runs still in progress are shown too."
+      ],
+      "intro": {
+        "wow": "Wow, what a huge mountain!",
+        "agree": "Yes… it's enormous."
+      },
+      "shop": {
+        "title": "Shop",
+        "badge": "Shop",
+        "buy": "Buy",
+        "buyFor": "Buy for",
+        "coinsCost": "{{amount}} AmoreCoins",
+        "ironCost": "{{amount}} iron",
+        "copperCost": "{{amount}} copper",
+        "and": "and",
+        "items": {
+          "iron_pickaxe": {
+            "name": "Iron pickaxe",
+            "description": "Mines iron."
+          },
+          "copper_pickaxe": {
+            "name": "Copper pickaxe",
+            "description": "Mines copper."
+          },
+          "axe": {
+            "name": "Axe",
+            "description": "Breaks the gate."
+          }
+        },
+        "lock": {
+          "owned": "Already in the shared pack",
+          "already_bought": "You already bought a pickaxe",
+          "taken": "Your partner already bought this pickaxe",
+          "no_funds": "Not enough AmoreCoins",
+          "no_ore": "Need 20 iron and 20 copper"
+        }
+      },
+      "mine": {
+        "title": "Mine",
+        "badge": "Mine",
+        "ironBoulder": "Iron boulder",
+        "copperBoulder": "Copper boulder",
+        "tapVein": "Tap the ore vein",
+        "taps": "{{current}}/{{goal}}",
+        "needIronPickaxe": "You need an iron pickaxe",
+        "needCopperPickaxe": "You need a copper pickaxe",
+        "tapFailed": "Could not mine",
+        "refreshIn": "Refresh in {{time}}"
+      },
+      "gate": {
+        "title": "Gate to Love Cliff",
+        "badge": "Gate",
+        "lore": "This is the entrance to Love Cliff. Reach the end and you will find true love — otherwise, eternal failure. Many couples have tried, few succeeded, so we boarded this gate shut.",
+        "needAxe": "You need an axe to get through.",
+        "break": "Break the boards",
+        "breakFailed": "Could not open the gate"
+      },
+      "climb": {
+        "caption": "Up the path…"
+      },
+      "bridge": {
+        "progress": "Holes {{holes}}/3 · Stones {{stones}} · Partner {{partnerHoles}}/3 · {{partnerStones}}",
+        "next": "Continue",
+        "surrender": "Retry the bridge",
+        "throwFailed": "Could not throw",
+        "surrenderFailed": "Could not reset the bridge",
+        "hint": "I think we have to throw pebbles into those holes to mend the bridge…",
+        "restored": "Yes! The bridge is mended — we can go on.",
+        "beautiful": "What a beautiful bridge!",
+        "choose": "Choose",
+        "throw": "Throw"
+      },
+      "lift": {
+        "badge": "Plate",
+        "title": "Pressure plate",
+        "lore": "This stone block rises only when two pets of level 2 or higher stand on the plate. They can both belong to one of you, or you can send one each.",
+        "needPets": "You need two pets of level 2 or higher. Level them up in the Pets section.",
+        "pick": "Choose two pets",
+        "you": "Yours",
+        "partner": "Partner's",
+        "level": "Lv. {{level}}",
+        "activate": "Send the pets",
+        "activateFailed": "Could not call the pets",
+        "raised": "The pets stepped on the plate — the stone rose.",
+        "rising": "We're going up!",
+        "next": "Continue"
+      },
+      "ropes": {
+        "badge": "Rope",
+        "hint": "Looks like we can grab these ropes and swing over to the other side…",
+        "jump": "Jump",
+        "progress": "Ropes {{current}}/{{total}} · Partner {{partnerCurrent}}/{{total}}",
+        "checkpoint": "A safe ledge — if we fall, we come back here.",
+        "cleared": "We made it across! We can go on.",
+        "next": "Continue",
+        "enterFailed": "Could not reach the ropes",
+        "jumpFailed": "Could not jump"
+      },
+      "finish": {
+        "title": "The bridge is yours",
+        "time": "Time: {{time}}",
+        "best": "Best time: {{time}}",
+        "playAgain": "Play again",
+        "resetConfirm": "Reset the run and try for a better time? Your best time stays.",
+        "failed": "Could not finish",
+        "resetFailed": "Could not reset the run"
+      },
+      "inventory": {
+        "coins": {
+          "title": "AmoreCoins",
+          "body": "These are your personal coins. In this game they buy an iron or copper pickaxe."
+        },
+        "iron": {
+          "title": "Iron",
+          "body": "Shared ore from iron boulders. Mine it with the iron pickaxe. The axe costs 20 iron and 20 copper."
+        },
+        "copper": {
+          "title": "Copper",
+          "body": "Shared ore from copper boulders. Mine it with the copper pickaxe. The axe costs 20 iron and 20 copper."
+        },
+        "altitude": {
+          "title": "Altitude",
+          "body": "How high you have climbed. You start at the foot of the mountain, then pass the gate, the bridge, the rising stone, and the hanging ropes."
+        },
+        "time": {
+          "title": "Time",
+          "body": "How long this run has been going. The timer pauses when neither of you is in the game. The leaderboard ranks pairs by best finish time."
+        },
+        "ironPickaxe": {
+          "title": "Iron pickaxe",
+          "body": "Lets you mine iron boulders. Each partner can buy only one pickaxe type — iron or copper."
+        },
+        "copperPickaxe": {
+          "title": "Copper pickaxe",
+          "body": "Lets you mine copper boulders. Each partner can buy only one pickaxe type — iron or copper."
+        },
+        "axe": {
+          "title": "Axe",
+          "body": "Breaks the boarded gate to Love Cliff. It costs 20 iron and 20 copper and is shared."
+        },
+        "resetGate": "Reset gate & bridge",
+        "resetGateFailed": "Could not reset the gate",
+        "resetRopes": "Reset ropes",
+        "resetRopesFailed": "Could not reset the ropes"
+      }
+    },
     "tab": "Games",
     "list": {
       "searchPlaceholder": "Search by game name",
@@ -438,7 +596,8 @@
       "emptyList": "No games in the list",
       "emptyHint": "Games for you and your partner will appear here",
       "tryDifferentQuery": "Try a different search",
-      "comingSoon": "Coming soon"
+      "comingSoon": "Coming soon",
+      "badgeNew": "New"
     },
     "page": {
       "notFound": "Game not found",
@@ -446,6 +605,7 @@
       "tabGame": "Game",
       "tabLeaderboard": "Leaderboard",
       "leaderboardSubtitle": "Global couple leaderboard by total score",
+      "leaderboardSubtitleTime": "Global couple leaderboard by best time",
       "comingSoon": "This game is coming soon",
       "addPartner": "Add your partner in settings to play together",
       "geoDailyLimitHint": "You guessed all {{count}} places today. New rounds will open later.",
@@ -516,7 +676,8 @@
       }
     },
     "leaderboard": {
-      "empty": "No one has played yet"
+      "empty": "No one has played yet",
+      "playingTime": "{{time}} · {{altitude}}m"
     },
     "badge": {
       "tooltip": "Top-{{rank}} · {{game}}"

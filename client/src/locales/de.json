@@ -430,6 +430,150 @@
         }
       }
     },
+    "cliff": {
+      "name": "Liebesklippe",
+      "description": "Erreicht gemeinsam den Gipfel: kauft Werkzeuge, fördert Erz, öffnet das Tor, repariert die Brücke und schwingt über die Seile.",
+      "rules": [
+        "Nur für Paare mit verknüpftem Partner.",
+        "Inventar ist geteilt, außer persönlichen AmoreCoins.",
+        "Jeder kann nur eine Spitzhackenart kaufen — Eisen oder Kupfer.",
+        "In der Mine gibt es zehn Felsen: fünf Eisen, fünf Kupfer.",
+        "Die Axt kostet 20 Eisen und 20 Kupfer und öffnet das Tor.",
+        "Hinter dem Tor bekommt jede Person 20 Steine und muss drei Löcher treffen.",
+        "Nach der Brücke müssen zwei Tiere der Stufe 2 oder höher auf die Druckplatte. Beide von einem Partner oder je eines.",
+        "Nach dem Aufstieg schwingt ihr über die Seile. Springt, wenn die Marke in der Zone ist. Drei Seile führen zum Checkpoint, dann fünf weitere zum fernen Hang.",
+        "Die Rangliste sortiert nach Bestzeit. Laufende Versuche werden auch angezeigt."
+      ],
+      "intro": { "wow": "Wow, was für ein großer Berg!", "agree": "Ja… er ist riesig." },
+      "shop": {
+        "title": "Laden",
+        "badge": "Laden",
+        "buy": "Kaufen",
+        "buyFor": "Kaufen für",
+        "coinsCost": "{{amount}} AmoreCoins",
+        "ironCost": "{{amount}} Eisen",
+        "copperCost": "{{amount}} Kupfer",
+        "and": "und",
+        "items": {
+          "iron_pickaxe": { "name": "Eisen-Spitzhacke", "description": "Baut Eisen ab." },
+          "copper_pickaxe": { "name": "Kupfer-Spitzhacke", "description": "Baut Kupfer ab." },
+          "axe": { "name": "Axt", "description": "Öffnet das Tor." }
+        },
+        "lock": {
+          "owned": "Bereits im gemeinsamen Inventar",
+          "already_bought": "Du hast schon eine Spitzhacke gekauft",
+          "taken": "Dein Partner hat diese Spitzhacke schon",
+          "no_funds": "Nicht genug AmoreCoins",
+          "no_ore": "Brauchst 20 Eisen und 20 Kupfer"
+        }
+      },
+      "mine": {
+        "title": "Mine",
+        "badge": "Mine",
+        "ironBoulder": "Eisenfelsen",
+        "copperBoulder": "Kupferfelsen",
+        "tapVein": "Ader antippen",
+        "taps": "{{current}}/{{goal}}",
+        "needIronPickaxe": "Eisen-Spitzhacke nötig",
+        "needCopperPickaxe": "Kupfer-Spitzhacke nötig",
+        "tapFailed": "Abbauen fehlgeschlagen",
+        "refreshIn": "Neu in {{time}}"
+      },
+      "gate": {
+        "title": "Tor zur Liebesklippe",
+        "badge": "Tor",
+        "lore": "Dies ist der Eingang zur Liebesklippe. Wer das Ende erreicht, findet wahre Liebe — sonst ewiges Scheitern. Viele Paare haben es versucht, deshalb haben wir das Tor vernagelt.",
+        "needAxe": "Du brauchst eine Axt.",
+        "break": "Bretter zerbrechen",
+        "breakFailed": "Tor konnte nicht geöffnet werden"
+      },
+      "climb": { "caption": "Den Pfad hinauf…" },
+      "bridge": {
+        "progress": "Löcher {{holes}}/3 · Steine {{stones}} · Partner {{partnerHoles}}/3 · {{partnerStones}}",
+        "next": "Weiter",
+        "surrender": "Brücke erneut versuchen",
+        "throwFailed": "Wurf fehlgeschlagen",
+        "surrenderFailed": "Brücke konnte nicht zurückgesetzt werden",
+        "hint": "Ich glaube, wir müssen Steine in diese Löcher werfen, um die Brücke zu flicken…",
+        "restored": "Ja! Die Brücke ist wieder ganz — wir können weiter.",
+        "beautiful": "Was für eine schöne Brücke!",
+        "choose": "Wählen",
+        "throw": "Werfen"
+      },
+      "lift": {
+        "badge": "Platte",
+        "title": "Druckplatte",
+        "lore": "Dieser Steinblock steigt nur, wenn zwei Tiere der Stufe 2 oder höher auf der Platte stehen. Beide können einem von euch gehören — oder je eines.",
+        "needPets": "Ihr braucht zwei Tiere der Stufe 2 oder höher. Steigert sie im Bereich Tiere.",
+        "pick": "Wählt zwei Tiere",
+        "you": "Deins",
+        "partner": "Partners",
+        "level": "Lvl. {{level}}",
+        "activate": "Tiere hinstellen",
+        "activateFailed": "Tiere konnten nicht gerufen werden",
+        "raised": "Die Tiere traten auf die Platte — der Stein stieg.",
+        "rising": "Wir steigen!",
+        "next": "Weiter"
+      },
+      "ropes": {
+        "badge": "Seil",
+        "hint": "Ich glaube, wir können uns an diesen Seilen festhalten und rüberschwingen…",
+        "jump": "Sprung",
+        "progress": "Seile {{current}}/{{total}} · Partner {{partnerCurrent}}/{{total}}",
+        "checkpoint": "Ein sicherer Hang — fallen wir, kommen wir hierher zurück.",
+        "cleared": "Wir sind rüber! Es geht weiter.",
+        "next": "Weiter",
+        "enterFailed": "Die Seile konnten nicht erreicht werden",
+        "jumpFailed": "Sprung fehlgeschlagen"
+      },
+      "finish": {
+        "title": "Die Brücke gehört euch",
+        "time": "Zeit: {{time}}",
+        "best": "Beste Zeit: {{time}}",
+        "playAgain": "Nochmal spielen",
+        "resetConfirm": "Lauf zurücksetzen und eine bessere Zeit versuchen? Die Bestzeit bleibt.",
+        "failed": "Abschluss fehlgeschlagen",
+        "resetFailed": "Zurücksetzen fehlgeschlagen"
+      },
+      "inventory": {
+        "coins": {
+          "title": "AmoreCoins",
+          "body": "Das sind deine persönlichen Münzen. In diesem Spiel kaufst du damit eine Eisen- oder Kupferspitzhacke."
+        },
+        "iron": {
+          "title": "Eisen",
+          "body": "Gemeinsames Erz von Eisenfelsen. Du baust es mit der Eisenspitzhacke ab. Die Axt kostet 20 Eisen und 20 Kupfer."
+        },
+        "copper": {
+          "title": "Kupfer",
+          "body": "Gemeinsames Erz von Kupferfelsen. Du baust es mit der Kupferspitzhacke ab. Die Axt kostet 20 Eisen und 20 Kupfer."
+        },
+        "altitude": {
+          "title": "Höhe",
+          "body": "Wie hoch ihr gerade seid. Zuerst der Bergfuß, dann Tor, Brücke, Platte und die Seile über der Schlucht."
+        },
+        "time": {
+          "title": "Zeit",
+          "body": "Wie lange dieser Lauf dauert. Der Timer pausiert, wenn niemand im Spiel ist. Die Bestenliste sortiert Paare nach Bestzeit."
+        },
+        "ironPickaxe": {
+          "title": "Eisenspitzhacke",
+          "body": "Damit baust du Eisen ab. Jeder Partner kann nur eine Spitzhacke kaufen — Eisen oder Kupfer."
+        },
+        "copperPickaxe": {
+          "title": "Kupferspitzhacke",
+          "body": "Damit baust du Kupfer ab. Jeder Partner kann nur eine Spitzhacke kaufen — Eisen oder Kupfer."
+        },
+        "axe": {
+          "title": "Axt",
+          "body": "Sie öffnet das vernagelte Tor zur Liebesklippe. Sie kostet 20 Eisen und 20 Kupfer und liegt im gemeinsamen Inventar."
+        },
+        "resetGate": "Tor & Brücke zurücksetzen",
+        "resetGateFailed": "Tor konnte nicht zurückgesetzt werden",
+        "resetRopes": "Seil-Level zurücksetzen",
+        "resetRopesFailed": "Seile konnten nicht zurückgesetzt werden"
+      }
+    },
     "tab": "Spiele",
     "list": {
       "searchPlaceholder": "Nach Spielname suchen",
@@ -438,7 +582,8 @@
       "emptyList": "Keine Spiele in der Liste",
       "emptyHint": "Hier erscheinen Spiele für dich und deinen Partner",
       "tryDifferentQuery": "Versuch eine andere Suche",
-      "comingSoon": "Demnächst"
+      "comingSoon": "Demnächst",
+      "badgeNew": "Neu"
     },
     "page": {
       "notFound": "Spiel nicht gefunden",
@@ -446,6 +591,7 @@
       "tabGame": "Spiel",
       "tabLeaderboard": "Bestenliste",
       "leaderboardSubtitle": "Globale Paar-Rangliste nach Gesamtpunktzahl",
+      "leaderboardSubtitleTime": "Globale Paar-Rangliste nach Bestzeit",
       "comingSoon": "Dieses Spiel kommt bald",
       "addPartner": "Füge deinen Partner in den Einstellungen hinzu, um zusammen zu spielen",
       "geoDailyLimitHint": "Du hast heute alle {{count}} Orte erraten. Neue Runden öffnen später.",
@@ -516,7 +662,8 @@
       }
     },
     "leaderboard": {
-      "empty": "Noch niemand hat gespielt"
+      "empty": "Noch niemand hat gespielt",
+      "playingTime": "{{time}} · {{altitude}}m"
     },
     "badge": {
       "tooltip": "Top-{{rank}} · {{game}}"
