@@ -35,6 +35,7 @@ type RopePhase = 'idle' | 'swinging' | 'jumping' | 'falling';
 type CliffRopesProps = {
   state: CliffGameState;
   onJump: (hit: boolean) => void;
+  onNext: () => void;
 };
 
 const displayName = (user: CliffGameState['me']) => user.firstName || user.username || '';
@@ -177,7 +178,7 @@ const CliffHangingRope: React.FC<CliffHangingRopeProps> = ({
   </Box>
 );
 
-const CliffRopes: React.FC<CliffRopesProps> = ({ state, onJump }) => {
+const CliffRopes: React.FC<CliffRopesProps> = ({ state, onJump, onNext }) => {
   const { t } = useTranslation();
   const myName = displayName(state.me) || t('games.common.you');
   const partnerName = displayName(state.partner) || t('games.common.partner');
@@ -548,14 +549,22 @@ const CliffRopes: React.FC<CliffRopesProps> = ({ state, onJump }) => {
             partnerCurrent: state.ropes.partnerIndex,
           })}
         </Typography>
-        {state.ropes.cleared && (
-          <Button
-            onClick={() => undefined}
-            sx={{ ...getCliffModalPrimaryButtonSx(), flexShrink: 0, py: 0.75, ml: 'auto' }}
-          >
-            {t('games.cliff.ropes.next')}
-          </Button>
-        )}
+        {state.ropes.cleared &&
+          (state.partnerPresent ? (
+            <Button
+              onClick={onNext}
+              sx={{ ...getCliffModalPrimaryButtonSx(), flexShrink: 0, py: 0.75, ml: 'auto' }}
+            >
+              {t('games.cliff.ropes.next')}
+            </Button>
+          ) : (
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 700, color: '#8a3d28', ml: 'auto', maxWidth: 220 }}
+            >
+              {t('games.cliff.waitPartner')}
+            </Typography>
+          ))}
       </Box>
     </Box>
   );

@@ -540,6 +540,22 @@
         "enterFailed": "Could not reach the ropes",
         "jumpFailed": "Could not jump"
       },
+      "balls": {
+        "hint": "A lane with score zones. Throw with power and angle — the farther it rolls, the more points.",
+        "start": "Start",
+        "choose": "Aim",
+        "throw": "Throw",
+        "progress": "Balls {{balls}}/{{each}} · {{myScore}} · Partner {{partnerBalls}}/{{each}} · {{partnerScore}} · Together {{pairScore}}/{{threshold}}",
+        "scored": "+{{score}}",
+        "miss": "Miss…",
+        "cleared": "Enough points! We can go on.",
+        "failed": "Not enough points. Try again?",
+        "retry": "Try again",
+        "next": "Continue",
+        "enterFailed": "Could not reach the ball lane",
+        "throwFailed": "Could not throw the ball"
+      },
+      "waitPartner": "Waiting for your partner",
       "finish": {
         "title": "The bridge is yours",
         "time": "Time: {{time}}",
@@ -585,7 +601,9 @@
         "resetGate": "Reset gate & bridge",
         "resetGateFailed": "Could not reset the gate",
         "resetRopes": "Reset ropes",
-        "resetRopesFailed": "Could not reset the ropes"
+        "resetRopesFailed": "Could not reset the ropes",
+        "resetBalls": "Reset balls",
+        "resetBallsFailed": "Could not reset the balls"
       }
     },
     "tab": "Games",

@@ -526,6 +526,22 @@
         "enterFailed": "Die Seile konnten nicht erreicht werden",
         "jumpFailed": "Sprung fehlgeschlagen"
       },
+      "balls": {
+        "hint": "Eine Bahn mit Zonen. Wirf mit Kraft und Winkel — je weiter er rollt, desto mehr Punkte.",
+        "start": "Start",
+        "choose": "Zielen",
+        "throw": "Werfen",
+        "progress": "Bälle {{balls}}/{{each}} · {{myScore}} · Partner {{partnerBalls}}/{{each}} · {{partnerScore}} · Zusammen {{pairScore}}/{{threshold}}",
+        "scored": "+{{score}}",
+        "miss": "Daneben…",
+        "cleared": "Genug Punkte! Es geht weiter.",
+        "failed": "Zu wenig Punkte. Nochmal versuchen?",
+        "retry": "Nochmal versuchen",
+        "next": "Weiter",
+        "enterFailed": "Ballbahn konnte nicht erreicht werden",
+        "throwFailed": "Ball konnte nicht geworfen werden"
+      },
+      "waitPartner": "Warte auf deinen Partner",
       "finish": {
         "title": "Die Brücke gehört euch",
         "time": "Zeit: {{time}}",
@@ -571,7 +587,9 @@
         "resetGate": "Tor & Brücke zurücksetzen",
         "resetGateFailed": "Tor konnte nicht zurückgesetzt werden",
         "resetRopes": "Seil-Level zurücksetzen",
-        "resetRopesFailed": "Seile konnten nicht zurückgesetzt werden"
+        "resetRopesFailed": "Seile konnten nicht zurückgesetzt werden",
+        "resetBalls": "Ball-Level zurücksetzen",
+        "resetBallsFailed": "Bälle konnten nicht zurückgesetzt werden"
       }
     },
     "tab": "Spiele",

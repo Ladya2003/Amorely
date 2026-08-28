@@ -18,8 +18,10 @@ type CliffInventoryBarProps = {
   elapsedMs: number;
   resettingGate?: boolean;
   resettingRopes?: boolean;
+  resettingBalls?: boolean;
   onResetGate: () => void;
   onResetRopes: () => void;
+  onResetBalls: () => void;
 };
 
 const oreIconSx = {
@@ -39,8 +41,10 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
   elapsedMs,
   resettingGate = false,
   resettingRopes = false,
+  resettingBalls = false,
   onResetGate,
   onResetRopes,
+  onResetBalls,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -138,6 +142,15 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
             sx={{ ...chip, opacity: resettingRopes ? 0.6 : 1 }}
           >
             {t('games.cliff.inventory.resetRopes')}
+          </Box>
+          <Box
+            component="button"
+            type="button"
+            disabled={resettingBalls}
+            onClick={onResetBalls}
+            sx={{ ...chip, opacity: resettingBalls ? 0.6 : 1 }}
+          >
+            {t('games.cliff.inventory.resetBalls')}
           </Box>
         </Box>
       </Box>

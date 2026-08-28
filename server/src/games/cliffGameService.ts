@@ -8,6 +8,10 @@ import { getPetImagePath } from '../config/petCatalog';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
 import { getBalance, spendCurrency } from '../services/currencyService';
 import {
+  CLIFF_BALLS_ALTITUDE,
+  CLIFF_BALLS_EACH,
+  CLIFF_BALLS_SCORE_THRESHOLD,
+  CLIFF_BALL_ZONE_SCORES,
   CLIFF_BRIDGE_ALTITUDE,
   CLIFF_MINE_RESET_MS,
   CLIFF_HOLES_REQUIRED,
@@ -26,6 +30,7 @@ import {
   CLIFF_STONES_EACH,
   createCliffBoulders,
   getCliffShopItem,
+  type CliffBallZoneScore,
   type CliffIntroLine,
   type CliffPickaxeType,
   type CliffScene,
@@ -133,6 +138,18 @@ export interface CliffGamePublicState {
     checkpointIndex: number;
     cleared: boolean;
   };
+  balls: {
+    myRemaining: number;
+    partnerRemaining: number;
+    myScore: number;
+    partnerScore: number;
+    pairScore: number;
+    each: number;
+    threshold: number;
+    zoneScores: number[];
+    cleared: boolean;
+    canRetry: boolean;
+  };
   canReset: boolean;
 }
 
@@ -190,10 +207,55 @@ const createEmptyProgress = (userId: string) => ({
   userId: new mongoose.Types.ObjectId(userId),
   stonesRemaining: CLIFF_STONES_EACH,
   holesCompleted: 0,
-    encouragementUses: 0,
-    encouragementCooldownUntil: null as Date | null,
-    ropeIndex: 0,
+  encouragementUses: 0,
+  encouragementCooldownUntil: null as Date | null,
+  ropeIndex: 0,
+  ballsRemaining: CLIFF_BALLS_EACH,
+  ballsScore: 0,
 });
+
+const resetBallsProgress = (progress: {
+  ballsRemaining?: number;
+  ballsScore?: number;
+}) => {
+  progress.ballsRemaining = CLIFF_BALLS_EACH;
+  progress.ballsScore = 0;
+};
+
+const bothPartnersPresent = (state: any, context: CliffGameContext) =>
+  includesUser(state.presentUserIds, context.ownerUserId) &&
+  includesUser(state.presentUserIds, context.partnerUserId);
+
+const normalizeBallZoneScore = (value: unknown): CliffBallZoneScore | null => {
+  const score = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(score)) {
+    return null;
+  }
+  const rounded = Math.round(score);
+  if (rounded === 0) {
+    return 0;
+  }
+  if ((CLIFF_BALL_ZONE_SCORES as readonly number[]).includes(rounded)) {
+    return rounded as CliffBallZoneScore;
+  }
+  return null;
+};
+
+const ballsPairScoreOf = (state: any, context: CliffGameContext) => {
+  const owner = getProgress(state, context.ownerUserId);
+  const partner = getProgress(state, context.partnerUserId);
+  return (owner.ballsScore ?? 0) + (partner.ballsScore ?? 0);
+};
+
+const ballsClearedOf = (state: any, context: CliffGameContext) => {
+  const owner = getProgress(state, context.ownerUserId);
+  const partner = getProgress(state, context.partnerUserId);
+  return (
+    (owner.ballsRemaining ?? CLIFF_BALLS_EACH) <= 0 &&
+    (partner.ballsRemaining ?? CLIFF_BALLS_EACH) <= 0 &&
+    ballsPairScoreOf(state, context) >= CLIFF_BALLS_SCORE_THRESHOLD
+  );
+};
 
 const createRunFields = (ownerUserId: string, partnerUserId: string) => ({
   runId: randomUUID(),
@@ -574,6 +636,29 @@ export const formatCliffGameState = async (
         (myProgress.ropeIndex ?? 0) >= CLIFF_ROPES_TOTAL &&
         (partnerProgress.ropeIndex ?? 0) >= CLIFF_ROPES_TOTAL,
     },
+    balls: (() => {
+      const myRemaining = myProgress.ballsRemaining ?? CLIFF_BALLS_EACH;
+      const partnerRemaining = partnerProgress.ballsRemaining ?? CLIFF_BALLS_EACH;
+      const myScore = myProgress.ballsScore ?? 0;
+      const partnerScore = partnerProgress.ballsScore ?? 0;
+      const pairScore = myScore + partnerScore;
+      const cleared =
+        myRemaining <= 0 &&
+        partnerRemaining <= 0 &&
+        pairScore >= CLIFF_BALLS_SCORE_THRESHOLD;
+      return {
+        myRemaining,
+        partnerRemaining,
+        myScore,
+        partnerScore,
+        pairScore,
+        each: CLIFF_BALLS_EACH,
+        threshold: CLIFF_BALLS_SCORE_THRESHOLD,
+        zoneScores: [...CLIFF_BALL_ZONE_SCORES],
+        cleared,
+        canRetry: myRemaining <= 0 && partnerRemaining <= 0 && !cleared,
+      };
+    })(),
     canReset: state.scene === 'finished',
   };
 };
@@ -1013,10 +1098,86 @@ export const resetCliffRopes = async (_userId: string, context: CliffGameContext
 
   for (const progress of [ownerProgress, partnerProgress]) {
     progress.ropeIndex = 0;
+    resetBallsProgress(progress);
   }
 
   state.scene = 'ropes';
   state.altitudeM = CLIFF_ROPES_ALTITUDE;
+  await state.save();
+  return state;
+};
+
+export const enterCliffBalls = async (_userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'ropes') {
+    throw new CliffGameError('BALLS_NOT_READY', 'Сначала переправьтесь по канатам');
+  }
+
+  const ownerProgress = getProgress(state, context.ownerUserId);
+  const partnerProgress = getProgress(state, context.partnerUserId);
+  const cleared =
+    ropeIndexOf(ownerProgress) >= CLIFF_ROPES_TOTAL &&
+    ropeIndexOf(partnerProgress) >= CLIFF_ROPES_TOTAL;
+  if (!cleared) {
+    throw new CliffGameError('BALLS_NOT_READY', 'Сначала переправьтесь по канатам');
+  }
+
+  if (!bothPartnersPresent(state, context)) {
+    throw new CliffGameError('WAIT_PARTNER', 'Подождите партнёра');
+  }
+
+  for (const progress of [ownerProgress, partnerProgress]) {
+    resetBallsProgress(progress);
+  }
+
+  state.scene = 'balls';
+  state.altitudeM = CLIFF_BALLS_ALTITUDE;
+  await state.save();
+  return state;
+};
+
+export const throwCliffBall = async (
+  userId: string,
+  context: CliffGameContext,
+  zoneScoreRaw: unknown
+) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'balls') {
+    throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя бросать шары');
+  }
+  if (ballsClearedOf(state, context)) {
+    throw new CliffGameError('BALLS_COMPLETE', 'Дорожка с шарами уже пройдена');
+  }
+
+  const zoneScore = normalizeBallZoneScore(zoneScoreRaw);
+  if (zoneScore === null) {
+    throw new CliffGameError('INVALID_ZONE', 'Некорректная зона броска');
+  }
+
+  const progress = getProgress(state, userId);
+  const remaining = progress.ballsRemaining ?? CLIFF_BALLS_EACH;
+  if (remaining <= 0) {
+    throw new CliffGameError('NO_BALLS', 'Шары закончились');
+  }
+
+  progress.ballsRemaining = remaining - 1;
+  progress.ballsScore = (progress.ballsScore ?? 0) + zoneScore;
+  state.altitudeM = CLIFF_BALLS_ALTITUDE;
+  await state.save();
+  return state;
+};
+
+export const resetCliffBalls = async (_userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  const ownerProgress = getProgress(state, context.ownerUserId);
+  const partnerProgress = getProgress(state, context.partnerUserId);
+
+  for (const progress of [ownerProgress, partnerProgress]) {
+    resetBallsProgress(progress);
+  }
+
+  state.scene = 'balls';
+  state.altitudeM = CLIFF_BALLS_ALTITUDE;
   await state.save();
   return state;
 };
@@ -1032,6 +1193,7 @@ export const resetCliffGateAndBridge = async (_userId: string, context: CliffGam
     progress.encouragementUses = 0;
     progress.encouragementCooldownUntil = undefined;
     progress.ropeIndex = 0;
+    resetBallsProgress(progress);
   }
 
   state.scene = 'hub';

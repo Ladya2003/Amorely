@@ -68,6 +68,7 @@ import {
   buyCliffShopItem,
   enterCliffGame,
   activateCliffLift,
+  enterCliffBalls,
   enterCliffMine,
   enterCliffRopes,
   finishCliffBridge,
@@ -76,12 +77,14 @@ import {
   getCliffLeaderboard,
   getOrCreateCliffGameState,
   leaveCliffGame,
+  resetCliffBalls,
   resetCliffGateAndBridge,
   resetCliffRopes,
   resetCliffRun,
   resolveCliffGameContext,
   surrenderCliffBridge,
   tapCliffBoulder,
+  throwCliffBall,
   throwCliffStone,
 } from '../games/cliffGameService';
 import { requireActiveRelationship } from '../utils/requireActiveRelationship';
@@ -207,7 +210,14 @@ const handleCliffGameError = (error: unknown, res: Response): boolean => {
                 error.code === 'LIFT_NOT_READY' ||
                 error.code === 'LIFT_ALREADY_RAISED' ||
                 error.code === 'NEED_TWO_PETS' ||
-                error.code === 'PETS_NOT_ELIGIBLE'
+                error.code === 'PETS_NOT_ELIGIBLE' ||
+                error.code === 'BALLS_NOT_READY' ||
+                error.code === 'WAIT_PARTNER' ||
+                error.code === 'BALLS_COMPLETE' ||
+                error.code === 'NO_BALLS' ||
+                error.code === 'INVALID_ZONE' ||
+                error.code === 'ROPES_COMPLETE' ||
+                error.code === 'ROPES_NOT_READY'
               ? 409
               : 400;
 
@@ -930,6 +940,51 @@ router.post('/cliff/ropes/jump', async (req: any, res: Response) => {
     }
     console.error('Ошибка cliff/ropes/jump:', error);
     res.status(500).json({ error: 'Не удалось прыгнуть' });
+  }
+});
+
+router.post('/cliff/balls/enter', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await enterCliffBalls(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/balls/enter:', error);
+    res.status(500).json({ error: 'Не удалось перейти к шарам' });
+  }
+});
+
+router.post('/cliff/balls/throw', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await throwCliffBall(userId, context, req.body?.zoneScore);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/balls/throw:', error);
+    res.status(500).json({ error: 'Не удалось бросить шар' });
+  }
+});
+
+router.post('/cliff/reset-balls', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await resetCliffBalls(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/reset-balls:', error);
+    res.status(500).json({ error: 'Не удалось сбросить шары' });
   }
 });
 

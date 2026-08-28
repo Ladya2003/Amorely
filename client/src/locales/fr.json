@@ -526,6 +526,22 @@
         "enterFailed": "Impossible d’atteindre les cordes",
         "jumpFailed": "Impossible de sauter"
       },
+      "balls": {
+        "hint": "Une piste avec des zones. Lance avec force et angle — plus ça roule loin, plus tu marques.",
+        "start": "Commencer",
+        "choose": "Viser",
+        "throw": "Lancer",
+        "progress": "Balles {{balls}}/{{each}} · {{myScore}} · Partenaire {{partnerBalls}}/{{each}} · {{partnerScore}} · Ensemble {{pairScore}}/{{threshold}}",
+        "scored": "+{{score}}",
+        "miss": "Raté…",
+        "cleared": "Assez de points ! On peut continuer.",
+        "failed": "Pas assez de points. On réessaie ?",
+        "retry": "Réessayer",
+        "next": "Continuer",
+        "enterFailed": "Impossible d'atteindre la piste de balles",
+        "throwFailed": "Impossible de lancer la balle"
+      },
+      "waitPartner": "Attendez votre partenaire",
       "finish": {
         "title": "Le pont est à vous",
         "time": "Temps : {{time}}",
@@ -571,7 +587,9 @@
         "resetGate": "Reset porte et pont",
         "resetGateFailed": "Impossible de réinitialiser la porte",
         "resetRopes": "Reset niveau cordes",
-        "resetRopesFailed": "Impossible de réinitialiser les cordes"
+        "resetRopesFailed": "Impossible de réinitialiser les cordes",
+        "resetBalls": "Reset niveau balles",
+        "resetBallsFailed": "Impossible de réinitialiser les balles"
       }
     },
     "tab": "Jeux",

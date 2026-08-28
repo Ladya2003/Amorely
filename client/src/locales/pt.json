@@ -526,6 +526,22 @@
         "enterFailed": "Não foi possível chegar às cordas",
         "jumpFailed": "Não foi possível saltar"
       },
+      "balls": {
+        "hint": "Uma pista com zonas. Lança com força e ângulo — quanto mais longe rolar, mais pontos.",
+        "start": "Começar",
+        "choose": "Apontar",
+        "throw": "Lançar",
+        "progress": "Bolas {{balls}}/{{each}} · {{myScore}} · Parceiro {{partnerBalls}}/{{each}} · {{partnerScore}} · Juntos {{pairScore}}/{{threshold}}",
+        "scored": "+{{score}}",
+        "miss": "Errou…",
+        "cleared": "Pontos suficientes! Podemos seguir.",
+        "failed": "Faltaram pontos. Tentar de novo?",
+        "retry": "Tentar de novo",
+        "next": "Continuar",
+        "enterFailed": "Não foi possível chegar às bolas",
+        "throwFailed": "Não foi possível lançar a bola"
+      },
+      "waitPartner": "Aguarde o parceiro",
       "finish": {
         "title": "A ponte é de vocês",
         "time": "Tempo: {{time}}",
@@ -571,7 +587,9 @@
         "resetGate": "Resetar portão e ponte",
         "resetGateFailed": "Não foi possível resetar o portão",
         "resetRopes": "Resetar nível das cordas",
-        "resetRopesFailed": "Não foi possível resetar as cordas"
+        "resetRopesFailed": "Não foi possível resetar as cordas",
+        "resetBalls": "Resetar nível das bolas",
+        "resetBallsFailed": "Não foi possível resetar as bolas"
       }
     },
     "tab": "Jogos",
