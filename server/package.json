@@ -37,7 +37,8 @@
     "generate:quiz-i18n": "ts-node scripts/generate-quiz-i18n.ts",
     "generate:geo-locales": "ts-node scripts/generate-geo-locales.ts",
     "reset:pet-test": "cross-env NODE_ENV=development ts-node src/scripts/reset-user-currency.ts",
-    "set:currency": "cross-env NODE_ENV=development ts-node src/scripts/set-user-currency.ts"
+    "set:currency": "cross-env NODE_ENV=development ts-node src/scripts/set-user-currency.ts",
+    "hash:password": "ts-node src/scripts/hash-password.ts"
   },
   "keywords": [],
   "author": "",

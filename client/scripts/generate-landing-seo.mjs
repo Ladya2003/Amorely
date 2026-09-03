@@ -19,6 +19,12 @@ const payloadsPath = path.join(__dirname, 'seo-locale-payloads.json');
 
 const LOCALES = ['en', 'ru', 'uk', 'by', 'de', 'es', 'fr', 'pt'];
 const SITE_ORIGIN = 'https://amorely.love';
+const SOCIAL_LINKS = {
+  instagram: 'https://www.instagram.com/amorely.love',
+  tiktok: 'https://www.tiktok.com/@amorely.love',
+  youtube: 'https://youtu.be/pnCo-TeEztY',
+};
+const SOCIAL_SAME_AS = [SOCIAL_LINKS.instagram, SOCIAL_LINKS.tiktok, SOCIAL_LINKS.youtube];
 const FEATURE_IDS = [
   'feed',
   'questions',
@@ -66,7 +72,13 @@ const loadLandingByLocale = () => {
   const byLocale = {};
   for (const lang of LOCALES) {
     const landing = readLocaleJson(lang).auth?.landing;
-    if (!landing?.faq?.items || !landing?.free || !landing?.closing || !landing?.reviews?.items) {
+    if (
+      !landing?.faq?.items ||
+      !landing?.free ||
+      !landing?.closing ||
+      !landing?.reviews?.items ||
+      !landing?.social
+    ) {
       throw new Error(`Missing auth.landing SEO keys in ${lang}.json`);
     }
     byLocale[lang] = landing;
@@ -167,6 +179,18 @@ ${reviewItems}
             <h2>${e(landing.faq.title)}</h2>
 ${faqItems}
           </section>
+
+          <section aria-label="${e(landing.social.ariaLabel)}">
+            <h2>${e(landing.social.title)}</h2>
+            <p>${e(landing.social.lead)}</p>
+            <nav>
+              <a href="${SOCIAL_LINKS.instagram}" rel="noopener noreferrer">Instagram</a>
+              ·
+              <a href="${SOCIAL_LINKS.tiktok}" rel="noopener noreferrer">TikTok</a>
+              ·
+              <a href="${SOCIAL_LINKS.youtube}" rel="noopener noreferrer">YouTube</a>
+            </nav>
+          </section>
         </div>`;
 };
 
@@ -189,6 +213,7 @@ const buildLocaleJsonLd = (lang, landing, byLocale, pageUrl = `${SITE_ORIGIN}/${
     logo: `${SITE_ORIGIN}/logo512.png`,
     description: landing.documentDescription,
     knowsLanguage: LOCALES,
+    sameAs: SOCIAL_SAME_AS,
   });
 
   scripts.push({

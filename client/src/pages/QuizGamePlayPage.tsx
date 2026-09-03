@@ -119,6 +119,15 @@ const QuizGamePlayPage: React.FC = () => {
   const expireSyncRequestedRef = useRef(false);
   const lobbySyncRequestedRef = useRef(false);
   const lobbyExpireSyncDoneRef = useRef(false);
+  const stateRef = useRef<QuizGameState | null>(null);
+  const pickFallbackTimerRef = useRef<number | null>(null);
+
+  const clearPickFallback = useCallback(() => {
+    if (pickFallbackTimerRef.current != null) {
+      window.clearTimeout(pickFallbackTimerRef.current);
+      pickFallbackTimerRef.current = null;
+    }
+  }, []);
 
   const applyState = useCallback((nextState: QuizGameState) => {
     if (!nextState.sessionActive) {
@@ -157,7 +166,12 @@ const QuizGamePlayPage: React.FC = () => {
       revealedCellKeysRef.current.add(question.cellKey);
     }
 
+    stateRef.current = nextState;
     setState(nextState);
+    if (question) {
+      clearPickFallback();
+      setSubmitting(false);
+    }
 
     if (!question) {
       setQuestionSecondsLeft(0);
@@ -175,7 +189,7 @@ const QuizGamePlayPage: React.FC = () => {
     } else {
       setSelectedOptionId(question.myOptionId);
     }
-  }, []);
+  }, [clearPickFallback]);
 
   const requestLobbySync = useCallback(() => {
     if (lobbySyncRequestedRef.current) {
@@ -215,9 +229,23 @@ const QuizGamePlayPage: React.FC = () => {
     }
   }, [applyState, t]);
 
+  const recoverQuizState = useCallback(async () => {
+    try {
+      const data = await fetchQuizGameState();
+      applyState(data.state);
+    } catch {
+      const socket = socketService.getSocket();
+      if (socket?.connected) {
+        socket.emit('quiz_game_sync');
+      }
+    }
+  }, [applyState]);
+
   useEffect(() => {
     loadState();
   }, [loadState]);
+
+  useEffect(() => () => clearPickFallback(), [clearPickFallback]);
 
   useEffect(() => {
     if (!user?._id) {
@@ -236,6 +264,17 @@ const QuizGamePlayPage: React.FC = () => {
         setBlockedReason(payload.message || t('games.common.partnerRequiredShort'));
         return;
       }
+      if (payload.code === 'QUESTION_ALREADY_ACTIVE') {
+        clearPickFallback();
+        void recoverQuizState().finally(() => {
+          if (!stateRef.current?.currentQuestion) {
+            setSubmitting(false);
+          }
+        });
+        return;
+      }
+      clearPickFallback();
+      setSubmitting(false);
       if (payload.message) {
         setToast({ open: true, message: payload.message, severity: 'error' });
       }
@@ -248,7 +287,7 @@ const QuizGamePlayPage: React.FC = () => {
       socket.off('quiz_game_state', handleState);
       socket.off('quiz_game_error', handleError);
     };
-  }, [user?._id, applyState, t]);
+  }, [user?._id, applyState, recoverQuizState, clearPickFallback, t]);
 
   useEffect(() => {
     if (!state?.inLobby) {
@@ -347,23 +386,47 @@ const QuizGamePlayPage: React.FC = () => {
   };
 
   const handlePickCell = async (categoryId: string, points: number) => {
+    if (submitting || stateRef.current?.currentQuestion) {
+      return;
+    }
+
     setSubmitting(true);
     try {
       const socket = socketService.getSocket();
       if (socket?.connected) {
         socket.emit('quiz_game_pick', { categoryId, points });
-      } else {
-        const result = await postQuizPick(categoryId, points);
-        applyState(result.state);
+        clearPickFallback();
+        pickFallbackTimerRef.current = window.setTimeout(() => {
+          pickFallbackTimerRef.current = null;
+          if (stateRef.current?.currentQuestion) {
+            setSubmitting(false);
+            return;
+          }
+          void recoverQuizState().finally(() => {
+            if (!stateRef.current?.currentQuestion) {
+              setSubmitting(false);
+            }
+          });
+        }, 800);
+        return;
       }
+
+      const result = await postQuizPick(categoryId, points);
+      applyState(result.state);
     } catch (error: any) {
+      if (error?.response?.data?.code === 'QUESTION_ALREADY_ACTIVE') {
+        await recoverQuizState();
+        return;
+      }
       setToast({
         open: true,
         message: error?.response?.data?.error || t('games.common.errors.pickFailed'),
         severity: 'error',
       });
     } finally {
-      setSubmitting(false);
+      if (!socketService.getSocket()?.connected) {
+        setSubmitting(false);
+      }
     }
   };
 

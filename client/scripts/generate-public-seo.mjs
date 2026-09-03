@@ -27,6 +27,11 @@ const SITE_ORIGIN = 'https://amorely.love';
 // Keep in sync with client/src/legal/publicSite.ts (cannot import it from Node ESM).
 const SUPPORT_EMAIL = 'amorely013@gmail.com';
 const LEGAL_UPDATED_AT = '2026-08-24';
+const SOCIAL_SAME_AS = [
+  'https://www.instagram.com/amorely.love',
+  'https://www.tiktok.com/@amorely.love',
+  'https://youtu.be/pnCo-TeEztY',
+];
 const LANDING_LOCALES = ['en', 'ru', 'uk', 'by', 'de', 'es', 'fr', 'pt'];
 const DEFAULT_LANG = 'ru';
 const OG_LOCALE = 'ru_RU';
@@ -44,6 +49,7 @@ const organization = {
   url: `${SITE_ORIGIN}/`,
   logo: `${SITE_ORIGIN}/logo512.png`,
   email: SUPPORT_EMAIL,
+  sameAs: SOCIAL_SAME_AS,
 };
 
 const escapeHtml = (value) =>
@@ -65,6 +71,16 @@ const pageUrl = (pathname) => `${SITE_ORIGIN}${pathname}`;
 
 const landingOgImageUrl = (fileName) =>
   `${SITE_ORIGIN}/landing/${encodeURIComponent(fileName)}`;
+
+const blogOgImageUrl = (imageFile) => {
+  if (/^https?:\/\//i.test(imageFile)) {
+    return imageFile;
+  }
+  if (String(imageFile).startsWith('/')) {
+    return `${SITE_ORIGIN}${imageFile}`;
+  }
+  return landingOgImageUrl(imageFile);
+};
 
 const indentJson = (value, spaces = 6) => {
   const pad = ' '.repeat(spaces);
@@ -232,7 +248,7 @@ ${articles}
 
 const renderBlogPostBlock = (lang, post) => {
   const e = escapeHtml;
-  const imageUrl = landingOgImageUrl(post.imageFile);
+  const imageUrl = blogOgImageUrl(post.imageFile);
   const paragraphs = post.paragraphs[lang]
     .map((paragraph) => `          <p>${e(paragraph)}</p>`)
     .join('\n');
@@ -487,7 +503,7 @@ pages.push({
 
 for (const post of blogPostsNewestFirst) {
   const pathname = `/blog/${post.slug}`;
-  const imageUrl = landingOgImageUrl(post.imageFile);
+  const imageUrl = blogOgImageUrl(post.imageFile);
   pages.push({
     id: `blog/${post.slug}`,
     pathname,

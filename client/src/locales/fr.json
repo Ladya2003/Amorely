@@ -298,7 +298,7 @@
     "geo": {
       "name": "Devine le lieu",
       "description": "Devinez où se trouve le lieu sur la carte et rivalisez avec d'autres couples.",
-      "mapAttribution": "Carte : © OpenStreetMap contributors, © CARTO",
+      "mapAttribution": "Carte : © Esri, © OpenStreetMap contributors",
       "photosAttribution": "Photos : Wikimedia Commons (licences Creative Commons)",
       "rules": [
         "Ce jeu est réservé aux couples avec partenaire lié.",
@@ -1695,6 +1695,11 @@
             "answer": "Non. Amorely fonctionne dans le navigateur sur mobile et ordinateur, et vous pouvez l'ajouter à l'écran d'accueil en PWA."
           }
         }
+      },
+      "social": {
+        "ariaLabel": "Réseaux sociaux d’Amorely",
+        "title": "Suivez Amorely",
+        "lead": "Actualités, coulisses et comment nous utilisons Amorely à deux."
       }
     },
     "or": "ou",
@@ -2248,7 +2253,11 @@
       "support": "Assistance",
       "blog": "Blog",
       "contactAria": "E-mail de contact",
-      "contactLead": "Pour toute question, écrivez à"
+      "contactLead": "Pour toute question, écrivez à",
+      "socialAria": "Réseaux sociaux d’Amorely",
+      "instagramAria": "Amorely sur Instagram",
+      "tiktokAria": "Amorely sur TikTok",
+      "youtubeAria": "Amorely sur YouTube"
     },
     "pages": {
       "terms": {
@@ -2293,8 +2302,8 @@
     },
     "blog": {
       "documentTitle": "Blog — Amorely",
-      "documentDescription": "Notes sur Amorely : un espace privé pour les couples, un chat chiffré et un calendrier partagé.",
-      "keywords": "blog Amorely, application couple, chat chiffré, calendrier",
+      "documentDescription": "Notes sur Amorely : un espace privé pour les couples, un chat chiffré, les questions du jour, un animal partagé, des idées de rendez-vous, des jeux et un calendrier photo.",
+      "keywords": "blog Amorely, application couple, chat chiffré, calendrier, idées de rendez-vous, questions du jour, jeux pour couples",
       "title": "Blog",
       "lead": "Idées pour les couples, fonctionnement de l’app et ce que nous préparons.",
       "search": "Rechercher des articles",

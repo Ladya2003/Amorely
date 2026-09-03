@@ -298,7 +298,7 @@
     "geo": {
       "name": "Угадай лакацыю",
       "description": "Угадайце, дзе на карце знаходзіцца загаданае месца, і спаборнічайце з іншымі парамі.",
-      "mapAttribution": "Карта: © OpenStreetMap contributors, © CARTO",
+      "mapAttribution": "Карта: © Esri, © OpenStreetMap contributors",
       "photosAttribution": "Фатаграфіі: Wikimedia Commons (ліцэнзіі Creative Commons)",
       "rules": [
         "Гульня даступная толькі парам з прывязаным партнёрам.",
@@ -1683,6 +1683,11 @@
             "answer": "Не. Amorely працуе ў браўзеры на тэлефоне і камп'ютары, а таксама яго можна дадаць на хатні экран як PWA."
           }
         }
+      },
+      "social": {
+        "ariaLabel": "Сацсеткі Amorely",
+        "title": "Мы ў сацсетках",
+        "lead": "Навіны прадукту, закуліссе і як мы ўдваіх карыстаемся Amorely."
       }
     },
     "or": "або",
@@ -2236,7 +2241,11 @@
       "support": "Падтрымка",
       "blog": "Блог",
       "contactAria": "Пошта для сувязі",
-      "contactLead": "Па любым пытанні можаце пісаць на"
+      "contactLead": "Па любым пытанні можаце пісаць на",
+      "socialAria": "Сацсеткі Amorely",
+      "instagramAria": "Amorely у Instagram",
+      "tiktokAria": "Amorely у TikTok",
+      "youtubeAria": "Amorely на YouTube"
     },
     "pages": {
       "terms": {
@@ -2281,8 +2290,8 @@
     },
     "blog": {
       "documentTitle": "Блог — Amorely",
-      "documentDescription": "Нататкі пра Amorely: асабістая прастора для пар, зашыфраваны чат і агульны каляндар.",
-      "keywords": "блог Amorely, дадатак для пар, зашыфраваны чат, каляндар",
+      "documentDescription": "Нататкі пра Amorely: асабістая прастора для пар, зашыфраваны чат, пытанні дня, агульны гадаванец, ідэі спатканняў, гульні і фотакаляндар.",
+      "keywords": "блог Amorely, дадатак для пар, зашыфраваны чат, каляндар, ідэі спатканняў, пытанні дня, гульні для пар",
       "title": "Блог",
       "lead": "Ідэі для пар, як уладкаваны сэрвіс і што мы робім далей.",
       "search": "Пошук па артыкулах",

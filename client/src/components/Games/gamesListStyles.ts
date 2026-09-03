@@ -17,6 +17,10 @@ export const getGamesListRootSx = () => ({
   display: 'flex',
   flexDirection: 'column' as const,
   bgcolor: 'transparent',
+  flex: 1,
+  minHeight: 0,
+  height: '100%',
+  overflow: 'hidden',
 });
 
 export const getGamesListSearchWrapSx = () => ({
@@ -29,6 +33,10 @@ export const getGamesListSearchWrapSx = () => ({
 export const getGamesListScrollSx = () => ({
   px: 2,
   py: 2,
+  flex: 1,
+  minHeight: 0,
+  overflowY: 'auto' as const,
+  WebkitOverflowScrolling: 'touch',
 });
 
 export const getGamesListStackSx = () => ({

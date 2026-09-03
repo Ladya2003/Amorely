@@ -298,7 +298,7 @@
     "geo": {
       "name": "Adivina la ubicación",
       "description": "Adivina dónde está el lugar en el mapa y compite con otras parejas.",
-      "mapAttribution": "Mapa: © OpenStreetMap contributors, © CARTO",
+      "mapAttribution": "Mapa: © Esri, © OpenStreetMap contributors",
       "photosAttribution": "Fotos: Wikimedia Commons (licencias Creative Commons)",
       "rules": [
         "Este juego es solo para parejas con pareja vinculada.",
@@ -1695,6 +1695,11 @@
             "answer": "No. Amorely funciona en el navegador en móvil y escritorio, y puedes añadirlo a la pantalla de inicio como PWA."
           }
         }
+      },
+      "social": {
+        "ariaLabel": "Redes sociales de Amorely",
+        "title": "Seguid a Amorely",
+        "lead": "Novedades, bastidores y cómo usamos Amorely en pareja."
       }
     },
     "or": "o",
@@ -2248,7 +2253,11 @@
       "support": "Soporte",
       "blog": "Blog",
       "contactAria": "Correo de contacto",
-      "contactLead": "Por cualquier consulta, escribe a"
+      "contactLead": "Por cualquier consulta, escribe a",
+      "socialAria": "Redes sociales de Amorely",
+      "instagramAria": "Amorely en Instagram",
+      "tiktokAria": "Amorely en TikTok",
+      "youtubeAria": "Amorely en YouTube"
     },
     "pages": {
       "terms": {
@@ -2293,8 +2302,8 @@
     },
     "blog": {
       "documentTitle": "Blog — Amorely",
-      "documentDescription": "Notas sobre Amorely: un espacio privado para parejas, chat cifrado y un calendario compartido.",
-      "keywords": "blog Amorely, app para parejas, chat cifrado, calendario",
+      "documentDescription": "Notas sobre Amorely: un espacio privado para parejas, chat cifrado, preguntas del día, mascota compartida, ideas de citas, juegos y un calendario de fotos.",
+      "keywords": "blog Amorely, app para parejas, chat cifrado, calendario, ideas de citas, preguntas del día, juegos para parejas",
       "title": "Blog",
       "lead": "Ideas para parejas, cómo funciona la app y en qué estamos trabajando.",
       "search": "Buscar artículos",

@@ -298,7 +298,7 @@
     "geo": {
       "name": "Guess the Location",
       "description": "Guess where the place is on the map and compete with other couples.",
-      "mapAttribution": "Map: © OpenStreetMap contributors, © CARTO",
+      "mapAttribution": "Map: © Esri, © OpenStreetMap contributors",
       "photosAttribution": "Photos: Wikimedia Commons (Creative Commons licenses)",
       "rules": [
         "This game is only for couples with a linked partner.",
@@ -1693,6 +1693,11 @@
             "answer": "No install required. Amorely works in the browser on phone and desktop, and you can add it to your home screen as a PWA."
           }
         }
+      },
+      "social": {
+        "ariaLabel": "Amorely on social media",
+        "title": "Follow Amorely",
+        "lead": "News, behind the scenes, and how we use Amorely together."
       }
     },
     "or": "or",
@@ -2246,7 +2251,11 @@
       "support": "Support",
       "blog": "Blog",
       "contactAria": "Contact email",
-      "contactLead": "For any question, write to"
+      "contactLead": "For any question, write to",
+      "socialAria": "Amorely social links",
+      "instagramAria": "Amorely on Instagram",
+      "tiktokAria": "Amorely on TikTok",
+      "youtubeAria": "Amorely on YouTube"
     },
     "pages": {
       "terms": {
@@ -2291,8 +2300,8 @@
     },
     "blog": {
       "documentTitle": "Blog — Amorely",
-      "documentDescription": "Notes about Amorely: a private space for couples, encrypted chat, and a shared calendar.",
-      "keywords": "Amorely blog, couples app, encrypted chat, shared calendar, dating ideas",
+      "documentDescription": "Notes about Amorely: a private space for couples, encrypted chat, daily questions, a shared pet, date ideas, couple games, and a photo calendar.",
+      "keywords": "Amorely blog, couples app, encrypted chat, shared calendar, dating ideas, questions of the day, couple games, virtual pet",
       "title": "Blog",
       "lead": "Ideas for couples, how the app works, and what we are building next.",
       "search": "Search posts",

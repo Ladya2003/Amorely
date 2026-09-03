@@ -2,9 +2,26 @@ import React from 'react';
 import { Box, Link, Typography, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
-import { PUBLIC_PATHS, SUPPORT_EMAIL } from '../../legal/publicSite';
+import { PUBLIC_PATHS, SOCIAL_LINKS, SUPPORT_EMAIL } from '../../legal/publicSite';
 import { getAuthLandingFooterMetaSx, getAuthLandingFooterSx } from '../Auth/authPageStyles';
-import { getFooterContactSx, getFooterLinkSx, getFooterLinksSx } from './legalPageStyles';
+import { InstagramIcon, TiktokIcon, YoutubeIcon, type AppIconComponent } from '../UI/icons';
+import {
+  getFooterContactSx,
+  getFooterLinkSx,
+  getFooterLinksSx,
+  getFooterSocialLinkSx,
+  getFooterSocialsSx,
+} from './legalPageStyles';
+
+const SOCIAL_ITEMS: Array<{
+  id: 'instagram' | 'tiktok' | 'youtube';
+  href: string;
+  Icon: AppIconComponent;
+}> = [
+  { id: 'instagram', href: SOCIAL_LINKS.instagram, Icon: InstagramIcon },
+  { id: 'tiktok', href: SOCIAL_LINKS.tiktok, Icon: TiktokIcon },
+  { id: 'youtube', href: SOCIAL_LINKS.youtube, Icon: YoutubeIcon },
+];
 
 const FOOTER_LINKS = [
   { to: PUBLIC_PATHS.terms, key: 'legal.footer.terms' },
@@ -21,6 +38,20 @@ const SiteFooter: React.FC = () => {
 
   return (
     <Box component="footer" sx={getAuthLandingFooterSx()}>
+      <Box component="nav" aria-label={t('legal.footer.socialAria')} sx={getFooterSocialsSx()}>
+        {SOCIAL_ITEMS.map(({ id, href, Icon }) => (
+          <Link
+            key={id}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t(`legal.footer.${id}Aria`)}
+            sx={getFooterSocialLinkSx(theme)}
+          >
+            <Icon fontSize="small" aria-hidden />
+          </Link>
+        ))}
+      </Box>
       <Box sx={getFooterLinksSx()}>
         {FOOTER_LINKS.map((item) => (
           <Link

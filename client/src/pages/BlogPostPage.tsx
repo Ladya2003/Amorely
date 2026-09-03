@@ -10,13 +10,10 @@ import { resolveLegalLocale } from '../legal/legalLocale';
 import {
   buildBlogPostingJsonLd,
   buildBreadcrumbJsonLd,
-  getLandingOgImageUrl,
+  getBlogOgImageUrl,
 } from '../legal/publicJsonLd';
 import { PUBLIC_PATHS, getBlogPostPath, getPublicHomePath } from '../legal/publicSite';
-import { getPublicAssetPath } from '../utils/publicAssetPath';
-
-const getLandingImageSrc = (fileName: string): string =>
-  getPublicAssetPath(`landing/${encodeURIComponent(fileName)}`);
+import { getBlogImageSrc } from '../utils/publicAssetPath';
 
 const BlogPostPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
@@ -26,7 +23,7 @@ const BlogPostPage: React.FC = () => {
   const locale = resolveLegalLocale(i18n.language);
   const post = getBlogPostBySlug(slug);
   const seoPath = post ? getBlogPostPath(post.slug) : PUBLIC_PATHS.blog;
-  const ogImageUrl = post ? getLandingOgImageUrl(post.imageFile) : undefined;
+  const ogImageUrl = post ? getBlogOgImageUrl(post.imageFile) : undefined;
   const jsonLd = useMemo(() => {
     if (!post || !ogImageUrl) {
       return [];
@@ -72,7 +69,7 @@ const BlogPostPage: React.FC = () => {
         </Typography>
         <Box
           component="img"
-          src={getLandingImageSrc(post.imageFile)}
+          src={getBlogImageSrc(post.imageFile)}
           alt={post.title[locale]}
           sx={getBlogHeroImageSx(theme)}
         />

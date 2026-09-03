@@ -694,7 +694,6 @@ export const attachGameSocketHandlers = (
           Number(payload?.points)
         );
 
-        await updateQuizGameBadges();
         await emitQuizStateToPartners(state, getQuizGameParticipantIds(context));
       } catch (error) {
         if (error instanceof QuizGameError) {

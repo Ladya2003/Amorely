@@ -64,7 +64,7 @@ const GeoGuessMap: React.FC<GeoGuessMapProps> = ({
       worldCopyJump
       attributionControl={false}
     >
-      <TileLayer attribution="" url={mapTiles.url} subdomains="abcd" />
+      <TileLayer attribution="" url={mapTiles.url} />
       <MapClickHandler onGuessChange={onGuessChange} interactive={interactive} />
       {allGuessPoints.map((point) => (
         <CircleMarker

@@ -15,12 +15,9 @@ import { filterBlogPosts, type BlogCategoryId } from '../legal/blogPosts';
 import { resolveLegalLocale } from '../legal/legalLocale';
 import { buildBreadcrumbJsonLd, buildWebPageJsonLd } from '../legal/publicJsonLd';
 import { PUBLIC_PATHS, getBlogPostPath, getPublicHomePath } from '../legal/publicSite';
-import { getPublicAssetPath } from '../utils/publicAssetPath';
+import { getBlogImageSrc } from '../utils/publicAssetPath';
 
 const CATEGORIES: Array<BlogCategoryId | 'all'> = ['all', 'product', 'tips', 'updates'];
-
-const getLandingImageSrc = (fileName: string): string =>
-  getPublicAssetPath(`landing/${encodeURIComponent(fileName)}`);
 
 const BlogPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -109,7 +106,7 @@ const BlogPage: React.FC = () => {
             >
               <Box
                 component="img"
-                src={getLandingImageSrc(post.imageFile)}
+                src={getBlogImageSrc(post.imageFile)}
                 alt={post.title[locale]}
                 sx={getBlogCardImageSx()}
               />

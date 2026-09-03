@@ -1,5 +1,5 @@
 import { SITE_ORIGIN } from '../localization/landingLocale';
-import { SUPPORT_EMAIL } from './publicSite';
+import { SOCIAL_SAME_AS, SUPPORT_EMAIL } from './publicSite';
 import type { LegalDocument } from './legalLocale';
 import type { BlogPost } from './blogPosts';
 
@@ -14,6 +14,7 @@ const organization = {
   url: `${SITE_ORIGIN}/`,
   logo: `${SITE_ORIGIN}/logo512.png`,
   email: SUPPORT_EMAIL,
+  sameAs: [...SOCIAL_SAME_AS],
 };
 
 export const buildWebPageJsonLd = (input: {
@@ -91,3 +92,13 @@ export const buildBlogPostingJsonLd = (input: {
 
 export const getLandingOgImageUrl = (fileName: string): string =>
   `${SITE_ORIGIN}/landing/${encodeURIComponent(fileName)}`;
+
+export const getBlogOgImageUrl = (imageFile: string): string => {
+  if (/^https?:\/\//i.test(imageFile)) {
+    return imageFile;
+  }
+  if (imageFile.startsWith('/')) {
+    return `${SITE_ORIGIN}${imageFile}`;
+  }
+  return getLandingOgImageUrl(imageFile);
+};

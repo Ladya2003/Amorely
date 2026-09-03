@@ -58,7 +58,7 @@ export const GAME_CATALOG: GameCatalogEntry[] = [
       'Каждый день — до 5 мест для угадывания; на следующий день лимит обновляется.',
       'Когда все 300 локаций пройдены, пул начинается сначала.',
       'Рейтинг строится по суммарному счёту пары за все раунды.',
-      'Карта: © OpenStreetMap contributors, © CARTO',
+      'Карта: © Esri, © OpenStreetMap contributors',
       'Фотографии: Wikimedia Commons (лицензии Creative Commons)',
     ],
   },

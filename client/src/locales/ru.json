@@ -298,7 +298,7 @@
     "geo": {
       "name": "Угадай локацию",
       "description": "Угадайте, где на карте находится загаданное место, и соревнуйтесь с другими парами.",
-      "mapAttribution": "Карта: © OpenStreetMap contributors, © CARTO",
+      "mapAttribution": "Карта: © Esri, © OpenStreetMap contributors",
       "photosAttribution": "Фотографии: Wikimedia Commons (лицензии Creative Commons)",
       "rules": [
         "Игра доступна только парам с привязанным партнёром.",
@@ -1697,6 +1697,11 @@
             "answer": "Нет. Amorely работает в браузере на телефоне и компьютере, а также его можно добавить на домашний экран как PWA."
           }
         }
+      },
+      "social": {
+        "ariaLabel": "Соцсети Amorely",
+        "title": "Мы в соцсетях",
+        "lead": "Новости продукта, закулисье и как мы вдвоём пользуемся Amorely."
       }
     },
     "or": "или",
@@ -2250,7 +2255,11 @@
       "support": "Поддержка",
       "blog": "Блог",
       "contactAria": "Почта для связи",
-      "contactLead": "По любому вопросу можете писать на"
+      "contactLead": "По любому вопросу можете писать на",
+      "socialAria": "Соцсети Amorely",
+      "instagramAria": "Amorely в Instagram",
+      "tiktokAria": "Amorely в TikTok",
+      "youtubeAria": "Amorely на YouTube"
     },
     "pages": {
       "terms": {
@@ -2295,8 +2304,8 @@
     },
     "blog": {
       "documentTitle": "Блог — Amorely",
-      "documentDescription": "Заметки об Amorely: личное пространство для пар, зашифрованный чат и общий календарь.",
-      "keywords": "блог Amorely, приложение для пар, шифрованный чат, общий календарь, идеи свиданий",
+      "documentDescription": "Заметки об Amorely: личное пространство для пар, зашифрованный чат, вопросы дня, общий питомец, идеи свиданий, игры и фотокалендарь.",
+      "keywords": "блог Amorely, приложение для пар, шифрованный чат, общий календарь, идеи свиданий, вопросы дня, игры для пар, виртуальный питомец",
       "title": "Блог",
       "lead": "Идеи для пар, как устроен сервис и что мы делаем дальше.",
       "search": "Поиск по статьям",

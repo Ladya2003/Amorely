@@ -1,3 +1,4 @@
+import { SOCIAL_LINKS } from '../legal/publicSite';
 import { AppLocale, SUPPORTED_LOCALES } from './locale';
 
 export interface NewsLocaleContent {
@@ -42,9 +43,9 @@ export const normalizeNewsTranslations = (
   return empty;
 };
 
-const INSTAGRAM_URL = 'https://www.instagram.com/amorely.love';
-const TIKTOK_URL = 'https://www.tiktok.com/@amorely.love';
-const YOUTUBE_URL = 'https://youtu.be/pnCo-TeEztY';
+const INSTAGRAM_URL = SOCIAL_LINKS.instagram;
+const TIKTOK_URL = SOCIAL_LINKS.tiktok;
+const YOUTUBE_URL = SOCIAL_LINKS.youtube;
 
 export const SOCIAL_PRESENCE_NEWS_PRESET: {
   category: 'announcement';

@@ -456,6 +456,56 @@ export const getAuthLandingFaqAnswerSx = () => ({
   pb: 1.5,
 });
 
+export const getAuthLandingSocialSx = () => ({
+  maxWidth: 640,
+  mx: 'auto',
+  mt: { xs: 8, sm: 10 },
+  mb: { xs: 1, sm: 2 },
+  textAlign: 'center' as const,
+});
+
+export const getAuthLandingSocialTitleSx = () => ({
+  fontWeight: 700,
+  fontSize: { xs: '1.35rem', sm: '1.65rem' },
+  letterSpacing: '-0.03em',
+  lineHeight: 1.2,
+  mb: 1,
+});
+
+export const getAuthLandingSocialLeadSx = () => ({
+  fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+  color: 'text.secondary',
+  lineHeight: 1.55,
+  mb: { xs: 2, sm: 2.5 },
+});
+
+export const getAuthLandingSocialLinksSx = () => ({
+  display: 'flex',
+  justifyContent: 'center',
+  flexWrap: 'wrap' as const,
+  gap: 1.25,
+});
+
+export const getAuthLandingSocialLinkSx = (theme: Theme) => ({
+  width: 48,
+  height: 48,
+  borderRadius: '50%',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: theme.palette.primary.main,
+  border: getSurfaceBorder(theme, 'soft'),
+  transition: theme.transitions.create(['background-color', 'transform', 'color'], {
+    duration: 240,
+    easing: theme.transitions.easing.easeOut,
+  }),
+  '&:hover': {
+    color: theme.palette.primary.dark,
+    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.16),
+    transform: 'translateY(-2px)',
+  },
+});
+
 export const getAuthScrollTopFabSx = (theme: Theme) => ({
   position: 'fixed' as const,
   right: { xs: 16, sm: 24 },

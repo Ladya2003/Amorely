@@ -298,7 +298,7 @@
     "geo": {
       "name": "Ort erraten",
       "description": "Erratet den Ort auf der Karte und messt euch mit anderen Paaren.",
-      "mapAttribution": "Karte: © OpenStreetMap contributors, © CARTO",
+      "mapAttribution": "Karte: © Esri, © OpenStreetMap contributors",
       "photosAttribution": "Fotos: Wikimedia Commons (Creative-Commons-Lizenzen)",
       "rules": [
         "Dieses Spiel ist nur für Paare mit verknüpftem Partner.",
@@ -1695,6 +1695,11 @@
             "answer": "Nein. Amorely läuft im Browser auf Handy und Desktop und lässt sich als PWA zum Startbildschirm hinzufügen."
           }
         }
+      },
+      "social": {
+        "ariaLabel": "Amorely in sozialen Netzwerken",
+        "title": "Folgt Amorely",
+        "lead": "Produktnews, Hintergründe und wie wir Amorely zu zweit nutzen."
       }
     },
     "or": "oder",
@@ -2248,7 +2253,11 @@
       "support": "Support",
       "blog": "Blog",
       "contactAria": "Kontakt-E-Mail",
-      "contactLead": "Bei jeder Frage schreibt an"
+      "contactLead": "Bei jeder Frage schreibt an",
+      "socialAria": "Amorely in sozialen Netzwerken",
+      "instagramAria": "Amorely auf Instagram",
+      "tiktokAria": "Amorely auf TikTok",
+      "youtubeAria": "Amorely auf YouTube"
     },
     "pages": {
       "terms": {
@@ -2293,8 +2302,8 @@
     },
     "blog": {
       "documentTitle": "Blog — Amorely",
-      "documentDescription": "Notizen zu Amorely: ein privater Raum für Paare, verschlüsselter Chat und ein gemeinsamer Kalender.",
-      "keywords": "Amorely Blog, App für Paare, verschlüsselter Chat, Kalender",
+      "documentDescription": "Notizen zu Amorely: ein privater Raum für Paare, verschlüsselter Chat, Tagesfragen, ein gemeinsames Haustier, Date-Ideen, Spiele und ein Fotokalender.",
+      "keywords": "Amorely Blog, App für Paare, verschlüsselter Chat, Kalender, Date-Ideen, Tagesfragen, Paarspiele",
       "title": "Blog",
       "lead": "Ideen für Paare, wie die App funktioniert und woran wir als Nächstes arbeiten.",
       "search": "Beiträge suchen",

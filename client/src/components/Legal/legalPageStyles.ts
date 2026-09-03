@@ -88,6 +88,32 @@ export const getFooterLinksSx = () => ({
   mb: 1.5,
 });
 
+export const getFooterSocialsSx = () => ({
+  display: 'flex',
+  justifyContent: 'center',
+  flexWrap: 'wrap' as const,
+  gap: 1,
+  mb: 1.75,
+});
+
+export const getFooterSocialLinkSx = (theme: Theme) => ({
+  width: 40,
+  height: 40,
+  borderRadius: '50%',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'text.secondary',
+  transition: theme.transitions.create(['color', 'background-color'], {
+    duration: 240,
+    easing: theme.transitions.easing.easeOut,
+  }),
+  '&:hover': {
+    color: theme.palette.primary.main,
+    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.16),
+  },
+});
+
 export const getFooterLinkSx = (theme: Theme) => ({
   fontSize: '0.8125rem',
   fontWeight: 600,

@@ -298,7 +298,7 @@
     "geo": {
       "name": "Adivinhe o local",
       "description": "Adivinhe onde o lugar está no mapa e compita com outros casais.",
-      "mapAttribution": "Mapa: © OpenStreetMap contributors, © CARTO",
+      "mapAttribution": "Mapa: © Esri, © OpenStreetMap contributors",
       "photosAttribution": "Fotos: Wikimedia Commons (licenças Creative Commons)",
       "rules": [
         "Este jogo é apenas para casais com parceiro vinculado.",
@@ -1695,6 +1695,11 @@
             "answer": "Não. O Amorely funciona no browser no telemóvel e no computador, e podem adicioná-lo ao ecrã inicial como PWA."
           }
         }
+      },
+      "social": {
+        "ariaLabel": "Redes sociais do Amorely",
+        "title": "Sigam o Amorely",
+        "lead": "Novidades, bastidores e como usamos o Amorely a dois."
       }
     },
     "or": "ou",
@@ -2248,7 +2253,11 @@
       "support": "Suporte",
       "blog": "Blog",
       "contactAria": "Email de contacto",
-      "contactLead": "Para qualquer questão, escreva para"
+      "contactLead": "Para qualquer questão, escreva para",
+      "socialAria": "Redes sociais do Amorely",
+      "instagramAria": "Amorely no Instagram",
+      "tiktokAria": "Amorely no TikTok",
+      "youtubeAria": "Amorely no YouTube"
     },
     "pages": {
       "terms": {
@@ -2293,8 +2302,8 @@
     },
     "blog": {
       "documentTitle": "Blog — Amorely",
-      "documentDescription": "Notas sobre a Amorely: um espaço privado para casais, chat encriptado e um calendário partilhado.",
-      "keywords": "blog Amorely, app para casais, chat encriptado, calendário",
+      "documentDescription": "Notas sobre a Amorely: um espaço privado para casais, chat encriptado, perguntas do dia, animal partilhado, ideias de encontros, jogos e um calendário de fotos.",
+      "keywords": "blog Amorely, app para casais, chat encriptado, calendário, ideias de encontros, perguntas do dia, jogos para casais",
       "title": "Blog",
       "lead": "Ideias para casais, como a app funciona e o que estamos a construir.",
       "search": "Pesquisar artigos",

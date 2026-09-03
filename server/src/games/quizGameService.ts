@@ -742,7 +742,7 @@ export const pickQuizQuestion = async (
   }
 
   if (state.currentQuestion) {
-    throw new QuizGameError('QUESTION_ALREADY_ACTIVE', 'Уже открыт другой вопрос');
+    return state;
   }
 
   if (!state.pickerUserId || state.pickerUserId.toString() !== userId) {

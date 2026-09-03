@@ -4,6 +4,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import RevealOnScroll from './RevealOnScroll';
 import AuthLandingFaq from './AuthLandingFaq';
 import AuthLandingReviews from './AuthLandingReviews';
+import AuthLandingSocial from './AuthLandingSocial';
 import {
   getAuthLandingClosingLeadSx,
   getAuthLandingClosingSx,
@@ -66,6 +67,8 @@ const AuthLandingClosing: React.FC = () => {
       <AuthLandingReviews />
 
       <AuthLandingFaq />
+
+      <AuthLandingSocial />
 
       <RevealOnScroll delayMs={80}>
         <SiteFooter />

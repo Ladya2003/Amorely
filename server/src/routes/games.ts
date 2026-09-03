@@ -663,8 +663,6 @@ router.post('/quiz/pick', async (req: any, res: Response) => {
     const context = await resolveQuizGameContext(userId);
     const state = await pickQuizQuestion(userId, context, String(categoryId), Number(points));
 
-    await updateQuizGameBadges();
-
     res.json({
       state: formatQuizGameState(state, userId, await getUserLocale(userId)),
       participantUserIds: getQuizGameParticipantIds(context),

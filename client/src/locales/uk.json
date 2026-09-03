@@ -298,7 +298,7 @@
     "geo": {
       "name": "Вгадай локацію",
       "description": "Вгадайте, де на карті знаходиться загадане місце, і змагайтеся з іншими парами.",
-      "mapAttribution": "Карта: © OpenStreetMap contributors, © CARTO",
+      "mapAttribution": "Карта: © Esri, © OpenStreetMap contributors",
       "photosAttribution": "Фотографії: Wikimedia Commons (ліцензії Creative Commons)",
       "rules": [
         "Гра доступна лише парам із прив'язаним партнером.",
@@ -1697,6 +1697,11 @@
             "answer": "Ні. Amorely працює в браузері на телефоні й комп’ютері, а також його можна додати на домашній екран як PWA."
           }
         }
+      },
+      "social": {
+        "ariaLabel": "Соцмережі Amorely",
+        "title": "Ми в соцмережах",
+        "lead": "Новини продукту, закулісся і як ми вдвох користуємося Amorely."
       }
     },
     "or": "або",
@@ -2250,7 +2255,11 @@
       "support": "Підтримка",
       "blog": "Блог",
       "contactAria": "Пошта для зв’язку",
-      "contactLead": "З будь-якого питання можете писати на"
+      "contactLead": "З будь-якого питання можете писати на",
+      "socialAria": "Соцмережі Amorely",
+      "instagramAria": "Amorely в Instagram",
+      "tiktokAria": "Amorely у TikTok",
+      "youtubeAria": "Amorely на YouTube"
     },
     "pages": {
       "terms": {
@@ -2295,8 +2304,8 @@
     },
     "blog": {
       "documentTitle": "Блог — Amorely",
-      "documentDescription": "Нотатки про Amorely: особистий простір для пар, зашифрований чат і спільний календар.",
-      "keywords": "блог Amorely, застосунок для пар, зашифрований чат, календар",
+      "documentDescription": "Нотатки про Amorely: особистий простір для пар, зашифрований чат, питання дня, спільний улюбленець, ідеї побачень, ігри та фотокалендар.",
+      "keywords": "блог Amorely, застосунок для пар, зашифрований чат, календар, ідеї побачень, питання дня, ігри для пар",
       "title": "Блог",
       "lead": "Ідеї для пар, як влаштований сервіс і що ми робимо далі.",
       "search": "Пошук за статтями",

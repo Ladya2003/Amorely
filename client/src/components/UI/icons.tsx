@@ -12,7 +12,10 @@ import {
   IconBell,
   IconBellRinging,
   IconBolt,
+  IconBrandInstagram,
   IconBrandLine,
+  IconBrandTiktok,
+  IconBrandYoutube,
   IconBrush,
   IconBucketDroplet,
   IconBuildingStore,
@@ -319,6 +322,9 @@ export const AllInclusiveIcon = createTablerIcon(IconInfinity);
 export const AddPhotoAlternateIcon = createTablerIcon(IconPhotoPlus);
 export const NotificationsActiveOutlinedIcon = createTablerIcon(IconBellRinging);
 export const BoltIcon = createTablerIcon(IconBolt);
+export const InstagramIcon = createTablerIcon(IconBrandInstagram);
+export const TiktokIcon = createTablerIcon(IconBrandTiktok);
+export const YoutubeIcon = createTablerIcon(IconBrandYoutube);
 
 export const AppHomeIcon = iconHome;
 export const AppHomeFilledIcon = iconHome;
