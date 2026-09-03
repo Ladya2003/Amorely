@@ -20,6 +20,8 @@ export const CLIFF_ASSETS = {
   pressurePlate: '/games/cliff/pressure-plate.png',
   ropesBg: '/games/cliff/ropes-bg.png',
   ropesBg2: '/games/cliff/ropes-bg-2.png',
+  ballsBg: '/games/cliff/balls-bg.png',
+  ballsLane: '/games/cliff/balls-lane.png',
 } as const;
 
 export const cliffBoulderImage = (metal: 'iron' | 'copper') => {

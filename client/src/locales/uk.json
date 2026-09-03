@@ -527,16 +527,21 @@
         "jumpFailed": "Не вдалося стрибнути"
       },
       "balls": {
-        "hint": "Доріжка із зонами. Кидай м'яч силою і кутом — що далі докотиться, то більше очок.",
+        "hint": "Здається, ці м'ячі треба закатити якомога далі — що далі докотиться, то більше очок…",
         "start": "Почати",
         "choose": "Вибрати",
         "throw": "Кинути",
-        "progress": "М'ячі {{balls}}/{{each}} · {{myScore}} · Партнер {{partnerBalls}}/{{each}} · {{partnerScore}} · Разом {{pairScore}}/{{threshold}}",
+        "scoreYou": "Ти {{score}}",
+        "scorePartner": "Партнер {{score}}",
+        "scoreTogether": "Разом {{score}}",
+        "scoreNeed": "Треба {{threshold}}",
+        "ballsLeft": "{{balls}}/{{each}}",
         "scored": "+{{score}}",
         "miss": "Мимо…",
         "cleared": "Набрали достатньо! Можна йти далі.",
         "failed": "Бракує очок. Спробуємо ще?",
         "retry": "Спробувати знову",
+        "resume": "Продовжити",
         "next": "Далі",
         "enterFailed": "Не вдалося перейти до м'ячів",
         "throwFailed": "Не вдалося кинути м'яч"

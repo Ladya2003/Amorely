@@ -541,16 +541,21 @@
         "jumpFailed": "Could not jump"
       },
       "balls": {
-        "hint": "A lane with score zones. Throw with power and angle — the farther it rolls, the more points.",
+        "hint": "Looks like we have to roll these balls as far as we can — the farther they go, the more points…",
         "start": "Start",
         "choose": "Aim",
         "throw": "Throw",
-        "progress": "Balls {{balls}}/{{each}} · {{myScore}} · Partner {{partnerBalls}}/{{each}} · {{partnerScore}} · Together {{pairScore}}/{{threshold}}",
+        "scoreYou": "You {{score}}",
+        "scorePartner": "Partner {{score}}",
+        "scoreTogether": "Together {{score}}",
+        "scoreNeed": "Need {{threshold}}",
+        "ballsLeft": "{{balls}}/{{each}}",
         "scored": "+{{score}}",
         "miss": "Miss…",
         "cleared": "Enough points! We can go on.",
         "failed": "Not enough points. Try again?",
         "retry": "Try again",
+        "resume": "Continue",
         "next": "Continue",
         "enterFailed": "Could not reach the ball lane",
         "throwFailed": "Could not throw the ball"

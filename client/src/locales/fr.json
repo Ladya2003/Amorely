@@ -527,16 +527,21 @@
         "jumpFailed": "Impossible de sauter"
       },
       "balls": {
-        "hint": "Une piste avec des zones. Lance avec force et angle — plus ça roule loin, plus tu marques.",
+        "hint": "Je crois qu’il faut faire rouler ces balles le plus loin possible — plus ça va loin, plus on marque…",
         "start": "Commencer",
         "choose": "Viser",
         "throw": "Lancer",
-        "progress": "Balles {{balls}}/{{each}} · {{myScore}} · Partenaire {{partnerBalls}}/{{each}} · {{partnerScore}} · Ensemble {{pairScore}}/{{threshold}}",
+        "scoreYou": "Toi {{score}}",
+        "scorePartner": "Partenaire {{score}}",
+        "scoreTogether": "Ensemble {{score}}",
+        "scoreNeed": "Objectif {{threshold}}",
+        "ballsLeft": "{{balls}}/{{each}}",
         "scored": "+{{score}}",
         "miss": "Raté…",
         "cleared": "Assez de points ! On peut continuer.",
         "failed": "Pas assez de points. On réessaie ?",
         "retry": "Réessayer",
+        "resume": "Continuer",
         "next": "Continuer",
         "enterFailed": "Impossible d'atteindre la piste de balles",
         "throwFailed": "Impossible de lancer la balle"

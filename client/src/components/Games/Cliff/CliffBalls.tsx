@@ -9,7 +9,6 @@ import {
   getCliffBridgePowerFillSx,
   getCliffBridgePowerTrackSx,
   getCliffBridgePowerWrapSx,
-  getCliffCharacterSlotSx,
   getCliffHubBackdropSx,
   getCliffHubStageSx,
   getCliffModalGhostButtonSx,
@@ -18,15 +17,15 @@ import {
   getCliffSceneRootSx,
 } from './cliffStyles';
 
-type BallPhase = 'briefing' | 'aiming' | 'charging' | 'flying' | 'cleared' | 'failed';
+type BallPhase = 'briefing' | 'aiming' | 'flying' | 'settled' | 'cleared' | 'failed';
 
-type FlyingBall = {
+type WorldPuck = {
   id: number;
+  owner: 'me' | 'partner';
   x: number;
   y: number;
   vx: number;
   vy: number;
-  rolling: boolean;
   settled: boolean;
   zoneScore: number | null;
 };
@@ -38,89 +37,87 @@ type CliffBallsProps = {
   onNext: () => void;
 };
 
-const ZONE_SCORES = [10, 20, 30, 40] as const;
-const ZONE_STARTS = [0.28, 0.44, 0.6, 0.76];
-const ZONE_WIDTH = 0.14;
-const GROUND_Y_FRAC = 0.72;
-const REF_HEIGHT = 600;
-const BASE_SPEED = 22;
-const BASE_GRAVITY = 0.32;
-const ROLL_FRICTION = 0.985;
-const ROLL_STOP = 0.18;
-const MIN_POWER = 0.12;
-const MIN_ANGLE = Math.PI * 0.12;
-const MAX_ANGLE = Math.PI * 0.48;
-const DEFAULT_ANGLE = Math.PI * 0.3;
-const DEFAULT_POWER = 0.68;
-const AIM_PREVIEW_STEPS = 12;
-const AIM_PREVIEW_RANGE = 0.34;
-const CHARGE_RADIANS_PER_FRAME = 0.024;
+const VIEW = 0.33;
+const START_Y = 0.075;
+const BOARD_LEFT = 0.31;
+const BOARD_WIDTH = 0.38;
+const LANE_INSET = 0.12;
+const MAX_AIM = Math.PI * 0.16;
+const MIN_POWER = 0.16;
+const DEFAULT_POWER = 0.62;
+const SPEED = 0.021;
+const FRICTION = 0.983;
+const STOP_V = 0.00055;
+const SIDE_BOUNCE = 0.42;
 const ROLL_MS_MIN = 1000;
 const ROLL_MS_MAX = 2000;
+const AIM_PREVIEW_STEPS = 14;
+const CHARGE_RADIANS_PER_FRAME = 0.03;
+const CAMERA_LERP = 0.08;
+const BG_SCALE = 1.72;
+const BG_PARALLAX = 0.72;
+
+const ZONE_BANDS: ReadonlyArray<{ score: 10 | 20 | 30 | 40; start: number; end: number; fill: string }> = [
+  { score: 10, start: 0.5, end: 0.62, fill: 'rgba(86, 150, 78, 0.34)' },
+  { score: 20, start: 0.62, end: 0.74, fill: 'rgba(62, 140, 168, 0.34)' },
+  { score: 30, start: 0.74, end: 0.86, fill: 'rgba(214, 154, 52, 0.36)' },
+  { score: 40, start: 0.86, end: 0.97, fill: 'rgba(196, 78, 58, 0.36)' },
+];
+
+const VALID_ZONE_SCORES: ReadonlyArray<number> = [0, 10, 20, 30, 40];
 
 const displayName = (user: CliffGameState['me']) => user.firstName || user.username || '';
 
-const physicsOf = (height: number) => {
-  const scale = Math.max(height, 1) / REF_HEIGHT;
-  return { speed: BASE_SPEED * scale, gravity: BASE_GRAVITY * scale };
-};
+const randomStartX = () => 0.18 + Math.random() * 0.64;
 
-const clampAngle = (angle: number) => Math.min(MAX_ANGLE, Math.max(MIN_ANGLE, angle));
+const clampAim = (angle: number) => Math.min(MAX_AIM, Math.max(-MAX_AIM, angle));
 
-const originOf = (width: number, height: number) => ({
-  x: width * 0.12,
-  y: height * 0.62,
-});
-
-const groundYOf = (height: number) => height * GROUND_Y_FRAC;
-
-const zoneScoreAt = (x: number, width: number): number => {
-  if (width <= 0) {
+const zoneScoreAt = (x: number, y: number): number => {
+  if (x < LANE_INSET || x > 1 - LANE_INSET) {
     return 0;
   }
-  const frac = x / width;
-  for (let i = 0; i < ZONE_SCORES.length; i += 1) {
-    const start = ZONE_STARTS[i];
-    const end = start + ZONE_WIDTH;
-    if (frac >= start && frac < end) {
-      return ZONE_SCORES[i];
-    }
-  }
-  return 0;
+  const band = ZONE_BANDS.find((item) => y >= item.start && y < item.end);
+  return band?.score ?? 0;
 };
 
-const projectPoints = (
-  originX: number,
-  originY: number,
-  angle: number,
-  power: number,
-  speed: number,
-  gravity: number,
-  groundY: number,
-  count: number,
-  maxDist: number
-) => {
+const zoneTargetY = (score: number) => {
+  const band = ZONE_BANDS.find((item) => item.score === score);
+  if (!band) {
+    return Math.random() < 0.75 ? 0.4 + Math.random() * 0.08 : 0.985;
+  }
+  return band.start + (band.end - band.start) * (0.25 + Math.random() * 0.5);
+};
+
+const projectAim = (originX: number, originY: number, aim: number, power: number, count: number) => {
   const points: Array<{ x: number; y: number }> = [];
   let x = originX;
   let y = originY;
-  let vx = Math.cos(angle) * power * speed;
-  let vy = -Math.sin(angle) * power * speed;
+  let vx = Math.sin(aim) * power * SPEED;
+  let vy = Math.cos(aim) * power * SPEED;
   for (let i = 0; i < count; i += 1) {
     x += vx;
     y += vy;
-    vy += gravity;
-    if (y >= groundY) {
-      y = groundY;
-      points.push({ x, y });
-      break;
-    }
-    if (Math.hypot(x - originX, y - originY) > maxDist) {
-      break;
+    vx *= FRICTION;
+    vy *= FRICTION;
+    if (x < 0) {
+      x = 0;
+      vx *= -SIDE_BOUNCE;
+    } else if (x > 1) {
+      x = 1;
+      vx *= -SIDE_BOUNCE;
     }
     points.push({ x, y });
+    if (y > 1.05 || Math.hypot(vx, vy) < STOP_V) {
+      break;
+    }
   }
   return points;
 };
+
+const puckFill = (owner: 'me' | 'partner') =>
+  owner === 'me'
+    ? 'radial-gradient(circle at 30% 28%, #fff2d2 0%, #d2a24a 42%, #7a4318 100%)'
+    : 'radial-gradient(circle at 30% 28%, #ffe4ea 0%, #c46a78 46%, #6a2434 100%)';
 
 const CliffBalls: React.FC<CliffBallsProps> = ({ state, onThrow, onRetry, onNext }) => {
   const { t } = useTranslation();
@@ -141,49 +138,42 @@ const CliffBalls: React.FC<CliffBallsProps> = ({ state, onThrow, onRetry, onNext
     }
     return started ? 'aiming' : 'briefing';
   });
-  const [angle, setAngle] = useState(DEFAULT_ANGLE);
+  const [aim, setAim] = useState(0);
   const [power, setPower] = useState(DEFAULT_POWER);
-  const [ball, setBall] = useState<FlyingBall | null>(null);
-  const [slotReady, setSlotReady] = useState(false);
-  const [areaSize, setAreaSize] = useState({ width: 0, height: 0 });
+  const [startX, setStartX] = useState(randomStartX);
+  const [myPuck, setMyPuck] = useState<WorldPuck | null>(null);
+  const [restPucks, setRestPucks] = useState<WorldPuck[]>([]);
+  const [partnerPucks, setPartnerPucks] = useState<WorldPuck[]>([]);
+  const [camTop, setCamTop] = useState(0);
   const [lastZone, setLastZone] = useState<number | null>(null);
+  const [areaSize, setAreaSize] = useState({ width: 0, height: 0 });
 
   const myName = displayName(state.me) || t('games.common.you');
   const partnerName = displayName(state.partner) || t('games.common.partner');
   const showPartner = state.partnerPresent;
-  const playable =
-    (phase === 'aiming' || phase === 'charging') &&
-    balls.myRemaining > 0 &&
-    !balls.cleared &&
-    !balls.canRetry;
-  const physics = physicsOf(areaSize.height);
-  const groundY = groundYOf(Math.max(areaSize.height, 1));
-  const ballSize = Math.max(18, areaSize.width * 0.04);
+  const playable = phase === 'aiming' && balls.myRemaining > 0 && !balls.cleared && !balls.canRetry;
+  const puckSize = Math.max(16, areaSize.width * 0.045);
+
+  const myPuckRef = useRef(myPuck);
+  myPuckRef.current = myPuck;
+  const camTopRef = useRef(camTop);
+  camTopRef.current = camTop;
+  const partnerTrackRef = useRef({ remaining: balls.partnerRemaining, score: balls.partnerScore });
 
   useEffect(() => {
-    const id = window.setTimeout(() => setSlotReady(true), 40);
-    return () => window.clearTimeout(id);
-  }, []);
-
-  useEffect(() => {
-    if (balls.cleared) {
-      setPhase('cleared');
-      return;
-    }
-    if (balls.canRetry) {
-      setPhase('failed');
-      return;
-    }
     setPhase((current) => {
-      if (current === 'flying' || current === 'briefing' || current === 'charging') {
+      if (current === 'flying' || current === 'briefing' || current === 'settled') {
         return current;
       }
-      if (balls.myRemaining <= 0) {
-        return current === 'aiming' ? current : 'aiming';
+      if (balls.cleared) {
+        return 'cleared';
       }
-      return current === 'failed' || current === 'cleared' ? 'aiming' : current;
+      if (balls.canRetry) {
+        return 'failed';
+      }
+      return current;
     });
-  }, [balls.canRetry, balls.cleared, balls.myRemaining]);
+  }, [balls.canRetry, balls.cleared]);
 
   useEffect(() => {
     const node = areaRef.current;
@@ -200,95 +190,149 @@ const CliffBalls: React.FC<CliffBallsProps> = ({ state, onThrow, onRetry, onNext
     return () => observer.disconnect();
   }, []);
 
-  const ballRef = useRef(ball);
-  ballRef.current = ball;
+  useEffect(() => {
+    const prev = partnerTrackRef.current;
+    partnerTrackRef.current = { remaining: balls.partnerRemaining, score: balls.partnerScore };
+    if (balls.partnerRemaining >= prev.remaining) {
+      return undefined;
+    }
+    const zoneScore = Math.max(0, balls.partnerScore - prev.score);
+    const safeScore = VALID_ZONE_SCORES.includes(zoneScore) ? zoneScore : 0;
+    const id = Date.now();
+    const fromX = randomStartX();
+    const fromY = START_Y;
+    const targetX = 0.16 + Math.random() * 0.68;
+    const targetY = zoneTargetY(safeScore);
+    setPartnerPucks((current) => [
+      ...current.slice(-4),
+      {
+        id,
+        owner: 'partner',
+        x: fromX,
+        y: fromY,
+        vx: 0,
+        vy: 0,
+        settled: false,
+        zoneScore: safeScore,
+      },
+    ]);
+    const startedAt = performance.now();
+    const duration = ROLL_MS_MIN + Math.random() * (ROLL_MS_MAX - ROLL_MS_MIN);
+    let frame = 0;
+    let cancelled = false;
+    const tick = (now: number) => {
+      if (cancelled) {
+        return;
+      }
+      const t = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - (1 - t) * (1 - t);
+      const settled = t >= 1;
+      setPartnerPucks((current) =>
+        current.map((puck) =>
+          puck.id === id
+            ? {
+                ...puck,
+                x: fromX + (targetX - fromX) * eased,
+                y: fromY + (targetY - fromY) * eased,
+                settled,
+                zoneScore: safeScore,
+              }
+            : puck
+        )
+      );
+      if (!settled) {
+        frame = window.requestAnimationFrame(tick);
+      }
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [balls.partnerRemaining, balls.partnerScore]);
+
+  const flyingId = myPuck && !myPuck.settled ? myPuck.id : null;
 
   useEffect(() => {
-    if (!ball || ball.settled) {
+    if (flyingId === null) {
       return undefined;
     }
     let frame = 0;
     const step = () => {
-      const current = ballRef.current;
+      const current = myPuckRef.current;
       if (!current || current.settled) {
         return;
       }
-      let { x, y, vx, vy, rolling } = current;
-      if (!rolling) {
-        x += vx;
-        y += vy;
-        vy += physics.gravity;
-        if (y >= groundY) {
-          y = groundY;
-          rolling = true;
-          vy = 0;
-          vx *= 0.72;
-          rollStartedAtRef.current = performance.now();
-        }
-      } else {
-        x += vx;
-        vx *= ROLL_FRICTION;
-        const rolledMs = performance.now() - rollStartedAtRef.current;
-        const minRollDone = rolledMs >= ROLL_MS_MIN;
-        const maxRollDone = rolledMs >= ROLL_MS_MAX;
-        if ((minRollDone && Math.abs(vx) < ROLL_STOP) || maxRollDone || x < 0 || x > areaSize.width) {
-          const zoneScore = zoneScoreAt(Math.min(Math.max(x, 0), areaSize.width), areaSize.width);
-          const settled: FlyingBall = {
-            ...current,
-            x: Math.min(Math.max(x, 0), areaSize.width),
-            y: groundY,
-            vx: 0,
-            vy: 0,
-            rolling: true,
-            settled: true,
-            zoneScore,
-          };
-          ballRef.current = settled;
-          setBall(settled);
-          setLastZone(zoneScore);
-          throwLockRef.current = false;
-          if (zoneScore > 0) {
-            void playCliffHitSound();
-          } else {
-            void playCliffMissSound();
-          }
-          onThrowRef.current(zoneScore);
-          setPhase('aiming');
-          window.setTimeout(() => {
-            setBall(null);
-          }, 700);
-          return;
-        }
+      let { x, y, vx, vy } = current;
+      x += vx;
+      y += vy;
+      vx *= FRICTION;
+      vy *= FRICTION;
+      if (x < 0) {
+        x = 0;
+        vx *= -SIDE_BOUNCE;
+      } else if (x > 1) {
+        x = 1;
+        vx *= -SIDE_BOUNCE;
       }
-      const next: FlyingBall = { ...current, x, y, vx, vy, rolling };
-      ballRef.current = next;
-      setBall(next);
+      const rolledMs = performance.now() - rollStartedAtRef.current;
+      const stopped =
+        (rolledMs >= ROLL_MS_MIN && Math.hypot(vx, vy) < STOP_V) ||
+        rolledMs >= ROLL_MS_MAX ||
+        y < 0 ||
+        y > 1.04;
+      if (stopped) {
+        const zoneScore = zoneScoreAt(x, y);
+        const settled: WorldPuck = {
+          ...current,
+          x: Math.min(Math.max(x, 0), 1),
+          y: Math.min(Math.max(y, 0), 1.02),
+          vx: 0,
+          vy: 0,
+          settled: true,
+          zoneScore,
+        };
+        myPuckRef.current = settled;
+        setMyPuck(settled);
+        setLastZone(zoneScore);
+        throwLockRef.current = false;
+        if (zoneScore > 0) {
+          void playCliffHitSound();
+        } else {
+          void playCliffMissSound();
+        }
+        onThrowRef.current(zoneScore);
+        setPhase('settled');
+        return;
+      }
+      const next: WorldPuck = { ...current, x, y, vx, vy };
+      myPuckRef.current = next;
+      setMyPuck(next);
       frame = window.requestAnimationFrame(step);
     };
     frame = window.requestAnimationFrame(step);
     return () => window.cancelAnimationFrame(frame);
-  }, [areaSize.width, ball?.id, ball?.settled, groundY, physics.gravity]);
-
-  const preview = useMemo(() => {
-    if (!playable || areaSize.width <= 0) {
-      return [] as Array<{ x: number; y: number }>;
-    }
-    const origin = originOf(areaSize.width, areaSize.height);
-    return projectPoints(
-      origin.x,
-      origin.y,
-      angle,
-      power,
-      physics.speed,
-      physics.gravity,
-      groundY,
-      AIM_PREVIEW_STEPS,
-      Math.max(areaSize.width, areaSize.height) * AIM_PREVIEW_RANGE
-    );
-  }, [angle, areaSize.height, areaSize.width, groundY, physics.gravity, physics.speed, playable, power]);
+  }, [flyingId]);
 
   useEffect(() => {
-    if (phase !== 'charging') {
+    let frame = 0;
+    const tick = () => {
+      const follow =
+        (phase === 'flying' || phase === 'settled') && myPuckRef.current
+          ? myPuckRef.current.y
+          : START_Y;
+      const target = Math.min(Math.max(follow - VIEW * 0.42, 0), 1 - VIEW);
+      const next = camTopRef.current + (target - camTopRef.current) * CAMERA_LERP;
+      camTopRef.current = Math.abs(next - target) < 0.001 ? target : next;
+      setCamTop(camTopRef.current);
+      frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'aiming') {
       return undefined;
     }
     let frame = 0;
@@ -302,47 +346,79 @@ const CliffBalls: React.FC<CliffBallsProps> = ({ state, onThrow, onRetry, onNext
     return () => window.cancelAnimationFrame(frame);
   }, [phase]);
 
-  const aimFromPointer = (clientX: number, clientY: number) => {
-    if (!areaRef.current || phase !== 'aiming') {
-      return;
+  const preview = useMemo(() => {
+    if (!playable) {
+      return [] as Array<{ x: number; y: number }>;
     }
-    const rect = areaRef.current.getBoundingClientRect();
-    const origin = originOf(rect.width, rect.height);
-    const dx = clientX - rect.left - origin.x;
-    const dy = origin.y - (clientY - rect.top);
-    setAngle(clampAngle(Math.atan2(Math.max(dy, 1), Math.max(dx, 1))));
+    return projectAim(startX, START_Y, aim, power, AIM_PREVIEW_STEPS);
+  }, [aim, playable, power, startX]);
+
+  const worldToLeft = (x: number) => `${BOARD_LEFT * 100 + x * BOARD_WIDTH * 100}%`;
+  const worldToBottom = (y: number) => `${y * 100}%`;
+
+  const pointerToWorld = (clientX: number, clientY: number) => {
+    const node = areaRef.current;
+    if (!node) {
+      return null;
+    }
+    const rect = node.getBoundingClientRect();
+    const worldY = camTopRef.current + ((rect.bottom - clientY) / Math.max(rect.height, 1)) * VIEW;
+    const worldX = (clientX - rect.left) / Math.max(rect.width, 1);
+    const boardX = (worldX - BOARD_LEFT) / BOARD_WIDTH;
+    return { x: boardX, y: worldY };
   };
 
-  const startCharge = () => {
-    if (!playable || phase !== 'aiming') {
+  const aimFromPointer = (clientX: number, clientY: number) => {
+    if (phase !== 'aiming') {
       return;
     }
-    chargePhaseRef.current = 0;
-    setPhase('charging');
+    const world = pointerToWorld(clientX, clientY);
+    if (!world) {
+      return;
+    }
+    setAim(clampAim(Math.atan2(world.x - startX, Math.max(world.y - START_Y, 0.02))));
   };
 
   const releaseThrow = () => {
-    if (phase !== 'charging' || throwLockRef.current || areaSize.width <= 0) {
+    if (!playable || throwLockRef.current) {
       return;
     }
     throwLockRef.current = true;
-    const origin = originOf(areaSize.width, areaSize.height);
-    const next: FlyingBall = {
+    const next: WorldPuck = {
       id: Date.now(),
-      x: origin.x,
-      y: origin.y,
-      vx: Math.cos(angle) * power * physics.speed,
-      vy: -Math.sin(angle) * power * physics.speed,
-      rolling: false,
+      owner: 'me',
+      x: startX,
+      y: START_Y,
+      vx: Math.sin(aim) * power * SPEED,
+      vy: Math.cos(aim) * power * SPEED,
       settled: false,
       zoneScore: null,
     };
-    setBall(next);
+    rollStartedAtRef.current = performance.now();
+    myPuckRef.current = next;
+    setMyPuck(next);
+    setLastZone(null);
     setPhase('flying');
     void playCliffThrowSound();
   };
 
-  const finishBriefing = () => setPhase('aiming');
+  const finishBriefing = () => {
+    setStartX(randomStartX());
+    setAim(0);
+    setPhase('aiming');
+  };
+
+  const resumeAfterThrow = () => {
+    if (myPuck) {
+      setRestPucks((current) => [...current.slice(-4), { ...myPuck, settled: true }]);
+    }
+    setMyPuck(null);
+    myPuckRef.current = null;
+    setStartX(randomStartX());
+    setAim(0);
+    setLastZone(null);
+    setPhase(balls.cleared ? 'cleared' : balls.canRetry ? 'failed' : 'aiming');
+  };
 
   const speech = (() => {
     switch (phase) {
@@ -353,13 +429,9 @@ const CliffBalls: React.FC<CliffBallsProps> = ({ state, onThrow, onRetry, onNext
       case 'failed':
         return t('games.cliff.balls.failed');
       case 'aiming':
-      case 'charging':
       case 'flying':
-        return lastZone === null
-          ? null
-          : lastZone > 0
-            ? t('games.cliff.balls.scored', { score: lastZone })
-            : t('games.cliff.balls.miss');
+      case 'settled':
+        return null;
       default: {
         const exhaustive: never = phase;
         return exhaustive;
@@ -367,40 +439,29 @@ const CliffBalls: React.FC<CliffBallsProps> = ({ state, onThrow, onRetry, onNext
     }
   })();
 
-  const powerAction = () => {
-    switch (phase) {
-      case 'aiming':
-        startCharge();
-        return;
-      case 'charging':
-        releaseThrow();
-        return;
-      case 'briefing':
-      case 'flying':
-      case 'cleared':
-      case 'failed':
-        return;
-      default: {
-        const exhaustive: never = phase;
-        return exhaustive;
-      }
-    }
-  };
+  const allPucks = [...restPucks, ...partnerPucks, ...(myPuck ? [myPuck] : [])];
+  const showStartActors = phase === 'briefing' || phase === 'aiming' || phase === 'cleared' || phase === 'failed';
+  const waitingForPartner =
+    phase === 'aiming' &&
+    balls.myRemaining <= 0 &&
+    balls.partnerRemaining > 0 &&
+    !balls.cleared &&
+    !balls.canRetry;
+  const showPanel =
+    phase === 'briefing' ||
+    phase === 'settled' ||
+    phase === 'cleared' ||
+    phase === 'failed' ||
+    waitingForPartner;
+  const camTravel = Math.min(Math.max(camTop / (1 - VIEW), 0), 1);
+  const bgShift = camTravel * BG_PARALLAX * (1 - 1 / BG_SCALE) * 100;
 
   return (
     <Box sx={getCliffSceneRootSx()}>
       <Box sx={getCliffHubBackdropSx()} aria-hidden>
-        <Box component="img" src={CLIFF_ASSETS.climbPath} alt="" />
+        <Box component="img" src={CLIFF_ASSETS.ballsBg} alt="" />
       </Box>
       <Box sx={getCliffHubStageSx()}>
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            background:
-              'linear-gradient(180deg, #7eb7d8 0%, #c9e4f2 38%, #d8b07a 58%, #8a5a32 100%)',
-          }}
-        />
         <Box
           ref={areaRef}
           onPointerDown={(event) => {
@@ -416,202 +477,261 @@ const CliffBalls: React.FC<CliffBallsProps> = ({ state, onThrow, onRetry, onNext
             }
             aimFromPointer(event.clientX, event.clientY);
           }}
-          sx={{ position: 'absolute', inset: 0, touchAction: 'none' }}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            overflow: 'hidden',
+            touchAction: 'none',
+            background: '#2a1818',
+          }}
         >
+          <Box
+            component="img"
+            src={CLIFF_ASSETS.ballsBg}
+            alt=""
+            sx={{
+              position: 'absolute',
+              left: '50%',
+              bottom: 0,
+              width: `${BG_SCALE * 100}%`,
+              height: `${BG_SCALE * 100}%`,
+              objectFit: 'cover',
+              objectPosition: 'center bottom',
+              transform: `translate(-50%, ${bgShift}%)`,
+              willChange: 'transform',
+              pointerEvents: 'none',
+            }}
+          />
           <Box
             sx={{
               position: 'absolute',
-              left: '4%',
-              right: '4%',
-              top: `${GROUND_Y_FRAC * 100}%`,
-              height: '18%',
-              borderRadius: '40% 40% 8px 8px',
-              background:
-                'linear-gradient(180deg, #c49a62 0%, #9a6a38 45%, #6f4524 100%)',
-              boxShadow: 'inset 0 8px 0 rgba(255,230,180,0.18)',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: `${100 / VIEW}%`,
+              transform: `translateY(${camTop * 100}%)`,
+              willChange: 'transform',
             }}
-          />
-          {ZONE_SCORES.map((score, index) => {
-            const left = `${ZONE_STARTS[index] * 100}%`;
-            return (
-              <Box
-                key={score}
-                sx={{
-                  position: 'absolute',
-                  left,
-                  width: `${ZONE_WIDTH * 100}%`,
-                  top: `${GROUND_Y_FRAC * 100 - 2}%`,
-                  height: '14%',
-                  borderRadius: 1,
-                  bgcolor:
-                    score === 10
-                      ? 'rgba(120, 160, 90, 0.55)'
-                      : score === 20
-                        ? 'rgba(90, 150, 170, 0.55)'
-                        : score === 30
-                          ? 'rgba(200, 150, 70, 0.55)'
-                          : 'rgba(180, 90, 70, 0.55)',
-                  border: '2px solid rgba(255, 236, 200, 0.65)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Typography sx={{ fontWeight: 900, color: '#3a160e', fontSize: { xs: 12, sm: 14 } }}>
-                  {score}
-                </Typography>
-              </Box>
-            );
-          })}
-          {playable && preview.length > 0 && (
-            <Box
-              component="svg"
-              viewBox={`0 0 ${areaSize.width} ${areaSize.height}`}
-              sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-            >
-              <polyline
-                points={preview.map((point) => `${point.x},${point.y}`).join(' ')}
-                fill="none"
-                stroke="#3a160e"
-                strokeWidth="7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity="0.55"
-              />
-              <polyline
-                points={preview.map((point) => `${point.x},${point.y}`).join(' ')}
-                fill="none"
-                stroke="#ffe08a"
-                strokeWidth="4"
-                strokeDasharray="11 8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Box>
-          )}
-          {ball && (
+          >
             <Box
               sx={{
                 position: 'absolute',
-                left: ball.x,
-                top: ball.y,
-                width: ballSize,
-                height: ballSize,
-                borderRadius: '50%',
-                transform: 'translate(-50%, -50%)',
-                background: 'radial-gradient(circle at 30% 28%, #fff2d2 0%, #d2a24a 42%, #7a4318 100%)',
-                boxShadow: '0 3px 6px rgba(40,16,12,0.4)',
-                border: '2px solid #5a3018',
+                left: `${BOARD_LEFT * 100}%`,
+                width: `${BOARD_WIDTH * 100}%`,
+                top: 0,
+                bottom: 0,
+                backgroundImage: `url(${CLIFF_ASSETS.ballsLane})`,
+                backgroundRepeat: 'repeat-y',
+                backgroundSize: '100% auto',
+                backgroundPosition: 'center bottom',
+                pointerEvents: 'none',
               }}
             />
-          )}
-        </Box>
-
-        <Box
-          sx={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: '4%',
-            height: '28%',
-            overflow: 'visible',
-            zIndex: 3,
-            pointerEvents: 'none',
-          }}
-        >
-          <Box sx={getCliffCharacterSlotSx(showPartner ? '6%' : '10%', slotReady)}>
-            <CliffCharacter
-              avatar={state.me.avatar}
-              name={myName}
-              walking={false}
-              from="left"
-              compact
-              speechWide
-              speech={speech}
-              motion="idle"
-            />
-          </Box>
-          {showPartner && (
-            <Box sx={getCliffCharacterSlotSx('22%', slotReady)}>
-              <CliffCharacter
-                avatar={state.partner.avatar}
-                name={partnerName}
-                walking={false}
-                from="right"
-                compact
-                motion="idle"
+            {ZONE_BANDS.map((band) => (
+              <Box
+                key={band.score}
+                sx={{
+                  position: 'absolute',
+                  left: `${(BOARD_LEFT + BOARD_WIDTH * LANE_INSET) * 100}%`,
+                  width: `${BOARD_WIDTH * (1 - LANE_INSET * 2) * 100}%`,
+                  bottom: `${band.start * 100}%`,
+                  height: `${(band.end - band.start) * 100}%`,
+                  bgcolor: band.fill,
+                  borderTop: '2px solid rgba(255, 244, 214, 0.45)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  pointerEvents: 'none',
+                }}
+              >
+                <Typography sx={{ fontWeight: 900, color: '#fff6e8', fontSize: { xs: 15, sm: 20 }, textShadow: '0 1px 3px rgba(40,16,12,0.8)' }}>
+                  {band.score}
+                </Typography>
+              </Box>
+            ))}
+            {playable && preview.length > 0 && areaSize.width > 0 && (
+              <Box
+                component="svg"
+                viewBox={`0 0 ${areaSize.width} ${areaSize.height / VIEW}`}
+                preserveAspectRatio="none"
+                sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+              >
+                <polyline
+                  points={preview
+                    .map((point) => {
+                      const x = (BOARD_LEFT + point.x * BOARD_WIDTH) * areaSize.width;
+                      const y = (1 - point.y) * (areaSize.height / VIEW);
+                      return `${x},${y}`;
+                    })
+                    .join(' ')}
+                  fill="none"
+                  stroke="#3a160e"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  opacity="0.45"
+                />
+                <polyline
+                  points={preview
+                    .map((point) => {
+                      const x = (BOARD_LEFT + point.x * BOARD_WIDTH) * areaSize.width;
+                      const y = (1 - point.y) * (areaSize.height / VIEW);
+                      return `${x},${y}`;
+                    })
+                    .join(' ')}
+                  fill="none"
+                  stroke="#ffe08a"
+                  strokeWidth="4"
+                  strokeDasharray="11 8"
+                  strokeLinecap="round"
+                />
+              </Box>
+            )}
+            {allPucks.map((puck) => (
+              <Box
+                key={`${puck.owner}-${puck.id}`}
+                sx={{
+                  position: 'absolute',
+                  left: worldToLeft(puck.x),
+                  bottom: worldToBottom(puck.y),
+                  width: puckSize,
+                  height: puckSize,
+                  borderRadius: '50%',
+                  transform: 'translate(-50%, 50%)',
+                  background: puckFill(puck.owner),
+                  boxShadow: '0 2px 5px rgba(40,16,12,0.45)',
+                  border: '2px solid #5a3018',
+                  zIndex: 4,
+                }}
               />
-            </Box>
-          )}
+            ))}
+            {phase === 'settled' && lastZone !== null && myPuck && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: worldToLeft(myPuck.x),
+                  bottom: `calc(${worldToBottom(myPuck.y)} + ${puckSize + 8}px)`,
+                  transform: 'translateX(-50%)',
+                  px: 1,
+                  py: 0.35,
+                  borderRadius: 1,
+                  bgcolor: '#fff6e8',
+                  border: '1px solid #8b4a2b',
+                  zIndex: 5,
+                }}
+              >
+                <Typography sx={{ fontWeight: 900, color: '#5c2618', fontSize: 13 }}>
+                  {lastZone > 0 ? t('games.cliff.balls.scored', { score: lastZone }) : t('games.cliff.balls.miss')}
+                </Typography>
+              </Box>
+            )}
+            {showStartActors && (
+              <>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: worldToLeft(showPartner ? 0.28 : 0.5),
+                    bottom: worldToBottom(0.01),
+                    width: { xs: '22%', sm: '18%' },
+                    transform: 'translateX(-50%)',
+                    zIndex: 3,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <CliffCharacter
+                    avatar={state.me.avatar}
+                    name={myName}
+                    walking={false}
+                    from="left"
+                    compact
+                    speechWide
+                    speech={speech}
+                    motion="idle"
+                  />
+                </Box>
+                {showPartner && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: worldToLeft(0.72),
+                      bottom: worldToBottom(0.01),
+                      width: { xs: '22%', sm: '18%' },
+                      transform: 'translateX(-50%)',
+                      zIndex: 3,
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <CliffCharacter
+                      avatar={state.partner.avatar}
+                      name={partnerName}
+                      walking={false}
+                      from="right"
+                      compact
+                      motion="idle"
+                    />
+                  </Box>
+                )}
+              </>
+            )}
+          </Box>
         </Box>
       </Box>
 
       {playable && (
         <Box sx={getCliffBridgePowerWrapSx()} onPointerDown={(event) => event.stopPropagation()}>
           <Box sx={getCliffBridgePowerTrackSx()}>
-            <Box sx={getCliffBridgePowerFillSx(power, phase === 'charging')} />
+            <Box sx={getCliffBridgePowerFillSx(power, true)} />
           </Box>
-          <Button onClick={powerAction} sx={{ ...getCliffModalPrimaryButtonSx(), minWidth: 96 }}>
-            {phase === 'charging' ? t('games.cliff.balls.throw') : t('games.cliff.balls.choose')}
+          <Button onClick={releaseThrow} sx={{ ...getCliffModalPrimaryButtonSx(), minWidth: 96 }}>
+            {t('games.cliff.balls.throw')}
           </Button>
         </Box>
       )}
 
-      <Box
-        sx={{
-          ...getCliffParchmentPanelSx(),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 1,
-          flexWrap: 'wrap',
-        }}
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        {phase === 'briefing' ? (
-          <Button onClick={finishBriefing} sx={getCliffModalPrimaryButtonSx()}>
-            {t('games.cliff.balls.start')}
-          </Button>
-        ) : (
-          <>
-            <Typography variant="body2" sx={{ fontWeight: 800, color: '#5c2618', minWidth: 0 }}>
-              {t('games.cliff.balls.progress', {
-                balls: balls.myRemaining,
-                each: balls.each,
-                myScore: balls.myScore,
-                partnerBalls: balls.partnerRemaining,
-                partnerScore: balls.partnerScore,
-                pairScore: balls.pairScore,
-                threshold: balls.threshold,
-              })}
+      {showPanel && (
+        <Box
+          sx={{
+            ...getCliffParchmentPanelSx(),
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: waitingForPartner || (balls.cleared && !state.partnerPresent) ? 'flex-start' : 'flex-end',
+            gap: 1,
+            flexWrap: 'wrap',
+          }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          {phase === 'briefing' && (
+            <Button onClick={finishBriefing} sx={getCliffModalPrimaryButtonSx()}>
+              {t('games.cliff.balls.start')}
+            </Button>
+          )}
+          {phase === 'settled' && (
+            <Button onClick={resumeAfterThrow} sx={getCliffModalPrimaryButtonSx()}>
+              {t('games.cliff.balls.resume')}
+            </Button>
+          )}
+          {waitingForPartner && (
+            <Typography variant="body2" sx={{ fontWeight: 700, color: '#8a3d28' }}>
+              {t('games.cliff.waitPartner')}
             </Typography>
-            {balls.cleared &&
-              (state.partnerPresent ? (
-                <Button
-                  onClick={onNext}
-                  sx={{ ...getCliffModalPrimaryButtonSx(), flexShrink: 0, py: 0.75, ml: 'auto' }}
-                >
-                  {t('games.cliff.balls.next')}
-                </Button>
-              ) : (
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 700, color: '#8a3d28', ml: 'auto', maxWidth: 220 }}
-                >
-                  {t('games.cliff.waitPartner')}
-                </Typography>
-              ))}
-            {balls.canRetry && (
-              <Button
-                onClick={onRetry}
-                sx={{ ...getCliffModalGhostButtonSx(), flexShrink: 0, py: 0.75, ml: 'auto' }}
-              >
-                {t('games.cliff.balls.retry')}
+          )}
+          {phase !== 'settled' &&
+            balls.cleared &&
+            (state.partnerPresent ? (
+              <Button onClick={onNext} sx={getCliffModalPrimaryButtonSx()}>
+                {t('games.cliff.balls.next')}
               </Button>
-            )}
-          </>
-        )}
-      </Box>
+            ) : (
+              <Typography variant="body2" sx={{ fontWeight: 700, color: '#8a3d28', maxWidth: 220 }}>
+                {t('games.cliff.waitPartner')}
+              </Typography>
+            ))}
+          {phase !== 'settled' && balls.canRetry && (
+            <Button onClick={onRetry} sx={getCliffModalGhostButtonSx()}>
+              {t('games.cliff.balls.retry')}
+            </Button>
+          )}
+        </Box>
+      )}
     </Box>
   );
 };

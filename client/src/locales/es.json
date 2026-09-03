@@ -527,16 +527,21 @@
         "jumpFailed": "No se pudo saltar"
       },
       "balls": {
-        "hint": "Una pista con zonas. Lanza con fuerza y ángulo: cuanto más lejos ruede, más puntos.",
+        "hint": "Creo que hay que hacer rodar estas bolas lo más lejos posible: cuanto más lejos, más puntos…",
         "start": "Empezar",
         "choose": "Apuntar",
         "throw": "Lanzar",
-        "progress": "Bolas {{balls}}/{{each}} · {{myScore}} · Pareja {{partnerBalls}}/{{each}} · {{partnerScore}} · Juntos {{pairScore}}/{{threshold}}",
+        "scoreYou": "Tú {{score}}",
+        "scorePartner": "Pareja {{score}}",
+        "scoreTogether": "Juntos {{score}}",
+        "scoreNeed": "Hay que {{threshold}}",
+        "ballsLeft": "{{balls}}/{{each}}",
         "scored": "+{{score}}",
         "miss": "Falló…",
         "cleared": "¡Suficientes puntos! Podemos seguir.",
         "failed": "No alcanzó. ¿Lo intentamos otra vez?",
         "retry": "Intentar de nuevo",
+        "resume": "Seguir",
         "next": "Seguir",
         "enterFailed": "No se pudo llegar a las bolas",
         "throwFailed": "No se pudo lanzar la bola"

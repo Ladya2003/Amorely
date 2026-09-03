@@ -527,16 +527,21 @@
         "jumpFailed": "Sprung fehlgeschlagen"
       },
       "balls": {
-        "hint": "Eine Bahn mit Zonen. Wirf mit Kraft und Winkel — je weiter er rollt, desto mehr Punkte.",
+        "hint": "Ich glaube, wir müssen diese Bälle so weit wie möglich rollen — je weiter, desto mehr Punkte…",
         "start": "Start",
         "choose": "Zielen",
         "throw": "Werfen",
-        "progress": "Bälle {{balls}}/{{each}} · {{myScore}} · Partner {{partnerBalls}}/{{each}} · {{partnerScore}} · Zusammen {{pairScore}}/{{threshold}}",
+        "scoreYou": "Du {{score}}",
+        "scorePartner": "Partner {{score}}",
+        "scoreTogether": "Zusammen {{score}}",
+        "scoreNeed": "Ziel {{threshold}}",
+        "ballsLeft": "{{balls}}/{{each}}",
         "scored": "+{{score}}",
         "miss": "Daneben…",
         "cleared": "Genug Punkte! Es geht weiter.",
         "failed": "Zu wenig Punkte. Nochmal versuchen?",
         "retry": "Nochmal versuchen",
+        "resume": "Weiter",
         "next": "Weiter",
         "enterFailed": "Ballbahn konnte nicht erreicht werden",
         "throwFailed": "Ball konnte nicht geworfen werden"

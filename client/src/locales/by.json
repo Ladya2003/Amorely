@@ -527,16 +527,21 @@
         "jumpFailed": "Не ўдалося скакнуць"
       },
       "balls": {
-        "hint": "Дарожка з зонамі. Кідай шар сілай і вуглом — чым далей дакаціцца, тым больш ачкоў.",
+        "hint": "Здаецца, гэтыя шары трэба закаціць як мага далей — чым далей дакаціцца, тым больш ачкоў…",
         "start": "Пачаць",
         "choose": "Выбраць",
         "throw": "Кінуць",
-        "progress": "Шары {{balls}}/{{each}} · {{myScore}} · Партнёр {{partnerBalls}}/{{each}} · {{partnerScore}} · Разам {{pairScore}}/{{threshold}}",
+        "scoreYou": "Ты {{score}}",
+        "scorePartner": "Партнёр {{score}}",
+        "scoreTogether": "Разам {{score}}",
+        "scoreNeed": "Трэба {{threshold}}",
+        "ballsLeft": "{{balls}}/{{each}}",
         "scored": "+{{score}}",
         "miss": "Міма…",
         "cleared": "Набралі дастаткова! Можна ісці далей.",
         "failed": "Не хапіла ачкоў. Паспрабуем яшчэ?",
         "retry": "Паспрабаваць зноў",
+        "resume": "Працягнуць",
         "next": "Далей",
         "enterFailed": "Не ўдалося перайсці да шароў",
         "throwFailed": "Не ўдалося кінуць шар"

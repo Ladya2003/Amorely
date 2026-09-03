@@ -541,16 +541,21 @@
         "jumpFailed": "Не удалось прыгнуть"
       },
       "balls": {
-        "hint": "Дорожка с зонами. Бросай шар силой и углом — чем дальше докатится, тем больше очков.",
+        "hint": "Кажется, эти шары надо закатить как можно дальше — чем дальше докатится, тем больше очков…",
         "start": "Начать",
         "choose": "Выбрать",
         "throw": "Бросить",
-        "progress": "Шары {{balls}}/{{each}} · {{myScore}} · Партнёр {{partnerBalls}}/{{each}} · {{partnerScore}} · Вместе {{pairScore}}/{{threshold}}",
+        "scoreYou": "Ты {{score}}",
+        "scorePartner": "Партнёр {{score}}",
+        "scoreTogether": "Вместе {{score}}",
+        "scoreNeed": "Надо {{threshold}}",
+        "ballsLeft": "{{balls}}/{{each}}",
         "scored": "+{{score}}",
         "miss": "Мимо…",
         "cleared": "Набрали достаточно! Можно идти дальше.",
         "failed": "Не хватило очков. Попробуем ещё раз?",
         "retry": "Попробовать снова",
+        "resume": "Продолжить",
         "next": "Дальше",
         "enterFailed": "Не удалось перейти к шарам",
         "throwFailed": "Не удалось бросить шар"

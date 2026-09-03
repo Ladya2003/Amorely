@@ -8,6 +8,7 @@ import CliffInventoryInfoModal, { type CliffInventoryTopic } from './CliffInvent
 import {
   formatCliffTime,
   getCliffChipButtonSx,
+  getCliffChipSx,
   getCliffHudIconButtonSx,
   getCliffHudRowSx,
   getCliffHudSx,
@@ -34,6 +35,13 @@ const toolIconSx = {
   width: 28,
   height: 28,
   objectFit: 'contain' as const,
+};
+
+const ballsChipSx = {
+  px: 1.15,
+  py: 0.55,
+  fontSize: '0.9rem',
+  gap: 0.65,
 };
 
 const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
@@ -153,6 +161,31 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
             {t('games.cliff.inventory.resetBalls')}
           </Box>
         </Box>
+        {state.scene === 'balls' && (
+          <Box sx={row}>
+            <Box sx={{ ...getCliffChipSx(theme, 'parchment'), ...ballsChipSx }}>
+              {t('games.cliff.balls.scoreYou', { score: state.balls.myScore })}
+              <Box component="span" sx={{ opacity: 0.4 }}>·</Box>
+              {t('games.cliff.balls.ballsLeft', {
+                balls: state.balls.each - state.balls.myRemaining,
+                each: state.balls.each,
+              })}
+            </Box>
+            <Box sx={{ ...getCliffChipSx(theme, 'parchment'), ...ballsChipSx }}>
+              {t('games.cliff.balls.scorePartner', { score: state.balls.partnerScore })}
+              <Box component="span" sx={{ opacity: 0.4 }}>·</Box>
+              {t('games.cliff.balls.ballsLeft', {
+                balls: state.balls.each - state.balls.partnerRemaining,
+                each: state.balls.each,
+              })}
+            </Box>
+            <Box sx={{ ...getCliffChipSx(theme, 'parchment'), ...ballsChipSx }}>
+              {t('games.cliff.balls.scoreTogether', { score: state.balls.pairScore })}
+              <Box component="span" sx={{ opacity: 0.4 }}>/</Box>
+              {state.balls.threshold}
+            </Box>
+          </Box>
+        )}
       </Box>
       {topic && <CliffInventoryInfoModal topic={topic} onClose={() => setTopic(null)} />}
     </>
