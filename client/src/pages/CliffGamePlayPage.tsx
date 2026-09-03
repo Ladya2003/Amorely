@@ -6,14 +6,17 @@ import { useAuth } from '../contexts/AuthContext';
 import socketService from '../services/socketService';
 import {
   postCliffActivateLift,
+  postCliffBallThrow,
   postCliffBreakGate,
   postCliffBuy,
   postCliffEnter,
+  postCliffEnterBalls,
   postCliffEnterMine,
   postCliffEnterRopes,
   postCliffFinish,
   postCliffLeave,
   postCliffReset,
+  postCliffResetBalls,
   postCliffResetGate,
   postCliffResetRopes,
   postCliffRopeJump,
@@ -40,6 +43,7 @@ import CliffFinish from '../components/Games/Cliff/CliffFinish';
 import CliffLift from '../components/Games/Cliff/CliffLift';
 import CliffLiftDialog from '../components/Games/Cliff/CliffLiftDialog';
 import CliffRopes from '../components/Games/Cliff/CliffRopes';
+import CliffBalls from '../components/Games/Cliff/CliffBalls';
 import CliffOverlayPresence from '../components/Games/Cliff/CliffOverlayPresence';
 import CliffItemAward from '../components/Games/Cliff/CliffItemAward';
 import { CLIFF_ITEM_AWARD_MS } from '../components/Games/Cliff/cliffStyles';
@@ -143,6 +147,7 @@ const CliffGamePlayPage: React.FC = () => {
   const [breaking, setBreaking] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [ropesEpoch, setRopesEpoch] = useState(0);
+  const [ballsEpoch, setBallsEpoch] = useState(0);
   const [showClimb, setShowClimb] = useState(false);
   const [showLiftDialog, setShowLiftDialog] = useState(false);
   const [activatingLift, setActivatingLift] = useState(false);
@@ -266,7 +271,7 @@ const CliffGamePlayPage: React.FC = () => {
             standingPets: [],
           },
         };
-    const normalized: CliffGameState = withLift.ropes
+    const withRopes: CliffGameState = withLift.ropes
       ? withLift
       : {
           ...withLift,
@@ -278,6 +283,23 @@ const CliffGamePlayPage: React.FC = () => {
             total: 8,
             checkpointIndex: 3,
             cleared: false,
+          },
+        };
+    const normalized: CliffGameState = withRopes.balls
+      ? withRopes
+      : {
+          ...withRopes,
+          balls: {
+            myRemaining: 5,
+            partnerRemaining: 5,
+            myScore: 0,
+            partnerScore: 0,
+            pairScore: 0,
+            each: 5,
+            threshold: 170,
+            zoneScores: [10, 20, 30, 40],
+            cleared: false,
+            canRetry: false,
           },
         };
     stateRef.current = normalized;
@@ -309,6 +331,21 @@ const CliffGamePlayPage: React.FC = () => {
           prev.ropes.cleared)
       ) {
         setRopesEpoch((value) => value + 1);
+      }
+      if (
+        prev &&
+        normalized.scene === 'balls' &&
+        normalized.balls.myRemaining === normalized.balls.each &&
+        normalized.balls.partnerRemaining === normalized.balls.each &&
+        normalized.balls.pairScore === 0 &&
+        !normalized.balls.cleared &&
+        (prev.scene !== 'balls' ||
+          prev.balls.myRemaining !== prev.balls.each ||
+          prev.balls.partnerRemaining !== prev.balls.each ||
+          prev.balls.pairScore !== 0 ||
+          prev.balls.cleared)
+      ) {
+        setBallsEpoch((value) => value + 1);
       }
       return normalized;
     });
@@ -666,6 +703,36 @@ const CliffGamePlayPage: React.FC = () => {
     }
   };
 
+  const handleEnterBalls = async () => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_enter_balls', {}, postCliffEnterBalls);
+    } catch (error: any) {
+      const code = error?.response?.data?.code;
+      setToast({
+        open: true,
+        message:
+          code === 'WAIT_PARTNER'
+            ? t('games.cliff.waitPartner')
+            : error?.response?.data?.error || t('games.cliff.balls.enterFailed'),
+        severity: code === 'WAIT_PARTNER' ? 'info' : 'error',
+      });
+    }
+  };
+
+  const handleBallThrow = async (zoneScore: number) => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_ball_throw', { zoneScore }, () => postCliffBallThrow(zoneScore));
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.balls.throwFailed'),
+        severity: 'error',
+      });
+    }
+  };
+
   const handleActivateLift = async (petIds: string[]) => {
     unlockGameAudio();
     setActivatingLift(true);
@@ -751,6 +818,21 @@ const CliffGamePlayPage: React.FC = () => {
     }
   };
 
+  const handleResetBalls = async () => {
+    setResetting(true);
+    try {
+      await emitOrPost('cliff_game_reset_balls', {}, postCliffResetBalls);
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.inventory.resetBallsFailed'),
+        severity: 'error',
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
+
   if (loading) {
     return (
       <GameFrame>
@@ -800,8 +882,10 @@ const CliffGamePlayPage: React.FC = () => {
             elapsedMs={elapsedMs}
             resettingGate={resetting}
             resettingRopes={resetting}
+            resettingBalls={resetting}
             onResetGate={handleResetGate}
             onResetRopes={handleResetRopes}
+            onResetBalls={handleResetBalls}
           />
           {itemBurst && <CliffItemAward itemId={itemBurst} />}
           {showHub && (
@@ -844,7 +928,27 @@ const CliffGamePlayPage: React.FC = () => {
             />
           )}
           {state.scene === 'ropes' && !showClimb && (
-            <CliffRopes key={ropesEpoch} state={state} onJump={handleRopeJump} />
+            <CliffRopes
+              key={ropesEpoch}
+              state={state}
+              onJump={handleRopeJump}
+              onNext={() => {
+                void handleEnterBalls();
+              }}
+            />
+          )}
+          {state.scene === 'balls' && !showClimb && (
+            <CliffBalls
+              key={ballsEpoch}
+              state={state}
+              onThrow={(zoneScore) => {
+                void handleBallThrow(zoneScore);
+              }}
+              onRetry={() => {
+                void handleResetBalls();
+              }}
+              onNext={() => undefined}
+            />
           )}
           {state.scene === 'finished' && (
             <CliffFinish

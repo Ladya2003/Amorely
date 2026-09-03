@@ -28,6 +28,8 @@ const cliffPlayerProgressSchema = new mongoose.Schema(
     encouragementUses: { type: Number, default: 0, min: 0, max: 5 },
     encouragementCooldownUntil: { type: Date, default: null },
     ropeIndex: { type: Number, default: 0, min: 0, max: 8 },
+    ballsRemaining: { type: Number, default: 5, min: 0, max: 5 },
+    ballsScore: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
@@ -40,7 +42,7 @@ const cliffGameStateSchema = new mongoose.Schema({
     unique: true,
   },
   runId: { type: String, required: true },
-  scene: { type: String, enum: ['hub', 'bridge', 'lift', 'ropes', 'finished'], default: 'hub' },
+  scene: { type: String, enum: ['hub', 'bridge', 'lift', 'ropes', 'balls', 'finished'], default: 'hub' },
   altitudeM: { type: Number, default: 10 },
   gateDestroyed: { type: Boolean, default: false },
   runStartedAt: { type: Date, default: null },

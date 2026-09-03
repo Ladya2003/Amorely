@@ -517,7 +517,7 @@ export const syncQuizGameState = async () => {
   return response.data as { state: QuizGameState };
 };
 
-export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'finished';
+export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'balls' | 'finished';
 
 export interface CliffLiftPet {
   id: string;
@@ -611,6 +611,18 @@ export interface CliffGameState {
     checkpointIndex: number;
     cleared: boolean;
   };
+  balls: {
+    myRemaining: number;
+    partnerRemaining: number;
+    myScore: number;
+    partnerScore: number;
+    pairScore: number;
+    each: number;
+    threshold: number;
+    zoneScores: number[];
+    cleared: boolean;
+    canRetry: boolean;
+  };
   canReset: boolean;
 }
 
@@ -695,8 +707,15 @@ export const postCliffEnterRopes = async () => (await postCliffAction('ropes/ent
 export const postCliffRopeJump = async (hit: boolean) =>
   (await postCliffAction('ropes/jump', { hit })).state;
 
+export const postCliffEnterBalls = async () => (await postCliffAction('balls/enter')).state;
+
+export const postCliffBallThrow = async (zoneScore: number) =>
+  (await postCliffAction('balls/throw', { zoneScore })).state;
+
 export const postCliffReset = async () => (await postCliffAction('reset')).state;
 
 export const postCliffResetGate = async () => (await postCliffAction('reset-gate')).state;
 
 export const postCliffResetRopes = async () => (await postCliffAction('reset-ropes')).state;
+
+export const postCliffResetBalls = async () => (await postCliffAction('reset-balls')).state;

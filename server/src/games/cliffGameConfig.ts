@@ -5,6 +5,7 @@ export const CLIFF_LIFT_RAISED_ALTITUDE = 130;
 export const CLIFF_ROPES_ALTITUDE = 140;
 export const CLIFF_ROPES_CHECKPOINT_ALTITUDE = 145;
 export const CLIFF_ROPES_END_ALTITUDE = 148;
+export const CLIFF_BALLS_ALTITUDE = 160;
 export const CLIFF_FINISH_ALTITUDE = 150;
 export const CLIFF_ROPES_FIRST = 3;
 export const CLIFF_ROPES_SECOND = 5;
@@ -12,6 +13,11 @@ export const CLIFF_ROPES_TOTAL = CLIFF_ROPES_FIRST + CLIFF_ROPES_SECOND;
 export const CLIFF_ROPES_CHECKPOINT = CLIFF_ROPES_FIRST;
 export const CLIFF_LIFT_PET_MIN_LEVEL = 2;
 export const CLIFF_LIFT_PETS_REQUIRED = 2;
+
+export const CLIFF_BALLS_EACH = 5;
+export const CLIFF_BALLS_SCORE_THRESHOLD = 170;
+export const CLIFF_BALL_ZONE_SCORES = [10, 20, 30, 40] as const;
+export type CliffBallZoneScore = (typeof CLIFF_BALL_ZONE_SCORES)[number] | 0;
 
 export const CLIFF_PICKAXE_COST = 50;
 export const CLIFF_AXE_IRON_COST = 20;
@@ -28,7 +34,7 @@ export const CLIFF_IRON_BOULDER_COUNT = 5;
 export const CLIFF_COPPER_BOULDER_COUNT = 5;
 export const CLIFF_MINE_RESET_MS = 12 * 60 * 60 * 1000;
 
-export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'finished';
+export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'balls' | 'finished';
 export type CliffMetal = 'iron' | 'copper';
 export type CliffPickaxeType = CliffMetal;
 export type CliffShopItemId = 'iron_pickaxe' | 'copper_pickaxe' | 'axe';

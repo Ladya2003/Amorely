@@ -526,6 +526,22 @@
         "enterFailed": "No se pudo llegar a las cuerdas",
         "jumpFailed": "No se pudo saltar"
       },
+      "balls": {
+        "hint": "Una pista con zonas. Lanza con fuerza y ángulo: cuanto más lejos ruede, más puntos.",
+        "start": "Empezar",
+        "choose": "Apuntar",
+        "throw": "Lanzar",
+        "progress": "Bolas {{balls}}/{{each}} · {{myScore}} · Pareja {{partnerBalls}}/{{each}} · {{partnerScore}} · Juntos {{pairScore}}/{{threshold}}",
+        "scored": "+{{score}}",
+        "miss": "Falló…",
+        "cleared": "¡Suficientes puntos! Podemos seguir.",
+        "failed": "No alcanzó. ¿Lo intentamos otra vez?",
+        "retry": "Intentar de nuevo",
+        "next": "Seguir",
+        "enterFailed": "No se pudo llegar a las bolas",
+        "throwFailed": "No se pudo lanzar la bola"
+      },
+      "waitPartner": "Espera a tu pareja",
       "finish": {
         "title": "El puente es vuestro",
         "time": "Tiempo: {{time}}",
@@ -571,7 +587,9 @@
         "resetGate": "Resetear puerta y puente",
         "resetGateFailed": "No se pudo resetear la puerta",
         "resetRopes": "Resetear nivel de cuerdas",
-        "resetRopesFailed": "No se pudieron resetear las cuerdas"
+        "resetRopesFailed": "No se pudieron resetear las cuerdas",
+        "resetBalls": "Resetear nivel de bolas",
+        "resetBallsFailed": "No se pudieron resetear las bolas"
       }
     },
     "tab": "Juegos",

@@ -59,6 +59,7 @@ import {
   breakCliffGate,
   buyCliffShopItem,
   bindCliffPresenceNotify,
+  enterCliffBalls,
   enterCliffGame,
   enterCliffMine,
   enterCliffRopes,
@@ -67,12 +68,14 @@ import {
   formatCliffGameState,
   getCliffGameParticipantIds,
   leaveCliffGame,
+  resetCliffBalls,
   resetCliffGateAndBridge,
   resetCliffRopes,
   resetCliffRun,
   resolveCliffGameContext,
   surrenderCliffBridge,
   tapCliffBoulder,
+  throwCliffBall,
   throwCliffStone,
 } from './cliffGameService';
 import { bindGameCurrencyNotify } from './gameCurrencyAwards';
@@ -918,6 +921,25 @@ export const attachGameSocketHandlers = (
     });
   });
 
+  socket.on('cliff_game_enter_balls', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await enterCliffBalls(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_ball_throw', async (payload?: { zoneScore?: number }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const zoneScore = payload?.zoneScore;
+      const state = await throwCliffBall(userId, context, zoneScore);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context), {
+        ballThrow: { userId, zoneScore },
+      });
+    });
+  });
+
   socket.on('cliff_game_reset', async () => {
     await withCliffAction(true, async (userId) => {
       const context = await resolveCliffGameContext(userId);
@@ -938,6 +960,14 @@ export const attachGameSocketHandlers = (
     await withCliffAction(true, async (userId) => {
       const context = await resolveCliffGameContext(userId);
       const state = await resetCliffRopes(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_reset_balls', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await resetCliffBalls(userId, context);
       await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
     });
   });
