@@ -417,4 +417,61 @@ export const playCliffSpeechSound = async (): Promise<void> => {
   playTone(ctx, start + 0.05, 392, 0.06, 0.05, 'sine');
 };
 
+const GUIDE_STEP_COUNT = 4;
+let lastGuideStepIndex = -1;
+
+export const playCliffGuideStepSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  let index = Math.floor(Math.random() * GUIDE_STEP_COUNT);
+  if (index === lastGuideStepIndex) {
+    index = (index + 1) % GUIDE_STEP_COUNT;
+  }
+  lastGuideStepIndex = index;
+  const start = ctx.currentTime;
+  const base = 168 + index * 18 + Math.random() * 12;
+  playTone(ctx, start, base, 0.045, 0.035, 'triangle');
+  playTone(ctx, start + 0.012, base * 0.62, 0.05, 0.022, 'sine');
+};
+
+export const playCliffGuideResetSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 196, 0.08, 0.07, 'sawtooth');
+  playTone(ctx, start + 0.06, 147, 0.12, 0.08, 'square');
+  playTone(ctx, start + 0.14, 98, 0.18, 0.07, 'sawtooth');
+  playTone(ctx, start + 0.24, 73, 0.2, 0.055, 'sine');
+};
+
+export const playCliffGuidePetRunSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 784, 0.06, 0.045, 'triangle');
+  playTone(ctx, start + 0.05, 659.25, 0.07, 0.04, 'sine');
+  [0.12, 0.2, 0.28, 0.36, 0.44, 0.52].forEach((offset, index) => {
+    playTone(ctx, start + offset, 420 + index * 36, 0.05, 0.028, index % 2 === 0 ? 'triangle' : 'sine');
+  });
+  playTone(ctx, start + 0.58, 987.77, 0.1, 0.04, 'sine');
+};
+
+export const playCliffGuideEscapeSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  [523.25, 659.25, 783.99, 987.77].forEach((freq, index) => {
+    playTone(ctx, start + index * 0.07, freq, 0.2, 0.07, index === 3 ? 'triangle' : 'sine');
+  });
+};
+
+export const playCliffGuidePickSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 440, 0.07, 0.07, 'sine');
+  playTone(ctx, start + 0.05, 554.37, 0.1, 0.065, 'triangle');
+  playTone(ctx, start + 0.11, 659.25, 0.12, 0.055, 'sine');
+};
+
 export const GAME_TIMER_LOW_THRESHOLD = TIMER_LOW_THRESHOLD;

@@ -14,15 +14,20 @@ import {
   postCliffEnter,
   postCliffEnterBalls,
   postCliffEnterCaves,
+  postCliffEnterGuides,
   postCliffEnterMine,
   postCliffEnterRopes,
   postCliffFinish,
   postCliffLeave,
   postCliffReset,
   postCliffResetBalls,
+  postCliffMoveGuide,
+  postCliffPickGuidePet,
   postCliffResetCaves,
   postCliffResetGate,
+  postCliffResetGuides,
   postCliffResetRopes,
+  postCliffSendGuidePet,
   postCliffRopeJump,
   postCliffSurrender,
   postCliffTapBoulder,
@@ -32,6 +37,7 @@ import {
   type CliffCaveInventory,
   type CliffCaveResource,
   type CliffGameState,
+  type CliffGuideDir,
   type CliffIntroLine,
   type CliffPublicBoulder,
   type CliffPublicCaveBoulder,
@@ -54,6 +60,7 @@ import CliffRopes from '../components/Games/Cliff/CliffRopes';
 import CliffBalls from '../components/Games/Cliff/CliffBalls';
 import CliffCaves from '../components/Games/Cliff/CliffCaves';
 import CliffCaveFall from '../components/Games/Cliff/CliffCaveFall';
+import CliffGuides from '../components/Games/Cliff/CliffGuides';
 import CliffOverlayPresence from '../components/Games/Cliff/CliffOverlayPresence';
 import CliffItemAward from '../components/Games/Cliff/CliffItemAward';
 import { cliffCaveItemImage, cliffItemImage } from '../components/Games/Cliff/cliffAssets';
@@ -145,6 +152,30 @@ const emptyCavesState = (): CliffGameState['caves'] => ({
   cleared: false,
 });
 
+const emptyGuidesState = (): CliffGameState['guides'] => ({
+  role: 'owner',
+  width: 0,
+  height: 0,
+  cells: [],
+  my: {
+    x: 0,
+    y: 0,
+    escaped: false,
+    runsLeft: 0,
+    runsTotal: 0,
+    lanternWithPet: false,
+    trail: [],
+    trailUntil: null,
+    lastFork: null,
+    pet: null,
+    trapTold: false,
+  },
+  partnerEscaped: false,
+  bothEscaped: false,
+  eligiblePets: [],
+  minLevel: 2,
+});
+
 const projectCliffBoulderTaps = (
   state: CliffGameState,
   boulderId: string | null,
@@ -230,6 +261,7 @@ const CliffGamePlayPage: React.FC = () => {
   const [ropesEpoch, setRopesEpoch] = useState(0);
   const [ballsEpoch, setBallsEpoch] = useState(0);
   const [cavesEpoch, setCavesEpoch] = useState(0);
+  const [guidesEpoch, setGuidesEpoch] = useState(0);
   const [caveMineOpen, setCaveMineOpen] = useState(false);
   const [showCaveFall, setShowCaveFall] = useState(false);
   const [caveFallEpoch, setCaveFallEpoch] = useState(0);
@@ -396,11 +428,17 @@ const CliffGamePlayPage: React.FC = () => {
             canRetry: false,
           },
         };
-    const normalized: CliffGameState = withBalls.caves
+    const withCaves: CliffGameState = withBalls.caves
       ? withBalls
       : {
           ...withBalls,
           caves: emptyCavesState(),
+        };
+    const normalized: CliffGameState = withCaves.guides
+      ? withCaves
+      : {
+          ...withCaves,
+          guides: emptyGuidesState(),
         };
     stateRef.current = normalized;
     setState((current) => {
@@ -468,6 +506,16 @@ const CliffGamePlayPage: React.FC = () => {
         setCaveMineOpen(false);
         setActiveBoulderId(null);
         playCaveFall();
+      }
+      if (
+        prev &&
+        normalized.scene === 'guides' &&
+        !normalized.guides.my.escaped &&
+        !normalized.guides.my.pet &&
+        normalized.guides.my.runsLeft === 0 &&
+        (prev.scene !== 'guides' || prev.guides.my.escaped || Boolean(prev.guides.my.pet))
+      ) {
+        setGuidesEpoch((value) => value + 1);
       }
       return normalized;
     });
@@ -561,6 +609,17 @@ const CliffGamePlayPage: React.FC = () => {
         inFlightMineTapsRef.current = 0;
         setPendingMineTaps(0);
         setInFlightMineTaps(0);
+      }
+      if (payload.code === 'WAIT_PARTNER') {
+        setToast({ open: true, message: t('games.cliff.waitPartner'), severity: 'info' });
+        return;
+      }
+      if (payload.code === 'PET_TAKEN') {
+        setToast({ open: true, message: t('games.cliff.guides.petTaken'), severity: 'error' });
+        return;
+      }
+      if (payload.code === 'INVALID_DIR') {
+        return;
       }
       if (payload.message) {
         setToast({ open: true, message: payload.message, severity: 'error' });
@@ -898,6 +957,70 @@ const CliffGamePlayPage: React.FC = () => {
     }
   };
 
+  const handleEnterGuides = async () => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_enter_guides', {}, postCliffEnterGuides);
+    } catch (error: any) {
+      const code = error?.response?.data?.code;
+      setToast({
+        open: true,
+        message:
+          code === 'WAIT_PARTNER'
+            ? t('games.cliff.waitPartner')
+            : error?.response?.data?.error || t('games.cliff.guides.enterFailed'),
+        severity: code === 'WAIT_PARTNER' ? 'info' : 'error',
+      });
+    }
+  };
+
+  const handlePickGuidePet = async (petId: string) => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_guides_pick_pet', { petId }, () => postCliffPickGuidePet(petId));
+    } catch (error: any) {
+      const code = error?.response?.data?.code;
+      setToast({
+        open: true,
+        message:
+          code === 'PET_TAKEN'
+            ? t('games.cliff.guides.petTaken')
+            : error?.response?.data?.error || t('games.cliff.guides.pickFailed'),
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleSendGuidePet = async () => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_guides_send_pet', {}, postCliffSendGuidePet);
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.guides.sendFailed'),
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleGuideMove = async (dir: CliffGuideDir) => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_guides_move', { dir }, () => postCliffMoveGuide(dir));
+    } catch (error: any) {
+      const code = error?.response?.data?.code;
+      if (code === 'INVALID_DIR') {
+        return;
+      }
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.guides.moveFailed'),
+        severity: 'error',
+      });
+    }
+  };
+
   const handleCaveCraft = async () => {
     unlockGameAudio();
     try {
@@ -1065,6 +1188,23 @@ const CliffGamePlayPage: React.FC = () => {
     }
   };
 
+  const handleResetGuides = async () => {
+    setResetting(true);
+    try {
+      setCaveMineOpen(false);
+      setGuidesEpoch((value) => value + 1);
+      await emitOrPost('cliff_game_reset_guides', {}, postCliffResetGuides);
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.inventory.resetGuidesFailed'),
+        severity: 'error',
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
+
   if (loading) {
     return (
       <GameFrame>
@@ -1116,10 +1256,12 @@ const CliffGamePlayPage: React.FC = () => {
             resettingRopes={resetting}
             resettingBalls={resetting}
             resettingCaves={resetting}
+            resettingGuides={resetting}
             onResetGate={handleResetGate}
             onResetRopes={handleResetRopes}
             onResetBalls={handleResetBalls}
             onResetCaves={handleResetCaves}
+            onResetGuides={handleResetGuides}
           />
           {itemBurst && <CliffItemAward src={itemBurst.src} amount={itemBurst.amount} />}
           {showHub && (
@@ -1238,6 +1380,34 @@ const CliffGamePlayPage: React.FC = () => {
                   });
                   return;
                 }
+                void handleEnterGuides();
+              }}
+              onNext={() => {
+                void handleEnterGuides();
+              }}
+            />
+          )}
+          {showCaveFall && (
+            <CliffCaveFall
+              key={caveFallEpoch}
+              state={state}
+              onContinue={() => setShowCaveFall(false)}
+            />
+          )}
+          {state.scene === 'guides' && !showClimb && (
+            <CliffGuides
+              key={guidesEpoch}
+              state={state}
+              onPickPet={(petId) => {
+                void handlePickGuidePet(petId);
+              }}
+              onSendPet={() => {
+                void handleSendGuidePet();
+              }}
+              onMove={(dir) => {
+                void handleGuideMove(dir);
+              }}
+              onNext={() => {
                 if (!state.partnerPresent) {
                   setToast({
                     open: true,
@@ -1246,14 +1416,6 @@ const CliffGamePlayPage: React.FC = () => {
                   });
                 }
               }}
-              onNext={() => undefined}
-            />
-          )}
-          {showCaveFall && (
-            <CliffCaveFall
-              key={caveFallEpoch}
-              state={state}
-              onContinue={() => setShowCaveFall(false)}
             />
           )}
           {state.scene === 'finished' && (

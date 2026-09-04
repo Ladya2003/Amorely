@@ -86,6 +86,11 @@ import {
   resetCliffRopes,
   resetCliffRun,
   tapCliffCaveBoulder,
+  enterCliffGuides,
+  moveCliffGuide,
+  pickCliffGuidePet,
+  resetCliffGuides,
+  sendCliffGuidePet,
   resolveCliffGameContext,
   surrenderCliffBridge,
   tapCliffBoulder,
@@ -225,7 +230,14 @@ const handleCliffGameError = (error: unknown, res: Response): boolean => {
                 error.code === 'ROPES_NOT_READY' ||
                 error.code === 'CAVES_NOT_READY' ||
                 error.code === 'WRONG_MINE' ||
-                error.code === 'WRONG_CRAFT_STEP'
+                error.code === 'WRONG_CRAFT_STEP' ||
+                error.code === 'GUIDES_NOT_READY' ||
+                error.code === 'GUIDE_ESCAPED' ||
+                error.code === 'NEED_GUIDE_PET' ||
+                error.code === 'NO_GUIDE_RUNS' ||
+                error.code === 'INVALID_DIR' ||
+                error.code === 'PET_ALREADY_CHOSEN' ||
+                error.code === 'PET_TAKEN'
               ? 409
               : 400;
 
@@ -1071,6 +1083,81 @@ router.post('/cliff/reset-caves', async (req: any, res: Response) => {
     }
     console.error('Ошибка cliff/reset-caves:', error);
     res.status(500).json({ error: 'Не удалось сбросить пещеры' });
+  }
+});
+
+router.post('/cliff/guides/enter', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await enterCliffGuides(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/guides/enter:', error);
+    res.status(500).json({ error: 'Не удалось войти в тьму' });
+  }
+});
+
+router.post('/cliff/guides/pet', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await pickCliffGuidePet(userId, context, req.body?.petId);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/guides/pet:', error);
+    res.status(500).json({ error: 'Не удалось выбрать питомца' });
+  }
+});
+
+router.post('/cliff/guides/send', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await sendCliffGuidePet(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/guides/send:', error);
+    res.status(500).json({ error: 'Не удалось отправить питомца' });
+  }
+});
+
+router.post('/cliff/guides/move', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await moveCliffGuide(userId, context, req.body?.dir);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/guides/move:', error);
+    res.status(500).json({ error: 'Не удалось шагнуть' });
+  }
+});
+
+router.post('/cliff/reset-guides', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await resetCliffGuides(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/reset-guides:', error);
+    res.status(500).json({ error: 'Не удалось сбросить проводников' });
   }
 });
 

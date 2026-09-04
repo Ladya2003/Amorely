@@ -517,7 +517,22 @@ export const syncQuizGameState = async () => {
   return response.data as { state: QuizGameState };
 };
 
-export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'balls' | 'caves' | 'finished';
+export type CliffScene =
+  | 'hub'
+  | 'bridge'
+  | 'lift'
+  | 'ropes'
+  | 'balls'
+  | 'caves'
+  | 'guides'
+  | 'finished';
+export type CliffGuideDir = 'up' | 'down' | 'left' | 'right';
+export type CliffGuideCellKind = 'wall' | 'path' | 'trap' | 'start' | 'exit';
+
+export interface CliffGuidePoint {
+  x: number;
+  y: number;
+}
 export type CliffCaveResource = 'iron' | 'copper' | 'quartz' | 'resin';
 export type CliffCaveSide = 'owner' | 'partner';
 export type CliffCaveItemId =
@@ -665,6 +680,29 @@ export interface CliffGameState {
     boulders: CliffPublicCaveBoulder[];
     cleared: boolean;
   };
+  guides: {
+    role: CliffCaveSide;
+    width: number;
+    height: number;
+    cells: CliffGuideCellKind[][];
+    my: {
+      x: number;
+      y: number;
+      escaped: boolean;
+      runsLeft: number;
+      runsTotal: number;
+      lanternWithPet: boolean;
+      trail: CliffGuidePoint[];
+      trailUntil: string | null;
+      lastFork: CliffGuidePoint | null;
+      pet: CliffLiftPet | null;
+      trapTold: boolean;
+    };
+    partnerEscaped: boolean;
+    bothEscaped: boolean;
+    eligiblePets: CliffLiftPet[];
+    minLevel: number;
+  };
   canReset: boolean;
 }
 
@@ -783,3 +821,15 @@ export const postCliffCaveGift = async (itemId: CliffCaveItemId) =>
   (await postCliffAction('caves/gift', { itemId })).state;
 
 export const postCliffResetCaves = async () => (await postCliffAction('reset-caves')).state;
+
+export const postCliffEnterGuides = async () => (await postCliffAction('guides/enter')).state;
+
+export const postCliffPickGuidePet = async (petId: string) =>
+  (await postCliffAction('guides/pet', { petId })).state;
+
+export const postCliffSendGuidePet = async () => (await postCliffAction('guides/send')).state;
+
+export const postCliffMoveGuide = async (dir: CliffGuideDir) =>
+  (await postCliffAction('guides/move', { dir })).state;
+
+export const postCliffResetGuides = async () => (await postCliffAction('reset-guides')).state;

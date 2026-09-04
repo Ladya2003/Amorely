@@ -16,7 +16,17 @@ import {
   CLIFF_CAVE_CRAFT_STEPS,
   CLIFF_CAVE_ITEMS,
   CLIFF_CAVES_ALTITUDE,
+  CLIFF_GUIDE_PET_MIN_LEVEL,
+  CLIFF_GUIDES_ALTITUDE,
+  CLIFF_GUIDE_PET_STEP_MS,
+  CLIFF_GUIDE_TRAIL_MS,
   CLIFF_MINE_RESET_MS,
+  clampGuidePetRuns,
+  guideMapOf,
+  guidePathFrom,
+  isCliffGuideDir,
+  isGuideFork,
+  shiftGuidePoint,
   createCliffCaveBoulders,
   emptyCliffCaveInventory,
   isCliffCaveItemId,
@@ -43,6 +53,9 @@ import {
   type CliffCaveItemId,
   type CliffCaveResource,
   type CliffCaveSide,
+  type CliffGuideCellKind,
+  type CliffGuideDir,
+  type CliffGuidePoint,
   type CliffIntroLine,
   type CliffPickaxeType,
   type CliffScene,
@@ -184,6 +197,29 @@ export interface CliffGamePublicState {
     boulders: CliffPublicCaveBoulder[];
     cleared: boolean;
   };
+  guides: {
+    role: CliffCaveSide;
+    width: number;
+    height: number;
+    cells: CliffGuideCellKind[][];
+    my: {
+      x: number;
+      y: number;
+      escaped: boolean;
+      runsLeft: number;
+      runsTotal: number;
+      lanternWithPet: boolean;
+      trail: CliffGuidePoint[];
+      trailUntil: string | null;
+      lastFork: CliffGuidePoint | null;
+      pet: CliffLiftPublicPet | null;
+      trapTold: boolean;
+    };
+    partnerEscaped: boolean;
+    bothEscaped: boolean;
+    eligiblePets: CliffLiftPublicPet[];
+    minLevel: number;
+  };
   canReset: boolean;
 }
 
@@ -254,6 +290,18 @@ const createEmptyProgress = (userId: string) => ({
   caveLensFlask: 0,
   caveLampBody: 0,
   caveLantern: 0,
+  guideX: 0,
+  guideY: 0,
+  guideEscaped: false,
+  guidePetId: null as mongoose.Types.ObjectId | null,
+  guideRunsLeft: 0,
+  guideRunsTotal: 0,
+  guideScoutIndex: 0,
+  guideTrailUntil: null as Date | null,
+  guideTrailCells: [] as string[],
+  guideLastForkX: null as number | null,
+  guideLastForkY: null as number | null,
+  guideTrapTold: false,
 });
 
 const resetBallsProgress = (progress: {
@@ -318,6 +366,74 @@ const resetCavesProgress = (progress: {
   caveLantern?: number;
 }) => {
   writeCaveInventory(progress, emptyCliffCaveInventory());
+};
+
+type CliffGuideProgress = {
+  guideX?: number;
+  guideY?: number;
+  guideEscaped?: boolean;
+  guidePetId?: mongoose.Types.ObjectId | null;
+  guideRunsLeft?: number;
+  guideRunsTotal?: number;
+  guideScoutIndex?: number;
+  guideTrailUntil?: Date | null;
+  guideTrailCells?: string[];
+  guideLastForkX?: number | null;
+  guideLastForkY?: number | null;
+  guideTrapTold?: boolean;
+};
+
+const parseGuideCellKey = (value: string): CliffGuidePoint | null => {
+  const [xRaw, yRaw] = value.split(',');
+  const x = Number(xRaw);
+  const y = Number(yRaw);
+  if (!Number.isInteger(x) || !Number.isInteger(y)) {
+    return null;
+  }
+  return { x, y };
+};
+
+const guideTrailCellsOf = (progress: CliffGuideProgress): CliffGuidePoint[] =>
+  (progress.guideTrailCells ?? [])
+    .map(parseGuideCellKey)
+    .filter((point): point is CliffGuidePoint => Boolean(point));
+
+const expireGuideTrail = (progress: CliffGuideProgress, now: Date) => {
+  const until = progress.guideTrailUntil ? new Date(progress.guideTrailUntil).getTime() : 0;
+  if (!until || until > now.getTime()) {
+    return;
+  }
+  progress.guideTrailUntil = null;
+  progress.guideTrailCells = [];
+  progress.guideLastForkX = null;
+  progress.guideLastForkY = null;
+};
+
+const resetGuidesProgress = (progress: CliffGuideProgress, role: CliffCaveSide) => {
+  const start = guideMapOf(role).start;
+  progress.guideX = start.x;
+  progress.guideY = start.y;
+  progress.guideEscaped = false;
+  progress.guidePetId = null;
+  progress.guideRunsLeft = 0;
+  progress.guideRunsTotal = 0;
+  progress.guideScoutIndex = 0;
+  progress.guideTrailUntil = null;
+  progress.guideTrailCells = [];
+  progress.guideLastForkX = null;
+  progress.guideLastForkY = null;
+  progress.guideTrapTold = false;
+};
+
+const resetGuidesRunFields = (state: any, context: CliffGameContext) => {
+  resetGuidesProgress(getProgress(state, context.ownerUserId), 'owner');
+  resetGuidesProgress(getProgress(state, context.partnerUserId), 'partner');
+};
+
+const cavesClearedOf = (state: any, context: CliffGameContext) => {
+  const ownerInv = caveInventoryOf(getProgress(state, context.ownerUserId));
+  const partnerInv = caveInventoryOf(getProgress(state, context.partnerUserId));
+  return deriveCavesPhase(ownerInv, partnerInv).action === 'done';
 };
 
 const caveRoleOf = (userId: string, context: CliffGameContext): CliffCaveSide =>
@@ -441,6 +557,53 @@ const formatCavesPublic = (
   };
 };
 
+const formatGuidesPublic = (
+  state: any,
+  viewerUserId: string,
+  context: CliffGameContext,
+  now: Date,
+  pets: { eligiblePets: CliffLiftPublicPet[]; selectedPet: CliffLiftPublicPet | null }
+): CliffGamePublicState['guides'] => {
+  const role = caveRoleOf(viewerUserId, context);
+  const map = guideMapOf(role);
+  const partnerUserId =
+    viewerUserId === context.ownerUserId ? context.partnerUserId : context.ownerUserId;
+  const myProgress = getProgress(state, viewerUserId);
+  const partnerProgress = getProgress(state, partnerUserId);
+  const trailUntil = myProgress.guideTrailUntil ? new Date(myProgress.guideTrailUntil) : null;
+  const trailActive = Boolean(trailUntil && trailUntil.getTime() > now.getTime());
+  const trail = trailActive ? guideTrailCellsOf(myProgress) : [];
+  const lastFork =
+    typeof myProgress.guideLastForkX === 'number' && typeof myProgress.guideLastForkY === 'number'
+      ? { x: myProgress.guideLastForkX, y: myProgress.guideLastForkY }
+      : null;
+  const start = map.start;
+
+  return {
+    role,
+    width: map.width,
+    height: map.height,
+    cells: map.cells,
+    my: {
+      x: myProgress.guideX ?? start.x,
+      y: myProgress.guideY ?? start.y,
+      escaped: Boolean(myProgress.guideEscaped),
+      runsLeft: myProgress.guideRunsLeft ?? 0,
+      runsTotal: myProgress.guideRunsTotal ?? 0,
+      lanternWithPet: trailActive,
+      trail: trailActive ? trail : [],
+      trailUntil: trailActive && trailUntil ? trailUntil.toISOString() : null,
+      lastFork: trailActive ? lastFork : null,
+      pet: pets.selectedPet,
+      trapTold: Boolean(myProgress.guideTrapTold),
+    },
+    partnerEscaped: Boolean(partnerProgress.guideEscaped),
+    bothEscaped: Boolean(myProgress.guideEscaped) && Boolean(partnerProgress.guideEscaped),
+    eligiblePets: pets.eligiblePets,
+    minLevel: CLIFF_GUIDE_PET_MIN_LEVEL,
+  };
+};
+
 const resetCavesRunFields = (state: any, context: CliffGameContext) => {
   const ownerProgress = getProgress(state, context.ownerUserId);
   const partnerProgress = getProgress(state, context.partnerUserId);
@@ -449,7 +612,7 @@ const resetCavesRunFields = (state: any, context: CliffGameContext) => {
   state.set('caveBoulders', createCliffCaveBoulders());
 };
 
-type CliffTestResetFrom = 'gate' | 'ropes' | 'balls' | 'caves';
+type CliffTestResetFrom = 'gate' | 'ropes' | 'balls' | 'caves' | 'guides';
 
 const resetBridgeProgress = (progress: {
   stonesRemaining?: number;
@@ -475,6 +638,7 @@ const resetStagesFrom = (state: any, context: CliffGameContext, from: CliffTestR
         progress.ropeIndex = 0;
         resetBallsProgress(progress);
         resetCavesProgress(progress);
+        resetGuidesProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
       }
       state.set('caveBoulders', createCliffCaveBoulders());
       state.gateDestroyed = false;
@@ -491,6 +655,7 @@ const resetStagesFrom = (state: any, context: CliffGameContext, from: CliffTestR
         progress.ropeIndex = 0;
         resetBallsProgress(progress);
         resetCavesProgress(progress);
+        resetGuidesProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
       }
       state.set('caveBoulders', createCliffCaveBoulders());
       state.scene = 'ropes';
@@ -500,6 +665,7 @@ const resetStagesFrom = (state: any, context: CliffGameContext, from: CliffTestR
       for (const progress of players) {
         resetBallsProgress(progress);
         resetCavesProgress(progress);
+        resetGuidesProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
       }
       state.set('caveBoulders', createCliffCaveBoulders());
       state.scene = 'balls';
@@ -507,8 +673,14 @@ const resetStagesFrom = (state: any, context: CliffGameContext, from: CliffTestR
       return;
     case 'caves':
       resetCavesRunFields(state, context);
+      resetGuidesRunFields(state, context);
       state.scene = 'caves';
       state.altitudeM = CLIFF_CAVES_ALTITUDE;
+      return;
+    case 'guides':
+      resetGuidesRunFields(state, context);
+      state.scene = 'guides';
+      state.altitudeM = CLIFF_GUIDES_ALTITUDE;
       return;
     default: {
       const exhaustive: never = from;
@@ -792,6 +964,46 @@ const loadCliffLiftPets = async (
   };
 };
 
+const loadCliffGuidePets = async (
+  state: any,
+  viewerUserId: string,
+  ownerUserId: string,
+  partnerUserId: string
+): Promise<{ eligiblePets: CliffLiftPublicPet[]; selectedPet: CliffLiftPublicPet | null }> => {
+  if (state.scene !== 'guides') {
+    return { eligiblePets: [], selectedPet: null };
+  }
+
+  const viewerProgress = getProgress(state, viewerUserId);
+  const selectedId = viewerProgress.guidePetId ? toId(viewerProgress.guidePetId) : '';
+  const coupleOwnerIds = [ownerUserId, partnerUserId];
+
+  if (selectedId) {
+    const selectedDoc = await Pet.findById(selectedId).lean();
+    return {
+      eligiblePets: [],
+      selectedPet: selectedDoc ? formatCliffLiftPet(selectedDoc, viewerUserId) : null,
+    };
+  }
+
+  const partnerProgress = getProgress(state, viewerUserId === ownerUserId ? partnerUserId : ownerUserId);
+  const takenId = partnerProgress.guidePetId ? toId(partnerProgress.guidePetId) : '';
+
+  const eligibleDocs = await Pet.find({
+    ownerId: { $in: coupleOwnerIds },
+    level: { $gte: CLIFF_GUIDE_PET_MIN_LEVEL },
+  })
+    .sort({ level: -1, name: 1 })
+    .lean();
+
+  return {
+    eligiblePets: eligibleDocs
+      .filter((pet) => pet._id.toString() !== takenId)
+      .map((pet) => formatCliffLiftPet(pet, viewerUserId)),
+    selectedPet: null,
+  };
+};
+
 const shopLockReason = (
   state: any,
   viewerUserId: string,
@@ -842,11 +1054,12 @@ export const formatCliffGameState = async (
   const partnerUserId =
     viewerUserId === context.ownerUserId ? context.partnerUserId : context.ownerUserId;
 
-  const [meDoc, partnerDoc, wallet, liftPets] = await Promise.all([
+  const [meDoc, partnerDoc, wallet, liftPets, guidePets] = await Promise.all([
     User.findById(viewerUserId).select('username firstName lastName avatar'),
     User.findById(partnerUserId).select('username firstName lastName avatar'),
     getBalance(viewerUserId),
     loadCliffLiftPets(state, viewerUserId, context.ownerUserId, context.partnerUserId),
+    loadCliffGuidePets(state, viewerUserId, context.ownerUserId, context.partnerUserId),
   ]);
 
   const myProgress = getProgress(state, viewerUserId);
@@ -956,6 +1169,7 @@ export const formatCliffGameState = async (
       };
     })(),
     caves: formatCavesPublic(state, viewerUserId, context),
+    guides: formatGuidesPublic(state, viewerUserId, context, now, guidePets),
     canReset: state.scene === 'finished',
   };
 };
@@ -1603,6 +1817,188 @@ export const giftCliffCaveItem = async (
 export const resetCliffCaves = async (_userId: string, context: CliffGameContext) => {
   const state = await getOrCreateCliffGameState(context);
   resetStagesFrom(state, context, 'caves');
+  await state.save();
+  return state;
+};
+
+export const enterCliffGuides = async (_userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'caves') {
+    throw new CliffGameError('GUIDES_NOT_READY', 'Сначала соберите фонари');
+  }
+  if (!cavesClearedOf(state, context)) {
+    throw new CliffGameError('GUIDES_NOT_READY', 'Сначала соберите фонари');
+  }
+  if (!bothPartnersPresent(state, context)) {
+    throw new CliffGameError('WAIT_PARTNER', 'Подождите партнёра');
+  }
+
+  resetGuidesRunFields(state, context);
+  state.scene = 'guides';
+  state.altitudeM = CLIFF_GUIDES_ALTITUDE;
+  await state.save();
+  return state;
+};
+
+export const pickCliffGuidePet = async (
+  userId: string,
+  context: CliffGameContext,
+  petIdRaw: unknown
+) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'guides') {
+    throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя звать питомца');
+  }
+
+  const progress = getProgress(state, userId);
+  expireGuideTrail(progress, new Date());
+  if (progress.guideEscaped) {
+    throw new CliffGameError('GUIDE_ESCAPED', 'Вы уже вышли из лабиринта');
+  }
+  if (progress.guidePetId) {
+    throw new CliffGameError('PET_ALREADY_CHOSEN', 'Питомец уже выбран');
+  }
+
+  const petId = String(petIdRaw ?? '');
+  if (!mongoose.Types.ObjectId.isValid(petId)) {
+    throw new CliffGameError('PETS_NOT_ELIGIBLE', 'Нужен питомец 2 уровня или выше');
+  }
+
+  const pet = await Pet.findOne({
+    _id: petId,
+    ownerId: { $in: [context.ownerUserId, context.partnerUserId] },
+    level: { $gte: CLIFF_GUIDE_PET_MIN_LEVEL },
+  });
+  if (!pet) {
+    throw new CliffGameError('PETS_NOT_ELIGIBLE', 'Нужен питомец 2 уровня или выше');
+  }
+
+  const partnerUserId = userId === context.ownerUserId ? context.partnerUserId : context.ownerUserId;
+  const partnerProgress = getProgress(state, partnerUserId);
+  if (partnerProgress.guidePetId && toId(partnerProgress.guidePetId) === petId) {
+    throw new CliffGameError('PET_TAKEN', 'Этот питомец уже выбран партнёром');
+  }
+
+  const runs = clampGuidePetRuns(pet.level ?? 1);
+  progress.guidePetId = pet._id;
+  progress.guideRunsTotal = runs;
+  progress.guideRunsLeft = runs;
+  await state.save();
+  return state;
+};
+
+export const sendCliffGuidePet = async (userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'guides') {
+    throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя отправлять питомца');
+  }
+
+  const role = caveRoleOf(userId, context);
+  const map = guideMapOf(role);
+  const progress = getProgress(state, userId);
+  expireGuideTrail(progress, new Date());
+  if (progress.guideEscaped) {
+    throw new CliffGameError('GUIDE_ESCAPED', 'Вы уже вышли из лабиринта');
+  }
+  if (!progress.guidePetId) {
+    throw new CliffGameError('NEED_GUIDE_PET', 'Сначала выберите питомца');
+  }
+  if ((progress.guideRunsLeft ?? 0) <= 0) {
+    throw new CliffGameError('NO_GUIDE_RUNS', 'Пробежки закончились');
+  }
+
+  const from = {
+    x: progress.guideX ?? map.start.x,
+    y: progress.guideY ?? map.start.y,
+  };
+  const cells = guidePathFrom(map, from);
+  if (cells.length === 0) {
+    throw new CliffGameError('NO_GUIDE_RUNS', 'Путь уже показан');
+  }
+
+  const lastFork = [...cells].reverse().find((point) => isGuideFork(map, point));
+  progress.guideScoutIndex = map.path.length;
+  progress.guideRunsLeft = Math.max(0, (progress.guideRunsLeft ?? 0) - 1);
+  progress.guideTrailCells = cells.map((point) => `${point.x},${point.y}`);
+  progress.guideTrailUntil = new Date(Date.now() + cells.length * CLIFF_GUIDE_PET_STEP_MS + CLIFF_GUIDE_TRAIL_MS);
+  progress.guideLastForkX = lastFork?.x ?? null;
+  progress.guideLastForkY = lastFork?.y ?? null;
+  await state.save();
+  return state;
+};
+
+const respawnGuidePlayer = (progress: CliffGuideProgress, map: ReturnType<typeof guideMapOf>) => {
+  if (!progress.guideTrapTold) {
+    progress.guideTrapTold = true;
+  }
+  progress.guideX = map.start.x;
+  progress.guideY = map.start.y;
+  progress.guideScoutIndex = 0;
+  progress.guideTrailUntil = null;
+  progress.guideTrailCells = [];
+  progress.guideLastForkX = null;
+  progress.guideLastForkY = null;
+  progress.guideRunsLeft = progress.guideRunsTotal ?? 0;
+};
+
+export const moveCliffGuide = async (
+  userId: string,
+  context: CliffGameContext,
+  dirRaw: unknown
+) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'guides') {
+    throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя идти');
+  }
+  if (!isCliffGuideDir(dirRaw)) {
+    throw new CliffGameError('INVALID_DIR', 'Некорректное направление');
+  }
+
+  const role = caveRoleOf(userId, context);
+  const map = guideMapOf(role);
+  const progress = getProgress(state, userId);
+  const now = new Date();
+  expireGuideTrail(progress, now);
+  if (progress.guideEscaped) {
+    throw new CliffGameError('GUIDE_ESCAPED', 'Вы уже вышли из лабиринта');
+  }
+
+  const from = {
+    x: progress.guideX ?? map.start.x,
+    y: progress.guideY ?? map.start.y,
+  };
+  const next = shiftGuidePoint(from, dirRaw);
+  const kind = map.cells[next.y]?.[next.x];
+  if (!kind || kind === 'wall' || kind === 'trap') {
+    respawnGuidePlayer(progress, map);
+    await state.save();
+    return state;
+  }
+
+  progress.guideX = next.x;
+  progress.guideY = next.y;
+  if (isGuideFork(map, next)) {
+    const trailActive = Boolean(
+      progress.guideTrailUntil && new Date(progress.guideTrailUntil).getTime() > now.getTime()
+    );
+    const onTrail = guideTrailCellsOf(progress).some((cell) => cell.x === next.x && cell.y === next.y);
+    if (trailActive && onTrail) {
+      progress.guideLastForkX = next.x;
+      progress.guideLastForkY = next.y;
+    }
+  }
+  if (kind === 'exit') {
+    progress.guideEscaped = true;
+    progress.guideTrailUntil = null;
+    progress.guideTrailCells = [];
+  }
+  await state.save();
+  return state;
+};
+
+export const resetCliffGuides = async (_userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  resetStagesFrom(state, context, 'guides');
   await state.save();
   return state;
 };

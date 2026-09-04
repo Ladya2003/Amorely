@@ -7,6 +7,7 @@ export const CLIFF_ROPES_CHECKPOINT_ALTITUDE = 145;
 export const CLIFF_ROPES_END_ALTITUDE = 148;
 export const CLIFF_BALLS_ALTITUDE = 160;
 export const CLIFF_CAVES_ALTITUDE = 170;
+export const CLIFF_GUIDES_ALTITUDE = 190;
 export const CLIFF_FINISH_ALTITUDE = 150;
 export const CLIFF_ROPES_FIRST = 3;
 export const CLIFF_ROPES_SECOND = 5;
@@ -35,7 +36,15 @@ export const CLIFF_IRON_BOULDER_COUNT = 5;
 export const CLIFF_COPPER_BOULDER_COUNT = 5;
 export const CLIFF_MINE_RESET_MS = 12 * 60 * 60 * 1000;
 
-export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'balls' | 'caves' | 'finished';
+export type CliffScene =
+  | 'hub'
+  | 'bridge'
+  | 'lift'
+  | 'ropes'
+  | 'balls'
+  | 'caves'
+  | 'guides'
+  | 'finished';
 export type CliffMetal = 'iron' | 'copper';
 export type CliffCaveResource = 'iron' | 'copper' | 'quartz' | 'resin';
 export type CliffCaveSide = 'owner' | 'partner';
@@ -199,6 +208,257 @@ export interface CliffBoulderSeed {
   tapsDone: number;
   depleted: boolean;
 }
+
+export const CLIFF_GUIDE_PET_MIN_LEVEL = CLIFF_LIFT_PET_MIN_LEVEL;
+export const CLIFF_GUIDE_RUN_MAX_CELLS = 8;
+export const CLIFF_GUIDE_RUN_MAX_FORKS = 2;
+export const CLIFF_GUIDE_TRAIL_MS = 5_000;
+export const CLIFF_GUIDE_PET_STEP_MS = 80;
+export const CLIFF_GUIDE_PET_LEVEL_MAX = 5;
+
+export type CliffGuideDir = 'up' | 'down' | 'left' | 'right';
+export type CliffGuideCellKind = 'wall' | 'path' | 'trap' | 'start' | 'exit';
+
+export interface CliffGuidePoint {
+  x: number;
+  y: number;
+}
+
+export interface CliffGuideMap {
+  width: number;
+  height: number;
+  start: CliffGuidePoint;
+  exit: CliffGuidePoint;
+  path: CliffGuidePoint[];
+  forks: CliffGuidePoint[];
+  cells: CliffGuideCellKind[][];
+}
+
+const OWNER_GUIDE_ROWS = [
+  '#############',
+  '#S....T######',
+  '#####.#######',
+  '#.....#######',
+  '#.###########',
+  '#......######',
+  '######.######',
+  '##.....#...##',
+  '##.#####.#.##',
+  '##.......#.##',
+  '##.#######.##',
+  '##T#######..E',
+  '#############',
+] as const;
+
+const PARTNER_GUIDE_ROWS = [
+  '#############',
+  'E..#####T####',
+  '##.#####.####',
+  '##.##....####',
+  '##.##.##.####',
+  '##.##.##.####',
+  '##....##....#',
+  '###########.#',
+  '###########.#',
+  '#######.....#',
+  '#######.#####',
+  '#####T.....S#',
+  '#############',
+] as const;
+
+const GUIDE_DIR_DELTA: Record<CliffGuideDir, CliffGuidePoint> = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+};
+
+const parseGuideKind = (ch: string): CliffGuideCellKind => {
+  switch (ch) {
+    case '#':
+      return 'wall';
+    case '.':
+      return 'path';
+    case 'T':
+      return 'trap';
+    case 'S':
+      return 'start';
+    case 'E':
+      return 'exit';
+    default:
+      throw new Error(`Unknown guide cell "${ch}"`);
+  }
+};
+
+const guidePointKey = (point: CliffGuidePoint) => `${point.x},${point.y}`;
+
+const neighborsOf = (point: CliffGuidePoint): CliffGuidePoint[] => [
+  { x: point.x, y: point.y - 1 },
+  { x: point.x, y: point.y + 1 },
+  { x: point.x - 1, y: point.y },
+  { x: point.x + 1, y: point.y },
+];
+
+const findGuideChar = (rows: readonly string[], ch: string): CliffGuidePoint => {
+  for (let y = 0; y < rows.length; y += 1) {
+    const x = rows[y].indexOf(ch);
+    if (x >= 0) {
+      return { x, y };
+    }
+  }
+  throw new Error(`Guide map is missing ${ch}`);
+};
+
+const walkableKinds: readonly CliffGuideCellKind[] = ['path', 'start', 'exit'];
+
+const buildGuideMap = (rows: readonly string[]): CliffGuideMap => {
+  const height = rows.length;
+  const width = rows[0]?.length ?? 0;
+  const cells = rows.map((row) => Array.from(row, parseGuideKind));
+  const start = findGuideChar(rows, 'S');
+  const exit = findGuideChar(rows, 'E');
+  const visited = new Set<string>([guidePointKey(start)]);
+  const prev = new Map<string, string>();
+  const queue: CliffGuidePoint[] = [start];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) {
+      break;
+    }
+    if (current.x === exit.x && current.y === exit.y) {
+      break;
+    }
+    for (const next of neighborsOf(current)) {
+      const kind = cells[next.y]?.[next.x];
+      if (!kind || !walkableKinds.includes(kind)) {
+        continue;
+      }
+      const key = guidePointKey(next);
+      if (visited.has(key)) {
+        continue;
+      }
+      visited.add(key);
+      prev.set(key, guidePointKey(current));
+      queue.push(next);
+    }
+  }
+
+  const path: CliffGuidePoint[] = [];
+  let cursor: string | undefined = guidePointKey(exit);
+  while (cursor) {
+    const [x, y] = cursor.split(',').map(Number);
+    path.push({ x, y });
+    cursor = prev.get(cursor);
+  }
+  path.reverse();
+  if (path.length === 0 || path[0].x !== start.x || path[0].y !== start.y) {
+    throw new Error('Guide map has no path from start to exit');
+  }
+
+  const forks = path.filter((point) =>
+    neighborsOf(point).some((next) => cells[next.y]?.[next.x] === 'trap')
+  );
+
+  return { width, height, start, exit, path, forks, cells };
+};
+
+export const CLIFF_GUIDE_MAPS: Record<CliffCaveSide, CliffGuideMap> = {
+  owner: buildGuideMap(OWNER_GUIDE_ROWS),
+  partner: buildGuideMap(PARTNER_GUIDE_ROWS),
+};
+
+export const guideMapOf = (role: CliffCaveSide) => CLIFF_GUIDE_MAPS[role];
+
+export const guideCellOf = (map: CliffGuideMap, point: CliffGuidePoint): CliffGuideCellKind | null =>
+  map.cells[point.y]?.[point.x] ?? null;
+
+export const isGuideFork = (map: CliffGuideMap, point: CliffGuidePoint) =>
+  map.forks.some((fork) => fork.x === point.x && fork.y === point.y);
+
+export const shiftGuidePoint = (point: CliffGuidePoint, dir: CliffGuideDir): CliffGuidePoint => {
+  const delta = GUIDE_DIR_DELTA[dir];
+  return { x: point.x + delta.x, y: point.y + delta.y };
+};
+
+export const isCliffGuideDir = (value: unknown): value is CliffGuideDir =>
+  value === 'up' || value === 'down' || value === 'left' || value === 'right';
+
+export const clampGuidePetRuns = (level: number) =>
+  Math.min(CLIFF_GUIDE_PET_LEVEL_MAX, Math.max(CLIFF_GUIDE_PET_MIN_LEVEL, Math.round(level)));
+
+export const nextGuideScoutRun = (
+  map: CliffGuideMap,
+  scoutIndex: number
+): { cells: CliffGuidePoint[]; nextIndex: number } => {
+  const start = Math.max(0, Math.min(scoutIndex, map.path.length - 1));
+  const cells: CliffGuidePoint[] = [];
+  let forks = 0;
+  let index = start;
+  while (index < map.path.length && cells.length < CLIFF_GUIDE_RUN_MAX_CELLS) {
+    const point = map.path[index];
+    cells.push(point);
+    if (index > start && isGuideFork(map, point)) {
+      forks += 1;
+      if (forks >= CLIFF_GUIDE_RUN_MAX_FORKS) {
+        return { cells, nextIndex: index + 1 };
+      }
+    }
+    index += 1;
+  }
+  return { cells, nextIndex: index };
+};
+
+export const guidePathFrom = (map: CliffGuideMap, from: CliffGuidePoint): CliffGuidePoint[] => {
+  const startKind = guideCellOf(map, from);
+  const start = startKind && walkableKinds.includes(startKind) ? from : map.start;
+  if (start.x === map.exit.x && start.y === map.exit.y) {
+    return [start];
+  }
+
+  const visited = new Set<string>([guidePointKey(start)]);
+  const prev = new Map<string, string>();
+  const queue: CliffGuidePoint[] = [start];
+  let reached = false;
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) {
+      break;
+    }
+    if (current.x === map.exit.x && current.y === map.exit.y) {
+      reached = true;
+      break;
+    }
+    for (const next of neighborsOf(current)) {
+      const kind = map.cells[next.y]?.[next.x];
+      if (!kind || !walkableKinds.includes(kind)) {
+        continue;
+      }
+      const key = guidePointKey(next);
+      if (visited.has(key)) {
+        continue;
+      }
+      visited.add(key);
+      prev.set(key, guidePointKey(current));
+      queue.push(next);
+    }
+  }
+
+  if (!reached) {
+    return [];
+  }
+
+  const path: CliffGuidePoint[] = [];
+  let cursor: string | undefined = guidePointKey(map.exit);
+  while (cursor) {
+    const [x, y] = cursor.split(',').map(Number);
+    path.push({ x, y });
+    cursor = prev.get(cursor);
+  }
+  path.reverse();
+  return path;
+};
 
 export const createCliffBoulders = (): CliffBoulderSeed[] => {
   const iron = Array.from({ length: CLIFF_IRON_BOULDER_COUNT }, (_, index) => ({

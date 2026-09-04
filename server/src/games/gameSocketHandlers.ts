@@ -77,6 +77,11 @@ import {
   resetCliffRopes,
   resetCliffRun,
   tapCliffCaveBoulder,
+  enterCliffGuides,
+  moveCliffGuide,
+  pickCliffGuidePet,
+  resetCliffGuides,
+  sendCliffGuidePet,
   resolveCliffGameContext,
   surrenderCliffBridge,
   tapCliffBoulder,
@@ -1024,6 +1029,46 @@ export const attachGameSocketHandlers = (
     await withCliffAction(true, async (userId) => {
       const context = await resolveCliffGameContext(userId);
       const state = await resetCliffCaves(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_enter_guides', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await enterCliffGuides(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_guides_pick_pet', async (payload?: { petId?: string }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await pickCliffGuidePet(userId, context, payload?.petId);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_guides_send_pet', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await sendCliffGuidePet(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_guides_move', async (payload?: { dir?: string }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await moveCliffGuide(userId, context, payload?.dir);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_reset_guides', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await resetCliffGuides(userId, context);
       await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
     });
   });

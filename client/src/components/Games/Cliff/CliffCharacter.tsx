@@ -10,6 +10,7 @@ type CliffCharacterProps = {
   from: 'left' | 'right';
   speech?: string | null;
   compact?: boolean;
+  maze?: boolean;
   speechWide?: boolean;
   speechBelow?: boolean;
   motion?: CliffCharacterMotion;
@@ -22,6 +23,7 @@ const CliffCharacter: React.FC<CliffCharacterProps> = ({
   from,
   speech,
   compact = false,
+  maze = false,
   speechWide = false,
   speechBelow = false,
   motion = 'idle',
@@ -30,7 +32,15 @@ const CliffCharacter: React.FC<CliffCharacterProps> = ({
   const stepping = walking || traveling;
 
   return (
-    <Box sx={{ ...getCliffCharacterWrapSx(motion, from, compact), maxWidth: 'none', overflow: 'visible' }}>
+    <Box
+      sx={{
+        ...getCliffCharacterWrapSx(motion, from, compact && !maze),
+        maxWidth: maze ? '100%' : 'none',
+        width: maze ? 'auto' : undefined,
+        height: maze ? '100%' : undefined,
+        overflow: maze ? 'hidden' : 'visible',
+      }}
+    >
       {speech && motion !== 'leave' && !speechBelow && (
         <Box
           sx={{
@@ -59,8 +69,10 @@ const CliffCharacter: React.FC<CliffCharacterProps> = ({
       <Box
         sx={{
           position: 'relative',
-          width: '100%',
-          maxWidth: compact ? CLIFF_CHAR_COMPACT_MAX_WIDTH : 'none',
+          width: maze ? 'auto' : '100%',
+          height: maze ? '100%' : undefined,
+          maxWidth: maze ? '100%' : compact ? CLIFF_CHAR_COMPACT_MAX_WIDTH : 'none',
+          maxHeight: maze ? '100%' : undefined,
           aspectRatio: '1 / 1.15',
         }}
       >

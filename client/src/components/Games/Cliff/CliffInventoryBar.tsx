@@ -25,10 +25,12 @@ type CliffInventoryBarProps = {
   resettingRopes?: boolean;
   resettingBalls?: boolean;
   resettingCaves?: boolean;
+  resettingGuides?: boolean;
   onResetGate: () => void;
   onResetRopes: () => void;
   onResetBalls: () => void;
   onResetCaves: () => void;
+  onResetGuides: () => void;
 };
 
 const oreIconSx = {
@@ -57,10 +59,12 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
   resettingRopes = false,
   resettingBalls = false,
   resettingCaves = false,
+  resettingGuides = false,
   onResetGate,
   onResetRopes,
   onResetBalls,
   onResetCaves,
+  onResetGuides,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -69,7 +73,7 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
   const iconButton = getCliffHudIconButtonSx();
   const [topic, setTopic] = useState<CliffInventoryTopic | null>(null);
   const [testOpen, setTestOpen] = useState(false);
-  const resetting = resettingGate || resettingRopes || resettingBalls || resettingCaves;
+  const resetting = resettingGate || resettingRopes || resettingBalls || resettingCaves || resettingGuides;
 
   const runReset = (reset: () => void) => {
     setTestOpen(false);
@@ -90,7 +94,7 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
             >
               <CurrencyBadge balance={state.amoreCoins} size="small" showGuideOnClick={false} />
             </Box>
-            {state.scene !== 'caves' && (
+            {state.scene !== 'caves' && state.scene !== 'guides' && (
               <>
                 <Box component="button" type="button" onClick={() => setTopic('iron')} sx={chip}>
                   <Box component="img" src={cliffBoulderImage('iron')} alt="" sx={oreIconSx} />
@@ -260,6 +264,13 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
                 sx={getCliffModalGhostButtonSx()}
               >
                 {t('games.cliff.inventory.resetCaves')}
+              </Button>
+              <Button
+                disabled={resetting}
+                onClick={() => runReset(onResetGuides)}
+                sx={getCliffModalGhostButtonSx()}
+              >
+                {t('games.cliff.inventory.resetGuides')}
               </Button>
             </Box>
           </CliffModalFrame>,

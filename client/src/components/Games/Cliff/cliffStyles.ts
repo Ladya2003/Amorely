@@ -744,6 +744,31 @@ export const getCliffModalGhostButtonSx = () => ({
   },
 });
 
+export const getCliffGuidesRootSx = () => ({
+  ...getCliffSceneRootSx(),
+  background: '#000',
+});
+
+export const getCliffGuidePadSx = () => ({
+  width: 52,
+  height: 52,
+  minWidth: 52,
+  p: 0,
+  fontWeight: 800,
+  fontSize: '1.15rem',
+  lineHeight: 1,
+  color: '#ffe8c8',
+  bgcolor: 'rgba(138, 61, 40, 0.88)',
+  borderRadius: '12px',
+  '&:hover': {
+    bgcolor: '#6e2f1e',
+  },
+  '&.Mui-disabled': {
+    color: '#8a6a58',
+    bgcolor: 'rgba(40, 20, 16, 0.7)',
+  },
+});
+
 export const getCliffParchmentPanelSx = () => ({
   position: 'absolute' as const,
   left: 8,
