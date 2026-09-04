@@ -472,6 +472,8 @@
         "badge": "Mine",
         "ironBoulder": "Rocher de fer",
         "copperBoulder": "Rocher de cuivre",
+        "quartzBoulder": "Veine de quartz",
+        "resinBoulder": "Veine de résine",
         "tapVein": "Touchez la veine",
         "taps": "{{current}}/{{goal}}",
         "needIronPickaxe": "Il faut une pioche de fer",
@@ -546,6 +548,80 @@
         "enterFailed": "Impossible d'atteindre la piste de balles",
         "throwFailed": "Impossible de lancer la balle"
       },
+      "caves": {
+        "falling": "Ooooh nonnn, on tombe !",
+        "fallingMe": "Ooooh nonnn, on tombe !",
+        "fallingPartner": "Aaaaah !",
+        "fallingContinue": "Entrer dans la grotte",
+        "window": "Fente",
+        "darkLocked": "Trop sombre. Il faut deux lanternes.",
+        "myMine": "Ma mine",
+        "partnerMine": "Mine du partenaire",
+        "darkPassage": "Passage sombre",
+        "step": "Étape {{step}}/4",
+        "steps": {
+          "1": {
+            "craft": {
+              "partner": "Fabrique une coupe à mèche : 8 cuivre et 6 résine.",
+              "owner": "Ton partenaire doit fabriquer une coupe à mèche avec 8 cuivre et 6 résine et te la passer."
+            },
+            "gift": {
+              "partner": "Passe la coupe à mèche par la fente.",
+              "owner": "Ton partenaire a la coupe — attends qu’il la passe par la fente."
+            }
+          },
+          "2": {
+            "craft": {
+              "owner": "Fabrique une fiole à lentille : la coupe, 6 fer et 8 quartz.",
+              "partner": "Ton partenaire doit fabriquer une fiole à lentille et te la passer."
+            },
+            "gift": {
+              "owner": "Passe la fiole à lentille par la fente.",
+              "partner": "Attends que ton partenaire passe la fiole par la fente."
+            }
+          },
+          "3": {
+            "craft": {
+              "partner": "Fabrique le corps de lanterne : la fiole, 8 cuivre et 4 résine.",
+              "owner": "Ton partenaire doit fabriquer le corps de lanterne et te le passer."
+            },
+            "gift": {
+              "partner": "Passe le corps de lanterne par la fente.",
+              "owner": "Attends que ton partenaire passe le corps par la fente."
+            }
+          },
+          "4": {
+            "craft": {
+              "owner": "Fabrique deux lanternes : le corps, 8 fer et 6 quartz. Une pour toi, une pour l’autre.",
+              "partner": "Ton partenaire doit fabriquer deux lanternes et t’en passer une."
+            },
+            "gift": {
+              "owner": "Passe une lanterne par la fente.",
+              "partner": "Attends une lanterne de ton partenaire."
+            }
+          }
+        },
+        "craft": "Fabriquer",
+        "gift": "Passer par la fente",
+        "giftPick": "Choisis un objet",
+        "nothingToGift": "Rien à passer pour l’instant",
+        "cleared": "Vous avez chacun une lanterne — le passage sombre est ouvert.",
+        "hintDone": "La grotte noire attend. Continuez ensemble.",
+        "next": "Continuer",
+        "enterFailed": "Impossible d’atteindre les grottes",
+        "craftFailed": "Fabrication impossible",
+        "giftFailed": "Impossible de passer l’objet",
+        "items": {
+          "iron": "Fer",
+          "copper": "Cuivre",
+          "quartz": "Quartz",
+          "resin": "Résine",
+          "wick_cup": "Coupe à mèche",
+          "lens_flask": "Fiole à lentille",
+          "lamp_body": "Corps de lanterne",
+          "lantern": "Lanterne"
+        }
+      },
       "waitPartner": "Attendez votre partenaire",
       "finish": {
         "title": "Le pont est à vous",
@@ -594,7 +670,36 @@
         "resetRopes": "Reset niveau cordes",
         "resetRopesFailed": "Impossible de réinitialiser les cordes",
         "resetBalls": "Reset niveau balles",
-        "resetBallsFailed": "Impossible de réinitialiser les balles"
+        "resetBallsFailed": "Impossible de réinitialiser les balles",
+        "resetCaves": "Reset niveau grottes",
+        "resetCavesFailed": "Impossible de réinitialiser les grottes",
+        "test": "Test",
+        "testTitle": "Reset de test",
+        "testHint": "Réinitialiser un niveau réinitialise aussi tous les suivants.",
+        "quartz": {
+          "title": "Quartz",
+          "body": "Cristal personnel de cette grotte. Le propriétaire le mine ici. Il n’entre pas dans le coffre partagé du camp — seulement par la fente."
+        },
+        "resin": {
+          "title": "Résine",
+          "body": "Résine personnelle de cette grotte. Le partenaire la mine ici. Elle n’entre pas dans le coffre partagé du camp — seulement par la fente."
+        },
+        "wickCup": {
+          "title": "Coupe à mèche",
+          "body": "Le premier cadeau : une coupe de cuivre avec une mèche. Le partenaire la fabrique et la passe par la fente."
+        },
+        "lensFlask": {
+          "title": "Fiole à lentille",
+          "body": "Une fiole de verre. Le propriétaire la fabrique avec la coupe, le fer et le quartz, puis la passe par la fente."
+        },
+        "lampBody": {
+          "title": "Corps de lanterne",
+          "body": "Le boîtier. Le partenaire le fabrique avec la fiole, le cuivre et la résine, puis le passe par la fente."
+        },
+        "lantern": {
+          "title": "Lanterne",
+          "body": "Le propriétaire fabrique deux lanternes. Une pour lui, une par la fente. La grotte noire exige les deux."
+        }
       }
     },
     "tab": "Jeux",

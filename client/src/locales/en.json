@@ -484,6 +484,8 @@
         "badge": "Mine",
         "ironBoulder": "Iron boulder",
         "copperBoulder": "Copper boulder",
+        "quartzBoulder": "Quartz vein",
+        "resinBoulder": "Resin vein",
         "tapVein": "Tap the ore vein",
         "taps": "{{current}}/{{goal}}",
         "needIronPickaxe": "You need an iron pickaxe",
@@ -560,6 +562,80 @@
         "enterFailed": "Could not reach the ball lane",
         "throwFailed": "Could not throw the ball"
       },
+      "caves": {
+        "falling": "Ooooh nooo, we're falling!",
+        "fallingMe": "Ooooh nooo, we're falling!",
+        "fallingPartner": "Aaaaah!",
+        "fallingContinue": "Enter the cave",
+        "window": "Slit",
+        "darkLocked": "It's pitch dark. You need two lanterns.",
+        "myMine": "My mine",
+        "partnerMine": "Partner's mine",
+        "darkPassage": "Dark passage",
+        "step": "Step {{step}}/4",
+        "steps": {
+          "1": {
+            "craft": {
+              "partner": "Craft a wick cup: 8 copper and 6 resin.",
+              "owner": "Your partner needs to craft a wick cup from 8 copper and 6 resin and pass it to you."
+            },
+            "gift": {
+              "partner": "Pass the wick cup through the slit.",
+              "owner": "Your partner crafted the wick cup — wait for them to pass it through the slit."
+            }
+          },
+          "2": {
+            "craft": {
+              "owner": "Craft a lens flask: the wick cup, 6 iron and 8 quartz.",
+              "partner": "Your partner needs to craft a lens flask and pass it to you."
+            },
+            "gift": {
+              "owner": "Pass the lens flask through the slit.",
+              "partner": "Wait for your partner to pass the lens flask through the slit."
+            }
+          },
+          "3": {
+            "craft": {
+              "partner": "Craft a lantern body: the lens flask, 8 copper and 4 resin.",
+              "owner": "Your partner needs to craft a lantern body and pass it to you."
+            },
+            "gift": {
+              "partner": "Pass the lantern body through the slit.",
+              "owner": "Wait for your partner to pass the lantern body through the slit."
+            }
+          },
+          "4": {
+            "craft": {
+              "owner": "Craft two lanterns: the body, 8 iron and 6 quartz. Keep one, give one.",
+              "partner": "Your partner needs to craft two lanterns and pass one to you."
+            },
+            "gift": {
+              "owner": "Pass one lantern through the slit.",
+              "partner": "Wait for a lantern from your partner."
+            }
+          }
+        },
+        "craft": "Craft",
+        "gift": "Pass through the slit",
+        "giftPick": "Choose one item to pass",
+        "nothingToGift": "Nothing to pass yet",
+        "cleared": "We both have lanterns — the dark passage is open.",
+        "hintDone": "The dark cave is waiting. Go on together.",
+        "next": "Continue",
+        "enterFailed": "Could not reach the caves",
+        "craftFailed": "Could not craft",
+        "giftFailed": "Could not pass the item",
+        "items": {
+          "iron": "Iron",
+          "copper": "Copper",
+          "quartz": "Quartz",
+          "resin": "Resin",
+          "wick_cup": "Wick cup",
+          "lens_flask": "Lens flask",
+          "lamp_body": "Lantern body",
+          "lantern": "Lantern"
+        }
+      },
       "waitPartner": "Waiting for your partner",
       "finish": {
         "title": "The bridge is yours",
@@ -608,7 +684,36 @@
         "resetRopes": "Reset ropes",
         "resetRopesFailed": "Could not reset the ropes",
         "resetBalls": "Reset balls",
-        "resetBallsFailed": "Could not reset the balls"
+        "resetBallsFailed": "Could not reset the balls",
+        "resetCaves": "Reset caves",
+        "resetCavesFailed": "Could not reset the caves",
+        "test": "Test",
+        "testTitle": "Test reset",
+        "testHint": "Resetting a stage also resets every stage after it.",
+        "quartz": {
+          "title": "Quartz",
+          "body": "Personal cave crystal. The owner mines it here. It is not shared in the hub chest — pass it only through the slit."
+        },
+        "resin": {
+          "title": "Resin",
+          "body": "Personal cave resin. The partner mines it here. It is not shared in the hub chest — pass it only through the slit."
+        },
+        "wickCup": {
+          "title": "Wick cup",
+          "body": "The first gift: a copper cup with a wick. The partner crafts it and passes it through the slit."
+        },
+        "lensFlask": {
+          "title": "Lens flask",
+          "body": "A glass flask with a lens. The owner crafts it from the wick cup, iron and quartz, then passes it back through the slit."
+        },
+        "lampBody": {
+          "title": "Lantern body",
+          "body": "The lantern housing. The partner crafts it from the flask, copper and resin, then passes it through the slit."
+        },
+        "lantern": {
+          "title": "Lantern",
+          "body": "The owner makes two lanterns. One stays, one is passed through the slit. Both lanterns are needed for the dark cave."
+        }
       }
     },
     "tab": "Games",

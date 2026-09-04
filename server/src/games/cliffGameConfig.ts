@@ -6,6 +6,7 @@ export const CLIFF_ROPES_ALTITUDE = 140;
 export const CLIFF_ROPES_CHECKPOINT_ALTITUDE = 145;
 export const CLIFF_ROPES_END_ALTITUDE = 148;
 export const CLIFF_BALLS_ALTITUDE = 160;
+export const CLIFF_CAVES_ALTITUDE = 170;
 export const CLIFF_FINISH_ALTITUDE = 150;
 export const CLIFF_ROPES_FIRST = 3;
 export const CLIFF_ROPES_SECOND = 5;
@@ -34,8 +35,119 @@ export const CLIFF_IRON_BOULDER_COUNT = 5;
 export const CLIFF_COPPER_BOULDER_COUNT = 5;
 export const CLIFF_MINE_RESET_MS = 12 * 60 * 60 * 1000;
 
-export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'balls' | 'finished';
+export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'balls' | 'caves' | 'finished';
 export type CliffMetal = 'iron' | 'copper';
+export type CliffCaveResource = 'iron' | 'copper' | 'quartz' | 'resin';
+export type CliffCaveSide = 'owner' | 'partner';
+export type CliffCaveItemId =
+  | CliffCaveResource
+  | 'wick_cup'
+  | 'lens_flask'
+  | 'lamp_body'
+  | 'lantern';
+export type CliffCaveCraftAction = 'craft' | 'gift' | 'done';
+
+export const CLIFF_CAVE_VEIN_COUNT = 4;
+export const CLIFF_CAVE_ITEMS: readonly CliffCaveItemId[] = [
+  'iron',
+  'copper',
+  'quartz',
+  'resin',
+  'wick_cup',
+  'lens_flask',
+  'lamp_body',
+  'lantern',
+];
+
+export interface CliffCaveInventory {
+  iron: number;
+  copper: number;
+  quartz: number;
+  resin: number;
+  wick_cup: number;
+  lens_flask: number;
+  lamp_body: number;
+  lantern: number;
+}
+
+export const emptyCliffCaveInventory = (): CliffCaveInventory => ({
+  iron: 0,
+  copper: 0,
+  quartz: 0,
+  resin: 0,
+  wick_cup: 0,
+  lens_flask: 0,
+  lamp_body: 0,
+  lantern: 0,
+});
+
+export interface CliffCaveCraftStep {
+  step: 1 | 2 | 3 | 4;
+  role: CliffCaveSide;
+  result: Exclude<CliffCaveItemId, CliffCaveResource>;
+  resultCount: number;
+  cost: Partial<CliffCaveInventory>;
+}
+
+export const CLIFF_CAVE_CRAFT_STEPS: readonly CliffCaveCraftStep[] = [
+  { step: 1, role: 'partner', result: 'wick_cup', resultCount: 1, cost: { copper: 8, resin: 6 } },
+  { step: 2, role: 'owner', result: 'lens_flask', resultCount: 1, cost: { wick_cup: 1, iron: 6, quartz: 8 } },
+  { step: 3, role: 'partner', result: 'lamp_body', resultCount: 1, cost: { lens_flask: 1, copper: 8, resin: 4 } },
+  { step: 4, role: 'owner', result: 'lantern', resultCount: 2, cost: { lamp_body: 1, iron: 8, quartz: 6 } },
+];
+
+export const pickaxeForCaveResource = (resource: CliffCaveResource): CliffMetal => {
+  switch (resource) {
+    case 'iron':
+    case 'quartz':
+      return 'iron';
+    case 'copper':
+    case 'resin':
+      return 'copper';
+    default: {
+      const exhaustive: never = resource;
+      return exhaustive;
+    }
+  }
+};
+
+export const isCliffCaveItemId = (value: unknown): value is CliffCaveItemId =>
+  typeof value === 'string' && (CLIFF_CAVE_ITEMS as readonly string[]).includes(value);
+
+export const isCliffCaveResource = (value: unknown): value is CliffCaveResource =>
+  value === 'iron' || value === 'copper' || value === 'quartz' || value === 'resin';
+
+export interface CliffCaveBoulderSeed {
+  id: string;
+  resource: CliffCaveResource;
+  side: CliffCaveSide;
+  yield: number;
+  tapsRequired: number;
+  tapsDone: number;
+  depleted: boolean;
+}
+
+const createCaveVeinGroup = (
+  side: CliffCaveSide,
+  resource: CliffCaveResource,
+  count: number
+): CliffCaveBoulderSeed[] =>
+  Array.from({ length: count }, (_, index) => ({
+    id: `cave-${side}-${resource}-${index}`,
+    resource,
+    side,
+    yield: randomIntInclusive(CLIFF_BOULDER_YIELD_MIN, CLIFF_BOULDER_YIELD_MAX),
+    tapsRequired: randomIntInclusive(CLIFF_BOULDER_TAPS_MIN, CLIFF_BOULDER_TAPS_MAX),
+    tapsDone: 0,
+    depleted: false,
+  }));
+
+export const createCliffCaveBoulders = (): CliffCaveBoulderSeed[] => [
+  ...createCaveVeinGroup('owner', 'iron', CLIFF_CAVE_VEIN_COUNT),
+  ...createCaveVeinGroup('owner', 'quartz', CLIFF_CAVE_VEIN_COUNT),
+  ...createCaveVeinGroup('partner', 'copper', CLIFF_CAVE_VEIN_COUNT),
+  ...createCaveVeinGroup('partner', 'resin', CLIFF_CAVE_VEIN_COUNT),
+];
 export type CliffPickaxeType = CliffMetal;
 export type CliffShopItemId = 'iron_pickaxe' | 'copper_pickaxe' | 'axe';
 export type CliffIntroLine = 'wow' | 'agree';

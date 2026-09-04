@@ -384,7 +384,10 @@ export const getCliffMineTapBadgeSx = (roomy = false) => ({
   gap: roomy ? 0.55 : 0.3,
 });
 
-export const getCliffMineTapBarSx = (metal: 'iron' | 'copper', progress: number) => {
+export const getCliffMineTapBarSx = (
+  metal: 'iron' | 'copper' | 'quartz' | 'resin',
+  progress: number
+) => {
   let fill = '#ffb15a';
   switch (metal) {
     case 'iron':
@@ -392,6 +395,12 @@ export const getCliffMineTapBarSx = (metal: 'iron' | 'copper', progress: number)
       break;
     case 'copper':
       fill = '#ffb15a';
+      break;
+    case 'quartz':
+      fill = '#d8e7ff';
+      break;
+    case 'resin':
+      fill = '#e38a2a';
       break;
     default: {
       const exhaustive: never = metal;

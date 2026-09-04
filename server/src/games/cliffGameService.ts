@@ -13,7 +13,14 @@ import {
   CLIFF_BALLS_SCORE_THRESHOLD,
   CLIFF_BALL_ZONE_SCORES,
   CLIFF_BRIDGE_ALTITUDE,
+  CLIFF_CAVE_CRAFT_STEPS,
+  CLIFF_CAVE_ITEMS,
+  CLIFF_CAVES_ALTITUDE,
   CLIFF_MINE_RESET_MS,
+  createCliffCaveBoulders,
+  emptyCliffCaveInventory,
+  isCliffCaveItemId,
+  pickaxeForCaveResource,
   CLIFF_HOLES_REQUIRED,
   CLIFF_HUB_ALTITUDE,
   CLIFF_LIFT_ALTITUDE,
@@ -31,6 +38,11 @@ import {
   createCliffBoulders,
   getCliffShopItem,
   type CliffBallZoneScore,
+  type CliffCaveCraftAction,
+  type CliffCaveInventory,
+  type CliffCaveItemId,
+  type CliffCaveResource,
+  type CliffCaveSide,
   type CliffIntroLine,
   type CliffPickaxeType,
   type CliffScene,
@@ -60,6 +72,16 @@ export interface CliffPublicUser {
 export interface CliffPublicBoulder {
   id: string;
   metal: 'iron' | 'copper';
+  yield: number;
+  tapsRequired: number;
+  tapsDone: number;
+  depleted: boolean;
+}
+
+export interface CliffPublicCaveBoulder {
+  id: string;
+  resource: CliffCaveResource;
+  side: CliffCaveSide;
   yield: number;
   tapsRequired: number;
   tapsDone: number;
@@ -150,6 +172,18 @@ export interface CliffGamePublicState {
     cleared: boolean;
     canRetry: boolean;
   };
+  caves: {
+    role: CliffCaveSide;
+    step: 1 | 2 | 3 | 4;
+    action: CliffCaveCraftAction;
+    canCraft: boolean;
+    canGift: boolean;
+    giftables: Array<{ id: CliffCaveItemId; count: number }>;
+    my: CliffCaveInventory;
+    partner: CliffCaveInventory;
+    boulders: CliffPublicCaveBoulder[];
+    cleared: boolean;
+  };
   canReset: boolean;
 }
 
@@ -212,6 +246,14 @@ const createEmptyProgress = (userId: string) => ({
   ropeIndex: 0,
   ballsRemaining: CLIFF_BALLS_EACH,
   ballsScore: 0,
+  caveIron: 0,
+  caveCopper: 0,
+  caveQuartz: 0,
+  caveResin: 0,
+  caveWickCup: 0,
+  caveLensFlask: 0,
+  caveLampBody: 0,
+  caveLantern: 0,
 });
 
 const resetBallsProgress = (progress: {
@@ -220,6 +262,259 @@ const resetBallsProgress = (progress: {
 }) => {
   progress.ballsRemaining = CLIFF_BALLS_EACH;
   progress.ballsScore = 0;
+};
+
+const caveInventoryOf = (progress: {
+  caveIron?: number;
+  caveCopper?: number;
+  caveQuartz?: number;
+  caveResin?: number;
+  caveWickCup?: number;
+  caveLensFlask?: number;
+  caveLampBody?: number;
+  caveLantern?: number;
+}): CliffCaveInventory => ({
+  iron: progress.caveIron ?? 0,
+  copper: progress.caveCopper ?? 0,
+  quartz: progress.caveQuartz ?? 0,
+  resin: progress.caveResin ?? 0,
+  wick_cup: progress.caveWickCup ?? 0,
+  lens_flask: progress.caveLensFlask ?? 0,
+  lamp_body: progress.caveLampBody ?? 0,
+  lantern: progress.caveLantern ?? 0,
+});
+
+const writeCaveInventory = (
+  progress: {
+    caveIron?: number;
+    caveCopper?: number;
+    caveQuartz?: number;
+    caveResin?: number;
+    caveWickCup?: number;
+    caveLensFlask?: number;
+    caveLampBody?: number;
+    caveLantern?: number;
+  },
+  inventory: CliffCaveInventory
+) => {
+  progress.caveIron = inventory.iron;
+  progress.caveCopper = inventory.copper;
+  progress.caveQuartz = inventory.quartz;
+  progress.caveResin = inventory.resin;
+  progress.caveWickCup = inventory.wick_cup;
+  progress.caveLensFlask = inventory.lens_flask;
+  progress.caveLampBody = inventory.lamp_body;
+  progress.caveLantern = inventory.lantern;
+};
+
+const resetCavesProgress = (progress: {
+  caveIron?: number;
+  caveCopper?: number;
+  caveQuartz?: number;
+  caveResin?: number;
+  caveWickCup?: number;
+  caveLensFlask?: number;
+  caveLampBody?: number;
+  caveLantern?: number;
+}) => {
+  writeCaveInventory(progress, emptyCliffCaveInventory());
+};
+
+const caveRoleOf = (userId: string, context: CliffGameContext): CliffCaveSide =>
+  userId === context.ownerUserId ? 'owner' : 'partner';
+
+const canPayCaveCost = (inventory: CliffCaveInventory, cost: Partial<CliffCaveInventory>) =>
+  (Object.keys(cost) as CliffCaveItemId[]).every((itemId) => (inventory[itemId] ?? 0) >= (cost[itemId] ?? 0));
+
+const spendCaveCost = (inventory: CliffCaveInventory, cost: Partial<CliffCaveInventory>) => {
+  (Object.keys(cost) as CliffCaveItemId[]).forEach((itemId) => {
+    inventory[itemId] = Math.max(0, inventory[itemId] - (cost[itemId] ?? 0));
+  });
+};
+
+const caveGiftablesOf = (inventory: CliffCaveInventory) =>
+  CLIFF_CAVE_ITEMS.filter((itemId) => inventory[itemId] > 0).map((itemId) => ({
+    id: itemId,
+    count: inventory[itemId],
+  }));
+
+const deriveCavesPhase = (
+  ownerInv: CliffCaveInventory,
+  partnerInv: CliffCaveInventory
+): { step: 1 | 2 | 3 | 4; action: CliffCaveCraftAction } => {
+  if (ownerInv.lantern >= 1 && partnerInv.lantern >= 1) {
+    return { step: 4, action: 'done' };
+  }
+  if (partnerInv.lantern >= 1) {
+    return { step: 4, action: 'done' };
+  }
+  if (ownerInv.lantern >= 1) {
+    return { step: 4, action: 'gift' };
+  }
+  if (ownerInv.lamp_body >= 1) {
+    return { step: 4, action: 'craft' };
+  }
+  if (partnerInv.lamp_body >= 1) {
+    return { step: 3, action: 'gift' };
+  }
+  if (partnerInv.lens_flask >= 1) {
+    return { step: 3, action: 'craft' };
+  }
+  if (ownerInv.lens_flask >= 1) {
+    return { step: 2, action: 'gift' };
+  }
+  if (ownerInv.wick_cup >= 1) {
+    return { step: 2, action: 'craft' };
+  }
+  if (partnerInv.wick_cup >= 1) {
+    return { step: 1, action: 'gift' };
+  }
+  return { step: 1, action: 'craft' };
+};
+
+const formatCaveBoulder = (boulder: {
+  id: string;
+  resource: CliffCaveResource;
+  side: CliffCaveSide;
+  yield: number;
+  tapsRequired: number;
+  tapsDone: number;
+  depleted?: boolean;
+}): CliffPublicCaveBoulder => ({
+  id: boulder.id,
+  resource: boulder.resource,
+  side: boulder.side,
+  yield: boulder.yield,
+  tapsRequired: boulder.tapsRequired,
+  tapsDone: boulder.tapsDone,
+  depleted: Boolean(boulder.depleted),
+});
+
+const formatCavesPublic = (
+  state: any,
+  viewerUserId: string,
+  context: CliffGameContext
+): CliffGamePublicState['caves'] => {
+  const role = caveRoleOf(viewerUserId, context);
+  const myProgress = getProgress(state, viewerUserId);
+  const partnerUserId =
+    viewerUserId === context.ownerUserId ? context.partnerUserId : context.ownerUserId;
+  const partnerProgress = getProgress(state, partnerUserId);
+  const ownerInv = caveInventoryOf(getProgress(state, context.ownerUserId));
+  const partnerInv = caveInventoryOf(getProgress(state, context.partnerUserId));
+  const myInv = caveInventoryOf(myProgress);
+  const theirInv = caveInventoryOf(partnerProgress);
+  const phase = deriveCavesPhase(ownerInv, partnerInv);
+  const recipe = CLIFF_CAVE_CRAFT_STEPS.find((item) => item.step === phase.step);
+  const canCraft =
+    phase.action === 'craft' &&
+    Boolean(recipe) &&
+    recipe?.role === role &&
+    canPayCaveCost(myInv, recipe?.cost ?? {});
+  const canGift =
+    phase.action === 'gift' &&
+    Boolean(recipe) &&
+    recipe?.role === role &&
+    (myInv[recipe.result] ?? 0) > 0;
+
+  return {
+    role,
+    step: phase.step,
+    action: phase.action,
+    canCraft,
+    canGift,
+    giftables: canGift ? caveGiftablesOf(myInv) : [],
+    my: myInv,
+    partner: theirInv,
+    boulders: ((state.caveBoulders ?? []) as Array<{
+      id: string;
+      resource: CliffCaveResource;
+      side: CliffCaveSide;
+      yield: number;
+      tapsRequired: number;
+      tapsDone: number;
+      depleted?: boolean;
+    }>)
+      .filter((boulder) => boulder.side === role)
+      .map(formatCaveBoulder),
+    cleared: phase.action === 'done',
+  };
+};
+
+const resetCavesRunFields = (state: any, context: CliffGameContext) => {
+  const ownerProgress = getProgress(state, context.ownerUserId);
+  const partnerProgress = getProgress(state, context.partnerUserId);
+  resetCavesProgress(ownerProgress);
+  resetCavesProgress(partnerProgress);
+  state.set('caveBoulders', createCliffCaveBoulders());
+};
+
+type CliffTestResetFrom = 'gate' | 'ropes' | 'balls' | 'caves';
+
+const resetBridgeProgress = (progress: {
+  stonesRemaining?: number;
+  holesCompleted?: number;
+  encouragementUses?: number;
+  encouragementCooldownUntil?: Date;
+}) => {
+  progress.stonesRemaining = CLIFF_STONES_EACH;
+  progress.holesCompleted = 0;
+  progress.encouragementUses = 0;
+  progress.encouragementCooldownUntil = undefined;
+};
+
+const resetStagesFrom = (state: any, context: CliffGameContext, from: CliffTestResetFrom) => {
+  const ownerProgress = getProgress(state, context.ownerUserId);
+  const partnerProgress = getProgress(state, context.partnerUserId);
+  const players = [ownerProgress, partnerProgress];
+
+  switch (from) {
+    case 'gate':
+      for (const progress of players) {
+        resetBridgeProgress(progress);
+        progress.ropeIndex = 0;
+        resetBallsProgress(progress);
+        resetCavesProgress(progress);
+      }
+      state.set('caveBoulders', createCliffCaveBoulders());
+      state.gateDestroyed = false;
+      state.bridgeRepaired = false;
+      state.liftRaised = false;
+      state.liftPetIds = [];
+      state.set('holeExpandedForUserId', null);
+      state.set('holeExpandedUntil', null);
+      state.scene = 'hub';
+      state.altitudeM = CLIFF_HUB_ALTITUDE;
+      return;
+    case 'ropes':
+      for (const progress of players) {
+        progress.ropeIndex = 0;
+        resetBallsProgress(progress);
+        resetCavesProgress(progress);
+      }
+      state.set('caveBoulders', createCliffCaveBoulders());
+      state.scene = 'ropes';
+      state.altitudeM = CLIFF_ROPES_ALTITUDE;
+      return;
+    case 'balls':
+      for (const progress of players) {
+        resetBallsProgress(progress);
+        resetCavesProgress(progress);
+      }
+      state.set('caveBoulders', createCliffCaveBoulders());
+      state.scene = 'balls';
+      state.altitudeM = CLIFF_BALLS_ALTITUDE;
+      return;
+    case 'caves':
+      resetCavesRunFields(state, context);
+      state.scene = 'caves';
+      state.altitudeM = CLIFF_CAVES_ALTITUDE;
+      return;
+    default: {
+      const exhaustive: never = from;
+      return exhaustive;
+    }
+  }
 };
 
 const bothPartnersPresent = (state: any, context: CliffGameContext) =>
@@ -272,6 +567,7 @@ const createRunFields = (ownerUserId: string, partnerUserId: string) => ({
   hasCopperPickaxe: false,
   purchasedPickaxes: [],
   boulders: createCliffBoulders(),
+  caveBoulders: createCliffCaveBoulders(),
   mineCycleStartedAt: null as Date | null,
   presentUserIds: [],
   introPlayedUserIds: [],
@@ -659,6 +955,7 @@ export const formatCliffGameState = async (
         canRetry: myRemaining <= 0 && partnerRemaining <= 0 && !cleared,
       };
     })(),
+    caves: formatCavesPublic(state, viewerUserId, context),
     canReset: state.scene === 'finished',
   };
 };
@@ -1093,16 +1390,7 @@ export const jumpCliffRope = async (userId: string, context: CliffGameContext, h
 
 export const resetCliffRopes = async (_userId: string, context: CliffGameContext) => {
   const state = await getOrCreateCliffGameState(context);
-  const ownerProgress = getProgress(state, context.ownerUserId);
-  const partnerProgress = getProgress(state, context.partnerUserId);
-
-  for (const progress of [ownerProgress, partnerProgress]) {
-    progress.ropeIndex = 0;
-    resetBallsProgress(progress);
-  }
-
-  state.scene = 'ropes';
-  state.altitudeM = CLIFF_ROPES_ALTITUDE;
+  resetStagesFrom(state, context, 'ropes');
   await state.save();
   return state;
 };
@@ -1169,41 +1457,159 @@ export const throwCliffBall = async (
 
 export const resetCliffBalls = async (_userId: string, context: CliffGameContext) => {
   const state = await getOrCreateCliffGameState(context);
-  const ownerProgress = getProgress(state, context.ownerUserId);
-  const partnerProgress = getProgress(state, context.partnerUserId);
+  resetStagesFrom(state, context, 'balls');
+  await state.save();
+  return state;
+};
 
-  for (const progress of [ownerProgress, partnerProgress]) {
-    resetBallsProgress(progress);
+export const enterCliffCaves = async (_userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'balls') {
+    throw new CliffGameError('CAVES_NOT_READY', 'Сначала пройдите дорожку с шарами');
+  }
+  if (!ballsClearedOf(state, context)) {
+    throw new CliffGameError('CAVES_NOT_READY', 'Сначала пройдите дорожку с шарами');
+  }
+  if (!bothPartnersPresent(state, context)) {
+    throw new CliffGameError('WAIT_PARTNER', 'Подождите партнёра');
   }
 
-  state.scene = 'balls';
-  state.altitudeM = CLIFF_BALLS_ALTITUDE;
+  resetCavesRunFields(state, context);
+  state.scene = 'caves';
+  state.altitudeM = CLIFF_CAVES_ALTITUDE;
+  await state.save();
+  return state;
+};
+
+export const tapCliffCaveBoulder = async (
+  userId: string,
+  context: CliffGameContext,
+  boulderId: string,
+  rawCount: unknown = 1
+) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'caves') {
+    throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя копать в пещере');
+  }
+
+  const role = caveRoleOf(userId, context);
+  const boulder = (state.caveBoulders ?? []).find((item: { id: string }) => item.id === boulderId);
+  if (!boulder) {
+    throw new CliffGameError('BOULDER_NOT_FOUND', 'Валун не найден');
+  }
+  if (boulder.side !== role) {
+    throw new CliffGameError('WRONG_MINE', 'Это шахта партнёра');
+  }
+  if (boulder.depleted) {
+    throw new CliffGameError('BOULDER_DEPLETED', 'Этот валун уже пуст');
+  }
+
+  const resource = boulder.resource as CliffCaveResource;
+  const pickaxe = pickaxeForCaveResource(resource);
+  const hasPickaxe = pickaxe === 'iron' ? state.hasIronPickaxe : state.hasCopperPickaxe;
+  if (!hasPickaxe) {
+    throw new CliffGameError(
+      'NEED_PICKAXE',
+      pickaxe === 'iron' ? 'Нужна кирка железа' : 'Нужна кирка меди'
+    );
+  }
+
+  const remaining = Math.max(0, boulder.tapsRequired - (boulder.tapsDone ?? 0));
+  const applied = Math.min(normalizeCliffTapCount(rawCount), remaining);
+  if (applied <= 0) {
+    throw new CliffGameError('BOULDER_DEPLETED', 'Этот валун уже пуст');
+  }
+
+  boulder.tapsDone = Math.min(boulder.tapsRequired, (boulder.tapsDone ?? 0) + applied);
+  let yielded = 0;
+  if (boulder.tapsDone >= boulder.tapsRequired) {
+    boulder.depleted = true;
+    yielded = boulder.yield;
+    const progress = getProgress(state, userId);
+    const inventory = caveInventoryOf(progress);
+    inventory[resource] += boulder.yield;
+    writeCaveInventory(progress, inventory);
+  }
+
+  await state.save();
+  return { state, yielded, resource };
+};
+
+export const craftCliffCaveItem = async (userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'caves') {
+    throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя крафтить');
+  }
+
+  const role = caveRoleOf(userId, context);
+  const ownerInv = caveInventoryOf(getProgress(state, context.ownerUserId));
+  const partnerInv = caveInventoryOf(getProgress(state, context.partnerUserId));
+  const phase = deriveCavesPhase(ownerInv, partnerInv);
+  const recipe = CLIFF_CAVE_CRAFT_STEPS.find((item) => item.step === phase.step);
+  if (phase.action !== 'craft' || !recipe || recipe.role !== role) {
+    throw new CliffGameError('WRONG_CRAFT_STEP', 'Сейчас не ваш шаг крафта');
+  }
+
+  const progress = getProgress(state, userId);
+  const inventory = caveInventoryOf(progress);
+  if (!canPayCaveCost(inventory, recipe.cost)) {
+    throw new CliffGameError('NOT_ENOUGH_ORE', 'Не хватает материалов');
+  }
+
+  spendCaveCost(inventory, recipe.cost);
+  inventory[recipe.result] += recipe.resultCount;
+  writeCaveInventory(progress, inventory);
+  await state.save();
+  return state;
+};
+
+export const giftCliffCaveItem = async (
+  userId: string,
+  context: CliffGameContext,
+  itemIdRaw: unknown
+) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'caves') {
+    throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя передавать предметы');
+  }
+  if (!isCliffCaveItemId(itemIdRaw)) {
+    throw new CliffGameError('ITEM_NOT_FOUND', 'Предмет не найден');
+  }
+
+  const partnerUserId =
+    userId === context.ownerUserId ? context.partnerUserId : context.ownerUserId;
+  const ownerInv = caveInventoryOf(getProgress(state, context.ownerUserId));
+  const partnerOwnedInv = caveInventoryOf(getProgress(state, context.partnerUserId));
+  if (deriveCavesPhase(ownerInv, partnerOwnedInv).action === 'done') {
+    throw new CliffGameError('WRONG_CRAFT_STEP', 'Передача уже не нужна');
+  }
+
+  const myProgress = getProgress(state, userId);
+  const partnerProgress = getProgress(state, partnerUserId);
+  const myInv = caveInventoryOf(myProgress);
+  const partnerInv = caveInventoryOf(partnerProgress);
+  if (myInv[itemIdRaw] <= 0) {
+    throw new CliffGameError('NOT_ENOUGH_ORE', 'Нечего передавать');
+  }
+
+  myInv[itemIdRaw] -= 1;
+  partnerInv[itemIdRaw] += 1;
+  writeCaveInventory(myProgress, myInv);
+  writeCaveInventory(partnerProgress, partnerInv);
+  await state.save();
+  return state;
+};
+
+export const resetCliffCaves = async (_userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  resetStagesFrom(state, context, 'caves');
   await state.save();
   return state;
 };
 
 export const resetCliffGateAndBridge = async (_userId: string, context: CliffGameContext) => {
   const state = await getOrCreateCliffGameState(context);
-  const ownerProgress = getProgress(state, context.ownerUserId);
-  const partnerProgress = getProgress(state, context.partnerUserId);
-
-  for (const progress of [ownerProgress, partnerProgress]) {
-    progress.stonesRemaining = CLIFF_STONES_EACH;
-    progress.holesCompleted = 0;
-    progress.encouragementUses = 0;
-    progress.encouragementCooldownUntil = undefined;
-    progress.ropeIndex = 0;
-    resetBallsProgress(progress);
-  }
-
-  state.scene = 'hub';
-  state.altitudeM = CLIFF_HUB_ALTITUDE;
-  state.gateDestroyed = false;
-  state.bridgeRepaired = false;
-  state.liftRaised = false;
-  state.liftPetIds = [];
-  state.set('holeExpandedForUserId', null);
-  state.set('holeExpandedUntil', null);
+  resetStagesFrom(state, context, 'gate');
   await state.save();
   return state;
 };

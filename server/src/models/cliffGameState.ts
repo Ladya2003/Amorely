@@ -12,6 +12,19 @@ const cliffBoulderSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const cliffCaveBoulderSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    resource: { type: String, enum: ['iron', 'copper', 'quartz', 'resin'], required: true },
+    side: { type: String, enum: ['owner', 'partner'], required: true },
+    yield: { type: Number, required: true, min: 4, max: 8 },
+    tapsRequired: { type: Number, required: true, min: 5, max: 20 },
+    tapsDone: { type: Number, default: 0, min: 0 },
+    depleted: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
 const cliffPickaxePurchaseSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -30,6 +43,14 @@ const cliffPlayerProgressSchema = new mongoose.Schema(
     ropeIndex: { type: Number, default: 0, min: 0, max: 8 },
     ballsRemaining: { type: Number, default: 5, min: 0, max: 5 },
     ballsScore: { type: Number, default: 0, min: 0 },
+    caveIron: { type: Number, default: 0, min: 0 },
+    caveCopper: { type: Number, default: 0, min: 0 },
+    caveQuartz: { type: Number, default: 0, min: 0 },
+    caveResin: { type: Number, default: 0, min: 0 },
+    caveWickCup: { type: Number, default: 0, min: 0 },
+    caveLensFlask: { type: Number, default: 0, min: 0 },
+    caveLampBody: { type: Number, default: 0, min: 0 },
+    caveLantern: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
@@ -42,7 +63,11 @@ const cliffGameStateSchema = new mongoose.Schema({
     unique: true,
   },
   runId: { type: String, required: true },
-  scene: { type: String, enum: ['hub', 'bridge', 'lift', 'ropes', 'balls', 'finished'], default: 'hub' },
+  scene: {
+    type: String,
+    enum: ['hub', 'bridge', 'lift', 'ropes', 'balls', 'caves', 'finished'],
+    default: 'hub',
+  },
   altitudeM: { type: Number, default: 10 },
   gateDestroyed: { type: Boolean, default: false },
   runStartedAt: { type: Date, default: null },
@@ -56,6 +81,7 @@ const cliffGameStateSchema = new mongoose.Schema({
   hasCopperPickaxe: { type: Boolean, default: false },
   purchasedPickaxes: { type: [cliffPickaxePurchaseSchema], default: [] },
   boulders: { type: [cliffBoulderSchema], default: [] },
+  caveBoulders: { type: [cliffCaveBoulderSchema], default: [] },
   mineCycleStartedAt: { type: Date, default: null },
   presentUserIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },
   introPlayedUserIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },

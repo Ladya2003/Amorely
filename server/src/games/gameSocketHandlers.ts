@@ -59,19 +59,24 @@ import {
   breakCliffGate,
   buyCliffShopItem,
   bindCliffPresenceNotify,
+  craftCliffCaveItem,
   enterCliffBalls,
+  enterCliffCaves,
   enterCliffGame,
   enterCliffMine,
   enterCliffRopes,
   finishCliffBridge,
+  giftCliffCaveItem,
   jumpCliffRope,
   formatCliffGameState,
   getCliffGameParticipantIds,
   leaveCliffGame,
   resetCliffBalls,
+  resetCliffCaves,
   resetCliffGateAndBridge,
   resetCliffRopes,
   resetCliffRun,
+  tapCliffCaveBoulder,
   resolveCliffGameContext,
   surrenderCliffBridge,
   tapCliffBoulder,
@@ -968,6 +973,57 @@ export const attachGameSocketHandlers = (
     await withCliffAction(true, async (userId) => {
       const context = await resolveCliffGameContext(userId);
       const state = await resetCliffBalls(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_enter_caves', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await enterCliffCaves(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_tap_cave_boulder', async (payload?: { boulderId?: string; count?: number }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const { state, yielded, resource } = await tapCliffCaveBoulder(
+        userId,
+        context,
+        String(payload?.boulderId ?? ''),
+        payload?.count
+      );
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context), {
+        yielded,
+        resource,
+        miningUserId: userId,
+      });
+    });
+  });
+
+  socket.on('cliff_game_cave_craft', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await craftCliffCaveItem(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_cave_gift', async (payload?: { itemId?: string }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await giftCliffCaveItem(userId, context, payload?.itemId);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context), {
+        caveGift: { userId, itemId: payload?.itemId },
+      });
+    });
+  });
+
+  socket.on('cliff_game_reset_caves', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await resetCliffCaves(userId, context);
       await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
     });
   });

@@ -517,7 +517,37 @@ export const syncQuizGameState = async () => {
   return response.data as { state: QuizGameState };
 };
 
-export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'balls' | 'finished';
+export type CliffScene = 'hub' | 'bridge' | 'lift' | 'ropes' | 'balls' | 'caves' | 'finished';
+export type CliffCaveResource = 'iron' | 'copper' | 'quartz' | 'resin';
+export type CliffCaveSide = 'owner' | 'partner';
+export type CliffCaveItemId =
+  | CliffCaveResource
+  | 'wick_cup'
+  | 'lens_flask'
+  | 'lamp_body'
+  | 'lantern';
+export type CliffCaveCraftAction = 'craft' | 'gift' | 'done';
+
+export interface CliffCaveInventory {
+  iron: number;
+  copper: number;
+  quartz: number;
+  resin: number;
+  wick_cup: number;
+  lens_flask: number;
+  lamp_body: number;
+  lantern: number;
+}
+
+export interface CliffPublicCaveBoulder {
+  id: string;
+  resource: CliffCaveResource;
+  side: CliffCaveSide;
+  yield: number;
+  tapsRequired: number;
+  tapsDone: number;
+  depleted: boolean;
+}
 
 export interface CliffLiftPet {
   id: string;
@@ -623,6 +653,18 @@ export interface CliffGameState {
     cleared: boolean;
     canRetry: boolean;
   };
+  caves: {
+    role: CliffCaveSide;
+    step: 1 | 2 | 3 | 4;
+    action: CliffCaveCraftAction;
+    canCraft: boolean;
+    canGift: boolean;
+    giftables: Array<{ id: CliffCaveItemId; count: number }>;
+    my: CliffCaveInventory;
+    partner: CliffCaveInventory;
+    boulders: CliffPublicCaveBoulder[];
+    cleared: boolean;
+  };
   canReset: boolean;
 }
 
@@ -719,3 +761,25 @@ export const postCliffResetGate = async () => (await postCliffAction('reset-gate
 export const postCliffResetRopes = async () => (await postCliffAction('reset-ropes')).state;
 
 export const postCliffResetBalls = async () => (await postCliffAction('reset-balls')).state;
+
+export const postCliffEnterCaves = async () => (await postCliffAction('caves/enter')).state;
+
+export const postCliffTapCaveBoulder = async (boulderId: string, count = 1) => {
+  const response = await axios.post(
+    `${API_URL}/api/games/cliff/caves/boulder/tap`,
+    { boulderId, count },
+    { headers: authHeaders() }
+  );
+  return response.data as {
+    state: CliffGameState;
+    yielded: number;
+    resource: CliffCaveResource;
+  };
+};
+
+export const postCliffCaveCraft = async () => (await postCliffAction('caves/craft')).state;
+
+export const postCliffCaveGift = async (itemId: CliffCaveItemId) =>
+  (await postCliffAction('caves/gift', { itemId })).state;
+
+export const postCliffResetCaves = async () => (await postCliffAction('reset-caves')).state;

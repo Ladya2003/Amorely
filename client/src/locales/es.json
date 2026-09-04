@@ -472,6 +472,8 @@
         "badge": "Mina",
         "ironBoulder": "Roca de hierro",
         "copperBoulder": "Roca de cobre",
+        "quartzBoulder": "Veta de cuarzo",
+        "resinBoulder": "Veta de resina",
         "tapVein": "Toca la veta",
         "taps": "{{current}}/{{goal}}",
         "needIronPickaxe": "Necesitas un pico de hierro",
@@ -546,6 +548,80 @@
         "enterFailed": "No se pudo llegar a las bolas",
         "throwFailed": "No se pudo lanzar la bola"
       },
+      "caves": {
+        "falling": "¡Ooooh nooo, nos caemos!",
+        "fallingMe": "¡Ooooh nooo, nos caemos!",
+        "fallingPartner": "¡Aaaaah!",
+        "fallingContinue": "Entrar en la cueva",
+        "window": "Grieta",
+        "darkLocked": "Está muy oscuro. Hacen falta dos faroles.",
+        "myMine": "Mi mina",
+        "partnerMine": "Mina de tu pareja",
+        "darkPassage": "Paso oscuro",
+        "step": "Paso {{step}}/4",
+        "steps": {
+          "1": {
+            "craft": {
+              "partner": "Crea un cuenco con mecha: 8 de cobre y 6 de resina.",
+              "owner": "Tu pareja debe crear un cuenco con mecha con 8 de cobre y 6 de resina y pasártelo."
+            },
+            "gift": {
+              "partner": "Pasa el cuenco con mecha por la grieta.",
+              "owner": "Tu pareja ya tiene el cuenco: espera a que lo pase por la grieta."
+            }
+          },
+          "2": {
+            "craft": {
+              "owner": "Crea un frasco con lente: el cuenco, 6 de hierro y 8 de cuarzo.",
+              "partner": "Tu pareja debe crear un frasco con lente y pasártelo."
+            },
+            "gift": {
+              "owner": "Pasa el frasco con lente por la grieta.",
+              "partner": "Espera a que tu pareja pase el frasco por la grieta."
+            }
+          },
+          "3": {
+            "craft": {
+              "partner": "Crea el cuerpo del farol: el frasco, 8 de cobre y 4 de resina.",
+              "owner": "Tu pareja debe crear el cuerpo del farol y pasártelo."
+            },
+            "gift": {
+              "partner": "Pasa el cuerpo del farol por la grieta.",
+              "owner": "Espera a que tu pareja pase el cuerpo del farol por la grieta."
+            }
+          },
+          "4": {
+            "craft": {
+              "owner": "Crea dos faroles: el cuerpo, 8 de hierro y 6 de cuarzo. Uno para ti, uno para tu pareja.",
+              "partner": "Tu pareja debe crear dos faroles y pasarte uno."
+            },
+            "gift": {
+              "owner": "Pasa un farol por la grieta.",
+              "partner": "Espera un farol de tu pareja."
+            }
+          }
+        },
+        "craft": "Crear",
+        "gift": "Pasar por la grieta",
+        "giftPick": "Elige un objeto",
+        "nothingToGift": "Aún no hay nada que pasar",
+        "cleared": "Los dos tenéis faroles: el paso oscuro está abierto.",
+        "hintDone": "La cueva oscura espera. Seguid juntos.",
+        "next": "Seguir",
+        "enterFailed": "No se pudo llegar a las cuevas",
+        "craftFailed": "No se pudo crear",
+        "giftFailed": "No se pudo pasar el objeto",
+        "items": {
+          "iron": "Hierro",
+          "copper": "Cobre",
+          "quartz": "Cuarzo",
+          "resin": "Resina",
+          "wick_cup": "Cuenco con mecha",
+          "lens_flask": "Frasco con lente",
+          "lamp_body": "Cuerpo del farol",
+          "lantern": "Farol"
+        }
+      },
       "waitPartner": "Espera a tu pareja",
       "finish": {
         "title": "El puente es vuestro",
@@ -594,7 +670,36 @@
         "resetRopes": "Resetear nivel de cuerdas",
         "resetRopesFailed": "No se pudieron resetear las cuerdas",
         "resetBalls": "Resetear nivel de bolas",
-        "resetBallsFailed": "No se pudieron resetear las bolas"
+        "resetBallsFailed": "No se pudieron resetear las bolas",
+        "resetCaves": "Resetear nivel de cuevas",
+        "resetCavesFailed": "No se pudieron resetear las cuevas",
+        "test": "Test",
+        "testTitle": "Reset de prueba",
+        "testHint": "Al resetear un nivel también se resetean todos los siguientes.",
+        "quartz": {
+          "title": "Cuarzo",
+          "body": "Cristal personal de esta cueva. Lo extrae el dueño de la partida. No va al cofre compartido del campamento: solo por la grieta."
+        },
+        "resin": {
+          "title": "Resina",
+          "body": "Resina personal de esta cueva. La extrae tu pareja. No va al cofre compartido del campamento: solo por la grieta."
+        },
+        "wickCup": {
+          "title": "Cuenco con mecha",
+          "body": "El primer regalo: un cuenco de cobre con mecha. Lo crea tu pareja y lo pasa por la grieta."
+        },
+        "lensFlask": {
+          "title": "Frasco con lente",
+          "body": "Un frasco de cristal. El dueño lo crea con el cuenco, hierro y cuarzo y lo pasa por la grieta."
+        },
+        "lampBody": {
+          "title": "Cuerpo del farol",
+          "body": "La carcasa. Tu pareja la crea con el frasco, cobre y resina y la pasa por la grieta."
+        },
+        "lantern": {
+          "title": "Farol",
+          "body": "El dueño hace dos faroles. Uno se queda, el otro pasa por la grieta. Para la cueva oscura hacen falta los dos."
+        }
       }
     },
     "tab": "Juegos",

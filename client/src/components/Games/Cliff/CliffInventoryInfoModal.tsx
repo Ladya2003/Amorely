@@ -8,7 +8,7 @@ import {
   CURRENCY_GUIDE_SECTIONS,
   type CurrencyGuideSection,
 } from '../../../config/currencyRewardCatalog';
-import { CLIFF_ASSETS, cliffBoulderImage } from './cliffAssets';
+import { CLIFF_ASSETS, cliffBoulderImage, cliffCaveItemImage } from './cliffAssets';
 import CliffModalFrame from './CliffModalFrame';
 import { getCliffModalBodySx, getCliffModalGhostButtonSx } from './cliffStyles';
 
@@ -16,6 +16,12 @@ export type CliffInventoryTopic =
   | 'coins'
   | 'iron'
   | 'copper'
+  | 'quartz'
+  | 'resin'
+  | 'wickCup'
+  | 'lensFlask'
+  | 'lampBody'
+  | 'lantern'
   | 'altitude'
   | 'time'
   | 'ironPickaxe'
@@ -88,6 +94,42 @@ const getInventoryInfo = (
         title: t('games.cliff.inventory.axe.title'),
         body: t('games.cliff.inventory.axe.body'),
         heroSrc: CLIFF_ASSETS.axe,
+      };
+    case 'quartz':
+      return {
+        title: t('games.cliff.inventory.quartz.title'),
+        body: t('games.cliff.inventory.quartz.body'),
+        heroSrc: cliffCaveItemImage('quartz'),
+      };
+    case 'resin':
+      return {
+        title: t('games.cliff.inventory.resin.title'),
+        body: t('games.cliff.inventory.resin.body'),
+        heroSrc: cliffCaveItemImage('resin'),
+      };
+    case 'wickCup':
+      return {
+        title: t('games.cliff.inventory.wickCup.title'),
+        body: t('games.cliff.inventory.wickCup.body'),
+        heroSrc: cliffCaveItemImage('wick_cup'),
+      };
+    case 'lensFlask':
+      return {
+        title: t('games.cliff.inventory.lensFlask.title'),
+        body: t('games.cliff.inventory.lensFlask.body'),
+        heroSrc: cliffCaveItemImage('lens_flask'),
+      };
+    case 'lampBody':
+      return {
+        title: t('games.cliff.inventory.lampBody.title'),
+        body: t('games.cliff.inventory.lampBody.body'),
+        heroSrc: cliffCaveItemImage('lamp_body'),
+      };
+    case 'lantern':
+      return {
+        title: t('games.cliff.inventory.lantern.title'),
+        body: t('games.cliff.inventory.lantern.body'),
+        heroSrc: cliffCaveItemImage('lantern'),
       };
     default: {
       const exhaustive: never = topic;

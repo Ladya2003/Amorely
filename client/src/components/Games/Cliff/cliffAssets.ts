@@ -22,6 +22,14 @@ export const CLIFF_ASSETS = {
   ropesBg2: '/games/cliff/ropes-bg-2.png',
   ballsBg: '/games/cliff/balls-bg.png',
   ballsLane: '/games/cliff/balls-lane.png',
+  cavesFall: '/games/cliff/caves-fall.png',
+  cavesCorridor: '/games/cliff/caves-corridor.png',
+  boulderQuartz: '/games/cliff/boulder-quartz.png',
+  boulderResin: '/games/cliff/boulder-resin.png',
+  wickCup: '/games/cliff/item-wick-cup.png',
+  lensFlask: '/games/cliff/item-lens-flask.png',
+  lampBody: '/games/cliff/item-lamp-body.png',
+  lantern: '/games/cliff/item-lantern.png',
 } as const;
 
 export const cliffBoulderImage = (metal: 'iron' | 'copper') => {
@@ -32,6 +40,50 @@ export const cliffBoulderImage = (metal: 'iron' | 'copper') => {
       return CLIFF_ASSETS.boulderCopper;
     default: {
       const exhaustive: never = metal;
+      return exhaustive;
+    }
+  }
+};
+
+export const cliffCaveResourceImage = (resource: 'iron' | 'copper' | 'quartz' | 'resin') => {
+  switch (resource) {
+    case 'iron':
+      return CLIFF_ASSETS.boulderIron;
+    case 'copper':
+      return CLIFF_ASSETS.boulderCopper;
+    case 'quartz':
+      return CLIFF_ASSETS.boulderQuartz;
+    case 'resin':
+      return CLIFF_ASSETS.boulderResin;
+    default: {
+      const exhaustive: never = resource;
+      return exhaustive;
+    }
+  }
+};
+
+export const cliffCaveItemImage = (
+  id: 'iron' | 'copper' | 'quartz' | 'resin' | 'wick_cup' | 'lens_flask' | 'lamp_body' | 'lantern'
+) => {
+  switch (id) {
+    case 'iron':
+      return CLIFF_ASSETS.boulderIron;
+    case 'copper':
+      return CLIFF_ASSETS.boulderCopper;
+    case 'quartz':
+      return CLIFF_ASSETS.boulderQuartz;
+    case 'resin':
+      return CLIFF_ASSETS.boulderResin;
+    case 'wick_cup':
+      return CLIFF_ASSETS.wickCup;
+    case 'lens_flask':
+      return CLIFF_ASSETS.lensFlask;
+    case 'lamp_body':
+      return CLIFF_ASSETS.lampBody;
+    case 'lantern':
+      return CLIFF_ASSETS.lantern;
+    default: {
+      const exhaustive: never = id;
       return exhaustive;
     }
   }

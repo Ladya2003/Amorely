@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Button, Typography, useTheme } from '@mui/material';
 import CurrencyBadge from '../../Pets/CurrencyBadge';
-import type { CliffGameState } from '../../../services/gamesService';
-import { CLIFF_ASSETS, cliffBoulderImage } from './cliffAssets';
+import type { CliffCaveItemId, CliffGameState } from '../../../services/gamesService';
+import { CLIFF_ASSETS, cliffBoulderImage, cliffCaveItemImage } from './cliffAssets';
 import CliffInventoryInfoModal, { type CliffInventoryTopic } from './CliffInventoryInfoModal';
+import CliffModalFrame from './CliffModalFrame';
 import {
   formatCliffTime,
   getCliffChipButtonSx,
@@ -12,6 +14,8 @@ import {
   getCliffHudIconButtonSx,
   getCliffHudRowSx,
   getCliffHudSx,
+  getCliffModalBodySx,
+  getCliffModalGhostButtonSx,
 } from './cliffStyles';
 
 type CliffInventoryBarProps = {
@@ -20,9 +24,11 @@ type CliffInventoryBarProps = {
   resettingGate?: boolean;
   resettingRopes?: boolean;
   resettingBalls?: boolean;
+  resettingCaves?: boolean;
   onResetGate: () => void;
   onResetRopes: () => void;
   onResetBalls: () => void;
+  onResetCaves: () => void;
 };
 
 const oreIconSx = {
@@ -50,9 +56,11 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
   resettingGate = false,
   resettingRopes = false,
   resettingBalls = false,
+  resettingCaves = false,
   onResetGate,
   onResetRopes,
   onResetBalls,
+  onResetCaves,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -60,6 +68,13 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
   const row = getCliffHudRowSx();
   const iconButton = getCliffHudIconButtonSx();
   const [topic, setTopic] = useState<CliffInventoryTopic | null>(null);
+  const [testOpen, setTestOpen] = useState(false);
+  const resetting = resettingGate || resettingRopes || resettingBalls || resettingCaves;
+
+  const runReset = (reset: () => void) => {
+    setTestOpen(false);
+    reset();
+  };
 
   return (
     <>
@@ -75,23 +90,37 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
             >
               <CurrencyBadge balance={state.amoreCoins} size="small" showGuideOnClick={false} />
             </Box>
-            <Box component="button" type="button" onClick={() => setTopic('iron')} sx={chip}>
-              <Box component="img" src={cliffBoulderImage('iron')} alt="" sx={oreIconSx} />
-              {state.inventory.iron}
-            </Box>
-            <Box component="button" type="button" onClick={() => setTopic('copper')} sx={chip}>
-              <Box component="img" src={cliffBoulderImage('copper')} alt="" sx={oreIconSx} />
-              {state.inventory.copper}
-            </Box>
+            {state.scene !== 'caves' && (
+              <>
+                <Box component="button" type="button" onClick={() => setTopic('iron')} sx={chip}>
+                  <Box component="img" src={cliffBoulderImage('iron')} alt="" sx={oreIconSx} />
+                  {state.inventory.iron}
+                </Box>
+                <Box component="button" type="button" onClick={() => setTopic('copper')} sx={chip}>
+                  <Box component="img" src={cliffBoulderImage('copper')} alt="" sx={oreIconSx} />
+                  {state.inventory.copper}
+                </Box>
+              </>
+            )}
           </Box>
-          <Box sx={row}>
-            <Box component="button" type="button" onClick={() => setTopic('altitude')} sx={chip}>
-              <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 800 }}>
-                {state.altitudeM}m
-              </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+            <Box sx={row}>
+              <Box component="button" type="button" onClick={() => setTopic('altitude')} sx={chip}>
+                <Typography component="span" sx={{ fontSize: 'inherit', fontWeight: 800 }}>
+                  {state.altitudeM}m
+                </Typography>
+              </Box>
+              <Box component="button" type="button" onClick={() => setTopic('time')} sx={chip}>
+                {formatCliffTime(elapsedMs)}
+              </Box>
             </Box>
-            <Box component="button" type="button" onClick={() => setTopic('time')} sx={chip}>
-              {formatCliffTime(elapsedMs)}
+            <Box
+              component="button"
+              type="button"
+              onClick={() => setTestOpen(true)}
+              sx={chip}
+            >
+              {t('games.cliff.inventory.test')}
             </Box>
           </Box>
         </Box>
@@ -132,35 +161,35 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
             )}
           </Box>
         )}
-        <Box sx={{ ...row, flexWrap: 'wrap' }}>
-          <Box
-            component="button"
-            type="button"
-            disabled={resettingGate}
-            onClick={onResetGate}
-            sx={{ ...chip, opacity: resettingGate ? 0.6 : 1 }}
-          >
-            {t('games.cliff.inventory.resetGate')}
+        {state.scene === 'caves' && (
+          <Box sx={{ ...row, flexWrap: 'wrap' }}>
+            {(
+              [
+                ['iron', 'iron'],
+                ['quartz', 'quartz'],
+                ['copper', 'copper'],
+                ['resin', 'resin'],
+                ['wick_cup', 'wickCup'],
+                ['lens_flask', 'lensFlask'],
+                ['lamp_body', 'lampBody'],
+                ['lantern', 'lantern'],
+              ] as Array<[CliffCaveItemId, CliffInventoryTopic]>
+            )
+              .filter(([itemId]) => state.caves.my[itemId] > 0)
+              .map(([itemId, topicId]) => (
+                <Box
+                  key={itemId}
+                  component="button"
+                  type="button"
+                  onClick={() => setTopic(topicId)}
+                  sx={chip}
+                >
+                  <Box component="img" src={cliffCaveItemImage(itemId)} alt="" sx={oreIconSx} />
+                  {state.caves.my[itemId]}
+                </Box>
+              ))}
           </Box>
-          <Box
-            component="button"
-            type="button"
-            disabled={resettingRopes}
-            onClick={onResetRopes}
-            sx={{ ...chip, opacity: resettingRopes ? 0.6 : 1 }}
-          >
-            {t('games.cliff.inventory.resetRopes')}
-          </Box>
-          <Box
-            component="button"
-            type="button"
-            disabled={resettingBalls}
-            onClick={onResetBalls}
-            sx={{ ...chip, opacity: resettingBalls ? 0.6 : 1 }}
-          >
-            {t('games.cliff.inventory.resetBalls')}
-          </Box>
-        </Box>
+        )}
         {state.scene === 'balls' && (
           <Box sx={row}>
             <Box sx={{ ...getCliffChipSx(theme, 'parchment'), ...ballsChipSx }}>
@@ -188,6 +217,54 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
         )}
       </Box>
       {topic && <CliffInventoryInfoModal topic={topic} onClose={() => setTopic(null)} />}
+      {testOpen &&
+        createPortal(
+          <CliffModalFrame
+            title={t('games.cliff.inventory.testTitle')}
+            zIndex={20}
+            pinned="fixed"
+            actions={
+              <Button onClick={() => setTestOpen(false)} sx={getCliffModalGhostButtonSx()}>
+                {t('games.common.close')}
+              </Button>
+            }
+          >
+            <Typography variant="body2" sx={getCliffModalBodySx()}>
+              {t('games.cliff.inventory.testHint')}
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 1, mt: 1.5 }}>
+              <Button
+                disabled={resetting}
+                onClick={() => runReset(onResetGate)}
+                sx={getCliffModalGhostButtonSx()}
+              >
+                {t('games.cliff.inventory.resetGate')}
+              </Button>
+              <Button
+                disabled={resetting}
+                onClick={() => runReset(onResetRopes)}
+                sx={getCliffModalGhostButtonSx()}
+              >
+                {t('games.cliff.inventory.resetRopes')}
+              </Button>
+              <Button
+                disabled={resetting}
+                onClick={() => runReset(onResetBalls)}
+                sx={getCliffModalGhostButtonSx()}
+              >
+                {t('games.cliff.inventory.resetBalls')}
+              </Button>
+              <Button
+                disabled={resetting}
+                onClick={() => runReset(onResetCaves)}
+                sx={getCliffModalGhostButtonSx()}
+              >
+                {t('games.cliff.inventory.resetCaves')}
+              </Button>
+            </Box>
+          </CliffModalFrame>,
+          document.body
+        )}
     </>
   );
 };

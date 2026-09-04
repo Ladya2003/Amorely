@@ -1,9 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
-import type { CliffGameState, CliffMetal, CliffPublicBoulder } from '../../../services/gamesService';
+import type {
+  CliffCaveResource,
+  CliffGameState,
+  CliffPublicBoulder,
+  CliffPublicCaveBoulder,
+} from '../../../services/gamesService';
 import { ArrowBackIcon } from '../../UI/icons';
-import { CLIFF_ASSETS, cliffBoulderImage } from './cliffAssets';
+import { CLIFF_ASSETS, cliffCaveResourceImage } from './cliffAssets';
 import CliffInventoryPack from './CliffInventoryPack';
 import {
   CLIFF_BOULDER_BREAK_MS,
@@ -31,7 +36,7 @@ import {
 type CliffMineTapBadgeProps = {
   current: number;
   goal: number;
-  metal: 'iron' | 'copper';
+  metal: CliffCaveResource;
   roomy?: boolean;
 };
 
@@ -53,12 +58,17 @@ const CliffMineTapBadge: React.FC<CliffMineTapBadgeProps> = ({ current, goal, me
 type CliffMineProps = {
   state: CliffGameState;
   activeBoulderId: string | null;
-  breakAward: { amount: number; metal: CliffMetal } | null;
+  breakAward: { amount: number; resource: CliffCaveResource } | null;
   onSelectBoulder: (boulder: CliffPublicBoulder) => void;
   onTapBoulder: () => void;
   onBreakDone: () => void;
   onCloseBoulder: () => void;
   onClose: () => void;
+  veins?: CliffPublicCaveBoulder[];
+  onSelectVein?: (vein: CliffPublicCaveBoulder) => void;
+  title?: string;
+  pack?: React.ReactNode;
+  hideRefresh?: boolean;
 };
 
 const CliffMine: React.FC<CliffMineProps> = ({
@@ -70,11 +80,28 @@ const CliffMine: React.FC<CliffMineProps> = ({
   onBreakDone,
   onCloseBoulder,
   onClose,
+  veins,
+  onSelectVein,
+  title,
+  pack,
+  hideRefresh = false,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const active = state.boulders.find((boulder) => boulder.id === activeBoulderId) ?? null;
-  const boulderKey = state.boulders.map((boulder) => boulder.id).join('|');
+  const caveMode = Boolean(veins && onSelectVein);
+  const listedVeins =
+    veins ??
+    state.boulders.map((boulder) => ({
+      id: boulder.id,
+      resource: boulder.metal,
+      side: 'owner' as const,
+      yield: boulder.yield,
+      tapsRequired: boulder.tapsRequired,
+      tapsDone: boulder.tapsDone,
+      depleted: boulder.depleted,
+    }));
+  const active = listedVeins.find((boulder) => boulder.id === activeBoulderId) ?? null;
+  const boulderKey = listedVeins.map((boulder) => boulder.id).join('|');
   const spots = useMemo(
     () => getCliffMineBoulderSpots(state.relationshipId, boulderKey.split('|')),
     [boulderKey, state.relationshipId]
@@ -151,11 +178,11 @@ const CliffMine: React.FC<CliffMineProps> = ({
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h6" sx={getCliffMineTitleSx()}>
-              {t(`games.cliff.mine.${active.metal}Boulder`)}
+              {t(`games.cliff.mine.${active.resource}Boulder`)}
             </Typography>
           </Box>
           <Box sx={{ px: 2, pb: 0.75 }}>
-            <CliffInventoryPack state={state} />
+            {pack ?? <CliffInventoryPack state={state} />}
           </Box>
         </Box>
         <Box
@@ -188,7 +215,7 @@ const CliffMine: React.FC<CliffMineProps> = ({
             <Box
               key={breaking ? 'break' : `hit-${hitKey}`}
               component="img"
-              src={cliffBoulderImage(active.metal)}
+              src={cliffCaveResourceImage(active.resource)}
               alt=""
               sx={{
                 width: '100%',
@@ -207,7 +234,7 @@ const CliffMine: React.FC<CliffMineProps> = ({
                 <Box
                   key={`shard-${index}`}
                   component="img"
-                  src={cliffBoulderImage(active.metal)}
+                  src={cliffCaveResourceImage(active.resource)}
                   alt=""
                   sx={getCliffBoulderShardSx(index)}
                 />
@@ -227,7 +254,7 @@ const CliffMine: React.FC<CliffMineProps> = ({
                 </Typography>
                 <Box
                   component="img"
-                  src={cliffBoulderImage(breakAward.metal)}
+                  src={cliffCaveResourceImage(breakAward.resource)}
                   alt=""
                   sx={{
                     width: 36,
@@ -246,7 +273,7 @@ const CliffMine: React.FC<CliffMineProps> = ({
             <CliffMineTapBadge
               current={active.tapsDone}
               goal={active.tapsRequired}
-              metal={active.metal}
+              metal={active.resource}
               roomy
             />
           </Box>
@@ -273,19 +300,19 @@ const CliffMine: React.FC<CliffMineProps> = ({
             <ArrowBackIcon />
           </IconButton>
           <Typography variant="h6" sx={getCliffMineTitleSx()}>
-            {t('games.cliff.mine.title')}
+            {title ?? t('games.cliff.mine.title')}
           </Typography>
-          {resetLabel && (
+          {!hideRefresh && resetLabel && (
             <Typography component="span" sx={getCliffMineRefreshSx()}>
               {resetLabel}
             </Typography>
           )}
         </Box>
         <Box sx={{ px: 1.25, pb: 0.75 }}>
-          <CliffInventoryPack state={state} />
+          {pack ?? <CliffInventoryPack state={state} />}
         </Box>
         <Box sx={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'auto' }}>
-          {state.boulders.map((boulder, index) => {
+          {listedVeins.map((boulder, index) => {
             const spot = spots[index];
             if (!spot) {
               return null;
@@ -295,7 +322,16 @@ const CliffMine: React.FC<CliffMineProps> = ({
                 key={boulder.id}
                 component="button"
                 type="button"
-                onClick={() => onSelectBoulder(boulder)}
+                onClick={() => {
+                  if (caveMode && onSelectVein) {
+                    onSelectVein(boulder);
+                    return;
+                  }
+                  const hubBoulder = state.boulders.find((item) => item.id === boulder.id);
+                  if (hubBoulder) {
+                    onSelectBoulder(hubBoulder);
+                  }
+                }}
                 sx={{
                   position: 'absolute',
                   left: spot.left,
@@ -311,7 +347,7 @@ const CliffMine: React.FC<CliffMineProps> = ({
               >
                 <Box
                   component="img"
-                  src={cliffBoulderImage(boulder.metal)}
+                  src={cliffCaveResourceImage(boulder.resource)}
                   alt=""
                   sx={{
                     width: '100%',
@@ -324,7 +360,7 @@ const CliffMine: React.FC<CliffMineProps> = ({
                 <CliffMineTapBadge
                   current={boulder.tapsDone}
                   goal={boulder.tapsRequired}
-                  metal={boulder.metal}
+                  metal={boulder.resource}
                 />
               </Box>
             );

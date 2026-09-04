@@ -68,19 +68,24 @@ import {
   buyCliffShopItem,
   enterCliffGame,
   activateCliffLift,
+  craftCliffCaveItem,
   enterCliffBalls,
+  enterCliffCaves,
   enterCliffMine,
   enterCliffRopes,
   finishCliffBridge,
+  giftCliffCaveItem,
   jumpCliffRope,
   formatCliffGameState,
   getCliffLeaderboard,
   getOrCreateCliffGameState,
   leaveCliffGame,
   resetCliffBalls,
+  resetCliffCaves,
   resetCliffGateAndBridge,
   resetCliffRopes,
   resetCliffRun,
+  tapCliffCaveBoulder,
   resolveCliffGameContext,
   surrenderCliffBridge,
   tapCliffBoulder,
@@ -217,7 +222,10 @@ const handleCliffGameError = (error: unknown, res: Response): boolean => {
                 error.code === 'NO_BALLS' ||
                 error.code === 'INVALID_ZONE' ||
                 error.code === 'ROPES_COMPLETE' ||
-                error.code === 'ROPES_NOT_READY'
+                error.code === 'ROPES_NOT_READY' ||
+                error.code === 'CAVES_NOT_READY' ||
+                error.code === 'WRONG_MINE' ||
+                error.code === 'WRONG_CRAFT_STEP'
               ? 409
               : 400;
 
@@ -983,6 +991,86 @@ router.post('/cliff/reset-balls', async (req: any, res: Response) => {
     }
     console.error('Ошибка cliff/reset-balls:', error);
     res.status(500).json({ error: 'Не удалось сбросить шары' });
+  }
+});
+
+router.post('/cliff/caves/enter', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await enterCliffCaves(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/caves/enter:', error);
+    res.status(500).json({ error: 'Не удалось перейти к пещерам' });
+  }
+});
+
+router.post('/cliff/caves/boulder/tap', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const { state, yielded, resource } = await tapCliffCaveBoulder(
+      userId,
+      context,
+      String(req.body?.boulderId ?? ''),
+      req.body?.count
+    );
+    res.json({ state: await formatCliffGameState(state, userId, context), yielded, resource });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/caves/boulder/tap:', error);
+    res.status(500).json({ error: 'Не удалось копать' });
+  }
+});
+
+router.post('/cliff/caves/craft', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await craftCliffCaveItem(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/caves/craft:', error);
+    res.status(500).json({ error: 'Не удалось скрафтить' });
+  }
+});
+
+router.post('/cliff/caves/gift', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await giftCliffCaveItem(userId, context, req.body?.itemId);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/caves/gift:', error);
+    res.status(500).json({ error: 'Не удалось передать предмет' });
+  }
+});
+
+router.post('/cliff/reset-caves', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await resetCliffCaves(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/reset-caves:', error);
+    res.status(500).json({ error: 'Не удалось сбросить пещеры' });
   }
 });
 

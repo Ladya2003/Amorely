@@ -472,6 +472,8 @@
         "badge": "Mine",
         "ironBoulder": "Eisenfelsen",
         "copperBoulder": "Kupferfelsen",
+        "quartzBoulder": "Quarzader",
+        "resinBoulder": "Harzader",
         "tapVein": "Ader antippen",
         "taps": "{{current}}/{{goal}}",
         "needIronPickaxe": "Eisen-Spitzhacke nötig",
@@ -546,6 +548,80 @@
         "enterFailed": "Ballbahn konnte nicht erreicht werden",
         "throwFailed": "Ball konnte nicht geworfen werden"
       },
+      "caves": {
+        "falling": "Ooooh nein, wir fallen runter!",
+        "fallingMe": "Ooooh nein, wir fallen runter!",
+        "fallingPartner": "Aaaaah!",
+        "fallingContinue": "In die Höhle",
+        "window": "Spalt",
+        "darkLocked": "Zu dunkel. Ihr braucht zwei Laternen.",
+        "myMine": "Meine Mine",
+        "partnerMine": "Mine des Partners",
+        "darkPassage": "Dunkler Gang",
+        "step": "Schritt {{step}}/4",
+        "steps": {
+          "1": {
+            "craft": {
+              "partner": "Fertige eine Dochtschale: 8 Kupfer und 6 Harz.",
+              "owner": "Dein Partner muss eine Dochtschale aus 8 Kupfer und 6 Harz fertigen und dir reichen."
+            },
+            "gift": {
+              "partner": "Reiche die Dochtschale durch den Spalt.",
+              "owner": "Dein Partner hat die Schale fertig — warte, bis er sie durch den Spalt reicht."
+            }
+          },
+          "2": {
+            "craft": {
+              "owner": "Fertige eine Linsenflasche: Dochtschale, 6 Eisen und 8 Quarz.",
+              "partner": "Dein Partner muss eine Linsenflasche fertigen und dir reichen."
+            },
+            "gift": {
+              "owner": "Reiche die Linsenflasche durch den Spalt.",
+              "partner": "Warte, bis dein Partner die Linsenflasche durch den Spalt reicht."
+            }
+          },
+          "3": {
+            "craft": {
+              "partner": "Fertige ein Laternengehäuse: Linsenflasche, 8 Kupfer und 4 Harz.",
+              "owner": "Dein Partner muss ein Laternengehäuse fertigen und dir reichen."
+            },
+            "gift": {
+              "partner": "Reiche das Laternengehäuse durch den Spalt.",
+              "owner": "Warte, bis dein Partner das Gehäuse durch den Spalt reicht."
+            }
+          },
+          "4": {
+            "craft": {
+              "owner": "Fertige zwei Laternen: Gehäuse, 8 Eisen und 6 Quarz. Eine behalten, eine weitergeben.",
+              "partner": "Dein Partner muss zwei Laternen fertigen und dir eine reichen."
+            },
+            "gift": {
+              "owner": "Reiche eine Laterne durch den Spalt.",
+              "partner": "Warte auf eine Laterne von deinem Partner."
+            }
+          }
+        },
+        "craft": "Herstellen",
+        "gift": "durch den Spalt reichen",
+        "giftPick": "Wähle einen Gegenstand",
+        "nothingToGift": "Noch nichts zum Weiterreichen",
+        "cleared": "Beide haben Laternen — der dunkle Gang ist offen.",
+        "hintDone": "Die dunkle Höhle wartet. Geht zusammen weiter.",
+        "next": "Weiter",
+        "enterFailed": "Die Höhlen konnten nicht erreicht werden",
+        "craftFailed": "Herstellen fehlgeschlagen",
+        "giftFailed": "Weiterreichen fehlgeschlagen",
+        "items": {
+          "iron": "Eisen",
+          "copper": "Kupfer",
+          "quartz": "Quarz",
+          "resin": "Harz",
+          "wick_cup": "Dochtschale",
+          "lens_flask": "Linsenflasche",
+          "lamp_body": "Laternengehäuse",
+          "lantern": "Laterne"
+        }
+      },
       "waitPartner": "Warte auf deinen Partner",
       "finish": {
         "title": "Die Brücke gehört euch",
@@ -594,7 +670,36 @@
         "resetRopes": "Seil-Level zurücksetzen",
         "resetRopesFailed": "Seile konnten nicht zurückgesetzt werden",
         "resetBalls": "Ball-Level zurücksetzen",
-        "resetBallsFailed": "Bälle konnten nicht zurückgesetzt werden"
+        "resetBallsFailed": "Bälle konnten nicht zurückgesetzt werden",
+        "resetCaves": "Höhlen-Level zurücksetzen",
+        "resetCavesFailed": "Höhlen konnten nicht zurückgesetzt werden",
+        "test": "Test",
+        "testTitle": "Test-Reset",
+        "testHint": "Ein Reset setzt auch alle folgenden Level zurück.",
+        "quartz": {
+          "title": "Quarz",
+          "body": "Persönlicher Höhlenkristall. Der Besitzer baut ihn hier ab. Er kommt nicht in die gemeinsame Hub-Kiste — nur durch den Spalt."
+        },
+        "resin": {
+          "title": "Harz",
+          "body": "Persönliches Höhlenharz. Der Partner baut es hier ab. Es kommt nicht in die gemeinsame Hub-Kiste — nur durch den Spalt."
+        },
+        "wickCup": {
+          "title": "Dochtschale",
+          "body": "Das erste Geschenk: eine Kupferschale mit Docht. Der Partner fertigt sie und reicht sie durch den Spalt."
+        },
+        "lensFlask": {
+          "title": "Linsenflasche",
+          "body": "Eine Glasflasche mit Linse. Der Besitzer fertigt sie aus Schale, Eisen und Quarz und reicht sie durch den Spalt zurück."
+        },
+        "lampBody": {
+          "title": "Laternengehäuse",
+          "body": "Das Gehäuse. Der Partner fertigt es aus Flasche, Kupfer und Harz und reicht es durch den Spalt."
+        },
+        "lantern": {
+          "title": "Laterne",
+          "body": "Der Besitzer macht zwei Laternen. Eine bleibt, eine geht durch den Spalt. Für die dunkle Höhle braucht ihr beide."
+        }
       }
     },
     "tab": "Spiele",

@@ -472,6 +472,8 @@
         "badge": "Mina",
         "ironBoulder": "Pedra de ferro",
         "copperBoulder": "Pedra de cobre",
+        "quartzBoulder": "Veio de quartzo",
+        "resinBoulder": "Veio de resina",
         "tapVein": "Toque na veia",
         "taps": "{{current}}/{{goal}}",
         "needIronPickaxe": "É precisa uma picareta de ferro",
@@ -546,6 +548,80 @@
         "enterFailed": "Não foi possível chegar às bolas",
         "throwFailed": "Não foi possível lançar a bola"
       },
+      "caves": {
+        "falling": "Ooooh nãooo, estamos caindo!",
+        "fallingMe": "Ooooh nãooo, estamos caindo!",
+        "fallingPartner": "Aaaaah!",
+        "fallingContinue": "Entrar na caverna",
+        "window": "Fenda",
+        "darkLocked": "Escuro demais. Precisam de duas lanternas.",
+        "myMine": "Minha mina",
+        "partnerMine": "Mina do parceiro",
+        "darkPassage": "Passagem escura",
+        "step": "Passo {{step}}/4",
+        "steps": {
+          "1": {
+            "craft": {
+              "partner": "Faça uma tigela com pavio: 8 de cobre e 6 de resina.",
+              "owner": "Seu parceiro precisa fazer uma tigela com pavio com 8 de cobre e 6 de resina e passar para você."
+            },
+            "gift": {
+              "partner": "Passe a tigela com pavio pela fenda.",
+              "owner": "Seu parceiro fez a tigela — espere ele passar pela fenda."
+            }
+          },
+          "2": {
+            "craft": {
+              "owner": "Faça um frasco com lente: a tigela, 6 de ferro e 8 de quartzo.",
+              "partner": "Seu parceiro precisa fazer um frasco com lente e passar para você."
+            },
+            "gift": {
+              "owner": "Passe o frasco com lente pela fenda.",
+              "partner": "Espere seu parceiro passar o frasco pela fenda."
+            }
+          },
+          "3": {
+            "craft": {
+              "partner": "Faça o corpo da lanterna: o frasco, 8 de cobre e 4 de resina.",
+              "owner": "Seu parceiro precisa fazer o corpo da lanterna e passar para você."
+            },
+            "gift": {
+              "partner": "Passe o corpo da lanterna pela fenda.",
+              "owner": "Espere seu parceiro passar o corpo pela fenda."
+            }
+          },
+          "4": {
+            "craft": {
+              "owner": "Faça duas lanternas: o corpo, 8 de ferro e 6 de quartzo. Uma para você, uma para o outro.",
+              "partner": "Seu parceiro precisa fazer duas lanternas e passar uma para você."
+            },
+            "gift": {
+              "owner": "Passe uma lanterna pela fenda.",
+              "partner": "Espere uma lanterna do seu parceiro."
+            }
+          }
+        },
+        "craft": "Fabricar",
+        "gift": "Passar pela fenda",
+        "giftPick": "Escolha um item",
+        "nothingToGift": "Ainda não há o que passar",
+        "cleared": "Os dois têm lanternas — a passagem escura está aberta.",
+        "hintDone": "A caverna escura espera. Sigam juntos.",
+        "next": "Continuar",
+        "enterFailed": "Não foi possível chegar às cavernas",
+        "craftFailed": "Não foi possível fabricar",
+        "giftFailed": "Não foi possível passar o item",
+        "items": {
+          "iron": "Ferro",
+          "copper": "Cobre",
+          "quartz": "Quartzo",
+          "resin": "Resina",
+          "wick_cup": "Tigela com pavio",
+          "lens_flask": "Frasco com lente",
+          "lamp_body": "Corpo da lanterna",
+          "lantern": "Lanterna"
+        }
+      },
       "waitPartner": "Aguarde o parceiro",
       "finish": {
         "title": "A ponte é de vocês",
@@ -594,7 +670,36 @@
         "resetRopes": "Resetar nível das cordas",
         "resetRopesFailed": "Não foi possível resetar as cordas",
         "resetBalls": "Resetar nível das bolas",
-        "resetBallsFailed": "Não foi possível resetar as bolas"
+        "resetBallsFailed": "Não foi possível resetar as bolas",
+        "resetCaves": "Resetar nível das cavernas",
+        "resetCavesFailed": "Não foi possível resetar as cavernas",
+        "test": "Teste",
+        "testTitle": "Reset de teste",
+        "testHint": "Resetar um nível também reseta todos os seguintes.",
+        "quartz": {
+          "title": "Quartzo",
+          "body": "Cristal pessoal desta caverna. O dono da corrida minera aqui. Não vai para o baú compartilhado do acampamento — só pela fenda."
+        },
+        "resin": {
+          "title": "Resina",
+          "body": "Resina pessoal desta caverna. O parceiro minera aqui. Não vai para o baú compartilhado do acampamento — só pela fenda."
+        },
+        "wickCup": {
+          "title": "Tigela com pavio",
+          "body": "O primeiro presente: uma tigela de cobre com pavio. O parceiro fabrica e passa pela fenda."
+        },
+        "lensFlask": {
+          "title": "Frasco com lente",
+          "body": "Um frasco de vidro. O dono fabrica com a tigela, ferro e quartzo e passa pela fenda."
+        },
+        "lampBody": {
+          "title": "Corpo da lanterna",
+          "body": "A carcaça. O parceiro fabrica com o frasco, cobre e resina e passa pela fenda."
+        },
+        "lantern": {
+          "title": "Lanterna",
+          "body": "O dono faz duas lanternas. Uma fica, a outra passa pela fenda. A caverna escura exige as duas."
+        }
       }
     },
     "tab": "Jogos",

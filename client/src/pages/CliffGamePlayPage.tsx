@@ -9,24 +9,32 @@ import {
   postCliffBallThrow,
   postCliffBreakGate,
   postCliffBuy,
+  postCliffCaveCraft,
+  postCliffCaveGift,
   postCliffEnter,
   postCliffEnterBalls,
+  postCliffEnterCaves,
   postCliffEnterMine,
   postCliffEnterRopes,
   postCliffFinish,
   postCliffLeave,
   postCliffReset,
   postCliffResetBalls,
+  postCliffResetCaves,
   postCliffResetGate,
   postCliffResetRopes,
   postCliffRopeJump,
   postCliffSurrender,
   postCliffTapBoulder,
+  postCliffTapCaveBoulder,
   postCliffThrow,
+  type CliffCaveItemId,
+  type CliffCaveInventory,
+  type CliffCaveResource,
   type CliffGameState,
   type CliffIntroLine,
-  type CliffMetal,
   type CliffPublicBoulder,
+  type CliffPublicCaveBoulder,
   type CliffShopItemId,
 } from '../services/gamesService';
 import GameFrame from '../components/Games/GameFrame';
@@ -44,8 +52,11 @@ import CliffLift from '../components/Games/Cliff/CliffLift';
 import CliffLiftDialog from '../components/Games/Cliff/CliffLiftDialog';
 import CliffRopes from '../components/Games/Cliff/CliffRopes';
 import CliffBalls from '../components/Games/Cliff/CliffBalls';
+import CliffCaves from '../components/Games/Cliff/CliffCaves';
+import CliffCaveFall from '../components/Games/Cliff/CliffCaveFall';
 import CliffOverlayPresence from '../components/Games/Cliff/CliffOverlayPresence';
 import CliffItemAward from '../components/Games/Cliff/CliffItemAward';
+import { cliffCaveItemImage, cliffItemImage } from '../components/Games/Cliff/cliffAssets';
 import { CLIFF_ITEM_AWARD_MS } from '../components/Games/Cliff/cliffStyles';
 import {
   getGamePlayBlockedCardSx,
@@ -92,6 +103,48 @@ const detectCliffPurchase = (prev: CliffGameState, next: CliffGameState): CliffS
   return null;
 };
 
+const CLIFF_CAVE_CRAFTED_ITEMS: CliffCaveItemId[] = ['wick_cup', 'lens_flask', 'lamp_body', 'lantern'];
+
+const detectCliffCaveItemGain = (
+  prev: CliffGameState,
+  next: CliffGameState
+): { itemId: CliffCaveItemId; amount: number } | null => {
+  if (!prev.caves || !next.caves) {
+    return null;
+  }
+  for (const itemId of CLIFF_CAVE_CRAFTED_ITEMS) {
+    const amount = next.caves.my[itemId] - prev.caves.my[itemId];
+    if (amount > 0) {
+      return { itemId, amount };
+    }
+  }
+  return null;
+};
+
+const emptyCaveInventory = (): CliffCaveInventory => ({
+  iron: 0,
+  copper: 0,
+  quartz: 0,
+  resin: 0,
+  wick_cup: 0,
+  lens_flask: 0,
+  lamp_body: 0,
+  lantern: 0,
+});
+
+const emptyCavesState = (): CliffGameState['caves'] => ({
+  role: 'owner',
+  step: 1,
+  action: 'craft',
+  canCraft: false,
+  canGift: false,
+  giftables: [],
+  my: emptyCaveInventory(),
+  partner: emptyCaveInventory(),
+  boulders: [],
+  cleared: false,
+});
+
 const projectCliffBoulderTaps = (
   state: CliffGameState,
   boulderId: string | null,
@@ -110,6 +163,34 @@ const projectCliffBoulderTaps = (
       return { ...boulder, tapsDone };
     }),
   };
+};
+
+const findCliffVein = (game: CliffGameState | null | undefined, id: string | null) => {
+  if (!game || !id) {
+    return null;
+  }
+  return (
+    game.boulders.find((boulder) => boulder.id === id) ??
+    game.caves?.boulders.find((boulder) => boulder.id === id) ??
+    null
+  );
+};
+
+const projectCliffCaveBoulderTaps = (
+  boulders: CliffPublicCaveBoulder[],
+  boulderId: string | null,
+  extraTaps: number
+): CliffPublicCaveBoulder[] => {
+  if (!boulderId || extraTaps <= 0) {
+    return boulders;
+  }
+  return boulders.map((boulder) => {
+    if (boulder.id !== boulderId) {
+      return boulder;
+    }
+    const tapsDone = Math.min(boulder.tapsRequired, boulder.tapsDone + extraTaps);
+    return { ...boulder, tapsDone };
+  });
 };
 
 let scheduledCliffLeave: number | null = null;
@@ -141,13 +222,17 @@ const CliffGamePlayPage: React.FC = () => {
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<HubOverlay>('none');
   const [activeBoulderId, setActiveBoulderId] = useState<string | null>(null);
-  const [oreBurst, setOreBurst] = useState<{ amount: number; metal: CliffMetal } | null>(null);
-  const [itemBurst, setItemBurst] = useState<CliffShopItemId | null>(null);
+  const [oreBurst, setOreBurst] = useState<{ amount: number; resource: CliffCaveResource } | null>(null);
+  const [itemBurst, setItemBurst] = useState<{ src: string; amount?: number } | null>(null);
   const [buying, setBuying] = useState(false);
   const [breaking, setBreaking] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [ropesEpoch, setRopesEpoch] = useState(0);
   const [ballsEpoch, setBallsEpoch] = useState(0);
+  const [cavesEpoch, setCavesEpoch] = useState(0);
+  const [caveMineOpen, setCaveMineOpen] = useState(false);
+  const [showCaveFall, setShowCaveFall] = useState(false);
+  const [caveFallEpoch, setCaveFallEpoch] = useState(0);
   const [showClimb, setShowClimb] = useState(false);
   const [showLiftDialog, setShowLiftDialog] = useState(false);
   const [activatingLift, setActivatingLift] = useState(false);
@@ -170,6 +255,10 @@ const CliffGamePlayPage: React.FC = () => {
   const inFlightMineTapsRef = useRef(0);
   const flushingMineTapsRef = useRef(false);
   const mineTapFlushRef = useRef<number | null>(null);
+  const playCaveFall = useCallback(() => {
+    setCaveFallEpoch((value) => value + 1);
+    setShowCaveFall(true);
+  }, []);
   const [pendingMineTaps, setPendingMineTaps] = useState(0);
   const [inFlightMineTaps, setInFlightMineTaps] = useState(0);
   activeBoulderIdRef.current = activeBoulderId;
@@ -226,8 +315,8 @@ const CliffGamePlayPage: React.FC = () => {
     const prev = stateRef.current;
     const openId = activeBoulderIdRef.current;
     if (openId && prev) {
-      const prevBoulder = prev.boulders.find((boulder) => boulder.id === openId);
-      const nextBoulder = next.boulders.find((boulder) => boulder.id === openId);
+      const prevBoulder = findCliffVein(prev, openId);
+      const nextBoulder = findCliffVein(next, openId);
       if (prevBoulder && nextBoulder) {
         const applied = Math.max(0, nextBoulder.tapsDone - prevBoulder.tapsDone);
         if (applied > 0 && inFlightMineTapsRef.current > 0) {
@@ -246,8 +335,13 @@ const CliffGamePlayPage: React.FC = () => {
     if (prev) {
       const purchased = detectCliffPurchase(prev, next);
       if (purchased) {
-        setItemBurst(purchased);
+        setItemBurst({ src: cliffItemImage(purchased) });
         void playCliffBuySound(purchased);
+      }
+      const caveGain = detectCliffCaveItemGain(prev, next);
+      if (caveGain) {
+        setItemBurst({ src: cliffCaveItemImage(caveGain.itemId), amount: caveGain.amount });
+        void playCliffOreDropSound();
       }
       if (!prev.gateDestroyed && next.gateDestroyed) {
         void playCliffWoodBreakSound();
@@ -285,7 +379,7 @@ const CliffGamePlayPage: React.FC = () => {
             cleared: false,
           },
         };
-    const normalized: CliffGameState = withRopes.balls
+    const withBalls: CliffGameState = withRopes.balls
       ? withRopes
       : {
           ...withRopes,
@@ -302,6 +396,12 @@ const CliffGamePlayPage: React.FC = () => {
             canRetry: false,
           },
         };
+    const normalized: CliffGameState = withBalls.caves
+      ? withBalls
+      : {
+          ...withBalls,
+          caves: emptyCavesState(),
+        };
     stateRef.current = normalized;
     setState((current) => {
       if (normalized.scene === 'bridge' && current?.scene === 'hub' && !climbPlayedRef.current) {
@@ -314,7 +414,13 @@ const CliffGamePlayPage: React.FC = () => {
       }
       if (normalized.scene !== 'hub') {
         setOverlay('none');
-        setActiveBoulderId(null);
+        if (normalized.scene !== 'caves') {
+          setActiveBoulderId(null);
+          setCaveMineOpen(false);
+        }
+      }
+      if (prev && prev.scene === 'balls' && normalized.scene === 'caves') {
+        playCaveFall();
       }
       if (normalized.scene !== 'lift') {
         setShowLiftDialog(false);
@@ -347,9 +453,25 @@ const CliffGamePlayPage: React.FC = () => {
       ) {
         setBallsEpoch((value) => value + 1);
       }
+      if (
+        prev &&
+        normalized.scene === 'caves' &&
+        normalized.caves.my.iron === 0 &&
+        normalized.caves.my.copper === 0 &&
+        normalized.caves.my.quartz === 0 &&
+        normalized.caves.my.resin === 0 &&
+        normalized.caves.my.lantern === 0 &&
+        !normalized.caves.cleared &&
+        (prev.scene !== 'caves' || prev.caves.cleared || prev.caves.my.lantern > 0 || prev.caves.my.iron > 0)
+      ) {
+        setCavesEpoch((value) => value + 1);
+        setCaveMineOpen(false);
+        setActiveBoulderId(null);
+        playCaveFall();
+      }
       return normalized;
     });
-  }, []);
+  }, [playCaveFall]);
 
   useEffect(() => {
     let cancelled = false;
@@ -404,19 +526,20 @@ const CliffGamePlayPage: React.FC = () => {
       introLine?: CliffIntroLine | null;
       enteringUserId?: string;
       yielded?: number;
-      metal?: CliffMetal;
+      metal?: CliffCaveResource;
+      resource?: CliffCaveResource;
       throwEvent?: { userId: string; hit: boolean };
     }) => {
       syncState(payload.state);
       applyIntro(payload, user._id);
-      if (typeof payload.yielded === 'number' && payload.yielded > 0 && payload.metal) {
+      const yieldedResource = payload.resource ?? payload.metal;
+      if (typeof payload.yielded === 'number' && payload.yielded > 0 && yieldedResource) {
         void playCliffOreDropSound();
         const openId = activeBoulderIdRef.current;
-        const openBoulder = openId
-          ? payload.state.boulders.find((item) => item.id === openId)
-          : null;
-        if (openBoulder?.depleted) {
-          setOreBurst({ amount: payload.yielded, metal: payload.metal });
+        const openHub = openId ? payload.state.boulders.find((item) => item.id === openId) : null;
+        const openCave = openId ? payload.state.caves.boulders.find((item) => item.id === openId) : null;
+        if (openHub?.depleted || openCave?.depleted) {
+          setOreBurst({ amount: payload.yielded, resource: yieldedResource });
         }
       }
       if (payload.throwEvent?.userId === user._id) {
@@ -513,12 +636,16 @@ const CliffGamePlayPage: React.FC = () => {
 
   const sendMineTapBatch = useCallback(async (boulderId: string, count: number) => {
     const tapCount = Math.min(Math.max(1, count), CLIFF_TAP_BATCH_MAX);
+    const caveScene = stateRef.current?.scene === 'caves';
     const socket = socketService.getSocket();
     if (socket?.connected) {
-      socket.emit('cliff_game_tap_boulder', { boulderId, count: tapCount });
+      socket.emit(caveScene ? 'cliff_game_tap_cave_boulder' : 'cliff_game_tap_boulder', {
+        boulderId,
+        count: tapCount,
+      });
       return null;
     }
-    return postCliffTapBoulder(boulderId, tapCount);
+    return caveScene ? postCliffTapCaveBoulder(boulderId, tapCount) : postCliffTapBoulder(boulderId, tapCount);
   }, []);
 
   const flushMineTaps = useCallback(async () => {
@@ -539,7 +666,8 @@ const CliffGamePlayPage: React.FC = () => {
         syncState(result.state);
         if (result.yielded > 0) {
           void playCliffOreDropSound();
-          setOreBurst({ amount: result.yielded, metal: result.metal });
+          const resource = 'resource' in result ? result.resource : result.metal;
+          setOreBurst({ amount: result.yielded, resource });
         }
       }
     } catch (error: any) {
@@ -588,7 +716,12 @@ const CliffGamePlayPage: React.FC = () => {
         const countToSend = Math.min(pendingCount, CLIFF_TAP_BATCH_MAX);
         const socket = socketService.getSocket();
         if (socket?.connected) {
-          socket.emit('cliff_game_tap_boulder', { boulderId, count: countToSend });
+          socket.emit(
+            stateRef.current?.scene === 'caves' ? 'cliff_game_tap_cave_boulder' : 'cliff_game_tap_boulder',
+            { boulderId, count: countToSend }
+          );
+        } else if (stateRef.current?.scene === 'caves') {
+          void postCliffTapCaveBoulder(boulderId, countToSend);
         } else {
           void postCliffTapBoulder(boulderId, countToSend);
         }
@@ -597,11 +730,16 @@ const CliffGamePlayPage: React.FC = () => {
     };
   }, []);
 
+  const pickaxeReadyFor = (resource: CliffCaveResource) => {
+    const pickaxe = resource === 'iron' || resource === 'quartz' ? 'iron' : 'copper';
+    return pickaxe === 'iron'
+      ? Boolean(state?.inventory.hasIronPickaxe)
+      : Boolean(state?.inventory.hasCopperPickaxe);
+  };
+
   const handleSelectBoulder = (boulder: CliffPublicBoulder) => {
     unlockGameAudio();
-    const hasPickaxe =
-      boulder.metal === 'iron' ? Boolean(state?.inventory.hasIronPickaxe) : Boolean(state?.inventory.hasCopperPickaxe);
-    if (!hasPickaxe) {
+    if (!pickaxeReadyFor(boulder.metal)) {
       setToast({
         open: true,
         message: t(boulder.metal === 'iron' ? 'games.cliff.mine.needIronPickaxe' : 'games.cliff.mine.needCopperPickaxe'),
@@ -615,9 +753,32 @@ const CliffGamePlayPage: React.FC = () => {
     setActiveBoulderId(boulder.id);
   };
 
+  const handleSelectCaveBoulder = (boulder: CliffPublicCaveBoulder) => {
+    unlockGameAudio();
+    if (!pickaxeReadyFor(boulder.resource)) {
+      setToast({
+        open: true,
+        message: t(
+          boulder.resource === 'iron' || boulder.resource === 'quartz'
+            ? 'games.cliff.mine.needIronPickaxe'
+            : 'games.cliff.mine.needCopperPickaxe'
+        ),
+        severity: 'info',
+      });
+      return;
+    }
+    if (boulder.depleted) {
+      return;
+    }
+    setActiveBoulderId(boulder.id);
+  };
+
   const handleTapBoulder = () => {
     const boulderId = activeBoulderId;
-    const boulder = state?.boulders.find((item) => item.id === boulderId);
+    const boulder =
+      state?.scene === 'caves'
+        ? state.caves.boulders.find((item) => item.id === boulderId)
+        : state?.boulders.find((item) => item.id === boulderId);
     if (!boulderId || !boulder || boulder.depleted || oreBurst) {
       return;
     }
@@ -720,6 +881,49 @@ const CliffGamePlayPage: React.FC = () => {
     }
   };
 
+  const handleEnterCaves = async () => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_enter_caves', {}, postCliffEnterCaves);
+    } catch (error: any) {
+      const code = error?.response?.data?.code;
+      setToast({
+        open: true,
+        message:
+          code === 'WAIT_PARTNER'
+            ? t('games.cliff.waitPartner')
+            : error?.response?.data?.error || t('games.cliff.caves.enterFailed'),
+        severity: code === 'WAIT_PARTNER' ? 'info' : 'error',
+      });
+    }
+  };
+
+  const handleCaveCraft = async () => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_cave_craft', {}, postCliffCaveCraft);
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.caves.craftFailed'),
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleCaveGift = async (itemId: CliffCaveItemId) => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_cave_gift', { itemId }, () => postCliffCaveGift(itemId));
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.caves.giftFailed'),
+        severity: 'error',
+      });
+    }
+  };
+
   const handleBallThrow = async (zoneScore: number) => {
     unlockGameAudio();
     try {
@@ -791,6 +995,10 @@ const CliffGamePlayPage: React.FC = () => {
     try {
       setShowClimb(false);
       climbPlayedRef.current = false;
+      setCaveMineOpen(false);
+      setShowCaveFall(false);
+      setActiveBoulderId(null);
+      setShowLiftDialog(false);
       await emitOrPost('cliff_game_reset_gate', {}, postCliffResetGate);
     } catch (error: any) {
       setToast({
@@ -806,6 +1014,9 @@ const CliffGamePlayPage: React.FC = () => {
   const handleResetRopes = async () => {
     setResetting(true);
     try {
+      setCaveMineOpen(false);
+      setShowCaveFall(false);
+      setActiveBoulderId(null);
       await emitOrPost('cliff_game_reset_ropes', {}, postCliffResetRopes);
     } catch (error: any) {
       setToast({
@@ -821,11 +1032,32 @@ const CliffGamePlayPage: React.FC = () => {
   const handleResetBalls = async () => {
     setResetting(true);
     try {
+      setCaveMineOpen(false);
+      setShowCaveFall(false);
       await emitOrPost('cliff_game_reset_balls', {}, postCliffResetBalls);
     } catch (error: any) {
       setToast({
         open: true,
         message: error?.response?.data?.error || t('games.cliff.inventory.resetBallsFailed'),
+        severity: 'error',
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const handleResetCaves = async () => {
+    setResetting(true);
+    try {
+      setCaveMineOpen(false);
+      setActiveBoulderId(null);
+      setCavesEpoch((value) => value + 1);
+      playCaveFall();
+      await emitOrPost('cliff_game_reset_caves', {}, postCliffResetCaves);
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.inventory.resetCavesFailed'),
         severity: 'error',
       });
     } finally {
@@ -863,7 +1095,7 @@ const CliffGamePlayPage: React.FC = () => {
   return (
     <GameFrame>
       <Box sx={getGamePlayRootSx()}>
-        {overlay !== 'mine' && (
+        {overlay !== 'mine' && !caveMineOpen && (
           <Box sx={getGamePlayHeaderSx(theme)}>
             <IconButton
               aria-label={t('games.common.back')}
@@ -883,11 +1115,13 @@ const CliffGamePlayPage: React.FC = () => {
             resettingGate={resetting}
             resettingRopes={resetting}
             resettingBalls={resetting}
+            resettingCaves={resetting}
             onResetGate={handleResetGate}
             onResetRopes={handleResetRopes}
             onResetBalls={handleResetBalls}
+            onResetCaves={handleResetCaves}
           />
-          {itemBurst && <CliffItemAward itemId={itemBurst} />}
+          {itemBurst && <CliffItemAward src={itemBurst.src} amount={itemBurst.amount} />}
           {showHub && (
             <CliffHub
               state={state}
@@ -947,7 +1181,79 @@ const CliffGamePlayPage: React.FC = () => {
               onRetry={() => {
                 void handleResetBalls();
               }}
+              onNext={() => {
+                void handleEnterCaves();
+              }}
+            />
+          )}
+          {state.scene === 'caves' && !showClimb && !showCaveFall && (
+            <CliffCaves
+              key={cavesEpoch}
+              state={state}
+              showMine={caveMineOpen}
+              activeBoulderId={activeBoulderId}
+              breakAward={oreBurst}
+              projectedBoulders={projectCliffCaveBoulderTaps(
+                state.caves.boulders,
+                activeBoulderId,
+                pendingMineTaps + inFlightMineTaps
+              )}
+              onOpenMine={() => {
+                const needIron = state.caves.role === 'owner';
+                const ready = needIron
+                  ? state.inventory.hasIronPickaxe
+                  : state.inventory.hasCopperPickaxe;
+                if (!ready) {
+                  setToast({
+                    open: true,
+                    message: t(needIron ? 'games.cliff.mine.needIronPickaxe' : 'games.cliff.mine.needCopperPickaxe'),
+                    severity: 'info',
+                  });
+                  return;
+                }
+                setCaveMineOpen(true);
+              }}
+              onCloseMine={() => {
+                void closeActiveBoulder();
+                setCaveMineOpen(false);
+              }}
+              onSelectBoulder={handleSelectCaveBoulder}
+              onTapBoulder={handleTapBoulder}
+              onBreakDone={finishOreBurst}
+              onCloseBoulder={() => {
+                void closeActiveBoulder();
+              }}
+              onCraft={() => {
+                void handleCaveCraft();
+              }}
+              onGift={(itemId) => {
+                void handleCaveGift(itemId);
+              }}
+              onOpenPassage={() => {
+                if (!state.caves.cleared) {
+                  setToast({
+                    open: true,
+                    message: t('games.cliff.caves.darkLocked'),
+                    severity: 'info',
+                  });
+                  return;
+                }
+                if (!state.partnerPresent) {
+                  setToast({
+                    open: true,
+                    message: t('games.cliff.waitPartner'),
+                    severity: 'info',
+                  });
+                }
+              }}
               onNext={() => undefined}
+            />
+          )}
+          {showCaveFall && (
+            <CliffCaveFall
+              key={caveFallEpoch}
+              state={state}
+              onContinue={() => setShowCaveFall(false)}
             />
           )}
           {state.scene === 'finished' && (

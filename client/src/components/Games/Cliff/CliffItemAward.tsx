@@ -1,14 +1,13 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import type { CliffShopItemId } from '../../../services/gamesService';
-import { cliffItemImage } from './cliffAssets';
 import { getCliffItemAwardSx, getCliffItemAwardWrapSx, getCliffOreAwardTextSx } from './cliffStyles';
 
 type CliffItemAwardProps = {
-  itemId: CliffShopItemId;
+  src: string;
+  amount?: number;
 };
 
-const CliffItemAward: React.FC<CliffItemAwardProps> = ({ itemId }) => (
+const CliffItemAward: React.FC<CliffItemAwardProps> = ({ src, amount }) => (
   <Box sx={getCliffItemAwardWrapSx()}>
     <Box sx={getCliffItemAwardSx()}>
       <Typography component="span" sx={getCliffOreAwardTextSx()}>
@@ -16,7 +15,7 @@ const CliffItemAward: React.FC<CliffItemAwardProps> = ({ itemId }) => (
       </Typography>
       <Box
         component="img"
-        src={cliffItemImage(itemId)}
+        src={src}
         alt=""
         sx={{
           width: 40,
@@ -25,6 +24,11 @@ const CliffItemAward: React.FC<CliffItemAwardProps> = ({ itemId }) => (
           filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))',
         }}
       />
+      {amount != null && amount > 0 ? (
+        <Typography component="span" sx={getCliffOreAwardTextSx()}>
+          {amount}
+        </Typography>
+      ) : null}
     </Box>
   </Box>
 );
