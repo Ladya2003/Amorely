@@ -646,6 +646,28 @@
         "trap": "Por ali não se passa. É preciso recomeçar — o rasto e as corridas foram reiniciados.",
         "petTaken": "O teu parceiro já escolheu este pet"
       },
+      "words": {
+        "fuel": "Combustível {{fuel}}",
+        "fuelPartner": "Parceiro {{fuel}}",
+        "start": "Começar",
+        "continue": "Continuar",
+        "introBounce": "Estas saliências saltam. Subimos aos pulos.",
+        "introFuel": "Cada salto gasta combustível. Anima-me se eu ficar sem ele.",
+        "fuelHint": "Fiquei sem combustível. Preciso pedir ao meu parceiro que me anime.",
+        "encourage": "Animar",
+        "rewound": "Longe demais — de volta ao último ponto.",
+        "cleared": "Subimos o poço. O acampamento está à frente.",
+        "next": "Continuar",
+        "campSoon": "O acampamento da caverna ainda está à frente.",
+        "enterFailed": "Não foi possível começar a subida",
+        "phraseFailed": "Não foi possível enviar essa frase",
+        "phrases": {
+          "cheer": "Tu consegues!",
+          "believe": "Acredito em ti.",
+          "together": "Vamos juntos.",
+          "proud": "Tenho tanto orgulho de ti."
+        }
+      },
       "waitPartner": "Aguarde o parceiro",
       "finish": {
         "title": "A ponte é de vocês",
@@ -699,6 +721,8 @@
         "resetCavesFailed": "Não foi possível resetar as cavernas",
         "resetGuides": "Resetar nível dos guias",
         "resetGuidesFailed": "Não foi possível resetar os guias",
+        "resetWords": "Resetar nível das palavras",
+        "resetWordsFailed": "Não foi possível resetar as palavras",
         "test": "Teste",
         "testTitle": "Reset de teste",
         "testHint": "Resetar um nível também reseta todos os seguintes.",

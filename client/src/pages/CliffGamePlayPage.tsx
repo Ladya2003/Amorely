@@ -16,6 +16,7 @@ import {
   postCliffEnterCaves,
   postCliffEnterGuides,
   postCliffEnterMine,
+  postCliffEnterWords,
   postCliffEnterRopes,
   postCliffFinish,
   postCliffLeave,
@@ -27,7 +28,12 @@ import {
   postCliffResetGate,
   postCliffResetGuides,
   postCliffResetRopes,
+  postCliffResetWords,
   postCliffSendGuidePet,
+  postCliffSyncWords,
+  postCliffWordsFuelHint,
+  postCliffWordsIntro,
+  postCliffWordsPhrase,
   postCliffRopeJump,
   postCliffSurrender,
   postCliffTapBoulder,
@@ -39,6 +45,7 @@ import {
   type CliffGameState,
   type CliffGuideDir,
   type CliffIntroLine,
+  type CliffWordsPhraseId,
   type CliffPublicBoulder,
   type CliffPublicCaveBoulder,
   type CliffShopItemId,
@@ -61,6 +68,7 @@ import CliffBalls from '../components/Games/Cliff/CliffBalls';
 import CliffCaves from '../components/Games/Cliff/CliffCaves';
 import CliffCaveFall from '../components/Games/Cliff/CliffCaveFall';
 import CliffGuides from '../components/Games/Cliff/CliffGuides';
+import CliffWords from '../components/Games/Cliff/CliffWords';
 import CliffOverlayPresence from '../components/Games/Cliff/CliffOverlayPresence';
 import CliffItemAward from '../components/Games/Cliff/CliffItemAward';
 import { cliffCaveItemImage, cliffItemImage } from '../components/Games/Cliff/cliffAssets';
@@ -176,6 +184,42 @@ const emptyGuidesState = (): CliffGameState['guides'] => ({
   minLevel: 2,
 });
 
+const emptyWordsState = (): CliffGameState['words'] => ({
+  role: 'owner',
+  world: {
+    width: 100,
+    cameraHeight: 100,
+    finishY: 522,
+    platforms: [],
+  },
+  my: {
+    x: 18,
+    y: 16,
+    fuel: 12,
+    checkpoint: 0,
+    cleared: false,
+    usedPhrases: [],
+  },
+  partner: {
+    x: 26,
+    y: 16,
+    fuel: 12,
+    checkpoint: 0,
+    cleared: false,
+  },
+  phraseIds: ['cheer', 'believe', 'together', 'proud'],
+  fuelStart: 12,
+  fuelMax: 12,
+  fuelBounce: 1,
+  fuelPhrase: 4,
+  bothCleared: false,
+  failSeq: 0,
+  fuelHint: false,
+  introTold: false,
+  lastPhrase: null,
+  cameraY: 0,
+});
+
 const projectCliffBoulderTaps = (
   state: CliffGameState,
   boulderId: string | null,
@@ -262,6 +306,7 @@ const CliffGamePlayPage: React.FC = () => {
   const [ballsEpoch, setBallsEpoch] = useState(0);
   const [cavesEpoch, setCavesEpoch] = useState(0);
   const [guidesEpoch, setGuidesEpoch] = useState(0);
+  const [wordsEpoch, setWordsEpoch] = useState(0);
   const [caveMineOpen, setCaveMineOpen] = useState(false);
   const [showCaveFall, setShowCaveFall] = useState(false);
   const [caveFallEpoch, setCaveFallEpoch] = useState(0);
@@ -434,11 +479,17 @@ const CliffGamePlayPage: React.FC = () => {
           ...withBalls,
           caves: emptyCavesState(),
         };
-    const normalized: CliffGameState = withCaves.guides
+    const withGuides: CliffGameState = withCaves.guides
       ? withCaves
       : {
           ...withCaves,
           guides: emptyGuidesState(),
+        };
+    const normalized: CliffGameState = withGuides.words
+      ? withGuides
+      : {
+          ...withGuides,
+          words: emptyWordsState(),
         };
     stateRef.current = normalized;
     setState((current) => {
@@ -516,6 +567,20 @@ const CliffGamePlayPage: React.FC = () => {
         (prev.scene !== 'guides' || prev.guides.my.escaped || Boolean(prev.guides.my.pet))
       ) {
         setGuidesEpoch((value) => value + 1);
+      }
+      if (
+        prev &&
+        normalized.scene === 'words' &&
+        normalized.words.my.y <= (normalized.words.world.platforms[0]?.y ?? 0) + 0.8 &&
+        normalized.words.my.fuel === normalized.words.fuelStart &&
+        normalized.words.my.usedPhrases.length === 0 &&
+        !normalized.words.my.cleared &&
+        (prev.scene !== 'words' ||
+          prev.words.my.cleared ||
+          prev.words.my.usedPhrases.length > 0 ||
+          prev.words.my.y > (normalized.words.world.platforms[0]?.y ?? 0) + 0.8)
+      ) {
+        setWordsEpoch((value) => value + 1);
       }
       return normalized;
     });
@@ -1021,6 +1086,69 @@ const CliffGamePlayPage: React.FC = () => {
     }
   };
 
+  const handleEnterWords = async () => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_enter_words', {}, postCliffEnterWords);
+    } catch (error: any) {
+      const code = error?.response?.data?.code;
+      setToast({
+        open: true,
+        message:
+          code === 'WAIT_PARTNER'
+            ? t('games.cliff.waitPartner')
+            : error?.response?.data?.error || t('games.cliff.words.enterFailed'),
+        severity: code === 'WAIT_PARTNER' ? 'info' : 'error',
+      });
+    }
+  };
+
+  const handleWordsSync = useCallback(
+    (x: number, y: number, bounce: boolean, fall = false) => {
+      void emitOrPost('cliff_game_words_sync', { x, y, bounce, fall }, () =>
+        postCliffSyncWords(x, y, bounce, fall)
+      );
+    },
+    [emitOrPost]
+  );
+
+  const handleWordsFuelHint = useCallback(() => {
+    void emitOrPost('cliff_game_words_fuel_hint', {}, postCliffWordsFuelHint);
+  }, [emitOrPost]);
+
+  const handleWordsIntro = useCallback(() => {
+    void emitOrPost('cliff_game_words_intro', {}, postCliffWordsIntro);
+  }, [emitOrPost]);
+
+  const handleWordsPhrase = async (phraseId: CliffWordsPhraseId) => {
+    unlockGameAudio();
+    try {
+      await emitOrPost('cliff_game_words_phrase', { phraseId }, () => postCliffWordsPhrase(phraseId));
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.words.phraseFailed'),
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleWordsNext = () => {
+    if (!stateRef.current?.partnerPresent) {
+      setToast({
+        open: true,
+        message: t('games.cliff.waitPartner'),
+        severity: 'info',
+      });
+      return;
+    }
+    setToast({
+      open: true,
+      message: t('games.cliff.words.campSoon'),
+      severity: 'info',
+    });
+  };
+
   const handleCaveCraft = async () => {
     unlockGameAudio();
     try {
@@ -1205,6 +1333,22 @@ const CliffGamePlayPage: React.FC = () => {
     }
   };
 
+  const handleResetWords = async () => {
+    setResetting(true);
+    try {
+      setWordsEpoch((value) => value + 1);
+      await emitOrPost('cliff_game_reset_words', {}, postCliffResetWords);
+    } catch (error: any) {
+      setToast({
+        open: true,
+        message: error?.response?.data?.error || t('games.cliff.inventory.resetWordsFailed'),
+        severity: 'error',
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
+
   if (loading) {
     return (
       <GameFrame>
@@ -1257,11 +1401,13 @@ const CliffGamePlayPage: React.FC = () => {
             resettingBalls={resetting}
             resettingCaves={resetting}
             resettingGuides={resetting}
+            resettingWords={resetting}
             onResetGate={handleResetGate}
             onResetRopes={handleResetRopes}
             onResetBalls={handleResetBalls}
             onResetCaves={handleResetCaves}
             onResetGuides={handleResetGuides}
+            onResetWords={handleResetWords}
           />
           {itemBurst && <CliffItemAward src={itemBurst.src} amount={itemBurst.amount} />}
           {showHub && (
@@ -1408,14 +1554,21 @@ const CliffGamePlayPage: React.FC = () => {
                 void handleGuideMove(dir);
               }}
               onNext={() => {
-                if (!state.partnerPresent) {
-                  setToast({
-                    open: true,
-                    message: t('games.cliff.waitPartner'),
-                    severity: 'info',
-                  });
-                }
+                void handleEnterWords();
               }}
+            />
+          )}
+          {state.scene === 'words' && !showClimb && (
+            <CliffWords
+              key={wordsEpoch}
+              state={state}
+              onSync={handleWordsSync}
+              onPhrase={(phraseId) => {
+                void handleWordsPhrase(phraseId);
+              }}
+              onAckFuelHint={handleWordsFuelHint}
+              onAckIntro={handleWordsIntro}
+              onNext={handleWordsNext}
             />
           )}
           {state.scene === 'finished' && (

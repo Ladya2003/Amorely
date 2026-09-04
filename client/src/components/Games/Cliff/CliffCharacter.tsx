@@ -13,6 +13,7 @@ type CliffCharacterProps = {
   maze?: boolean;
   speechWide?: boolean;
   speechBelow?: boolean;
+  speechSide?: 'left' | 'right';
   motion?: CliffCharacterMotion;
 };
 
@@ -26,6 +27,7 @@ const CliffCharacter: React.FC<CliffCharacterProps> = ({
   maze = false,
   speechWide = false,
   speechBelow = false,
+  speechSide,
   motion = 'idle',
 }) => {
   const traveling = motion === 'enter' || motion === 'leave';
@@ -44,13 +46,22 @@ const CliffCharacter: React.FC<CliffCharacterProps> = ({
       {speech && motion !== 'leave' && !speechBelow && (
         <Box
           sx={{
+            position: compact ? 'absolute' : 'relative',
+            bottom: compact ? '100%' : undefined,
+            left: compact && (speechSide ?? from) === 'left' ? '50%' : compact ? 'auto' : undefined,
+            right: compact && (speechSide ?? from) === 'right' ? '50%' : undefined,
             mb: 0.5,
             px: 1.25,
             py: 0.75,
             boxSizing: 'border-box',
             width: speechWide ? 280 : 160,
-            maxWidth: speechWide ? 'min(280px, 76cqw)' : 'min(160px, 72vw)',
+            maxWidth: compact
+              ? 'min(220px, 68vw)'
+              : speechWide
+                ? 'min(280px, 76cqw)'
+                : 'min(160px, 72vw)',
             alignSelf: speechWide && from === 'left' ? 'flex-start' : speechWide && from === 'right' ? 'flex-end' : 'center',
+            zIndex: 2,
             borderRadius: 2,
             bgcolor: 'background.paper',
             boxShadow: 1,

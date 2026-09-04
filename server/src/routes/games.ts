@@ -87,10 +87,16 @@ import {
   resetCliffRun,
   tapCliffCaveBoulder,
   enterCliffGuides,
+  enterCliffWords,
+  ackCliffWordsFuelHint,
+  ackCliffWordsIntro,
   moveCliffGuide,
   pickCliffGuidePet,
+  phraseCliffWords,
   resetCliffGuides,
+  resetCliffWords,
   sendCliffGuidePet,
+  syncCliffWords,
   resolveCliffGameContext,
   surrenderCliffBridge,
   tapCliffBoulder,
@@ -237,7 +243,11 @@ const handleCliffGameError = (error: unknown, res: Response): boolean => {
                 error.code === 'NO_GUIDE_RUNS' ||
                 error.code === 'INVALID_DIR' ||
                 error.code === 'PET_ALREADY_CHOSEN' ||
-                error.code === 'PET_TAKEN'
+                error.code === 'PET_TAKEN' ||
+                error.code === 'WORDS_NOT_READY' ||
+                error.code === 'PHRASE_USED' ||
+                error.code === 'PHRASE_INVALID' ||
+                error.code === 'INVALID_WORDS_POS'
               ? 409
               : 400;
 
@@ -1158,6 +1168,96 @@ router.post('/cliff/reset-guides', async (req: any, res: Response) => {
     }
     console.error('Ошибка cliff/reset-guides:', error);
     res.status(500).json({ error: 'Не удалось сбросить проводников' });
+  }
+});
+
+router.post('/cliff/words/enter', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await enterCliffWords(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/words/enter:', error);
+    res.status(500).json({ error: 'Не удалось начать подъём со словами' });
+  }
+});
+
+router.post('/cliff/words/sync', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await syncCliffWords(userId, context, req.body ?? {});
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/words/sync:', error);
+    res.status(500).json({ error: 'Не удалось синхронизировать подъём' });
+  }
+});
+
+router.post('/cliff/words/intro', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await ackCliffWordsIntro(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/words/intro:', error);
+    res.status(500).json({ error: 'Не удалось закрыть вступление' });
+  }
+});
+
+router.post('/cliff/words/fuel-hint', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await ackCliffWordsFuelHint(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/words/fuel-hint:', error);
+    res.status(500).json({ error: 'Не удалось закрыть подсказку' });
+  }
+});
+
+router.post('/cliff/words/phrase', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await phraseCliffWords(userId, context, req.body?.phraseId);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/words/phrase:', error);
+    res.status(500).json({ error: 'Не удалось отправить фразу' });
+  }
+});
+
+router.post('/cliff/reset-words', async (req: any, res: Response) => {
+  try {
+    const userId = req.userId as string;
+    const context = await resolveCliffGameContext(userId);
+    const state = await resetCliffWords(userId, context);
+    res.json({ state: await formatCliffGameState(state, userId, context) });
+  } catch (error) {
+    if (handleCliffGameError(error, res)) {
+      return;
+    }
+    console.error('Ошибка cliff/reset-words:', error);
+    res.status(500).json({ error: 'Не удалось сбросить слова' });
   }
 });
 

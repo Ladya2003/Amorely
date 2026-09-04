@@ -646,6 +646,28 @@
         "trap": "Da geht es nicht weiter. Zurück zum Anfang — Spur und Läufe sind zurückgesetzt.",
         "petTaken": "Dein Partner hat dieses Haustier schon gewählt"
       },
+      "words": {
+        "fuel": "Treibstoff {{fuel}}",
+        "fuelPartner": "Partner {{fuel}}",
+        "start": "Start",
+        "continue": "Weiter",
+        "introBounce": "Diese Absätze federn. Wir springen den Schacht hinauf.",
+        "introFuel": "Jeder Absprung kostet Treibstoff. Ermutige mich, wenn er leer ist.",
+        "fuelHint": "Mir hat der Treibstoff nicht gereicht. Ich muss meinen Partner bitten, mich zu ermutigen.",
+        "encourage": "Ermutigen",
+        "rewound": "Zu weit auseinander — zurück zum letzten Checkpoint.",
+        "cleared": "Wir sind den Schacht hinauf. Das Lager liegt voraus.",
+        "next": "Weiter",
+        "campSoon": "Das Höhlenlager kommt noch.",
+        "enterFailed": "Der Aufstieg konnte nicht starten",
+        "phraseFailed": "Das Wort konnte nicht gesendet werden",
+        "phrases": {
+          "cheer": "Du schaffst das!",
+          "believe": "Ich glaube an dich.",
+          "together": "Wir schaffen das zusammen.",
+          "proud": "Ich bin so stolz auf dich."
+        }
+      },
       "waitPartner": "Warte auf deinen Partner",
       "finish": {
         "title": "Die Brücke gehört euch",
@@ -699,6 +721,8 @@
         "resetCavesFailed": "Höhlen konnten nicht zurückgesetzt werden",
         "resetGuides": "Führer-Level zurücksetzen",
         "resetGuidesFailed": "Führer konnten nicht zurückgesetzt werden",
+        "resetWords": "Wort-Level zurücksetzen",
+        "resetWordsFailed": "Worte konnten nicht zurückgesetzt werden",
         "test": "Test",
         "testTitle": "Test-Reset",
         "testHint": "Ein Reset setzt auch alle folgenden Level zurück.",

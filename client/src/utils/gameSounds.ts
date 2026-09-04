@@ -417,6 +417,14 @@ export const playCliffSpeechSound = async (): Promise<void> => {
   playTone(ctx, start + 0.05, 392, 0.06, 0.05, 'sine');
 };
 
+export const playCliffBounceSound = async (): Promise<void> => {
+  const ctx = await ensureAudioReady();
+  if (!ctx) return;
+  const start = ctx.currentTime;
+  playTone(ctx, start, 392, 0.05, 0.07, 'triangle');
+  playTone(ctx, start + 0.04, 587, 0.08, 0.06, 'sine');
+};
+
 const GUIDE_STEP_COUNT = 4;
 let lastGuideStepIndex = -1;
 

@@ -525,7 +525,16 @@ export type CliffScene =
   | 'balls'
   | 'caves'
   | 'guides'
+  | 'words'
   | 'finished';
+export type CliffWordsPhraseId = 'cheer' | 'believe' | 'together' | 'proud';
+
+export interface CliffWordsPlatform {
+  x: number;
+  y: number;
+  w: number;
+  checkpoint: 0 | 1 | 2 | 3;
+}
 export type CliffGuideDir = 'up' | 'down' | 'left' | 'right';
 export type CliffGuideCellKind = 'wall' | 'path' | 'trap' | 'start' | 'exit';
 
@@ -703,6 +712,41 @@ export interface CliffGameState {
     eligiblePets: CliffLiftPet[];
     minLevel: number;
   };
+  words: {
+    role: CliffCaveSide;
+    world: {
+      width: number;
+      cameraHeight: number;
+      finishY: number;
+      platforms: CliffWordsPlatform[];
+    };
+    my: {
+      x: number;
+      y: number;
+      fuel: number;
+      checkpoint: number;
+      cleared: boolean;
+      usedPhrases: CliffWordsPhraseId[];
+    };
+    partner: {
+      x: number;
+      y: number;
+      fuel: number;
+      checkpoint: number;
+      cleared: boolean;
+    };
+    phraseIds: CliffWordsPhraseId[];
+    fuelStart: number;
+    fuelMax: number;
+    fuelBounce: number;
+    fuelPhrase: number;
+    bothCleared: boolean;
+    failSeq: number;
+    fuelHint: boolean;
+    introTold: boolean;
+    lastPhrase: { userId: string; phraseId: CliffWordsPhraseId; at: string } | null;
+    cameraY: number;
+  };
   canReset: boolean;
 }
 
@@ -833,3 +877,17 @@ export const postCliffMoveGuide = async (dir: CliffGuideDir) =>
   (await postCliffAction('guides/move', { dir })).state;
 
 export const postCliffResetGuides = async () => (await postCliffAction('reset-guides')).state;
+
+export const postCliffEnterWords = async () => (await postCliffAction('words/enter')).state;
+
+export const postCliffSyncWords = async (x: number, y: number, bounce = false, fall = false) =>
+  (await postCliffAction('words/sync', { x, y, bounce, fall })).state;
+
+export const postCliffWordsFuelHint = async () => (await postCliffAction('words/fuel-hint')).state;
+
+export const postCliffWordsIntro = async () => (await postCliffAction('words/intro')).state;
+
+export const postCliffWordsPhrase = async (phraseId: CliffWordsPhraseId) =>
+  (await postCliffAction('words/phrase', { phraseId })).state;
+
+export const postCliffResetWords = async () => (await postCliffAction('reset-words')).state;

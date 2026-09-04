@@ -749,6 +749,11 @@ export const getCliffGuidesRootSx = () => ({
   background: '#000',
 });
 
+export const getCliffWordsRootSx = () => ({
+  ...getCliffSceneRootSx(),
+  background: 'linear-gradient(180deg, #1a0e0a 0%, #3a2216 42%, #2a160f 100%)',
+});
+
 export const getCliffGuidePadSx = () => ({
   width: 52,
   height: 52,

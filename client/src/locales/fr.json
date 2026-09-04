@@ -646,6 +646,28 @@
         "trap": "On ne peut pas passer. Il faut recommencer — la trace et les courses sont réinitialisées.",
         "petTaken": "Votre partenaire a déjà choisi ce familier"
       },
+      "words": {
+        "fuel": "Carburant {{fuel}}",
+        "fuelPartner": "Partenaire {{fuel}}",
+        "start": "Démarrer",
+        "continue": "Continuer",
+        "introBounce": "Ces corniches rebondissent. On monte à sauts.",
+        "introFuel": "Chaque rebond dépense du carburant. Encourage-moi s’il est vide.",
+        "fuelHint": "Je n’ai plus de carburant. Il faut que je demande à mon partenaire de m’encourager.",
+        "encourage": "Encourager",
+        "rewound": "Trop loin l’un de l’autre — retour au dernier point.",
+        "cleared": "Nous avons gravi le puits. Le camp est plus loin.",
+        "next": "Continuer",
+        "campSoon": "Le camp de la grotte est encore devant.",
+        "enterFailed": "Impossible de commencer l’ascension",
+        "phraseFailed": "Impossible d’envoyer cette phrase",
+        "phrases": {
+          "cheer": "Tu vas y arriver !",
+          "believe": "Je crois en toi.",
+          "together": "On y arrive ensemble.",
+          "proud": "Je suis si fier de toi."
+        }
+      },
       "waitPartner": "Attendez votre partenaire",
       "finish": {
         "title": "Le pont est à vous",
@@ -699,6 +721,8 @@
         "resetCavesFailed": "Impossible de réinitialiser les grottes",
         "resetGuides": "Reset niveau guides",
         "resetGuidesFailed": "Impossible de réinitialiser les guides",
+        "resetWords": "Reset niveau mots",
+        "resetWordsFailed": "Impossible de réinitialiser les mots",
         "test": "Test",
         "testTitle": "Reset de test",
         "testHint": "Réinitialiser un niveau réinitialise aussi tous les suivants.",

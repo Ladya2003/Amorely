@@ -78,10 +78,16 @@ import {
   resetCliffRun,
   tapCliffCaveBoulder,
   enterCliffGuides,
+  enterCliffWords,
+  ackCliffWordsFuelHint,
+  ackCliffWordsIntro,
   moveCliffGuide,
   pickCliffGuidePet,
+  phraseCliffWords,
   resetCliffGuides,
+  resetCliffWords,
   sendCliffGuidePet,
+  syncCliffWords,
   resolveCliffGameContext,
   surrenderCliffBridge,
   tapCliffBoulder,
@@ -1069,6 +1075,56 @@ export const attachGameSocketHandlers = (
     await withCliffAction(true, async (userId) => {
       const context = await resolveCliffGameContext(userId);
       const state = await resetCliffGuides(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_enter_words', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await enterCliffWords(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_words_sync', async (payload?: { x?: number; y?: number; bounce?: boolean; fall?: boolean }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await syncCliffWords(userId, context, payload ?? {});
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_words_intro', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await ackCliffWordsIntro(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_words_fuel_hint', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await ackCliffWordsFuelHint(userId, context);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
+    });
+  });
+
+  socket.on('cliff_game_words_phrase', async (payload?: { phraseId?: string }) => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await phraseCliffWords(userId, context, payload?.phraseId);
+      await emitCliffStateToPartners(state, getCliffGameParticipantIds(context), {
+        wordsPhrase: { userId, phraseId: payload?.phraseId },
+      });
+    });
+  });
+
+  socket.on('cliff_game_reset_words', async () => {
+    await withCliffAction(true, async (userId) => {
+      const context = await resolveCliffGameContext(userId);
+      const state = await resetCliffWords(userId, context);
       await emitCliffStateToPartners(state, getCliffGameParticipantIds(context));
     });
   });

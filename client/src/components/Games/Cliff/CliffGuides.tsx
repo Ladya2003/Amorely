@@ -363,6 +363,8 @@ const CliffGuides: React.FC<CliffGuidesProps> = ({ state, onPickPet, onSendPet, 
   );
 
   if (guides.bothEscaped) {
+    const hallLine = t('games.cliff.guides.hall');
+    const ownerSpeaks = guides.role === 'owner';
     return (
       <Box sx={getCliffGuidesRootSx()}>
         <Box
@@ -373,9 +375,18 @@ const CliffGuides: React.FC<CliffGuidesProps> = ({ state, onPickPet, onSendPet, 
               'radial-gradient(ellipse at 50% 70%, rgba(72, 42, 28, 0.45) 0%, rgba(0, 0, 0, 0.2) 42%, #000 78%)',
           }}
         />
-        <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: '8%', height: '42%', zIndex: 2 }}>
+        <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: '8%', height: '52%', zIndex: 2 }}>
           <Box sx={getCliffCharacterSlotSx(state.partnerPresent ? '18%' : '38%', true)}>
-            <CliffCharacter avatar={state.me.avatar} name={myName} walking={false} from="left" compact motion="idle" />
+            <CliffCharacter
+              avatar={state.me.avatar}
+              name={myName}
+              walking={false}
+              from="left"
+              compact
+              speech={ownerSpeaks ? hallLine : null}
+              speechWide={ownerSpeaks}
+              motion="idle"
+            />
           </Box>
           {state.partnerPresent && (
             <Box sx={getCliffCharacterSlotSx('58%', true)}>
@@ -385,26 +396,36 @@ const CliffGuides: React.FC<CliffGuidesProps> = ({ state, onPickPet, onSendPet, 
                 walking={false}
                 from="right"
                 compact
+                speech={!ownerSpeaks ? hallLine : null}
+                speechWide={!ownerSpeaks}
                 motion="idle"
               />
             </Box>
           )}
         </Box>
-        <Box sx={{ ...getCliffParchmentPanelSx(), display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Typography variant="body2" sx={{ fontWeight: 800, color: '#5c2618' }}>
-            {t('games.cliff.guides.hall')}
-          </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-            {state.partnerPresent ? (
-              <Button onClick={onNext} sx={getCliffModalPrimaryButtonSx()}>
-                {t('games.cliff.guides.next')}
-              </Button>
-            ) : (
-              <Typography variant="body2" sx={{ fontWeight: 700, color: '#8a3d28' }}>
-                {t('games.cliff.waitPartner')}
-              </Typography>
-            )}
+        {!ownerSpeaks && !state.partnerPresent && (
+          <Box
+            sx={{
+              position: 'absolute',
+              right: 12,
+              bottom: '28%',
+              zIndex: 4,
+              maxWidth: '52%',
+            }}
+          >
+            <GuideSpeechBubble text={hallLine} align="right" name={partnerName} />
           </Box>
+        )}
+        <Box sx={{ ...getCliffParchmentPanelSx(), display: 'flex', justifyContent: 'flex-end' }}>
+          {state.partnerPresent ? (
+            <Button onClick={onNext} sx={getCliffModalPrimaryButtonSx()}>
+              {t('games.cliff.guides.next')}
+            </Button>
+          ) : (
+            <Typography variant="body2" sx={{ fontWeight: 700, color: '#8a3d28' }}>
+              {t('games.cliff.waitPartner')}
+            </Typography>
+          )}
         </Box>
       </Box>
     );

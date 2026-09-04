@@ -660,6 +660,28 @@
         "trap": "Can't go that way. Back to the start — the trail and the pet's runs reset.",
         "petTaken": "Your partner already chose this pet"
       },
+      "words": {
+        "fuel": "Fuel {{fuel}}",
+        "fuelPartner": "Partner {{fuel}}",
+        "start": "Start",
+        "continue": "Continue",
+        "introBounce": "These ledges bounce. We jump up the shaft.",
+        "introFuel": "Each bounce spends fuel. Cheer me if I run low.",
+        "fuelHint": "I ran out of fuel. I need to ask my partner to encourage me.",
+        "encourage": "Encourage",
+        "rewound": "Too far apart — back to the last checkpoint.",
+        "cleared": "We climbed this shaft. The camp is ahead.",
+        "next": "Continue",
+        "campSoon": "The cave camp is still ahead.",
+        "enterFailed": "Could not start the climb",
+        "phraseFailed": "Could not send that word",
+        "phrases": {
+          "cheer": "You've got this!",
+          "believe": "I believe in you.",
+          "together": "We're in this together.",
+          "proud": "I'm so proud of you."
+        }
+      },
       "waitPartner": "Waiting for your partner",
       "finish": {
         "title": "The bridge is yours",
@@ -713,6 +735,8 @@
         "resetCavesFailed": "Could not reset the caves",
         "resetGuides": "Reset guides",
         "resetGuidesFailed": "Could not reset the guides",
+        "resetWords": "Reset words",
+        "resetWordsFailed": "Could not reset the words climb",
         "test": "Test",
         "testTitle": "Test reset",
         "testHint": "Resetting a stage also resets every stage after it.",

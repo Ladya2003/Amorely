@@ -26,11 +26,13 @@ type CliffInventoryBarProps = {
   resettingBalls?: boolean;
   resettingCaves?: boolean;
   resettingGuides?: boolean;
+  resettingWords?: boolean;
   onResetGate: () => void;
   onResetRopes: () => void;
   onResetBalls: () => void;
   onResetCaves: () => void;
   onResetGuides: () => void;
+  onResetWords: () => void;
 };
 
 const oreIconSx = {
@@ -60,11 +62,13 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
   resettingBalls = false,
   resettingCaves = false,
   resettingGuides = false,
+  resettingWords = false,
   onResetGate,
   onResetRopes,
   onResetBalls,
   onResetCaves,
   onResetGuides,
+  onResetWords,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -73,7 +77,8 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
   const iconButton = getCliffHudIconButtonSx();
   const [topic, setTopic] = useState<CliffInventoryTopic | null>(null);
   const [testOpen, setTestOpen] = useState(false);
-  const resetting = resettingGate || resettingRopes || resettingBalls || resettingCaves || resettingGuides;
+  const resetting =
+    resettingGate || resettingRopes || resettingBalls || resettingCaves || resettingGuides || resettingWords;
 
   const runReset = (reset: () => void) => {
     setTestOpen(false);
@@ -94,7 +99,7 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
             >
               <CurrencyBadge balance={state.amoreCoins} size="small" showGuideOnClick={false} />
             </Box>
-            {state.scene !== 'caves' && state.scene !== 'guides' && (
+            {state.scene !== 'caves' && state.scene !== 'guides' && state.scene !== 'words' && (
               <>
                 <Box component="button" type="button" onClick={() => setTopic('iron')} sx={chip}>
                   <Box component="img" src={cliffBoulderImage('iron')} alt="" sx={oreIconSx} />
@@ -161,6 +166,18 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
                 sx={chip}
               >
                 <Box component="img" src={CLIFF_ASSETS.axe} alt="" sx={toolIconSx} />
+              </Box>
+            )}
+          </Box>
+        )}
+        {state.scene === 'words' && (
+          <Box sx={row}>
+            <Box sx={{ ...getCliffChipSx(theme, 'parchment'), ...ballsChipSx }}>
+              {t('games.cliff.words.fuel', { fuel: state.words.my.fuel })}
+            </Box>
+            {state.partnerPresent && (
+              <Box sx={{ ...getCliffChipSx(theme, 'parchment'), ...ballsChipSx }}>
+                {t('games.cliff.words.fuelPartner', { fuel: state.words.partner.fuel })}
               </Box>
             )}
           </Box>
@@ -271,6 +288,13 @@ const CliffInventoryBar: React.FC<CliffInventoryBarProps> = ({
                 sx={getCliffModalGhostButtonSx()}
               >
                 {t('games.cliff.inventory.resetGuides')}
+              </Button>
+              <Button
+                disabled={resetting}
+                onClick={() => runReset(onResetWords)}
+                sx={getCliffModalGhostButtonSx()}
+              >
+                {t('games.cliff.inventory.resetWords')}
               </Button>
             </Box>
           </CliffModalFrame>,

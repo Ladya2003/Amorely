@@ -20,6 +20,28 @@ import {
   CLIFF_GUIDES_ALTITUDE,
   CLIFF_GUIDE_PET_STEP_MS,
   CLIFF_GUIDE_TRAIL_MS,
+  CLIFF_WORDS_ALTITUDE,
+  CLIFF_WORDS_CAMERA_HEIGHT,
+  CLIFF_WORDS_CAMERA_KEEP,
+  CLIFF_WORDS_CAMERA_START,
+  CLIFF_WORDS_CAMERA_UNLOCK_Y,
+  CLIFF_WORDS_FINISH_Y,
+  CLIFF_WORDS_FUEL_BOUNCE,
+  CLIFF_WORDS_FUEL_MAX,
+  CLIFF_WORDS_FUEL_PHRASE,
+  CLIFF_WORDS_FUEL_START,
+  CLIFF_WORDS_MAX_BOUNCE_DY,
+  CLIFF_WORDS_MAX_FALL_DY,
+  CLIFF_WORDS_PHRASE_IDS,
+  CLIFF_WORDS_PLATFORMS,
+  CLIFF_WORDS_PLAYER_WIDTH,
+  CLIFF_WORDS_WORLD_WIDTH,
+  cliffWordsCheckpointAtY,
+  cliffWordsCheckpointY,
+  cliffWordsPlaceX,
+  cliffWordsStartX,
+  cliffWordsStartY,
+  isCliffWordsPhraseId,
   CLIFF_MINE_RESET_MS,
   clampGuidePetRuns,
   guideMapOf,
@@ -60,6 +82,7 @@ import {
   type CliffPickaxeType,
   type CliffScene,
   type CliffShopItemId,
+  type CliffWordsPhraseId,
 } from './cliffGameConfig';
 
 export interface CliffGameRelationship {
@@ -220,6 +243,41 @@ export interface CliffGamePublicState {
     eligiblePets: CliffLiftPublicPet[];
     minLevel: number;
   };
+  words: {
+    role: CliffCaveSide;
+    world: {
+      width: number;
+      cameraHeight: number;
+      finishY: number;
+      platforms: Array<{ x: number; y: number; w: number; checkpoint: 0 | 1 | 2 | 3 }>;
+    };
+    my: {
+      x: number;
+      y: number;
+      fuel: number;
+      checkpoint: number;
+      cleared: boolean;
+      usedPhrases: CliffWordsPhraseId[];
+    };
+    partner: {
+      x: number;
+      y: number;
+      fuel: number;
+      checkpoint: number;
+      cleared: boolean;
+    };
+    phraseIds: CliffWordsPhraseId[];
+    fuelStart: number;
+    fuelMax: number;
+    fuelBounce: number;
+    fuelPhrase: number;
+    bothCleared: boolean;
+    failSeq: number;
+    fuelHint: boolean;
+    introTold: boolean;
+    lastPhrase: { userId: string; phraseId: CliffWordsPhraseId; at: string } | null;
+    cameraY: number;
+  };
   canReset: boolean;
 }
 
@@ -302,6 +360,16 @@ const createEmptyProgress = (userId: string) => ({
   guideLastForkX: null as number | null,
   guideLastForkY: null as number | null,
   guideTrapTold: false,
+  wordsX: cliffWordsStartX('owner'),
+  wordsY: cliffWordsStartY(),
+  wordsBaseY: cliffWordsStartY(),
+  wordsFuel: CLIFF_WORDS_FUEL_START,
+  wordsCheckpoint: 0,
+  wordsCleared: false,
+  wordsUsedPhrases: [] as string[],
+  wordsShowFuelHint: false,
+  wordsFuelHintTold: false,
+  wordsIntroTold: false,
 });
 
 const resetBallsProgress = (progress: {
@@ -428,6 +496,223 @@ const resetGuidesProgress = (progress: CliffGuideProgress, role: CliffCaveSide) 
 const resetGuidesRunFields = (state: any, context: CliffGameContext) => {
   resetGuidesProgress(getProgress(state, context.ownerUserId), 'owner');
   resetGuidesProgress(getProgress(state, context.partnerUserId), 'partner');
+};
+
+type CliffWordsProgress = {
+  wordsX?: number;
+  wordsY?: number;
+  wordsBaseY?: number;
+  wordsFuel?: number;
+  wordsCheckpoint?: number;
+  wordsCleared?: boolean;
+  wordsUsedPhrases?: string[];
+  wordsShowFuelHint?: boolean;
+  wordsFuelHintTold?: boolean;
+  wordsIntroTold?: boolean;
+};
+
+const clampWordsX = (value: number) =>
+  Math.min(
+    CLIFF_WORDS_WORLD_WIDTH - CLIFF_WORDS_PLAYER_WIDTH / 2,
+    Math.max(CLIFF_WORDS_PLAYER_WIDTH / 2, value)
+  );
+
+const clampWordsY = (value: number) =>
+  Math.min(CLIFF_WORDS_FINISH_Y + 20, Math.max(-4, value));
+
+const standWordsAt = (progress: CliffWordsProgress, x: number, y: number) => {
+  progress.wordsX = x;
+  progress.wordsY = y;
+  progress.wordsBaseY = y;
+};
+
+const resetWordsProgress = (progress: CliffWordsProgress, role: CliffCaveSide) => {
+  standWordsAt(progress, cliffWordsStartX(role), cliffWordsStartY());
+  progress.wordsFuel = CLIFF_WORDS_FUEL_START;
+  progress.wordsCheckpoint = 0;
+  progress.wordsCleared = false;
+  progress.wordsUsedPhrases = [];
+  progress.wordsShowFuelHint = false;
+  progress.wordsFuelHintTold = false;
+  progress.wordsIntroTold = false;
+};
+
+const resetWordsRunFields = (state: any, context: CliffGameContext) => {
+  resetWordsProgress(getProgress(state, context.ownerUserId), 'owner');
+  resetWordsProgress(getProgress(state, context.partnerUserId), 'partner');
+  state.wordsCameraY = CLIFF_WORDS_CAMERA_START;
+  state.set('wordsLastPhraseUserId', null);
+  state.set('wordsLastPhraseId', null);
+  state.set('wordsLastPhraseAt', null);
+};
+
+const wordsLeadY = (state: any, context: CliffGameContext) => {
+  const owner = getProgress(state, context.ownerUserId);
+  const partner = getProgress(state, context.partnerUserId);
+  return Math.max(owner.wordsY ?? 0, partner.wordsY ?? 0);
+};
+
+const syncWordsCamera = (state: any, context: CliffGameContext, snap = false) => {
+  const lead = wordsLeadY(state, context);
+  if (lead < CLIFF_WORDS_CAMERA_UNLOCK_Y) {
+    state.wordsCameraY = CLIFF_WORDS_CAMERA_START;
+    return;
+  }
+  const desired = Math.max(CLIFF_WORDS_CAMERA_START, lead - CLIFF_WORDS_CAMERA_KEEP);
+  state.wordsCameraY = snap ? desired : Math.max(state.wordsCameraY ?? CLIFF_WORDS_CAMERA_START, desired);
+};
+
+const rewindWordsToSharedCheckpoint = (state: any, context: CliffGameContext) => {
+  const owner = getProgress(state, context.ownerUserId);
+  const partner = getProgress(state, context.partnerUserId);
+  const checkpoint = Math.min(owner.wordsCheckpoint ?? 0, partner.wordsCheckpoint ?? 0);
+  const y = cliffWordsCheckpointY(checkpoint);
+  const place = (progress: CliffWordsProgress, role: CliffCaveSide) => {
+    if (progress.wordsCleared) {
+      return;
+    }
+    standWordsAt(progress, cliffWordsPlaceX(y, role), y);
+    progress.wordsFuel = CLIFF_WORDS_FUEL_START;
+    progress.wordsCheckpoint = checkpoint;
+  };
+  place(owner, 'owner');
+  place(partner, 'partner');
+  syncWordsCamera(state, context, true);
+  state.wordsFailSeq = (state.wordsFailSeq ?? 0) + 1;
+};
+
+const rewindWordsPlayer = (progress: CliffWordsProgress, role: CliffCaveSide) => {
+  const checkpoint = progress.wordsCheckpoint ?? 0;
+  const y = cliffWordsCheckpointY(checkpoint);
+  standWordsAt(progress, cliffWordsPlaceX(y, role), y);
+  progress.wordsFuel = CLIFF_WORDS_FUEL_START;
+};
+
+const restartWordsFromStart = (progress: CliffWordsProgress, role: CliffCaveSide) => {
+  standWordsAt(progress, cliffWordsStartX(role), cliffWordsStartY());
+  progress.wordsFuel = CLIFF_WORDS_FUEL_START;
+  progress.wordsCheckpoint = 0;
+};
+
+const bumpWordsFail = (state: any) => {
+  state.wordsFailSeq = (state.wordsFailSeq ?? 0) + 1;
+};
+
+const failWordsForFuel = (
+  state: any,
+  context: CliffGameContext,
+  progress: CliffWordsProgress,
+  role: CliffCaveSide,
+  bothPresent: boolean,
+  pairStillClimbing: boolean
+) => {
+  if (progress.wordsCleared) {
+    return;
+  }
+  if (!progress.wordsFuelHintTold) {
+    restartWordsFromStart(progress, role);
+    progress.wordsShowFuelHint = true;
+    progress.wordsIntroTold = true;
+    bumpWordsFail(state);
+    return;
+  }
+  if (bothPresent && pairStillClimbing) {
+    rewindWordsToSharedCheckpoint(state, context);
+    return;
+  }
+  rewindWordsPlayer(progress, role);
+  bumpWordsFail(state);
+  syncWordsCamera(state, context, true);
+};
+
+const wordsClearedOf = (state: any, context: CliffGameContext) => {
+  const owner = getProgress(state, context.ownerUserId);
+  const partner = getProgress(state, context.partnerUserId);
+  return Boolean(owner.wordsCleared) && Boolean(partner.wordsCleared);
+};
+
+const guidesClearedOf = (state: any, context: CliffGameContext) => {
+  const owner = getProgress(state, context.ownerUserId);
+  const partner = getProgress(state, context.partnerUserId);
+  return Boolean(owner.guideEscaped) && Boolean(partner.guideEscaped);
+};
+
+const wordsStandingX = (x: number | undefined, y: number | undefined, role: CliffCaveSide) => {
+  const nextY = y ?? cliffWordsStartY();
+  const nextX = x ?? cliffWordsPlaceX(nextY, role);
+  const platform =
+    CLIFF_WORDS_PLATFORMS.find((item) => Math.abs(item.y - nextY) < 0.51) ?? CLIFF_WORDS_PLATFORMS[0];
+  const half = platform.w / 2;
+  if (nextX > platform.x - half && nextX < platform.x + half) {
+    return nextX;
+  }
+  return cliffWordsPlaceX(nextY, role);
+};
+
+const formatWordsPublic = (
+  state: any,
+  viewerUserId: string,
+  context: CliffGameContext
+): CliffGamePublicState['words'] => {
+  const role = caveRoleOf(viewerUserId, context);
+  const partnerRole: CliffCaveSide = role === 'owner' ? 'partner' : 'owner';
+  const partnerUserId =
+    viewerUserId === context.ownerUserId ? context.partnerUserId : context.ownerUserId;
+  const myProgress = getProgress(state, viewerUserId);
+  const partnerProgress = getProgress(state, partnerUserId);
+  const phraseAt = state.wordsLastPhraseAt ? new Date(state.wordsLastPhraseAt) : null;
+  const phraseFresh = Boolean(phraseAt && Date.now() - phraseAt.getTime() < 6000);
+  const phraseId = state.wordsLastPhraseId;
+  const lastPhrase =
+    phraseFresh && isCliffWordsPhraseId(phraseId) && state.wordsLastPhraseUserId
+      ? {
+          userId: toId(state.wordsLastPhraseUserId),
+          phraseId,
+          at: phraseAt ? phraseAt.toISOString() : new Date().toISOString(),
+        }
+      : null;
+
+  return {
+    role,
+    world: {
+      width: CLIFF_WORDS_WORLD_WIDTH,
+      cameraHeight: CLIFF_WORDS_CAMERA_HEIGHT,
+      finishY: CLIFF_WORDS_FINISH_Y,
+      platforms: CLIFF_WORDS_PLATFORMS.map((platform) => ({ ...platform })),
+    },
+    my: {
+      x: wordsStandingX(myProgress.wordsX, myProgress.wordsY, role),
+      y:
+        (myProgress.wordsCheckpoint ?? 0) <= 0
+          ? Math.max(myProgress.wordsY ?? cliffWordsStartY(), cliffWordsStartY())
+          : myProgress.wordsY ?? cliffWordsStartY(),
+      fuel: myProgress.wordsFuel ?? CLIFF_WORDS_FUEL_START,
+      checkpoint: myProgress.wordsCheckpoint ?? 0,
+      cleared: Boolean(myProgress.wordsCleared),
+      usedPhrases: (myProgress.wordsUsedPhrases ?? []).filter(isCliffWordsPhraseId),
+    },
+    partner: {
+      x: wordsStandingX(partnerProgress.wordsX, partnerProgress.wordsY, partnerRole),
+      y:
+        (partnerProgress.wordsCheckpoint ?? 0) <= 0
+          ? Math.max(partnerProgress.wordsY ?? cliffWordsStartY(), cliffWordsStartY())
+          : partnerProgress.wordsY ?? cliffWordsStartY(),
+      fuel: partnerProgress.wordsFuel ?? CLIFF_WORDS_FUEL_START,
+      checkpoint: partnerProgress.wordsCheckpoint ?? 0,
+      cleared: Boolean(partnerProgress.wordsCleared),
+    },
+    phraseIds: [...CLIFF_WORDS_PHRASE_IDS],
+    fuelStart: CLIFF_WORDS_FUEL_START,
+    fuelMax: CLIFF_WORDS_FUEL_MAX,
+    fuelBounce: CLIFF_WORDS_FUEL_BOUNCE,
+    fuelPhrase: CLIFF_WORDS_FUEL_PHRASE,
+    bothCleared: wordsClearedOf(state, context),
+    failSeq: state.wordsFailSeq ?? 0,
+    fuelHint: Boolean(myProgress.wordsShowFuelHint),
+    introTold: Boolean(myProgress.wordsIntroTold),
+    lastPhrase,
+    cameraY: state.wordsCameraY ?? CLIFF_WORDS_CAMERA_START,
+  };
 };
 
 const cavesClearedOf = (state: any, context: CliffGameContext) => {
@@ -612,7 +897,7 @@ const resetCavesRunFields = (state: any, context: CliffGameContext) => {
   state.set('caveBoulders', createCliffCaveBoulders());
 };
 
-type CliffTestResetFrom = 'gate' | 'ropes' | 'balls' | 'caves' | 'guides';
+type CliffTestResetFrom = 'gate' | 'ropes' | 'balls' | 'caves' | 'guides' | 'words';
 
 const resetBridgeProgress = (progress: {
   stonesRemaining?: number;
@@ -639,8 +924,13 @@ const resetStagesFrom = (state: any, context: CliffGameContext, from: CliffTestR
         resetBallsProgress(progress);
         resetCavesProgress(progress);
         resetGuidesProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
+        resetWordsProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
       }
       state.set('caveBoulders', createCliffCaveBoulders());
+      state.wordsFailSeq = (state.wordsFailSeq ?? 0) + 1;
+      state.set('wordsLastPhraseUserId', null);
+      state.set('wordsLastPhraseId', null);
+      state.set('wordsLastPhraseAt', null);
       state.gateDestroyed = false;
       state.bridgeRepaired = false;
       state.liftRaised = false;
@@ -656,8 +946,13 @@ const resetStagesFrom = (state: any, context: CliffGameContext, from: CliffTestR
         resetBallsProgress(progress);
         resetCavesProgress(progress);
         resetGuidesProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
+        resetWordsProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
       }
       state.set('caveBoulders', createCliffCaveBoulders());
+      state.wordsFailSeq = (state.wordsFailSeq ?? 0) + 1;
+      state.set('wordsLastPhraseUserId', null);
+      state.set('wordsLastPhraseId', null);
+      state.set('wordsLastPhraseAt', null);
       state.scene = 'ropes';
       state.altitudeM = CLIFF_ROPES_ALTITUDE;
       return;
@@ -666,21 +961,34 @@ const resetStagesFrom = (state: any, context: CliffGameContext, from: CliffTestR
         resetBallsProgress(progress);
         resetCavesProgress(progress);
         resetGuidesProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
+        resetWordsProgress(progress, progress === ownerProgress ? 'owner' : 'partner');
       }
       state.set('caveBoulders', createCliffCaveBoulders());
+      state.wordsFailSeq = (state.wordsFailSeq ?? 0) + 1;
+      state.set('wordsLastPhraseUserId', null);
+      state.set('wordsLastPhraseId', null);
+      state.set('wordsLastPhraseAt', null);
       state.scene = 'balls';
       state.altitudeM = CLIFF_BALLS_ALTITUDE;
       return;
     case 'caves':
       resetCavesRunFields(state, context);
       resetGuidesRunFields(state, context);
+      resetWordsRunFields(state, context);
       state.scene = 'caves';
       state.altitudeM = CLIFF_CAVES_ALTITUDE;
       return;
     case 'guides':
       resetGuidesRunFields(state, context);
+      resetWordsRunFields(state, context);
       state.scene = 'guides';
       state.altitudeM = CLIFF_GUIDES_ALTITUDE;
+      return;
+    case 'words':
+      resetWordsRunFields(state, context);
+      state.wordsFailSeq = (state.wordsFailSeq ?? 0) + 1;
+      state.scene = 'words';
+      state.altitudeM = CLIFF_WORDS_ALTITUDE;
       return;
     default: {
       const exhaustive: never = from;
@@ -749,6 +1057,11 @@ const createRunFields = (ownerUserId: string, partnerUserId: string) => ({
   bridgeRepaired: false,
   liftRaised: false,
   liftPetIds: [] as mongoose.Types.ObjectId[],
+  wordsFailSeq: 0,
+  wordsCameraY: CLIFF_WORDS_CAMERA_START,
+  wordsLastPhraseUserId: null as mongoose.Types.ObjectId | null,
+  wordsLastPhraseId: null as string | null,
+  wordsLastPhraseAt: null as Date | null,
 });
 
 const getPurchaseType = (state: any, userId: string): CliffPickaxeType | null => {
@@ -1170,6 +1483,7 @@ export const formatCliffGameState = async (
     })(),
     caves: formatCavesPublic(state, viewerUserId, context),
     guides: formatGuidesPublic(state, viewerUserId, context, now, guidePets),
+    words: formatWordsPublic(state, viewerUserId, context),
     canReset: state.scene === 'finished',
   };
 };
@@ -1999,6 +2313,160 @@ export const moveCliffGuide = async (
 export const resetCliffGuides = async (_userId: string, context: CliffGameContext) => {
   const state = await getOrCreateCliffGameState(context);
   resetStagesFrom(state, context, 'guides');
+  await state.save();
+  return state;
+};
+
+export const enterCliffWords = async (_userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  if (state.scene !== 'guides') {
+    throw new CliffGameError('WORDS_NOT_READY', 'Сначала выйдите из лабиринта');
+  }
+  if (!guidesClearedOf(state, context)) {
+    throw new CliffGameError('WORDS_NOT_READY', 'Сначала выйдите из лабиринта');
+  }
+  if (!bothPartnersPresent(state, context)) {
+    throw new CliffGameError('WAIT_PARTNER', 'Подождите партнёра');
+  }
+
+  resetWordsRunFields(state, context);
+  state.wordsFailSeq = 0;
+  state.wordsCameraY = CLIFF_WORDS_CAMERA_START;
+  state.scene = 'words';
+  state.altitudeM = CLIFF_WORDS_ALTITUDE;
+  await state.save();
+  return state;
+};
+
+const applyWordsPosition = (
+  progress: CliffWordsProgress,
+  xRaw: unknown,
+  yRaw: unknown,
+  bounce: boolean
+) => {
+  const storedY = progress.wordsY ?? 0;
+  const x = typeof xRaw === 'number' ? xRaw : Number(xRaw);
+  const y = typeof yRaw === 'number' ? yRaw : Number(yRaw);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    throw new CliffGameError('INVALID_WORDS_POS', 'Некорректная позиция');
+  }
+
+  progress.wordsX = clampWordsX(x);
+  const recordedBase = progress.wordsBaseY;
+  const baseY = recordedBase && recordedBase > 0 ? recordedBase : storedY;
+  if (bounce) {
+    const nextY = clampWordsY(y);
+    progress.wordsY = Math.min(baseY + CLIFF_WORDS_MAX_BOUNCE_DY, Math.max(baseY, nextY));
+    progress.wordsBaseY = progress.wordsY;
+  } else {
+    progress.wordsY = clampWordsY(
+      Math.min(baseY + CLIFF_WORDS_MAX_BOUNCE_DY, Math.max(baseY - CLIFF_WORDS_MAX_FALL_DY, y))
+    );
+  }
+
+  const reached = cliffWordsCheckpointAtY(progress.wordsY);
+  if (reached > (progress.wordsCheckpoint ?? 0)) {
+    progress.wordsCheckpoint = reached;
+  }
+  if ((progress.wordsY ?? 0) >= CLIFF_WORDS_FINISH_Y - 1) {
+    progress.wordsCleared = true;
+    progress.wordsY = CLIFF_WORDS_FINISH_Y;
+  }
+};
+
+export const syncCliffWords = async (
+  userId: string,
+  context: CliffGameContext,
+  payload: { x?: unknown; y?: unknown; bounce?: unknown; fall?: unknown }
+) =>
+  saveCliffStateWithRetry(context, (state) => {
+    if (state.scene !== 'words') {
+      throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя прыгать');
+    }
+
+    const role = caveRoleOf(userId, context);
+    const partnerUserId = userId === context.ownerUserId ? context.partnerUserId : context.ownerUserId;
+    const progress = getProgress(state, userId);
+    const partnerProgress = getProgress(state, partnerUserId);
+    const bounce = payload.bounce === true;
+    const bothPresent = bothPartnersPresent(state, context);
+    const pairStillClimbing = !progress.wordsCleared && !partnerProgress.wordsCleared;
+
+    if (payload.fall === true && !progress.wordsCleared) {
+      restartWordsFromStart(progress, role);
+      bumpWordsFail(state);
+      return;
+    }
+
+    if (bounce) {
+      const fuel = progress.wordsFuel ?? CLIFF_WORDS_FUEL_START;
+      if (fuel < CLIFF_WORDS_FUEL_BOUNCE) {
+        failWordsForFuel(state, context, progress, role, bothPresent, pairStillClimbing);
+        return;
+      }
+      progress.wordsFuel = fuel - CLIFF_WORDS_FUEL_BOUNCE;
+    }
+
+    applyWordsPosition(progress, payload.x, payload.y, bounce);
+
+    if (bounce && (progress.wordsFuel ?? 0) <= 0 && !progress.wordsCleared) {
+      failWordsForFuel(state, context, progress, role, bothPresent, pairStillClimbing);
+    }
+  });
+
+export const ackCliffWordsFuelHint = async (userId: string, context: CliffGameContext) =>
+  saveCliffStateWithRetry(context, (state) => {
+    if (state.scene !== 'words') {
+      throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя прыгать');
+    }
+    const progress = getProgress(state, userId);
+    progress.wordsShowFuelHint = false;
+    progress.wordsFuelHintTold = true;
+    progress.wordsIntroTold = true;
+  });
+
+export const ackCliffWordsIntro = async (userId: string, context: CliffGameContext) =>
+  saveCliffStateWithRetry(context, (state) => {
+    if (state.scene !== 'words') {
+      throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя прыгать');
+    }
+    getProgress(state, userId).wordsIntroTold = true;
+  });
+
+export const phraseCliffWords = async (
+  userId: string,
+  context: CliffGameContext,
+  phraseIdRaw: unknown
+) =>
+  saveCliffStateWithRetry(context, (state) => {
+    if (state.scene !== 'words') {
+      throw new CliffGameError('WRONG_SCENE', 'Сейчас нельзя подбадривать');
+    }
+    if (!isCliffWordsPhraseId(phraseIdRaw)) {
+      throw new CliffGameError('PHRASE_INVALID', 'Такой фразы нет');
+    }
+
+    const partnerUserId = userId === context.ownerUserId ? context.partnerUserId : context.ownerUserId;
+    const progress = getProgress(state, userId);
+    const partnerProgress = getProgress(state, partnerUserId);
+    const used = progress.wordsUsedPhrases ?? [];
+    if (used.includes(phraseIdRaw)) {
+      throw new CliffGameError('PHRASE_USED', 'Эту фразу уже говорили');
+    }
+
+    progress.wordsUsedPhrases = [...used, phraseIdRaw];
+    partnerProgress.wordsFuel = Math.min(
+      CLIFF_WORDS_FUEL_MAX,
+      (partnerProgress.wordsFuel ?? CLIFF_WORDS_FUEL_START) + CLIFF_WORDS_FUEL_PHRASE
+    );
+    state.wordsLastPhraseUserId = new mongoose.Types.ObjectId(userId);
+    state.wordsLastPhraseId = phraseIdRaw;
+    state.wordsLastPhraseAt = new Date();
+  });
+
+export const resetCliffWords = async (_userId: string, context: CliffGameContext) => {
+  const state = await getOrCreateCliffGameState(context);
+  resetStagesFrom(state, context, 'words');
   await state.save();
   return state;
 };

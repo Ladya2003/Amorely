@@ -63,6 +63,16 @@ const cliffPlayerProgressSchema = new mongoose.Schema(
     guideLastForkX: { type: Number, default: null },
     guideLastForkY: { type: Number, default: null },
     guideTrapTold: { type: Boolean, default: false },
+    wordsX: { type: Number, default: 0 },
+    wordsY: { type: Number, default: 0 },
+    wordsBaseY: { type: Number, default: 0 },
+    wordsFuel: { type: Number, default: 12, min: 0, max: 12 },
+    wordsCheckpoint: { type: Number, default: 0, min: 0, max: 3 },
+    wordsCleared: { type: Boolean, default: false },
+    wordsUsedPhrases: { type: [String], default: [] },
+    wordsShowFuelHint: { type: Boolean, default: false },
+    wordsFuelHintTold: { type: Boolean, default: false },
+    wordsIntroTold: { type: Boolean, default: false },
   },
   { _id: false }
 );
@@ -77,7 +87,7 @@ const cliffGameStateSchema = new mongoose.Schema({
   runId: { type: String, required: true },
   scene: {
     type: String,
-    enum: ['hub', 'bridge', 'lift', 'ropes', 'balls', 'caves', 'guides', 'finished'],
+    enum: ['hub', 'bridge', 'lift', 'ropes', 'balls', 'caves', 'guides', 'words', 'finished'],
     default: 'hub',
   },
   altitudeM: { type: Number, default: 10 },
@@ -103,6 +113,11 @@ const cliffGameStateSchema = new mongoose.Schema({
   bridgeRepaired: { type: Boolean, default: false },
   liftRaised: { type: Boolean, default: false },
   liftPetIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },
+  wordsFailSeq: { type: Number, default: 0, min: 0 },
+  wordsCameraY: { type: Number, default: 0 },
+  wordsLastPhraseUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  wordsLastPhraseId: { type: String, default: null },
+  wordsLastPhraseAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

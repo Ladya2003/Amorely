@@ -8,6 +8,7 @@ export const CLIFF_ROPES_END_ALTITUDE = 148;
 export const CLIFF_BALLS_ALTITUDE = 160;
 export const CLIFF_CAVES_ALTITUDE = 170;
 export const CLIFF_GUIDES_ALTITUDE = 190;
+export const CLIFF_WORDS_ALTITUDE = 220;
 export const CLIFF_FINISH_ALTITUDE = 150;
 export const CLIFF_ROPES_FIRST = 3;
 export const CLIFF_ROPES_SECOND = 5;
@@ -44,6 +45,7 @@ export type CliffScene =
   | 'balls'
   | 'caves'
   | 'guides'
+  | 'words'
   | 'finished';
 export type CliffMetal = 'iron' | 'copper';
 export type CliffCaveResource = 'iron' | 'copper' | 'quartz' | 'resin';
@@ -459,6 +461,96 @@ export const guidePathFrom = (map: CliffGuideMap, from: CliffGuidePoint): CliffG
   path.reverse();
   return path;
 };
+
+export const CLIFF_WORDS_FUEL_START = 12;
+export const CLIFF_WORDS_FUEL_MAX = 12;
+export const CLIFF_WORDS_FUEL_BOUNCE = 1;
+export const CLIFF_WORDS_FUEL_PHRASE = 4;
+export const CLIFF_WORDS_WORLD_WIDTH = 100;
+export const CLIFF_WORDS_CAMERA_HEIGHT = 100;
+export const CLIFF_WORDS_PLATFORM_COUNT = 24;
+export const CLIFF_WORDS_FLOOR_Y = 16;
+export const CLIFF_WORDS_PLATFORM_GAP = 22;
+export const CLIFF_WORDS_PLATFORM_WIDTH = 26;
+export const CLIFF_WORDS_PLAYER_WIDTH = 8;
+export const CLIFF_WORDS_MAX_BOUNCE_DY = 36;
+export const CLIFF_WORDS_MAX_FALL_DY = 40;
+export const CLIFF_WORDS_CHECKPOINT_INDEXES = [7, 15, 21] as const;
+export const CLIFF_WORDS_PHRASE_IDS = ['cheer', 'believe', 'together', 'proud'] as const;
+export type CliffWordsPhraseId = (typeof CLIFF_WORDS_PHRASE_IDS)[number];
+
+export interface CliffWordsPlatform {
+  x: number;
+  y: number;
+  w: number;
+  checkpoint: 0 | 1 | 2 | 3;
+}
+
+const wordsCheckpointOf = (index: number): 0 | 1 | 2 | 3 => {
+  if (index === CLIFF_WORDS_CHECKPOINT_INDEXES[0]) {
+    return 1;
+  }
+  if (index === CLIFF_WORDS_CHECKPOINT_INDEXES[1]) {
+    return 2;
+  }
+  if (index === CLIFF_WORDS_CHECKPOINT_INDEXES[2]) {
+    return 3;
+  }
+  return 0;
+};
+
+const CLIFF_WORDS_PLATFORM_X = [
+  22, 38, 72, 55, 28, 16, 50, 46, 78, 64, 32, 20, 58, 84, 48, 50, 26, 70, 86, 40, 18, 52, 74, 50,
+] as const;
+
+export const CLIFF_WORDS_PLATFORMS: CliffWordsPlatform[] = Array.from(
+  { length: CLIFF_WORDS_PLATFORM_COUNT },
+  (_, index) => ({
+    x: CLIFF_WORDS_PLATFORM_X[index] ?? 50,
+    y: CLIFF_WORDS_FLOOR_Y + index * CLIFF_WORDS_PLATFORM_GAP,
+    w: CLIFF_WORDS_PLATFORM_WIDTH,
+    checkpoint: wordsCheckpointOf(index),
+  })
+);
+
+export const CLIFF_WORDS_FINISH_Y =
+  CLIFF_WORDS_FLOOR_Y + (CLIFF_WORDS_PLATFORM_COUNT - 1) * CLIFF_WORDS_PLATFORM_GAP;
+export const CLIFF_WORDS_CAMERA_UNLOCK_INDEX = 2;
+export const CLIFF_WORDS_CAMERA_UNLOCK_Y =
+  CLIFF_WORDS_FLOOR_Y + CLIFF_WORDS_CAMERA_UNLOCK_INDEX * CLIFF_WORDS_PLATFORM_GAP;
+export const CLIFF_WORDS_CAMERA_KEEP = 26;
+export const CLIFF_WORDS_CAMERA_START = 0;
+
+export const cliffWordsPlaceX = (y: number, role: CliffCaveSide) => {
+  const platform =
+    CLIFF_WORDS_PLATFORMS.find((item) => Math.abs(item.y - y) < 0.51) ?? CLIFF_WORDS_PLATFORMS[0];
+  return platform.x + (role === 'owner' ? -4 : 4);
+};
+
+export const cliffWordsStartX = (role: CliffCaveSide) => cliffWordsPlaceX(CLIFF_WORDS_FLOOR_Y, role);
+
+export const cliffWordsStartY = () => CLIFF_WORDS_FLOOR_Y;
+
+export const cliffWordsCheckpointY = (checkpoint: number) => {
+  if (checkpoint <= 0) {
+    return CLIFF_WORDS_FLOOR_Y;
+  }
+  const index = CLIFF_WORDS_CHECKPOINT_INDEXES[Math.min(3, checkpoint) - 1];
+  return CLIFF_WORDS_FLOOR_Y + index * CLIFF_WORDS_PLATFORM_GAP;
+};
+
+export const cliffWordsCheckpointAtY = (y: number): 0 | 1 | 2 | 3 => {
+  let reached: 0 | 1 | 2 | 3 = 0;
+  for (const platform of CLIFF_WORDS_PLATFORMS) {
+    if (platform.checkpoint > 0 && y + 0.01 >= platform.y) {
+      reached = platform.checkpoint;
+    }
+  }
+  return reached;
+};
+
+export const isCliffWordsPhraseId = (value: unknown): value is CliffWordsPhraseId =>
+  typeof value === 'string' && (CLIFF_WORDS_PHRASE_IDS as readonly string[]).includes(value);
 
 export const createCliffBoulders = (): CliffBoulderSeed[] => {
   const iron = Array.from({ length: CLIFF_IRON_BOULDER_COUNT }, (_, index) => ({
