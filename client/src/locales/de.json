@@ -1301,7 +1301,8 @@
       "unblockFailed": "Benutzer konnte nicht entsperrt werden"
     },
     "input": {
-      "placeholder": "Nachricht eingeben..."
+      "placeholder": "Nachricht eingeben...",
+      "systemPlaceholder": "Notiz für dich schreiben..."
     },
     "dialog": {
       "reply": "Antworten",

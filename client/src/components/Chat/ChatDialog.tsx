@@ -42,7 +42,7 @@ import MemoryRestoreChatBanner from './MemoryRestoreChatBanner';
 import ChatHistoryRestoreBanner from './ChatHistoryRestoreBanner';
 import { usePartnerId } from '../../hooks/usePartnerId';
 import { formatContactPresence } from '../../utils/formatContactPresence';
-import { getContactDisplayName } from '../../utils/contactDisplayName';
+import { getContactDisplayName, isSystemContact } from '../../utils/contactDisplayName';
 import { formatChatDayBadge } from '../../localization/chatHelpers';
 import { getOnlinePresenceColor } from '../UI/CustomSnackbar';
 import { isIOSDevice } from '../../utils/isIOSDevice';
@@ -2044,8 +2044,12 @@ const ChatDialogComponent: React.FC<ChatDialogProps> = ({
           onFocus={handleMessageInputFocus}
           useIOSAccessoryFix={useIOSAccessoryFix}
           onAttachmentClick={handleAttachmentClick}
-          attachmentDisabled={isPickingAttachments}
-          placeholder={t('chat.input.placeholder')}
+          attachmentDisabled={isPickingAttachments || (contact ? isSystemContact(contact) : false)}
+          placeholder={
+            contact && isSystemContact(contact)
+              ? t('chat.input.systemPlaceholder')
+              : t('chat.input.placeholder')
+          }
           requireText={Boolean(editingMessage)}
           allowEmptySend={Boolean(forwardingMessage || sharingEvent || sharingNote)}
           hasAttachments={attachments.length > 0}
