@@ -32,6 +32,7 @@ export interface UserDocument extends mongoose.Document {
   displayBadgeGameId?: string | null;
   showDisplayBadge?: boolean;
   showAdminIcon?: boolean;
+  kaifLifeIdeasEnabled?: boolean;
   localeBannerDismissedAt?: Date | null;
   installBannerDismissed?: boolean;
   readNewsIds?: mongoose.Types.ObjectId[];
@@ -110,6 +111,7 @@ const userSchema = new mongoose.Schema({
   displayBadgeGameId: { type: String, default: null },
   showDisplayBadge: { type: Boolean, default: true },
   showAdminIcon: { type: Boolean, default: true },
+  kaifLifeIdeasEnabled: { type: Boolean, default: false },
   localeBannerDismissedAt: { type: Date, default: null },
   installBannerDismissed: { type: Boolean, default: false },
   readNewsIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'News' }],

@@ -43,6 +43,7 @@ interface User {
   displayBadgeGameId?: string | null;
   showDisplayBadge?: boolean;
   showAdminIcon?: boolean;
+  kaifLifeIdeasEnabled?: boolean;
   role?: 'user' | 'admin';
   locale?: string;
   hasCryptoBackup?: boolean;

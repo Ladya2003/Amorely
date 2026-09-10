@@ -30,6 +30,7 @@ import CalendarDay from './CalendarDay';
 import CalendarGrid from './CalendarGrid';
 import { CalendarGridSkeleton, CalendarMonthSkeleton } from './CalendarSkeletons';
 import PlansNotes, { type PlansNotesHandle } from './PlansNotes';
+import KaifLifePage from '../KaifLife/KaifLifePage';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   readCalendarUiPreferences,
@@ -60,7 +61,7 @@ import {
   getCalendarViewToggleGroupSx,
   getCalendarWeekdayLabelSx,
 } from './calendarPageStyles';
-import { AddIcon, ArrowBackIosNewIcon, ArrowForwardIosIcon, CalendarMonthIcon, DeleteSweepIcon, ExpandMoreIcon, FilterListIcon, GridViewIcon, ListAltIcon } from '../UI/icons';
+import { AddIcon, ArrowBackIosNewIcon, ArrowForwardIosIcon, CalendarMonthIcon, DeleteSweepIcon, ExpandMoreIcon, FilterListIcon, GridViewIcon, LightbulbOutlinedIcon, ListAltIcon } from '../UI/icons';
 
 interface MediaFile {
   _id: string;
@@ -132,6 +133,9 @@ const Calendar: React.FC<CalendarProps> = ({
   const [tabValue, setTabValue] = useState(() =>
     user?._id && readCalendarUiPreferences(user._id).mainTab === 'plans' ? 1 : 0
   );
+  const [kaifLifeOpen, setKaifLifeOpen] = useState(() =>
+    Boolean(user?._id && user.kaifLifeIdeasEnabled && readCalendarUiPreferences(user._id).kaifLifeOpen)
+  );
   const calendarTabDirection = useTabSlideDirection(tabValue);
   const [eventFilter, setEventFilter] = useState<EventFilter>({
     dateFrom: null,
@@ -155,7 +159,8 @@ const Calendar: React.FC<CalendarProps> = ({
     const prefs = readCalendarUiPreferences(user._id);
     setTabValue(forcePlansTab || prefs.mainTab === 'plans' ? 1 : 0);
     setView(prefs.calendarView);
-  }, [user?._id, forcePlansTab]);
+    setKaifLifeOpen(Boolean(user.kaifLifeIdeasEnabled && prefs.kaifLifeOpen));
+  }, [user?._id, user?.kaifLifeIdeasEnabled, forcePlansTab]);
 
   useEffect(() => {
     if (forcePlansTab) {
@@ -189,6 +194,23 @@ const Calendar: React.FC<CalendarProps> = ({
     if (newValue !== null) {
       setTabValue(newValue);
     }
+  };
+
+  const handleOpenKaifLife = () => {
+    if (!user?._id || !user.kaifLifeIdeasEnabled) {
+      return;
+    }
+    updateCalendarUiPreferences(user._id, { kaifLifeOpen: true, mainTab: 'plans' });
+    setTabValue(1);
+    setKaifLifeOpen(true);
+  };
+
+  const handleCloseKaifLife = () => {
+    if (user?._id) {
+      updateCalendarUiPreferences(user._id, { kaifLifeOpen: false, mainTab: 'plans' });
+    }
+    setTabValue(1);
+    setKaifLifeOpen(false);
   };
 
   const isPlansTab = tabValue === 1;
@@ -312,6 +334,14 @@ const Calendar: React.FC<CalendarProps> = ({
     };
   });
 
+  if (kaifLifeOpen && user?.kaifLifeIdeasEnabled) {
+    return (
+      <Box sx={getCalendarRootSx()}>
+        <KaifLifePage onClose={handleCloseKaifLife} />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={getCalendarRootSx()}>
       <Box sx={(muiTheme) => getCalendarHeaderGlowWrapSx(muiTheme)}>
@@ -430,22 +460,33 @@ const Calendar: React.FC<CalendarProps> = ({
 
           {tabValue === 1 && (
             <Box sx={getCalendarControlsRowSx()}>
-              <Badge
-                badgeContent={activePlansFilterCount}
-                color="primary"
-                invisible={activePlansFilterCount === 0}
-                overlap="rectangular"
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                sx={getCalendarFilterBadgeSx(theme)}
-              >
-                <IconButton
-                  onClick={() => setPlanFilterDialogOpen(true)}
-                  aria-label={t('calendar.plans.filter.ariaLabel')}
-                  sx={getCalendarFilterButtonSx(theme, isPlansFilterActive)}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Badge
+                  badgeContent={activePlansFilterCount}
+                  color="primary"
+                  invisible={activePlansFilterCount === 0}
+                  overlap="rectangular"
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  sx={getCalendarFilterBadgeSx(theme)}
                 >
-                  <FilterListIcon sx={{ fontSize: '1.25rem' }} />
-                </IconButton>
-              </Badge>
+                  <IconButton
+                    onClick={() => setPlanFilterDialogOpen(true)}
+                    aria-label={t('calendar.plans.filter.ariaLabel')}
+                    sx={getCalendarFilterButtonSx(theme, isPlansFilterActive)}
+                  >
+                    <FilterListIcon sx={{ fontSize: '1.25rem' }} />
+                  </IconButton>
+                </Badge>
+                {user?.kaifLifeIdeasEnabled && (
+                  <IconButton
+                    onClick={handleOpenKaifLife}
+                    aria-label="Мои идеи для Kaif Life"
+                    sx={getCalendarFilterButtonSx(theme)}
+                  >
+                    <LightbulbOutlinedIcon sx={{ fontSize: '1.25rem' }} />
+                  </IconButton>
+                )}
+              </Box>
               {isMobile && (
                 <Button
                   variant="contained"
