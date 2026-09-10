@@ -1315,7 +1315,8 @@
       "unblockFailed": "Failed to unblock user"
     },
     "input": {
-      "placeholder": "Type a message..."
+      "placeholder": "Type a message...",
+      "systemPlaceholder": "Write a note for yourself..."
     },
     "dialog": {
       "reply": "Reply",

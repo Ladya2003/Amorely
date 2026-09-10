@@ -68,6 +68,7 @@ import {
 } from '../crypto/cryptoService';
 import { encryptAndUploadChatFiles, type StoredChatAttachment } from '../crypto/chatMediaService';
 import { getForwardPreviewText } from '../utils/getForwardPreviewText';
+import { isSystemContact } from '../utils/contactDisplayName';
 import { getChatMessagePreview } from '../localization/chatHelpers';
 import { runChatHistoryRestoreRewrap, type ChatHistoryRestoreProgress } from '../crypto/chatRestoreRewrap';
 import { isVideoFile } from '../utils/videoMetadata';
@@ -2154,21 +2155,24 @@ const ChatPage: React.FC = () => {
 
     const sendMessageWithAttachments = async () => {
       try {
+        const selectedContact = contacts.find((contact) => contact.id === selectedContactId);
+        const skipEncryption = selectedContact ? isSystemContact(selectedContact) : false;
+
         let storedAttachments: StoredChatAttachment[] = [];
         let mediaEnvelopes: ChatPayloadV2['attachments'] = [];
         let encryptedPayload: EncryptedChatPayload | undefined;
 
-        if (hasFiles && localDeviceKeys) {
+        if (hasFiles && !skipEncryption && localDeviceKeys) {
           const uploaded = await encryptAndUploadChatFiles(attachments!);
           storedAttachments = uploaded.stored;
           mediaEnvelopes = uploaded.envelopes;
         }
 
-        if (hasFiles && !localDeviceKeys) {
+        if (hasFiles && !skipEncryption && !localDeviceKeys) {
           throw new Error(t('chat.errors.encryptKeys'));
         }
 
-        if (localDeviceKeys && (trimmedText || mediaEnvelopes.length > 0)) {
+        if (localDeviceKeys && !skipEncryption && (trimmedText || mediaEnvelopes.length > 0)) {
           encryptedPayload = await encryptChatPayload(localDeviceKeys, selectedContactId, {
             version: 2,
             text: trimmedText,
@@ -2422,7 +2426,10 @@ const ChatPage: React.FC = () => {
 
     const sendEdit = async () => {
       try {
-        if (originalMessage.encryptedPayload) {
+        const selectedContact = contacts.find((contact) => contact.id === selectedContactId);
+        const skipEncryption = selectedContact ? isSystemContact(selectedContact) : false;
+
+        if (originalMessage.encryptedPayload && !skipEncryption) {
           if (!localDeviceKeys) {
             throw new Error(t('chat.errors.encryptKeys'));
           }

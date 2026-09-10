@@ -1301,7 +1301,8 @@
       "unblockFailed": "Não foi possível desbloquear o usuário"
     },
     "input": {
-      "placeholder": "Digite uma mensagem..."
+      "placeholder": "Digite uma mensagem...",
+      "systemPlaceholder": "Escreva uma nota para você..."
     },
     "dialog": {
       "reply": "Responder",

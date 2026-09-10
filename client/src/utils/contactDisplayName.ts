@@ -1,7 +1,10 @@
+export const isSystemContact = (contact: { role?: string }): boolean =>
+  contact.role === 'system';
+
 export const getContactDisplayName = (
   contact: {
     name: string;
     role?: string;
   },
   systemMessagesLabel: string
-): string => (contact.role === 'system' ? systemMessagesLabel : contact.name);
+): string => (isSystemContact(contact) ? systemMessagesLabel : contact.name);
