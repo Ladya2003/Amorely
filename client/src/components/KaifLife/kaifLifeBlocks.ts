@@ -23,6 +23,7 @@ export const createTextBlock = (text = ''): KaifLifeTextBlock => ({
 
 export const createEmptyStage = (): KaifLifeStage => ({
   done: false,
+  inProgress: false,
   deadline: null,
   blocks: [createTextBlock()],
 });
@@ -55,7 +56,11 @@ export const ensureStageTextBlocks = (stage: KaifLifeStage): KaifLifeStage => {
 export const normalizeDraft = (draft: KaifLifeIdeaDraft): KaifLifeIdeaDraft => ({
   title: draft.title,
   stages: KAIF_LIFE_STAGE_KEYS.reduce((acc, key) => {
-    acc[key] = ensureStageTextBlocks(draft.stages[key] ?? createEmptyStage());
+    const stage = draft.stages[key] ?? createEmptyStage();
+    acc[key] = ensureStageTextBlocks({
+      ...stage,
+      inProgress: stage.inProgress === true,
+    });
     return acc;
   }, {} as KaifLifeStages),
 });
@@ -70,7 +75,7 @@ export const isIdeaMeaningful = (draft: KaifLifeIdeaDraft): boolean => {
     if (!stage) {
       return false;
     }
-    if (stage.done || stage.deadline) {
+    if (stage.done || stage.inProgress || stage.deadline) {
       return true;
     }
     return stage.blocks.some((block) => {

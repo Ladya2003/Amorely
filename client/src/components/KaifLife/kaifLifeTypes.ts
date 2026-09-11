@@ -28,15 +28,26 @@ export type KaifLifeContentBlock = KaifLifeTextBlock | KaifLifeMediaBlock;
 
 export type KaifLifeStage = {
   done: boolean;
+  inProgress: boolean;
   deadline: string | null;
   blocks: KaifLifeContentBlock[];
 };
 
 export type KaifLifeStages = Record<KaifLifeStageKey, KaifLifeStage>;
 
-export type KaifLifeIdea = {
+export type KaifLifeGroup = {
   _id: string;
   title: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type KaifLifeIdea = {
+  _id: string;
+  groupId: string;
+  title: string;
+  sortOrder: number;
   stages: KaifLifeStages;
   createdAt: string;
   updatedAt: string;
@@ -46,3 +57,10 @@ export type KaifLifeIdeaDraft = {
   title: string;
   stages: KaifLifeStages;
 };
+
+export type KaifLifeListPayload = {
+  groups: KaifLifeGroup[];
+  ideas: KaifLifeIdea[];
+};
+
+export type KaifLifeMoveDirection = 'up' | 'down';

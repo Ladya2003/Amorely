@@ -45,10 +45,11 @@ const HISTORY_LIMIT = 50;
 
 interface KaifLifeIdeaEditorProps {
   idea: KaifLifeIdea | null;
+  groupId: string | null;
   onBack: (shouldReload: boolean) => void;
 }
 
-const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, onBack }) => {
+const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, groupId, onBack }) => {
   const [draft, setDraft] = useState<KaifLifeIdeaDraft>(() =>
     idea ? normalizeDraft({ title: idea.title, stages: idea.stages }) : createEmptyDraft()
   );
@@ -129,7 +130,13 @@ const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, onBack })
     savingRef.current = true;
     try {
       if (!currentId) {
-        const created = await createKaifLifeIdea(snapshot);
+        if (!groupId) {
+          if (!leavingRef.current) {
+            setSnackbar({ open: true, message: 'Не удалось сохранить идею', severity: 'error' });
+          }
+          return false;
+        }
+        const created = await createKaifLifeIdea(snapshot, groupId);
         ideaIdRef.current = created._id;
         setIdeaId(created._id);
       } else {
@@ -151,7 +158,7 @@ const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, onBack })
         void flushSave();
       }
     }
-  }, []);
+  }, [groupId]);
 
   const scheduleSave = useCallback(() => {
     if (saveTimerRef.current !== null) {
@@ -462,6 +469,26 @@ const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, onBack })
           mb: 2,
         }}
       >
+        <FormControlLabel
+          control={
+            <Switch
+              checked={stage.inProgress}
+              onChange={(event) =>
+                updateDraft((prev) => ({
+                  ...prev,
+                  stages: {
+                    ...prev.stages,
+                    [activeStage]: {
+                      ...prev.stages[activeStage],
+                      inProgress: event.target.checked,
+                    },
+                  },
+                }))
+              }
+            />
+          }
+          label="В прогрессе"
+        />
         <FormControlLabel
           control={
             <Switch

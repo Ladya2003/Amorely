@@ -20,6 +20,7 @@ export type KaifLifeContentBlock =
 
 export type KaifLifeStage = {
   done: boolean;
+  inProgress: boolean;
   deadline: Date | null;
   blocks: KaifLifeContentBlock[];
 };
@@ -28,7 +29,10 @@ export type KaifLifeStages = Record<KaifLifeStageKey, KaifLifeStage>;
 
 export interface KaifLifeIdeaDocument extends mongoose.Document {
   userId: mongoose.Types.ObjectId;
+  groupId?: mongoose.Types.ObjectId | null;
   title: string;
+  inProgress: boolean;
+  sortOrder: number;
   stages: KaifLifeStages;
   createdAt: Date;
   updatedAt: Date;
@@ -50,6 +54,7 @@ const contentBlockSchema = new mongoose.Schema(
 const stageSchema = new mongoose.Schema(
   {
     done: { type: Boolean, default: false },
+    inProgress: { type: Boolean, default: false },
     deadline: { type: Date, default: null },
     blocks: { type: [contentBlockSchema], default: () => [] },
   },
@@ -58,6 +63,7 @@ const stageSchema = new mongoose.Schema(
 
 const emptyStage = () => ({
   done: false,
+  inProgress: false,
   deadline: null,
   blocks: [] as KaifLifeContentBlock[],
 });
@@ -65,7 +71,10 @@ const emptyStage = () => ({
 const kaifLifeIdeaSchema = new mongoose.Schema<KaifLifeIdeaDocument>(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'KaifLifeGroup', index: true },
     title: { type: String, default: '' },
+    inProgress: { type: Boolean, default: false },
+    sortOrder: { type: Number, default: 0 },
     stages: {
       development: { type: stageSchema, default: emptyStage },
       script: { type: stageSchema, default: emptyStage },
@@ -75,5 +84,7 @@ const kaifLifeIdeaSchema = new mongoose.Schema<KaifLifeIdeaDocument>(
   },
   { timestamps: true }
 );
+
+kaifLifeIdeaSchema.index({ userId: 1, groupId: 1, sortOrder: 1 });
 
 export default mongoose.model<KaifLifeIdeaDocument>('KaifLifeIdea', kaifLifeIdeaSchema);

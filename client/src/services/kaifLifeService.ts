@@ -1,6 +1,12 @@
 import axios from 'axios';
 import { API_URL } from '../config';
-import type { KaifLifeIdea, KaifLifeIdeaDraft } from '../components/KaifLife/kaifLifeTypes';
+import type {
+  KaifLifeGroup,
+  KaifLifeIdea,
+  KaifLifeIdeaDraft,
+  KaifLifeListPayload,
+  KaifLifeMoveDirection,
+} from '../components/KaifLife/kaifLifeTypes';
 
 export type KaifLifeUploadItem = {
   url: string;
@@ -8,9 +14,12 @@ export type KaifLifeUploadItem = {
   mediaType: 'image' | 'video';
 };
 
-export const fetchKaifLifeIdeas = async (): Promise<KaifLifeIdea[]> => {
-  const { data } = await axios.get<{ ideas: KaifLifeIdea[] }>(`${API_URL}/api/kaif-life/ideas`);
-  return data.ideas;
+export const fetchKaifLifeList = async (): Promise<KaifLifeListPayload> => {
+  const { data } = await axios.get<KaifLifeListPayload>(`${API_URL}/api/kaif-life/ideas`);
+  return {
+    groups: data.groups ?? [],
+    ideas: data.ideas ?? [],
+  };
 };
 
 export const fetchKaifLifeIdea = async (id: string): Promise<KaifLifeIdea> => {
@@ -18,8 +27,45 @@ export const fetchKaifLifeIdea = async (id: string): Promise<KaifLifeIdea> => {
   return data.idea;
 };
 
-export const createKaifLifeIdea = async (draft: KaifLifeIdeaDraft): Promise<KaifLifeIdea> => {
-  const { data } = await axios.post<{ idea: KaifLifeIdea }>(`${API_URL}/api/kaif-life/ideas`, draft);
+export const createKaifLifeGroup = async (title: string): Promise<KaifLifeGroup> => {
+  const { data } = await axios.post<{ group: KaifLifeGroup }>(`${API_URL}/api/kaif-life/groups`, {
+    title,
+  });
+  return data.group;
+};
+
+export const updateKaifLifeGroup = async (id: string, title: string): Promise<KaifLifeGroup> => {
+  const { data } = await axios.patch<{ group: KaifLifeGroup }>(`${API_URL}/api/kaif-life/groups/${id}`, {
+    title,
+  });
+  return data.group;
+};
+
+export const deleteKaifLifeGroup = async (id: string): Promise<void> => {
+  await axios.delete(`${API_URL}/api/kaif-life/groups/${id}`);
+};
+
+export const moveKaifLifeGroup = async (
+  id: string,
+  direction: KaifLifeMoveDirection
+): Promise<KaifLifeListPayload> => {
+  const { data } = await axios.patch<KaifLifeListPayload>(`${API_URL}/api/kaif-life/groups/${id}/move`, {
+    direction,
+  });
+  return {
+    groups: data.groups ?? [],
+    ideas: data.ideas ?? [],
+  };
+};
+
+export const createKaifLifeIdea = async (
+  draft: KaifLifeIdeaDraft,
+  groupId: string
+): Promise<KaifLifeIdea> => {
+  const { data } = await axios.post<{ idea: KaifLifeIdea }>(`${API_URL}/api/kaif-life/ideas`, {
+    ...draft,
+    groupId,
+  });
   return data.idea;
 };
 
@@ -29,6 +75,19 @@ export const updateKaifLifeIdea = async (
 ): Promise<KaifLifeIdea> => {
   const { data } = await axios.put<{ idea: KaifLifeIdea }>(`${API_URL}/api/kaif-life/ideas/${id}`, draft);
   return data.idea;
+};
+
+export const moveKaifLifeIdea = async (
+  id: string,
+  direction: KaifLifeMoveDirection
+): Promise<KaifLifeListPayload> => {
+  const { data } = await axios.patch<KaifLifeListPayload>(`${API_URL}/api/kaif-life/ideas/${id}/move`, {
+    direction,
+  });
+  return {
+    groups: data.groups ?? [],
+    ideas: data.ideas ?? [],
+  };
 };
 
 export const deleteKaifLifeIdea = async (id: string): Promise<void> => {
