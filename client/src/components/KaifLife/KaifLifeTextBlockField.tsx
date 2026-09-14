@@ -5,6 +5,42 @@ import { CloseIcon } from '../UI/icons';
 
 const COMMIT_MS = 400;
 
+type ScrollSnapshot = {
+  node: HTMLElement | Window;
+  top: number;
+  left: number;
+};
+
+const isVerticallyScrollable = (el: HTMLElement) => {
+  const overflowY = window.getComputedStyle(el).overflowY;
+  return overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+};
+
+const captureScrollAncestors = (from: HTMLElement | null): ScrollSnapshot[] => {
+  const snapshots: ScrollSnapshot[] = [];
+  let el = from?.parentElement ?? null;
+  while (el) {
+    if (el.scrollHeight > el.clientHeight && isVerticallyScrollable(el)) {
+      snapshots.push({ node: el, top: el.scrollTop, left: el.scrollLeft });
+    }
+    el = el.parentElement;
+  }
+  snapshots.push({ node: window, top: window.scrollY, left: window.scrollX });
+  return snapshots;
+};
+
+const restoreScrollAncestors = (snapshots: ScrollSnapshot[]) => {
+  snapshots.forEach((snapshot) => {
+    if (snapshot.node === window) {
+      window.scrollTo(snapshot.left, snapshot.top);
+      return;
+    }
+    const node = snapshot.node;
+    node.scrollTop = snapshot.top;
+    node.scrollLeft = snapshot.left;
+  });
+};
+
 interface KaifLifeTextBlockFieldProps {
   id: string;
   text: string;
@@ -34,6 +70,7 @@ const KaifLifeTextBlockField: React.FC<KaifLifeTextBlockFieldProps> = ({
   const commitTimerRef = useRef<number | null>(null);
   const nodeRef = useRef<HTMLTextAreaElement | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
+  const minRowsRef = useRef(minRows);
   const onCommitRef = useRef(onCommit);
   const onLiveChangeRef = useRef(onLiveChange);
   const [showDelete, setShowDelete] = useState(canDeleteWhenEmpty && !text.trim());
@@ -45,9 +82,11 @@ const KaifLifeTextBlockField: React.FC<KaifLifeTextBlockFieldProps> = ({
     if (!node) {
       return;
     }
+    const snapshots = captureScrollAncestors(node);
     node.style.overflowY = 'hidden';
     node.style.height = 'auto';
     node.style.height = `${node.scrollHeight}px`;
+    restoreScrollAncestors(snapshots);
   };
 
   useEffect(() => {
@@ -66,6 +105,11 @@ const KaifLifeTextBlockField: React.FC<KaifLifeTextBlockFieldProps> = ({
   }, [text, canDeleteWhenEmpty]);
 
   useLayoutEffect(() => {
+    const minRowsChanged = minRowsRef.current !== minRows;
+    minRowsRef.current = minRows;
+    if (text === lastEmittedRef.current && !minRowsChanged) {
+      return;
+    }
     fitHeight(nodeRef.current);
   }, [text, minRows]);
 

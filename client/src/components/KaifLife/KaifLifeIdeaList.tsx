@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import { alpha, lighten, useTheme } from '@mui/material/styles';
 import { format } from 'date-fns';
@@ -48,32 +48,15 @@ const KaifLifeIdeaCard: React.FC<{
   onOpen: () => void;
 }> = ({ idea, canMoveUp, canMoveDown, moving, onMove, onOpen }) => {
   const theme = useTheme();
-  const lastTapRef = useRef<{ id: string; at: number }>({ id: '', at: 0 });
   const doneCount = KAIF_LIFE_STAGE_KEYS.filter((key) => idea.stages[key]?.done).length;
   const isLight = theme.palette.mode === 'light';
   const filledBadgeText = isLight
     ? theme.palette.primary.main
     : lighten(theme.palette.primary.main, 0.62);
 
-  const handleCardClick = (pointerType: string) => {
-    if (pointerType !== 'touch') {
-      return;
-    }
-
-    const now = Date.now();
-    if (lastTapRef.current.id === idea._id && now - lastTapRef.current.at < 350) {
-      lastTapRef.current = { id: '', at: 0 };
-      onOpen();
-      return;
-    }
-
-    lastTapRef.current = { id: idea._id, at: now };
-  };
-
   return (
     <Box
-      onDoubleClick={onOpen}
-      onPointerUp={(event) => handleCardClick(event.pointerType)}
+      onClick={onOpen}
       sx={(muiTheme) => {
         const restSurface = getPrimaryTintSurface(muiTheme);
 
@@ -125,7 +108,7 @@ const KaifLifeIdeaCard: React.FC<{
         >
           {doneCount}/{KAIF_LIFE_STAGE_KEYS.length}
         </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', flexShrink: 0, mt: -0.5 }} onPointerUp={stopCardOpen}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', flexShrink: 0, mt: -0.5 }} onClick={stopCardOpen}>
           <IconButton
             size="small"
             aria-label="Переместить идею вверх"
