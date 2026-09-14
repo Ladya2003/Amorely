@@ -5,11 +5,9 @@ import { CloseIcon } from '../UI/icons';
 
 const COMMIT_MS = 400;
 
-type ScrollSnapshot = {
-  node: HTMLElement | Window;
-  top: number;
-  left: number;
-};
+type ScrollSnapshot =
+  | { kind: 'window'; top: number; left: number }
+  | { kind: 'element'; node: HTMLElement; top: number; left: number };
 
 const isVerticallyScrollable = (el: HTMLElement) => {
   const overflowY = window.getComputedStyle(el).overflowY;
@@ -21,23 +19,29 @@ const captureScrollAncestors = (from: HTMLElement | null): ScrollSnapshot[] => {
   let el = from?.parentElement ?? null;
   while (el) {
     if (el.scrollHeight > el.clientHeight && isVerticallyScrollable(el)) {
-      snapshots.push({ node: el, top: el.scrollTop, left: el.scrollLeft });
+      snapshots.push({ kind: 'element', node: el, top: el.scrollTop, left: el.scrollLeft });
     }
     el = el.parentElement;
   }
-  snapshots.push({ node: window, top: window.scrollY, left: window.scrollX });
+  snapshots.push({ kind: 'window', top: window.scrollY, left: window.scrollX });
   return snapshots;
 };
 
 const restoreScrollAncestors = (snapshots: ScrollSnapshot[]) => {
   snapshots.forEach((snapshot) => {
-    if (snapshot.node === window) {
-      window.scrollTo(snapshot.left, snapshot.top);
-      return;
+    switch (snapshot.kind) {
+      case 'window':
+        window.scrollTo(snapshot.left, snapshot.top);
+        return;
+      case 'element':
+        snapshot.node.scrollTop = snapshot.top;
+        snapshot.node.scrollLeft = snapshot.left;
+        return;
+      default: {
+        const _exhaustive: never = snapshot;
+        return _exhaustive;
+      }
     }
-    const node = snapshot.node;
-    node.scrollTop = snapshot.top;
-    node.scrollLeft = snapshot.left;
   });
 };
 
