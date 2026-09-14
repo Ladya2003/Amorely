@@ -14,6 +14,13 @@ export type KaifLifeUploadItem = {
   mediaType: 'image' | 'video';
 };
 
+export type KaifLifeDocumentUploadItem = {
+  url: string;
+  publicId: string;
+  fileName: string;
+  mimeType: string;
+};
+
 export const fetchKaifLifeList = async (): Promise<KaifLifeListPayload> => {
   const { data } = await axios.get<KaifLifeListPayload>(`${API_URL}/api/kaif-life/ideas`);
   return {
@@ -102,6 +109,25 @@ export const uploadKaifLifeMedia = async (files: File[]): Promise<KaifLifeUpload
 
   const { data } = await axios.post<{ items: KaifLifeUploadItem[] }>(
     `${API_URL}/api/kaif-life/upload`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }
+  );
+
+  return data.items;
+};
+
+export const uploadKaifLifeDocuments = async (
+  files: File[]
+): Promise<KaifLifeDocumentUploadItem[]> => {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append('documents', file);
+  });
+
+  const { data } = await axios.post<{ items: KaifLifeDocumentUploadItem[] }>(
+    `${API_URL}/api/kaif-life/upload-documents`,
     formData,
     {
       headers: { 'Content-Type': 'multipart/form-data' },

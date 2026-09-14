@@ -4,6 +4,8 @@ import {
   Fab,
   FormControlLabel,
   IconButton,
+  Menu,
+  MenuItem,
   Switch,
   Tab,
   Tabs,
@@ -13,18 +15,29 @@ import AppDatePicker from '../UI/AppDatePicker';
 import AppTextField from '../UI/AppTextField';
 import ConfirmDeleteDialog from '../UI/ConfirmDeleteDialog';
 import CustomSnackbar from '../UI/CustomSnackbar';
-import { AddIcon, ArrowBackIcon, DeleteIcon, RedoIcon, SaveIcon, UndoIcon } from '../UI/icons';
+import {
+  AddIcon,
+  AddPhotoAlternateIcon,
+  AppPaperClipIcon,
+  ArrowBackIcon,
+  DeleteIcon,
+  RedoIcon,
+  SaveIcon,
+  UndoIcon,
+} from '../UI/icons';
 import { prepareAllMediaForUpload } from '../../utils/parallelMediaPrepare';
 import {
   createKaifLifeIdea,
   deleteKaifLifeIdea,
   updateKaifLifeIdea,
+  uploadKaifLifeDocuments,
   uploadKaifLifeMedia,
 } from '../../services/kaifLifeService';
 import {
   cloneDraft,
   createEmptyDraft,
   defaultMediaWidth,
+  insertDocumentAtCursor,
   insertMediaAtCursor,
   isIdeaMeaningful,
   normalizeDraft,
@@ -76,6 +89,8 @@ const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, groupId, 
   const savingRef = useRef(false);
   const pendingSaveRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const documentInputRef = useRef<HTMLInputElement | null>(null);
+  const [addMenuAnchor, setAddMenuAnchor] = useState<HTMLElement | null>(null);
   const leavingRef = useRef(false);
   const undoStackRef = useRef<KaifLifeIdeaDraft[]>([]);
   const redoStackRef = useRef<KaifLifeIdeaDraft[]>([]);
@@ -359,6 +374,53 @@ const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, groupId, 
     }
   };
 
+  const handleAddDocuments = async (files: FileList | null) => {
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    setUploading(true);
+    try {
+      flushPendingInputsRef.current();
+      const uploaded = await uploadKaifLifeDocuments(Array.from(files));
+      const documentItems = uploaded.map((item) => ({
+        url: item.url,
+        publicId: item.publicId,
+        fileName: item.fileName,
+        mimeType: item.mimeType,
+      }));
+
+      flushPendingInputsRef.current();
+      const inserted = insertDocumentAtCursor(
+        draftRef.current.stages[activeStage].blocks,
+        documentItems,
+        focusTextIdRef.current,
+        cursorRef.current
+      );
+      focusTextIdRef.current = inserted.focusTextId;
+      cursorRef.current = 0;
+      setFocusTextId(inserted.focusTextId);
+      updateDraft((prev) => ({
+        ...prev,
+        stages: {
+          ...prev.stages,
+          [activeStage]: {
+            ...prev.stages[activeStage],
+            blocks: inserted.blocks,
+          },
+        },
+      }));
+    } catch (error) {
+      console.error('Kaif Life document upload error:', error);
+      setSnackbar({ open: true, message: 'Не удалось загрузить документы', severity: 'error' });
+    } finally {
+      setUploading(false);
+      if (documentInputRef.current) {
+        documentInputRef.current.value = '';
+      }
+    }
+  };
+
   const stage = draft.stages[activeStage];
   const canUndo = historyTick >= 0 && undoStackRef.current.length > 0;
   const canRedo = historyTick >= 0 && redoStackRef.current.length > 0;
@@ -566,12 +628,20 @@ const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, groupId, 
         hidden
         onChange={(event) => void handleAddMedia(event.target.files)}
       />
+      <input
+        ref={documentInputRef}
+        type="file"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.csv,.odt,.ods,.odp,application/pdf"
+        multiple
+        hidden
+        onChange={(event) => void handleAddDocuments(event.target.files)}
+      />
 
       <Fab
         color="primary"
-        aria-label="Добавить фото или видео"
+        aria-label="Добавить файл"
         disabled={uploading}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={(event) => setAddMenuAnchor(event.currentTarget)}
         sx={{
           position: 'sticky',
           bottom: { xs: 16, sm: 16 },
@@ -581,6 +651,33 @@ const KaifLifeIdeaEditor: React.FC<KaifLifeIdeaEditorProps> = ({ idea, groupId, 
       >
         <AddIcon />
       </Fab>
+
+      <Menu
+        anchorEl={addMenuAnchor}
+        open={Boolean(addMenuAnchor)}
+        onClose={() => setAddMenuAnchor(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <MenuItem
+          onClick={() => {
+            setAddMenuAnchor(null);
+            fileInputRef.current?.click();
+          }}
+        >
+          <AddPhotoAlternateIcon sx={{ mr: 1.25, fontSize: 20 }} />
+          Фото или видео
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setAddMenuAnchor(null);
+            documentInputRef.current?.click();
+          }}
+        >
+          <AppPaperClipIcon sx={{ mr: 1.25, fontSize: 20 }} />
+          Документ
+        </MenuItem>
+      </Menu>
 
       {uploading && (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, alignSelf: 'flex-end' }}>

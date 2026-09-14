@@ -1,4 +1,5 @@
 import express, { Response, NextFunction } from 'express';
+import path from 'path';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
@@ -30,6 +31,109 @@ const upload = multer({
   storage,
   limits: { fileSize: 12 * 1024 * 1024 },
 });
+
+const DOCUMENT_EXTENSIONS = new Set([
+  'pdf',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'txt',
+  'rtf',
+  'csv',
+  'odt',
+  'ods',
+  'odp',
+]);
+
+const DOCUMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain',
+  'text/csv',
+  'application/rtf',
+  'text/rtf',
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/vnd.oasis.opendocument.presentation',
+]);
+
+const getFileExtension = (fileName: string): string =>
+  path.extname(fileName).replace(/^\./, '').toLowerCase();
+
+const isAllowedDocument = (file: Express.Multer.File): boolean => {
+  const extension = getFileExtension(file.originalname || '');
+  if (extension && DOCUMENT_EXTENSIONS.has(extension)) {
+    return true;
+  }
+  return DOCUMENT_MIME_TYPES.has((file.mimetype || '').toLowerCase());
+};
+
+const sanitizeDocumentStem = (originalName: string): string => {
+  const stem = path
+    .basename(originalName, path.extname(originalName))
+    .replace(/[^a-zA-Z0-9._-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80);
+  return stem || 'document';
+};
+
+const documentStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (_req, file) => {
+    const extension = getFileExtension(file.originalname || '');
+    const params: Record<string, string> = {
+      folder: 'amorely/kaif-life',
+      resource_type: 'raw',
+      public_id: `${sanitizeDocumentStem(file.originalname || 'document')}_${Date.now()}`,
+    };
+    if (extension && DOCUMENT_EXTENSIONS.has(extension)) {
+      params.format = extension;
+    }
+    return params;
+  },
+});
+
+const uploadDocuments = multer({
+  storage: documentStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    if (isAllowedDocument(file)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error('Неподдерживаемый тип документа'));
+  },
+});
+
+const handleDocumentUpload = (req: ExtendedRequest, res: Response, next: NextFunction) => {
+  uploadDocuments.array('documents', 12)(req, res, (error: unknown) => {
+    if (!error) {
+      next();
+      return;
+    }
+
+    const multerError = error as { code?: string; message?: string };
+    if (multerError.code === 'LIMIT_FILE_SIZE') {
+      res.status(413).json({ error: 'Файл слишком большой. Максимум 10 МБ' });
+      return;
+    }
+    if (multerError.message === 'Неподдерживаемый тип документа') {
+      res.status(400).json({ error: 'Неподдерживаемый тип документа' });
+      return;
+    }
+
+    console.error('Kaif Life document upload error:', error);
+    res.status(500).json({ error: 'Не удалось загрузить документы' });
+  });
+};
 
 const requireKaifLifeAccess = async (
   req: ExtendedRequest,
@@ -115,6 +219,27 @@ const sanitizeBlock = (raw: unknown): KaifLifeContentBlock | null => {
       widthPercent: Number.isFinite(widthPercent)
         ? Math.min(100, Math.max(15, widthPercent))
         : 48,
+    };
+  }
+
+  if (block.type === 'document') {
+    const url = typeof block.url === 'string' ? block.url : '';
+    const publicId = typeof block.publicId === 'string' ? block.publicId : '';
+    if (!url) {
+      return null;
+    }
+    const fileName =
+      typeof block.fileName === 'string' && block.fileName.trim()
+        ? block.fileName.trim().slice(0, 255)
+        : 'Документ';
+    const mimeType = typeof block.mimeType === 'string' ? block.mimeType.trim().slice(0, 200) : '';
+    return {
+      id,
+      type: 'document',
+      url,
+      publicId,
+      fileName,
+      mimeType,
     };
   }
 
@@ -283,7 +408,7 @@ const collectPublicIds = (stages: KaifLifeStages): string[] => {
   const ids: string[] = [];
   for (const key of KAIF_LIFE_STAGE_KEYS) {
     for (const block of stages[key]?.blocks ?? []) {
-      if (block.type === 'media' && block.publicId) {
+      if ((block.type === 'media' || block.type === 'document') && block.publicId) {
         ids.push(block.publicId);
       }
     }
@@ -291,16 +416,21 @@ const collectPublicIds = (stages: KaifLifeStages): string[] => {
   return ids;
 };
 
+const CLOUDINARY_RESOURCE_TYPES = ['image', 'video', 'raw'] as const;
+
 const destroyCloudinaryFiles = async (publicIds: string[]) => {
   await Promise.all(
     publicIds.map(async (publicId) => {
-      try {
-        await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
-      } catch {
+      for (const resourceType of CLOUDINARY_RESOURCE_TYPES) {
         try {
-          await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+          const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+          if (result?.result === 'ok') {
+            return;
+          }
         } catch (error) {
-          console.error('Kaif Life cloudinary destroy error:', error);
+          if (resourceType === 'raw') {
+            console.error('Kaif Life cloudinary destroy error:', error);
+          }
         }
       }
     })
@@ -609,5 +739,33 @@ router.post('/upload', upload.array('media', 12), async (req: ExtendedRequest, r
     res.status(500).json({ error: 'Не удалось загрузить файлы' });
   }
 });
+
+router.post(
+  '/upload-documents',
+  handleDocumentUpload,
+  async (req: ExtendedRequest, res: Response) => {
+    try {
+      const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+      if (files.length === 0) {
+        return res.status(400).json({ error: 'Файлы не были загружены' });
+      }
+
+      const items = files.map((file) => {
+        const cloudinaryFile = file as Express.Multer.File & { path: string; filename: string };
+        return {
+          url: cloudinaryFile.path,
+          publicId: cloudinaryFile.filename,
+          fileName: file.originalname || 'Документ',
+          mimeType: file.mimetype || '',
+        };
+      });
+
+      res.json({ items });
+    } catch (error) {
+      console.error('Kaif Life document upload error:', error);
+      res.status(500).json({ error: 'Не удалось загрузить документы' });
+    }
+  }
+);
 
 export default router;

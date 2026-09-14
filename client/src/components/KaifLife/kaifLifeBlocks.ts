@@ -1,8 +1,10 @@
 import {
   KAIF_LIFE_STAGE_KEYS,
   type KaifLifeContentBlock,
+  type KaifLifeDocumentBlock,
   type KaifLifeIdeaDraft,
   type KaifLifeMediaBlock,
+  type KaifLifeMoveDirection,
   type KaifLifeStage,
   type KaifLifeStages,
   type KaifLifeTextBlock,
@@ -79,7 +81,7 @@ export const isIdeaMeaningful = (draft: KaifLifeIdeaDraft): boolean => {
       return true;
     }
     return stage.blocks.some((block) => {
-      if (block.type === 'media') {
+      if (block.type === 'media' || block.type === 'document') {
         return true;
       }
       if (block.type === 'text') {
@@ -92,6 +94,56 @@ export const isIdeaMeaningful = (draft: KaifLifeIdeaDraft): boolean => {
 };
 
 export type MediaInsert = Omit<KaifLifeMediaBlock, 'id' | 'type'>;
+export type DocumentInsert = Omit<KaifLifeDocumentBlock, 'id' | 'type'>;
+
+export const insertBlocksAtCursor = (
+  blocks: KaifLifeContentBlock[],
+  inserted: KaifLifeContentBlock[],
+  focusedTextId: string | null,
+  cursor: number
+): { blocks: KaifLifeContentBlock[]; focusTextId: string } => {
+  const trailingText = createTextBlock();
+
+  if (!focusedTextId) {
+    const next = [...blocks, ...inserted, trailingText];
+    return { blocks: next, focusTextId: trailingText.id };
+  }
+
+  const index = blocks.findIndex((block) => block.id === focusedTextId);
+  if (index < 0 || blocks[index].type !== 'text') {
+    const next = [...blocks, ...inserted, trailingText];
+    return { blocks: next, focusTextId: trailingText.id };
+  }
+
+  const textBlock = blocks[index];
+  if (textBlock.type !== 'text') {
+    const next = [...blocks, ...inserted, trailingText];
+    return { blocks: next, focusTextId: trailingText.id };
+  }
+
+  const safeCursor = Math.max(0, Math.min(cursor, textBlock.text.length));
+  const before = textBlock.text.slice(0, safeCursor);
+  const after = textBlock.text.slice(safeCursor);
+  const nextBlocks: KaifLifeContentBlock[] = [];
+
+  if (index > 0) {
+    nextBlocks.push(...blocks.slice(0, index));
+  }
+
+  nextBlocks.push({ ...textBlock, text: before });
+  nextBlocks.push(...inserted);
+
+  if (after) {
+    const afterBlock = createTextBlock(after);
+    nextBlocks.push(afterBlock);
+    nextBlocks.push(...blocks.slice(index + 1));
+    return { blocks: nextBlocks, focusTextId: afterBlock.id };
+  }
+
+  nextBlocks.push(trailingText);
+  nextBlocks.push(...blocks.slice(index + 1));
+  return { blocks: nextBlocks, focusTextId: trailingText.id };
+};
 
 export const insertMediaAtCursor = (
   blocks: KaifLifeContentBlock[],
@@ -107,53 +159,30 @@ export const insertMediaAtCursor = (
     publicId: item.publicId,
     widthPercent: item.widthPercent,
   }));
+  return insertBlocksAtCursor(blocks, mediaBlocks, focusedTextId, cursor);
+};
 
-  const trailingText = createTextBlock();
-
-  if (!focusedTextId) {
-    const next = [...blocks, ...mediaBlocks, trailingText];
-    return { blocks: next, focusTextId: trailingText.id };
-  }
-
-  const index = blocks.findIndex((block) => block.id === focusedTextId);
-  if (index < 0 || blocks[index].type !== 'text') {
-    const next = [...blocks, ...mediaBlocks, trailingText];
-    return { blocks: next, focusTextId: trailingText.id };
-  }
-
-  const textBlock = blocks[index];
-  if (textBlock.type !== 'text') {
-    const next = [...blocks, ...mediaBlocks, trailingText];
-    return { blocks: next, focusTextId: trailingText.id };
-  }
-
-  const safeCursor = Math.max(0, Math.min(cursor, textBlock.text.length));
-  const before = textBlock.text.slice(0, safeCursor);
-  const after = textBlock.text.slice(safeCursor);
-  const nextBlocks: KaifLifeContentBlock[] = [];
-
-  if (index > 0) {
-    nextBlocks.push(...blocks.slice(0, index));
-  }
-
-  nextBlocks.push({ ...textBlock, text: before });
-  nextBlocks.push(...mediaBlocks);
-
-  if (after) {
-    const afterBlock = createTextBlock(after);
-    nextBlocks.push(afterBlock);
-    nextBlocks.push(...blocks.slice(index + 1));
-    return { blocks: nextBlocks, focusTextId: afterBlock.id };
-  }
-
-  nextBlocks.push(trailingText);
-  nextBlocks.push(...blocks.slice(index + 1));
-  return { blocks: nextBlocks, focusTextId: trailingText.id };
+export const insertDocumentAtCursor = (
+  blocks: KaifLifeContentBlock[],
+  documentItems: DocumentInsert[],
+  focusedTextId: string | null,
+  cursor: number
+): { blocks: KaifLifeContentBlock[]; focusTextId: string } => {
+  const documentBlocks: KaifLifeDocumentBlock[] = documentItems.map((item) => ({
+    id: createBlockId(),
+    type: 'document',
+    url: item.url,
+    publicId: item.publicId,
+    fileName: item.fileName,
+    mimeType: item.mimeType,
+  }));
+  return insertBlocksAtCursor(blocks, documentBlocks, focusedTextId, cursor);
 };
 
 export type DocumentGroup =
   | { type: 'text'; block: KaifLifeTextBlock }
-  | { type: 'mediaRow'; blocks: KaifLifeMediaBlock[] };
+  | { type: 'mediaRow'; blocks: KaifLifeMediaBlock[] }
+  | { type: 'document'; block: KaifLifeDocumentBlock };
 
 export const groupDocumentBlocks = (blocks: KaifLifeContentBlock[]): DocumentGroup[] => {
   const groups: DocumentGroup[] = [];
@@ -176,12 +205,52 @@ export const groupDocumentBlocks = (blocks: KaifLifeContentBlock[]): DocumentGro
       groups.push({ type: 'text', block });
       continue;
     }
+    if (block.type === 'document') {
+      flushMedia();
+      groups.push({ type: 'document', block });
+      continue;
+    }
     const _exhaustive: never = block;
     return _exhaustive;
   }
 
   flushMedia();
   return groups;
+};
+
+export const moveContentBlock = (
+  blocks: KaifLifeContentBlock[],
+  id: string,
+  direction: KaifLifeMoveDirection
+): KaifLifeContentBlock[] => {
+  const index = blocks.findIndex((block) => block.id === id);
+  if (index < 0) {
+    return blocks;
+  }
+
+  let swapWith: number;
+  switch (direction) {
+    case 'up':
+      swapWith = index - 1;
+      break;
+    case 'down':
+      swapWith = index + 1;
+      break;
+    default: {
+      const _exhaustive: never = direction;
+      return _exhaustive;
+    }
+  }
+
+  if (swapWith < 0 || swapWith >= blocks.length) {
+    return blocks;
+  }
+
+  const next = [...blocks];
+  const current = next[index];
+  next[index] = next[swapWith];
+  next[swapWith] = current;
+  return next;
 };
 
 export const defaultMediaWidth = (count: number): number => {

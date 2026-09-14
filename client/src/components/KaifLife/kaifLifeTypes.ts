@@ -24,7 +24,16 @@ export type KaifLifeMediaBlock = {
   widthPercent: number;
 };
 
-export type KaifLifeContentBlock = KaifLifeTextBlock | KaifLifeMediaBlock;
+export type KaifLifeDocumentBlock = {
+  id: string;
+  type: 'document';
+  url: string;
+  publicId: string;
+  fileName: string;
+  mimeType: string;
+};
+
+export type KaifLifeContentBlock = KaifLifeTextBlock | KaifLifeMediaBlock | KaifLifeDocumentBlock;
 
 export type KaifLifeStage = {
   done: boolean;

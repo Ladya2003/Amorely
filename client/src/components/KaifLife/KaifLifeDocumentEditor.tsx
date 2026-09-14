@@ -1,10 +1,12 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import MediaViewerDialog from '../common/MediaViewerDialog';
+import KaifLifeBlockMoveControls from './KaifLifeBlockMoveControls';
+import KaifLifeFileBlockView from './KaifLifeFileBlock';
 import KaifLifeMediaBlockView from './KaifLifeMediaBlock';
 import KaifLifeTextBlockField from './KaifLifeTextBlockField';
-import { groupDocumentBlocks } from './kaifLifeBlocks';
-import type { KaifLifeContentBlock, KaifLifeMediaBlock } from './kaifLifeTypes';
+import { groupDocumentBlocks, moveContentBlock } from './kaifLifeBlocks';
+import type { KaifLifeContentBlock, KaifLifeMediaBlock, KaifLifeMoveDirection } from './kaifLifeTypes';
 
 export type KaifLifeDocumentEditorHandle = {
   flush: () => KaifLifeContentBlock[];
@@ -97,7 +99,7 @@ const KaifLifeDocumentEditor = forwardRef<KaifLifeDocumentEditorHandle, KaifLife
       );
     };
 
-    const deleteMedia = (id: string) => {
+    const deleteBlock = (id: string) => {
       onBlocksChange(mergeLiveText(blocksRef.current).filter((block) => block.id !== id));
     };
 
@@ -113,27 +115,66 @@ const KaifLifeDocumentEditor = forwardRef<KaifLifeDocumentEditorHandle, KaifLife
       onBlocksChange(next);
     };
 
+    const moveBlock = (id: string, direction: KaifLifeMoveDirection) => {
+      onBlocksChange(moveContentBlock(mergeLiveText(blocksRef.current), id, direction));
+    };
+
+    const renderMoveControls = (id: string) => {
+      const index = blocks.findIndex((block) => block.id === id);
+      return (
+        <KaifLifeBlockMoveControls
+          canMoveUp={index > 0}
+          canMoveDown={index >= 0 && index < blocks.length - 1}
+          onMove={(direction) => moveBlock(id, direction)}
+        />
+      );
+    };
+
     return (
       <Box ref={containerRef} sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
         {groups.map((group) => {
           if (group.type === 'text') {
             return (
-              <KaifLifeTextBlockField
+              <Box
                 key={group.block.id}
-                id={group.block.id}
-                text={group.block.text}
-                minRows={onlyOneText ? 8 : 3}
-                canDeleteWhenEmpty={blocks.length > 1}
-                onLiveChange={(id, text) => {
-                  liveTextRef.current[id] = text;
-                }}
-                onCommit={commitText}
-                onFocusMeta={onFocusChange}
-                onDelete={deleteText}
-                inputRef={(node) => {
-                  textareaRefs.current[group.block.id] = node;
-                }}
-              />
+                sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, width: '100%' }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <KaifLifeTextBlockField
+                    id={group.block.id}
+                    text={group.block.text}
+                    minRows={onlyOneText ? 8 : 3}
+                    canDeleteWhenEmpty={blocks.length > 1}
+                    onLiveChange={(id, text) => {
+                      liveTextRef.current[id] = text;
+                    }}
+                    onCommit={commitText}
+                    onFocusMeta={onFocusChange}
+                    onDelete={deleteText}
+                    inputRef={(node) => {
+                      textareaRefs.current[group.block.id] = node;
+                    }}
+                  />
+                </Box>
+                {renderMoveControls(group.block.id)}
+              </Box>
+            );
+          }
+
+          if (group.type === 'document') {
+            return (
+              <Box
+                key={group.block.id}
+                sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, width: '100%' }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <KaifLifeFileBlockView
+                    block={group.block}
+                    onDelete={() => deleteBlock(group.block.id)}
+                  />
+                </Box>
+                {renderMoveControls(group.block.id)}
+              </Box>
             );
           }
 
@@ -150,17 +191,31 @@ const KaifLifeDocumentEditor = forwardRef<KaifLifeDocumentEditorHandle, KaifLife
                 }}
               >
                 {group.blocks.map((block) => (
-                  <KaifLifeMediaBlockView
+                  <Box
                     key={block.id}
-                    block={block}
-                    rowWidth={rowWidth}
-                    onChangeWidth={(widthPercent) => updateMediaWidth(block.id, widthPercent)}
-                    onDelete={() => deleteMedia(block.id)}
-                    onOpen={() => {
-                      const index = mediaItems.findIndex((item) => item.id === block.id);
-                      setViewer({ open: true, index: Math.max(0, index) });
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 0.25,
+                      width: `${block.widthPercent}%`,
+                      maxWidth: '100%',
+                      flex: '0 0 auto',
                     }}
-                  />
+                  >
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <KaifLifeMediaBlockView
+                        block={block}
+                        rowWidth={rowWidth}
+                        onChangeWidth={(widthPercent) => updateMediaWidth(block.id, widthPercent)}
+                        onDelete={() => deleteBlock(block.id)}
+                        onOpen={() => {
+                          const index = mediaItems.findIndex((item) => item.id === block.id);
+                          setViewer({ open: true, index: Math.max(0, index) });
+                        }}
+                      />
+                    </Box>
+                    {renderMoveControls(block.id)}
+                  </Box>
                 ))}
               </Box>
             );

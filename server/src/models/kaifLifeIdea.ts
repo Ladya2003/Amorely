@@ -16,6 +16,14 @@ export type KaifLifeContentBlock =
       url: string;
       publicId: string;
       widthPercent: number;
+    }
+  | {
+      id: string;
+      type: 'document';
+      url: string;
+      publicId: string;
+      fileName: string;
+      mimeType: string;
     };
 
 export type KaifLifeStage = {
@@ -41,12 +49,14 @@ export interface KaifLifeIdeaDocument extends mongoose.Document {
 const contentBlockSchema = new mongoose.Schema(
   {
     id: { type: String, required: true },
-    type: { type: String, enum: ['text', 'media'], required: true },
+    type: { type: String, enum: ['text', 'media', 'document'], required: true },
     text: { type: String },
     mediaType: { type: String, enum: ['image', 'video'] },
     url: { type: String },
     publicId: { type: String },
     widthPercent: { type: Number },
+    fileName: { type: String },
+    mimeType: { type: String },
   },
   { _id: false }
 );

@@ -89,9 +89,8 @@ const KaifLifeMediaBlockView: React.FC<KaifLifeMediaBlockProps> = ({
     <Box
       sx={{
         position: 'relative',
-        width: `${block.widthPercent}%`,
+        width: '100%',
         maxWidth: '100%',
-        flex: '0 0 auto',
         borderRadius: 1.5,
         overflow: 'visible',
       }}
