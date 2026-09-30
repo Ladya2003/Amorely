@@ -29,6 +29,7 @@ import currencyRoutes from './routes/currency';
 import dailyQuestionsRoutes from './routes/dailyQuestions';
 import datingIdeasRoutes from './routes/datingIdeas';
 import kaifLifeRoutes from './routes/kaifLife';
+import fortuneWheelRoutes from './routes/fortuneWheel';
 import adminRoutes from './routes/admin';
 import cronRoutes from './routes/cron';
 import publicSupportRoutes from './routes/publicSupport';
@@ -391,6 +392,7 @@ app.use('/api/currency', authMiddleware, currencyRoutes);
 app.use('/api/daily-questions', authMiddleware, dailyQuestionsRoutes);
 app.use('/api/dating-ideas', authMiddleware, datingIdeasRoutes);
 app.use('/api/kaif-life', authMiddleware, kaifLifeRoutes);
+app.use('/api/fortune-wheel', authMiddleware, fortuneWheelRoutes);
 
 // Маршруты админ-панели
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes);

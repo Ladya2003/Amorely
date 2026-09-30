@@ -31,6 +31,7 @@ import CalendarGrid from './CalendarGrid';
 import { CalendarGridSkeleton, CalendarMonthSkeleton } from './CalendarSkeletons';
 import PlansNotes, { type PlansNotesHandle } from './PlansNotes';
 import KaifLifePage from '../KaifLife/KaifLifePage';
+import FortuneWheelPage from '../FortuneWheel/FortuneWheelPage';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   readCalendarUiPreferences,
@@ -61,7 +62,7 @@ import {
   getCalendarViewToggleGroupSx,
   getCalendarWeekdayLabelSx,
 } from './calendarPageStyles';
-import { AddIcon, ArrowBackIosNewIcon, ArrowForwardIosIcon, CalendarMonthIcon, DeleteSweepIcon, ExpandMoreIcon, FilterListIcon, GridViewIcon, LightbulbOutlinedIcon, ListAltIcon } from '../UI/icons';
+import { AddIcon, ArrowBackIosNewIcon, ArrowForwardIosIcon, CalendarMonthIcon, DeleteSweepIcon, ExpandMoreIcon, FilterListIcon, FortuneWheelIcon, GridViewIcon, LightbulbOutlinedIcon, ListAltIcon } from '../UI/icons';
 
 interface MediaFile {
   _id: string;
@@ -136,6 +137,9 @@ const Calendar: React.FC<CalendarProps> = ({
   const [kaifLifeOpen, setKaifLifeOpen] = useState(() =>
     Boolean(user?._id && user.kaifLifeIdeasEnabled && readCalendarUiPreferences(user._id).kaifLifeOpen)
   );
+  const [fortuneWheelOpen, setFortuneWheelOpen] = useState(() =>
+    Boolean(user?._id && user.kaifLifeIdeasEnabled && readCalendarUiPreferences(user._id).fortuneWheelOpen)
+  );
   const calendarTabDirection = useTabSlideDirection(tabValue);
   const [eventFilter, setEventFilter] = useState<EventFilter>({
     dateFrom: null,
@@ -160,6 +164,7 @@ const Calendar: React.FC<CalendarProps> = ({
     setTabValue(forcePlansTab || prefs.mainTab === 'plans' ? 1 : 0);
     setView(prefs.calendarView);
     setKaifLifeOpen(Boolean(user.kaifLifeIdeasEnabled && prefs.kaifLifeOpen));
+    setFortuneWheelOpen(Boolean(user.kaifLifeIdeasEnabled && prefs.fortuneWheelOpen));
   }, [user?._id, user?.kaifLifeIdeasEnabled, forcePlansTab]);
 
   useEffect(() => {
@@ -200,8 +205,9 @@ const Calendar: React.FC<CalendarProps> = ({
     if (!user?._id || !user.kaifLifeIdeasEnabled) {
       return;
     }
-    updateCalendarUiPreferences(user._id, { kaifLifeOpen: true, mainTab: 'plans' });
+    updateCalendarUiPreferences(user._id, { kaifLifeOpen: true, fortuneWheelOpen: false, mainTab: 'plans' });
     setTabValue(1);
+    setFortuneWheelOpen(false);
     setKaifLifeOpen(true);
   };
 
@@ -211,6 +217,24 @@ const Calendar: React.FC<CalendarProps> = ({
     }
     setTabValue(1);
     setKaifLifeOpen(false);
+  };
+
+  const handleOpenFortuneWheel = () => {
+    if (!user?._id || !user.kaifLifeIdeasEnabled) {
+      return;
+    }
+    updateCalendarUiPreferences(user._id, { fortuneWheelOpen: true, kaifLifeOpen: false, mainTab: 'plans' });
+    setTabValue(1);
+    setKaifLifeOpen(false);
+    setFortuneWheelOpen(true);
+  };
+
+  const handleCloseFortuneWheel = () => {
+    if (user?._id) {
+      updateCalendarUiPreferences(user._id, { fortuneWheelOpen: false, mainTab: 'plans' });
+    }
+    setTabValue(1);
+    setFortuneWheelOpen(false);
   };
 
   const isPlansTab = tabValue === 1;
@@ -333,6 +357,14 @@ const Calendar: React.FC<CalendarProps> = ({
       isOutsideMonth: !inCurrentMonth,
     };
   });
+
+  if (fortuneWheelOpen && user?.kaifLifeIdeasEnabled) {
+    return (
+      <Box sx={{ ...getCalendarRootSx(), flex: 1, minHeight: 0 }}>
+        <FortuneWheelPage onClose={handleCloseFortuneWheel} />
+      </Box>
+    );
+  }
 
   if (kaifLifeOpen && user?.kaifLifeIdeasEnabled) {
     return (
@@ -478,13 +510,22 @@ const Calendar: React.FC<CalendarProps> = ({
                   </IconButton>
                 </Badge>
                 {user?.kaifLifeIdeasEnabled && (
-                  <IconButton
-                    onClick={handleOpenKaifLife}
-                    aria-label="Мои идеи для Kaif Life"
-                    sx={getCalendarFilterButtonSx(theme)}
-                  >
-                    <LightbulbOutlinedIcon sx={{ fontSize: '1.25rem' }} />
-                  </IconButton>
+                  <>
+                    <IconButton
+                      onClick={handleOpenKaifLife}
+                      aria-label="Мои идеи для Kaif Life"
+                      sx={getCalendarFilterButtonSx(theme)}
+                    >
+                      <LightbulbOutlinedIcon sx={{ fontSize: '1.25rem' }} />
+                    </IconButton>
+                    <IconButton
+                      onClick={handleOpenFortuneWheel}
+                      aria-label="Моё колесо Фортуны"
+                      sx={getCalendarFilterButtonSx(theme)}
+                    >
+                      <FortuneWheelIcon sx={{ fontSize: '1.25rem' }} />
+                    </IconButton>
+                  </>
                 )}
               </Box>
               {isMobile && (

@@ -6,6 +6,7 @@ export type CalendarUiPreferences = {
   calendarView: CalendarViewMode;
   plansCategory: string | null;
   kaifLifeOpen: boolean;
+  fortuneWheelOpen: boolean;
 };
 
 const STORAGE_VERSION = 1;
@@ -14,7 +15,8 @@ const DEFAULT_PREFS: CalendarUiPreferences = {
   mainTab: 'calendar',
   calendarView: 'circles',
   plansCategory: null,
-  kaifLifeOpen: false
+  kaifLifeOpen: false,
+  fortuneWheelOpen: false,
 };
 
 export function getCalendarUiStorageKey(userId: string): string {
@@ -34,7 +36,8 @@ export function readCalendarUiPreferences(userId: string): CalendarUiPreferences
       mainTab: parsed.mainTab === 'plans' ? 'plans' : 'calendar',
       calendarView: parsed.calendarView === 'grid' ? 'grid' : 'circles',
       plansCategory: typeof parsed.plansCategory === 'string' ? parsed.plansCategory : null,
-      kaifLifeOpen: parsed.kaifLifeOpen === true
+      kaifLifeOpen: parsed.kaifLifeOpen === true,
+      fortuneWheelOpen: parsed.fortuneWheelOpen === true,
     };
   } catch {
     return { ...DEFAULT_PREFS };

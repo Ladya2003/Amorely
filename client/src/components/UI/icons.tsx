@@ -105,6 +105,7 @@ import {
   IconUserPlus,
   IconUsers,
   IconVideo,
+  IconWheel,
   IconWorld,
   IconX,
 } from '@tabler/icons-react';
@@ -287,6 +288,7 @@ export const SupportAgentIcon = createTablerIcon(IconHeadset);
 export const PanToolAltOutlinedIcon = createTablerIcon(IconHandClick);
 export const DevicesOutlinedIcon = createTablerIcon(IconDevices);
 export const LightbulbOutlinedIcon = createTablerIcon(IconBulb);
+export const FortuneWheelIcon = createTablerIcon(IconWheel);
 export const PetsOutlinedIcon = createTablerIcon(IconPaw);
 export const QuizOutlinedIcon = createTablerIcon(IconHelp);
 export const PublicOutlinedIcon = createTablerIcon(IconWorld);
