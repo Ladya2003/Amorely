@@ -150,9 +150,21 @@
   </url>
   <url>
     <loc>https://amorely.love/blog</loc>
-    <lastmod>2026-08-31</lastmod>
+    <lastmod>2026-09-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://amorely.love/blog/how-shared-photos-stay-encrypted</loc>
+    <lastmod>2026-09-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://amorely.love/blog/how-couple-chat-encryption-works</loc>
+    <lastmod>2026-09-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://amorely.love/blog/shared-plans-for-two</loc>

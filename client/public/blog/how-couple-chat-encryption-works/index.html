@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual" />
+    <meta name="theme-color" content="#ff4b8d" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Amorely" />
+    <!--! SEO_META_START -->
+    <title>Как устроен зашифрованный чат Amorely</title>
+    <meta
+      name="description"
+      content="Ключи остаются на устройствах пары. На сервер уходит только шифротекст сообщения."
+    />
+    <meta
+      name="keywords"
+      content="блог Amorely, приложение для пар, шифрованный чат, общий календарь, идеи свиданий, вопросы дня, игры для пар, виртуальный питомец"
+    />
+    <meta name="author" content="Amorely" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://amorely.love/blog/how-couple-chat-encryption-works" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Amorely" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:title" content="Как устроен зашифрованный чат Amorely" />
+    <meta
+      property="og:description"
+      content="Ключи остаются на устройствах пары. На сервер уходит только шифротекст сообщения."
+    />
+    <meta property="og:url" content="https://amorely.love/blog/how-couple-chat-encryption-works" />
+    <meta property="og:image" content="https://amorely.love/landing/6.%20chat%20light.PNG" />
+    <meta property="og:image:alt" content="Как устроен зашифрованный чат Amorely" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Как устроен зашифрованный чат Amorely" />
+    <meta
+      name="twitter:description"
+      content="Ключи остаются на устройствах пары. На сервер уходит только шифротекст сообщения."
+    />
+    <meta name="twitter:image" content="https://amorely.love/landing/6.%20chat%20light.PNG" />
+    <!--! SEO_META_END -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <!--! SEO_JSONLD_START -->
+    <script type="application/ld+json" data-amorely-public-jsonld="true">
+      {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Как устроен зашифрованный чат Amorely",
+        "description": "Ключи остаются на устройствах пары. На сервер уходит только шифротекст сообщения.",
+        "datePublished": "2026-09-29",
+        "dateModified": "2026-09-29",
+        "image": "https://amorely.love/landing/6.%20chat%20light.PNG",
+        "inLanguage": "ru",
+        "url": "https://amorely.love/blog/how-couple-chat-encryption-works",
+        "author": {
+          "@type": "Organization",
+          "name": "Amorely",
+          "url": "https://amorely.love/",
+          "logo": "https://amorely.love/logo512.png",
+          "email": "amorely013@gmail.com",
+          "sameAs": [
+            "https://www.instagram.com/amorely.love",
+            "https://www.tiktok.com/@amorely.love",
+            "https://youtu.be/pnCo-TeEztY"
+          ]
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Amorely",
+          "url": "https://amorely.love/",
+          "logo": "https://amorely.love/logo512.png",
+          "email": "amorely013@gmail.com",
+          "sameAs": [
+            "https://www.instagram.com/amorely.love",
+            "https://www.tiktok.com/@amorely.love",
+            "https://youtu.be/pnCo-TeEztY"
+          ]
+        },
+        "articleBody": "Чат Amorely рассчитан на то, чтобы переписку могли прочитать только двое. Сервер хранит сообщения и доставляет их в реальном времени, но не получает текст, который можно открыть из базы.\n\nУ каждого устройства есть своя пара ключей ECDH на кривой P-256. Она создаётся в браузере. Публичный ключ можно отдать партнёру. Приватный ключ с устройства не уходит.\n\nКогда вы отправляете сообщение, браузер берёт ваш приватный ключ и публичный ключ партнёра и получает общий секрет длиной 256 бит. Этот секрет используется как ключ AES-GCM. Для каждого сообщения генерируется новый вектор инициализации на 12 байт. В сеть уходят шифротекст, этот вектор, версия и идентификатор устройства отправителя. Алгоритм в полезной нагрузке называется ECDH-P256-AES-GCM.\n\nСокет доставляет тот же зашифрованный пакет, что записан в базе. Расшифровка происходит уже в браузере получателя, тем же общим секретом. Отдельного ключа «для поддержки» нет: если потеряны оба устройства и резервная фраза, сервис не сможет открыть старые сообщения.\n\nРезервная фраза — 12 слов. Из неё через PBKDF2 (SHA-256, 250 000 итераций) получается ключ AES-256-GCM, которым на устройстве закрываются локальные ключи. Фраза нужна, чтобы восстановить доступ, а не чтобы сервер хранил копию переписки.\n\nПоэтому в базе нет поля с текстом сообщения. Есть шифротекст. Поиск по словам переписки на сервере из этой схемы не сделать: индексировать нечего.",
+        "mainEntityOfPage": "https://amorely.love/blog/how-couple-chat-encryption-works"
+      }
+    </script>
+    <script type="application/ld+json" data-amorely-public-jsonld="true">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Главная",
+            "item": "https://amorely.love/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Блог",
+            "item": "https://amorely.love/blog"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Как устроен зашифрованный чат Amorely",
+            "item": "https://amorely.love/blog/how-couple-chat-encryption-works"
+          }
+        ]
+      }
+    </script>
+    <!--! SEO_JSONLD_END -->
+    <script type="text/javascript">
+      // GitHub Pages: восстановление маршрута после 404.html
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
+    <style>
+      #root > .seo-bootstrap {
+        display: none !important;
+      }
+    </style>
+    <!-- CRA dev bundle; production postbuild replaces this file with hashed assets -->
+    <script defer src="/static/js/bundle.js"></script>
+  </head>
+  <body>
+    <noscript>
+      <div style="max-width:40rem;margin:2rem auto;padding:0 1rem;font-family:system-ui,sans-serif;line-height:1.5">
+        <article lang="ru">
+          <h1>Как устроен зашифрованный чат Amorely</h1>
+          <img src="https://amorely.love/landing/6.%20chat%20light.PNG" alt="Как устроен зашифрованный чат Amorely" />
+          <p>Чат Amorely рассчитан на то, чтобы переписку могли прочитать только двое. Сервер хранит сообщения и доставляет их в реальном времени, но не получает текст, который можно открыть из базы.</p>
+          <p>У каждого устройства есть своя пара ключей ECDH на кривой P-256. Она создаётся в браузере. Публичный ключ можно отдать партнёру. Приватный ключ с устройства не уходит.</p>
+          <p>Когда вы отправляете сообщение, браузер берёт ваш приватный ключ и публичный ключ партнёра и получает общий секрет длиной 256 бит. Этот секрет используется как ключ AES-GCM. Для каждого сообщения генерируется новый вектор инициализации на 12 байт. В сеть уходят шифротекст, этот вектор, версия и идентификатор устройства отправителя. Алгоритм в полезной нагрузке называется ECDH-P256-AES-GCM.</p>
+          <p>Сокет доставляет тот же зашифрованный пакет, что записан в базе. Расшифровка происходит уже в браузере получателя, тем же общим секретом. Отдельного ключа «для поддержки» нет: если потеряны оба устройства и резервная фраза, сервис не сможет открыть старые сообщения.</p>
+          <p>Резервная фраза — 12 слов. Из неё через PBKDF2 (SHA-256, 250 000 итераций) получается ключ AES-256-GCM, которым на устройстве закрываются локальные ключи. Фраза нужна, чтобы восстановить доступ, а не чтобы сервер хранил копию переписки.</p>
+          <p>Поэтому в базе нет поля с текстом сообщения. Есть шифротекст. Поиск по словам переписки на сервере из этой схемы не сделать: индексировать нечего.</p>
+        </article>
+        <article lang="en">
+          <h1>How Amorely’s encrypted couple chat works</h1>
+          <img src="https://amorely.love/landing/6.%20chat%20light.PNG" alt="How Amorely’s encrypted couple chat works" />
+          <p>Amorely chat is built so only the two people in a couple can read it. The server stores messages and delivers them in real time, but it does not receive text that can be opened from the database.</p>
+          <p>Each device has its own ECDH key pair on the P-256 curve, created in the browser. The public key can be given to the partner. The private key does not leave the device.</p>
+          <p>When you send a message, the browser uses your private key and your partner’s public key and derives a 256-bit shared secret. That secret is used as an AES-GCM key. Every message gets a new 12-byte initialization vector. What goes over the network is the ciphertext, that vector, a version, and the sender’s device id. The payload names the algorithm ECDH-P256-AES-GCM.</p>
+          <p>The socket delivers the same encrypted packet that is stored. Decryption happens in the recipient’s browser, with the same shared secret. There is no support key. If both devices and the recovery phrase are lost, the service cannot open old messages.</p>
+          <p>The recovery phrase is 12 words. PBKDF2 (SHA-256, 250,000 iterations) turns it into an AES-256-GCM key that wraps the local keys on the device. The phrase restores access. It is not a server-side copy of the chat.</p>
+          <p>So the database has no plaintext message field. It has ciphertext. Server-side search over the conversation does not fall out of this design: there is nothing to index.</p>
+        </article>
+      </div>
+    </noscript>
+    <div id="root">
+      <!--! SEO_BOOTSTRAP_START -->
+      <main class="seo-bootstrap">
+        <article lang="ru">
+          <h1>Как устроен зашифрованный чат Amorely</h1>
+          <img src="https://amorely.love/landing/6.%20chat%20light.PNG" alt="Как устроен зашифрованный чат Amorely" />
+          <p>Чат Amorely рассчитан на то, чтобы переписку могли прочитать только двое. Сервер хранит сообщения и доставляет их в реальном времени, но не получает текст, который можно открыть из базы.</p>
+          <p>У каждого устройства есть своя пара ключей ECDH на кривой P-256. Она создаётся в браузере. Публичный ключ можно отдать партнёру. Приватный ключ с устройства не уходит.</p>
+          <p>Когда вы отправляете сообщение, браузер берёт ваш приватный ключ и публичный ключ партнёра и получает общий секрет длиной 256 бит. Этот секрет используется как ключ AES-GCM. Для каждого сообщения генерируется новый вектор инициализации на 12 байт. В сеть уходят шифротекст, этот вектор, версия и идентификатор устройства отправителя. Алгоритм в полезной нагрузке называется ECDH-P256-AES-GCM.</p>
+          <p>Сокет доставляет тот же зашифрованный пакет, что записан в базе. Расшифровка происходит уже в браузере получателя, тем же общим секретом. Отдельного ключа «для поддержки» нет: если потеряны оба устройства и резервная фраза, сервис не сможет открыть старые сообщения.</p>
+          <p>Резервная фраза — 12 слов. Из неё через PBKDF2 (SHA-256, 250 000 итераций) получается ключ AES-256-GCM, которым на устройстве закрываются локальные ключи. Фраза нужна, чтобы восстановить доступ, а не чтобы сервер хранил копию переписки.</p>
+          <p>Поэтому в базе нет поля с текстом сообщения. Есть шифротекст. Поиск по словам переписки на сервере из этой схемы не сделать: индексировать нечего.</p>
+        </article>
+        <article lang="en">
+          <h1>How Amorely’s encrypted couple chat works</h1>
+          <img src="https://amorely.love/landing/6.%20chat%20light.PNG" alt="How Amorely’s encrypted couple chat works" />
+          <p>Amorely chat is built so only the two people in a couple can read it. The server stores messages and delivers them in real time, but it does not receive text that can be opened from the database.</p>
+          <p>Each device has its own ECDH key pair on the P-256 curve, created in the browser. The public key can be given to the partner. The private key does not leave the device.</p>
+          <p>When you send a message, the browser uses your private key and your partner’s public key and derives a 256-bit shared secret. That secret is used as an AES-GCM key. Every message gets a new 12-byte initialization vector. What goes over the network is the ciphertext, that vector, a version, and the sender’s device id. The payload names the algorithm ECDH-P256-AES-GCM.</p>
+          <p>The socket delivers the same encrypted packet that is stored. Decryption happens in the recipient’s browser, with the same shared secret. There is no support key. If both devices and the recovery phrase are lost, the service cannot open old messages.</p>
+          <p>The recovery phrase is 12 words. PBKDF2 (SHA-256, 250,000 iterations) turns it into an AES-256-GCM key that wraps the local keys on the device. The phrase restores access. It is not a server-side copy of the chat.</p>
+          <p>So the database has no plaintext message field. It has ciphertext. Server-side search over the conversation does not fall out of this design: there is nothing to index.</p>
+        </article>
+      </main>
+      <!--! SEO_BOOTSTRAP_END -->
+    </div>
+  </body>
+</html>

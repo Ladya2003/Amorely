@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual" />
+    <meta name="theme-color" content="#ff4b8d" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Amorely" />
+    <!--! SEO_META_START -->
+    <title>Как общие фото шифруются до загрузки</title>
+    <meta
+      name="description"
+      content="Файл закрывается отдельным ключом AES-GCM ещё в браузере. Ключ файла партнёр получает уже в зашифрованном виде."
+    />
+    <meta
+      name="keywords"
+      content="блог Amorely, приложение для пар, шифрованный чат, общий календарь, идеи свиданий, вопросы дня, игры для пар, виртуальный питомец"
+    />
+    <meta name="author" content="Amorely" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://amorely.love/blog/how-shared-photos-stay-encrypted" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Amorely" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:title" content="Как общие фото шифруются до загрузки" />
+    <meta
+      property="og:description"
+      content="Файл закрывается отдельным ключом AES-GCM ещё в браузере. Ключ файла партнёр получает уже в зашифрованном виде."
+    />
+    <meta property="og:url" content="https://amorely.love/blog/how-shared-photos-stay-encrypted" />
+    <meta property="og:image" content="https://amorely.love/landing/1.%20avatars%2C%20feed%20light.PNG" />
+    <meta property="og:image:alt" content="Как общие фото шифруются до загрузки" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Как общие фото шифруются до загрузки" />
+    <meta
+      name="twitter:description"
+      content="Файл закрывается отдельным ключом AES-GCM ещё в браузере. Ключ файла партнёр получает уже в зашифрованном виде."
+    />
+    <meta name="twitter:image" content="https://amorely.love/landing/1.%20avatars%2C%20feed%20light.PNG" />
+    <!--! SEO_META_END -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <!--! SEO_JSONLD_START -->
+    <script type="application/ld+json" data-amorely-public-jsonld="true">
+      {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Как общие фото шифруются до загрузки",
+        "description": "Файл закрывается отдельным ключом AES-GCM ещё в браузере. Ключ файла партнёр получает уже в зашифрованном виде.",
+        "datePublished": "2026-09-30",
+        "dateModified": "2026-09-30",
+        "image": "https://amorely.love/landing/1.%20avatars%2C%20feed%20light.PNG",
+        "inLanguage": "ru",
+        "url": "https://amorely.love/blog/how-shared-photos-stay-encrypted",
+        "author": {
+          "@type": "Organization",
+          "name": "Amorely",
+          "url": "https://amorely.love/",
+          "logo": "https://amorely.love/logo512.png",
+          "email": "amorely013@gmail.com",
+          "sameAs": [
+            "https://www.instagram.com/amorely.love",
+            "https://www.tiktok.com/@amorely.love",
+            "https://youtu.be/pnCo-TeEztY"
+          ]
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Amorely",
+          "url": "https://amorely.love/",
+          "logo": "https://amorely.love/logo512.png",
+          "email": "amorely013@gmail.com",
+          "sameAs": [
+            "https://www.instagram.com/amorely.love",
+            "https://www.tiktok.com/@amorely.love",
+            "https://youtu.be/pnCo-TeEztY"
+          ]
+        },
+        "articleBody": "Фото в ленте, в чате и в календаре не загружаются как обычная картинка. Перед отправкой браузер шифрует байты файла и только потом отдаёт их на сервер.\n\nНа каждый файл создаётся случайный ключ AES-GCM длиной 32 байта и отдельный вектор инициализации на 12 байт. Этим ключом закрывается содержимое. Наружу уходит непрозрачный блоб, а не JPEG, который можно открыть по прямой ссылке.\n\nСам ключ файла нельзя положить рядом с блобом в открытом виде. Он сериализуется вместе с вектором и шифруется тем же способом, что и текст чата: ECDH P-256 и AES-GCM, на публичный ключ партнёра. В хранилище остаётся конверт с шифротекстом ключа.\n\nДля календаря конверт делается дважды: для автора и для партнёра. Оба могут расшифровать один и тот же файл своими ключами устройства. Третьей копии ключа у сервиса нет.\n\nТип файла и размер могут храниться отдельно — по ним нельзя восстановить картинку. Содержимое появляется снова только на устройстве пары, когда браузер расшифровывает блоб ключом из конверта.\n\nТекст сообщения и вложение поэтому защищены по-разному, но одной границей: сервер видит, что файл доставлен, и не видит, что на нём изображено.",
+        "mainEntityOfPage": "https://amorely.love/blog/how-shared-photos-stay-encrypted"
+      }
+    </script>
+    <script type="application/ld+json" data-amorely-public-jsonld="true">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Главная",
+            "item": "https://amorely.love/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Блог",
+            "item": "https://amorely.love/blog"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Как общие фото шифруются до загрузки",
+            "item": "https://amorely.love/blog/how-shared-photos-stay-encrypted"
+          }
+        ]
+      }
+    </script>
+    <!--! SEO_JSONLD_END -->
+    <script type="text/javascript">
+      // GitHub Pages: восстановление маршрута после 404.html
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&');
+            })
+            .join('?');
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
+    <style>
+      #root > .seo-bootstrap {
+        display: none !important;
+      }
+    </style>
+    <!-- CRA dev bundle; production postbuild replaces this file with hashed assets -->
+    <script defer src="/static/js/bundle.js"></script>
+  </head>
+  <body>
+    <noscript>
+      <div style="max-width:40rem;margin:2rem auto;padding:0 1rem;font-family:system-ui,sans-serif;line-height:1.5">
+        <article lang="ru">
+          <h1>Как общие фото шифруются до загрузки</h1>
+          <img src="https://amorely.love/landing/1.%20avatars%2C%20feed%20light.PNG" alt="Как общие фото шифруются до загрузки" />
+          <p>Фото в ленте, в чате и в календаре не загружаются как обычная картинка. Перед отправкой браузер шифрует байты файла и только потом отдаёт их на сервер.</p>
+          <p>На каждый файл создаётся случайный ключ AES-GCM длиной 32 байта и отдельный вектор инициализации на 12 байт. Этим ключом закрывается содержимое. Наружу уходит непрозрачный блоб, а не JPEG, который можно открыть по прямой ссылке.</p>
+          <p>Сам ключ файла нельзя положить рядом с блобом в открытом виде. Он сериализуется вместе с вектором и шифруется тем же способом, что и текст чата: ECDH P-256 и AES-GCM, на публичный ключ партнёра. В хранилище остаётся конверт с шифротекстом ключа.</p>
+          <p>Для календаря конверт делается дважды: для автора и для партнёра. Оба могут расшифровать один и тот же файл своими ключами устройства. Третьей копии ключа у сервиса нет.</p>
+          <p>Тип файла и размер могут храниться отдельно — по ним нельзя восстановить картинку. Содержимое появляется снова только на устройстве пары, когда браузер расшифровывает блоб ключом из конверта.</p>
+          <p>Текст сообщения и вложение поэтому защищены по-разному, но одной границей: сервер видит, что файл доставлен, и не видит, что на нём изображено.</p>
+        </article>
+        <article lang="en">
+          <h1>How shared photos are encrypted before upload</h1>
+          <img src="https://amorely.love/landing/1.%20avatars%2C%20feed%20light.PNG" alt="How shared photos are encrypted before upload" />
+          <p>Photos in the feed, chat, and calendar are not uploaded as ordinary images. The browser encrypts the file bytes first and only then sends them to the server.</p>
+          <p>Each file gets a random 32-byte AES-GCM key and its own 12-byte initialization vector. That key seals the contents. What leaves the browser is an opaque blob, not a JPEG that opens from a direct link.</p>
+          <p>The file key cannot sit next to the blob in the clear. It is serialized with the vector and encrypted the same way as chat text: ECDH P-256 and AES-GCM, to the partner’s public key. Storage keeps an envelope of ciphertext, not the raw key.</p>
+          <p>For the calendar the envelope is made twice: once for the author and once for the partner. Both can decrypt the same file with their own device keys. The service does not keep a third copy of the key.</p>
+          <p>File type and size may be stored beside the blob. They are not enough to reconstruct the picture. The image appears again only on a couple’s device, after the browser decrypts the blob with the key from the envelope.</p>
+          <p>Message text and attachments are protected differently, behind the same boundary: the server can see that a file arrived, and it cannot see what the file shows.</p>
+        </article>
+      </div>
+    </noscript>
+    <div id="root">
+      <!--! SEO_BOOTSTRAP_START -->
+      <main class="seo-bootstrap">
+        <article lang="ru">
+          <h1>Как общие фото шифруются до загрузки</h1>
+          <img src="https://amorely.love/landing/1.%20avatars%2C%20feed%20light.PNG" alt="Как общие фото шифруются до загрузки" />
+          <p>Фото в ленте, в чате и в календаре не загружаются как обычная картинка. Перед отправкой браузер шифрует байты файла и только потом отдаёт их на сервер.</p>
+          <p>На каждый файл создаётся случайный ключ AES-GCM длиной 32 байта и отдельный вектор инициализации на 12 байт. Этим ключом закрывается содержимое. Наружу уходит непрозрачный блоб, а не JPEG, который можно открыть по прямой ссылке.</p>
+          <p>Сам ключ файла нельзя положить рядом с блобом в открытом виде. Он сериализуется вместе с вектором и шифруется тем же способом, что и текст чата: ECDH P-256 и AES-GCM, на публичный ключ партнёра. В хранилище остаётся конверт с шифротекстом ключа.</p>
+          <p>Для календаря конверт делается дважды: для автора и для партнёра. Оба могут расшифровать один и тот же файл своими ключами устройства. Третьей копии ключа у сервиса нет.</p>
+          <p>Тип файла и размер могут храниться отдельно — по ним нельзя восстановить картинку. Содержимое появляется снова только на устройстве пары, когда браузер расшифровывает блоб ключом из конверта.</p>
+          <p>Текст сообщения и вложение поэтому защищены по-разному, но одной границей: сервер видит, что файл доставлен, и не видит, что на нём изображено.</p>
+        </article>
+        <article lang="en">
+          <h1>How shared photos are encrypted before upload</h1>
+          <img src="https://amorely.love/landing/1.%20avatars%2C%20feed%20light.PNG" alt="How shared photos are encrypted before upload" />
+          <p>Photos in the feed, chat, and calendar are not uploaded as ordinary images. The browser encrypts the file bytes first and only then sends them to the server.</p>
+          <p>Each file gets a random 32-byte AES-GCM key and its own 12-byte initialization vector. That key seals the contents. What leaves the browser is an opaque blob, not a JPEG that opens from a direct link.</p>
+          <p>The file key cannot sit next to the blob in the clear. It is serialized with the vector and encrypted the same way as chat text: ECDH P-256 and AES-GCM, to the partner’s public key. Storage keeps an envelope of ciphertext, not the raw key.</p>
+          <p>For the calendar the envelope is made twice: once for the author and once for the partner. Both can decrypt the same file with their own device keys. The service does not keep a third copy of the key.</p>
+          <p>File type and size may be stored beside the blob. They are not enough to reconstruct the picture. The image appears again only on a couple’s device, after the browser decrypts the blob with the key from the envelope.</p>
+          <p>Message text and attachments are protected differently, behind the same boundary: the server can see that a file arrived, and it cannot see what the file shows.</p>
+        </article>
+      </main>
+      <!--! SEO_BOOTSTRAP_END -->
+    </div>
+  </body>
+</html>

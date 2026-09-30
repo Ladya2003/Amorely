@@ -343,6 +343,70 @@ export const BLOG_POSTS: BlogPost[] = [
       ],
     },
   },
+  {
+    slug: 'how-couple-chat-encryption-works',
+    category: 'updates',
+    publishedAt: '2026-09-29',
+    imageFile: '6. chat light.PNG',
+    title: {
+      ru: 'Как устроен зашифрованный чат Amorely',
+      en: 'How Amorely’s encrypted couple chat works',
+    },
+    excerpt: {
+      ru: 'Ключи остаются на устройствах пары. На сервер уходит только шифротекст сообщения.',
+      en: 'Keys stay on the couple’s devices. The server receives only the message ciphertext.',
+    },
+    paragraphs: {
+      ru: [
+        'Чат Amorely рассчитан на то, чтобы переписку могли прочитать только двое. Сервер хранит сообщения и доставляет их в реальном времени, но не получает текст, который можно открыть из базы.',
+        'У каждого устройства есть своя пара ключей ECDH на кривой P-256. Она создаётся в браузере. Публичный ключ можно отдать партнёру. Приватный ключ с устройства не уходит.',
+        'Когда вы отправляете сообщение, браузер берёт ваш приватный ключ и публичный ключ партнёра и получает общий секрет длиной 256 бит. Этот секрет используется как ключ AES-GCM. Для каждого сообщения генерируется новый вектор инициализации на 12 байт. В сеть уходят шифротекст, этот вектор, версия и идентификатор устройства отправителя. Алгоритм в полезной нагрузке называется ECDH-P256-AES-GCM.',
+        'Сокет доставляет тот же зашифрованный пакет, что записан в базе. Расшифровка происходит уже в браузере получателя, тем же общим секретом. Отдельного ключа «для поддержки» нет: если потеряны оба устройства и резервная фраза, сервис не сможет открыть старые сообщения.',
+        'Резервная фраза — 12 слов. Из неё через PBKDF2 (SHA-256, 250 000 итераций) получается ключ AES-256-GCM, которым на устройстве закрываются локальные ключи. Фраза нужна, чтобы восстановить доступ, а не чтобы сервер хранил копию переписки.',
+        'Поэтому в базе нет поля с текстом сообщения. Есть шифротекст. Поиск по словам переписки на сервере из этой схемы не сделать: индексировать нечего.',
+      ],
+      en: [
+        'Amorely chat is built so only the two people in a couple can read it. The server stores messages and delivers them in real time, but it does not receive text that can be opened from the database.',
+        'Each device has its own ECDH key pair on the P-256 curve, created in the browser. The public key can be given to the partner. The private key does not leave the device.',
+        'When you send a message, the browser uses your private key and your partner’s public key and derives a 256-bit shared secret. That secret is used as an AES-GCM key. Every message gets a new 12-byte initialization vector. What goes over the network is the ciphertext, that vector, a version, and the sender’s device id. The payload names the algorithm ECDH-P256-AES-GCM.',
+        'The socket delivers the same encrypted packet that is stored. Decryption happens in the recipient’s browser, with the same shared secret. There is no support key. If both devices and the recovery phrase are lost, the service cannot open old messages.',
+        'The recovery phrase is 12 words. PBKDF2 (SHA-256, 250,000 iterations) turns it into an AES-256-GCM key that wraps the local keys on the device. The phrase restores access. It is not a server-side copy of the chat.',
+        'So the database has no plaintext message field. It has ciphertext. Server-side search over the conversation does not fall out of this design: there is nothing to index.',
+      ],
+    },
+  },
+  {
+    slug: 'how-shared-photos-stay-encrypted',
+    category: 'updates',
+    publishedAt: '2026-09-30',
+    imageFile: '1. avatars, feed light.PNG',
+    title: {
+      ru: 'Как общие фото шифруются до загрузки',
+      en: 'How shared photos are encrypted before upload',
+    },
+    excerpt: {
+      ru: 'Файл закрывается отдельным ключом AES-GCM ещё в браузере. Ключ файла партнёр получает уже в зашифрованном виде.',
+      en: 'The file is sealed with its own AES-GCM key in the browser. Your partner receives that file key only in encrypted form.',
+    },
+    paragraphs: {
+      ru: [
+        'Фото в ленте, в чате и в календаре не загружаются как обычная картинка. Перед отправкой браузер шифрует байты файла и только потом отдаёт их на сервер.',
+        'На каждый файл создаётся случайный ключ AES-GCM длиной 32 байта и отдельный вектор инициализации на 12 байт. Этим ключом закрывается содержимое. Наружу уходит непрозрачный блоб, а не JPEG, который можно открыть по прямой ссылке.',
+        'Сам ключ файла нельзя положить рядом с блобом в открытом виде. Он сериализуется вместе с вектором и шифруется тем же способом, что и текст чата: ECDH P-256 и AES-GCM, на публичный ключ партнёра. В хранилище остаётся конверт с шифротекстом ключа.',
+        'Для календаря конверт делается дважды: для автора и для партнёра. Оба могут расшифровать один и тот же файл своими ключами устройства. Третьей копии ключа у сервиса нет.',
+        'Тип файла и размер могут храниться отдельно — по ним нельзя восстановить картинку. Содержимое появляется снова только на устройстве пары, когда браузер расшифровывает блоб ключом из конверта.',
+        'Текст сообщения и вложение поэтому защищены по-разному, но одной границей: сервер видит, что файл доставлен, и не видит, что на нём изображено.',
+      ],
+      en: [
+        'Photos in the feed, chat, and calendar are not uploaded as ordinary images. The browser encrypts the file bytes first and only then sends them to the server.',
+        'Each file gets a random 32-byte AES-GCM key and its own 12-byte initialization vector. That key seals the contents. What leaves the browser is an opaque blob, not a JPEG that opens from a direct link.',
+        'The file key cannot sit next to the blob in the clear. It is serialized with the vector and encrypted the same way as chat text: ECDH P-256 and AES-GCM, to the partner’s public key. Storage keeps an envelope of ciphertext, not the raw key.',
+        'For the calendar the envelope is made twice: once for the author and once for the partner. Both can decrypt the same file with their own device keys. The service does not keep a third copy of the key.',
+        'File type and size may be stored beside the blob. They are not enough to reconstruct the picture. The image appears again only on a couple’s device, after the browser decrypts the blob with the key from the envelope.',
+        'Message text and attachments are protected differently, behind the same boundary: the server can see that a file arrived, and it cannot see what the file shows.',
+      ],
+    },
+  },
 ];
 
 export const getBlogPostBySlug = (slug: string): BlogPost | undefined =>
