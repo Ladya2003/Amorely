@@ -189,6 +189,8 @@ ${faqItems}
               <a href="${SOCIAL_LINKS.tiktok}" rel="noopener noreferrer">TikTok</a>
               ·
               <a href="${SOCIAL_LINKS.youtube}" rel="noopener noreferrer">YouTube</a>
+              ·
+              <a href="https://kaif-life.com/" rel="noopener noreferrer">KAIF LIFE</a>
             </nav>
           </section>
         </div>`;

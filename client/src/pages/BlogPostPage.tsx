@@ -71,11 +71,18 @@ const BlogPostPage: React.FC = () => {
           component="img"
           src={getBlogImageSrc(post.imageFile)}
           alt={post.title[locale]}
-          sx={getBlogHeroImageSx(theme)}
+          sx={{ ...getBlogHeroImageSx(theme), ...(post.imageFit === 'contain' ? { maxHeight: 'none', height: 'auto', objectFit: 'contain' } : {}) }}
         />
         {post.paragraphs[locale].map((paragraph) => (
           <Typography key={paragraph} variant="body1" sx={{ mb: 2, lineHeight: 1.75 }}>
             {paragraph}
+          </Typography>
+        ))}
+        {post.links?.map((link) => (
+          <Typography key={link.href[locale]} sx={{ mb: 1.5 }}>
+            <Link href={link.href[locale]} target="_blank" rel="noopener noreferrer" underline="hover">
+              {link.label[locale]}
+            </Link>
           </Typography>
         ))}
       </Box>

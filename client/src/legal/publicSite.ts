@@ -4,6 +4,8 @@ export const SUPPORT_EMAIL = 'amorely013@gmail.com';
 export const SITE_HOST = 'amorely.love';
 export const LEGAL_UPDATED_AT = '2026-08-24';
 
+export const KAIF_LIFE_URL = 'https://kaif-life.com/';
+
 export const SOCIAL_LINKS = {
   instagram: 'https://www.instagram.com/amorely.love',
   tiktok: 'https://www.tiktok.com/@amorely.love',

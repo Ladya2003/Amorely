@@ -138,6 +138,19 @@ export function createTablerIcon(TablerIcon: TablerIcon, options: CreateOptions 
 
 export type AppIconComponent = React.ComponentType<SvgIconProps>;
 
+/** Eight-spoke mark shared with the creator's KAIF LIFE site. */
+export const KaifLifeIcon: AppIconComponent = (props) => (
+  <SvgIcon {...props} viewBox="0 0 24 24">
+    <path
+      d="M12 2v20M2 12h20M5 5l14 14M5 19 19 5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </SvgIcon>
+);
+
 const iconX = createTablerIcon(IconX);
 const iconPencil = createTablerIcon(IconPencil);
 const iconTrash = createTablerIcon(IconTrash);

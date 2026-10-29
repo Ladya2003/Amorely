@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Link, Typography, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { SOCIAL_LINKS } from '../../legal/publicSite';
-import { InstagramIcon, TiktokIcon, YoutubeIcon, type AppIconComponent } from '../UI/icons';
+import { KAIF_LIFE_URL, SOCIAL_LINKS } from '../../legal/publicSite';
+import { InstagramIcon, KaifLifeIcon, TiktokIcon, YoutubeIcon, type AppIconComponent } from '../UI/icons';
 import RevealOnScroll from './RevealOnScroll';
 import {
   getAuthLandingSocialLeadSx,
@@ -13,13 +13,14 @@ import {
 } from './authPageStyles';
 
 const SOCIAL_ITEMS: Array<{
-  id: 'instagram' | 'tiktok' | 'youtube';
+  id: 'instagram' | 'tiktok' | 'youtube' | 'kaifLife';
   href: string;
   Icon: AppIconComponent;
 }> = [
   { id: 'instagram', href: SOCIAL_LINKS.instagram, Icon: InstagramIcon },
   { id: 'tiktok', href: SOCIAL_LINKS.tiktok, Icon: TiktokIcon },
   { id: 'youtube', href: SOCIAL_LINKS.youtube, Icon: YoutubeIcon },
+  { id: 'kaifLife', href: KAIF_LIFE_URL, Icon: KaifLifeIcon },
 ];
 
 const AuthLandingSocial: React.FC = () => {
@@ -41,6 +42,7 @@ const AuthLandingSocial: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={t(`legal.footer.${id}Aria`)}
+              title={t(`legal.footer.${id}Aria`)}
               sx={getAuthLandingSocialLinkSx(theme)}
             >
               <Icon fontSize="small" aria-hidden />

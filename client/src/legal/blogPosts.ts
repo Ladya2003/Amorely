@@ -7,12 +7,68 @@ export type BlogPost = {
   category: BlogCategoryId;
   publishedAt: string;
   imageFile: string;
+  imageFit?: 'cover' | 'contain';
   title: Record<LegalLocale, string>;
   excerpt: Record<LegalLocale, string>;
   paragraphs: Record<LegalLocale, string[]>;
+  links?: Array<{
+    href: Record<LegalLocale, string>;
+    label: Record<LegalLocale, string>;
+  }>;
 };
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    "slug": "kaif-life-stories-behind-amorely",
+    "category": "updates",
+    "publishedAt": "2026-10-29",
+    "imageFile": "/blog/images/kaif-life-launch.png",
+    "imageFit": "contain",
+    "title": {
+      "ru": "KAIF LIFE: истории и приключения создателя Amorely",
+      "en": "KAIF LIFE: stories and adventures from the creator of Amorely"
+    },
+    "excerpt": {
+      "ru": "Влад, создатель Amorely, запустил личный сайт KAIF LIFE — о путешествиях, тачках и съёмках. Два проекта с общей идеей: есть что вспомнить.",
+      "en": "Vlad, the creator of Amorely, has launched KAIF LIFE, a personal site about travel, cars and making videos. Two projects connected by memories worth keeping."
+    },
+    "paragraphs": {
+      "ru": [
+        "За Amorely стоит Влад — фулстак-разработчик с опытом более шести лет, автор YouTube-канала KAIF LIFE и человек, которому хочется проводить больше времени со своей невестой Аней. Теперь у его путешествий, автомобильных челленджей и закулисья съёмок есть собственный дом: kaif-life.com.",
+        "Amorely появился из очень личной потребности. Работа занимала большую часть дня, а времени вдвоём не хватало. Влад начал с сайта, где можно записывать события в календарь, а на главной — встречать случайные воспоминания. Так обычное открытие страницы могло напомнить о поездке, свидании или смешном моменте, который уже успел забыться.",
+        "Позже к воспоминаниям добавились игры для пары, вопросы дня, идеи свиданий и общие питомцы. Но отправная точка осталась прежней: найти время друг для друга и сохранить то, что вы прожили вместе.",
+        "KAIF LIFE продолжает эту мысль в формате открытого дневника. «Есть что вспомнить» — его главная фраза. На сайте собраны истории из поездок по Грузии, первый полёт на параплане и вещи, на которые Влад наконец решился. Здесь можно посмотреть выпуск, прочитать историю и задержаться на фотографиях.",
+        "Отдельная часть дневника — работа над автомобильным челленджем с другом Лёхой. Несколько свободных вечеров ушло на поиск похожих форматов и разработку правил, около десяти часов — на съёмку по всему городу, а больше тридцати — на монтаж в DaVinci Resolve. В статье Влад рассказывает, как учился новым эффектам и собирал динамичный выпуск. Рядом есть отдельная заметка о двух A/B-тестах заголовков и превью.",
+        "В дневнике соседствуют красивые кадры и смешные дубли. У некоторых фотографий есть кнопка «Как было на самом деле»: нажимаешь — и вместо удачного ракурса появляется то, что обычно остаётся за кадром. Эта деталь хорошо передаёт настроение проекта: путешествовать, пробовать новое и уметь посмеяться над собой.",
+        "У Amorely и KAIF LIFE разные форматы: закрытое пространство пары и публичные истории автора. Их связывает желание замечать свою жизнь. Если вам близка эта идея, загляните в дневник Влада — возможно, одна из историй станет поводом запланировать собственное приключение вдвоём."
+      ],
+      "en": [
+        "Behind Amorely is Vlad: a full-stack developer with more than six years of experience, the creator of the KAIF LIFE YouTube channel, and someone who wants more time with his fiancée Anya. His travels, car challenges and behind-the-scenes stories now have a home of their own: kaif-life.com.",
+        "Amorely began with a personal need. Work filled much of the day, leaving too little time together. Vlad started with a website for recording events in a calendar and showing random memories on the home page. Opening it could bring back a trip, a date or a funny moment that had almost slipped away.",
+        "Couple games, daily questions, date ideas and shared pets followed. The starting point stayed the same: making time for each other and keeping what you have experienced together.",
+        "KAIF LIFE carries that idea into a public journal. Its motto, “Есть что вспомнить”, means having something worth remembering. The site brings together stories from Georgia, a first paragliding flight and things Vlad finally decided to try. Visitors can watch an episode, read the story and spend time with the photos. The journal is available in Russian, English and Spanish.",
+        "One part of the journal explores a car challenge filmed with his friend Lyokha. Researching similar formats and developing the rules took several free evenings. Filming across the city took about ten hours, followed by more than thirty hours of editing in DaVinci Resolve. Vlad writes about learning new effects and shaping a fast-paced episode. A separate post covers two A/B tests of titles and thumbnails.",
+        "Beautiful photos sit alongside funny outtakes. Some pictures have a “How it really went” button: a click swaps the polished shot for a moment that would usually stay behind the scenes. It captures the mood of the project: travelling, trying something new and being able to laugh at yourself.",
+        "Amorely is a private space for a couple; KAIF LIFE shares its creator’s stories in public. Both come from wanting to pay attention to the life you are living. If that sounds familiar, visit Vlad’s journal. One of the stories might inspire an adventure of your own, together."
+      ]
+    },
+    "links": [
+      {
+        "href": { "ru": "https://kaif-life.com/", "en": "https://kaif-life.com/en/" },
+        "label": {
+          "ru": "Открыть дневник KAIF LIFE",
+          "en": "Visit the KAIF LIFE journal"
+        }
+      },
+      {
+        "href": { "ru": "https://kaif-life.com/stories/car-challenge-behind-the-scenes/", "en": "https://kaif-life.com/en/stories/car-challenge-behind-the-scenes/" },
+        "label": {
+          "ru": "Как снимался автомобильный челлендж",
+          "en": "Behind the scenes of the car challenge"
+        }
+      }
+    ]
+  },
   {
     slug: 'private-space-for-two',
     category: 'product',

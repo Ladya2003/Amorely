@@ -108,7 +108,7 @@ const BlogPage: React.FC = () => {
                 component="img"
                 src={getBlogImageSrc(post.imageFile)}
                 alt={post.title[locale]}
-                sx={getBlogCardImageSx()}
+                sx={{ ...getBlogCardImageSx(), ...(post.imageFit ? { objectFit: post.imageFit } : {}) }}
               />
               <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
                 <Chip

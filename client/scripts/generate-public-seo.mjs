@@ -256,7 +256,7 @@ const renderBlogPostBlock = (lang, post) => {
   return `        <article lang="${lang}">
           <h1>${e(post.title[lang])}</h1>
           <img src="${e(imageUrl)}" alt="${e(post.title[lang])}" />
-${paragraphs}
+${paragraphs}${(post.links ?? []).map((link) => `\n          <p><a href="${e(link.href[lang])}" target="_blank" rel="noopener noreferrer">${e(link.label[lang])}</a></p>`).join('')}
         </article>`;
 };
 

@@ -2,9 +2,9 @@ import React from 'react';
 import { Box, Link, Typography, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
-import { PUBLIC_PATHS, SOCIAL_LINKS, SUPPORT_EMAIL } from '../../legal/publicSite';
+import { KAIF_LIFE_URL, PUBLIC_PATHS, SOCIAL_LINKS, SUPPORT_EMAIL } from '../../legal/publicSite';
 import { getAuthLandingFooterMetaSx, getAuthLandingFooterSx } from '../Auth/authPageStyles';
-import { InstagramIcon, TiktokIcon, YoutubeIcon, type AppIconComponent } from '../UI/icons';
+import { InstagramIcon, KaifLifeIcon, TiktokIcon, YoutubeIcon, type AppIconComponent } from '../UI/icons';
 import {
   getFooterContactSx,
   getFooterLinkSx,
@@ -14,13 +14,14 @@ import {
 } from './legalPageStyles';
 
 const SOCIAL_ITEMS: Array<{
-  id: 'instagram' | 'tiktok' | 'youtube';
+  id: 'instagram' | 'tiktok' | 'youtube' | 'kaifLife';
   href: string;
   Icon: AppIconComponent;
 }> = [
   { id: 'instagram', href: SOCIAL_LINKS.instagram, Icon: InstagramIcon },
   { id: 'tiktok', href: SOCIAL_LINKS.tiktok, Icon: TiktokIcon },
   { id: 'youtube', href: SOCIAL_LINKS.youtube, Icon: YoutubeIcon },
+  { id: 'kaifLife', href: KAIF_LIFE_URL, Icon: KaifLifeIcon },
 ];
 
 const FOOTER_LINKS = [
@@ -46,6 +47,7 @@ const SiteFooter: React.FC = () => {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t(`legal.footer.${id}Aria`)}
+            title={t(`legal.footer.${id}Aria`)}
             sx={getFooterSocialLinkSx(theme)}
           >
             <Icon fontSize="small" aria-hidden />
