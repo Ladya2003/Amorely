@@ -33,6 +33,7 @@ import fortuneWheelRoutes from './routes/fortuneWheel';
 import adminRoutes from './routes/admin';
 import cronRoutes from './routes/cron';
 import publicSupportRoutes from './routes/publicSupport';
+import carServiceRoutes from './routes/carService';
 import { adminMiddleware } from './middleware/admin';
 import { getAllowedOrigins } from './utils/corsOrigins';
 import { migrateLegacyTapGameStates } from './games/tapGameService';
@@ -370,6 +371,7 @@ app.use('/api/auth', authRoutes);
 // Cron-задачи (до app.use('/api', authMiddleware) — иначе JWT перехватит запрос)
 app.use('/api/cron', cronRoutes);
 app.use('/api/public', publicSupportRoutes);
+app.use('/api/car-service', carServiceRoutes);
 
 // Маршруты для чата
 app.use('/api', authMiddleware, chatRoutes);

@@ -6,7 +6,7 @@
 export const getAllowedOrigins = (): string[] => {
   const origins = new Set<string>();
 
-  const clientUrl = process.env.CLIENT_URL?.trim();
+  const clientUrl = [process.env.CLIENT_URL, process.env.CAR_SERVICE_ORIGINS, 'https://ladya2003.github.io'].filter(Boolean).join(',').trim();
   if (clientUrl) {
     for (const raw of clientUrl.split(',')) {
       const entry = raw.trim();
