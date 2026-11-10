@@ -973,7 +973,7 @@ const PlansNotes = React.forwardRef<PlansNotesHandle, PlansNotesProps>(function 
       </Box>
 
       {/* Форма создания / редактирования */}
-      <ResponsiveDialog open={formOpen} onClose={() => !isSaving && setFormOpen(false)} fullWidth maxWidth="sm">
+      <ResponsiveDialog mobileKeyboardAware open={formOpen} onClose={() => !isSaving && setFormOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
           {editingNote ? t('calendar.plans.editNote') : t('calendar.plans.newNote')}
           <IconButton onClick={() => setFormOpen(false)} disabled={isSaving} size="small">
@@ -990,7 +990,7 @@ const PlansNotes = React.forwardRef<PlansNotesHandle, PlansNotesProps>(function 
               value={form.title}
               onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
               fullWidth
-              autoFocus
+              autoFocus={!isMobile}
               inputProps={{ maxLength: 200 }}
             />
           </Box>
@@ -1063,7 +1063,7 @@ const PlansNotes = React.forwardRef<PlansNotesHandle, PlansNotesProps>(function 
                   value={form.category}
                   onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
                   fullWidth
-                  autoFocus={categories.length > 0}
+                  autoFocus={!isMobile && categories.length > 0}
                   disabled={isSaving}
                   inputProps={{ maxLength: 100 }}
                 />
